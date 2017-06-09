@@ -30,7 +30,6 @@ class RDevtools(RPackage):
 
     homepage = "https://github.com/hadley/devtools"
     url      = "https://cran.r-project.org/src/contrib/devtools_1.12.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/devtools"
 
     version('1.12.0', '73b46c446273566e5b21c9f5f72aeca3')
     version('1.11.1', '242672ee27d24dddcbdaac88c586b6c2')

@@ -31,7 +31,6 @@ class RTibble(RPackage):
 
     homepage = "https://github.com/hadley/tibble"
     url      = "https://cran.r-project.org/src/contrib/tibble_1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/tibble"
 
     version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
     version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')

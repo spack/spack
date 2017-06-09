@@ -34,7 +34,6 @@ class RMultcomp(RPackage):
 
     homepage = "http://multcomp.r-forge.r-project.org/"
     url      = "https://cran.r-project.org/src/contrib/multcomp_1.4-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/multcomp"
 
     version('1.4-6', 'f1353ede2ed78b23859a7f1f1f9ebe88')
 

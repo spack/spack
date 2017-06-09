@@ -33,6 +33,5 @@ class RAssertthat(RPackage):
 
     homepage = "https://cran.r-project.org/package=assertthat"
     url      = "https://cran.r-project.org/src/contrib/assertthat_0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/assertthat"
 
     version('0.1', '59f9d7f7c00077ea54d763b78eeb5798')

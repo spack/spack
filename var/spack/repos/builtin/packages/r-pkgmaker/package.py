@@ -36,7 +36,6 @@ class RPkgmaker(RPackage):
 
     homepage = "https://renozao.github.io/pkgmaker"
     url      = "https://cran.r-project.org/src/contrib/pkgmaker_0.22.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pkgmaker"
 
     version('0.22', '73a0c6d3e84c6dadf3de7582ef7e88a4')
 

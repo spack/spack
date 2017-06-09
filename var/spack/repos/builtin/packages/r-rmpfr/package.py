@@ -34,7 +34,6 @@ class RRmpfr(RPackage):
 
     homepage = "http://rmpfr.r-forge.r-project.org"
     url      = "https://cran.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpfr"
 
     version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
 

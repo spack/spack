@@ -36,6 +36,5 @@ class RSurvey(RPackage):
 
     homepage = "http://r-survey.r-forge.r-project.org/survey/"
     url      = "https://cran.r-project.org/src/contrib/survey_3.30-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/survey"
 
     version('3.30-3', 'c70cdae9cb43d35abddd11173d64cad0')

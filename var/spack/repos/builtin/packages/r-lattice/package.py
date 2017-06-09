@@ -33,6 +33,5 @@ class RLattice(RPackage):
 
     homepage = "http://lattice.r-forge.r-project.org/"
     url      = "https://cran.r-project.org/src/contrib/lattice_0.20-34.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lattice"
 
     version('0.20-34', 'c2a648b22d4206ae7526fb70b8e90fed')

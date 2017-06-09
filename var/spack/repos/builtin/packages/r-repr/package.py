@@ -32,6 +32,5 @@ class RRepr(RPackage):
 
     homepage = "https://github.com/IRkernel/repr"
     url      = "https://cran.r-project.org/src/contrib/repr_0.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/repr"
 
     version('0.9', 'db5ff74893063b492f684e42283070bd')

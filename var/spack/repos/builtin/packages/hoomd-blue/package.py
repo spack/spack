@@ -40,9 +40,8 @@ class HoomdBlue(CMakePackage):
     git      = "https://bitbucket.org/glotzer/hoomd-blue"
 
     # TODO: There is a bug in Spack that requires a url to be defined
-    # even if it isn't used. These URLs can hopefully be removed someday.
+    # even if it isn't used. This URL can hopefully be removed someday.
     url      = "https://bitbucket.org/glotzer/hoomd-blue/get/v2.1.6.tar.bz2"
-    list_url = "https://bitbucket.org/glotzer/hoomd-blue/downloads/?tab=tags"
 
     version('develop', git=git, submodules=True)
 

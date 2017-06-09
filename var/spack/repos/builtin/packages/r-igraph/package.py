@@ -32,7 +32,6 @@ class RIgraph(RPackage):
 
     homepage = "http://igraph.org/"
     url      = "https://cran.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/igraph"
 
     version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')
 

@@ -44,7 +44,6 @@ class RApe(RPackage):
 
     homepage = "http://ape-package.ird.fr/"
     url      = "https://cran.r-project.org/src/contrib/ape_4.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ape"
 
     version('4.1', 'a9ed416d6d172d4b9682556cf692d7c2')
 

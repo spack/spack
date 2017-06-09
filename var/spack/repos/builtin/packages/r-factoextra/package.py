@@ -31,7 +31,6 @@ class RFactoextra(RPackage):
 
     homepage = "http://www.sthda.com/english/rpkgs/factoextra"
     url      = "https://cran.r-project.org/src/contrib/factoextra_1.0.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/factoextra"
 
     version('1.0.4', 'aa4c81ca610f17fdee0c9f3379e35429')
 

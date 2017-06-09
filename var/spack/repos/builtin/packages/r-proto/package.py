@@ -31,6 +31,5 @@ class RProto(RPackage):
 
     homepage = "http://r-proto.googlecode.com/"
     url      = "https://cran.r-project.org/src/contrib/proto_0.3-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/proto"
 
     version('0.3-10', 'd5523943a5be6ca2f0ab557c900f8212')

@@ -33,7 +33,6 @@ class RKernlab(RPackage):
 
     homepage = "https://cran.r-project.org/package=kernlab"
     url      = "https://cran.r-project.org/src/contrib/kernlab_0.9-25.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/kernlab"
 
     version('0.9-25', '1182a2a336a79fd2cf70b4bc5a35353f')
 

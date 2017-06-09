@@ -43,7 +43,6 @@ class RSpdep(RPackage):
 
     homepage = "https://r-forge.r-project.org/projects/spdep"
     url      = "https://cran.r-project.org/src/contrib/spdep_0.6-13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/spdep"
 
     version('0.6-13', 'bfc68b3016b4894b152ecec4b86f85d1')
 

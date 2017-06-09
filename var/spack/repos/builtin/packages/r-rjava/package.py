@@ -31,7 +31,6 @@ class RRjava(RPackage):
 
     homepage = "http://www.rforge.net/rJava/"
     url      = "https://cran.r-project.org/src/contrib/rJava_0.9-8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rJava"
 
     version('0.9-8', '51ae0d690ceed056ebe7c4be71fc6c7a')
 

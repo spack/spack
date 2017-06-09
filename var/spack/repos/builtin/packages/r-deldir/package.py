@@ -34,7 +34,6 @@ class RDeldir(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=deldir"
     url      = "https://cran.r-project.org/src/contrib/deldir_0.1-14.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/deldir"
 
     version('0.1-14', '6a22b13d962615cd9d51b6eae403409f')
 

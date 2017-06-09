@@ -33,7 +33,6 @@ class RShiny(RPackage):
 
     homepage = "http://shiny.rstudio.com/"
     url      = "https://cran.r-project.org/src/contrib/shiny_0.13.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/shiny"
 
     version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
 

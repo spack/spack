@@ -31,7 +31,6 @@ class RRzmq(RPackage):
 
     homepage = "http://github.com/armstrtw/rzmq"
     url      = "https://cran.r-project.org/src/contrib/rzmq_0.7.7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rzmq"
 
     version('0.7.7', '8ba18fd1c222d1eb25bb622ccd2897e0')
 

@@ -31,7 +31,6 @@ class RDomc(RPackage):
 
     homepage = "https://cran.r-project.org/package=doMC"
     url      = "https://cran.r-project.org/src/contrib/doMC_1.3.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/doMC"
 
     version('1.3.4', 'f965b09add9056e84f99a831dc3af7d1')
 

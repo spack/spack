@@ -33,7 +33,6 @@ class REvaluate(RPackage):
 
     homepage = "https://github.com/hadley/evaluate"
     url      = "https://cran.rstudio.com/src/contrib/evaluate_0.9.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/evaluate"
 
     version('0.10', 'c49326babf984a8b36e7e276da370ad2')
     version('0.9',  '877d89ce8a9ef7f403b1089ca1021775')

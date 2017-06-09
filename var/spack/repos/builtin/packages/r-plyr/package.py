@@ -36,7 +36,6 @@ class RPlyr(RPackage):
 
     homepage = "http://had.co.nz/plyr"
     url      = "https://cran.r-project.org/src/contrib/plyr_1.8.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plyr"
 
     version('1.8.4', 'ef455cf7fc06e34837692156b7b2587b')
 

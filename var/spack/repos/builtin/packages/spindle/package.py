@@ -33,7 +33,6 @@ class Spindle(AutotoolsPackage):
     """
     homepage = "https://computation.llnl.gov/project/spindle/"
     url      = "https://github.com/hpc/Spindle/archive/v0.8.1.tar.gz"
-    list_url = "https://github.com/hpc/Spindle/releases"
 
     version('0.8.1', 'f11793a6b9d8df2cd231fccb2857d912')
 

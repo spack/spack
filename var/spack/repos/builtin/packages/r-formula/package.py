@@ -32,6 +32,5 @@ class RFormula(RPackage):
 
     homepage = "https://cran.r-project.org/package=Formula"
     url      = "https://cran.r-project.org/src/contrib/Formula_1.2-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Formula"
 
     version('1.2-1', '2afb31e637cecd0c1106317aca1e4849')

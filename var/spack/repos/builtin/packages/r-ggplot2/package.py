@@ -36,7 +36,6 @@ class RGgplot2(RPackage):
 
     homepage = "http://ggplot2.org/"
     url      = "https://cran.r-project.org/src/contrib/ggplot2_2.2.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggplot2"
 
     version('2.2.1', '14c5a3507bc123c6e7e9ad3bef7cee5c')
     version('2.1.0', '771928cfb97c649c720423deb3ec7fd3')
