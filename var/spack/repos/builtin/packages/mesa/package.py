@@ -112,6 +112,11 @@ class Mesa(AutotoolsPackage):
 
         args.extend(['--with-gallium-drivers=' + ','.join(gallium)])
 
+        # Avoid errors due to missing clock_gettime symbol:
+        arch = spec.architecture
+        if arch.platform == 'linux':
+            args.extend(['LIBS=-lrt'])
+
         return args
 
     def configure(self, spec, prefix):
