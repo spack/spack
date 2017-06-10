@@ -1925,8 +1925,6 @@ class Spec(object):
                     dep_context[dep.name] = child_matches[0]
             else:
                 dep_context = pre_existing[0]
-            if dep.name == 'python':
-                print "existing", self.name, id(dep_context[dep.name])
             # merge package/vdep information into spec
             try:
                 changed |= dep_context[dep.name].constrain(dep)
@@ -1941,8 +1939,6 @@ class Spec(object):
                               e.constraint_type, e.required, e.provided)
                 raise e
         else:
-            if dep.name == 'python':
-                print "new", self.name, id(dep)
             for dep_context in dep_contexts:
                 dep_context[dep.name] = dep
             resolved = dep
