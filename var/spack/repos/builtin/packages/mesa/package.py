@@ -91,7 +91,10 @@ class Mesa(AutotoolsPackage):
 
         if '+gallium' in spec:
             args.extend(['--disable-osmesa', '--enable-gallium-osmesa'])
-            gallium.extend(['swrast', 'swr'])
+            gallium.extend(['swrast'])
+            if spec.satisfies('@:16.99') or spec.satisfies('%gcc@4.9:'):
+                # swr driver requires c++14 support for @17:
+                gallium.extend(['swr'])
         else:
             args.extend(['--enable-osmesa', '--disable-gallium-osmesa'])
 
