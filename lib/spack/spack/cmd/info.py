@@ -131,6 +131,14 @@ def print_text_info(pkg):
     header = "{0}:   ".format(pkg.build_system_class)
 
     print(header, pkg.name)
+
+    print()
+    print("Description:")
+    if pkg.__doc__:
+        print(pkg.format_doc(indent=4))
+    else:
+        print("    None")
+
     whitespaces = ''.join([' '] * (len(header) - len("Homepage: ")))
     print("Homepage:", whitespaces, pkg.homepage)
 
@@ -180,13 +188,6 @@ def print_text_info(pkg):
         for when, specs in reversed(sorted(inverse_map.items())):
             print("    %s provides %s" % (
                 when, ', '.join(str(s) for s in specs)))
-    else:
-        print("    None")
-
-    print()
-    print("Description:")
-    if pkg.__doc__:
-        print(pkg.format_doc(indent=4))
     else:
         print("    None")
 
