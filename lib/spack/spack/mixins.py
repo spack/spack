@@ -27,14 +27,14 @@ import os
 import llnl.util.filesystem
 
 
-class FilterCompilerWrappersPackageMixin(object):
+class FilterCompilerWrappers(object):
     """This mixin class registers a callback that filters a list of files
     after installation and substitutes hardcoded paths pointing to the Spack
     compiler wrappers with the corresponding 'real' compilers.
     """
 
     #: compiler wrappers to be filtered (needs to be overridden)
-    compiler_wrappers = []
+    to_be_filtered_for_wrappers = []
 
     #: phase after which the callback is invoked (default 'install')
     filter_phase = 'install'
@@ -43,7 +43,7 @@ class FilterCompilerWrappersPackageMixin(object):
 
         attr_name = '_InstallPhase_{0}'.format(self.filter_phase)
 
-        # Here we want to get the attribute directly from the class (noe from
+        # Here we want to get the attribute directly from the class (not from
         # the instance), so that we can modify it and add the mixin method
         phase = getattr(type(self), attr_name)
 
@@ -54,10 +54,10 @@ class FilterCompilerWrappersPackageMixin(object):
         phase = getattr(type(self), attr_name)
 
         phase.run_after.append(
-            FilterCompilerWrappersPackageMixin.filter_compilers
+            FilterCompilerWrappers.filter_compilers
         )
 
-        super(FilterCompilerWrappersPackageMixin, self).__init__()
+        super(FilterCompilerWrappers, self).__init__()
 
     def filter_compilers(self):
         """Substitutes any path referring to a Spack compiler wrapper
@@ -70,8 +70,10 @@ class FilterCompilerWrappersPackageMixin(object):
 
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
-        if self.compiler_wrappers:
-            x = llnl.util.filesystem.FileFilter(*self.compiler_wrappers)
+        if self.to_be_filtered_for_wrappers:
+            x = llnl.util.filesystem.FileFilter(
+                *self.to_be_filtered_for_wrappers
+            )
 
             x.filter(os.environ['CC'], self.compiler.cc, **kwargs)
             x.filter(os.environ['CXX'], self.compiler.cxx, **kwargs)

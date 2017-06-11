@@ -35,7 +35,7 @@ def _process_manager_validator(values):
         )
 
 
-class Mvapich2(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
+class Mvapich2(AutotoolsPackage, mixins.FilterCompilerWrappers):
     """MVAPICH2 is an MPI implementation for Infiniband networks."""
     homepage = "http://mvapich.cse.ohio-state.edu/"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
@@ -233,7 +233,7 @@ class Mvapich2(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
         return args
 
     @property
-    def compiler_wrappers(self):
+    def to_be_filtered_for_wrappers(self):
         return [
             join_path(self.prefix.bin, 'mpicc'),
             join_path(self.prefix.bin, 'mpicxx'),

@@ -214,8 +214,8 @@ __all__ += [
     'IntelPackage',
 ]
 
-from spack.mixins import FilterCompilerWrappersPackageMixin
-__all__ += ['FilterCompilerWrappersPackageMixin']
+import spack.mixins as mixins
+__all__ += ['mixins']
 
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']

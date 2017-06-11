@@ -26,7 +26,7 @@ import shutil
 from spack import *
 
 
-class R(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
+class R(AutotoolsPackage, mixins.FilterCompilerWrappers):
     """R is 'GNU S', a freely available language and environment for
     statistical computing and graphics which provides a wide variety of
     statistical and graphical techniques: linear and nonlinear modelling,
@@ -130,7 +130,7 @@ class R(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
         shutil.copy(src_makeconf, dst_makeconf)
 
     @property
-    def compiler_wrappers(self):
+    def to_be_filtered_for_wrappers(self):
         return [join_path(self.etcdir, 'Makeconf')]
 
     # ========================================================================
