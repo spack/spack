@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Mpich(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
+class Mpich(AutotoolsPackage, mixins.FilterCompilerWrappers):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -171,7 +171,7 @@ spack package at this time.''',
         return config_args
 
     @property
-    def compiler_wrappers(self):
+    def to_be_filtered_for_wrappers(self):
         return [
             join_path(self.prefix.bin, 'mpicc'),
             join_path(self.prefix.bin, 'mpicxx'),

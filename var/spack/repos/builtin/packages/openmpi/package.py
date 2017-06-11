@@ -64,7 +64,7 @@ def _mxm_dir():
         return None
 
 
-class Openmpi(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
+class Openmpi(AutotoolsPackage, mixins.FilterCompilerWrappers):
     """The Open MPI Project is an open source Message Passing Interface
        implementation that is developed and maintained by a consortium
        of academic, research, and industry partners. Open MPI is
@@ -376,7 +376,7 @@ class Openmpi(AutotoolsPackage, FilterCompilerWrappersPackageMixin):
         return config_args
 
     @property
-    def compiler_wrappers(self):
+    def to_be_filtered_for_wrappers(self):
 
         basepath = join_path(self.prefix, 'share', 'openmpi')
 
