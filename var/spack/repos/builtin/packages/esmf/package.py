@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Esmf(Package):
+class Esmf(MakefilePackage):
     """The Earth System Modeling Framework (ESMF) is high-performance, flexible
     software infrastructure for building and coupling weather, climate, and
     related Earth science applications. The ESMF defines an architecture for
@@ -65,7 +65,7 @@ class Esmf(Package):
     def url_for_version(self, version):
         return "http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
 
-    def install(self, spec, prefix):
+    def edit(self, spec, prefix):
         # Installation instructions can be found at:
         # http://www.earthsystemmodeling.org/esmf_releases/last_built/ESMF_usrdoc/node9.html
 
@@ -238,16 +238,5 @@ class Esmf(Package):
             # ESMF_XERCES_INCLUDE
             # ESMF_XERCES_LIBPATH
 
-        ################
-        # Installation #
-        ################
-
-        make()
-
-        if self.run_tests:
-            make('check', parallel=False)
-
-        make('install')
-
-        if self.run_tests:
-            make('installcheck')
+    def check(self):
+        make('check', parallel=False)
