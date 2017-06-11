@@ -47,20 +47,23 @@ class Esmf(MakefilePackage):
     variant('debug',   default=False, description='Make a debuggable version of the library')
 
     # Required dependencies
-    depends_on('mpi', when='+mpi')
     depends_on('zlib')
     depends_on('libxml2')
-    # depends_on('perl', type='test')  # TODO: Add a test deptype
 
     # Optional dependencies
+    depends_on('mpi', when='+mpi')
     depends_on('lapack@3:', when='+lapack')
     depends_on('netcdf@3.6:', when='+netcdf')
     depends_on('netcdf-fortran@3.6:', when='+netcdf')
     depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
     depends_on('xerces-c@3.1.0:', when='+xerces')
 
+    # Testing dependencies
+    # depends_on('perl', type='test')  # TODO: Add a test deptype
+
     # NOTE: ESMF cannot be installed with GCC 6. It uses constructs that
     # are no longer valid in GCC 6. GCC 4 is recommended for installation.
+    conflicts('%gcc@6:')
 
     def url_for_version(self, version):
         return "http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
