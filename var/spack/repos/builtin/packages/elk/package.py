@@ -22,11 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
 from spack import *
 
 
-class Elk(Package):
+class Elk(MakefilePackage):
     '''An all-electron full-potential linearised augmented-plane wave
     (FP-LAPW) code with many advanced features.'''
 
@@ -60,7 +59,7 @@ class Elk(Package):
     # Cannot be built in parallel
     parallel = False
 
-    def configure(self, spec):
+    def edit(self, spec, prefix):
         # Dictionary of configuration options
         config = {
             'MAKE': 'make',
@@ -110,8 +109,8 @@ class Elk(Package):
             config['F90'] = spec['mpi'].mpifc
             config['F77'] = spec['mpi'].mpif77
         else:
-            config['F90'] = join_path(spack.build_env_path, 'f90')
-            config['F77'] = join_path(spack.build_env_path, 'f77')
+            config['F90'] = spack_fc
+            config['F77'] = spack_f77
             config['SRC_MPI'] = 'mpi_stub.f90'
 
         # OpenMP support
@@ -141,14 +140,8 @@ class Elk(Package):
                 inc.write('{0} = {1}\n'.format(key, config[key]))
 
     def install(self, spec, prefix):
-        # Elk only provides an interactive setup script
-        self.configure(spec)
-
-        make()
-        make('test')
-
         # The Elk Makefile does not provide an install target
-        mkdirp(prefix.bin)
+        mkdir(prefix.bin)
 
         install('src/elk',                   prefix.bin)
         install('src/eos/eos',               prefix.bin)
