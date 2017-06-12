@@ -54,12 +54,12 @@ class Context(object):
                 else:
                     stream.write(concretized_spec.format())
 
-    def reconcretize(self):
+    def reset_os_and_compiler(self):
         new_order = list()
         new_specs_by_hash = {}
         for spec_hash in self.concretized_order:
             spec = self.specs_by_hash[spec_hash]
-            new_spec = reconcretize(spec)
+            new_spec = reset_os_and_compiler(spec)
             new_order.append(new_spec.dag_hash())
             new_specs_by_hash[new_spec.dag_hash()] = new_spec
         self.concretized_order = new_order
@@ -96,7 +96,7 @@ class Context(object):
     def path(self):
         return fs.join_path(_db_dirname, self.name)
 
-def reconcretize(spec):
+def reset_os_and_compiler(spec):
     spec = spec.copy()
     for x in spec.traverse():
         x.compiler = None
