@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Cube(Package):
+class Cube(AutotoolsPackage):
     """Cube the profile viewer for Score-P and Scalasca profiles. It displays a
     multi-dimensional performance space consisting of the dimensions:
     - performance metric
@@ -35,6 +35,11 @@ class Cube(Package):
 
     homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
     url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz"
+
+    # Some versions fail with parallel builds/installs
+    parallel = False
+
+    version('4.3.5', 'e5dce986e3c6381ea3a5fcb66c553adc')
 
     version('4.3.4', '50f73060f55311cb12c5b3cb354d59fa',
             url='http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3.4.tar.gz')
@@ -46,16 +51,20 @@ class Cube(Package):
     variant('gui', default=False, description='Build CUBE GUI')
 
     depends_on('zlib')
-    depends_on('qt@4.6:', when='+gui')
 
-    def install(self, spec, prefix):
-        configure_args = ["--prefix=%s" % prefix,
-                          "--without-paraver"]
+    depends_on('qt@5:', when='@4.3 +gui')
+    depends_on('qt@4.6:', when='@4.2 +gui')
 
-        # TODO : need to handle cross compiling build
+    def url_for_version(self, version):
+        return 'http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/cube-{1}.tar.gz'.format(version.up_to(2), version)
+
+    def configure_args(self):
+        spec = self.spec
+
+        configure_args = ['--enable-shared']
+
         if '+gui' not in spec:
             configure_args.append('--without-gui')
 
-        configure(*configure_args)
-        make()
-        make("install", parallel=False)
+        return configure_args
+        
