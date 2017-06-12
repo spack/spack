@@ -45,6 +45,8 @@ class IsaacServer(CMakePackage):
     #         'Support for RTP streams, e.g. to Twitch or Youtube')
 
     depends_on('cmake@3.3:', type='build')
-    depends_on('isaac')
-    depends_on('libwebsockets')
+    depends_on('libjpeg-turbo', type='link')
+    depends_on('jansson', type='link')
+    depends_on('boost@1.56:', type='link')
+    depends_on('libwebsockets', type='link')
     # depends_on('gstreamer@1.0', when='+gstreamer')
