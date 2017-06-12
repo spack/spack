@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Meep(Package):
+class Meep(AutotoolsPackage):
     """Meep (or MEEP) is a free finite-difference time-domain (FDTD) simulation
     software package developed at MIT to model electromagnetic systems."""
 
@@ -56,16 +56,10 @@ class Meep(Package):
     depends_on('hdf5+mpi',    when='+hdf5+mpi')
     depends_on('gsl',         when='+gsl')
 
-    def url_for_version(self, version):
-        base_url = "http://ab-initio.mit.edu/meep"
-        if version > Version('1.1.1'):
-            return "{0}/meep-{1}.tar.gz".format(base_url, version)
-        else:
-            return "{0}/old/meep-{1}.tar.gz".format(base_url, version)
+    def configure_args(self):
+        spec = self.spec
 
-    def install(self, spec, prefix):
         config_args = [
-            '--prefix={0}'.format(prefix),
             '--enable-shared'
         ]
 
@@ -97,15 +91,14 @@ class Meep(Package):
         else:
             config_args.append('--without-hdf5')
 
-        configure(*config_args)
+        return config_args
 
-        make()
+    def check(self):
+        spec = self.spec
 
         # aniso_disp test fails unless installed with harminv
         # near2far test fails unless installed with gsl
-        if self.run_tests and '+harminv' in spec and '+gsl' in spec:
+        if '+harminv' in spec and '+gsl' in spec:
             # Most tests fail when run in parallel
             # 2D_convergence tests still fails to converge for unknown reasons
             make('check', parallel=False)
-
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Harminv(Package):
+class Harminv(AutotoolsPackage):
     """Harminv is a free program (and accompanying library) to solve the
     problem of harmonic inversion - given a discrete-time, finite-length
     signal that consists of a sum of finitely-many sinusoids (possibly
@@ -34,21 +34,18 @@ class Harminv(Package):
 
     homepage = "http://ab-initio.mit.edu/wiki/index.php/Harminv"
     url      = "http://ab-initio.mit.edu/harminv/harminv-1.4.tar.gz"
+    list_url = "http://ab-initio.mit.edu/harminv/old"
 
     version('1.4', 'b95e24a9bc7e07d3d2202d1605e9e86f')
 
     depends_on('blas')
     depends_on('lapack')
 
-    def install(self, spec, prefix):
-        config_args = [
-            '--prefix={0}'.format(prefix),
+    def configure_args(self):
+        spec = self.spec
+
+        return [
+            '--enable-shared',
             '--with-blas={0}'.format(spec['blas'].prefix.lib),
             '--with-lapack={0}'.format(spec['lapack'].prefix.lib),
-            '--enable-shared'
         ]
-
-        configure(*config_args)
-
-        make()
-        make('install')
