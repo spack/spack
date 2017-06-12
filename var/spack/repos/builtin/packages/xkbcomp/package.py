@@ -27,7 +27,7 @@ class Xkbcomp(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
-    depends_on('xkeyboard-config', type='build')
+    depends_on('xkeyboard-config', type=('build', 'run'))
 
     def configure_args(self):
         datadir = os.path.join(self.spec['xkeyboard-config'].prefix, 'share')
