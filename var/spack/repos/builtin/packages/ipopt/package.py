@@ -31,6 +31,9 @@ class Ipopt(Package):
     homepage = "https://projects.coin-or.org/Ipopt"
     url      = "http://www.coin-or.org/download/source/Ipopt/Ipopt-3.12.4.tgz"
 
+    version('3.12.7', '2a36e4a04717a8ed7012ac7d1253ae4ffbc1a8fd')
+    version('3.12.6', 'ed4072427fab786fcf6082fe7e6f6c2ed9b5e6f8')
+    version('3.12.5', '3f63ddfff517235ead17af6cceb426ca858dda37')
     version('3.12.4', '12a8ecaff8dd90025ddea6c65b49cb03')
     version('3.12.3', 'c560cbfa9cbf62acf8b485823c255a1b')
     version('3.12.2', 'ec1e855257d7de09e122c446506fb00d')
