@@ -67,4 +67,3 @@ class Cube(AutotoolsPackage):
             configure_args.append('--without-gui')
 
         return configure_args
-        
