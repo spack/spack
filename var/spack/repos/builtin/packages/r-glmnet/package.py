@@ -35,7 +35,6 @@ class RGlmnet(RPackage):
 
     homepage = "http://www.jstatsoft.org/v33/i01/"
     url      = "https://cran.r-project.org/src/contrib/glmnet_2.0-5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/glmnet"
 
     version('2.0-5', '049b18caa29529614cd684db3beaec2a')
 

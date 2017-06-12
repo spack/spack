@@ -32,7 +32,6 @@ class RKnitr(RPackage):
 
     homepage = "http://yihui.name/knitr/"
     url      = "https://cran.rstudio.com/src/contrib/knitr_1.14.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/knitr"
 
     version('1.14', 'ef0fbeaa9372f99ffbc57212a7781511')
     version('0.6',  'c67d6db84cd55594a9e870c90651a3db')

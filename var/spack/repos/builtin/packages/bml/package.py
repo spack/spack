@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,22 +25,25 @@
 from spack import *
 
 
-class RFactoextra(RPackage):
-    """factoextra: Extract and Visualize the Results of Multivariate Data
-    Analyses"""
+class Bml(CMakePackage):
+    """The basic matrix library (bml) is a collection of various matrix data
+    formats (in dense and sparse) and their associated algorithms for basic
+    matrix operations."""
 
-    homepage = "http://www.sthda.com/english/rpkgs/factoextra"
-    url      = "https://cran.r-project.org/src/contrib/factoextra_1.0.4.tar.gz"
+    homepage = "https://github.com/qmmd/bml"
+    url      = "https://github.com/qmmd/bml"
 
-    version('1.0.4', 'aa4c81ca610f17fdee0c9f3379e35429')
+    version('develop', git='https://github.com/qmmd/bml', branch='master')
+    version('1.1.0', git='https://github.com/qmmd/bml', tag='v1.1.0')
 
-    depends_on('r@3.1.0:')
-    depends_on('r-ggplot2@2.2.0:', type=('build', 'run'))
-    depends_on('r-abind', type=('build', 'run'))
-    # depends_on('r-cluster', type=('build', 'run'))
-    depends_on('r-dendextend', type=('build', 'run'))
-    depends_on('r-factominer', type=('build', 'run'))
-    depends_on('r-ggpubr', type=('build', 'run'))
-    depends_on('r-reshape2', type=('build', 'run'))
-    depends_on('r-ggrepel', type=('build', 'run'))
-    depends_on('r-tidyr', type=('build', 'run'))
+    variant('debug', default=False, description='Build debug version')
+
+    depends_on("blas")
+    depends_on("lapack")
+
+    def build_type(self):
+        spec = self.spec
+        if '+debug' in spec:
+            return 'Debug'
+        else:
+            return 'Release'
