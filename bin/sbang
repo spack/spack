@@ -109,9 +109,12 @@ while read line && ((lines < 2)) ; do
     fi
     lines=$((lines+1))
 done < "$script"
-#this is ineeded for scripts with sbang parameter
-#like ones in intltool
+# this is ineeded for scripts with sbang parameter
+# like ones in intltool
+# #!/<spack-long-path>/perl -w
+# this is the interpreter line with all the parameters as a vector
 interpreter_v=(${interpreter})
+# this is the single interpreter path 
 interpreter_f="${interpreter_v[0]}"
 
 # Invoke any interpreter found, or raise an error if none was found.
