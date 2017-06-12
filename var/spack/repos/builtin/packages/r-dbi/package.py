@@ -32,6 +32,5 @@ class RDbi(RPackage):
 
     homepage = "https://github.com/rstats-db/DBI"
     url      = "https://cran.r-project.org/src/contrib/DBI_0.4-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/DBI"
 
     version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
