@@ -31,6 +31,5 @@ class RStatnetCommon(RPackage):
 
     homepage = "http://www.statnet.org"
     url      = "https://cran.r-project.org/src/contrib/statnet.common_3.3.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/statnet.common"
 
     version('3.3.0', '36bc11098dcd3652a4beb05c156ad6c8')
