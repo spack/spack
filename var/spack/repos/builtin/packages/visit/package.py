@@ -31,6 +31,7 @@ class Visit(Package):
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
     url = "http://portal.nersc.gov/project/visit/releases/2.10.1/visit2.10.1.tar.gz"
 
+    version('2.12.2', '355779b1dbf440cdd548526eecd77b60')
     version('2.10.3', 'a1082a6f6dab3e2dcb58993603456c2b')
     version('2.10.2', '253de0837a9d69fb689befc98ea4d068')
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
