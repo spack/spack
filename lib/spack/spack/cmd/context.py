@@ -16,7 +16,6 @@ class Context(object):
     def __init__(self, name):
         self.name = name
         self.user_specs = list()
-        self.concretized_index = 0
         self.concretized_order = list()
         self.specs_by_hash = dict()
         # Libs in this set must always appear as the dependency traced from any
@@ -29,13 +28,35 @@ class Context(object):
     def add(self, user_spec):
         self.user_specs.append(user_spec)
 
+    def remove(self, query_spec):
+        query_spec = Spec(query_spec)
+        match_index = -1
+        for i, spec in enumerate(self.user_specs):
+            if Spec(spec).satisfies(query_spec):
+                if match_index >= 0:
+                    tty.die("{0} and {1} match {2}"
+                            .format(self.user_specs[match_index],
+                                    self.user_specs[i],
+                                    query_spec))
+                else:
+                    match_index = i
+
+        if match_index < 0:
+            tty.die("Not found: {0}".format(query_spec))
+
+        del self.user_specs[match_index]
+        if match_index < len(self.concretized_order):
+            spec_hash = self.concretized_order[match_index]
+            del self.concretized_order[match_index]
+            del self.specs_by_hash[spec_hash]
+
     def concretize(self):
-        for user_spec in self.user_specs[self.concretized_index:]:
+        num_concretized = len(self.concretized_order)
+        for user_spec in self.user_specs[num_concretized:]:
             spec = Spec(user_spec)
             spec.concretize()
             self.specs_by_hash[spec.dag_hash()] = spec
             self.concretized_order.append(spec.dag_hash())
-            self.concretized_index += 1
 
     def install(self):
         for dag_hash, spec in self.specs_by_hash.items():
@@ -108,7 +129,6 @@ class Context(object):
         common_bins = syaml.syaml_dict(self.common_bins.items())
         format = {
             'user_specs': self.user_specs,
-            'concretized_index': self.concretized_index,
             'concretized_order': concretized_order,
             'common_libs': common_libs,
             'common_bins': common_bins
@@ -119,7 +139,6 @@ class Context(object):
     def from_dict(name, d):
         c = Context(name)
         c.user_specs = list(d['user_specs'])
-        c.concretized_index = int(d['concretized_index'])
         c.concretized_order = list(d['concretized_order'])
         c.common_libs = dict(d['common_libs'])
         c.common_bins = dict(d['common_bins'])
@@ -226,6 +245,12 @@ def context_add(args):
         context.add(spec.format())
     write(context)
 
+def context_remove(args):
+    context = read(args.context)
+    for spec in spack.cmd.parse_specs(args.package):
+        context.remove(spec.format())
+    write(context)
+
 def context_concretize(args):
     context = read(args.context)
     context.concretize()
@@ -259,7 +284,16 @@ def setup_parser(subparser):
     add_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
-        help="spec of the package to install"
+        help="spec of the package to add"
+    )
+
+    remove_parser = sp.add_parser(
+        'remove', help='Remove a spec from this context')
+    add_common_args(remove_parser)
+    remove_parser.add_argument(
+        'package',
+        nargs=argparse.REMAINDER,
+        help="spec of the package to remove"
     )
 
     concretize_parser = sp.add_parser(
@@ -273,7 +307,7 @@ def setup_parser(subparser):
     add_common_args(list_parser)
 
     modules_parser = sp.add_parser(
-        'show-modules',
+        'list-modules',
         help='Show modules for for packages installed in a context')
     add_common_args(modules_parser)
 
@@ -283,6 +317,7 @@ def context(parser, args, **kwargs):
         'add': context_add,
         'concretize': context_concretize,
         'list': context_list,
-        'show-modules': context_list_modules,
+        'list-modules': context_list_modules,
+        'remove': context_remove,
         }
     action[args.context_command](args)
