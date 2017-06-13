@@ -52,8 +52,8 @@ class Cube(AutotoolsPackage):
 
     depends_on('zlib')
 
-    depends_on('qt@5:', when='@4.3 +gui')
-    depends_on('qt@4.6:', when='@4.2 +gui')
+    depends_on('qt@5:', when='@4.3.0:4.3.999 +gui')
+    depends_on('qt@4.8:', when='@4.2.0:4.2.999 +gui')
 
     def url_for_version(self, version):
         return 'http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/cube-{1}.tar.gz'.format(version.up_to(2), version)
