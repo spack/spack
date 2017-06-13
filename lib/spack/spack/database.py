@@ -577,6 +577,8 @@ class Database(object):
         else:
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
+            with WriteTransaction(self.lock, timeout=_db_lock_timeout):
+                self._write(None, None, None)
             self.reindex(spack.store.layout)
 
     def _add(self, spec, directory_layout=None, explicit=False):

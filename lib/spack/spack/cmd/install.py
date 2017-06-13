@@ -66,6 +66,9 @@ the dependencies"""
         '--keep-stage', action='store_true', dest='keep_stage',
         help="don't remove the build stage if installation succeeds")
     subparser.add_argument(
+        '--restage', action='store_true', dest='restage',
+        help="if a partial install is detected, delete prior state")
+    subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="do not check packages against checksum")
     subparser.add_argument(
@@ -307,6 +310,7 @@ def install(parser, args, **kwargs):
     kwargs.update({
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
+        'restage': args.restage,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,
         'run_tests': args.run_tests,
