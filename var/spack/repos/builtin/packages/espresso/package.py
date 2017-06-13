@@ -94,7 +94,7 @@ class Espresso(Package):
             options.append('--enable-openmp')
 
         if '+scalapack' in spec:
-            scalapack_option = 'intel' if '%intel' in spec else 'yes'
+            scalapack_option = 'intel' if '^intel-mkl' in spec else 'yes'
             options.append('--with-scalapack={0}'.format(scalapack_option))
 
         if '+elpa' in spec:
@@ -106,25 +106,18 @@ class Espresso(Package):
             elpa_module = find(elpa.prefix, 'elpa.mod')
 
             # Compute the include directory from there: versions
-            # of espresso prior to 6.1 requires -I in from of the directory
+            # of espresso prior to 6.1 requires -I in front of the directory
             elpa_include = '' if '@6.1:' in spec else '-I'
             elpa_include += os.path.dirname(elpa_module[0])
-            options.append('--with-elpa-include={0}'.format(elpa_include))
 
-            # Search for the libraries to link
-            library = 'libelpa_openmp' if '+openmp' in spec else 'libelpa'
-            elpa_libraries = find_libraries(
-                library, elpa.prefix, recurse=True
-            )
-            options.append(
-                '--with-elpa-lib={0}'.format(elpa_libraries[0])
-            )
+            options.append('--with-elpa-include={0}'.format(elpa_include))
+            options.append('--with-elpa-lib={0}'.format(elpa.libs[0]))
 
         if '+hdf5' in spec:
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
 
         # Compiler related configure options
-        if '%intel' in self.spec:
+        if '^intel-mpi' in self.spec:
             options.append('MPIF90=mpiifort')
 
         # Add a list of directories to search
