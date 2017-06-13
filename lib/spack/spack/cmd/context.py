@@ -26,20 +26,21 @@ class Context(object):
         self.common_bins = dict() # name -> hash
 
     def add(self, user_spec):
+        query_spec = Spec(user_spec)
+        existing = set(x for x in self.user_specs
+                       if Spec(x).name == query_spec.name)
+        if existing:
+            tty.die("Package {0} was already added to {1}"
+                    .format(query_spec.name, self.name))
         self.user_specs.append(user_spec)
 
     def remove(self, query_spec):
         query_spec = Spec(query_spec)
         match_index = -1
         for i, spec in enumerate(self.user_specs):
-            if Spec(spec).satisfies(query_spec):
-                if match_index >= 0:
-                    tty.die("{0} and {1} match {2}"
-                            .format(self.user_specs[match_index],
-                                    self.user_specs[i],
-                                    query_spec))
-                else:
-                    match_index = i
+            if Spec(spec).name == query_spec.name:
+                match_index = i
+                break
 
         if match_index < 0:
             tty.die("Not found: {0}".format(query_spec))
@@ -71,9 +72,9 @@ class Context(object):
             if concretized_hash:
                 concretized_spec = self.specs_by_hash[concretized_hash]
                 if include_deps:
-                    stream.write(concretized_spec.tree())
+                    stream.write(concretized_spec.tree() + '\n')
                 else:
-                    stream.write(concretized_spec.format())
+                    stream.write(concretized_spec.format() + '\n')
 
     def reset_os_and_compiler(self):
         new_order = list()
