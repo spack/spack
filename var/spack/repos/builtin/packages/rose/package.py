@@ -35,7 +35,7 @@ class Rose(Package):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url      = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
+    url = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
 
     version('0.9.7', 'e14ce5250078df4b09f4f40559d46c75')
     version('master', branch='master',
@@ -85,15 +85,17 @@ class Rose(Package):
 
     def configure_args(self):
         spec = self.spec
+        cc = self.compiler.cc
+        cxx = self.compiler.cxx
         return [
             '--disable-boost-version-check',
-            "--with-alternate_backend_C_compiler={0}".format(self.compiler.cc),
-            "--with-alternate_backend_Cxx_compiler={0}".format(self.compiler.cxx),
+            "--with-alternate_backend_C_compiler={0}".format(cc),
+            "--with-alternate_backend_Cxx_compiler={0}".format(cxx),
             "--with-boost={0}".format(spec['boost'].prefix),
             "--enable-languages={0}".format(",".join(self.languages)),
             "--with-z3={0}".format(spec['z3'].prefix) if '+z3' in spec else '',
-            '--enable-tests-directory' if '+tests' in spec else '--disable-tests-directory',
+            '--disable-tests-directory' if '+tests' not in spec else '',
             '--enable-tutorial-directory={0}'.format('no'),
         ]
 
-    install_targets = [ "install-core" ]
+    install_targets = ["install-core"]

@@ -27,7 +27,8 @@ from spack import *
 
 
 class Z3(MakefilePackage):
-    """Z3 is a theorem prover from Microsoft Research. It is licensed under the MIT license."""
+    """Z3 is a theorem prover from Microsoft Research.
+    It is licensed under the MIT license."""
 
     homepage = "https://github.com/Z3Prover/z3/wiki"
     url      = "https://github.com/Z3Prover/z3/archive/z3-4.5.0.tar.gz"
