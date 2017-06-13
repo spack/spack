@@ -53,8 +53,11 @@ class Elpa(AutotoolsPackage):
     # override default implementation which returns static lib
     @property
     def libs(self):
+
+        libname = 'libelpa_openmp' if '+openmp' in self.spec else 'libelpa'
+
         return find_libraries(
-            ['libelpa'], root=self.prefix, shared=True, recurse=True
+            libname, root=self.prefix, shared=True, recurse=True
         )
 
     build_directory = 'spack-build'
