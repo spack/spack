@@ -42,12 +42,15 @@ class Ipopt(Package):
 
     variant('coinhsl', default=False,
             description="Build with Coin Harwell Subroutine Libraries")
+    variant('metis', default=False,
+            description="Build with METIS partitioning support")
 
     depends_on("blas")
     depends_on("lapack")
     depends_on("pkg-config", type='build')
     depends_on("mumps+double~mpi")
     depends_on('coinhsl', when='+coinhsl')
+    depends_on('metis@4.0:4.999', when='+metis')
 
     def install(self, spec, prefix):
         # Dependency directories
@@ -79,6 +82,11 @@ class Ipopt(Package):
             configure_args.extend([
                 '--with-hsl-lib=%s' % spec['coinhsl'].libs.ld_flags,
                 '--with-hsl-incdir=%s' % spec['coinhsl'].prefix.include])
+
+        if 'metis' in spec:
+            configure_args.extend([
+                '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
+                '--with-metis-incdir=%s' % spec['metis'].prefix.include])
 
         configure(*configure_args)
 
