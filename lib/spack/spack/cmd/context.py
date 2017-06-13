@@ -65,6 +65,38 @@ class Context(object):
         self.concretized_order = new_order
         self.specs_by_hash = new_specs_by_hash
 
+    def _get_environment_specs(self):
+        # At most one instance of any package gets added to the environment
+        package_to_spec = {}
+
+        for spec_hash in self.concretized_order:
+            spec = self.specs_by_hash[spec_hash]
+            for dep in spec.traverse(deptype=('link', 'run')):
+                if dep.name in package_to_spec:
+                    tty.warn("{0} takes priority over {1}"
+                             .format(package_to_spec[dep.name].format(),
+                                     dep.format()))
+                else:
+                    package_to_spec[dep.name] = dep
+
+        return list(package_to_spec.values())
+
+    def get_modules(self):
+        import spack.modules
+
+        module_files = list()
+        environment_specs = self._get_environment_specs()
+        for spec in environment_specs:
+            module = spack.modules.LmodModule(spec)
+            path = module.file_name
+            if os.path.exists(path):
+                module_files.append(path)
+            else:
+                tty.warn("Module file for {0} does not exist"
+                         .format(spec.format()))
+
+        return module_files
+
     def upgrade(self, spec, new):
         # TODO: Copy this context, replace the given spec (what if it appears
         # multiple times?)
@@ -205,6 +237,11 @@ def context_list(args):
     import sys
     context.list(sys.stdout, args.include_deps)
 
+def context_list_modules(args):
+    context = read(args.context)
+    for module_file in context.get_modules():
+        print(module_file)
+
 def add_common_args(parser):
     parser.add_argument(
         'context',
@@ -235,11 +272,17 @@ def setup_parser(subparser):
         dest='include_deps', help='Show dependencies of requested packages')
     add_common_args(list_parser)
 
+    modules_parser = sp.add_parser(
+        'show-modules',
+        help='Show modules for for packages installed in a context')
+    add_common_args(modules_parser)
+
 def context(parser, args, **kwargs):
     action = {
         'create': context_create,
         'add': context_add,
         'concretize': context_concretize,
         'list': context_list,
+        'show-modules': context_list_modules,
         }
     action[args.context_command](args)
