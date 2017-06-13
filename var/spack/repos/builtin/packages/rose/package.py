@@ -87,13 +87,13 @@ class Rose(Package):
         spec = self.spec
         return [
             '--disable-boost-version-check',
-            "--with-alternate_backend_C_compiler={}".format(self.compiler.cc),
-            "--with-alternate_backend_Cxx_compiler={}".format(self.compiler.cxx),
-            "--with-boost={}".format(spec['boost'].prefix),
-            "--enable-languages={}".format(",".join(self.languages)),
-            "--with-z3={}".format(spec['z3'].prefix) if '+z3' in spec else '',
+            "--with-alternate_backend_C_compiler={0}".format(self.compiler.cc),
+            "--with-alternate_backend_Cxx_compiler={0}".format(self.compiler.cxx),
+            "--with-boost={0}".format(spec['boost'].prefix),
+            "--enable-languages={0}".format(",".join(self.languages)),
+            "--with-z3={0}".format(spec['z3'].prefix) if '+z3' in spec else '',
             '--enable-tests-directory' if '+tests' in spec else '--disable-tests-directory',
-            '--enable-tutorial-directory={}'.format('no'),
+            '--enable-tutorial-directory={0}'.format('no'),
         ]
 
     install_targets = [ "install-core" ]
