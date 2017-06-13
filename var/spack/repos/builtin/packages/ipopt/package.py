@@ -40,10 +40,14 @@ class Ipopt(Package):
     version('3.12.1', 'ceaf895ce80c77778f2cab68ba9f17f3')
     version('3.12.0', 'f7dfc3aa106a6711a85214de7595e827')
 
+    variant('coinhsl', default=False,
+            description="Build with Coin Harwell Subroutine Libraries")
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("pkg-config", type='build')
     depends_on("mumps+double~mpi")
+    depends_on('coinhsl', when='+coinhsl')
 
     def install(self, spec, prefix):
         # Dependency directories
@@ -70,6 +74,11 @@ class Ipopt(Package):
             "--with-lapack-incdir=%s" % lapack_dir.include,
             "--with-lapack-lib=%s" % lapack_lib
         ]
+
+        if 'coinhsl' in spec:
+            configure_args.extend([
+                '--with-hsl-lib=%s' % spec['coinhsl'].libs.ld_flags,
+                '--with-hsl-incdir=%s' % spec['coinhsl'].prefix.include])
 
         configure(*configure_args)
 
