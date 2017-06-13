@@ -99,8 +99,8 @@ def changed_files(args):
     git = which('git', required=True)
 
     git_args = [
-        # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', 'develop...'],
+        # Add changed files committed since branching off of releases/cornalin
+        ['diff', '--name-only', '--diff-filter=ACMR', 'releases/cornalin...'],
         # Add changed files that have been staged but not yet committed
         ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
         # Add changed files that are unstaged
