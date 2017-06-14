@@ -26,7 +26,9 @@ from spack import *
 
 
 class Amrex(CMakePackage):
-    """A Block-Structured AMR Framework. AMReX is the successor to BoxLib."""
+    """AMReX is the successor to BoxLib.
+       It is a Block-Structured AMR Framework.
+    """
 
     homepage = "https://ccse.lbl.gov/AMReX/index.html"
     url      = "https://github.com/AMReX-Codes/amrex.git"
