@@ -36,9 +36,6 @@ class Amrex(CMakePackage):
     version('develop', git='https://github.com/AMReX-Codes/amrex.git', tag='master')
     version('17.06', git='https://github.com/AMReX-Codes/amrex.git', commit='836d3c7')
 
-    variant('mpi', default=True, description='Enable MPI parallel support')
-# variant('omp', default=False, description='Enable OpenMP parallel support')
-
     variant('dims',
         default='3',
         values=('1', '2', '3'),
@@ -51,6 +48,8 @@ class Amrex(CMakePackage):
         multi=False,
         description='Floating point precision')
 
+    variant('mpi', default=True, description='Enable MPI parallel support')
+    variant('openmp', default=False, description='Enable OpenMP parallel support')
     variant('fortran', default=True, description='Enable Fortran support')
     variant('debug', default=False, description='Enable debugging features')
     variant('particles', default=False, description='Include particle classes in build')
@@ -64,23 +63,15 @@ class Amrex(CMakePackage):
             '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
             '-DBL_SPACEDIM:INT=%d' % int(spec.variants['dims'].value),
             '-DBL_PRECISION:STRING=%s' % spec.variants['prec'].value,
+            '-DENABLE_FMG=%s' % ('+fortran' in spec),
+            '-DENABLE_FBASELIB=%s' % ('+fortran' in spec),
+            '-DBL_DEBUG:INT=%d' % int('+debug' in spec),
+            '-DBL_USE_PARTICLES:INT=%d' % int('+particles' in spec),
+            '-DENABLE_MPI:INT=%d' % int('+mpi' in spec),
+            '-DENABLE_OpenMP:INT=%d' % int('+openmp' in spec),
         ]
 
-        if '+fortran' in spec:
-            cmake_args += [
-                '-DENABLE_FMG=ON',
-                '-DENABLE_FBASELIB=ON'
-            ]
-
-        if '+debug' not in spec:
-            cmake_args += ['-DBL_DEBUG:INT=0']
-
-        if '+particles' in spec:
-            cmake_args += ['-DBL_USE_PARTICLES:INT=1']
-
-        if '~mpi' in spec:
-            cmake_args += ['-DENABLE_MPI:INT=0']
-        else:
+        if '+mpi' in spec:
             cmake_args += [
                 '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
                 '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx
@@ -89,7 +80,6 @@ class Amrex(CMakePackage):
                 cmake_args += [
                     '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
                 ]
-            else:
-                cmake_args += ['-DENABLE_FORTRAN_MPI=OFF']
+            cmake_args += ['-DENABLE_FORTRAN_MPI=%s' % ('+fortran' in spec)]
 
         return cmake_args
