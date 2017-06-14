@@ -77,6 +77,23 @@ class Context(object):
                     stream.write(concretized_spec.format() + '\n')
 
     def upgrade_dependency(self, dep_name, dry_run=False):
+        """
+        Note: if you have
+        
+        w -> x -> y
+        
+        and
+        
+        v -> x -> y
+        
+        Then if you upgrade y, you will start by re-concretizing w (and x).
+        This should make sure that v uses the same x as w if this context is
+        supposed to reuse dependencies where possible. The difference compared
+        to 'normal' concretization is that you want to keep things as similar
+        as possible. I think the approach would be to go through all the
+        common_libs and common_bins, recognize the first time they get
+        re-concretized, and then replace them manually where encountered later.
+        """
         new_order = list()
         for i, spec_hash in enumerate(self.concretized_order):
             spec = self.specs_by_hash[spec_hash]
