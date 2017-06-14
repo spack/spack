@@ -28,7 +28,6 @@ from spack import *
 class PyLatexcodec(PythonPackage):
     """A lexer and codec to work with LaTeX code in Python."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://latexcodec.readthedocs.io"
     url      = "https://pypi.io/packages/source/l/latexcodec/latexcodec-1.0.4.tar.gz"
 
