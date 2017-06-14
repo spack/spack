@@ -44,20 +44,13 @@ class H5zZfp(MakefilePackage):
     @property
     def make_defs(self):
         make_defs = [
-            "CC=%s" % spack_cc,
-            "HDF5_HOME=%s" % self.spec['hdf5'].prefix,
-            "ZFP_HOME=%s" % self.spec['zfp'].prefix]
+            'PREFIX=%s' % prefix,
+            'CC=%s' % spack_cc,
+            'HDF5_HOME=%s' % self.spec['hdf5'].prefix,
+            'ZFP_HOME=%s' % self.spec['zfp'].prefix]
 
-        if '+fortran' in self.spec and not spack_fc:
-            msg = 'cannot build a Fortran variant without a Fortran compiler'
-            raise RuntimeError(msg)
-
-        if '+fortran' in self.spec:
-            make_defs += ["FC=%s" % spack_fc]
-
-        make_defs += [
-            "PREFIX=%s" % prefix,
-            "all"]
+        if '+fortran' in self.spec and spack_fc:
+            make_defs += ['FC=%s' % spack_fc]
 
         return make_defs
 
