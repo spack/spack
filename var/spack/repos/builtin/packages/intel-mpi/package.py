@@ -54,6 +54,13 @@ class IntelMpi(IntelInstaller):
             libraries, root=self.prefix.lib64, shared=True, recurse=True
         )
 
+    @property
+    def mpi_headers(self):
+        # recurse from self.prefix will find too many things for all the
+        # supported sub-architectures like 'mic'
+        return find_headers(
+            'mpi', root=self.prefix.include64, recurse=False)
+
     def install(self, spec, prefix):
         self.intel_prefix = prefix
         IntelInstaller.install(self, spec, prefix)
