@@ -135,7 +135,8 @@ class Metis(Package):
 
         # Set up and run tests on installation
         ccompile('-I%s' % prefix.include, '-L%s' % prefix.lib,
-                 '-Wl,-rpath=%s' % (prefix.lib if '+shared' in spec else ''),
+                 self.compiler.cc_rpath_arg +
+                 '%s' % (prefix.lib if '+shared' in spec else ''),
                  join_path('Programs', 'io.o'), join_path('Test', 'mtest.c'),
                  '-o', '%s/mtest' % prefix.bin, '-lmetis', '-lm')
 
