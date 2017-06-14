@@ -115,29 +115,43 @@ class Charm(Package):
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack
         # here.
-        compiler = "gcc"
+        compiler = os.path.basename(self.compiler.cc)
 
-        options = [compiler,
-                   "--with-production",   # Note: turn this into a variant
-                   "-j%d" % make_jobs,
-                   "--destination=%s" % prefix]
-        if "+mpi" in spec:
-            options.append("--basedir=%s" % spec["mpi"].prefix)
+        options = [compiler]
+        if compiler == 'icc':
+            options.append('ifort')
+
+        options.extend([
+            "--with-production",   # Note: turn this into a variant
+            "-j%d" % make_jobs,
+            "--destination=%s" % prefix])
+
+        if 'backend=mpi' in spec:
+            # in intelmpi <prefix>/include and <prefix>/lib fails so --basedir
+            # cannot be used
+            options.extend([
+                '--incdir={0}'.format(incdir)
+                for incdir in spec["mpi"].headers.directories
+            ])
+            options.extend([
+                '--libdir={0}'.format(libdir)
+                for libdir in spec["mpi"].libs.directories
+            ])
         if "+papi" in spec:
             options.extend(["papi", "--basedir=%s" % spec["papi"].prefix])
         if "+smp" in spec:
-            if "+multicore" in spec:
+            if 'backend=multicore' in spec:
                 # This is a Charm++ limitation; it would lead to a
                 # build error
                 raise InstallError("Cannot combine +smp with +multicore")
             options.append("smp")
         if "+tcp" in spec:
-            if "+net" not in spec:
+            if 'backend=net' not in spec:
                 # This is a Charm++ limitation; it would lead to a
                 # build error
                 raise InstallError(
                     "The +tcp variant requires "
-                    "the +net communication mechanism")
+                    "the backend=net communication mechanism")
             options.append("tcp")
         if "+shared" in spec:
             options.append("--build-shared")
