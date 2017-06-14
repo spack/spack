@@ -51,6 +51,8 @@ class PkgConfig(AutotoolsPackage):
         files."""
         spack_env.append_path('PKG_CONFIG_PATH', '/usr/lib64/pkgconfig')
         spack_env.append_path('PKG_CONFIG_PATH', '/usr/local/lib64/pkgconfig')
+        spack_env.append_path('ACLOCAL_PATH',
+                              join_path(self.prefix.share, 'aclocal'))
 
     def configure_args(self):
         config_args = ['--enable-shared']

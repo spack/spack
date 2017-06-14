@@ -31,7 +31,6 @@ class RGgsci(RPackage):
 
     homepage = "https://github.com/road2stat/ggsci"
     url      = "https://cran.r-project.org/src/contrib/ggsci_2.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggsci"
 
     version('2.4', '8e5dc2fcf84352cacbb91363e26c7175')
 

@@ -35,7 +35,6 @@ class RFormatr(RPackage):
 
     homepage = "http://yihui.name/formatR"
     url      = "https://cran.r-project.org/src/contrib/formatR_1.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/formatR"
 
     version('1.4', '98b9b64b2785b35f9df403e1aab6c73c')
 
