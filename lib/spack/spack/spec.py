@@ -678,6 +678,10 @@ class DependencyMap(HashableMap):
     """Each spec has a DependencyMap containing specs for its dependencies.
        The DependencyMap is keyed by name. """
 
+    def __init__(self, owner):
+        super(DependencyMap, self).__init__()
+        self.owner = owner
+
     @property
     def concrete(self):
         return all((d.spec.concrete and d.deptypes)
@@ -1647,8 +1651,8 @@ class Spec(object):
                 if replacement.external:
                     if (spec._dependencies):
                         changed = True
-                        spec._dependencies = DependencyMap()
-                    replacement._dependencies = DependencyMap()
+                        spec._dependencies = DependencyMap(spec)
+                    replacement._dependencies = DependencyMap(replacement)
                     replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
@@ -1807,7 +1811,7 @@ class Spec(object):
     def index(self, deptype=None):
         """Return DependencyMap that points to all the dependencies in this
            spec."""
-        dm = DependencyMap()
+        dm = DependencyMap(None)
         for spec in self.traverse(deptype=deptype):
             dm[spec.name] = spec
         return dm
@@ -2416,8 +2420,8 @@ class Spec(object):
             else None
         self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
-            self._dependents = DependencyMap()
-            self._dependencies = DependencyMap()
+            self._dependents = DependencyMap(self)
+            self._dependencies = DependencyMap(self)
         self.compiler_flags = other.compiler_flags.copy()
         self.variants = other.variants.copy()
         self.variants.spec = self
@@ -3078,8 +3082,8 @@ class SpecParser(spack.parse.Parser):
         spec.external_path = None
         spec.external_module = None
         spec.compiler_flags = FlagMap(spec)
-        spec._dependents = DependencyMap()
-        spec._dependencies = DependencyMap()
+        spec._dependents = DependencyMap(spec)
+        spec._dependencies = DependencyMap(spec)
         spec.namespace = spec_namespace
         spec._hash = None
         spec._cmp_key_cache = None
