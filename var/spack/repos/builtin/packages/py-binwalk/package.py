@@ -22,21 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Spot(AutotoolsPackage):
-    """Spot is a C++11 library for omega-automata manipulation and model
-       checking."""
-    homepage = "https://spot.lrde.epita.fr/"
-    url      = "http://www.lrde.epita.fr/dload/spot/spot-1.99.3.tar.gz"
+class PyBinwalk(PythonPackage):
+    """Binwalk is a fast, easy to use tool for analyzing, reverse engineering,
+       and extracting firmware images."""
 
-    version('1.99.3', 'd53adcb2d0fe7c69f45d4e595a58254e')
-    version('1.2.6', '799bf59ccdee646d12e00f0fe6c23902')
+    homepage = "https://github.com/devttys0/binwalk"
+    url      = "https://pypi.io/packages/source/b/binwalk/binwalk-2.1.0.tar.gz"
 
-    variant('python', default=True, description='Enable python API')
+    version('2.1.0', '054867d9abe6a05f43200cf2591051e6')
 
-    depends_on("python@3.3:", when='@1.99.5: +python')
-    depends_on("python@3.2:", when='@1.99: +python')
-    depends_on("python@2:", when='+python')
-    depends_on('boost', when='@:1.2.6')
+    depends_on('python')
+    depends_on('py-setuptools', type='build')
