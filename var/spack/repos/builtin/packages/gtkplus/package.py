@@ -45,6 +45,7 @@ class Gtkplus(AutotoolsPackage):
     depends_on("pango~X", when='~X')
     depends_on("pango+X", when='+X')
     depends_on('gobject-introspection', when='+X')
+    depends_on('shared-mime-info')
 
     patch('no-demos.patch')
 
