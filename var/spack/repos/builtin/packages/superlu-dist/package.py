@@ -83,7 +83,9 @@ class SuperluDist(Package):
             'F90FLAGS     = -O2',
             'LOADER       = {0}'.format(self.spec['mpi'].mpif77),
             'LOADOPTS     =',
-            'CDEFS        = -DAdd_'
+            'CDEFS        = %s' % ("-DNoChange"
+                                       if '%xl' in spec or '%xl_r' in spec
+                                       else "-DAdd_")
         ])
 
         with open('make.inc', 'w') as fh:
