@@ -103,7 +103,7 @@ class Trilinos(CMakePackage):
             description='Compile with Epetra')
     variant('epetraext',    default=True,
             description='Compile with EpetraExt')
-    variant('exodus',       default=False,
+    variant('exodus',       default=True,
             description='Compile with Exodus from SEACAS')
     variant('pnetcdf',      default=False,
             description='Compile with parallel-netcdf')
