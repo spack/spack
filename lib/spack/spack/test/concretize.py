@@ -399,7 +399,6 @@ class TestConcretize(object):
             with pytest.raises(exc_type):
                 s.concretize()
 
-    @pytest.mark.xfail
     def test_regression_issue_4492(self):
         # Constructing a spec which has no dependencies, but is otherwise
         # concrete is kind of difficult. What we will do is to concretize
@@ -414,6 +413,6 @@ class TestConcretize(object):
 
         # Remove the dependencies and reset caches
         s._dependencies.clear()
-        s._concrete = None
+        s._concrete = False
 
         assert not s.concrete
