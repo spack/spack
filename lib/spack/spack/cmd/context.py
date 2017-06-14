@@ -76,6 +76,24 @@ class Context(object):
                 else:
                     stream.write(concretized_spec.format() + '\n')
 
+    def upgrade_dependency(self, dep_name, dry_run=False):
+        new_order = list()
+        for i, spec_hash in enumerate(self.concretized_order):
+            spec = self.specs_by_hash[spec_hash]
+            if dep_name in spec:
+                if dry_run:
+                    tty.msg("Would upgrade {0} for {1}"
+                            .format(spec[dep_name].format(), spec.format()))
+                else:
+                    new_spec = upgrade_dependency_version(spec, dep_name)
+                    new_order.append(new_spec.dag_hash())
+                    self.specs_by_hash[new_spec.dag_hash()] = new_spec
+            else:
+                new_order.append(spec_hash)
+
+        if not dry_run:
+            self.concretized_order = new_order
+
     def reset_os_and_compiler(self, compiler=None):
         new_order = list()
         new_specs_by_hash = {}
@@ -160,6 +178,14 @@ def reset_os_and_compiler(spec, compiler=None):
         spec.compiler = CompilerSpec(compiler)
     spec.concretize()
     return spec
+
+def upgrade_dependency_version(spec, dep_name):
+    spec = spec.copy()
+    for x in spec.traverse():
+        x._concrete = False
+        x._hash = None
+    spec[dep_name].version = None
+    spec.concretize()
 
 def write(context):
     tmp_new, dest, tmp_old = write_paths(context)
@@ -275,6 +301,12 @@ def context_list_modules(args):
     for module_file in context.get_modules():
         print(module_file)
 
+def context_upgrade_dependency(args):
+    context = read(args.context)
+    context.upgrade_dependency(args.dep_name, args.dry_run)
+    if not args.dry_run:
+        write(context)
+
 def add_common_args(parser):
     parser.add_argument(
         'context',
@@ -327,6 +359,16 @@ def setup_parser(subparser):
         help='Show modules for for packages installed in a context')
     add_common_args(modules_parser)
 
+    upgrade_parser = sp.add_parser(
+        'upgrade',
+        help='Upgrade a dependency package in a context to the latest version')
+    add_common_args(upgrade_parser)
+    upgrade_parser.add_argument(
+        'dep_name', help='Dependency package to upgrade')
+    upgrade_parser.add_argument(
+        '--dry-run', action='store_true', dest='dry_run',
+        help="Just show the updates that would take place")
+
 def context(parser, args, **kwargs):
     action = {
         'create': context_create,
@@ -336,5 +378,6 @@ def context(parser, args, **kwargs):
         'list-modules': context_list_modules,
         'remove': context_remove,
         'relocate': context_relocate,
+        'upgrade': context_upgrade_dependency,
         }
     action[args.context_command](args)
