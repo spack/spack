@@ -26,7 +26,7 @@
 from spack import *
 
 
-class PyPywt(PythonPackage):
+class PyPywavelets(PythonPackage):
     """PyWavelets is a free Open Source library for wavelet transforms
        in Python"""
 
