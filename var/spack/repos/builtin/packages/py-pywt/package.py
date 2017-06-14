@@ -27,7 +27,8 @@ from spack import *
 
 
 class PyPywt(PythonPackage):
-    """PyWavelets is a free Open Source library for wavelet transforms in Python"""
+    """PyWavelets is a free Open Source library for wavelet transforms
+       in Python"""
 
     homepage = "https://github.com/PyWavelets"
     url = "https://pypi.io/packages/source/P/PyWavelets/PyWavelets-0.5.2.tar.gz"
@@ -35,8 +36,7 @@ class PyPywt(PythonPackage):
     version('0.5.2', 'aedda732f064cf9395f03d37f1003d1a')
 
     import_modules = ['pywt']
-    
+
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
     depends_on('py-numpy@1.9.1:',  type=('build', 'run'))
-
