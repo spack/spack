@@ -3,7 +3,7 @@ import spack
 import llnl.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.spec import Spec
+from spack.spec import Spec, CompilerSpec, FlagMap
 
 import argparse
 import itertools
@@ -72,16 +72,16 @@ class Context(object):
             if concretized_hash:
                 concretized_spec = self.specs_by_hash[concretized_hash]
                 if include_deps:
-                    stream.write(concretized_spec.tree() + '\n')
+                    stream.write(concretized_spec.tree())
                 else:
                     stream.write(concretized_spec.format() + '\n')
 
-    def reset_os_and_compiler(self):
+    def reset_os_and_compiler(self, compiler=None):
         new_order = list()
         new_specs_by_hash = {}
         for spec_hash in self.concretized_order:
             spec = self.specs_by_hash[spec_hash]
-            new_spec = reset_os_and_compiler(spec)
+            new_spec = reset_os_and_compiler(spec, compiler)
             new_order.append(new_spec.dag_hash())
             new_specs_by_hash[new_spec.dag_hash()] = new_spec
         self.concretized_order = new_order
@@ -148,7 +148,7 @@ class Context(object):
     def path(self):
         return fs.join_path(_db_dirname, self.name)
 
-def reset_os_and_compiler(spec):
+def reset_os_and_compiler(spec, compiler=None):
     spec = spec.copy()
     for x in spec.traverse():
         x.compiler = None
@@ -156,6 +156,8 @@ def reset_os_and_compiler(spec):
         x.compiler_flags = FlagMap(x)
         x._concrete = False
         x._hash = None
+    if compiler:
+        spec.compiler = CompilerSpec(compiler)
     spec.concretize()
     return spec
 
@@ -257,6 +259,11 @@ def context_concretize(args):
     context.concretize()
     write(context)
 
+def context_relocate(args):
+    context = read(args.context)
+    context.reset_os_and_compiler(compiler=args.compiler)
+    write(context)
+
 def context_list(args):
     # TODO? option to list packages w/ multiple instances?
     context = read(args.context)
@@ -285,7 +292,7 @@ def setup_parser(subparser):
     add_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
-        help="spec of the package to add"
+        help="Spec of the package to add"
     )
 
     remove_parser = sp.add_parser(
@@ -294,12 +301,20 @@ def setup_parser(subparser):
     remove_parser.add_argument(
         'package',
         nargs=argparse.REMAINDER,
-        help="spec of the package to remove"
+        help="Spec of the package to remove"
     )
 
     concretize_parser = sp.add_parser(
         'concretize', help='Concretize user specs')
     add_common_args(concretize_parser)
+
+    relocate_parser = sp.add_parser(
+        'relocate', help='Reconcretize context with new OS and/or compiler')
+    add_common_args(relocate_parser)
+    relocate_parser.add_argument(
+        '--compiler',
+        help="Compiler spec to use"
+    )
 
     list_parser = sp.add_parser('list', help='List specs in a context')
     list_parser.add_argument(
@@ -320,5 +335,6 @@ def context(parser, args, **kwargs):
         'list': context_list,
         'list-modules': context_list_modules,
         'remove': context_remove,
+        'relocate': context_relocate,
         }
     action[args.context_command](args)
