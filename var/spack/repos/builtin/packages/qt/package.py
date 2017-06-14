@@ -62,6 +62,8 @@ class Qt(Package):
             description="Build with D-Bus support.")
     variant('phonon',     default=False,
             description="Build with phonon support.")
+    variant('opengl',     default=True,
+            description="Build with OpenGL support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
@@ -93,6 +95,8 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
     depends_on("icu4c")
+    depends_on("fontconfig")
+    depends_on("freetype")
     # FIXME:
     # depends_on("freetype", when='@5.8:') and '-system-freetype'
     # -system-harfbuzz
@@ -104,12 +108,12 @@ class Qt(Package):
     # OpenGL hardware acceleration
     depends_on("mesa", when='@4:+mesa')
     depends_on("libxcb", when=sys.platform != 'darwin')
+    depends_on("libx11", when=sys.platform != 'darwin')
 
     # Webkit
     depends_on("flex", when='+webkit', type='build')
     depends_on("bison", when='+webkit', type='build')
     depends_on("gperf", when='+webkit')
-    depends_on("fontconfig", when='+webkit')
 
     # Multimedia
     # depends_on("gstreamer", when='+multimedia')
@@ -151,6 +155,7 @@ class Qt(Package):
         return url
 
     def setup_environment(self, spack_env, run_env):
+        spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
         run_env.set('QTDIR', self.prefix)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -192,12 +197,15 @@ class Qt(Package):
             '-prefix', self.prefix,
             '-v',
             '-opensource',
-            '-opengl',
+            '-{0}opengl'.format('' if '+opengl' in self.spec else 'no-'),
             '-release',
             '-shared',
             '-confirm-license',
             '-openssl-linked',
             '-optimized-qmake',
+            '-fontconfig',
+            '-system-freetype',
+            '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include),
             '-no-pch'
         ]
 
