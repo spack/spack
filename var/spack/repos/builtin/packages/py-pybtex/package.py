@@ -36,4 +36,6 @@ class PyPybtex(PythonPackage):
     version('0.21', 'e7b320b2bcb34c664c4385533a2ea831')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pyyaml@3.0.1:', type=('build', 'run'))
+    depends_on('py-latexcodec@1.0.4:', type='build')
+    depends_on('py-pyyaml@3.01:', type=('build', 'run'))
+    depends_on('py-counter@1:', when='^python@:2.6', type=('build', 'run'))
