@@ -13,7 +13,7 @@ import spack
 from spack.stage import Stage
 import spack.fetch_strategy as fs
 import spack.relocate
-
+from contextlib import closing
 
 def get_full_system_from_platform():
     import platform
@@ -152,7 +152,7 @@ def build_tarball(spec, outdir, force=False, key=None):
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec)
-    with tarfile.open(tarfile_path, 'w:gz') as tar:
+    with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % spec.prefix, arcname='%s' %
                 os.path.basename(spec.prefix))
 
@@ -169,7 +169,7 @@ def build_tarball(spec, outdir, force=False, key=None):
         os.utime(path2, None)
     # temporary to test adding and extracting .asc files
 
-    with tarfile.open(spackfile_path, 'w') as tar:
+    with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
         tar.add(name='%s' % spec_file, arcname='spec.yaml')
         tar.add(name='%s.asc' % tarfile_path, arcname='%s.asc' % tarfile_name)
@@ -212,7 +212,7 @@ def extract_tarball(package):
     mkdirp(package.prefix)
     tarfile_name = tarball_name(package.spec, '.tar.gz')
     tarfile_path = os.path.join(package.stage.path, tarfile_name)
-    with tarfile.open(local_tarball, 'r') as tar:
+    with closing(tarfile.open(local_tarball, 'r')) as tar:
         tar.extract('spec.yaml', package.stage.path)
         tar.extract('spec.yaml.asc', package.stage.path)
 
@@ -223,7 +223,7 @@ def extract_tarball(package):
 
         # spack gpg verify tarfile_path
 
-    with tarfile.open(tarfile_path, 'r') as tar:
+    with closing(tarfile.open(tarfile_path, 'r')) as tar:
         tar.extractall(path=os.path.dirname(package.prefix))
 
 #    os.remove(tarfile_path)
