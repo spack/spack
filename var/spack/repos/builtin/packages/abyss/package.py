@@ -61,12 +61,4 @@ class Abyss(AutotoolsPackage):
                 '--with-sqlite=%s' % self.spec['sqlite'].prefix] 
         return args
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def check_install(self):
-	try:
-	    subprocess.check_call('/net/my.files.iastate.edu/ifs/isu/las/dept/BIT/tests/abyss/test.sh')
-            pass
-            print ("Test passed.")
-        except subprocess.CalledProcessError:
-            print ("Test failed with one or more errors.")
+    
