@@ -40,3 +40,4 @@ class PySphinxcontribBibtex(PythonPackage):
     depends_on('py-six@1.4.1:', type=('build', 'run'))
     depends_on('py-sphinx@1.0:', type=('build', 'run'))
     depends_on('py-oset@0.1.3:', type=('build', 'run'))
+    depends_on('py-ordereddict@1.1:', when='^python@:2.6', type=('build', 'run'))
