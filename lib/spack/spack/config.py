@@ -234,6 +234,7 @@ _user_path = spack.user_config_path
 ConfigScope('user', _user_path)
 ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 
+
 def highest_precedence_scope():
     """Get the scope with highest precedence (prefs will override others)."""
     return config_scopes.values()[-1]
