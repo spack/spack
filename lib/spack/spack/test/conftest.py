@@ -173,6 +173,7 @@ def config(configuration_dir):
     real_scope = spack.config.config_scopes
     spack.config.config_scopes = ordereddict_backport.OrderedDict()
     spack.config.ConfigScope('site', str(configuration_dir.join('site')))
+    spack.config.ConfigScope('system', str(configuration_dir.join('system')))
     spack.config.ConfigScope('user', str(configuration_dir.join('user')))
     Config = collections.namedtuple('Config', ['real', 'mock'])
 
