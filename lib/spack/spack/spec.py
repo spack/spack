@@ -1864,7 +1864,7 @@ class Spec(object):
             elif required:
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
-    def _merge_dependency(self, dep, deptypes, dep_contexts,
+    def _merge_dependency(self, dep, deptypes, dep_contexts, visited,
                           provider_index):
         """Merge the dependency into this spec.
 
@@ -1949,11 +1949,15 @@ class Spec(object):
             self._add_dependency(resolved, deptypes)
 
         changed |= resolved._normalize_helper(
-            dep_contexts, provider_index)
+            dep_contexts, visited, provider_index)
         return changed
 
-    def _normalize_helper(self, dep_contexts, provider_index):
+    def _normalize_helper(self, dep_contexts, visited, provider_index):
         """Recursive helper function for _normalize."""
+        if self in visited:
+            return False
+        visited.add(self)
+
         # if we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
         if self.virtual or self.external:
@@ -1983,8 +1987,6 @@ class Spec(object):
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
-                if dep_name in self._dependencies:
-                    continue
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
                 deptypes = pkg.dependency_types[dep_name]
@@ -1995,10 +1997,12 @@ class Spec(object):
                     child_contexts = dep_contexts
 
                 # If pkg_dep is a dependency, merge it.
+                local_changed = False
                 if pkg_dep:
-                    changed |= self._merge_dependency(
-                        pkg_dep, deptypes, child_contexts,
+                    local_changed = self._merge_dependency(
+                        pkg_dep, deptypes, child_contexts, visited,
                         provider_index)
+                    changed |= local_changed
             any_change |= changed
 
         return any_change
@@ -2041,9 +2045,12 @@ class Spec(object):
         provider_index = ProviderIndex(
             list(dep_contexts[0].values()), restrict=True)
 
+        visited = set()
+
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
-        any_change = self._normalize_helper(dep_contexts, provider_index)
+        any_change = self._normalize_helper(
+            dep_contexts, visited, provider_index)
 
         # Mark the spec as normal once done.
         self._normal = True
