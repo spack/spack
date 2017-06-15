@@ -211,7 +211,7 @@ def upgrade_dependency_version(spec, dep_name):
     spec[dep_name].version = None
     spec.concretize()
 
-def write(context, new_repo_dir=None):
+def write(context, new_repo=None):
     tmp_new, dest, tmp_old = write_paths(context)
 
     if os.path.exists(tmp_new) or os.path.exists(tmp_old):
@@ -226,8 +226,8 @@ def write(context, new_repo_dir=None):
         syaml.dump(context.to_dict(), stream=F, default_flow_style=False)
 
     dest_repo_dir = fs.join_path(tmp_new, 'repo')
-    if new_repo_dir:
-        shutil.copytree(new_repo_dir, dest_repo_dir)
+    if new_repo:
+        shutil.copytree(new_repo.root, dest_repo_dir)
     elif os.path.exists(context.repo_path()):
         shutil.copytree(context.repo_path(), dest_repo_dir)
 
@@ -312,12 +312,28 @@ def context_remove(args):
 
 def context_concretize(args):
     context = read(args.context)
-    new_repo_dir = prepare_repository(context)
+    repo = prepare_repository(context)
 
     new_specs = context.concretize()
     for spec in new_specs:
-        spack.package.dump_packages(spec, new_repo_dir)
-    write(context, new_repo_dir)
+        for dep in spec.traverse():
+            dump_to_context_repo(dep, repo)
+    write(context, repo)
+
+def dump_to_context_repo(spec, repo):
+    source = spack.store.layout.build_packages_path(spec)
+    source_repo_root = fs.join_path(source, spec.namespace)
+    if os.path.isdir(source_repo_root):
+        source_repo = spack.repository.Repo(source_repo_root)
+        source_pkg_dir = source_repo.dirname_for_package_name(spec.name)
+    else:
+        source_pkg_dir = None
+
+    dest_pkg_dir = repo.dirname_for_package_name(spec.name)
+    if source_pkg_dir:
+        fs.install_tree(source_pkg_dir, dest_pkg_dir)
+    else:
+        spack.repo.dump_provenance(spec, dest_pkg_dir)
 
 def prepare_repository(context, remove=None):
     import tempfile
@@ -325,6 +341,8 @@ def prepare_repository(context, remove=None):
     new_repo_dir = fs.join_path(repo_stage, 'repo')
     if os.path.exists(context.repo_path()):
         shutil.copytree(context.repo_path(), new_repo_dir)
+    else:
+        spack.repository.create_repo(new_repo_dir, context.name)
     if remove:
         remove_dirs = []
         repo = Repo(new_repo_dir)
@@ -332,9 +350,9 @@ def prepare_repository(context, remove=None):
             remove_dirs.append(repo.dirname_for_package_name(pkg_name))
         for d in remove_dirs:
             shutil.rmtree(d)
-    if os.path.exists(new_repo_dir):
-        spack.repo.put_first(Repo(new_repo_dir))
-    return new_repo_dir
+    repo = Repo(new_repo_dir)
+    spack.repo.put_first(repo)
+    return repo
 
 def context_relocate(args):
     context = read(args.context)
@@ -355,11 +373,11 @@ def context_list_modules(args):
 
 def context_upgrade_dependency(args):
     context = read(args.context)
-    new_repo_dir = prepare_repository(context, [args.dep_name])
+    repo = prepare_repository(context, [args.dep_name])
     context.upgrade_dependency(args.dep_name, args.dry_run)
     if not args.dry_run:
-        spack.package.dump_packages(Spec(args.dep_name), new_repo_dir)
-        write(context, new_repo_dir)
+        dump_to_context_repo(Spec(args.dep_name), repo)
+        write(context, repo)
 
 def add_common_args(parser):
     parser.add_argument(
