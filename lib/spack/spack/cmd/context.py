@@ -4,6 +4,7 @@ import llnl.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec, CompilerSpec, FlagMap
+from spack.repository import Repo
 
 import argparse
 import itertools
@@ -53,11 +54,14 @@ class Context(object):
 
     def concretize(self):
         num_concretized = len(self.concretized_order)
+        new_specs = list()
         for user_spec in self.user_specs[num_concretized:]:
             spec = Spec(user_spec)
             spec.concretize()
+            new_specs.append(spec)
             self.specs_by_hash[spec.dag_hash()] = spec
             self.concretized_order.append(spec.dag_hash())
+        return new_specs
 
     def install(self):
         for dag_hash, spec in self.specs_by_hash.items():
@@ -183,6 +187,9 @@ class Context(object):
     def path(self):
         return fs.join_path(_db_dirname, self.name)
 
+    def repo_path(self):
+        return fs.join_path(self.path(), 'repo')
+
 def reset_os_and_compiler(spec, compiler=None):
     spec = spec.copy()
     for x in spec.traverse():
@@ -204,7 +211,7 @@ def upgrade_dependency_version(spec, dep_name):
     spec[dep_name].version = None
     spec.concretize()
 
-def write(context):
+def write(context, new_repo_dir=None):
     tmp_new, dest, tmp_old = write_paths(context)
 
     if os.path.exists(tmp_new) or os.path.exists(tmp_old):
@@ -217,6 +224,12 @@ def write(context):
     #create one file for the rest of the data in yaml format
     with open(fs.join_path(tmp_new, 'context.yaml'), 'w') as F:
         syaml.dump(context.to_dict(), stream=F, default_flow_style=False)
+
+    dest_repo_dir = fs.join_path(tmp_new, 'repo')
+    if new_repo_dir:
+        shutil.copytree(new_repo_dir, dest_repo_dir)
+    elif os.path.exists(context.repo_path()):
+        shutil.copytree(context.repo_path(), dest_repo_dir)
 
     if os.path.exists(dest):
         shutil.move(dest, tmp_old)
@@ -299,11 +312,33 @@ def context_remove(args):
 
 def context_concretize(args):
     context = read(args.context)
-    context.concretize()
-    write(context)
+    new_repo_dir = prepare_repository(context)
+
+    new_specs = context.concretize()
+    for spec in new_specs:
+        spack.package.dump_packages(spec, new_repo_dir)
+    write(context, new_repo_dir)
+
+def prepare_repository(context, remove=None):
+    import tempfile
+    repo_stage = tempfile.mkdtemp()
+    new_repo_dir = fs.join_path(repo_stage, 'repo')
+    if os.path.exists(context.repo_path()):
+        shutil.copytree(context.repo_path(), new_repo_dir)
+    if remove:
+        remove_dirs = []
+        repo = Repo(new_repo_dir)
+        for pkg_name in remove:
+            remove_dirs.append(repo.dirname_for_package_name(pkg_name))
+        for d in remove_dirs:
+            shutil.rmtree(d)
+    if os.path.exists(new_repo_dir):
+        spack.repo.put_first(Repo(new_repo_dir))
+    return new_repo_dir
 
 def context_relocate(args):
     context = read(args.context)
+    prepare_repository(context)
     context.reset_os_and_compiler(compiler=args.compiler)
     write(context)
 
@@ -320,9 +355,11 @@ def context_list_modules(args):
 
 def context_upgrade_dependency(args):
     context = read(args.context)
+    new_repo_dir = prepare_repository(context, [args.dep_name])
     context.upgrade_dependency(args.dep_name, args.dry_run)
     if not args.dry_run:
-        write(context)
+        spack.package.dump_packages(Spec(args.dep_name), new_repo_dir)
+        write(context, new_repo_dir)
 
 def add_common_args(parser):
     parser.add_argument(
