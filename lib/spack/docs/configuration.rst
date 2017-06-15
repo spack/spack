@@ -47,25 +47,25 @@ Configuration Scopes
 Spack pulls configuration data from files in several directories. There
 are four configuration scopes.  From lowest to highest:
 
-1. **defaults**: Stored in ``$(prefix)/etc/spack/defaults/``. These are
+#. **defaults**: Stored in ``$(prefix)/etc/spack/defaults/``. These are
    the "factory" settings. Users should generally not modify the settings
    here, but should override them in other configuration scopes. The
    defaults here will change from version to version of Spack.
 
-2. **system**: Stored in ``/etc/spack``. These are settings for this
+#. **system**: Stored in ``/etc/spack``. These are settings for this
    machine, or for all machines on which this file system is
    mounted. The site scope can be used for settings idiosyncratic to a
    particular machine, such as the locations of compilers or external
    packages. These settings are presumably controlled by someone with
    root access on the machine.
 
-2. **site**: Stored in ``$(prefix)/etc/spack/``.  Settings here affect
+#. **site**: Stored in ``$(prefix)/etc/spack/``.  Settings here affect
    only *this instance* of Spack, and they override defaults.  The site
    scope can can be used for per-project settings (one spack instance per
    project) or for site-wide settings on a multi-user machine (e.g., for
    a common spack instance).
 
-3. **user**: Stored in the home directory: ``~/.spack/``. These settings
+#. **user**: Stored in the home directory: ``~/.spack/``. These settings
    affect all instances of Spack and take the highest precedence.
 
 Each configuration directory may contain several configuration files,
