@@ -26,7 +26,7 @@ from spack import *
 
 
 class PyAse(PythonPackage):
-    """The Atomic Simulation Environment (ASE) is a set of tools and Python modules for setting up, manipulating, running, visualizing and analyzing atomistic simulations."""
+    """Sets up, manipulates, runs, visualizes and analyzes atomistic simulations."""
 
     homepage = "https://wiki.fysik.dtu.dk/ase/"
     url      = "https://pypi.io/packages/source/a/ase/ase-3.13.0.tar.gz"
