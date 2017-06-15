@@ -69,8 +69,7 @@ class ABI(object):
             if Clang.default_version(rungcc.exe[0]) != 'unknown':
                 return None
 
-            output = rungcc("--print-file-name=%s" % libname,
-                            return_output=True)
+            output = rungcc("--print-file-name=%s" % libname, output=str)
         except ProcessError:
             return None
         if not output:

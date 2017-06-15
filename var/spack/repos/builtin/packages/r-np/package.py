@@ -36,7 +36,6 @@ class RNp(RPackage):
 
     homepage = "https://github.com/JeffreyRacine/R-Package-np/"
     url      = "https://cran.r-project.org/src/contrib/np_0.60-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/np"
 
     version('0.60-2', 'e094d52ddff7280272b41e6cb2c74389')
 
