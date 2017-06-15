@@ -71,16 +71,21 @@ class SuperluDist(Package):
             'ARCHFLAGS    = cr',
             'RANLIB       = true',
             'CC           = {0}'.format(self.spec['mpi'].mpicc),
-            'CFLAGS       = -fPIC -std=c99 -O2 %s %s %s' % (
+            'CFLAGS       = %s %s -O2 %s %s %s' % (
+                self.compiler.pic_flag,
+                '' if '%pgi' in spec else '-std=c99',
                 spec['parmetis'].headers.cpp_flags,
                 spec['metis'].headers.cpp_flags,
                 '-D_LONGINT' if '+int64' in spec else ''),
-            'NOOPTS       = -fPIC -std=c99',
+            'NOOPTS       = %s -std=c99' % (
+                self.compiler.pic_flag),
             'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),
             'F90FLAGS     = -O2',
             'LOADER       = {0}'.format(self.spec['mpi'].mpif77),
             'LOADOPTS     =',
-            'CDEFS        = -DAdd_'
+            'CDEFS        = %s' % ("-DNoChange"
+                                       if '%xl' in spec or '%xl_r' in spec
+                                       else "-DAdd_")
         ])
 
         with open('make.inc', 'w') as fh:

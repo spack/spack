@@ -56,7 +56,7 @@ class Ncl(Package):
     # Non-optional dependencies according to the manual:
     depends_on('jpeg')
     depends_on('netcdf')
-    depends_on('cairo')
+    depends_on('cairo+X')
 
     # Extra dependencies that may be missing from build system:
     depends_on('bison', type='build')
@@ -124,7 +124,7 @@ class Ncl(Package):
 
         if self.compiler.name == 'gcc':
             fc_flags.append('-fno-range-check')
-            c2f_flags.extend(['-lgfortran'])
+            c2f_flags.extend(['-lgfortran', '-lm'])
         elif self.compiler.name == 'intel':
             fc_flags.append('-fp-model precise')
             cc_flags.append('-fp-model precise')

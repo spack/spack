@@ -30,7 +30,6 @@ class RKernsmooth(RPackage):
 
     homepage = "https://cran.r-project.org/package=KernSmooth"
     url      = "https://cran.r-project.org/src/contrib/KernSmooth_2.23-15.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/KernSmooth"
 
     version('2.23-15', '746cdf26dec72004cf19978e87dcc982')
 

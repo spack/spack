@@ -32,6 +32,5 @@ class RBoot(RPackage):
 
     homepage = "https://cran.r-project.org/package=boot"
     url      = "https://cran.r-project.org/src/contrib/boot_1.3-18.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/boot"
 
     version('1.3-18', '711dd58af14e1027eb8377d9202e9b6f')
