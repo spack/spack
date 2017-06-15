@@ -40,13 +40,10 @@ class Cube(AutotoolsPackage):
     parallel = False
 
     version('4.3.5', 'e5dce986e3c6381ea3a5fcb66c553adc')
+    version('4.3.4', '50f73060f55311cb12c5b3cb354d59fa')
+    version('4.3.3', '07e109248ed8ffc7bdcce614264a2909')
 
-    version('4.3.4', '50f73060f55311cb12c5b3cb354d59fa',
-            url='http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3.4.tar.gz')
-    version('4.3.3', '07e109248ed8ffc7bdcce614264a2909',
-            url='http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3.3.tar.gz')
-    version('4.2.3', '8f95b9531f5a8f8134f279c2767c9b20',
-            url="http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz")
+    version('4.2.3', '8f95b9531f5a8f8134f279c2767c9b20')
 
     variant('gui', default=False, description='Build CUBE GUI')
 
