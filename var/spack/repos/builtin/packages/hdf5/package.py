@@ -263,7 +263,7 @@ HDF5 version {version} {version}
                  spec['hdf5'].libs.ld_flags.split()))
             try:
                 check = Executable('./check')
-                output = check(return_output=True)
+                output = check(output=str)
             except:
                 output = ""
             success = output == expected
