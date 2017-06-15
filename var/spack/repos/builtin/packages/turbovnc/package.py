@@ -65,6 +65,7 @@ class Turbovnc(CMakePackage):
     # depends_on('libxkbfile')
     depends_on('xkeyboard-config', when='+x11deps', type=('build', 'run'))
     depends_on('xkbcomp', when='+x11deps', type=('build', 'run'))
+    depends_on('xauth', when='+x11deps', type=('build', 'run'))
     # depends_on('xkbdata', when='+x11deps', type='build')
 
     def validate(self):
