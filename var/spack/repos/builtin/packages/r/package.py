@@ -100,6 +100,7 @@ class R(AutotoolsPackage):
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
             '--enable-R-shlib',
             '--enable-BLAS-shlib',
+            '--without-recommended-packages',
             '--enable-R-framework=no'
         ]
 
