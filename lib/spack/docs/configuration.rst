@@ -95,7 +95,7 @@ by settings in ``system``, ``system/bgq``, ``site``, ``site/bgq``,
 1. ``defaults``
 2. ``defaults/<platform>``
 3. ``system``
-4. ``system/<platform>
+4. ``system/<platform>``
 5. ``site``
 6. ``site/<platform>``
 7. ``user``
