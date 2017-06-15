@@ -213,7 +213,22 @@ from spack.util.executable import *
 __all__ += spack.util.executable.__all__
 
 # User's editor from the environment
-editor = Executable(os.environ.get("EDITOR", "vi"))
+
+# Default editors to use:
+_default_editors = ['vim', 'vi', 'emacs', 'nano']
+
+# The EDITOR environment variable has the highest precedence
+if os.environ.get('EDITOR'):
+    _default_editors.insert(0, os.environ.get('EDITOR'))
+
+editor = which(*_default_editors)
+
+if not editor:
+    default = default_editors[0]
+    msg  = 'Default text editor, {0}, not found.\n'.format(default)
+    msg += 'Please set the EDITOR environment variable to your preferred '
+    msg += 'text editor, or install {0}.'.format(default)
+    raise EnvironmentError(msg)
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \

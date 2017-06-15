@@ -39,7 +39,7 @@ def compile_c_and_execute(source_file, include_flags, link_flags):
        *link_flags)
 
     check = Executable('./check')
-    return check(return_output=True)
+    return check(output=str)
 
 
 def compare_output(current_output, blessed_output):

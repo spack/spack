@@ -72,7 +72,7 @@ class Spark(Package):
         # spack_env.set('JAVA_HOME', self.spec['jdk'].prefix)
 
         hadoop = self.spec['hadoop'].command
-        hadoop_classpath = hadoop('classpath', return_output=True)
+        hadoop_classpath = hadoop('classpath', output=str)
 
         # Remove whitespaces, as they can compromise syntax in
         # module files

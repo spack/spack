@@ -46,9 +46,16 @@ class Executable(object):
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
     def add_default_arg(self, arg):
+        """Add a default argument to the command."""
         self.exe.append(arg)
 
     def add_default_env(self, key, value):
+        """Set an environment variable when the command is run.
+
+        Parameters:
+            key: The environment variable to set
+            value: The value to set it to
+        """
         self.default_env[key] = value
 
     @property
@@ -81,55 +88,34 @@ class Executable(object):
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
 
-        Arguments
-          args
-            command line arguments to the executable to run.
+        Parameters:
+            *args (str): Command-line arguments to the executable to run
 
-        Optional arguments
+        Keyword Arguments:
+            env (dict): The environment to run the executable with
+            fail_on_error (bool): Raise an exception if the subprocess returns
+                an error. Default is True. The return code is available as
+                ``exe.returncode``
+            ignore_errors (int or list): A list of error codes to ignore.
+                If these codes are returned, this process will not raise
+                an exception even if ``fail_on_error`` is set to ``True``
+            input: Where to read stdin from
+            output: Where to send stdout
+            error: Where to send stderr
 
-          fail_on_error
+        Accepted values for input, output, and error:
 
-            Raise an exception if the subprocess returns an
-            error. Default is True.  When not set, the return code is
-            available as `exe.returncode`.
+        * python streams, e.g. open Python file objects, or ``os.devnull``
+        * filenames, which will be automatically opened for writing
+        * ``str``, as in the Python string type. If you set these to ``str``,
+          output and error will be written to pipes and returned as a string.
+          If both ``output`` and ``error`` are set to ``str``, then one string
+          is returned containing output concatenated with error. Not valid
+          for ``input``
 
-          ignore_errors
-
-            An optional list/tuple of error codes that can be
-            *ignored*.  i.e., if these codes are returned, this will
-            not raise an exception when `fail_on_error` is `True`.
-
-          output, error
-
-            These arguments allow you to specify new stdout and stderr
-            values.  They default to `None`, which means the
-            subprocess will inherit the parent's file descriptors.
-
-            You can set these to:
-            - python streams, e.g. open Python file objects, or os.devnull;
-            - filenames, which will be automatically opened for writing; or
-            - `str`, as in the Python string type. If you set these to `str`,
-               output and error will be written to pipes and returned as
-               a string.  If both `output` and `error` are set to `str`,
-               then one string is returned containing output concatenated
-               with error.
-
-          input
-
-            Same as output, error, but `str` is not an allowed value.
-
-        Deprecated arguments
-
-          return_output[=False]
-
-            Setting this to True is the same as setting output=str.
-            This argument may be removed in future Spack versions.
-
+        By default, the subprocess inherits the parent's file descriptors.
         """
-        fail_on_error = kwargs.pop("fail_on_error", True)
-        ignore_errors = kwargs.pop("ignore_errors", ())
-
-        # environment
+        # Environment
         env_arg = kwargs.get('env', None)
         if env_arg is None:
             env = os.environ.copy()
@@ -138,19 +124,19 @@ class Executable(object):
             env = self.default_env.copy()
             env.update(env_arg)
 
-        # TODO: This is deprecated.  Remove in a future version.
-        return_output = kwargs.pop("return_output", False)
+        fail_on_error = kwargs.pop('fail_on_error', True)
+        ignore_errors = kwargs.pop('ignore_errors', ())
 
-        # Default values of None says to keep parent's file descriptors.
-        if return_output:
-            output = str
-        else:
-            output = kwargs.pop("output", None)
+        # If they just want to ignore one error code, make it a tuple.
+        if isinstance(ignore_errors, int):
+            ignore_errors = (ignore_errors, )
 
-        error = kwargs.pop("error", None)
-        input = kwargs.pop("input", None)
+        input  = kwargs.pop('input',  None)
+        output = kwargs.pop('output', None)
+        error  = kwargs.pop('error',  None)
+
         if input is str:
-            raise ValueError("Cannot use `str` as input stream.")
+            raise ValueError('Cannot use `str` as input stream.')
 
         def streamify(arg, mode):
             if isinstance(arg, string_types):
@@ -161,12 +147,8 @@ class Executable(object):
                 return arg, False
 
         ostream, close_ostream = streamify(output, 'w')
-        estream, close_estream = streamify(error, 'w')
-        istream, close_istream = streamify(input, 'r')
-
-        # if they just want to ignore one error code, make it a tuple.
-        if isinstance(ignore_errors, int):
-            ignore_errors = (ignore_errors, )
+        estream, close_estream = streamify(error,  'w')
+        istream, close_istream = streamify(input,  'r')
 
         quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
         if quoted_args:
@@ -196,7 +178,7 @@ class Executable(object):
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
-                raise ProcessError("Command exited with status %d:" %
+                raise ProcessError('Command exited with status %d:' %
                                    proc.returncode, cmd_line)
 
             if output is str or error is str:
@@ -209,12 +191,12 @@ class Executable(object):
 
         except OSError as e:
             raise ProcessError(
-                "%s: %s" % (self.exe[0], e.strerror), "Command: " + cmd_line)
+                '%s: %s' % (self.exe[0], e.strerror), 'Command: ' + cmd_line)
 
         except subprocess.CalledProcessError as e:
             if fail_on_error:
                 raise ProcessError(
-                    str(e), "\nExit status %d when invoking command: %s" %
+                    str(e), '\nExit status %d when invoking command: %s' %
                     (proc.returncode, cmd_line))
 
         finally:
@@ -235,27 +217,43 @@ class Executable(object):
         return hash((type(self), ) + tuple(self.exe))
 
     def __repr__(self):
-        return "<exe: %s>" % self.exe
+        return '<exe: %s>' % self.exe
 
     def __str__(self):
         return ' '.join(self.exe)
 
 
-def which(name, **kwargs):
-    """Finds an executable in the path like command-line which."""
-    path = kwargs.get('path', os.environ.get('PATH', '').split(os.pathsep))
+def which(*args, **kwargs):
+    """Finds an executable in the path like command-line which.
+
+    If given multiple executables, returns the first one that is found.
+    If no executables are found, returns None.
+
+    Parameters:
+        *args (str): One or more executables to search for
+
+    Keyword Arguments:
+        path (:func:`list` or str): The path to search. Defaults to ``PATH``
+        required (bool): If set to True, raise an error if executable not found
+
+    Returns:
+        Executable: The first executable that is found in the path
+    """
+    path = kwargs.get('path', os.environ.get('PATH'))
     required = kwargs.get('required', False)
 
-    if not path:
-        path = []
+    if isinstance(path, string_types):
+        path = path.split(os.pathsep)
 
-    for dir in path:
-        exe = os.path.join(dir, name)
-        if os.path.isfile(exe) and os.access(exe, os.X_OK):
-            return Executable(exe)
+    for name in args:
+        for directory in path:
+            exe = os.path.join(directory, name)
+            if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                return Executable(exe)
 
     if required:
-        tty.die("spack requires %s.  Make sure it is in your path." % name)
+        tty.die("spack requires '%s'. Make sure it is in your path." % args[0])
+
     return None
 
 
