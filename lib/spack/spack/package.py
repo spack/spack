@@ -1862,15 +1862,17 @@ def dump_packages(spec, path):
 
             # There's no provenance installed for the source package.  Skip it.
             # User can always get something current from the builtin repo.
-            if os.path.isdir(source_repo_root):
-                # Create a source repo and get the pkg directory out of it.
-                try:
-                    source_repo = spack.repository.Repo(source_repo_root)
-                    source_pkg_dir = source_repo.dirname_for_package_name(
-                        node.name)
-                except RepoError:
-                    tty.warn("Warning: Couldn't copy in provenance for %s" %
-                             node.name)
+            if not os.path.isdir(source_repo_root):
+                continue
+
+            # Create a source repo and get the pkg directory out of it.
+            try:
+                source_repo = spack.repository.Repo(source_repo_root)
+                source_pkg_dir = source_repo.dirname_for_package_name(
+                    node.name)
+            except RepoError:
+                tty.warn("Warning: Couldn't copy in provenance for %s" %
+                         node.name)
 
         # Create a destination repository
         dest_repo_root = join_path(path, node.namespace)
@@ -1880,7 +1882,7 @@ def dump_packages(spec, path):
 
         # Get the location of the package in the dest repo.
         dest_pkg_dir = repo.dirname_for_package_name(node.name)
-        if node is not spec and node.package.installed:
+        if node is not spec:
             install_tree(source_pkg_dir, dest_pkg_dir)
         else:
             spack.repo.dump_provenance(node, dest_pkg_dir)
