@@ -75,7 +75,10 @@ def createtarball(args):
         for spec in spack.cmd.parse_specs(pkg, concretize=True):
             specs.add(spec)
             tty.msg('recursing dependencies')
-            for d, node in spec.traverse(order='pre', depth=True):
+            for d, node in spec.traverse(order='post'
+                                        , depth=True
+                                        , deptype=('link', 'run')
+                                        , deptype_query='run'):
                 tty.msg('adding dependency %s' % node)
                 specs.add(node)
     for spec in specs:
@@ -93,7 +96,10 @@ def installtarball(args):
         for spec in spack.cmd.parse_specs(pkg, concretize=True):
             specs.add(spec)
             tty.msg('recursing dependencies')
-            for d, node in spec.traverse(order='pre', depth=True):
+            for d, node in spec.traverse(order='post'
+                                        , depth=True
+                                        , deptype=('link', 'run')
+                                        , deptype_query='run'):
                 tty.msg('adding dependency %s' % node)
                 specs.add(node)
 
