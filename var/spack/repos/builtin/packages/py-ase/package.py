@@ -33,5 +33,5 @@ class PyAse(PythonPackage):
 
     version('3.13.0', 'e946a0addc5b61e5e2e75857e0f99b89')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('python@2.6:')
     depends_on('py-numpy', type=('build', 'run'))
