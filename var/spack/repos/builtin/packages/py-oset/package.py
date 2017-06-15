@@ -28,7 +28,7 @@ from spack import *
 class PyOset(PythonPackage):
     """Set that remembers original insertion order."""
 
-    homepage = "https://gitorious.com/sleipnir/python-oset"
+    homepage = "https://pypi.python.org/pypi/oset"
     url      = "https://pypi.io/packages/source/o/oset/oset-0.1.3.tar.gz"
 
     version('0.1.3', 'f23e5a545d2c77df3916398d2d39a3ab')
