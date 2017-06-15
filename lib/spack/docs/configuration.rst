@@ -45,12 +45,19 @@ Configuration Scopes
 -------------------------
 
 Spack pulls configuration data from files in several directories. There
-are three configuration scopes.  From lowest to highest:
+are four configuration scopes.  From lowest to highest:
 
 1. **defaults**: Stored in ``$(prefix)/etc/spack/defaults/``. These are
    the "factory" settings. Users should generally not modify the settings
    here, but should override them in other configuration scopes. The
    defaults here will change from version to version of Spack.
+
+2. **system**: Stored in ``/etc/spack``. These are settings for this
+   machine, or for all machines on which this file system is
+   mounted. The site scope can be used for settings idiosyncratic to a
+   particular machine, such as the locations of compilers or external
+   packages. These settings are presumably controlled by someone with
+   root access on the machine.
 
 2. **site**: Stored in ``$(prefix)/etc/spack/``.  Settings here affect
    only *this instance* of Spack, and they override defaults.  The site
@@ -78,22 +85,25 @@ Platform-specific scopes
 -------------------------
 
 For each scope above, there can *also* be platform-specific settings.
-For example, on Blue Gene/Q machines, Spack needs to know the location of
-cross-compilers for the compute nodes.  This configuration is in
-``etc/spack/defaults/bgq/compilers.yaml``.  It will take precedence over
-settings in the ``defaults`` scope, but can still be overridden by
-settings in ``site``, ``site/bgq``, ``user``, or ``user/bgq``. So, the
-full scope precedence is:
+For example, on Blue Gene/Q machines, Spack needs to know the location
+of cross-compilers for the compute nodes.  This configuration is in
+``etc/spack/defaults/bgq/compilers.yaml``.  It will take precedence
+over settings in the ``defaults`` scope, but can still be overridden
+by settings in ``system``, ``system/bgq``, ``site``, ``site/bgq``,
+``user``, or ``user/bgq``. So, the full scope precedence is:
 
 1. ``defaults``
 2. ``defaults/<platform>``
-3. ``site``
-4. ``site/<platform>``
-5. ``user``
-6. ``user/<platform>``
+3. ``system``
+4. ``system/<platform>
+5. ``site``
+6. ``site/<platform>``
+7. ``user``
+8. ``user/<platform>``
 
 You can get the name to use for ``<platform>`` by running ``spack arch
---platform``.
+--platform``. The system config scope has a ``<platform>`` section for
+sites at which ``/etc`` is mounted on multiple heterogeneous machines.
 
 -------------------------
 Scope precedence
