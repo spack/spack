@@ -474,7 +474,9 @@ def mock_svn_repository():
     url = 'file://' + str(repodir)
     # Initialize the repository
     current = repodir.chdir()
-    svnadmin('create', str(repodir))
+    # NOTE: Adding --pre-1.5-compatible works for NERSC
+    # Unknown if this is also an issue at other sites.
+    svnadmin('create', '--pre-1.5-compatible', str(repodir))
 
     # Import a structure (first commit)
     r0_file = 'r0_file'
