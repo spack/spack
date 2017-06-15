@@ -46,6 +46,11 @@ class Moab(Package):
     variant('shared', default=True,
             description='Enables the build of shared libraries')
     variant('fortran', default=True, description='Enable Fortran support')
+    variant('pnetcdf', default=False, description='Enable pnetcdf support')
+    variant('zoltan', default=False, description='Enable zoltan support')
+    variant('cgm', default=False, description='Enable common geometric module')
+    variant('metis', default=True, description='Enable metis link')
+    variant('parmetis', default=True, description='Enable parmetis link')
 
     # There are many possible variants for MOAB. Here are examples for
     # two of them:
@@ -58,29 +63,22 @@ class Moab(Package):
     depends_on('mpi')
     depends_on('hdf5+mpi')
     depends_on('netcdf', when='+netcdf')
-    depends_on('netcdf+mpi', when='+netcdf')
     depends_on('metis')
     depends_on('parmetis')
-    depends_on('zoltan')
-    depends_on('zoltan~fortran', when='~fortran')
+    depends_on('zoltan', when='+zoltan')
 
     def install(self, spec, prefix):
 
         options = [
             '--prefix=%s' % prefix,
             '--enable-optimize',
-            '--disable-tools',
-            '--disable-mbconvert',
             '--disable-hexmodops',
             '--disable-vtkMOABReader',
-            '--disable-mbsize',
             '--disable-mbskin',
             '--disable-mbtagprop',
             '--disable-mbmem',
             '--disable-spheredecomp',
             '--disable-mbsurfplot',
-            '--disable-mbpart',
-            '--disable-dagmc',
             '--disable-gsets',
             '--disable-mbmerge',
             '--disable-mbdepth',
@@ -89,15 +87,10 @@ class Moab(Package):
             '--disable-refiner',
             '--disable-h5mtools',
             '--disable-mbcslam',
-            '--disable-mbquality',
-            '--disable-ahf',
-            '--disable-mbumr',
-            '--disable-imesh',
             '--with-pic',
             '--with-mpi=%s' % spec['mpi'].prefix,
             '--with-hdf5=%s' % spec['hdf5'].prefix,
             '--with-parmetis=%s' % spec['parmetis'].prefix,
-            '--with-zoltan=%s' % spec['zoltan'].prefix,
             '--without-vtk',
             'CXX=%s' % spec['mpi'].mpicxx,
             'CC=%s' % spec['mpi'].mpicc,
@@ -109,6 +102,8 @@ class Moab(Package):
             options.append('--enable-shared')
         if '+netcdf' in spec:
             options.append('--with-netcdf=%s' % spec['netcdf'].prefix)
+        if '+zoltan' in spec:
+            options.append('--with-zoltan=%s' % spec['zoltan'].prefix)
 
         configure(*options)
         make()
