@@ -37,29 +37,15 @@ class Cgm(AutotoolsPackage):
     version('13.1.0', 'a6c7b22660f164ce893fb974f9cb2028')
     version('13.1', '95f724bda04919fc76818a5b7bc0b4ed')
 
-    variant("mpi", default=False, description='enable mpi support')
+    variant("mpi", default=True, description='enable mpi support')
     variant("oce", default=False, description='enable oce geometry kernel')
 
     depends_on('mpi', when='+mpi')
     depends_on('oce+X11', when='+oce')
 
-    def url_for_version(self, version):
-        if Version('13.0') <= version <= Version('13.999'):
-            return "http://ftp.mcs.anl.gov/pub/fathom/cgm{0}.tar.gz".format(version)
-        else:
-            return "http://ftp.mcs.anl.gov/pub/fathom/cgm-{0}.tar.gz".format(version)
-
-    def patch(self):
-        if self.version < Version('14.1'):
-            filter_file('^(#include "CGMParallelConventions.h")',
-                        '//\1',
-                        'geom/parallel/CGMReadParallel.cpp')
-
     def configure_args(self):
         spec = self.spec
-
-        args = [
-        ]
+        args = []
 
         if '+mpi' in spec:
             args.extend([
@@ -67,9 +53,12 @@ class Cgm(AutotoolsPackage):
                 "CC={0}".format(spec['mpi'].mpicc),
                 "CXX={0}".format(spec['mpi'].mpicxx)
             ])
+        else:
+            args.append("--without-mpi")
 
         if '+oce' in spec:
-            args.extend([
-                "--with-occ={0}".format(spec['oce'].prefix)
-            ])
+            args.append("--with-occ={0}".format(spec['oce'].prefix))
+        else:
+            args.append("--without-occ")
+
         return args
