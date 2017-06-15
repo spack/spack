@@ -5,6 +5,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.repository import Repo
+from spack.version import VersionList
 
 import argparse
 import itertools
@@ -99,6 +100,7 @@ class Context(object):
         re-concretized, and then replace them manually where encountered later.
         """
         new_order = list()
+        new_deps = list()
         for i, spec_hash in enumerate(self.concretized_order):
             spec = self.specs_by_hash[spec_hash]
             if dep_name in spec:
@@ -109,11 +111,13 @@ class Context(object):
                     new_spec = upgrade_dependency_version(spec, dep_name)
                     new_order.append(new_spec.dag_hash())
                     self.specs_by_hash[new_spec.dag_hash()] = new_spec
+                    new_deps.append(new_spec[dep_name])
             else:
                 new_order.append(spec_hash)
 
         if not dry_run:
             self.concretized_order = new_order
+            return new_deps[0] if new_deps else None
 
     def reset_os_and_compiler(self, compiler=None):
         new_order = list()
@@ -203,8 +207,9 @@ def upgrade_dependency_version(spec, dep_name):
     for x in spec.traverse():
         x._concrete = False
         x._hash = None
-    spec[dep_name].version = None
+    spec[dep_name].versions = VersionList(':')
     spec.concretize()
+    return spec
 
 def write(context, new_repo=None):
     tmp_new, dest, tmp_old = write_paths(context)
@@ -375,9 +380,9 @@ def context_list_modules(args):
 def context_upgrade_dependency(args):
     context = read(args.context)
     repo = prepare_repository(context, [args.dep_name])
-    context.upgrade_dependency(args.dep_name, args.dry_run)
-    if not args.dry_run:
-        dump_to_context_repo(Spec(args.dep_name), repo)
+    new_dep = context.upgrade_dependency(args.dep_name, args.dry_run)
+    if not args.dry_run and new_dep:
+        dump_to_context_repo(new_dep, repo)
         write(context, repo)
 
 def add_common_args(parser):
