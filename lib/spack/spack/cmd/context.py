@@ -158,11 +158,6 @@ class Context(object):
 
         return module_files
 
-    def upgrade(self, spec, new):
-        # TODO: Copy this context, replace the given spec (what if it appears
-        # multiple times?)
-        pass
-
     def to_dict(self):
         concretized_order = list(self.concretized_order)
         common_libs = syaml.syaml_dict(self.common_libs.items())
@@ -366,6 +361,12 @@ def context_list(args):
     import sys
     context.list(sys.stdout, args.include_deps)
 
+def context_stage(args):
+    context = read(args.context)
+    for spec in context.specs_by_hash.values():
+        for dep in spec.traverse():
+            dep.package.do_stage()
+
 def context_list_modules(args):
     context = read(args.context)
     for module_file in context.get_modules():
@@ -441,6 +442,11 @@ def setup_parser(subparser):
         '--dry-run', action='store_true', dest='dry_run',
         help="Just show the updates that would take place")
 
+    stage_parser = sp.add_parser(
+        'stage',
+        help='Download all source files for all packages in a context')
+    add_common_args(stage_parser)
+
 def context(parser, args, **kwargs):
     action = {
         'create': context_create,
@@ -451,5 +457,6 @@ def context(parser, args, **kwargs):
         'remove': context_remove,
         'relocate': context_relocate,
         'upgrade': context_upgrade_dependency,
+        'stage': context_stage,
         }
     action[args.context_command](args)
