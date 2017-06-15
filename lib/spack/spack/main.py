@@ -32,8 +32,8 @@ from __future__ import print_function
 import sys
 import os
 import inspect
-from argparse import _ArgumentGroup, ArgumentParser, RawTextHelpFormatter
 import pstats
+import argparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import *
@@ -126,7 +126,7 @@ def index_commands():
     return index
 
 
-class SpackArgumentParser(ArgumentParser):
+class SpackArgumentParser(argparse.ArgumentParser):
     def format_help_sections(self, level):
         """Format help on sections for a particular verbosity level.
 
@@ -165,7 +165,7 @@ class SpackArgumentParser(ArgumentParser):
                         if action.metavar in cmd_set)
 
             # add commands to a group in order, and add the group
-            group = _ArgumentGroup(self, title=title)
+            group = argparse._ArgumentGroup(self, title=title)
             for name in commands:
                 group._add_action(cmds[name])
                 if name in remaining:
@@ -265,7 +265,7 @@ class SpackArgumentParser(ArgumentParser):
 def make_argument_parser():
     """Create an basic argument parser without any subcommands added."""
     parser = SpackArgumentParser(
-        formatter_class=RawTextHelpFormatter, add_help=False,
+        formatter_class=argparse.RawTextHelpFormatter, add_help=False,
         description=(
             "A flexible package manager that supports multiple versions,\n"
             "configurations, platforms, and compilers."))
@@ -410,8 +410,7 @@ def main(argv=None):
     # avoid loading all the modules from spack.cmd when we don't need
     # them, which reduces startup latency.
     parser = make_argument_parser()
-    parser.add_argument(
-        'command', metavar='COMMAND', nargs='?', action='store')
+    parser.add_argument('command', nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
 
     # Just print help and exit if run with no arguments at all
@@ -432,13 +431,13 @@ def main(argv=None):
 
     # Try to load the particular command the caller asked for.  If there
     # is no module for it, just die.
-    command_name = args.command.replace('-', '_')
+    command_name = args.command[0].replace('-', '_')
     try:
         parser.add_command(command_name)
     except ImportError:
         if spack.debug:
             raise
-        tty.die("Unknown command: %s" % args.command)
+        tty.die("Unknown command: %s" % args.command[0])
 
     # Re-parse with the proper sub-parser added.
     args, unknown = parser.parse_known_args()
