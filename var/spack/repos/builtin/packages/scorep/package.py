@@ -34,6 +34,7 @@ class Scorep(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-2.0.2.tar.gz"
 
+    version('3.1',   '065bf8eb08398e8146c895718ddb9145')
     version('3.0',   '44da8beaa3f71436a5f6fe51938aab2f')
     version('2.0.2', '8f00e79e1b5b96e511c5ebecd10b2888')
     version('1.4.2', '3b9a042b13bdd5836452354e6567f71e')
