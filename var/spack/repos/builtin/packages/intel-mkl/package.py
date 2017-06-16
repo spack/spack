@@ -33,8 +33,12 @@ class IntelMkl(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2017.3.196', '4a2eb4bee789391d9c07d7c348a80702',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11544/l_mkl_2017.3.196.tgz")
     version('2017.2.174', 'ef39a12dcbffe5f4a0ef141b8759208c',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11306/l_mkl_2017.2.174.tgz")
+    version('2017.1.132', '7911c0f777c4cb04225bf4518088939e',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11024/l_mkl_2017.1.132.tgz")
     version('2017.0.098', '3cdcb739ab5ab1e047eb130b9ffdd8d0',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9662/l_mkl_2017.0.098.tgz")
     version('11.3.3.210', 'f72546df27f5ebb0941b5d21fd804e34',
