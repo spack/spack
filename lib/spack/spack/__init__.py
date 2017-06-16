@@ -64,9 +64,9 @@ mock_packages_path = join_path(repos_path, "builtin.mock")
 user_config_path = os.path.expanduser('~/.spack')
 
 prefix = spack_root
-opt_path       = join_path(prefix, "opt")
-etc_path       = join_path(prefix, "etc")
-
+opt_path        = join_path(prefix, "opt")
+etc_path        = join_path(prefix, "etc")
+system_etc_path = '/etc'
 
 # GPG paths.
 gpg_keys_path      = join_path(var_path, "gpg")
