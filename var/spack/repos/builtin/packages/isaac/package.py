@@ -31,7 +31,9 @@ class Isaac(CMakePackage):
     homepage = "http://computationalradiationphysics.github.io/isaac/"
     url      = "https://github.com/ComputationalRadiationPhysics/isaac/archive/v1.3.0.tar.gz"
 
-    root_cmakelists_dir = 'lib'
+    @property
+    def root_cmakelists_dir(self):
+        return join_path(self.stage.source_path, 'lib')
 
     version('develop', branch='dev',
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')

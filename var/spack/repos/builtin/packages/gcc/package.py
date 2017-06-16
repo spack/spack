@@ -78,11 +78,13 @@ class Gcc(AutotoolsPackage):
     depends_on('gmp@4.3.2:')
     depends_on('mpfr@2.4.2:')
     depends_on('mpc@0.8.1:', when='@4.5:')
-    depends_on('isl@0.15:', when='@5.0:')
+    depends_on('isl@0.14', when='@5:5.9')
+    depends_on('isl@0.15:', when='@6:')
     depends_on('zlib', when='@6:')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
+    depends_on('zip', type='build', when='@:6 languages=all')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
@@ -97,17 +99,14 @@ class Gcc(AutotoolsPackage):
     # depends_on('guile@1.4.1:', type='test')
 
     # See https://golang.org/doc/install/gccgo#Releases
-    provides('golang', when='languages=go')
-    # 'when' does not currently support multiple parts of a spec.
-    # See https://github.com/LLNL/spack/pull/4151
-    # provides('golang',        when='languages=go @4.6:')
-    # provides('golang@:1',     when='languages=go @4.7.1:')
-    # provides('golang@:1.1',   when='languages=go @4.8:')
-    # provides('golang@:1.1.2', when='languages=go @4.8.2:')
-    # provides('golang@:1.2',   when='languages=go @4.9:')
-    # provides('golang@:1.4',   when='languages=go @5:')
-    # provides('golang@:1.6.1', when='languages=go @6:')
-    # provides('golang@:1.8',   when='languages=go @7:')
+    provides('golang',        when='languages=go @4.6:')
+    provides('golang@:1',     when='languages=go @4.7.1:')
+    provides('golang@:1.1',   when='languages=go @4.8:')
+    provides('golang@:1.1.2', when='languages=go @4.8.2:')
+    provides('golang@:1.2',   when='languages=go @4.9:')
+    provides('golang@:1.4',   when='languages=go @5:')
+    provides('golang@:1.6.1', when='languages=go @6:')
+    provides('golang@:1.8',   when='languages=go @7:')
 
     # For a list of valid languages for a specific release,
     # run the following command in the GCC source directory:

@@ -25,7 +25,7 @@
 from __future__ import print_function
 
 import textwrap
-import itertools
+from six.moves import zip_longest
 from llnl.util.tty.colify import *
 import spack
 import spack.fetch_strategy as fs
@@ -119,7 +119,7 @@ class VariantFormatter(object):
                     v.description,
                     width=self.column_widths[2]
                 )
-                for t in itertools.izip_longest(
+                for t in zip_longest(
                         name, allowed, description, fillvalue=''
                 ):
                     yield "    " + self.fmt % t
@@ -131,6 +131,14 @@ def print_text_info(pkg):
     header = "{0}:   ".format(pkg.build_system_class)
 
     print(header, pkg.name)
+
+    print()
+    print("Description:")
+    if pkg.__doc__:
+        print(pkg.format_doc(indent=4))
+    else:
+        print("    None")
+
     whitespaces = ''.join([' '] * (len(header) - len("Homepage: ")))
     print("Homepage:", whitespaces, pkg.homepage)
 
@@ -180,13 +188,6 @@ def print_text_info(pkg):
         for when, specs in reversed(sorted(inverse_map.items())):
             print("    %s provides %s" % (
                 when, ', '.join(str(s) for s in specs)))
-    else:
-        print("    None")
-
-    print()
-    print("Description:")
-    if pkg.__doc__:
-        print(pkg.format_doc(indent=4))
     else:
         print("    None")
 
