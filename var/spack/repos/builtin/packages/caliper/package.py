@@ -60,25 +60,19 @@ class Caliper(CMakePackage):
         args = [
             '-DBUILD_TESTING=Off',
             '-DWITH_DOCS=Off',
-            '-DWITH_TEST_APPS=Off'
+            '-DWITH_TEST_APPS=Off',
+            '-DWITH_DYNINST=%s'  % ('On' if '+dyninst'  in spec else 'Off'),
+            '-DWITH_CALLPATH=%s' % ('On' if '+callpath' in spec else 'Off'),
+            '-DWITH_GOTCHA=%s'   % ('On' if '+gotcha'   in spec else 'Off'),
+            '-DWITH_PAPI=%s'     % ('On' if '+papi'     in spec else 'Off'),
+            '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off')
         ]
-
-        if '+dyninst' not in spec:
-            args.append('-DWITH_DYNINST=Off')
-        if '+callpath' not in spec:
-            args.append('-DWITH_CALLPATH=Off')
-        if '+gotcha' not in spec:
-            args.append('-DWITH_GOTCHA=Off')
 
         if '+papi' in spec:
             args.append('-DPAPI_PREFIX=%s' % spec['papi'].prefix)
-        else:
-            args.append('-DWITH_PAPI=Off')
 
         if '+mpi' in spec:
             args.append('-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc)
             args.append('-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx)
-        else:
-            args.append('-DWITH_MPI=Off')
 
         return args
