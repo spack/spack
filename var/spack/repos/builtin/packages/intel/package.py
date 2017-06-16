@@ -122,8 +122,10 @@ class Intel(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    version('17.0.3', '691874735458d3e88fe0bcca4438b2a9',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
+    version('17.0.4', '3cd2a5763bf2ebe97889a067a1a7c800',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11485/parallel_studio_xe_2017_update4_composer_edition.tgz')
+    version('17.0.3', '52344df122c17ddff3687f84ceb21623',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
     version('17.0.2',     '2891ab1ece43eb61b6ab892f07c47f01',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
     version('17.0.1',     '1f31976931ed8ec424ac7c3ef56f5e85',

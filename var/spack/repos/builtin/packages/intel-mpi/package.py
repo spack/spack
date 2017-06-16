@@ -33,6 +33,8 @@ class IntelMpi(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
+    version('2017.3', '721ecd5f6afa385e038777e5b5361dfb',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11595/l_mpi_2017.3.196.tgz')
     version('2017.2', 'b6c2e62c3fb9b1558ede72ccf72cf1d6',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11334/l_mpi_2017.2.174.tgz')
     version('2017.1', 'd5e941ac2bcf7c5576f85f6bcfee4c18',
