@@ -52,4 +52,4 @@ class Isaac(CMakePackage):
     depends_on('icet', type='link')
     depends_on('mpi', type='link')
 
-    cmakelists_directory = 'lib'
+    root_cmakelists_dir = 'lib'

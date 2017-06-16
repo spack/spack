@@ -24,6 +24,7 @@
 ##############################################################################
 
 import inspect
+import os
 import platform
 
 import spack.build_environment
@@ -83,19 +84,15 @@ class CMakePackage(PackageBase):
         return 'RelWithDebInfo'
 
     @property
-    def cmakelists_directory(self):
+    def root_cmakelists_dir(self):
         """The relative path to the directory containing CMakeLists.txt
 
-        Defaults to the root of the extracted tarball.
+        This path is relative to the root of the extracted tarball,
+        not to the ``build_directory``. Defaults to the current directory.
 
         :return: directory containing CMakeLists.txt
         """
         return self.stage.source_path
-
-    @property
-    def cmakelists_abs_path(self):
-        """Absolute path to the directory containing CMakeLists.txt."""
-        return os.path.abspath(self.cmakelists_directory)
 
     @property
     def std_cmake_args(self):
@@ -110,13 +107,8 @@ class CMakePackage(PackageBase):
     @staticmethod
     def _std_args(pkg):
         """Computes the standard cmake arguments for a generic package"""
-        try:
-            build_type = pkg.build_type()
-        except AttributeError:
-            build_type = 'RelWithDebInfo'
-
         args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
-                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
+                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(pkg.build_type),
                 '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON']
         if platform.mac_ver()[0]:
             args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
@@ -150,8 +142,9 @@ class CMakePackage(PackageBase):
 
     def cmake(self, spec, prefix):
         """Runs ``cmake`` in the build directory"""
-        options = [self.cmakelists_abs_path] + self.std_cmake_args + \
-            self.cmake_args()
+        options = [os.path.abspath(self.cmakelists_abs_path)]
+        options += self.std_cmake_args
+        options += self.cmake_args()
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).cmake(*options)
 

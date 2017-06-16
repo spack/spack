@@ -48,4 +48,4 @@ class IsaacServer(CMakePackage):
     depends_on('libwebsockets@2.1.1:', type='link')
     # depends_on('gstreamer@1.0', when='+gstreamer')
 
-    cmakelists_directory = 'server'
+    root_cmakelists_dir = 'server'
