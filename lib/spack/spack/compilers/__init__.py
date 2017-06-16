@@ -100,7 +100,8 @@ def get_compiler_config(scope=None, init_config=True):
             # Check the site config and update the user config if
             # nothing is configured at the site level.
             site_config = spack.config.get_config('compilers', scope='site')
-            if not site_config:
+            sys_config = spack.config.get_config('compilers', scope='system')
+            if not site_config and not sys_config:
                 init_compiler_config()
                 config = spack.config.get_config('compilers', scope=scope)
         return config
