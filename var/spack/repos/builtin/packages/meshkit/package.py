@@ -41,12 +41,30 @@ class Meshkit(AutotoolsPackage):
     version('1.3-nightly', 'f56129ce1f3beae83a4038b47ae6b2c2')
     version('1.3',         '19bf51f56392f28d70e581fd4c2f51c8')
 
+    variant("mpi", default=True, description='enable mpi support')
+    variant("debug", default=False, description='enable debug symbols')
+    variant("shared", default=False, description='enable shared builds')
+    
+    depends_on('mpi', when='+mpi')
     depends_on('cgm')
     depends_on('moab')
 
     def configure_args(self):
         args = [ 
-             "--with-igeom={0}".format(spec['cgm'].prefix),
-             "--with-imesh={0}".format(spec['moab'].prefix)
+            "--with-igeom={0}".format(spec['cgm'].prefix),
+            "--with-imesh={0}".format(spec['moab'].prefix)
         ]
+        if '+mpi' in spec:
+            args.extend([
+                "--with-mpi",
+                "CC={0}".format(spec['mpi'].mpicc),
+                "CXX={0}".format(spec['mpi'].mpicxx),
+                "FC={0}".format(spec['mpi'].mpifc)
+            ])
+
+        if '+debug' in spec:
+            args.append("--enable-debug")
+        if '+shared' in spec:
+            args.append("--enable-shared")
+
         return args
