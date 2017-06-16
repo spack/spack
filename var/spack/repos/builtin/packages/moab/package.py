@@ -123,16 +123,26 @@ class Moab(AutotoolsPackage):
             options.append('--with-pnetcdf=%s' % spec['parallel-netcdf'].prefix)
         if '+cgm' in spec:
             options.append('--with-cgm=%s' % spec['cgm'].prefix)
+            if '+irel' in spec:
+                options.append('--enable-irel')
+        else:
+            if '+irel' in spec:
+                raise InstallError("configure with cgm if you need irel")
+        if '+fbigeom' in spec:
+            options.append('--enable-fbigeom')    
+        if '+coupler' in spec:
+            options.append('--enable-mbcoupler')
         if '+metis' in spec:
             options.append('--with-metis=%s' % spec['metis'].prefix)
         if '+parmetis' in spec:
             options.append('--with-parmetis=%s' % spec['parmetis'].prefix)
         if '+zoltan' in spec:
             options.append('--with-zoltan=%s' % spec['zoltan'].prefix)
+
         if '+debug' in spec:
             options.append('--enable-debug')
         # FIXME it seems that with cgm and shared, we have a link 
-        #   issue 
+        #   issue  in tools/geometry
         if '+shared' in spec:
             options.append('--enable-shared')
         if '~fortran' in spec:
