@@ -103,14 +103,14 @@ class Mfem(Package):
     depends_on('metis', when='+mpi')
     depends_on('metis@4:', when='+metis')
     depends_on('metis@5:', when='+suite-sparse ^suite-sparse@4.5:')
-    depends_on('hypre', when='+mpi')
-    depends_on('hypre', when='+hypre')
+    depends_on('hypre~internal-superlu', when='+mpi')
+    depends_on('hypre@develop~internal-superlu', when='+petsc +hypre')
 
     depends_on('sundials', when='+sundials')
     depends_on('mesquite', when='+mesquite')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='@3.2: +superlu-dist')
-    depends_on('petsc', when='+petsc')
+    depends_on('petsc@develop', when='+petsc')
 
     depends_on('mpfr', when='+mpfr')
     depends_on('cmake', when='^metis@5:', type='build')
@@ -244,7 +244,8 @@ class Mfem(Package):
             options += [
                 'PETSC_DIR=%s' % spec['petsc'].prefix,
                 'PETSC_OPT=%s' % petsc_opts,
-                'PETSC_LIB=%s' % petsc_libs]
+                'PETSC_LIB=-L%s -lpetsc %s' %
+                (spec['petsc'].prefix.lib, petsc_libs)]
 
         if '+mesquite' in spec:
             options += [
