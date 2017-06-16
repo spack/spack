@@ -212,16 +212,16 @@ import spack.util.executable
 from spack.util.executable import *
 __all__ += spack.util.executable.__all__
 
-# User's editor from the environment
 
-# Default editors to use:
-_default_editors = ['vim', 'vi', 'emacs', 'nano']
+# Set up the user's editor
+# $EDITOR environment variable has the highest precedence
+editor = os.environ.get('EDITOR')
 
-# The EDITOR environment variable has the highest precedence
-if os.environ.get('EDITOR'):
-    _default_editors.insert(0, os.environ.get('EDITOR'))
-
-editor = which(*_default_editors)
+# if editor is not set, use some sensible defaults
+if editor is not None:
+    editor = Executable(editor)
+else:
+    editor = which('vim', 'vi', 'emacs', 'nano')
 
 if not editor:
     default = default_editors[0]
