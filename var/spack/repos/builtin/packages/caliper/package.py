@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Caliper(CMakePackage):
     """Caliper is a program instrumentation and performance measurement
     framework. It provides data collection mechanisms and a source-code
