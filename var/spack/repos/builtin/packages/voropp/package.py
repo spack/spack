@@ -31,18 +31,9 @@ class Voropp(MakefilePackage):
     scientific fields."""
 
     homepage = "http://math.lbl.gov/voro++/about.html"
-
-    # This url is wrong but it passes the test the ++ make the url parser fail,
-    # the correct url is constructed by url_for_version that has to be used in
-    # any case due to the difference between the package name and the url
-    url      = "http://math.lbl.gov/voropp/download/dir/voropp-0.4.6.tar.gz"
+    url      = "http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz"
 
     version('0.4.6', '2338b824c3b7b25590e18e8df5d68af9')
-
-    def url_for_version(self, version):
-        url = "http://math.lbl.gov/voro++/download/dir/voro++-{0}.tar.gz".format(  # noqa: E501
-            str(version))
-        return url
 
     def edit(self, spec, prefix):
         filter_file(r'CC=g\+\+',

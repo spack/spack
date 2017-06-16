@@ -56,12 +56,23 @@ class IntelInstaller(Package):
 
     homepage = "https://software.intel.com/en-us"
     intel_components = "ALL"
-    license_required = True
     license_comment = '#'
     license_files = ['Licenses/license.lic']
     license_vars = ['INTEL_LICENSE_FILE']
     license_url = \
         'https://software.intel.com/en-us/articles/intel-license-manager-faq'
+
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See
+        # https://software.intel.com/en-us/articles/free-mkl
+        if (self.spec.satisfies("intel-mkl@2017.2:") or
+            self.spec.satisfies("intel-daal@2017.2:") or
+            self.spec.satisfies("intel-mpi@2017.2:") or
+            self.spec.satisfies("intel-ipp@2017.2:")):
+            return False
+        return True
 
     @property
     def global_license_file(self):
@@ -84,34 +95,47 @@ PSET_MODE=install
 CONTINUE_WITH_INSTALLDIR_OVERWRITE=yes
 PSET_INSTALL_DIR=%s
 NONRPM_DB_DIR=%s
+CONTINUE_WITH_OPTIONAL_ERROR=yes
+COMPONENTS=%s
+""" % (self.intel_prefix, self.intel_prefix, self.intel_components))
+
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See
+        # https://software.intel.com/en-us/articles/free-mkl
+        if not (spec.satisfies("intel-mkl@2017.2:") or
+                spec.satisfies("intel-daal@2017.2:") or
+                spec.satisfies("intel-mpi@2017.2:") or
+                spec.satisfies("intel-ipp@2017.2:")):
+            with open(silent_config_filename, 'a') as f:
+                f.write("""
 ACTIVATION_LICENSE_FILE=%s
 ACTIVATION_TYPE=license_file
 PHONEHOME_SEND_USAGE_DATA=no
-CONTINUE_WITH_OPTIONAL_ERROR=yes
-COMPONENTS=%s
-""" % (self.intel_prefix, self.intel_prefix, self.global_license_file,
-                self.intel_components))
+""" % (self.global_license_file))
 
         install_script = Executable("./install.sh")
         install_script('--silent', silent_config_filename)
 
 
 class Intel(IntelInstaller):
-    """Intel Compilers.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    """Intel Compilers."""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    # TODO: can also try the online installer (will download files on demand)
-    version('16.0.2', '1133fb831312eb519f7da897fec223fa',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"
-        % os.getcwd())
-    version('16.0.3', '3208eeabee951fc27579177b593cefe9',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"
-        % os.getcwd())
+    version('17.0.3', '691874735458d3e88fe0bcca4438b2a9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
+    version('17.0.2',     '2891ab1ece43eb61b6ab892f07c47f01',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
+    version('17.0.1',     '1f31976931ed8ec424ac7c3ef56f5e85',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10978/parallel_studio_xe_2017_update1_composer_edition.tgz')
+    version('17.0.0',     'b67da0065a17a05f110ed1d15c3c6312',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9656/parallel_studio_xe_2017_composer_edition.tgz')
+    version('16.0.4',      '2bc9bfc9be9c1968a6e42efb4378f40e',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9785/parallel_studio_xe_2016_composer_edition_update4.tgz')
+    version('16.0.3',     '3208eeabee951fc27579177b593cefe9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9063/parallel_studio_xe_2016_composer_edition_update3.tgz')
+    version('16.0.2',     '1133fb831312eb519f7da897fec223fa',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
 

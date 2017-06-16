@@ -25,30 +25,30 @@
 from spack import *
 
 
-class Glpk(Package):
+class Glpk(AutotoolsPackage):
     """The GLPK (GNU Linear Programming Kit) package is intended for solving
-       large-scale linear programming (LP), mixed integer programming
-       (MIP), and other related problems. It is a set of routines written
-       in ANSI C and organized in the form of a callable library
-
+    large-scale linear programming (LP), mixed integer programming
+    (MIP), and other related problems. It is a set of routines written
+    in ANSI C and organized in the form of a callable library.
     """
+
     homepage = "https://www.gnu.org/software/glpk"
     url = "http://ftp.gnu.org/gnu/glpk/glpk-4.57.tar.gz"
 
+    version('4.61', '3ce3e224a8b6e75a1a0b378445830f21')    
     version('4.57', '237531a54f73155842f8defe51aedb0f')
 
-    variant('gmp', default=False,
-            description='Activates support for GMP library')
+    variant(
+        'gmp', default=False, description='Activates support for GMP library'
+    )
 
     depends_on('gmp', when='+gmp')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
 
-        options = ['--prefix=%s' % prefix]
+        options = []
 
-        if '+gmp' in spec:
+        if '+gmp' in self.spec:
             options.append('--with-gmp')
 
-        configure(*options)
-        make()
-        make("install")
+        return options

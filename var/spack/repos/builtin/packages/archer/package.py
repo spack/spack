@@ -30,12 +30,12 @@ class Archer(Package):
     """ARCHER, a data race detection tool for large OpenMP applications."""
 
     homepage = "https://github.com/PRUNERS/ARCHER"
+    url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
 
-    version('1.0.0b', git='https://github.com/PRUNERS/ARCHER.git',
-            commit='2cf7ead36358842871d5bd9c33d499f62bf8dd38')
+    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
 
     depends_on('cmake', type='build')
-    depends_on('llvm+clang~gold')
+    depends_on('llvm')
     depends_on('ninja', type='build')
     depends_on('llvm-openmp-ompt')
 

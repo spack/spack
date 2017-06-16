@@ -39,21 +39,21 @@ def compile_c_and_execute(source_file, include_flags, link_flags):
        *link_flags)
 
     check = Executable('./check')
-    return check(return_output=True)
+    return check(output=str)
 
 
 def compare_output(current_output, blessed_output):
     """Compare blessed and current output of executables."""
     if not (current_output == blessed_output):
-        print "Produced output does not match expected output."
-        print "Expected output:"
-        print '-' * 80
-        print blessed_output
-        print '-' * 80
-        print "Produced output:"
-        print '-' * 80
-        print current_output
-        print '-' * 80
+        print("Produced output does not match expected output.")
+        print("Expected output:")
+        print('-' * 80)
+        print(blessed_output)
+        print('-' * 80)
+        print("Produced output:")
+        print('-' * 80)
+        print(current_output)
+        print('-' * 80)
         raise RuntimeError("Ouput check failed.",
                            "See spack_output.log for details")
 

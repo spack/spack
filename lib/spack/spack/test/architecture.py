@@ -58,7 +58,7 @@ def test_dict_functions_for_architecture():
 
 def test_platform():
         output_platform_class = spack.architecture.real_platform()
-        if os.path.exists('/opt/cray/craype'):
+        if os.environ.get('CRAYPE_VERSION') is not None:
             my_platform_class = Cray()
         elif os.path.exists('/bgsys'):
             my_platform_class = Bgq()
@@ -138,8 +138,8 @@ def test_user_defaults(config):
 
 def test_user_input_combination(config):
     platform = spack.architecture.platform()
-    os_list = platform.operating_sys.keys()
-    target_list = platform.targets.keys()
+    os_list = list(platform.operating_sys.keys())
+    target_list = list(platform.targets.keys())
     additional = ["fe", "be", "frontend", "backend"]
 
     os_list.extend(additional)

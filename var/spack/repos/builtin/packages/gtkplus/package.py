@@ -36,12 +36,17 @@ class Gtkplus(AutotoolsPackage):
 
     variant('X', default=False, description="Enable an X toolkit")
 
+    depends_on('pkg-config', type='build')
+
     depends_on("atk")
     depends_on("gdk-pixbuf")
     depends_on("glib")
     depends_on("pango")
     depends_on("pango~X", when='~X')
     depends_on("pango+X", when='+X')
+    depends_on('gobject-introspection', when='+X')
+
+    patch('no-demos.patch')
 
     def patch(self):
         # remove disable deprecated flag.

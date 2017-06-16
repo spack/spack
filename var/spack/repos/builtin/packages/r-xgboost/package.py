@@ -38,7 +38,6 @@ class RXgboost(RPackage):
 
     homepage = "https://github.com/dmlc/xgboost"
     url      = "https://cran.r-project.org/src/contrib/xgboost_0.6-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/xgboost"
 
     version('0.6-4', '86e517e3ce39f8a01de796920f6b425e')
     version('0.4-4', 'c24d3076058101a71de4b8af8806697c')

@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import os
 
 import llnl.util.tty as tty
@@ -31,6 +33,8 @@ import spack.config
 from spack.repository import *
 
 description = "manage package source repositories"
+section = "config"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -161,7 +165,7 @@ def repo_list(args):
     max_ns_len = max(len(r.namespace) for r in repos)
     for repo in repos:
         fmt = "%%-%ds%%s" % (max_ns_len + 4)
-        print fmt % (repo.namespace, repo.root)
+        print(fmt % (repo.namespace, repo.root))
 
 
 def repo(parser, args):

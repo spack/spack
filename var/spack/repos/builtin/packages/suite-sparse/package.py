@@ -32,11 +32,14 @@ class SuiteSparse(Package):
     homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
     url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.1.tar.gz'
 
+    version('4.5.5', '0a5b38af0016f009409a9606d2f1b555')
+    version('4.5.4', 'f6ab689442e64a1624a47aa220072d1b')
     version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
     version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
 
-    variant('tbb', default=True, description='Build with Intel TBB')
-    variant('fpic', default=True, description='Build position independent code (required to link with shared libraries)')
+    variant('tbb',  default=False, description='Build with Intel TBB')
+    variant('pic',  default=True,  description='Build position independent code (required to link with shared libraries)')
+    variant('cuda', default=False, description='Build with CUDA')
 
     depends_on('blas')
     depends_on('lapack')
@@ -46,7 +49,12 @@ class SuiteSparse(Package):
     # flags does not seem to be used, which leads to linking errors on Linux.
     depends_on('tbb', when='@4.5.3:+tbb')
 
-    patch('tbb_453.patch', when='@4.5.3')
+    depends_on('cuda', when='+cuda')
+
+    patch('tbb_453.patch', when='@4.5.3:+tbb')
+
+    # This patch removes unsupported flags for pgi compiler
+    patch('pgi.patch', when='%pgi')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -57,27 +65,30 @@ class SuiteSparse(Package):
 
         make_args = ['INSTALL=%s' % prefix]
 
-        # inject Spack compiler wrappers
         make_args.extend([
+            # By default, the Makefile uses the Intel compilers if
+            # they are found. This flag disables this behavior,
+            # forcing it to use Spack's compiler wrappers.
             'AUTOCC=no',
-            'CC=cc',
-            'CXX=c++',
-            'F77=f77',
-            'CUDA_ROOT     =',
-            'GPU_BLAS_PATH =',
-            'GPU_CONFIG    =',
-            'CUDA_PATH     =',
-            'CUDART_LIB    =',
-            'CUBLAS_LIB    =',
-            'CUDA_INC_PATH =',
-            'NV20          =',
-            'NV30          =',
-            'NV35          =',
-            'NVCC          = echo',
-            'NVCCFLAGS     =',
+            # CUDA=no does NOT disable cuda, it only disables internal search
+            # for CUDA_PATH. If in addition the latter is empty, then CUDA is
+            # completely disabled. See
+            # [SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk] for more.
+            'CUDA=no',
+            'CUDA_PATH={0}'.format(
+                spec['cuda'].prefix if '+cuda' in spec else ''
+            ),
+            'CFOPENMP={0}'.format(self.compiler.openmp_flag)
         ])
-        if '+fpic' in spec:
-            make_args.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+
+        if '+pic' in spec:
+            make_args.extend([
+                'CFLAGS={0}'.format(self.compiler.pic_flag),
+                'FFLAGS={0}'.format(self.compiler.pic_flag)
+            ])
+
+        if '%xl' in spec or '%xl_r' in spec:
+            make_args.extend(['CFLAGS+=-DBLAS_NO_UNDERSCORE'])
 
         # use Spack's metis in CHOLMOD/Partition module,
         # otherwise internal Metis will be compiled
@@ -95,8 +106,8 @@ class SuiteSparse(Package):
 
         # Make sure Spack's Blas/Lapack is used. Otherwise System's
         # Blas/Lapack might be picked up.
-        blas = spec['blas'].blas_libs.ld_flags
-        lapack = spec['lapack'].lapack_libs.ld_flags
+        blas = spec['blas'].libs.ld_flags
+        lapack = spec['lapack'].libs.ld_flags
         if '@4.5.1' in spec:
             # adding -lstdc++ is clearly an ugly way to do this, but it follows
             # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk

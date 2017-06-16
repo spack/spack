@@ -40,6 +40,7 @@ class Cairo(AutotoolsPackage):
     depends_on('libxext', when='+X')
     depends_on('libxrender', when='+X')
     depends_on('libxcb', when='+X')
+    depends_on('python', when='+X', type='build')
     depends_on("libpng")
     depends_on("glib")
     depends_on("pixman")
@@ -50,4 +51,8 @@ class Cairo(AutotoolsPackage):
     def configure_args(self):
         args = ["--disable-trace",  # can cause problems with libiberty
                 "--enable-tee"]
+        if '+X' in self.spec:
+            args.extend(["--enable-xlib", "--enable-xcb"])
+        else:
+            args.extend(["--disable-xlib", "--disable-xcb"])
         return args

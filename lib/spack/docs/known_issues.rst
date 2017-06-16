@@ -1,0 +1,110 @@
+============
+Known Issues
+============
+
+This is a list of known bugs in Spack. It provides ways of getting around these
+problems if you encounter them.
+
+-----------------------------------------------------------------
+Default variants are not taken into account during concretization
+-----------------------------------------------------------------
+
+**Status:** Expected to be fixed in the next release
+
+Current concretization algorithm does not take into account default values
+of variants when adding extra constraints to the spec via CLI. For example
+you may encounter the following error when trying to specify which MPI provider
+to use:
+
+.. code-block:: console
+
+   $ spack install hdf5 ^openmpi
+   ==> Error: hdf5 does not depend on openmpi
+
+although the hdf5 package contains:
+
+.. code-block:: python
+
+   variant('mpi', default=True, description='Enable MPI support')
+   depends_on('mpi', when='+mpi')
+
+A workaround is to explicitly activate the variant related to the dependency:
+
+.. code-block:: console
+
+   $ spack install hdf5+mpi ^openmpi
+
+See https://github.com/LLNL/spack/issues/397 for further details.
+
+
+---------------------------------------------------
+Variants are not properly forwarded to dependencies
+---------------------------------------------------
+
+**Status:** Expected to be fixed in the next release
+
+Sometimes, a variant of a package can also affect how its dependencies are
+built. For example, in order to build MPI support for a package, it may
+require that its dependencies are also built with MPI support. In the
+``package.py``, this looks like:
+
+.. code-block:: python
+
+   depends_on('hdf5~mpi', when='~mpi')
+   depends_on('hdf5+mpi', when='+mpi')
+
+Spack handles this situation properly for *immediate* dependencies, and
+builds ``hdf5`` with the same variant you used for the package that
+depends on it. However, for *indirect* dependencies (dependencies of
+dependencies), Spack does not backtrack up the DAG far enough to handle
+this. Users commonly run into this situation when trying to build R with
+X11 support:
+
+.. code-block:: console
+
+   $ spack install r+X
+   ...
+   ==> Error: Invalid spec: 'cairo@1.14.8%gcc@6.2.1+X arch=linux-fedora25-x86_64 ^bzip2@1.0.6%gcc@6.2.1+shared arch=linux-fedora25-x86_64 ^font-util@1.3.1%gcc@6.2.1 arch=linux-fedora25-x86_64 ^fontconfig@2.12.1%gcc@6.2.1 arch=linux-fedora25-x86_64 ^freetype@2.7.1%gcc@6.2.1 arch=linux-fedora25-x86_64 ^gettext@0.19.8.1%gcc@6.2.1+bzip2+curses+git~libunistring+libxml2+tar+xz arch=linux-fedora25-x86_64 ^glib@2.53.1%gcc@6.2.1~libmount arch=linux-fedora25-x86_64 ^inputproto@2.3.2%gcc@6.2.1 arch=linux-fedora25-x86_64 ^kbproto@1.0.7%gcc@6.2.1 arch=linux-fedora25-x86_64 ^libffi@3.2.1%gcc@6.2.1 arch=linux-fedora25-x86_64 ^libpng@1.6.29%gcc@6.2.1 arch=linux-fedora25-x86_64 ^libpthread-stubs@0.4%gcc@6.2.1 arch=linux-fedora25-x86_64 ^libx11@1.6.5%gcc@6.2.1 arch=linux-fedora25-x86_64 ^libxau@1.0.8%gcc@6.2.1 arch=linux-fedora25-x86_64 ^libxcb@1.12%gcc@6.2.1 arch=linux-fedora25-x86_64 ^libxdmcp@1.1.2%gcc@6.2.1 arch=linux-fedora25-x86_64 ^libxext@1.3.3%gcc@6.2.1 arch=linux-fedora25-x86_64 ^libxml2@2.9.4%gcc@6.2.1~python arch=linux-fedora25-x86_64 ^libxrender@0.9.10%gcc@6.2.1 arch=linux-fedora25-x86_64 ^ncurses@6.0%gcc@6.2.1~symlinks arch=linux-fedora25-x86_64 ^openssl@1.0.2k%gcc@6.2.1 arch=linux-fedora25-x86_64 ^pcre@8.40%gcc@6.2.1+utf arch=linux-fedora25-x86_64 ^pixman@0.34.0%gcc@6.2.1 arch=linux-fedora25-x86_64 ^pkg-config@0.29.2%gcc@6.2.1+internal_glib arch=linux-fedora25-x86_64 ^python@2.7.13%gcc@6.2.1+shared~tk~ucs4 arch=linux-fedora25-x86_64 ^readline@7.0%gcc@6.2.1 arch=linux-fedora25-x86_64 ^renderproto@0.11.1%gcc@6.2.1 arch=linux-fedora25-x86_64 ^sqlite@3.18.0%gcc@6.2.1 arch=linux-fedora25-x86_64 ^tar^util-macros@1.19.1%gcc@6.2.1 arch=linux-fedora25-x86_64 ^xcb-proto@1.12%gcc@6.2.1 arch=linux-fedora25-x86_64 ^xextproto@7.3.0%gcc@6.2.1 arch=linux-fedora25-x86_64 ^xproto@7.0.31%gcc@6.2.1 arch=linux-fedora25-x86_64 ^xtrans@1.3.5%gcc@6.2.1 arch=linux-fedora25-x86_64 ^xz@5.2.3%gcc@6.2.1 arch=linux-fedora25-x86_64 ^zlib@1.2.11%gcc@6.2.1+pic+shared arch=linux-fedora25-x86_64'.
+   Package cairo requires variant ~X, but spec asked for +X
+
+A workaround is to explicitly activate the variants of dependencies as well:
+
+.. code-block:: console
+
+   $ spack install r+X ^cairo+X ^pango+X
+
+See https://github.com/LLNL/spack/issues/267 and
+https://github.com/LLNL/spack/issues/2546 for further details.
+
+
+---------------------------------
+``spack extensions`` doesn't work
+---------------------------------
+
+**Status:** Up for grabs if you want to try to fix it
+
+Spack provides an ``extensions`` command that lists all available extensions
+of a package, the ones that are installed, and the ones that are already
+activated. This is very useful in conjunction with ``spack activate``.
+Unfortunately, this command no longer works:
+
+.. code-block:: console
+
+   $ spack extensions python
+   ==> python@2.7.13%clang@8.0.0-apple~tk~ucs4 arch=darwin-sierra-x86_64 -ckrr4mg has no extensions.
+
+
+See https://github.com/LLNL/spack/issues/2895 for further details.
+
+
+----------------------------
+``spack setup`` doesn't work
+----------------------------
+
+**Status:** Work in progress
+
+Spack provides a ``setup`` command that is useful for the development of
+software outside of Spack. Unfortunately, this command no longer works.
+See https://github.com/LLNL/spack/issues/2597 and
+https://github.com/LLNL/spack/issues/2662 for details. This is expected
+to be fixed by https://github.com/LLNL/spack/pull/2664.

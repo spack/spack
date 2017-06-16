@@ -32,7 +32,6 @@ class RCoin(RPackage):
 
     homepage = "https://cran.r-project.org/package=coin"
     url      = "https://cran.r-project.org/src/contrib/coin_1.1-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/coin"
 
     version('1.1-3', '97d3d21f1e4a5762e36dd718dd2d0661')
 
