@@ -144,7 +144,32 @@ class Mfem(Package):
     def install(self, spec, prefix):
         self.check_variants(spec)
 
-        options = []
+        yes_no = ('NO', 'YES')
+
+        metis_str = 'NO'
+        if '+parmetis' in spec or \
+           ('+metis' in spec and spec['metis'].satisfies('@5:')):
+            metis_str = 'YES'
+
+        threadsafe_str = 'NO'
+        if '+openmp' in spec or '+threadsafe' in spec:
+            threadsafe_str = 'YES'
+
+        options = [
+            'PREFIX=%s' % prefix,
+            'MFEM_DEBUG=%s' % yes_no['+debug' in spec],
+            'MFEM_USE_METIS_5=%s' % metis_str,
+            'MFEM_THREAD_SAFE=%s' % threadsafe_str,
+            'MFEM_USE_MPI=%s' % yes_no['+mpi' in spec],
+            'MFEM_USE_LAPACK=%s' % yes_no['+lapack' in spec],
+            'MFEM_USE_SUPERLU=%s' % yes_no['+superlu-dist' in spec],
+            'MFEM_USE_SUITESPARSE=%s' % yes_no['+suite-sparse' in spec],
+            'MFEM_USE_SUNDIALS=%s' % yes_no['+sundials' in spec],
+            'MFEM_USE_PETSC=%s' % yes_no['+petsc' in spec],
+            'MFEM_USE_MESQUITE=%s' % yes_no['+mesquite' in spec],
+            'MFEM_USE_NETCDF=%s' % yes_no['+netcdf' in spec],
+            'MFEM_USE_MPFR=%s' % yes_no['+mpfr' in spec],
+            'MFEM_USE_OPENMP=%s' % yes_no['+openmp' in spec]]
 
         if '+hypre' in spec:
             options += [
@@ -152,19 +177,12 @@ class Mfem(Package):
                 'HYPRE_OPT=-I%s' % spec['hypre'].prefix.include,
                 'HYPRE_LIB=-L%s' % spec['hypre'].prefix.lib + ' -lHYPRE']
 
-        options += ['MFEM_USE_LAPACK=%s' %
-                    ('NO', 'YES')['+lapack' in spec]]
         if '+lapack' in spec:
             lapack_lib = (spec['lapack'].libs + spec['blas'].libs).ld_flags  # NOQA: ignore=E501
             options += [
                 'LAPACK_OPT=-I%s' % spec['lapack'].prefix.include,
                 'LAPACK_LIB=%s' % lapack_lib]
 
-        metis_str = 'NO'
-        if '+parmetis' in spec or \
-           ('+metis' in spec and spec['metis'].satisfies('@5:')):
-            metis_str = 'YES'
-        options += ['MFEM_USE_METIS_5=%s' % metis_str]
         if '+parmetis' in spec:
             metis_lib = '-L%s -lparmetis -lmetis' % spec['parmetis'].prefix.lib
             options += [
@@ -178,8 +196,6 @@ class Mfem(Package):
                 'METIS_OPT=-I%s' % spec['metis'].prefix.include,
                 'METIS_LIB=%s' % metis_lib]
 
-        options += ['MFEM_USE_SUPERLU=%s' %
-                    ('NO', 'YES')['+superlu-dist' in spec]]
         if '+superlu-dist' in spec:
             superlu_lib = '-L%s' % spec['superlu-dist'].prefix.lib
             superlu_lib += ' -lsuperlu_dist'
@@ -188,8 +204,6 @@ class Mfem(Package):
                 'SUPERLU_OPT=-I%s' % spec['superlu-dist'].prefix.include,
                 'SUPERLU_LIB=%s' % superlu_lib]
 
-        options += ['MFEM_USE_SUITESPARSE=%s' %
-                    ('NO', 'YES')['+suite-sparse' in spec]]
         if '+suite-sparse' in spec:
             ssp = spec['suite-sparse'].prefix
             ss_lib = '-L%s' % ssp.lib
@@ -206,8 +220,6 @@ class Mfem(Package):
                 'SUITESPARSE_OPT=-I%s' % ssp.include,
                 'SUITESPARSE_LIB=%s' % ss_lib]
 
-        options += ['MFEM_USE_SUNDIALS=%s' %
-                    ('NO', 'YES')['+sundials' in spec]]
         if '+sundials' in spec:
             sundials_libs = (
                 '-lsundials_arkode -lsundials_cvode'
@@ -221,7 +233,6 @@ class Mfem(Package):
                 'SUNDIALS_LIB=-L%s %s' % (spec['sundials'].prefix.lib,
                                           sundials_libs)]
 
-        options += ['MFEM_USE_PETSC=%s' % ('NO', 'YES')['+petsc' in spec]]
         if '+petsc' in spec:
             f = open('%s/lib/pkgconfig/PETSc.pc' % spec['petsc'].prefix, 'r')
             for line in f:
@@ -235,15 +246,12 @@ class Mfem(Package):
                 'PETSC_OPT=%s' % petsc_opts,
                 'PETSC_LIB=%s' % petsc_libs]
 
-        options += ['MFEM_USE_MESQUITE=%s' %
-                    ('NO', 'YES')['+mesquite' in spec]]
         if '+mesquite' in spec:
             options += [
                 'MESQUITE_DIR=%s' % spec['mesquite'].prefix,
                 'MESQUITE_OPT=-I%s' % spec['mesquite'].prefix.include,
                 'MESQUITE_LIB=-L%s -lmesquite' % spec['mesquite'].prefix.lib]
 
-        options += ['MFEM_USE_NETCDF=%s' % ('NO', 'YES')['+netcdf' in spec]]
         if '+netcdf' in spec:
             np = spec['netcdf'].prefix
             zp = spec['zlib'].prefix
@@ -258,24 +266,11 @@ class Mfem(Package):
                 'NETCDF_OPT=-I%s' % np.include,
                 'NETCDF_LIB=%s' % nlib]
 
-        options += ['MFEM_USE_MPFR=%s' % ('NO', 'YES')['+mpfr' in spec]]
         if '+mpfr' in spec:
             options += ['MPFR_LIB=-L%s -lmpfr' % spec['mpfr'].prefix.lib]
 
-        threadsafe_str = 'NO'
-        if '+openmp' in spec or '+theadsafe' in spec:
-            threadsafe_str = 'YES'
-        options += ['MFEM_THREAD_SAFE=%s' % threadsafe_str]
-
-        options += ['MFEM_USE_OPENMP=%s' % ('NO', 'YES')['+openmp' in spec]]
         if '+openmp' in spec:
             options += ['OPENMP_OPT = %s' % self.compiler.openmp_flag]
-
-        options += ['MFEM_USE_MPI=%s' % ('NO', 'YES')['+mpi' in spec]]
-
-        options += ['MFEM_DEBUG=%s' % ('NO', 'YES')['+debug' in spec]]
-
-        options += ['PREFIX=%s' % prefix]
 
         make('config', *options)
         make('all')
