@@ -39,6 +39,8 @@ class Cgm(AutotoolsPackage):
 
     variant("mpi", default=True, description='enable mpi support')
     variant("oce", default=False, description='enable oce geometry kernel')
+    variant("debug", default=False, description='enable debug symbols')
+    variant("shared", default=False, description='enable shared builds')
 
     depends_on('mpi', when='+mpi')
     depends_on('oce+X11', when='+oce')
@@ -60,5 +62,11 @@ class Cgm(AutotoolsPackage):
             args.append("--with-occ={0}".format(spec['oce'].prefix))
         else:
             args.append("--without-occ")
+
+        if '+debug' in spec:
+            args.append("--enable-debug")
+
+        if '+shared' in spec:
+            args.append("--enable-shared")
 
         return args
