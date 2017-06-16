@@ -129,4 +129,6 @@ class PyPillow(PythonPackage):
             return '--{0}-{1}'.format(able, variant)
 
         variants = ['jpeg', 'zlib', 'tiff', 'freetype', 'lcms', 'jpeg2000']
-        return list(map(variant_to_flag, variants))
+        args = list(map(variant_to_flag, variants))
+        args.extend(['--rpath=%s' % ":".join(self.rpath)])
+        return args
