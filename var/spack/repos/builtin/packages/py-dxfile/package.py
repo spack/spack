@@ -29,7 +29,7 @@ class PyDxfile(PythonPackage):
     """Scientific Data Exchange [A1] is a set of guidelines for storing scientific
        data and metadata in a Hierarchical Data Format 5 [B6] file."""
 
-    homepage = "://github.com/data-exchange/dxfile"
+    homepage = "https://github.com/data-exchange/dxfile"
     url      = "https://github.com/data-exchange/dxfile/archive/v0.4.tar.gz"
 
     version('0.4', '0402cd38aefdfd5ce92feb43dda18947')
