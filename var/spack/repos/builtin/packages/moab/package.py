@@ -83,7 +83,8 @@ class Moab(AutotoolsPackage):
     depends_on('cgm', when='+cgm')
     depends_on('metis', when='+metis')
     depends_on('parmetis', when='+parmetis')
-    depends_on('zoltan', when='+zoltan')
+    # FIXME it seems that zoltan needs to be built without fortran
+    depends_on('zoltan~fortran', when='+zoltan')
 
     def configure_args(self):
         spec = self.spec
@@ -129,8 +130,15 @@ class Moab(AutotoolsPackage):
             options.append('--with-zoltan=%s' % spec['zoltan'].prefix)
         if '+debug' in spec:
             options.append('--enable-debug')
+        # FIXME it seems that with cgm and shared, we have a link 
+        #   issue 
         if '+shared' in spec:
             options.append('--enable-shared')
         if '~fortran' in spec:
             options.append('--disable-fortran')
         return options
+
+    # Run the install phase with -j 1.  There seems to be a problem with
+    # parallel installations of examples
+    def install(self, spec, prefix):
+        make('install', parallel=False)
