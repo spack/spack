@@ -78,6 +78,7 @@ class Moab(AutotoolsPackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('netcdf', when='+netcdf')
     depends_on('parallel-netcdf', when='+pnetcdf')
     depends_on('cgm', when='+cgm')
