@@ -241,8 +241,7 @@ def _depends_on(pkg, spec, when=None, type=None):
         #               but is most backwards-compatible.
         type = ('build', 'link')
 
-    if isinstance(type, str):
-        type = spack.spec.special_types.get(type, (type,))
+    type = spack.spec.canonical_deptype(type)
 
     for deptype in type:
         if deptype not in spack.spec.alldeps:
