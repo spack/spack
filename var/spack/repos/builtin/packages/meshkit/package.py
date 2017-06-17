@@ -50,6 +50,7 @@ class Meshkit(AutotoolsPackage):
     depends_on('moab+irel+fbigeom')
 
     def configure_args(self):
+        spec = self.spec
         args = [ 
             "--with-igeom={0}".format(spec['cgm'].prefix),
             "--with-imesh={0}".format(spec['moab'].prefix)
