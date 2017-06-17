@@ -137,7 +137,6 @@ __all__ = [
     'Spec',
     'alldeps',
     'canonical_deptype',
-    'validate_deptype',
     'parse',
     'parse_anonymous_spec',
     'SpecError',
@@ -150,7 +149,6 @@ __all__ = [
     'DuplicateArchitectureError',
     'InconsistentSpecError',
     'InvalidDependencyError',
-    'InvalidDependencyTypeError',
     'NoProviderError',
     'MultipleProviderError',
     'UnsatisfiableSpecError',
@@ -197,44 +195,27 @@ _separators = '[%s]' % ''.join(color_formats.keys())
    every time we call str()"""
 _any_version = VersionList([':'])
 
-# Special types of dependencies.
+"""Types of dependencies that Spack understands."""
 alldeps = ('build', 'link', 'run')
-norun   = ('link', 'build')
-special_types = {
-    'alldeps': alldeps,
-    'all': alldeps,  # allow "all" as string but not symbol.
-    'norun': norun,
-}
-
-legal_deps = tuple(special_types) + alldeps
 
 """Max integer helps avoid passing too large a value to cyaml."""
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
 
-def validate_deptype(deptype):
-    if isinstance(deptype, str):
-        if deptype not in legal_deps:
-            raise InvalidDependencyTypeError(
-                "Invalid dependency type: %s" % deptype)
-
-    elif isinstance(deptype, (list, tuple)):
-        for t in deptype:
-            validate_deptype(t)
-
-    elif deptype is None:
-        raise InvalidDependencyTypeError("deptype cannot be None!")
-
-
 def canonical_deptype(deptype):
-    if deptype is None:
+    if deptype in (None, 'all', all):
         return alldeps
 
     elif isinstance(deptype, string_types):
-        return special_types.get(deptype, (deptype,))
+        if deptype not in alldeps:
+            raise ValueError('Invalid dependency type: %s' % deptype)
+        return (deptype,)
 
     elif isinstance(deptype, (tuple, list)):
-        return (sum((canonical_deptype(d) for d in deptype), ()))
+        invalid = next((d for d in deptype if d not in alldeps), None)
+        if invalid:
+            raise ValueError('Invalid dependency type: %s' % invalid)
+        return tuple(sorted(deptype))
 
     return deptype
 
@@ -3336,10 +3317,6 @@ class InconsistentSpecError(SpecError):
 class InvalidDependencyError(SpecError):
     """Raised when a dependency in a spec is not actually a dependency
        of the package."""
-
-
-class InvalidDependencyTypeError(SpecError):
-    """Raised when a dependency type is not a legal Spack dep type."""
 
 
 class NoProviderError(SpecError):
