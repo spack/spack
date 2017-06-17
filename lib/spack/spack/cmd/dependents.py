@@ -38,16 +38,22 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-a', '--all', action='store_true', default=False,
-        help="List all potential dependents of the package instead of actual "
-        "dependents of an installed spec")
+        '-i', '--installed', action='store_true', default=False,
+        help="List installed dependents of an installed spec, "
+        "instead of possible dependents of a package.")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="specs to list dependencies of")
+        help="spec to list dependents for")
 
 
-def inverted_dag():
-    """Returns inverted package DAG as adjacency lists."""
+def inverted_dependencies():
+    """Iterate through all packages and return a dictionary mapping package
+       names to possible dependnecies.
+
+       Virtual packages are included as sources, so that you can query
+       dependents of, e.g., `mpi`, but virtuals are not included as
+       actual dependents.
+    """
     dag = {}
     for pkg in spack.repo.all_packages():
         dag.setdefault(pkg.name, set())
@@ -56,24 +62,30 @@ def inverted_dag():
 
             # expand virtuals if necessary
             if spack.repo.is_virtual(dep):
-                deps = [s.name for s in spack.repo.providers_for(dep)]
+                deps += [s.name for s in spack.repo.providers_for(dep)]
 
             for d in deps:
                 dag.setdefault(d, set()).add(pkg.name)
     return dag
 
 
-def all_dependents(name, inverted_dag, dependents=None):
+def get_dependents(pkg_name, ideps, dependents=None):
+    """Get all dependents for a package.
+
+    Args:
+        pkg_name (str): name of the package whose dependents should be returned
+        ideps (dict): dictionary of dependents, from inverted_dependencies()
+    """
     if dependents is None:
         dependents = set()
 
-    if name in dependents:
+    if pkg_name in dependents:
         return set()
-    dependents.add(name)
+    dependents.add(pkg_name)
 
-    direct = inverted_dag[name]
-    for dname in direct:
-        all_dependents(dname, inverted_dag, dependents)
+    direct = ideps[pkg_name]
+    for dep_name in direct:
+        get_dependents(dep_name, ideps, dependents)
     dependents.update(direct)
     return dependents
 
@@ -83,23 +95,23 @@ def dependents(parser, args):
     if len(specs) != 1:
         tty.die("spack dependents takes only one spec.")
 
-    if args.all:
-        spec = specs[0]
-        idag = inverted_dag()
-
-        dependents = all_dependents(spec.name, idag)
-        dependents.remove(spec.name)
-        if dependents:
-            colify(sorted(dependents))
-        else:
-            print("No dependents")
-
-    else:
+    if args.installed:
         spec = spack.cmd.disambiguate_spec(specs[0])
 
         tty.msg("Dependents of %s" % spec.cformat('$_$@$%@$/'))
         deps = spack.store.db.installed_dependents(spec)
         if deps:
             spack.cmd.display_specs(deps)
+        else:
+            print("No dependents")
+
+    else:
+        spec = specs[0]
+        ideps = inverted_dependencies()
+
+        dependents = get_dependents(spec.name, ideps)
+        dependents.remove(spec.name)
+        if dependents:
+            colify(sorted(dependents))
         else:
             print("No dependents")
