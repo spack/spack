@@ -39,8 +39,6 @@ class Moab(AutotoolsPackage):
     url      = "http://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
 
     version('5.0.0', '1840ca02366f4d3237d44af63e239e3b')
-    version('4.9.2-RC1', '012c2c29e2c504c5c39131a0a10adc50')
-    version('4.9.2-RC0', '8581acec855308b34144c66e1163ad8e')
     version('4.9.2', '540931a604c180bbd3c1bb3ee8c51dd0')
     version('4.9.1', '19cc2189fa266181ad9109b18d0b2ab8')
     version('4.9.0', '40695d0a159040683cfa05586ad4a7c2')
@@ -67,6 +65,10 @@ class Moab(AutotoolsPackage):
     variant('shared', default=False,
             description='Enables the build of shared libraries')
     variant('fortran', default=True, description='Enable Fortran support')
+
+    conflicts('+irel', when='~cgm')
+    conflicts('+pnetcdf', when='~mpi')
+    conflicts('+parmetis', when='~mpi')
 
     # There are many possible variants for MOAB. Here are examples for
     # two of them:
@@ -125,9 +127,6 @@ class Moab(AutotoolsPackage):
             options.append('--with-cgm=%s' % spec['cgm'].prefix)
             if '+irel' in spec:
                 options.append('--enable-irel')
-        else:
-            if '+irel' in spec:
-                raise InstallError("configure with cgm if you need irel")
         if '+fbigeom' in spec:
             options.append('--enable-fbigeom')    
         if '+coupler' in spec:
