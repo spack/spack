@@ -24,17 +24,18 @@
 ##############################################################################
 from spack import *
 
+
 class Netgen(AutotoolsPackage):
-    """NETGEN is an automatic 3d tetrahedral mesh generator. It accepts 
-       input from constructive solid geometry (CSG) or boundary 
-       representation (BRep) from STL file format. The connection to 
+    """NETGEN is an automatic 3d tetrahedral mesh generator. It accepts
+       input from constructive solid geometry (CSG) or boundary
+       representation (BRep) from STL file format. The connection to
        a geometry kernel allows the handling of IGES and STEP files.
-       NETGEN contains modules for mesh optimization and hierarchical 
+       NETGEN contains modules for mesh optimization and hierarchical
        mesh refinement. """
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://ngsolve.org/"
-    url      = "https://gigenet.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/5.3/netgen-5.3.1.tar.gz"
+    url = "https://gigenet.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/5.3/netgen-5.3.1.tar.gz"
 
     version('5.3.1', 'afd5a9b0b1296c242a9c554f06af6510')
 
@@ -42,11 +43,11 @@ class Netgen(AutotoolsPackage):
     variant("oce", default=False, description='enable oce geometry kernel')
     variant("nogui", default=True, description='disable gui')
     variant("metis", default=False, description='use metis for partitioning')
-    
+
     depends_on('mpi', when='+mpi')
     depends_on('oce+X11', when='+oce')
     depends_on('metis', when='+metis')
-    
+
     def configure_args(self):
         spec = self.spec
         args = []
@@ -59,15 +60,14 @@ class Netgen(AutotoolsPackage):
         if '+oce' in spec:
             args.append("--with-occ={0}".format(spec['oce'].prefix))
         #  FIXME
-        # due to a bug in netgen config, when --without-occ is specified 
-        #   or --with-occ=no, OCC flags is turned true, and build fails 
-        #   later; so do not specify anything like that  
+        # due to a bug in netgen config, when --without-occ is specified
+        #   or --with-occ=no, OCC flags is turned true, and build fails
+        #   later; so do not specify anything like that
         #else:
         #    args.append("--without-occ")
 
         if '+nogui' in spec:
             args.append("--disable-gui")
-        
         if '+metis' in spec:
             args.append('--with-metis=%s' % spec['metis'].prefix)
 

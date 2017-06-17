@@ -28,7 +28,7 @@ from spack import *
 
 class Meshkit(AutotoolsPackage):
     """MeshKit is an open-source library of mesh generation functionality.
-       Its design philosophy is two-fold: it provides a collection of 
+       Its design philosophy is two-fold: it provides a collection of
        meshing algorithms for use in real meshing problems, along with
        other tools commonly needed to support mesh generation"""
 
@@ -38,10 +38,10 @@ class Meshkit(AutotoolsPackage):
     version('1.5.0',       '90b52416598ef65525ce4457a50ffe68')
 
     variant("mpi", default=True, description='enable mpi support')
-    variant("netgen", default=False, description = 'enable netgen support')
+    variant("netgen", default=False, description='enable netgen support')
     variant("debug", default=False, description='enable debug symbols')
     variant("shared", default=False, description='enable shared builds')
-    
+
     depends_on('mpi', when='+mpi')
     depends_on('netgen', when='+netgen')
     depends_on('cgm')
@@ -49,7 +49,7 @@ class Meshkit(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = [ 
+        args = [
             "--with-igeom={0}".format(spec['cgm'].prefix),
             "--with-imesh={0}".format(spec['moab'].prefix)
         ]
@@ -61,7 +61,7 @@ class Meshkit(AutotoolsPackage):
                 "FC={0}".format(spec['mpi'].mpifc)
             ])
         if '+netgen' in spec:
-            args.append("--with-netgen={0}".format(spec['netgen'].prefix ))
+            args.append("--with-netgen={0}".format(spec['netgen'].prefix))
 
         if '+debug' in spec:
             args.append("--enable-debug")
