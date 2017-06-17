@@ -36,16 +36,14 @@ class Meshkit(AutotoolsPackage):
     url = "http://ftp.mcs.anl.gov/pub/fathom/meshkit-1.5.0.tar.gz"
 
     version('1.5.0',       '90b52416598ef65525ce4457a50ffe68')
-    version('1.4.1',       'a8cee0babf32be0f3964a5a2a99f7e5b')
-    version('1.4.0',       '5d7799ee528045b20e78e5c900006e92')
-    version('1.3-nightly', 'f56129ce1f3beae83a4038b47ae6b2c2')
-    version('1.3',         '19bf51f56392f28d70e581fd4c2f51c8')
 
     variant("mpi", default=True, description='enable mpi support')
+    variant("netgen", default=False, description = 'enable netgen support')
     variant("debug", default=False, description='enable debug symbols')
     variant("shared", default=False, description='enable shared builds')
     
     depends_on('mpi', when='+mpi')
+    depends_on('netgen', when='+netgen')
     depends_on('cgm')
     depends_on('moab+irel+fbigeom')
 
@@ -62,10 +60,17 @@ class Meshkit(AutotoolsPackage):
                 "CXX={0}".format(spec['mpi'].mpicxx),
                 "FC={0}".format(spec['mpi'].mpifc)
             ])
+        if '+netgen' in spec:
+            args.append("--with-netgen={0}".format(spec['netgen'].prefix ))
 
         if '+debug' in spec:
             args.append("--enable-debug")
+        else:
+            args.append("--disable-debug")
+
         if '+shared' in spec:
             args.append("--enable-shared")
+        else:
+            args.append("--disable-shared")
 
         return args
