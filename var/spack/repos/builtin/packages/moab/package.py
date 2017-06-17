@@ -36,7 +36,7 @@ class Moab(AutotoolsPackage):
     versatile enough to support individual entity access."""
 
     homepage = "https://bitbucket.org/fathomteam/moab"
-    url      = "http://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
+    url = "http://ftp.mcs.anl.gov/pub/fathom/moab-5.0.0.tar.gz"
 
     version('5.0.0', '1840ca02366f4d3237d44af63e239e3b')
     version('4.9.2', '540931a604c180bbd3c1bb3ee8c51dd0')
@@ -104,31 +104,32 @@ class Moab(AutotoolsPackage):
             '--disable-refiner',
             '--disable-h5mtools',
             '--disable-mbcslam',
-            '--with-pic', 
+            '--with-pic',
             '--without-vtk'
             ]
         if '+mpi' in spec:
-            options.extend ([ 
+            options.extend([
                 '--with-mpi=%s' % spec['mpi'].prefix,
                 'CXX=%s' % spec['mpi'].mpicxx,
                 'CC=%s' % spec['mpi'].mpicc,
                 'FC=%s' % spec['mpi'].mpifc
                 ])
             if '+parmetis' in spec:
-                 options.append('--with-parmetis=%s' % spec['parmetis'].prefix)
-                
+                options.append('--with-parmetis=%s' % spec['parmetis'].prefix)
+
         if '+hdf5' in spec:
             options.append('--with-hdf5=%s' % spec['hdf5'].prefix)
         if '+netcdf' in spec:
             options.append('--with-netcdf=%s' % spec['netcdf'].prefix)
         if '+pnetcdf' in spec:
-            options.append('--with-pnetcdf=%s' % spec['parallel-netcdf'].prefix)
+            options.append('--with-pnetcdf=%s'
+                           % spec['parallel-netcdf'].prefix)
         if '+cgm' in spec:
             options.append('--with-cgm=%s' % spec['cgm'].prefix)
             if '+irel' in spec:
                 options.append('--enable-irel')
         if '+fbigeom' in spec:
-            options.append('--enable-fbigeom')    
+            options.append('--enable-fbigeom')
         if '+coupler' in spec:
             options.append('--enable-mbcoupler')
         if '+metis' in spec:
@@ -140,7 +141,7 @@ class Moab(AutotoolsPackage):
 
         if '+debug' in spec:
             options.append('--enable-debug')
-        # FIXME it seems that with cgm and shared, we have a link 
+        # FIXME it seems that with cgm and shared, we have a link
         #   issue  in tools/geometry
         if '+shared' in spec:
             options.append('--enable-shared')
