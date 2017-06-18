@@ -31,7 +31,7 @@ import spack
 import spack.store
 import spack.cmd
 
-description = "show installed packages that depend on another"
+description = "show packages that depend on another"
 section = "basic"
 level = "long"
 
@@ -42,8 +42,11 @@ def setup_parser(subparser):
         help="List installed dependents of an installed spec, "
         "instead of possible dependents of a package.")
     subparser.add_argument(
+        '-t', '--transitive', action='store_true', default=False,
+        help="Show all transitive dependents.")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="spec to list dependents for")
+        help="spec or package name")
 
 
 def inverted_dependencies():
@@ -69,12 +72,13 @@ def inverted_dependencies():
     return dag
 
 
-def get_dependents(pkg_name, ideps, dependents=None):
+def get_dependents(pkg_name, ideps, transitive=False, dependents=None):
     """Get all dependents for a package.
 
     Args:
         pkg_name (str): name of the package whose dependents should be returned
         ideps (dict): dictionary of dependents, from inverted_dependencies()
+        transitive (bool, optional): return transitive dependents when True
     """
     if dependents is None:
         dependents = set()
@@ -84,8 +88,9 @@ def get_dependents(pkg_name, ideps, dependents=None):
     dependents.add(pkg_name)
 
     direct = ideps[pkg_name]
-    for dep_name in direct:
-        get_dependents(dep_name, ideps, dependents)
+    if transitive:
+        for dep_name in direct:
+            get_dependents(dep_name, ideps, transitive, dependents)
     dependents.update(direct)
     return dependents
 
@@ -109,7 +114,7 @@ def dependents(parser, args):
         spec = specs[0]
         ideps = inverted_dependencies()
 
-        dependents = get_dependents(spec.name, ideps)
+        dependents = get_dependents(spec.name, ideps, args.transitive)
         dependents.remove(spec.name)
         if dependents:
             colify(sorted(dependents))
