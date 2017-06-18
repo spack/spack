@@ -4,6 +4,7 @@
 [![Build Status](https://travis-ci.org/LLNL/spack.svg?branch=develop)](https://travis-ci.org/LLNL/spack)
 [![codecov](https://codecov.io/gh/LLNL/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/LLNL/spack)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
+[![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
 
 Spack is a multi-platform package manager that builds and installs
 multiple versions and configurations of software. It works on Linux,
@@ -53,10 +54,19 @@ packages to bugfixes, or even new core features.
 
 ### Mailing list
 
-If you are interested in contributing to spack, the first step is to join
-the mailing list.  We're Google Groups for this. Join here:
+If you are interested in contributing to spack, join the mailing list.
+We're using Google Groups for this:
 
   * [Spack Google Group](https://groups.google.com/d/forum/spack)
+
+### Slack channel
+
+Spack has a Slack channel where you can chat about all things Spack:
+
+  * [Spack on Slack](https://spackpm.slack.com)
+
+[Sign up here](https://spackpm.herokuapp.com) to get an invitation mailed
+to you.
 
 ### Contributions
 
