@@ -31,9 +31,13 @@ class NinjaFortran(Package):
     homepage = "https://github.com/Kitware/ninja"
     url      = "https://github.com/Kitware/ninja/archive/v1.7.2.gcc0ea.kitware.dyndep-1.tar.gz"
 
-    version('1.7.2.gcc0ea.kitware.dyndep-1', '3982f508c415c0abaca34cb5e92e711a')
+    version('1.7.2', '3982f508c415c0abaca34cb5e92e711a')
 
     extends('python')
+
+    def url_for_version(self, version):
+        url = 'https://github.com/Kitware/ninja/archive/v{0}.gcc0ea.kitware.dyndep-1.tar.gz'
+        return url.format(version)
 
     def install(self, spec, prefix):
         python('configure.py', '--bootstrap')
