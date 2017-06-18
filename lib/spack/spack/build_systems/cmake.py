@@ -147,7 +147,7 @@ class CMakePackage(PackageBase):
 
     def cmake(self, spec, prefix):
         """Runs ``cmake`` in the build directory"""
-        options = [os.path.abspath(self.cmakelists_abs_path)]
+        options = [os.path.abspath(self.root_cmakelists_dir)]
         options += self.std_cmake_args
         options += self.cmake_args()
         with working_dir(self.build_directory, create=True):
