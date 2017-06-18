@@ -45,8 +45,7 @@ def setup_parser(subparser):
         '-t', '--transitive', action='store_true', default=False,
         help="Show all transitive dependents.")
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="spec or package name")
+        'spec', nargs=argparse.REMAINDER, help="spec or package name")
 
 
 def inverted_dependencies():
@@ -104,7 +103,8 @@ def dependents(parser, args):
         spec = spack.cmd.disambiguate_spec(specs[0])
 
         tty.msg("Dependents of %s" % spec.cformat('$_$@$%@$/'))
-        deps = spack.store.db.installed_dependents(spec)
+        deps = spack.store.db.installed_relatives(
+            spec, 'parents', args.transitive)
         if deps:
             spack.cmd.display_specs(deps)
         else:
