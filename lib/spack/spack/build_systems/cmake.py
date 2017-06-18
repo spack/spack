@@ -107,8 +107,13 @@ class CMakePackage(PackageBase):
     @staticmethod
     def _std_args(pkg):
         """Computes the standard cmake arguments for a generic package"""
+        try:
+            build_type = pkg.build_type()
+        except AttributeError:
+            build_type = 'RelWithDebInfo'
+
         args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
-                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(pkg.build_type),
+                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
                 '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON']
         if platform.mac_ver()[0]:
             args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
