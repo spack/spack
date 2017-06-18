@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 
+import sys
+
 
 class Caliper(CMakePackage):
     """Caliper is a program instrumentation and performance measurement
@@ -42,10 +44,15 @@ class Caliper(CMakePackage):
             description='Enable MPI wrappers')
     variant('dyninst', default=False, 
             description='Enable symbol translation support with dyninst')
-    variant('callpath', default=True,
+    # libunwind has some issues on Mac
+    variant('callpath', default = sys.platform != 'darwin',
             description='Enable callpath service (requires libunwind)')
-    variant('papi', default=True, description='Enable PAPI service')
-    variant('gotcha', default=True, description='Enable GOTCHA support')
+    # pthread_self() signature is incompatible with PAPI_thread_init() on Mac
+    variant('papi', default = sys.platform != 'darwin',
+            description='Enable PAPI service')
+    # gotcha doesn't work on Mac
+    variant('gotcha',default = sys.platform != 'darwin',
+            description='Enable GOTCHA support')
 
     depends_on('dyninst', when='+dyninst')
     depends_on('papi', when='+papi')
