@@ -711,11 +711,16 @@ class Database(object):
             return self._remove(spec)
 
     @_autospec
-    def installed_dependents(self, spec):
+    def installed_dependents(self, spec, transitive=True):
         """List the installed specs that depend on this one."""
         dependents = set()
         for spec in self.query(spec):
-            for dependent in spec.traverse(direction='parents', root=False):
+            if transitive:
+                to_add = spec.traverse(direction='parents', root=False)
+            else:
+                to_add = spec.dependents()
+
+            for dependent in to_add:
                 dependents.add(dependent)
         return dependents
 
