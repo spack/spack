@@ -107,10 +107,6 @@ def coerced(method):
     return coercing_method
 
 
-def _numeric_lt(self0, other):
-    """Compares two versions, knowing they're both numeric"""
-
-
 class Version(object):
     """Class to represent versions"""
 
