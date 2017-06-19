@@ -93,6 +93,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             '-Dloclibpth=' + self.spec['gdbm'].prefix.lib,
         ]
 
+        # Prepend default perl @INC path to allow package activation:
+        config_args.append('-Accflags=-DAPPLLIB_EXP=\\"' + join_path(
+                           self.spec.prefix, 'lib', 'perl5') + '\\"')
+
         # Discussion of -fPIC for Intel at:
         # https://github.com/LLNL/spack/pull/3081 and
         # https://github.com/LLNL/spack/pull/4416
@@ -129,10 +133,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 perl('Makefile.PL')
                 make()
                 make('install')
-
-    def setup_environment(self, spack_env, run_env):
-        """Set PERL5LIB to support activation of Perl packages"""
-        run_env.set('PERL5LIB', join_path(self.prefix, 'lib', 'perl5'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
