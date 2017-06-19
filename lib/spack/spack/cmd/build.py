@@ -35,7 +35,7 @@ build_system_to_phase = {
     AutotoolsPackage: 'build',
     CMakePackage: 'build',
     WafPackage: 'build',
-    PythonPackage: 'build',
+    PythonPackage: 'build_scripts',
     PerlPackage: 'build',
 }
 

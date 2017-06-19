@@ -28,6 +28,7 @@ import os
 
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
+from spack.util.environment import filter_system_paths
 
 from llnl.util.filesystem import working_dir
 
@@ -64,8 +65,15 @@ class PythonPackage(PackageBase):
 
        $ python setup.py --help-commands
 
-    By default, only the 'build' and 'install' phases are run, but if you
-    need to run more phases, simply modify your ``phases`` list like so:
+    By default, only the following phases are run:
+
+    * build_py
+    * build_ext
+    * build_clib
+    * build_scripts
+    * install
+
+    If you need to run more phases, simply modify your ``phases`` list like so:
 
     .. code-block:: python
 
@@ -78,8 +86,7 @@ class PythonPackage(PackageBase):
        $ python setup.py --no-user-cfg <phase>
 
     Each phase also has a <phase_args> function that can pass arguments to
-    this call. All of these functions are empty except for the ``install_args``
-    function, which passes ``--prefix=/path/to/installation/directory``.
+    this call.
 
     If you need to run a phase which is not a standard setup.py command,
     you'll need to define a function for it like so:
@@ -89,21 +96,23 @@ class PythonPackage(PackageBase):
        def configure(self, spec, prefix):
            self.setup_py('configure')
     """
-    # Default phases
-    phases = ['build', 'install']
+    #: Default phases
+    phases = [
+        'build_py', 'build_ext', 'build_clib', 'build_scripts', 'install'
+    ]
 
-    # Name of modules that the Python package provides
-    # This is used to test whether or not the installation succeeded
-    # These names generally come from running:
-    #
-    # >>> import setuptools
-    # >>> setuptools.find_packages()
-    #
-    # in the source tarball directory
+    #: Name of modules that the Python package provides
+    #: This is used to test whether or not the installation succeeded
+    #: These names generally come from running:
+    #:
+    #: >>> import setuptools
+    #: >>> setuptools.find_packages()
+    #:
+    #: in the source tarball directory
     import_modules = []
 
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: To be used in UI queries that require to know which
+    #: build-system class we are using
     build_system_class = 'PythonPackage'
 
     #: Callback names for build-time test
@@ -184,6 +193,43 @@ class PythonPackage(PackageBase):
         """Build C/C++ extensions (compile/link to build directory)."""
         args = self.build_ext_args(spec, prefix)
 
+        # Get link dependencies
+        link_deps = self.spec.traverse(root=False, deptype=('link'))
+        link_prefixes = [dep.prefix for dep in link_deps]
+
+        # Filter out system paths: ['/', '/usr', '/usr/local']
+        # These paths can be introduced into the build when an external package
+        # is added as a dependency. The problem with these paths is that they
+        # contain hundreds of other packages installed in the same directory.
+        # If these paths come first, they can overshadow Spack installations.
+        link_prefixes = filter_system_paths(link_prefixes)
+
+        # Only add include and lib directories that actually exist
+        include_dirs = []
+        for prefix in link_prefixes:
+            if os.path.isdir(prefix.include):
+                include_dirs.append(prefix.include)
+            if os.path.isdir(prefix.include64):
+                include_dirs.append(prefix.include64)
+
+        library_dirs = []
+        for prefix in link_prefixes:
+            if os.path.isdir(prefix.lib):
+                library_dirs.append(prefix.lib)
+            if os.path.isdir(prefix.lib64):
+                library_dirs.append(prefix.lib)
+
+        # RPATH link dependencies. Python packages build with the compiler
+        # used to install Python. Unfortunately, we have to filter the
+        # Spack compiler wrappers out after installation, so Python builds
+        # its modules with the regular compilers. I haven't yet found a way
+        # to override the compiler, so we explicitly set --rpath instead.
+        args.extend([
+            '--include-dirs={0}'.format(':'.join(include_dirs)),
+            '--library-dirs={0}'.format(':'.join(library_dirs)),
+            '--rpath={0}'.format(':'.join(library_dirs)),
+        ])
+
         self.setup_py('build_ext', *args)
 
     def build_ext_args(self, spec, prefix):
@@ -206,6 +252,10 @@ class PythonPackage(PackageBase):
 
         self.setup_py('build_scripts', *args)
 
+    def build_scripts_args(self, spec, prefix):
+        """Arguments to pass to build_scripts."""
+        return []
+
     def clean(self, spec, prefix):
         """Clean up temporary files from 'build' command."""
         args = self.clean_args(spec, prefix)
@@ -220,11 +270,13 @@ class PythonPackage(PackageBase):
         """Install everything from build directory."""
         args = self.install_args(spec, prefix)
 
-        self.setup_py('install', *args)
+        args.append('--prefix={0}'.format(prefix))
 
-    def install_args(self, spec, prefix):
-        """Arguments to pass to install."""
-        args = ['--prefix={0}'.format(prefix)]
+        # Skip rebuilding everything
+        # Without this flag, distutils/setuptools will try to rebuild
+        # packages already build with build_ext --rpath, overwriting
+        # the RPATH settings we used.
+        args.append('--skip-build')
 
         # This option causes python packages (including setuptools) NOT
         # to create eggs or easy-install.pth files.  Instead, they
@@ -241,11 +293,21 @@ class PythonPackage(PackageBase):
             'py-setuptools' in spec._dependencies):  # it's an immediate dep
             args += ['--single-version-externally-managed', '--root=/']
 
-        return args
+        self.setup_py('install', *args)
+
+    def install_args(self, spec, prefix):
+        """Arguments to pass to install."""
+        return []
 
     def install_lib(self, spec, prefix):
         """Install all Python modules (extensions and pure Python)."""
         args = self.install_lib_args(spec, prefix)
+
+        # Skip rebuilding everything
+        # Without this flag, distutils/setuptools will try to rebuild
+        # packages already build with build_ext --rpath, overwriting
+        # the RPATH settings we used.
+        args.append('--skip-build')
 
         self.setup_py('install_lib', *args)
 
@@ -266,6 +328,12 @@ class PythonPackage(PackageBase):
     def install_scripts(self, spec, prefix):
         """Install scripts (Python or otherwise)."""
         args = self.install_scripts_args(spec, prefix)
+
+        # Skip rebuilding everything
+        # Without this flag, distutils/setuptools will try to rebuild
+        # packages already build with build_ext --rpath, overwriting
+        # the RPATH settings we used.
+        args.append('--skip-build')
 
         self.setup_py('install_scripts', *args)
 
@@ -379,7 +447,7 @@ class PythonPackage(PackageBase):
         """Arguments to pass to test."""
         return []
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+    run_after('build_scripts')(PackageBase._run_default_build_time_test_callbacks)  # noqa
 
     def import_module_test(self):
         """Attempts to import the module that was just installed.
