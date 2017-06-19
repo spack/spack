@@ -26,18 +26,12 @@
 from spack import *
 
 
-class RDeoptim(Package):
+class RDeoptim(RPackage):
     """Implements the differential evolution algorithm for global optimization
     of a real-valued function of a real-valued parameter vector."""
 
     homepage = "https://cran.r-project.org/package=DEoptim"
     url      = "https://cran.r-project.org/src/contrib/DEoptim_2.2-3.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/DEoptim"
-    
+
     version('2.2-3', 'ed406e6790f8f1568aa9bec159f80326')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

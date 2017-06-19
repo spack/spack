@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGdata(Package):
+class RGdata(RPackage):
     """Various R programming tools for data manipulation, including: - medical
     unit conversions ('ConvertMedUnits', 'MedUnits'), - combining objects
     ('bindData', 'cbindX', 'combine', 'interleave'), - character vector
@@ -50,10 +50,4 @@ class RGdata(Package):
 
     version('2.17.0', 'c716b663b9dc16ad8cafe6acc781a75f')
 
-    extends('R')
-
-    depends_on('r-gtools', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-gtools', type=('build', 'run'))

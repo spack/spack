@@ -50,7 +50,7 @@ class Psi4(Package):
                '+thread')
     depends_on('python')
     depends_on('cmake', type='build')
-    depends_on('py-numpy', type=nolink)
+    depends_on('py-numpy', type=('build', 'run'))
 
     # Optional dependencies
     # TODO: add packages for these

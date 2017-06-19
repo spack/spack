@@ -60,7 +60,7 @@ def fake_fetchify(url, pkg):
 @pytest.mark.usefixtures('install_mockery')
 def test_install_and_uninstall(mock_archive):
     # Get a basic concrete spec for the trivial install package.
-    spec = Spec('trivial_install_test_package')
+    spec = Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
 
@@ -90,3 +90,15 @@ def test_store(mock_archive):
     except Exception:
         pkg.remove_prefix()
         raise
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_failing_build(mock_archive):
+    spec = Spec('failing-build').concretized()
+
+    for s in spec.traverse():
+        fake_fetchify(mock_archive.url, s.package)
+
+    pkg = spec.package
+    with pytest.raises(spack.build_environment.ChildError):
+        pkg.do_install()

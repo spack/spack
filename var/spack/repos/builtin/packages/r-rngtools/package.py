@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRngtools(Package):
+class RRngtools(RPackage):
     """This package contains a set of functions for working with Random Number
     Generators (RNGs). In particular, it defines a generic S4 framework for
     getting/setting the current RNG, or RNG data that are embedded into objects
@@ -38,12 +38,6 @@ class RRngtools(Package):
 
     version('1.2.4', '715967f8b3af2848a76593a7c718c1cd')
 
-    extends('R')
-
-    depends_on('r-pkgmaker', type=nolink)
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-digest', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-pkgmaker', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))

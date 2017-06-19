@@ -34,24 +34,24 @@ from llnl.util.tty.colify import colify
 
 import spack
 
-description = "A thin wrapper around the pytest command."
+description = "a thin wrapper around the pytest command"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-H', '--pytest-help', action='store_true', default=False,
-        help="print full pytest help message, showing advanced options.")
+        help="print full pytest help message, showing advanced options")
 
     list_group = subparser.add_mutually_exclusive_group()
     list_group.add_argument(
         '-l', '--list', action='store_true', default=False,
-        help="list basic test names.")
+        help="list basic test names")
     list_group.add_argument(
         '-L', '--long-list', action='store_true', default=False,
-        help="list the entire hierarchy of tests.")
+        help="list the entire hierarchy of tests")
     subparser.add_argument(
         'tests', nargs=argparse.REMAINDER,
-        help="list of tests to run (will be passed to pytest -k).")
+        help="list of tests to run (will be passed to pytest -k)")
 
 
 def do_list(args, unknown_args):
@@ -99,9 +99,10 @@ def test(parser, args, unknown_args):
             do_list(args, unknown_args)
             return
 
-        if args.tests and not any(arg.startswith('-') for arg in args.tests):
-            # Allow keyword search without -k if no options are specified
+        # Allow keyword search without -k if no options are specified
+        if (args.tests and not unknown_args and
+            not any(arg.startswith('-') for arg in args.tests)):
             return pytest.main(['-k'] + args.tests)
-        else:
-            # Just run the pytest command.
-            return pytest.main(unknown_args + args.tests)
+
+        # Just run the pytest command
+        return pytest.main(unknown_args + args.tests)

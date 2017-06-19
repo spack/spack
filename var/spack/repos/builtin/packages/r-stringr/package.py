@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RStringr(Package):
+class RStringr(RPackage):
     """A consistent, simple and easy to use set of wrappers around the
     fantastic 'stringi' package. All function and argument names (and
     positions) are consistent, all functions deal with "NA"'s and zero length
@@ -33,16 +33,11 @@ class RStringr(Package):
     into the input of another."""
 
     homepage = "https://cran.r-project.org/web/packages/stringr/index.html"
-    url      = "https://cran.r-project.org/src/contrib/stringr_1.0.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/stringr_1.1.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/stringr"
 
+    version('1.1.0', '47973a33944c6d5db9524b1e835b8a5d')
     version('1.0.0', '5ca977c90351f78b1b888b379114a7b4')
 
-    extends('R')
-
-    depends_on('r-stringi', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-stringi', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))

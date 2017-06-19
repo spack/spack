@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RDiagrammer(Package):
+class RDiagrammer(RPackage):
     """Create graph diagrams and flowcharts using R."""
 
     homepage = "https://github.com/rich-iannone/DiagrammeR"
@@ -34,16 +34,10 @@ class RDiagrammer(Package):
 
     version('0.8.4', '9ee295c744f5d4ba9a84289ca7bdaf1a')
 
-    extends('R')
-
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-igraph', type=nolink)
-    depends_on('r-influencer', type=nolink)
-    depends_on('r-rstudioapi@0.6:', type=nolink)
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-visnetwork', type=nolink)
-    depends_on('r-scales', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-igraph', type=('build', 'run'))
+    depends_on('r-influencer', type=('build', 'run'))
+    depends_on('r-rstudioapi@0.6:', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-visnetwork', type=('build', 'run'))
+    depends_on('r-scales', type=('build', 'run'))

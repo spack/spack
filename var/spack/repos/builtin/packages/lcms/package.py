@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Lcms(Package):
+class Lcms(AutotoolsPackage):
     """Little cms is a color management library. Implements fast
        transforms between ICC profiles. It is focused on speed, and is
        portable across several platforms (MIT license)."""
@@ -37,8 +37,3 @@ class Lcms(Package):
     depends_on("jpeg")
     depends_on("libtiff")
     depends_on("zlib")
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

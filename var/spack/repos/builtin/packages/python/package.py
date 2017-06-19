@@ -44,6 +44,7 @@ class Python(Package):
     list_url = "https://www.python.org/downloads/"
     list_depth = 2
 
+    version('3.6.0', '3f7062ccf8be76491884d0e47ac8b251')
     version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
     version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
     version('3.5.0', 'a56c0c0b45d75a0ec9c6dee933c41c36')
@@ -98,6 +99,11 @@ class Python(Package):
             r'\1setup.py\2 --no-user-cfg \3\6'
         )
 
+    @when('@:2.6,3.0:3.3')
+    def patch(self):
+        # See https://github.com/LLNL/spack/issues/1490
+        pass
+
     def install(self, spec, prefix):
         # TODO: The '--no-user-cfg' option for Python installation is only in
         # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and
@@ -141,6 +147,16 @@ class Python(Package):
         configure(*config_args)
         make()
         make('install')
+
+        self.sysconfigfilename = '_sysconfigdata.py'
+        if spec.satisfies('@3.6:'):
+            # Python 3.6.0 renamed the sys config file
+            python3 = os.path.join(prefix.bin,
+                                   'python{0}'.format(self.version.up_to(1)))
+            python = Executable(python3)
+            sc = 'import sysconfig; print(sysconfig._get_sysconfigdata_name())'
+            cf = python('-c', sc, output=str).strip('\n')
+            self.sysconfigfilename = '{0}.py'.format(cf)
 
         self._save_distutil_vars(prefix)
 
@@ -201,12 +217,11 @@ class Python(Package):
         input_filename = None
         for filename in [join_path(lib_dir,
                                    'python{0}'.format(self.version.up_to(2)),
-                                   '_sysconfigdata.py')
+                                   self.sysconfigfilename)
                          for lib_dir in [prefix.lib, prefix.lib64]]:
             if os.path.isfile(filename):
                 input_filename = filename
                 break
-
         if not input_filename:
             return
 
@@ -295,7 +310,7 @@ class Python(Package):
         config_dirname = 'config-{0}m'.format(
             self.version.up_to(2)) if self.spec.satisfies('@3:') else 'config'
 
-        rel_filenames = ['_sysconfigdata.py',
+        rel_filenames = [self.sysconfigfilename,
                          join_path(config_dirname, 'Makefile')]
 
         abs_filenames = [join_path(dirname, filename) for dirname in
@@ -346,7 +361,8 @@ class Python(Package):
         spack_env.set('PYTHONHOME', prefix.strip('\n'))
 
         python_paths = []
-        for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
+        for d in extension_spec.traverse(
+                deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
                                               self.site_packages_dir))

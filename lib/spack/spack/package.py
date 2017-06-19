@@ -78,13 +78,14 @@ class InstallPhase(object):
     search for execution. The method is retrieved at __get__ time, so that
     it can be overridden by subclasses of whatever class declared the phases.
 
-    It also provides hooks to execute prerequisite and sanity checks.
+    It also provides hooks to execute arbitrary callbacks before and after
+    the phase.
     """
 
     def __init__(self, name):
         self.name = name
-        self.preconditions = []
-        self.sanity_checks = []
+        self.run_before = []
+        self.run_after = []
 
     def __get__(self, instance, owner):
         # The caller is a class that is trying to customize
@@ -101,14 +102,13 @@ class InstallPhase(object):
             self._on_phase_start(instance)
             # Execute phase pre-conditions,
             # and give them the chance to fail
-            for check in self.preconditions:
-                # Do something sensible at some point
-                check(instance)
+            for callback in self.run_before:
+                callback(instance)
             phase(spec, prefix)
             # Execute phase sanity_checks,
             # and give them the chance to fail
-            for check in self.sanity_checks:
-                check(instance)
+            for callback in self.run_after:
+                callback(instance)
             # Check instance attributes at the end of a phase
             self._on_phase_exit(instance)
         return phase_wrapper
@@ -129,8 +129,8 @@ class InstallPhase(object):
             # This bug-fix was not back-ported in Python 2.6
             # http://bugs.python.org/issue1515
             other = InstallPhase(self.name)
-            other.preconditions.extend(self.preconditions)
-            other.sanity_checks.extend(self.sanity_checks)
+            other.run_before.extend(self.run_before)
+            other.run_after.extend(self.run_after)
             return other
 
 
@@ -142,22 +142,23 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
     """
     phase_fmt = '_InstallPhase_{0}'
 
-    _InstallPhase_sanity_checks = {}
-    _InstallPhase_preconditions = {}
+    _InstallPhase_run_before = {}
+    _InstallPhase_run_after = {}
 
-    def __new__(meta, name, bases, attr_dict):
-        # Check if phases is in attr dict, then set
-        # install phases wrappers
+    def __new__(mcs, name, bases, attr_dict):
+
         if 'phases' in attr_dict:
+            # Turn the strings in 'phases' into InstallPhase instances
+            # and add them as private attributes
             _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]  # NOQA: ignore=E501
             for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict['phases']):  # NOQA: ignore=E501
                 attr_dict[phase_name] = InstallPhase(callback_name)
             attr_dict['_InstallPhase_phases'] = _InstallPhase_phases
 
-        def _append_checks(check_name):
+        def _flush_callbacks(check_name):
             # Name of the attribute I am going to check it exists
             attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(meta, attr_name)
+            checks = getattr(mcs, attr_name)
             if checks:
                 for phase_name, funcs in checks.items():
                     try:
@@ -180,57 +181,61 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
                             PackageMeta.phase_fmt.format(phase_name)]
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
-                setattr(meta, attr_name, {})
-
-        @classmethod
-        def _register_checks(cls, check_type, *args):
-            def _register_sanity_checks(func):
-                attr_name = PackageMeta.phase_fmt.format(check_type)
-                check_list = getattr(meta, attr_name)
-                for item in args:
-                    checks = check_list.setdefault(item, [])
-                    checks.append(func)
-                setattr(meta, attr_name, check_list)
-                return func
-            return _register_sanity_checks
-
-        @staticmethod
-        def on_package_attributes(**attrs):
-            def _execute_under_condition(func):
-                @functools.wraps(func)
-                def _wrapper(instance):
-                    # If all the attributes have the value we require, then
-                    # execute
-                    if all([getattr(instance, key, None) == value for key, value in attrs.items()]):  # NOQA: ignore=E501
-                        func(instance)
-                return _wrapper
-            return _execute_under_condition
-
-        @classmethod
-        def precondition(cls, *args):
-            return cls._register_checks('preconditions', *args)
-
-        @classmethod
-        def sanity_check(cls, *args):
-            return cls._register_checks('sanity_checks', *args)
-
-        if all([not hasattr(x, '_register_checks') for x in bases]):
-            attr_dict['_register_checks'] = _register_checks
-
-        if all([not hasattr(x, 'sanity_check') for x in bases]):
-            attr_dict['sanity_check'] = sanity_check
-
-        if all([not hasattr(x, 'precondition') for x in bases]):
-            attr_dict['precondition'] = precondition
-
-        if all([not hasattr(x, 'on_package_attributes') for x in bases]):
-            attr_dict['on_package_attributes'] = on_package_attributes
+                setattr(mcs, attr_name, {})
 
         # Preconditions
-        _append_checks('preconditions')
+        _flush_callbacks('run_before')
         # Sanity checks
-        _append_checks('sanity_checks')
-        return super(PackageMeta, meta).__new__(meta, name, bases, attr_dict)
+        _flush_callbacks('run_after')
+        return super(PackageMeta, mcs).__new__(mcs, name, bases, attr_dict)
+
+    @staticmethod
+    def register_callback(check_type, *phases):
+        def _decorator(func):
+            attr_name = PackageMeta.phase_fmt.format(check_type)
+            check_list = getattr(PackageMeta, attr_name)
+            for item in phases:
+                checks = check_list.setdefault(item, [])
+                checks.append(func)
+            setattr(PackageMeta, attr_name, check_list)
+            return func
+        return _decorator
+
+
+def run_before(*phases):
+    """Registers a method of a package to be run before a given phase"""
+    return PackageMeta.register_callback('run_before', *phases)
+
+
+def run_after(*phases):
+    """Registers a method of a package to be run after a given phase"""
+    return PackageMeta.register_callback('run_after', *phases)
+
+
+def on_package_attributes(**attr_dict):
+    """Executes the decorated method only if at the moment of calling
+    the instance has attributes that are equal to certain values.
+
+    :param dict attr_dict: dictionary mapping attribute names to their
+        required values
+    """
+    def _execute_under_condition(func):
+
+        @functools.wraps(func)
+        def _wrapper(instance, *args, **kwargs):
+            # If all the attributes have the value we require, then execute
+            has_all_attributes = all(
+                [hasattr(instance, key) for key in attr_dict]
+            )
+            if has_all_attributes:
+                has_the_right_values = all(
+                    [getattr(instance, key) == value for key, value in attr_dict.items()]  # NOQA: ignore=E501
+                )
+                if has_the_right_values:
+                    func(instance, *args, **kwargs)
+        return _wrapper
+
+    return _execute_under_condition
 
 
 class PackageBase(object):
@@ -1447,7 +1452,7 @@ class PackageBase(object):
         This is useful if there are some common steps to installing
         all extensions for a certain package.
         """
-        self.setup_environment(spack_env, run_env)
+        pass
 
     def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.
@@ -1555,16 +1560,19 @@ class PackageBase(object):
 
         # Activate any package dependencies that are also extensions.
         if not force:
-            for spec in self.spec.traverse(root=False, deptype='run'):
-                if spec.package.extends(self.extendee_spec):
-                    if not spec.package.activated:
-                        spec.package.do_activate(force=force)
+            for spec in self.dependency_activations():
+                if not spec.package.activated:
+                    spec.package.do_activate(force=force)
 
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.store.layout.add_extension(self.extendee_spec, self.spec)
         tty.msg("Activated extension %s for %s" %
                 (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+
+    def dependency_activations(self):
+        return (spec for spec in self.spec.traverse(root=False, deptype='run')
+                if spec.package.extends(self.extendee_spec))
 
     def activate(self, extension, **kwargs):
         """Symlinks all files from the extension into extendee's install dir.
@@ -1704,15 +1712,61 @@ class PackageBase(object):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
+    build_time_test_callbacks = None
+
+    @on_package_attributes(run_tests=True)
+    def _run_default_build_time_test_callbacks(self):
+        """Tries to call all the methods that are listed in the attribute
+        ``build_time_test_callbacks`` if ``self.run_tests is True``.
+
+        If ``build_time_test_callbacks is None`` returns immediately.
+        """
+        if self.build_time_test_callbacks is None:
+            return
+
+        for name in self.build_time_test_callbacks:
+            try:
+                fn = getattr(self, name)
+                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
+                fn()
+            except AttributeError:
+                msg = 'RUN-TESTS: method not implemented [{0}]'
+                tty.warn(msg.format(name))
+
+    install_time_test_callbacks = None
+
+    @on_package_attributes(run_tests=True)
+    def _run_default_install_time_test_callbacks(self):
+        """Tries to call all the methods that are listed in the attribute
+        ``install_time_test_callbacks`` if ``self.run_tests is True``.
+
+        If ``install_time_test_callbacks is None`` returns immediately.
+        """
+        if self.install_time_test_callbacks is None:
+            return
+
+        for name in self.install_time_test_callbacks:
+            try:
+                fn = getattr(self, name)
+                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
+                fn()
+            except AttributeError:
+                msg = 'RUN-TESTS: method not implemented [{0}]'
+                tty.warn(msg.format(name))
+
 
 class Package(PackageBase):
+    """General purpose class with a single ``install``
+    phase that needs to be coded by packagers.
+    """
+    #: The one and only phase
     phases = ['install']
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: This attribute is used in UI queries that require to know which
+    #: build-system class we are using
     build_system_class = 'Package'
     # This will be used as a registration decorator in user
     # packages, if need be
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

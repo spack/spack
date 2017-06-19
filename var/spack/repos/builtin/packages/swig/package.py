@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Swig(Package):
+class Swig(AutotoolsPackage):
     """SWIG is an interface compiler that connects programs written in
        C and C++ with scripting languages such as Perl, Python, Ruby,
        and Tcl. It works by taking the declarations found in C/C++
@@ -38,6 +38,7 @@ class Swig(Package):
     homepage = "http://www.swig.org"
     url      = "http://prdownloads.sourceforge.net/swig/swig-3.0.8.tar.gz"
 
+    version('3.0.11', '13732eb0f1ab2123d180db8425c1edea')
     version('3.0.10', 'bb4ab8047159469add7d00910e203124')
     version('3.0.8', 'c96a1d5ecb13d38604d7e92148c73c97')
     version('3.0.2', '62f9b0d010cef36a13a010dc530d0d41')
@@ -46,8 +47,3 @@ class Swig(Package):
     version('1.3.40', '2df766c9e03e02811b1ab4bba1c7b9cc')
 
     depends_on('pcre')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make('install')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RSurvey(Package):
+class RSurvey(RPackage):
     """Summary statistics, two-sample tests, rank tests, generalised linear
     models, cumulative link models, Cox models, loglinear models, and general
     maximum pseudolikelihood estimation for multistage stratified,
@@ -39,9 +39,3 @@ class RSurvey(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/survey"
 
     version('3.30-3', 'c70cdae9cb43d35abddd11173d64cad0')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

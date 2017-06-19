@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxpm(Package):
+class Libxpm(AutotoolsPackage):
     """libXpm - X Pixmap (XPM) image file format library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXpm"
@@ -42,9 +42,3 @@ class Libxpm(Package):
     depends_on('xproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

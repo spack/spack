@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Uberftp(Package):
+class Uberftp(AutotoolsPackage):
     """UberFTP is an interactive (text-based) client for GridFTP"""
 
     homepage = "http://toolkit.globus.org/grid_software/data/uberftp.php"
@@ -35,10 +35,4 @@ class Uberftp(Package):
     version('2_7', 'faaea2d6e1958c1105cfc9147824e03c')
     version('2_6', '784210976f259f9d19c0798c19778d34')
 
-    depends_on('globus_toolkit')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')
+    depends_on('globus-toolkit')

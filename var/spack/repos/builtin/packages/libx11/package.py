@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libx11(Package):
+class Libx11(AutotoolsPackage):
     """libX11 - Core X11 protocol client library."""
 
     homepage = "https://www.x.org/"
@@ -42,10 +42,3 @@ class Libx11(Package):
     depends_on('inputproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('check')
-        make('install')

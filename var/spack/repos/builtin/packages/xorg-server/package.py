@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XorgServer(Package):
+class XorgServer(AutotoolsPackage):
     """X.Org Server is the free and open source implementation of the display
     server for the X Window System stewarded by the X.Org Foundation."""
 
@@ -100,9 +100,3 @@ class XorgServer(Package):
     # LIBUDEV="libudev >= 143"
     # LIBSELINUX="libselinux >= 2.0.86"
     # LIBDBUS="dbus-1 >= 1.0"
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

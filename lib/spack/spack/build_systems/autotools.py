@@ -31,34 +31,68 @@ from subprocess import PIPE
 from subprocess import check_call
 
 import llnl.util.tty as tty
-from spack.package import PackageBase
+from llnl.util.filesystem import working_dir, join_path, force_remove
+from spack.package import PackageBase, run_after, run_before
+from spack.util.executable import Executable
 
 
 class AutotoolsPackage(PackageBase):
-    """Specialized class for packages that are built using GNU Autotools
+    """Specialized class for packages built using GNU Autotools.
 
     This class provides four phases that can be overridden:
-    - autoreconf
-    - configure
-    - build
-    - install
+
+        1. :py:meth:`~.AutotoolsPackage.autoreconf`
+        2. :py:meth:`~.AutotoolsPackage.configure`
+        3. :py:meth:`~.AutotoolsPackage.build`
+        4. :py:meth:`~.AutotoolsPackage.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override `configure_args`
+    necessary will be to override the helper method :py:meth:`.configure_args`.
+    For a finer tuning you may also override:
 
-    Additionally, you may specify make targets for build and install
-    phases by overriding `build_targets` and `install_targets`
+        +-----------------------------------------------+--------------------+
+        | **Method**                                    | **Purpose**        |
+        +===============================================+====================+
+        | :py:attr:`~.AutotoolsPackage.build_targets`   | Specify ``make``   |
+        |                                               | targets for the    |
+        |                                               | build phase        |
+        +-----------------------------------------------+--------------------+
+        | :py:attr:`~.AutotoolsPackage.install_targets` | Specify ``make``   |
+        |                                               | targets for the    |
+        |                                               | install phase      |
+        +-----------------------------------------------+--------------------+
+        | :py:meth:`~.AutotoolsPackage.check`           | Run  build time    |
+        |                                               | tests if required  |
+        +-----------------------------------------------+--------------------+
+
     """
+    #: Phases of a GNU Autotools package
     phases = ['autoreconf', 'configure', 'build', 'install']
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: This attribute is used in UI queries that need to know the build
+    #: system base class
     build_system_class = 'AutotoolsPackage'
+    #: Whether or not to update ``config.guess`` on old architectures
     patch_config_guess = True
 
+    #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.build`
+    #: phase
     build_targets = []
+    #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.install`
+    #: phase
     install_targets = ['install']
 
-    def do_patch_config_guess(self):
+    #: Callback names for build-time test
+    build_time_test_callbacks = ['check']
+
+    #: Callback names for install-time test
+    install_time_test_callbacks = ['installcheck']
+
+    #: Set to true to force the autoreconf step even if configure is present
+    force_autoreconf = False
+    #: Options to be passed to autoreconf when using the default implementation
+    autoreconf_extra_args = []
+
+    def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
         this updated when installed on a newer architecture."""
 
@@ -84,7 +118,7 @@ class AutotoolsPackage(PackageBase):
                 check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
                 # The package's config.guess already runs OK, so just use it
                 return True
-            except:
+            except Exception:
                 pass
         else:
             return True
@@ -102,7 +136,7 @@ class AutotoolsPackage(PackageBase):
                 check_call([config_guess], stdout=PIPE, stderr=PIPE)
                 shutil.copyfile(config_guess, my_config_guess)
                 return True
-            except:
+            except Exception:
                 pass
 
         # Look for the system's config.guess
@@ -119,73 +153,152 @@ class AutotoolsPackage(PackageBase):
                 check_call([config_guess], stdout=PIPE, stderr=PIPE)
                 shutil.copyfile(config_guess, my_config_guess)
                 return True
-            except:
+            except Exception:
                 pass
 
         return False
 
+    @property
+    def configure_directory(self):
+        """Returns the directory where 'configure' resides.
+
+        :return: directory where to find configure
+        """
+        return self.stage.source_path
+
+    @property
+    def configure_abs_path(self):
+        # Absolute path to configure
+        configure_abs_path = join_path(
+            os.path.abspath(self.configure_directory), 'configure'
+        )
+        return configure_abs_path
+
+    @property
+    def build_directory(self):
+        """Override to provide another place to build the package"""
+        return self.configure_directory
+
     def patch(self):
-        """Perform any required patches."""
+        """Patches config.guess if
+        :py:attr:``~.AutotoolsPackage.patch_config_guess`` is True
+
+        :raise RuntimeError: if something goes wrong when patching
+            ``config.guess``
+        """
 
         if self.patch_config_guess and self.spec.satisfies(
-                'arch=linux-rhel7-ppc64le'):
-            if not self.do_patch_config_guess():
+                'arch=linux-rhel7-ppc64le'
+        ):
+            if not self._do_patch_config_guess():
                 raise RuntimeError('Failed to find suitable config.guess')
+
+    @run_before('autoreconf')
+    def delete_configure_to_force_update(self):
+        if self.force_autoreconf:
+            force_remove(self.configure_abs_path)
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""
-        pass
+        # If configure exists nothing needs to be done
+        if os.path.exists(self.configure_abs_path):
+            return
+        # Else try to regenerate it
+        autotools = ['m4', 'autoconf', 'automake', 'libtool']
+        missing = [x for x in autotools if x not in spec]
+        if missing:
+            msg = 'Cannot generate configure: missing dependencies {0}'
+            raise RuntimeError(msg.format(missing))
+        tty.msg('Configure script not found: trying to generate it')
+        tty.warn('*********************************************************')
+        tty.warn('* If the default procedure fails, consider implementing *')
+        tty.warn('*        a custom AUTORECONF phase in the package       *')
+        tty.warn('*********************************************************')
+        with working_dir(self.configure_directory):
+            m = inspect.getmodule(self)
+            # This part should be redundant in principle, but
+            # won't hurt
+            m.libtoolize()
+            m.aclocal()
+            # This line is what is needed most of the time
+            # --install, --verbose, --force
+            autoreconf_args = ['-ivf']
+            if 'pkg-config' in spec:
+                autoreconf_args += [
+                    '-I',
+                    join_path(spec['pkg-config'].prefix, 'share', 'aclocal'),
+                ]
+            autoreconf_args += self.autoreconf_extra_args
+            m.autoreconf(*autoreconf_args)
 
-    @PackageBase.sanity_check('autoreconf')
-    def is_configure_or_die(self):
-        """Checks the presence of a `configure` file after the
-        autoreconf phase"""
-        if not os.path.exists('configure'):
-            raise RuntimeError(
-                'configure script not found in {0}'.format(os.getcwd()))
+    @run_after('autoreconf')
+    def set_configure_or_die(self):
+        """Checks the presence of a ``configure`` file after the
+        autoreconf phase. If it is found sets a module attribute
+        appropriately, otherwise raises an error.
+
+        :raises RuntimeError: if a configure script is not found in
+            :py:meth:`~.configure_directory`
+        """
+        # Check if a configure script is there. If not raise a RuntimeError.
+        if not os.path.exists(self.configure_abs_path):
+            msg = 'configure script not found in {0}'
+            raise RuntimeError(msg.format(self.configure_directory))
+
+        # Monkey-patch the configure script in the corresponding module
+        inspect.getmodule(self).configure = Executable(
+            self.configure_abs_path
+        )
 
     def configure_args(self):
-        """Method to be overridden. Should return an iterable containing
-        all the arguments that must be passed to configure, except --prefix
+        """Produces a list containing all the arguments that must be passed to
+        configure, except ``--prefix`` which will be pre-pended to the list.
+
+        :return: list of arguments for configure
         """
         return []
 
     def configure(self, spec, prefix):
-        """Runs configure with the arguments specified in `configure_args`
-        and an appropriately set prefix
+        """Runs configure with the arguments specified in :py:meth:`.configure_args`
+        and an appropriately set prefix.
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
-        inspect.getmodule(self).configure(*options)
+
+        with working_dir(self.build_directory, create=True):
+            inspect.getmodule(self).configure(*options)
 
     def build(self, spec, prefix):
-        """Make the build targets"""
-        inspect.getmodule(self).make(*self.build_targets)
+        """Makes the build targets specified by
+        :py:attr:``~.AutotoolsPackage.build_targets``
+        """
+        with working_dir(self.build_directory):
+            inspect.getmodule(self).make(*self.build_targets)
 
     def install(self, spec, prefix):
-        """Make the install targets"""
-        inspect.getmodule(self).make(*self.install_targets)
-
-    @PackageBase.sanity_check('build')
-    @PackageBase.on_package_attributes(run_tests=True)
-    def _run_default_function(self):
-        """This function is run after build if self.run_tests == True
-
-        It will search for a method named `check` and run it. A sensible
-        default is provided in the base class.
+        """Makes the install targets specified by
+        :py:attr:``~.AutotoolsPackage.install_targets``
         """
-        try:
-            fn = getattr(self, 'check')
-            tty.msg('Trying default sanity checks [check]')
-            fn()
-        except AttributeError:
-            tty.msg('Skipping default sanity checks [method `check` not implemented]')  # NOQA: ignore=E501
+        with working_dir(self.build_directory):
+            inspect.getmodule(self).make(*self.install_targets)
+
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
     def check(self):
-        """Default test : search the Makefile for targets `test` and `check`
-        and run them if found.
+        """Searches the Makefile for targets ``test`` and ``check``
+        and runs them if found.
         """
-        self._if_make_target_execute('test')
-        self._if_make_target_execute('check')
+        with working_dir(self.build_directory):
+            self._if_make_target_execute('test')
+            self._if_make_target_execute('check')
+
+    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
+
+    def installcheck(self):
+        """Searches the Makefile for an ``installcheck`` target
+        and runs it if found.
+        """
+        with working_dir(self.build_directory):
+            self._if_make_target_execute('installcheck')
 
     # Check that self.prefix is there after installation
-    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+    run_after('install')(PackageBase.sanity_check_prefix)

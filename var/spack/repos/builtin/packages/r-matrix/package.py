@@ -25,20 +25,15 @@
 from spack import *
 
 
-class RMatrix(Package):
+class RMatrix(RPackage):
     """Classes and methods for dense and sparse matrices and operations on them
     using 'LAPACK' and 'SuiteSparse'."""
 
     homepage = "http://matrix.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/Matrix_1.2-6.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/Matrix_1.2-8.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/Matrix"
 
+    version('1.2-8', '4a6406666bf97d3ec6b698eea5d9c0f5')
     version('1.2-6', 'f545307fb1284861e9266c4e9712c55e')
 
-    extends('R')
-
-    depends_on('r-lattice', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-lattice', type=('build', 'run'))

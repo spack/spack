@@ -59,12 +59,11 @@ class Ibmisc(CMakePackage):
     depends_on('netcdf-cxx4', when='+netcdf')
     depends_on('udunits2', when='+udunits2')
     depends_on('googletest', when='+googletest', type='build')
-    depends_on('py-cython', when='+python', type=nolink)
-    depends_on('py-numpy', when='+python', type=nolink)
+    depends_on('py-cython', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('boost', when='+boost')
 
     # Build dependencies
-    depends_on('cmake', type='build')
     depends_on('doxygen', type='build')
 
     def cmake_args(self):

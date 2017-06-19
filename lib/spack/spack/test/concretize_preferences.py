@@ -25,7 +25,9 @@
 import pytest
 
 import spack
+import spack.util.spack_yaml as syaml
 from spack.spec import Spec
+from spack.package_prefs import PreferredPackages
 
 
 @pytest.fixture()
@@ -39,7 +41,10 @@ def concretize_scope(config, tmpdir):
     # This is kind of weird, but that's how config scopes are
     # set in ConfigScope.__init__
     spack.config.config_scopes.pop('concretize')
-    spack.pkgsort = spack.PreferredPackages()
+    spack.package_prefs._pkgsort = PreferredPackages()
+
+    # reset provider index each time, too
+    spack.repo._provider_index = None
 
 
 def concretize(abstract_spec):
@@ -50,7 +55,7 @@ def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
     spack.config.update_config('packages', conf, 'concretize')
-    spack.pkgsort = spack.PreferredPackages()
+    spack.package_prefs._pkgsort = PreferredPackages()
 
 
 def assert_variant_values(spec, **variants):
@@ -114,3 +119,55 @@ class TestConcretizePreferences(object):
         spec = Spec('builtin.mock.develop-test')
         spec.concretize()
         assert spec.version == spack.spec.Version('0.2.15')
+
+    def test_no_virtuals_in_packages_yaml(self):
+        """Verify that virtuals are not allowed in packages.yaml."""
+
+        # set up a packages.yaml file with a vdep as a key.  We use
+        # syaml.load here to make sure source lines in the config are
+        # attached to parsed strings, as the error message uses them.
+        conf = syaml.load("""\
+mpi:
+    paths:
+      mpi-with-lapack@2.1: /path/to/lapack
+""")
+        spack.config.update_config('packages', conf, 'concretize')
+
+        # now when we get the packages.yaml config, there should be an error
+        with pytest.raises(spack.package_prefs.VirtualInPackagesYAMLError):
+            spack.package_prefs.get_packages_config()
+
+    def test_all_is_not_a_virtual(self):
+        """Verify that `all` is allowed in packages.yaml."""
+        conf = syaml.load("""\
+all:
+        variants: [+mpi]
+""")
+        spack.config.update_config('packages', conf, 'concretize')
+
+        # should be no error for 'all':
+        spack.package_prefs._pkgsort = PreferredPackages()
+        spack.package_prefs.get_packages_config()
+
+    def test_external_mpi(self):
+        # make sure this doesn't give us an external first.
+        spec = Spec('mpi')
+        spec.concretize()
+        assert not spec['mpi'].external
+
+        # load config
+        conf = syaml.load("""\
+all:
+    providers:
+        mpi: [mpich]
+mpich:
+    buildable: false
+    paths:
+        mpich@3.0.4: /dummy/path
+""")
+        spack.config.update_config('packages', conf, 'concretize')
+
+        # ensure that once config is in place, external is used
+        spec = Spec('mpi')
+        spec.concretize()
+        assert spec['mpich'].external == '/dummy/path'

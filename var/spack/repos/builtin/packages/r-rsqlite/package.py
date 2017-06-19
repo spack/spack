@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRsqlite(Package):
+class RRsqlite(RPackage):
     """This package embeds the SQLite database engine in R and provides an
     interface compliant with the DBI package. The source for the SQLite engine
     (version 3.8.6) is included."""
@@ -36,10 +36,4 @@ class RRsqlite(Package):
 
     version('1.0.0', 'e6cbe2709612b687c13a10d30c7bad45')
 
-    extends('R')
-
-    depends_on('r-dbi', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-dbi', type=('build', 'run'))

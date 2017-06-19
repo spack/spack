@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Tk(Package):
+class Tk(AutotoolsPackage):
     """Tk is a graphical user interface toolkit that takes developing
        desktop applications to a higher level than conventional
        approaches. Tk is the standard GUI not only for Tcl, but for
@@ -34,6 +34,7 @@ class Tk(Package):
        and more."""
     homepage = "http://www.tcl.tk"
 
+    version('8.6.6', 'dd7dbb3a6523c42d05f6ab6e86096e99')
     version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
@@ -42,19 +43,18 @@ class Tk(Package):
     depends_on("tcl")
     depends_on("libx11", when='+X')
 
+    configure_directory = 'unix'
+
     def url_for_version(self, version):
         base_url = "http://prdownloads.sourceforge.net/tcl"
         return "{0}/tk{1}-src.tar.gz".format(base_url, version)
 
-    def setup_environment(self, spack_env, env):
+    def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
-                self.spec.version.up_to(2))))
+        run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+            self.spec.version.up_to(2))))
 
-    def install(self, spec, prefix):
-        with working_dir('unix'):
-            configure("--prefix={0}".format(prefix),
-                      "--with-tcl={0}".format(spec['tcl'].prefix.lib))
-            make()
-            make("install")
+    def configure_args(self):
+        spec = self.spec
+        return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib)]

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RNetworkd3(Package):
+class RNetworkd3(RPackage):
     """Creates 'D3' 'JavaScript' network, tree, dendrogram, and Sankey graphs
     from 'R'."""
 
@@ -35,12 +35,6 @@ class RNetworkd3(Package):
 
     version('0.2.12', '356fe4be59698e6fb052644bd9659d84')
 
-    extends('R')
-
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-igraph', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-igraph', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))

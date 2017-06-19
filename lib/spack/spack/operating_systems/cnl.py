@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
-import os
 
 from spack.architecture import OperatingSystem
 from spack.util.executable import *
@@ -67,17 +66,10 @@ class Cnl(OperatingSystem):
             modulecmd = which('modulecmd')
             modulecmd.add_default_arg('python')
 
-            # Save the environment variable to restore later
-            old_modulepath = os.environ['MODULEPATH']
-            # if given any explicit paths, search them for module files too
-            if paths:
-                module_paths = ':' + ':'.join(p for p in paths)
-                os.environ['MODULEPATH'] = module_paths
-
             output = modulecmd(
                 'avail', cmp_cls.PrgEnv_compiler, output=str, error=str)
-            matches = re.findall(
-                r'(%s)/([\d\.]+[\d])' % cmp_cls.PrgEnv_compiler, output)
+            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_cls.PrgEnv_compiler
+            matches = re.findall(version_regex, output)
             for name, version in matches:
                 v = version
                 comp = cmp_cls(
@@ -86,9 +78,5 @@ class Cnl(OperatingSystem):
                     ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
 
                 compilers.append(comp)
-
-            # Restore modulepath environment variable
-            if paths:
-                os.environ['MODULEPATH'] = old_modulepath
 
         return compilers

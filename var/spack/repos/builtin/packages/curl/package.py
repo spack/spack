@@ -32,6 +32,7 @@ class Curl(Package):
     homepage = "http://curl.haxx.se"
     url      = "http://curl.haxx.se/download/curl-7.46.0.tar.bz2"
 
+    version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')
     version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
     version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
     version('7.50.1', '015f6a0217ca6f2c5442ca406476920b')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxau(Package):
+class Libxau(AutotoolsPackage):
     """The libXau package contains a library implementing the X11
     Authorization Protocol. This is useful for restricting client
     access to the display."""
@@ -38,10 +38,3 @@ class Libxau(Package):
     depends_on('xproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('check')
-        make('install')

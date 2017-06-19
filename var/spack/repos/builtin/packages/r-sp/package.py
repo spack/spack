@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RSp(Package):
+class RSp(RPackage):
     """Classes and methods for spatial data; the classes document where the
     spatial location information resides, for 2D or 3D data. Utility functions
     are provided, e.g. for plotting data as maps, spatial selection, as well as
@@ -37,10 +37,4 @@ class RSp(Package):
 
     version('1.2-3', 'f0e24d993dec128642ee66b6b47b10c1')
 
-    extends('R')
-
-    depends_on('r-lattice', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-lattice', type=('build', 'run'))

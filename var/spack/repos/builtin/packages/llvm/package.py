@@ -77,6 +77,7 @@ class Llvm(Package):
 
     # Universal dependency
     depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
+    depends_on('py-lit')
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')
@@ -98,46 +99,55 @@ class Llvm(Package):
             'url': base_url % {'pkg': 'compiler-rt'},
             'destination': 'projects',
             'placement': 'compiler-rt',
+            'variant': '+compiler-rt',
         },
         'openmp': {
             'url': base_url % {'pkg': 'openmp'},
             'destination': 'projects',
             'placement': 'openmp',
+            'variant': '+clang',
         },
         'libcxx': {
             'url': base_url % {'pkg': 'libcxx'},
             'destination': 'projects',
             'placement': 'libcxx',
+            'variant': '+libcxx',
         },
         'libcxxabi': {
             'url':  base_url % {'pkg': 'libcxxabi'},
             'destination': 'projects',
             'placement': 'libcxxabi',
+            'variant': '+libcxx',
         },
         'cfe': {
             'url':  base_url % {'pkg': 'cfe'},
             'destination': 'tools',
             'placement': 'clang',
+            'variant': '+clang',
         },
         'clang-tools-extra': {
             'url':  base_url % {'pkg': 'clang-tools-extra'},
             'destination': 'tools/clang/tools',
             'placement': 'extra',
+            'variant': '+clang',
         },
         'lldb': {
             'url':  base_url % {'pkg': 'lldb'},
             'destination': 'tools',
             'placement': 'lldb',
+            'variant': '+lldb',
         },
         'polly': {
             'url':  base_url % {'pkg': 'polly'},
             'destination': 'tools',
             'placement': 'polly',
+            'variant': '+polly',
         },
-        'llvm-libunwind': {
+        'libunwind': {
             'url':  base_url % {'pkg': 'libunwind'},
             'destination': 'projects',
             'placement': 'libunwind',
+            'variant': '+internal_unwind',
         },
     }
     releases = [
@@ -153,9 +163,24 @@ class Llvm(Package):
                 'cfe': 'http://llvm.org/svn/llvm-project/cfe/trunk',
                 'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
-                'llvm-libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+                'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
                 }
             },
+            {
+                'version': '3.9.1',
+                'md5': '3259018a7437e157f3642df80f1983ea',
+                'resources': {
+                    'compiler-rt': 'aadc76e7e180fafb10fb729444e287a3',
+                    'openmp': 'f076916bf2f49229b4df9fa0bb002599',
+                    'polly': '2cc7fe2bd9539775ba140abfd375bec6',
+                    'libcxx': '75a3214224301fc543fa6a38bdf7efe0',
+                    'libcxxabi': '62fd584b38cc502172c2ffab041b5fcc',
+                    'cfe': '45713ec5c417ed9cad614cd283d786a1',
+                    'clang-tools-extra': '1a01d545a064fcbc46a2f05f6880d3d7',
+                    'lldb': '91399402f287d3f637db1207113deecb',
+                    'libunwind': 'f273dd0ed638ad0601b23176a36f187b',
+                    }
+                },
             {
                 'version': '3.9.0',
                 'md5': 'f2093e98060532449eb7d2fcfd0bc6c6',
@@ -168,7 +193,7 @@ class Llvm(Package):
                     'cfe': '29e1d86bee422ab5345f5e9fb808d2dc',
                     'clang-tools-extra': 'f4f663068c77fc742113211841e94d5e',
                     'lldb': '968d053c3c3d7297983589164c6999e9',
-                    'llvm-libunwind': '3e5c87c723a456be599727a444b1c166',
+                    'libunwind': '3e5c87c723a456be599727a444b1c166',
                     }
                 },
             {
@@ -183,7 +208,7 @@ class Llvm(Package):
                     'cfe': '4ff2f8844a786edb0220f490f7896080',
                     'clang-tools-extra': '6e49f285d0b366cc3cab782d8c92d382',
                     'lldb': '9e4787b71be8e432fffd31e13ac87623',
-                    'llvm-libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
+                    'libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
                     }
                 },
             {
@@ -198,7 +223,7 @@ class Llvm(Package):
                     'cfe': 'cc99e7019bb74e6459e80863606250c5',
                     'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
                     'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
-                    'llvm-libunwind': '162ade468607f153cca12be90b5194fa',
+                    'libunwind': '162ade468607f153cca12be90b5194fa',
                     }
                 },
             {
@@ -213,7 +238,7 @@ class Llvm(Package):
                     'cfe': '0acd026b5529164197563d135a8fd83e',
                     'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
                     'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
-                    'llvm-libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
+                    'libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
                     }
                 },
             {
@@ -228,7 +253,7 @@ class Llvm(Package):
                     'cfe': '8f9d27335e7331cf0a4711e952f21f01',
                     'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
                     'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
-                    'llvm-libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
+                    'libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
                     }
                 },
         {
@@ -267,7 +292,8 @@ class Llvm(Package):
                 resource(name=name,
                          svn=repo,
                          destination=resources[name]['destination'],
-                         when='@%(version)s' % release,
+                         when='@%s%s' % (release['version'],
+                             resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
         else:
             version(release['version'], release['md5'], url=llvm_url % release)
@@ -277,7 +303,8 @@ class Llvm(Package):
                          url=resources[name]['url'] % release,
                          md5=md5,
                          destination=resources[name]['destination'],
-                         when='@%(version)s' % release,
+                         when='@%s%s' % (release['version'],
+                             resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
 
     def install(self, spec, prefix):

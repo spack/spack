@@ -104,6 +104,9 @@ def get_matching_versions(specs, **kwargs):
                 s = Spec(pkg.name)
                 s.versions = VersionList([v])
                 s.variants = spec.variants.copy()
+                # This is needed to avoid hanging references during the
+                # concretization phase
+                s.variants.spec = s
                 matching_spec.append(s)
 
         if not matching_spec:

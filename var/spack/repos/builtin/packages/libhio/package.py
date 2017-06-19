@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libhio(Package):
+class Libhio(AutotoolsPackage):
     """
     A library for writing to hierarchical data store systems.
     """
@@ -38,8 +38,3 @@ class Libhio(Package):
     depends_on("libjson-c")
     depends_on("bzip2")
     depends_on("pkg-config", type="build")
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")

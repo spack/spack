@@ -29,14 +29,22 @@ class Libpng(AutotoolsPackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
-    url      = "http://download.sourceforge.net/libpng/libpng-1.6.26.tar.gz"
+    url      = "http://download.sourceforge.net/libpng/libpng-1.6.27.tar.gz"
 
-    version('1.6.26', '236cd975520fc1f34cc0b8f0e615f7a0')
-    version('1.6.24', '65213080dd30a9b16193d9b83adc1ee9')
-
-    # Security vulnerabilities have been discovered in 1.6.19 an older
+    version('1.6.27', '58698519e9f6126c1caeefc28dbcbd5f')
+    # From http://www.libpng.org/pub/png/libpng.html (2017-01-04)
+    #     Virtually all libpng versions through 1.6.26, 1.5.27,
+    #     1.4.19, 1.2.56, and 1.0.66, respectively, have a
+    #     null-pointer-dereference bug in png_set_text_2() when an
+    #     image-editing application adds, removes, and re-adds text
+    #     chunks to a PNG image. (This bug does not affect pure
+    #     viewers, nor are there any known editors that could trigger
+    #     it without interactive user input. It has been assigned ID
+    #     CVE-2016-10087.)  The vulnerability is fixed in versions
+    #     1.6.27, 1.5.28, 1.4.20, 1.2.57, and 1.0.67, released on 29
+    #     December 2016.
 
     # Required for qt@3
-    version('1.2.56', '9508fc59d10a1ffadd9aae35116c19ee')
+    version('1.2.57', 'dfcda3603e29dcc11870c48f838ef75b')
 
     depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended

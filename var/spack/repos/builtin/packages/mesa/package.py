@@ -25,12 +25,12 @@
 from spack import *
 
 
-class Mesa(Package):
+class Mesa(AutotoolsPackage):
     """Mesa is an open-source implementation of the OpenGL
     specification - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
-    url      = "ftp://ftp.freedesktop.org/pub/mesa/12.0.3/mesa-12.0.3.tar.gz"
+    url      = "http://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/12.0.3/mesa-12.0.3.tar.gz"
 
     version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
 
@@ -59,9 +59,3 @@ class Mesa(Package):
 
     # TODO: Add package for systemd, provides libudev
     # Using the system package manager to install systemd didn't work for me
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

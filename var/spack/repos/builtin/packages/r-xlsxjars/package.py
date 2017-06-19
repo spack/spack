@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RXlsxjars(Package):
+class RXlsxjars(RPackage):
     """The xlsxjars package collects all the external jars required for the
     xlxs package. This release corresponds to POI 3.10.1."""
 
@@ -35,10 +35,4 @@ class RXlsxjars(Package):
 
     version('0.6.1', '5a1721d5733cb42f3a29e3f353e39166')
 
-    extends('R')
-
-    depends_on('r-rjava', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-rjava', type=('build', 'run'))

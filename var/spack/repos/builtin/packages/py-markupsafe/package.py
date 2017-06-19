@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyMarkupsafe(Package):
+class PyMarkupsafe(PythonPackage):
     """MarkupSafe is a library for Python that implements a unicode
     string that is aware of HTML escaping rules and can be used to
     implement automatic string escaping. It is used by Jinja 2, the
@@ -40,9 +40,4 @@ class PyMarkupsafe(Package):
     version('0.20', '7da066d9cb191a70aa85d0a3d43565d1')
     version('0.19', 'ccb3f746c807c5500850987006854a6d')
 
-    extends('python')
-
     depends_on('py-setuptools', type='build')
-
-    def install(self, spec, prefix):
-        setup_py('install', '--prefix={0}'.format(prefix))

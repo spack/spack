@@ -32,7 +32,7 @@ import spack.store
 from spack.spec import *
 from spack.graph import *
 
-description = "Generate graphs of package dependency relationships."
+description = "generate graphs of package dependency relationships"
 
 
 def setup_parser(subparser):
@@ -41,31 +41,31 @@ def setup_parser(subparser):
     method = subparser.add_mutually_exclusive_group()
     method.add_argument(
         '-a', '--ascii', action='store_true',
-        help="Draw graph as ascii to stdout (default).")
+        help="draw graph as ascii to stdout (default)")
     method.add_argument(
         '-d', '--dot', action='store_true',
-        help="Generate graph in dot format and print to stdout.")
+        help="generate graph in dot format and print to stdout")
 
     subparser.add_argument(
         '-n', '--normalize', action='store_true',
-        help="Skip concretization; only print normalized spec.")
+        help="skip concretization; only print normalized spec")
 
     subparser.add_argument(
         '-s', '--static', action='store_true',
-        help="Use static information from packages, not dynamic spec info.")
+        help="use static information from packages, not dynamic spec info")
 
     subparser.add_argument(
         '-i', '--installed', action='store_true',
-        help="Graph all installed specs in dot format (implies --dot).")
+        help="graph all installed specs in dot format (implies --dot)")
 
     subparser.add_argument(
         '-t', '--deptype', action='store',
-        help="Comma-separated list of deptypes to traverse. default=%s."
+        help="comma-separated list of deptypes to traverse. default=%s"
         % ','.join(alldeps))
 
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER,
-        help="specs of packages to graph.")
+        help="specs of packages to graph")
 
 
 def graph(parser, args):

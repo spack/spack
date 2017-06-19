@@ -69,7 +69,7 @@ import spack
 import spack.cmd
 import llnl.util.tty as tty
 
-description = "Produce a single-rooted directory view of a spec."
+description = "produce a single-rooted directory view of a spec"
 
 
 def setup_parser(sp):
@@ -77,40 +77,40 @@ def setup_parser(sp):
 
     sp.add_argument(
         '-v', '--verbose', action='store_true', default=False,
-        help="Display verbose output.")
+        help="display verbose output")
     sp.add_argument(
         '-e', '--exclude', action='append', default=[],
-        help="Exclude packages with names matching the given regex pattern.")
+        help="exclude packages with names matching the given regex pattern")
     sp.add_argument(
         '-d', '--dependencies', choices=['true', 'false', 'yes', 'no'],
         default='true',
-        help="Follow dependencies.")
+        help="follow dependencies")
 
     ssp = sp.add_subparsers(metavar='ACTION', dest='action')
 
     specs_opts = dict(metavar='spec', nargs='+',
-                      help="Seed specs of the packages to view.")
+                      help="seed specs of the packages to view")
 
     # The action parameterizes the command but in keeping with Spack
     # patterns we make it a subcommand.
     file_system_view_actions = [
         ssp.add_parser(
             'symlink', aliases=['add', 'soft'],
-            help='Add package files to a filesystem view via symbolic links.'),
+            help='add package files to a filesystem view via symbolic links'),
         ssp.add_parser(
             'hardlink', aliases=['hard'],
-            help='Add packages files to a filesystem via via hard links.'),
+            help='add packages files to a filesystem via via hard links'),
         ssp.add_parser(
             'remove', aliases=['rm'],
-            help='Remove packages from a filesystem view.'),
+            help='remove packages from a filesystem view'),
         ssp.add_parser(
             'statlink', aliases=['status', 'check'],
-            help='Check status of packages in a filesystem view.')
+            help='check status of packages in a filesystem view')
     ]
     # All these options and arguments are common to every action.
     for act in file_system_view_actions:
         act.add_argument('path', nargs=1,
-                         help="Path to file system view directory.")
+                         help="path to file system view directory")
         act.add_argument('specs', **specs_opts)
 
     return

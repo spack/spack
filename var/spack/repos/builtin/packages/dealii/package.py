@@ -66,7 +66,7 @@ class Dealii(CMakePackage):
             description='Compile with Trilinos (only with MPI)')
     variant('python',   default=True,
             description='Compile with Python bindings')
-    variant('64bit',    default=False,
+    variant('int64',    default=False,
             description='Compile with 64 bit indices support')
 
     # required dependencies, light version
@@ -108,18 +108,26 @@ class Dealii(CMakePackage):
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
     depends_on("p4est",            when='+p4est+mpi')
-    depends_on("petsc+mpi",        when='@8.4.2:+petsc+mpi~64bit')
+    depends_on("petsc+mpi",        when='@8.4.2:+petsc+mpi~int64')
     depends_on('python',           when='@8.5.0:+python')
-    depends_on("slepc",            when='@8.4.2:+slepc+petsc+mpi~64bit')
-    depends_on("petsc@:3.6.4+mpi", when='@:8.4.1+petsc+mpi~64bit')
-    depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi~64bit')
+    depends_on("slepc",            when='@8.4.2:+slepc+petsc+mpi~int64')
+    depends_on("petsc@:3.6.4+mpi", when='@:8.4.1+petsc+mpi~int64')
+    depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi~int64')
     depends_on("trilinos",         when='+trilinos+mpi')
+
+    # check that the combination of variants makes sense
+    def variants_check(self):
+        for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
+                  '+slepc', '+trilinos']:
+            if p in self.spec and '+mpi' not in self.spec:
+                raise RuntimeError('The ' + p + ' variant requires +mpi')
 
     def build_type(self):
         # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
         return 'DebugRelease'
 
     def cmake_args(self):
+        self.variants_check()
         spec = self.spec
         options = []
 
@@ -192,7 +200,7 @@ class Dealii(CMakePackage):
         ])
 
         # arpack
-        if '+arpack' in spec:
+        if '+arpack' in spec and '+mpi' in spec:
             options.extend([
                 '-DARPACK_DIR=%s' % spec['arpack-ng'].prefix,
                 '-DDEAL_II_WITH_ARPACK=ON',
@@ -204,7 +212,7 @@ class Dealii(CMakePackage):
             ])
 
         # since Netcdf is spread among two, need to do it by hand:
-        if '+netcdf' in spec:
+        if '+netcdf' in spec and '+mpi' in spec:
             # take care of lib64 vs lib installed lib locations:
             if os.path.isdir(spec['netcdf-cxx'].prefix.lib):
                 netcdfcxx_lib_dir = spec['netcdf-cxx'].prefix.lib
@@ -244,7 +252,7 @@ class Dealii(CMakePackage):
 
         # 64 bit indices
         options.extend([
-            '-DDEAL_II_WITH_64BIT_INDICES=%s' % ('+64bit' in spec)
+            '-DDEAL_II_WITH_64BIT_INDICES=%s' % ('+int64' in spec)
         ])
 
         return options

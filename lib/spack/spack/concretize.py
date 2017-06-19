@@ -42,8 +42,7 @@ import spack.error
 from spack.version import *
 from functools import partial
 from itertools import chain
-from spack.config import *
-import spack.preferred_packages
+from spack.package_prefs import *
 
 
 class DefaultConcretizer(object):
@@ -64,11 +63,11 @@ class DefaultConcretizer(object):
                 raise UnsatisfiableProviderSpecError(providers[0], spec)
             spec_w_preferred_providers = find_spec(
                 spec,
-                lambda x: spack.pkgsort.spec_has_preferred_provider(
+                lambda x: pkgsort().spec_has_preferred_provider(
                     x.name, spec.name))
             if not spec_w_preferred_providers:
                 spec_w_preferred_providers = spec
-            provider_cmp = partial(spack.pkgsort.provider_compare,
+            provider_cmp = partial(pkgsort().provider_compare,
                                    spec_w_preferred_providers.name,
                                    spec.name)
             candidates = sorted(providers, cmp=provider_cmp)
@@ -169,8 +168,8 @@ class DefaultConcretizer(object):
 
         # ---------- Produce prioritized list of versions
         # Get list of preferences from packages.yaml
-        preferred = spack.pkgsort
-        # NOTE: spack.pkgsort == spack.preferred_packages.PreferredPackages()
+        preferred = pkgsort()
+        # NOTE: pkgsort() == spack.package_prefs.PreferredPackages()
 
         yaml_specs = [
             x[0] for x in
@@ -277,7 +276,7 @@ class DefaultConcretizer(object):
            the package specification.
         """
         changed = False
-        preferred_variants = spack.pkgsort.spec_preferred_variants(
+        preferred_variants = pkgsort().spec_preferred_variants(
             spec.package_class.name)
         for name, variant in spec.package_class.variants.items():
             if name not in spec.variants:
@@ -342,7 +341,7 @@ class DefaultConcretizer(object):
         compiler_list = all_compilers if not other_compiler else \
             spack.compilers.find(other_compiler)
         cmp_compilers = partial(
-            spack.pkgsort.compiler_compare, other_spec.name)
+            pkgsort().compiler_compare, other_spec.name)
         matches = sorted(compiler_list, cmp=cmp_compilers)
         if not matches:
             arch = spec.architecture
@@ -465,41 +464,6 @@ def find_spec(spec, condition):
         return spec
 
     return None   # Nothing matched the condition.
-
-
-def cmp_specs(lhs, rhs):
-    # Package name sort order is not configurable, always goes alphabetical
-    if lhs.name != rhs.name:
-        return cmp(lhs.name, rhs.name)
-
-    # Package version is second in compare order
-    pkgname = lhs.name
-    if lhs.versions != rhs.versions:
-        return spack.pkgsort.version_compare(
-            pkgname, lhs.versions, rhs.versions)
-
-    # Compiler is third
-    if lhs.compiler != rhs.compiler:
-        return spack.pkgsort.compiler_compare(
-            pkgname, lhs.compiler, rhs.compiler)
-
-    # Variants
-    if lhs.variants != rhs.variants:
-        return spack.pkgsort.variant_compare(
-            pkgname, lhs.variants, rhs.variants)
-
-    # Architecture
-    if lhs.architecture != rhs.architecture:
-        return spack.pkgsort.architecture_compare(
-            pkgname, lhs.architecture, rhs.architecture)
-
-    # Dependency is not configurable
-    lhash, rhash = hash(lhs), hash(rhs)
-    if lhash != rhash:
-        return -1 if lhash < rhash else 1
-
-    # Equal specs
-    return 0
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):

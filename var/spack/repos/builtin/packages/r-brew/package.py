@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RBrew(Package):
+class RBrew(RPackage):
     """brew implements a templating framework for mixing text and R code for
     report generation. brew template syntax is similar to PHP, Ruby's erb
     module, Java Server Pages, and Python's psp module."""
@@ -35,9 +35,3 @@ class RBrew(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/brew"
 
     version('1.0-6', '4aaca5e6ec145e0fc0fe6375ce1f3806')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

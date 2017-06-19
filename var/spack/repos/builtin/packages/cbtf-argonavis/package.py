@@ -54,7 +54,7 @@ class CbtfArgonavis(Package):
     # url = "file:/home/jeg/OpenSpeedShop_ROOT/SOURCES/cbtf-argonavis-1.6.tar.gz"
     # version('1.6', '0fafa0008478405c2c2319450f174ed4')
 
-    version('1.6', branch='master',
+    version('1.8', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
 
     depends_on("cmake@3.0.2:", type='build')

@@ -35,7 +35,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 from spack.modules import module_types
 
-description = "Manipulate module files"
+description = "manipulate module files"
 
 # Dictionary that will be populated with the list of sub-commands
 # Each sub-command must be callable and accept 3 arguments :
@@ -57,10 +57,10 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subparser_name')
 
     # spack module refresh
-    refresh_parser = sp.add_parser('refresh', help='Regenerate module files')
+    refresh_parser = sp.add_parser('refresh', help='regenerate module files')
     refresh_parser.add_argument(
         '--delete-tree',
-        help='Delete the module file tree before refresh',
+        help='delete the module file tree before refresh',
         action='store_true'
     )
     arguments.add_common_arguments(
@@ -68,11 +68,11 @@ def setup_parser(subparser):
     )
 
     # spack module find
-    find_parser = sp.add_parser('find', help='Find module files for packages')
+    find_parser = sp.add_parser('find', help='find module files for packages')
     arguments.add_common_arguments(find_parser, ['constraint', 'module_type'])
 
     # spack module rm
-    rm_parser = sp.add_parser('rm', help='Remove module files')
+    rm_parser = sp.add_parser('rm', help='remove module files')
     arguments.add_common_arguments(
         rm_parser, ['constraint', 'module_type', 'yes_to_all']
     )
@@ -80,19 +80,19 @@ def setup_parser(subparser):
     # spack module loads
     loads_parser = sp.add_parser(
         'loads',
-        help='Prompt the list of modules associated with a constraint'
+        help='prompt the list of modules associated with a constraint'
     )
     loads_parser.add_argument(
         '--input-only', action='store_false', dest='shell',
-        help='Generate input for module command (instead of a shell script)'
+        help='generate input for module command (instead of a shell script)'
     )
     loads_parser.add_argument(
         '-p', '--prefix', dest='prefix', default='',
-        help='Prepend to module names when issuing module load commands'
+        help='prepend to module names when issuing module load commands'
     )
     loads_parser.add_argument(
         '-x', '--exclude', dest='exclude', action='append', default=[],
-        help="Exclude package from output; may be specified multiple times"
+        help="exclude package from output; may be specified multiple times"
     )
     arguments.add_common_arguments(
         loads_parser, ['constraint', 'module_type', 'recurse_dependencies']
@@ -132,6 +132,7 @@ def loads(mtype, specs, args):
 
     module_commands = {
         'tcl': 'module load ',
+        'lmod': 'module load ',
         'dotkit': 'dotkit use '
     }
 

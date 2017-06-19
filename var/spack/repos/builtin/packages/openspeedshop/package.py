@@ -63,12 +63,12 @@ class Openspeedshop(Package):
     url	= "https://github.com/OpenSpeedShop"
     version('2.2', '16cb051179c2038de4e8a845edf1d573')
     # Use when the git repository is available
-    version('2.2', branch='master',
+    version('2.3', branch='master',
             git='https://github.com/OpenSpeedShop/openspeedshop.git')
 
     # Optional mirror template
-    # url = "file:/home/jeg/OpenSpeedShop_ROOT/SOURCES/openspeedshop-2.2.tar.gz"
-    # version('2.2', '517a7798507241ad8abd8b0626a4d2cf')
+    # url = "file:/home/jeg/OpenSpeedShop_ROOT/SOURCES/openspeedshop-2.3.tar.gz"
+    # version('2.3', '517a7798507241ad8abd8b0626a4d2cf')
 
     parallel = False
 

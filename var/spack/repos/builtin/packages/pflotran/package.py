@@ -38,7 +38,7 @@ class Pflotran(AutotoolsPackage):
             commmit='4734cf5e606b')    
 
     depends_on('mpi')
-    depends_on('hdf5@1.8.12+mpi+fortran')
+    depends_on('hdf5@1.8.12:+mpi+fortran')
     depends_on('petsc@develop+hdf5+metis',when='@develop')
     depends_on('petsc@for-pflotran-0.1.0+hdf5+metis',when='@0.1.0')    
 

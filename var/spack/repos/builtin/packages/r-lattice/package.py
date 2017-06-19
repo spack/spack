@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RLattice(Package):
+class RLattice(RPackage):
     """A powerful and elegant high-level data visualization system inspired by
     Trellis graphics, with an emphasis on multivariate data. Lattice is
     sufficient for typical graphics needs, and is also flexible enough to
@@ -36,9 +36,3 @@ class RLattice(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/lattice"
 
     version('0.20-34', 'c2a648b22d4206ae7526fb70b8e90fed')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

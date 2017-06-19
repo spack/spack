@@ -27,16 +27,16 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 
-description = "Activate a package extension."
+description = "activate a package extension"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true',
-        help="Activate without first activating dependencies.")
+        help="activate without first activating dependencies")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="spec of package extension to activate.")
+        help="spec of package extension to activate")
 
 
 def activate(parser, args):

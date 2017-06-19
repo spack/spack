@@ -32,7 +32,7 @@ class DarshanUtil(Package):
     log files produced by Darshan (runtime)."""
 
     homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
-    url = "ftp://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
+    url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
 
     version('3.1.0', '439d717323e6265b2612ed127886ae52')
     version('3.0.0', '732577fe94238936268d74d7d74ebd08')

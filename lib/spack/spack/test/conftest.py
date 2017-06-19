@@ -122,7 +122,6 @@ def builtin_mock(repo_path):
 def refresh_builtin_mock(builtin_mock, repo_path):
     """Refreshes the state of spack.repo"""
     # Get back the real repository
-    spack.repo.swap(builtin_mock.real)
     mock_repo = copy.deepcopy(repo_path)
     spack.repo.swap(mock_repo)
     return builtin_mock

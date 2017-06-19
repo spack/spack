@@ -56,7 +56,7 @@ class CbtfKrell(Package):
     # url      = "file:/home/jeg/cbtf-krell-1.6.tar.gz"
     # version('1.6', 'edeb61cd488f16e7b124f77db9ce762d')
 
-    version('1.6', branch='master',
+    version('1.8', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-krell.git')
 
     # MPI variants

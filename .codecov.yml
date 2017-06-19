@@ -1,0 +1,28 @@
+coverage:
+  precision: 2
+  round: nearest
+  range: 60...90
+  status:
+    project:
+      default: true
+      llnl:
+        threshold: 0.5
+        paths:
+          - lib/spack/llnl
+      commands:
+        threshold: 0.5
+        paths:
+          - lib/spack/spack/cmd
+      core:
+        threshold: 0.5
+        paths:
+          - "!lib/spack/llnl"
+          - "!lib/spack/spack/cmd"
+
+ignore:
+  - lib/spack/spack/test/.*
+  - lib/spack/env/.*
+  - lib/spack/docs/.*
+  - lib/spack/external/.*
+
+comment: off

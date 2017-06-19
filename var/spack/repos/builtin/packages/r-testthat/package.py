@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RTestthat(Package):
+class RTestthat(RPackage):
     """A unit testing system designed to be fun, flexible and easy to set
     up."""
 
@@ -35,14 +35,8 @@ class RTestthat(Package):
 
     version('1.0.2', '6c6a90c8db860292df5784a70e07b8dc')
 
-    extends('R')
-
-    depends_on('r-digest', type=nolink)
-    depends_on('r-crayon', type=nolink)
-    depends_on('r-praise', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-R6', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-crayon', type=('build', 'run'))
+    depends_on('r-praise', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'))

@@ -31,20 +31,24 @@ from spack import *
 class CBlosc(Package):
     """Blosc, an extremely fast, multi-threaded, meta-compressor library"""
     homepage = "http://www.blosc.org"
-    url      = "https://github.com/Blosc/c-blosc/archive/v1.9.2.tar.gz"
+    url      = "https://github.com/Blosc/c-blosc/archive/v1.11.1.tar.gz"
 
-    version('1.9.2', 'dd2d83069d74b36b8093f1c6b49defc5')
-    version('1.9.1', '7d708d3daadfacf984a87b71b1734ce2')
-    version('1.9.0', 'e4c1dc8e2c468e5cfa2bf05eeee5357a')
-    version('1.8.1', 'd73d5be01359cf271e9386c90dcf5b05')
-    version('1.8.0', '5b92ecb287695ba20cc33d30bf221c4f')
+    version('1.11.1', 'e236550640afa50155f3881f2d300206')
+    version('1.9.2',  'dd2d83069d74b36b8093f1c6b49defc5')
+    version('1.9.1',  '7d708d3daadfacf984a87b71b1734ce2')
+    version('1.9.0',  'e4c1dc8e2c468e5cfa2bf05eeee5357a')
+    version('1.8.1',  'd73d5be01359cf271e9386c90dcf5b05')
+    version('1.8.0',  '5b92ecb287695ba20cc33d30bf221c4f')
+
+    variant('avx2', default=True, description='Enable AVX2 support')
 
     depends_on("cmake", type='build')
     depends_on("snappy")
     depends_on("zlib")
 
     def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
+        avx2 = '-DDEACTIVATE_AVX2=%s' % ('ON' if '~avx2' in spec else 'OFF')
+        cmake('.', avx2, *std_cmake_args)
 
         make()
         make("install")

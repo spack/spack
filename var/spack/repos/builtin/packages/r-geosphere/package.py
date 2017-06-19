@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RGeosphere(Package):
+class RGeosphere(RPackage):
     """Spherical trigonometry for geographic applications. That is, compute
     distances and related measures for angular (longitude/latitude)
     locations."""
@@ -36,10 +36,4 @@ class RGeosphere(Package):
 
     version('1.5-5', '28efb7a8e266c7f076cdbcf642455f3e')
 
-    extends('R')
-
-    depends_on('r-sp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-sp', type=('build', 'run'))

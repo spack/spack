@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RTidyr(Package):
+class RTidyr(RPackage):
     """An evolution of 'reshape2'. It's designed specifically for data tidying
     (not general reshaping or aggregating) and works well with 'dplyr' data
     pipelines."""
@@ -36,14 +36,9 @@ class RTidyr(Package):
 
     version('0.5.1', '3cadc869510c054ed93d374ab44120bd')
 
-    extends('R')
-    depends_on('r-tibble', type=nolink)
-    depends_on('r-dplyr', type=nolink)
-    depends_on('r-stringi', type=nolink)
-    depends_on('r-lazyeval', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-tibble', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-stringi', type=('build', 'run'))
+    depends_on('r-lazyeval', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

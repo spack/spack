@@ -31,6 +31,7 @@ class Flex(AutotoolsPackage):
     homepage = "https://github.com/westes/flex"
     url = "https://github.com/westes/flex/releases/download/v2.6.1/flex-2.6.1.tar.gz"
 
+    version('2.6.3', 'a5f65570cd9107ec8a8ec88f17b31bb1')
     # Problematic version:
     # See issue #2554; https://github.com/westes/flex/issues/113
     # version('2.6.2', 'cc6d76c333db7653d5caf423a3335239')
@@ -43,7 +44,7 @@ class Flex(AutotoolsPackage):
     depends_on('help2man',      type='build')
 
     # Older tarballs don't come with a configure script
-    depends_on('m4',       type='build', when='@:2.6.0')
+    depends_on('m4',       type='build')
     depends_on('autoconf', type='build', when='@:2.6.0')
     depends_on('automake', type='build', when='@:2.6.0')
     depends_on('libtool',  type='build', when='@:2.6.0')
@@ -60,11 +61,3 @@ class Flex(AutotoolsPackage):
             url += "/archive/flex-{0}.tar.gz".format(version.dashed)
 
         return url
-
-    def autoreconf(self, spec, prefix):
-        pass
-
-    @when('@:2.6.0')
-    def autoreconf(self, spec, prefix):
-        libtoolize('--install', '--force')
-        autoreconf('--install', '--force')

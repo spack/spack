@@ -25,15 +25,10 @@
 from spack import *
 
 
-class Fontcacheproto(Package):
+class Fontcacheproto(AutotoolsPackage):
     """X.org FontcacheProto protocol headers."""
 
     homepage = "http://cgit.freedesktop.org/xorg/proto/fontcacheproto"
     url      = "https://www.x.org/archive/individual/proto/fontcacheproto-0.1.3.tar.gz"
 
     version('0.1.3', '5a91ab914ffbfbc856e6fcde52e6f3e3')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

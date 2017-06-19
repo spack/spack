@@ -647,8 +647,8 @@ avoid ambiguity.
 
 When spack normalizes specs, it prints them out with no spaces boolean
 variants using the backwards compatibility syntax and uses only ``~``
-for disabled boolean variants.  We allow ``-`` and spaces on the command
-line is provided for convenience and legibility.
+for disabled boolean variants.  The ``-`` and spaces on the command
+line are provided for convenience and legibility.
 
 ^^^^^^^^^^^^^^
 Compiler Flags
@@ -658,14 +658,17 @@ Compiler flags are specified using the same syntax as non-boolean variants,
 but fulfill a different purpose. While the function of a variant is set by
 the package, compiler flags are used by the compiler wrappers to inject
 flags into the compile line of the build. Additionally, compiler flags are
-inherited by dependencies. ``spack install libdwarf cppflags=\"-g\"`` will
+inherited by dependencies. ``spack install libdwarf cppflags="-g"`` will
 install both libdwarf and libelf with the ``-g`` flag injected into their
 compile line.
 
-Notice that the value of the compiler flags must be escape quoted on the
-command line. From within python files, the same spec would be specified
-``libdwarf cppflags="-g"``. This is necessary because of how the shell
-handles the quote symbols.
+Notice that the value of the compiler flags must be quoted if it
+contains any spaces. Any of ``cppflags=-O3``, ``cppflags="-O3"``,
+``cppflags='-O3'``, and ``cppflags="-O3 -fPIC"`` are acceptable, but
+``cppflags=-O3 -fPIC`` is not. Additionally, if they value of the
+compiler flags is not the last thing on the line, it must be followed
+by a space. The commmand ``spack install libelf cppflags="-O3"%intel``
+will be interpreted as an attempt to set `cppflags="-O3%intel"``.
 
 The six compiler flags are injected in the order of implicit make commands
 in GNU Autotools. If all flags are set, the order is

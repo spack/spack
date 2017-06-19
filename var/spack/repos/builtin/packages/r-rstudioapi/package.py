@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RRstudioapi(Package):
+class RRstudioapi(RPackage):
     """Access the RStudio API (if available) and provide informative error
     messages when it's not."""
 
@@ -35,9 +35,3 @@ class RRstudioapi(Package):
 
     version('0.6', 'fdb13bf46aab02421557e713fceab66b')
     version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
