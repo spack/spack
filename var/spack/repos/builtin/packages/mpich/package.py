@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Mpich(AutotoolsPackage, mixins.FilterCompilerWrappers):
+class Mpich(AutotoolsPackage):
     """MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""
 
@@ -70,6 +70,8 @@ spack package at this time.''',
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
+
+    filter_compiler_wrappers('mpicc', 'mpicxx', 'mpif77', 'mpif90')
 
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
@@ -169,12 +171,3 @@ spack package at this time.''',
         config_args.append(device_config)
 
         return config_args
-
-    @property
-    def to_be_filtered_for_wrappers(self):
-        return [
-            join_path(self.prefix.bin, 'mpicc'),
-            join_path(self.prefix.bin, 'mpicxx'),
-            join_path(self.prefix.bin, 'mpif77'),
-            join_path(self.prefix.bin, 'mpif90')
-        ]
