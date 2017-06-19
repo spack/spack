@@ -27,7 +27,7 @@ def get_existing_elf_rpaths(path_name, patchelf_executable):
     return retval
 
 
-def modify_macho_object(path_name, old_dir, new_dir):
+def modify_macho_object(path_name, old_dir, new_dir, gcc_prefix):
     """
     Modify MachO binaries by changing rpaths,and id and dependency lib paths.
     Examines the output of otool -l for these three patterns
@@ -111,7 +111,13 @@ def modify_macho_object(path_name, old_dir, new_dir):
         if install_name_tool.returncode != 0:
             tty.warn('failed writing id for %s.' % path_name)
             tty.warn(output)
-
+    if gcc_prefix:
+        output = install_name_tool('-add_rpath', "%s/lib" % gcc_prefix,
+                                   '-add_rpath', "%s/lib64" % gcc_prefix,
+                                   path_name, output=str, err=str)
+        if install_name_tool.returncode != 0:
+            tty.warn('failed adding gcc_prefix to %s.' % path_name)
+            tty.warn(output)
     os.chmod(path_name, st.st_mode)
     return
 
@@ -129,7 +135,8 @@ def get_filetype(path_name):
     return output.strip()
 
 
-def modify_elf_object(path_name, orig_rpath, new_rpath, patchelf_executable):
+def modify_elf_object(path_name, orig_rpath, new_rpath, patchelf_executable,
+                      gcc_prefix):
     """
     Replace RPATH's in given elf object
     """
@@ -138,7 +145,8 @@ def modify_elf_object(path_name, orig_rpath, new_rpath, patchelf_executable):
     if not wmode:
         os.chmod(path_name, st.st_mode | stat.S_IWUSR)
     if platform.system() == 'Linux':
-        new_joined = ':'.join(new_rpath)
+        new_joined = '%s/lib:%s/lib64:' % (gcc_prefix, gcc_prefix)
+        new_joined += ':'.join(new_rpath)
         command = which(patchelf_executable)
         output = command('--force-rpath', '--set-rpath', '%s' % new_joined,
                          '%s' % path_name, output=str, cmd=str)
@@ -173,17 +181,18 @@ def needs_text_relocation(filetype):
     return ("text" in filetype)
 
 
-def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
+def relocate_binary(path_name, old_dir, new_dir, patchelf_executable, 
+                    gcc_prefix):
     """
     Change RPATHs in given elf or mach-o file
     """
     if platform.system() == 'Darwin':
-        modify_macho_object(path_name, old_dir, new_dir)
+        modify_macho_object(path_name, old_dir, new_dir, gcc_prefix)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
         new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
         modify_elf_object(path_name, orig_rpaths, new_rpaths,
-                          patchelf_executable)
+                          patchelf_executable, gcc_prefix)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 

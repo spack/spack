@@ -14,10 +14,10 @@ from spack.stage import Stage
 import spack.fetch_strategy as fs
 import spack.relocate
 from contextlib import closing
+import platform
+import re
 
 def get_full_system_from_platform():
-    import platform
-    import re
     system = platform.system()
     if system == "Linux":
         pf = platform.linux_distribution(full_distribution_name=0)[0]
@@ -253,10 +253,12 @@ def relocate_package(package):
     # now do the actual relocation
     for filename in buildinfo['relocate_binaries']:
         path_name = os.path.join(package.prefix, filename)
+        gcc_prefix=re.sub('/bin/.*$','',package.compiler.cc)
         spack.relocate.relocate_binary(path_name,
                                        old_path,
                                        new_path,
-                                       patchelf_executable)
+                                       patchelf_executable,
+                                       gcc_prefix)
 
     for filename in buildinfo['relocate_textfiles']:
         path_name = os.path.join(package.prefix, filename)
