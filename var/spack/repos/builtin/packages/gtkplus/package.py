@@ -57,3 +57,5 @@ class Gtkplus(AutotoolsPackage):
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path("XDG_DATA_DIRS",
                                self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS",
+                             self.prefix.share)
