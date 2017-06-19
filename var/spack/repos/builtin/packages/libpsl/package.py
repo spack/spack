@@ -25,17 +25,33 @@
 from spack import *
 
 
-class Nettle(AutotoolsPackage):
-    """The Nettle package contains the low-level cryptographic library
-    that is designed to fit easily in many contexts."""
+class Libpsl(AutotoolsPackage):
+    """libpsl - C library to handle the Public Suffix List."""
 
-    homepage = "https://www.lysator.liu.se/~nisse/nettle/"
-    url      = "http://ftp.gnu.org/gnu/nettle/nettle-3.3.tar.gz"
+    homepage = "https://github.com/rockdaboot/libpsl"
+    url      = "https://github.com/rockdaboot/libpsl/releases/download/libpsl-0.17.0/libpsl-0.17.0.tar.gz"
 
-    version('3.3',   '10f969f78a463704ae73529978148dbe')
-    version('3.2',   'afb15b4764ebf1b4e6d06c62bd4d29e4')
-    version('2.7.1', '003d5147911317931dd453520eb234a5')
-    version('2.7',   '2caa1bd667c35db71becb93c5d89737f')
+    version('0.17.0', 'fed13f33d0d6dc13ef24de255630bfcb')
 
-    depends_on('gmp')
-    depends_on('m4', type='build')
+    depends_on('icu4c')
+
+    depends_on('gettext', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('python@2.7:', type='build')
+
+    # TODO: Add a 'test' deptype
+    # depends_on('valgrind', type='test')
+
+    def configure_args(self):
+        spec = self.spec
+
+        args = [
+            'PYTHON={0}'.format(spec['python'].command.path),
+        ]
+
+        if self.run_tests:
+            args.append('--enable-valgrind-tests')
+        else:
+            args.append('--disable-valgrind-tests')
+
+        return args
