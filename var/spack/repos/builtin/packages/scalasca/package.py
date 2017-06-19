@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Scalasca(Package):
+class Scalasca(AutotoolsPackage):
     """Scalasca is a software tool that supports the performance optimization
        of parallel programs by measuring and analyzing their runtime
        behavior. The analysis identifies potential performance
@@ -38,29 +38,29 @@ class Scalasca(Package):
     homepage = "http://www.scalasca.org"
     url = "http://apps.fz-juelich.de/scalasca/releases/scalasca/2.1/dist/scalasca-2.1.tar.gz"
 
-    version('2.2.2', '2bafce988b0522d18072f7771e491ab9',
-            url='http://apps.fz-juelich.de/scalasca/releases/scalasca/2.2/dist/scalasca-2.2.2.tar.gz')
-
-    version('2.1', 'bab9c2b021e51e2ba187feec442b96e6',
-            url='http://apps.fz-juelich.de/scalasca/releases/scalasca/2.1/dist/scalasca-2.1.tar.gz')
+    version('2.3.1', 'a83ced912b9d2330004cb6b9cefa7585')
+    version('2.2.2', '2bafce988b0522d18072f7771e491ab9')
+    version('2.1',   'bab9c2b021e51e2ba187feec442b96e6')
 
     depends_on("mpi")
-    ##########
-    # Hard-code dependencies for Scalasca according to what stated in the
-    # release page
-    # The OTF2 library path should be detected automatically from SCOREP
-    # SCALASCA 2.2.2
-    depends_on("scorep@1.4:", when='@2.2.2')
-    depends_on("cube@4.3:", when='@2.2.2')
-    # SCALASCA 2.1
-    depends_on("scorep@1.3", when='@2.1')
-    depends_on("cube@4.2:", when='@2.1')
-    ##########
 
-    def install(self, spec, prefix):
-        configure_args = ["--prefix=%s" % prefix,
-                          "--with-cube=%s" % spec['cube'].prefix.bin,
-                          "--enable-shared"]
-        configure(*configure_args)
-        make()
-        make("install")
+    # version 2.3
+    depends_on('cube@4.3:', when='@2.3:')
+    depends_on('otf2@2:', when='@2.3:')
+
+    # version 2.1+
+    depends_on('cube@4.2', when='@2.1:2.2.999')
+    depends_on('otf2@1.4', when='@2.1:2.2.999')
+
+    def url_for_version(self, version):
+        return 'http://apps.fz-juelich.de/scalasca/releases/scalasca/{0}/dist/scalasca-{1}.tar.gz'.format(version.up_to(2), version)
+
+    def configure_args(self):
+        spec = self.spec
+
+        config_args = ["--enable-shared"]
+
+        config_args.append("--with-cube=%s" % spec['cube'].prefix.bin)
+        config_args.append("--with-otf2=%s" % spec['otf2'].prefix.bin)
+
+        return config_args

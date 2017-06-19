@@ -24,6 +24,16 @@
 ##############################################################################
 from spack import *
 
+import numbers
+
+
+def is_integral(x):
+    """Any integer value"""
+    try:
+        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
+    except ValueError:
+        return False
+
 
 class Netcdf(AutotoolsPackage):
     """NetCDF is a set of software libraries and self-describing,
@@ -34,7 +44,7 @@ class Netcdf(AutotoolsPackage):
     url      = "http://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-4.3.3.tar.gz"
 
     # Version 4.4.1.1 is having problems in tests
-    #    https://github.com/Unidata/netcdf-c/issues/343 
+    #    https://github.com/Unidata/netcdf-c/issues/343
     version('4.4.1.1', '503a2d6b6035d116ed53b1d80c811bda')
     # netcdf@4.4.1 can crash on you (in real life and in tests).  See:
     #    https://github.com/Unidata/netcdf-c/issues/282
@@ -52,10 +62,18 @@ class Netcdf(AutotoolsPackage):
     # These variants control the number of dimensions (i.e. coordinates and
     # attributes) and variables (e.g. time, entity ID, number of coordinates)
     # that can be used in any particular NetCDF file.
-    variant('maxdims', default=1024,
-            description='Defines the maximum dimensions of NetCDF files.')
-    variant('maxvars', default=8192,
-            description='Defines the maximum variables of NetCDF files.')
+    variant(
+        'maxdims',
+        default=1024,
+        description='Defines the maximum dimensions of NetCDF files.',
+        values=is_integral
+    )
+    variant(
+        'maxvars',
+        default=8192,
+        description='Defines the maximum variables of NetCDF files.',
+        values=is_integral
+    )
 
     depends_on("m4", type='build')
     depends_on("hdf", when='+hdf4')
@@ -137,6 +155,7 @@ class Netcdf(AutotoolsPackage):
 
         if '+mpi' in spec:
             config_args.append('--enable-parallel4')
+            config_args.append('CC=%s' % spec['mpi'].mpicc)
 
         CPPFLAGS.append("-I%s/include" % spec['hdf5'].prefix)
         LDFLAGS.append("-L%s/lib"     % spec['hdf5'].prefix)

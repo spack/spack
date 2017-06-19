@@ -68,14 +68,14 @@ class Nwchem(Package):
         ]
     }
     # Iterate over patches
-    for condition, urls in urls_for_patches.iteritems():
+    for condition, urls in urls_for_patches.items():
         for url, md5 in urls:
             patch(url, when=condition, level=0, md5=md5)
 
     def install(self, spec, prefix):
-        scalapack = spec['scalapack'].scalapack_libs
-        lapack = spec['lapack'].lapack_libs
-        blas = spec['blas'].blas_libs
+        scalapack = spec['scalapack'].libs
+        lapack = spec['lapack'].libs
+        blas = spec['blas'].libs
         # see http://www.nwchem-sw.org/index.php/Compiling_NWChem
         args = []
         args.extend([
@@ -88,7 +88,7 @@ class Nwchem(Package):
             'MPI_LOC=%s' % spec['mpi'].prefix,
             'USE_PYTHONCONFIG=y',
             'PYTHONVERSION=%s' % spec['python'].version.up_to(2),
-            'PYTHONHOME=%s' % spec['python'].prefix,
+            'PYTHONHOME=%s' % spec['python'].home,
             'BLASOPT=%s' % ((lapack + blas).ld_flags),
             'BLAS_LIB=%s' % blas.ld_flags,
             'LAPACK_LIB=%s' % lapack.ld_flags,

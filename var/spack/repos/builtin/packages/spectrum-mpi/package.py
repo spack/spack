@@ -32,6 +32,7 @@ class SpectrumMpi(Package):
     """
 
     homepage = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
+    url = "http://www-03.ibm.com/systems/spectrum-computing/products/mpi"
 
     provides('mpi')
 
@@ -62,3 +63,8 @@ class SpectrumMpi(Package):
             spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
             spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
             spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+
+        spack_env.set('OMPI_CC', spack_cc)
+        spack_env.set('OMPI_CXX', spack_cxx)
+        spack_env.set('OMPI_FC', spack_fc)
+        spack_env.set('OMPI_F77', spack_f77)

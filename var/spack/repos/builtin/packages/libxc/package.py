@@ -36,6 +36,33 @@ class Libxc(Package):
     version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
     version('2.2.1', '38dc3a067524baf4f8521d5bb1cd0b8f')
 
+    @property
+    def libs(self):
+        """Libxc can be queried for the following parameters:
+
+        - "static": returns the static library version of libxc
+            (by default the shared version is returned)
+
+        :return: list of matching libraries
+        """
+        query_parameters = self.spec.last_query.extra_parameters
+
+        libraries = ['libxc']
+
+        # Libxc installs both shared and static libraries.
+        # If a client ask for static explicitly then return
+        # the static libraries
+        shared = False if 'static' in query_parameters else True
+
+        # Libxc has a fortran90 interface: give clients the
+        # possibility to query for it
+        if 'fortran' in query_parameters:
+            libraries = ['libxcf90'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=shared, recurse=True
+        )
+
     def install(self, spec, prefix):
         # Optimizations for the Intel compiler, suggested by CP2K
         optflags = '-O2'

@@ -34,7 +34,7 @@ class Tetgen(Package):
        boundary conforming Delaunay meshes, and Voronoi paritions.
     """
 
-    homepage = "http://www.tetgen.org"
+    homepage = "http://wias-berlin.de/software/tetgen/"
 
     version('1.5.0', '3b9fd9cdec121e52527b0308f7aad5c1', url='http://www.tetgen.org/1.5/src/tetgen1.5.0.tar.gz')
     version('1.4.3', 'd6a4bcdde2ac804f7ec66c29dcb63c18', url='http://www.tetgen.org/files/tetgen1.4.3.tar.gz')

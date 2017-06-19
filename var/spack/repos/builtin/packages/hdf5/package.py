@@ -37,6 +37,7 @@ class Hdf5(AutotoolsPackage):
     list_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
+    version('1.10.1', '43a2f9466702fb1db31df98ae6677f15')
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
     version('1.8.18', 'dd2148b740713ca0295442ec683d7b1c',
@@ -70,21 +71,80 @@ class Hdf5(AutotoolsPackage):
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
-    @run_before('configure')
-    def validate(self):
-        """
-        Checks if incompatible variants have been activated at the same time
+    # According to ./configure --help thread-safe capabilities are:
+    # "Not compatible with the high-level library, Fortran, or C++ wrappers."
+    # (taken from hdf5@1.10.0patch1)
+    conflicts('+threadsafe', when='+cxx')
+    conflicts('+threadsafe', when='+fortran')
 
-        :param spec: spec of the package
-        :raises RuntimeError: in case of inconsistencies
+    @property
+    def libs(self):
+        """HDF5 can be queried for the following parameters:
+
+        - "hl": high-level interface
+        - "cxx": C++ APIs
+        - "fortran": Fortran APIs
+
+        :return: list of matching libraries
         """
+        query_parameters = self.spec.last_query.extra_parameters
+
+        shared = '+shared' in self.spec
+
+        # This map contains a translation from query_parameters
+        # to the libraries needed
+        query2libraries = {
+            tuple(): ['libhdf5'],
+            ('cxx', 'fortran', 'hl'): [
+                'libhdf5hl_fortran',
+                'libhdf5_hl_cpp',
+                'libhdf5_hl',
+                'libhdf5_fortran',
+                'libhdf5',
+            ],
+            ('cxx', 'hl'): [
+                'libhdf5_hl_cpp',
+                'libhdf5_hl',
+                'libhdf5',
+            ],
+            ('fortran', 'hl'): [
+                'libhdf5hl_fortran',
+                'libhdf5_hl',
+                'libhdf5_fortran',
+                'libhdf5',
+            ],
+            ('hl',): [
+                'libhdf5_hl',
+                'libhdf5',
+            ],
+            ('cxx', 'fortran'): [
+                'libhdf5_fortran',
+                'libhdf5_cpp',
+                'libhdf5',
+            ],
+            ('cxx',): [
+                'libhdf5_cpp',
+                'libhdf5',
+            ],
+            ('fortran',): [
+                'libhdf5_fortran',
+                'libhdf5',
+            ]
+        }
+
+        # Turn the query into the appropriate key
+        key = tuple(sorted(query_parameters))
+        libraries = query2libraries[key]
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=shared, recurse=True
+        )
+
+    @run_before('configure')
+    def fortran_check(self):
         spec = self.spec
         if '+fortran' in spec and not self.compiler.fc:
-            msg = 'cannot build a fortran variant without a fortran compiler'
-            raise RuntimeError(msg)
-
-        if '+threadsafe' in spec and ('+cxx' in spec or '+fortran' in spec):
-            msg = 'cannot use variant +threadsafe with either +cxx or +fortran'
+            msg = 'cannot build a Fortran variant without a Fortran compiler'
             raise RuntimeError(msg)
 
     def configure_args(self):
@@ -126,7 +186,7 @@ class Hdf5(AutotoolsPackage):
         if '+pic' in spec:
             extra_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
             extra_args.append('CXXFLAGS={0}'.format(self.compiler.pic_flag))
-            extra_args.append('FFLAGS={0}'.format(self.compiler.pic_flag))
+            extra_args.append('FCFLAGS={0}'.format(self.compiler.pic_flag))
 
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
@@ -156,11 +216,9 @@ class Hdf5(AutotoolsPackage):
 
         return ["--with-zlib=%s" % spec['zlib'].prefix] + extra_args
 
-    def configure(self, spec, prefix):
-        # Run the default autotools package configure
-        super(Hdf5, self).configure(spec, prefix)
-
-        if '@:1.8.14' in spec:
+    @run_after('configure')
+    def patch_postdeps(self):
+        if '@:1.8.14' in self.spec:
             # On Ubuntu14, HDF5 1.8.12 (and maybe other versions)
             # mysteriously end up with "-l -l" in the postdeps in the
             # libtool script.  Patch this by removing the spurious -l's.
@@ -171,6 +229,7 @@ class Hdf5(AutotoolsPackage):
                 'libtool')
 
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         # Build and run a small program to test the installed HDF5 library
         spec = self.spec
@@ -196,19 +255,15 @@ HDF5 version {version} {version}
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
-                cc = which('%s' % spec['mpi'].mpicc)
+                cc = Executable(spec['mpi'].mpicc)
             else:
-                cc = which('cc')
-            # TODO: Automate these path and library settings
-            cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
-            cc('-o', "check", "check.o",
-               "-L%s" % join_path(spec.prefix, "lib"),
-               "-L%s" % join_path(spec.prefix, "lib64"),
-               "-lhdf5",
-               "-lz")
+                cc = Executable(self.compiler.cc)
+            cc(*(['-c', "check.c"] + spec['hdf5'].headers.cpp_flags.split()))
+            cc(*(['-o', "check", "check.o"] +
+                 spec['hdf5'].libs.ld_flags.split()))
             try:
                 check = Executable('./check')
-                output = check(return_output=True)
+                output = check(output=str)
             except:
                 output = ""
             success = output == expected

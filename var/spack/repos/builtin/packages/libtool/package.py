@@ -41,6 +41,10 @@ class Libtool(AutotoolsPackage):
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.append_path('ACLOCAL_PATH',
+                              join_path(self.prefix.share, 'aclocal'))
+
     def setup_dependent_package(self, module, dependent_spec):
         # Automake is very likely to be a build dependency,
         # so we add the tools it provides to the dependent module

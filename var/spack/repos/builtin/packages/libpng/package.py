@@ -29,8 +29,11 @@ class Libpng(AutotoolsPackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
-    url      = "http://download.sourceforge.net/libpng/libpng-1.6.27.tar.gz"
+    url      = "http://download.sourceforge.net/libpng/libpng-1.6.29.tar.gz"
+    list_url = "https://sourceforge.net/projects/libpng/files/"
+    list_depth = 2
 
+    version('1.6.29', '68553080685f812d1dd7a6b8215c37d8')
     version('1.6.27', '58698519e9f6126c1caeefc28dbcbd5f')
     # From http://www.libpng.org/pub/png/libpng.html (2017-01-04)
     #     Virtually all libpng versions through 1.6.26, 1.5.27,

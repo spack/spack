@@ -35,11 +35,11 @@ class Prefix(str):
        For example, you can do something like this::
 
            prefix = Prefix('/usr')
-           print prefix.lib
-           print prefix.lib64
-           print prefix.bin
-           print prefix.share
-           print prefix.man4
+           print(prefix.lib)
+           print(prefix.lib64)
+           print(prefix.bin)
+           print(prefix.share)
+           print(prefix.man4)
 
        This program would print:
 
@@ -52,7 +52,7 @@ class Prefix(str):
        Prefix objects behave identically to strings.  In fact, they
        subclass str.  So operators like + are legal:
 
-           print "foobar " + prefix
+           print("foobar " + prefix)
 
        This prints 'foobar /usr". All of this is meant to make custom
        installs easy.
@@ -60,16 +60,18 @@ class Prefix(str):
 
     def __new__(cls, path):
         s = super(Prefix, cls).__new__(cls, path)
-        s.bin     = join_path(s, 'bin')
-        s.sbin    = join_path(s, 'sbin')
-        s.etc     = join_path(s, 'etc')
-        s.include = join_path(s, 'include')
-        s.lib     = join_path(s, 'lib')
-        s.lib64   = join_path(s, 'lib64')
-        s.libexec = join_path(s, 'libexec')
-        s.share   = join_path(s, 'share')
-        s.doc     = join_path(s.share, 'doc')
-        s.info    = join_path(s.share, 'info')
+        s.bin       = join_path(s, 'bin')
+        s.bin64     = join_path(s, 'bin64')
+        s.sbin      = join_path(s, 'sbin')
+        s.etc       = join_path(s, 'etc')
+        s.include   = join_path(s, 'include')
+        s.include64 = join_path(s, 'include64')
+        s.lib       = join_path(s, 'lib')
+        s.lib64     = join_path(s, 'lib64')
+        s.libexec   = join_path(s, 'libexec')
+        s.share     = join_path(s, 'share')
+        s.doc       = join_path(s.share, 'doc')
+        s.info      = join_path(s.share, 'info')
 
         s.man  = join_path(s, 'man')
         s.man1 = join_path(s.man, 'man1')
