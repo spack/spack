@@ -90,7 +90,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             '-des',
             '-Dprefix={0}'.format(prefix),
             '-Dlocincpth=' + self.spec['gdbm'].prefix.include,
-            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib,
+            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib
         ]
 
         # Prepend default perl @INC path to allow package activation:
