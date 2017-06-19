@@ -111,13 +111,6 @@ def modify_macho_object(path_name, old_dir, new_dir, gcc_prefix):
         if install_name_tool.returncode != 0:
             tty.warn('failed writing id for %s.' % path_name)
             tty.warn(output)
-    if gcc_prefix:
-        output = install_name_tool('-add_rpath', "%s/lib" % gcc_prefix,
-                                   '-add_rpath', "%s/lib64" % gcc_prefix,
-                                   path_name, output=str, err=str)
-        if install_name_tool.returncode != 0:
-            tty.warn('failed adding gcc_prefix to %s.' % path_name)
-            tty.warn(output)
     os.chmod(path_name, st.st_mode)
     return
 
