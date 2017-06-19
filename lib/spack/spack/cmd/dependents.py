@@ -106,7 +106,7 @@ def dependents(parser, args):
         deps = spack.store.db.installed_relatives(
             spec, 'parents', args.transitive)
         if deps:
-            spack.cmd.display_specs(deps)
+            spack.cmd.display_specs(deps, long=True)
         else:
             print("No dependents")
 
