@@ -28,8 +28,9 @@ from spack import *
 class Fontconfig(AutotoolsPackage):
     """Fontconfig is a library for configuring/customizing font access"""
     homepage = "http://www.freedesktop.org/wiki/Software/fontconfig/"
-    url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.12.1.tar.gz"
+    url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.12.3.tar.gz"
 
+    version('2.12.3', 'aca0c734c1a38eb3ba12b2447dd90ab0')
     version('2.12.1', 'ce55e525c37147eee14cc2de6cc09f6c')
     version('2.11.1', 'e75e303b4f7756c2b16203a57ac87eba')
 
