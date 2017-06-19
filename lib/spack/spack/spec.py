@@ -1724,7 +1724,11 @@ class Spec(object):
         changed = True
         force = False
 
-        dep_contexts = [{}]
+        dep_context = {}
+        for dep in self.traverse(root=False, deptype=('link', 'run')):
+            dep_context[dep.name] = dep.copy(deps=False)
+        self._dependencies.clear()
+        dep_contexts = [dep_context]
         while changed:
             changes = (self.normalize(dep_contexts, force),
                        self._expand_virtual_packages(dep_contexts),
