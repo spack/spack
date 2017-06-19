@@ -56,6 +56,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
+import spack.mixins
 import spack.repository
 import spack.url
 import spack.util.web
@@ -141,7 +142,10 @@ class InstallPhase(object):
             return other
 
 
-class PackageMeta(spack.directives.DirectiveMetaMixin):
+class PackageMeta(
+    spack.directives.DirectiveMeta,
+    spack.mixins.PackageMixinsMeta
+):
     """Conveniently transforms attributes to permit extensible phases
 
     Iterates over the attribute 'phases' and creates / updates private

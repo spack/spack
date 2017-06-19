@@ -64,7 +64,7 @@ def _mxm_dir():
         return None
 
 
-class Openmpi(AutotoolsPackage, mixins.FilterCompilerWrappers):
+class Openmpi(AutotoolsPackage):
     """The Open MPI Project is an open source Message Passing Interface
        implementation that is developed and maintained by a consortium
        of academic, research, and industry partners. Open MPI is
@@ -213,6 +213,23 @@ class Openmpi(AutotoolsPackage, mixins.FilterCompilerWrappers):
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
+
+    filter_compiler_wrappers(
+        'mpicc-vt-wrapper-data.txt',
+        'mpicc-wrapper-data.txt',
+        'ortecc-wrapper-data.txt',
+        'shmemcc-wrapper-data.txt',
+        'mpic++-vt-wrapper-data.txt',
+        'mpic++-wrapper-data.txt',
+        'ortec++-wrapper-data.txt',
+        'mpifort-vt-wrapper-data.txt',
+        'mpifort-wrapper-data.txt',
+        'shmemfort-wrapper-data.txt',
+        'mpif90-vt-wrapper-data.txt',
+        'mpif90-wrapper-data.txt',
+        'mpif77-vt-wrapper-data.txt',
+        'mpif77-wrapper-data.txt'
+    )
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -374,29 +391,3 @@ class Openmpi(AutotoolsPackage, mixins.FilterCompilerWrappers):
             config_args.append('--without-ucx')
 
         return config_args
-
-    @property
-    def to_be_filtered_for_wrappers(self):
-
-        basepath = join_path(self.prefix, 'share', 'openmpi')
-
-        wrappers = [
-            'mpicc-vt-wrapper-data.txt',
-            'mpicc-wrapper-data.txt',
-            'ortecc-wrapper-data.txt',
-            'shmemcc-wrapper-data.txt',
-            'mpic++-vt-wrapper-data.txt',
-            'mpic++-wrapper-data.txt',
-            'ortec++-wrapper-data.txt',
-            'mpifort-vt-wrapper-data.txt',
-            'mpifort-wrapper-data.txt',
-            'shmemfort-wrapper-data.txt',
-            'mpif90-vt-wrapper-data.txt',
-            'mpif90-wrapper-data.txt',
-            'mpif77-vt-wrapper-data.txt',
-            'mpif77-wrapper-data.txt'
-        ]
-
-        abs_wrappers = [join_path(basepath, x) for x in wrappers]
-
-        return [x for x in abs_wrappers if not os.path.islink(x)]

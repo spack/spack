@@ -35,7 +35,7 @@ def _process_manager_validator(values):
         )
 
 
-class Mvapich2(AutotoolsPackage, mixins.FilterCompilerWrappers):
+class Mvapich2(AutotoolsPackage):
     """MVAPICH2 is an MPI implementation for Infiniband networks."""
     homepage = "http://mvapich.cse.ohio-state.edu/"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
@@ -106,6 +106,8 @@ class Mvapich2(AutotoolsPackage, mixins.FilterCompilerWrappers):
     depends_on('bison', type='build')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('cuda', when='+cuda')
+
+    filter_compiler_wrappers('mpicc', 'mpicxx', 'mpif77', 'mpif90')
 
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"
@@ -231,12 +233,3 @@ class Mvapich2(AutotoolsPackage, mixins.FilterCompilerWrappers):
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
         return args
-
-    @property
-    def to_be_filtered_for_wrappers(self):
-        return [
-            join_path(self.prefix.bin, 'mpicc'),
-            join_path(self.prefix.bin, 'mpicxx'),
-            join_path(self.prefix.bin, 'mpif77'),
-            join_path(self.prefix.bin, 'mpif90')
-        ]
