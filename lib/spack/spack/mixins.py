@@ -118,6 +118,9 @@ class PackageMixinsMeta(type):
             for f in fn_list:
                 phase_obj.run_before.append(f)
 
+        # Flush the dictionary for the next class
+        PackageMixinsMeta._add_method_before.clear()
+
         for phase in PackageMixinsMeta._add_method_after:
 
             attr_name = attr_fmt.format(phase)
@@ -126,6 +129,9 @@ class PackageMixinsMeta(type):
 
             for f in fn_list:
                 phase_obj.run_after.append(f)
+
+        # Flush the dictionary for the next class
+        PackageMixinsMeta._add_method_after.clear()
 
         super(PackageMixinsMeta, cls).__init__(name, bases, attr_dict)
 
