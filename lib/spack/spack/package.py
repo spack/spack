@@ -594,26 +594,31 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         self.extra_args = {}
 
-    def possible_dependencies(self, visited=None):
-        """Return set of possible transitive dependencies of this package."""
+    def possible_dependencies(self, transitive=True, visited=None):
+        """Return set of possible transitive dependencies of this package.
+
+        Args:
+            transitive (bool): include all transitive dependencies if True,
+                only direct dependencies if False.
+        """
         if visited is None:
             visited = set()
 
         visited.add(self.name)
         for name in self.dependencies:
-            if name in visited:
-                continue
-
             spec = spack.spec.Spec(name)
+
             if not spec.virtual:
-                pkg = spack.repo.get(name)
-                for name in pkg.possible_dependencies(visited):
-                    visited.add(name)
+                visited.add(name)
+                if transitive:
+                    pkg = spack.repo.get(name)
+                    pkg.possible_dependencies(transitive, visited)
             else:
                 for provider in spack.repo.providers_for(spec):
-                    pkg = spack.repo.get(provider.name)
-                    for name in pkg.possible_dependencies(visited):
-                        visited.add(name)
+                    visited.add(provider.name)
+                    if transitive:
+                        pkg = spack.repo.get(provider.name)
+                        pkg.possible_dependencies(transitive, visited)
 
         return visited
 

@@ -377,11 +377,14 @@ class SpackCommand(object):
         self.command = spack.cmd.get_command(command)
         self.fail_on_error = fail_on_error
 
-    def __call__(self, *argv):
+    def __call__(self, *argv, **kwargs):
         """Invoke this SpackCommand.
 
         Args:
             argv (list of str): command line arguments.
+
+        Keyword Args:
+            color (optional bool): force-disable or force-enable color
 
         Returns:
             (str, str): output and error as a strings

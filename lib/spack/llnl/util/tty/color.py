@@ -155,9 +155,9 @@ def set_color_when(when):
 def color_when(value):
     """Context manager to temporarily use a particular color setting."""
     old_value = value
-    set_color(value)
+    set_color_when(value)
     yield
-    set_color(old_value)
+    set_color_when(old_value)
 
 
 class match_to_ansi(object):
