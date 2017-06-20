@@ -69,6 +69,7 @@ class Moab(AutotoolsPackage):
     conflicts('+irel', when='~cgm')
     conflicts('+pnetcdf', when='~mpi')
     conflicts('+parmetis', when='~mpi')
+    conflicts('+coupler', when='~mpi')
 
     # There are many possible variants for MOAB. Here are examples for
     # two of them:
@@ -106,50 +107,82 @@ class Moab(AutotoolsPackage):
             '--disable-mbcslam',
             '--with-pic',
             '--without-vtk'
-            ]
+        ]
         if '+mpi' in spec:
             options.extend([
                 '--with-mpi=%s' % spec['mpi'].prefix,
                 'CXX=%s' % spec['mpi'].mpicxx,
                 'CC=%s' % spec['mpi'].mpicc,
                 'FC=%s' % spec['mpi'].mpifc
-                ])
+            ])
             if '+parmetis' in spec:
                 options.append('--with-parmetis=%s' % spec['parmetis'].prefix)
+            else:
+                options.append('--without-parmetis')
 
         if '+hdf5' in spec:
             options.append('--with-hdf5=%s' % spec['hdf5'].prefix)
+        else:
+            options.append('--without-hdf5')
+
         if '+netcdf' in spec:
             options.append('--with-netcdf=%s' % spec['netcdf'].prefix)
+        else:
+            options.append('--without-netcdf')
+
         if '+pnetcdf' in spec:
             options.append('--with-pnetcdf=%s'
                            % spec['parallel-netcdf'].prefix)
+        else:
+            options.append('--without-pnetcdf')
+
         if '+cgm' in spec:
             options.append('--with-cgm=%s' % spec['cgm'].prefix)
             if '+irel' in spec:
                 options.append('--enable-irel')
         if '+fbigeom' in spec:
             options.append('--enable-fbigeom')
+
         if '+coupler' in spec:
             options.append('--enable-mbcoupler')
+        else:
+            options.append('--disable-mbcoupler')
+
         if '+metis' in spec:
             options.append('--with-metis=%s' % spec['metis'].prefix)
+        else:
+            options.append('--without-metis')
+ 
         if '+parmetis' in spec:
             options.append('--with-parmetis=%s' % spec['parmetis'].prefix)
+        else:
+            options.append('--without-parmetis')
+ 
         if '+zoltan' in spec:
             options.append('--with-zoltan=%s' % spec['zoltan'].prefix)
-
+        else:
+            options.append('--without-zoltan')
+ 
         if '+debug' in spec:
             options.append('--enable-debug')
+        else:
+            options.append('--disable-debug')
+ 
         # FIXME it seems that with cgm and shared, we have a link
         #   issue  in tools/geometry
         if '+shared' in spec:
             options.append('--enable-shared')
+        else:
+            options.append('--disable-shared')
+ 
         if '~fortran' in spec:
             options.append('--disable-fortran')
+        else:
+            options.append('--enable-fortran')
+
         return options
 
-    # Run the install phase with -j 1.  There seems to be a problem with
+    # FIXME Run the install phase with -j 1.  There seems to be a problem with
     # parallel installations of examples
     def install(self, spec, prefix):
         make('install', parallel=False)

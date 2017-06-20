@@ -41,7 +41,7 @@ class Netgen(AutotoolsPackage):
 
     variant("mpi", default=True, description='enable mpi support')
     variant("oce", default=False, description='enable oce geometry kernel')
-    variant("nogui", default=True, description='disable gui')
+    variant("gui", default=False, description='enable gui')
     variant("metis", default=False, description='use metis for partitioning')
 
     depends_on('mpi', when='+mpi')
@@ -66,8 +66,10 @@ class Netgen(AutotoolsPackage):
         #else:
         #    args.append("--without-occ")
 
-        if '+nogui' in spec:
+        if '~gui' in spec:
             args.append("--disable-gui")
+        else:
+            args.append("--enable-gui")
         if '+metis' in spec:
             args.append('--with-metis=%s' % spec['metis'].prefix)
 
