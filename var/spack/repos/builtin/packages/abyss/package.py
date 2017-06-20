@@ -35,15 +35,16 @@ class Abyss(AutotoolsPackage):
 
     version('2.0.2', '1623f55ad7f4586e80f6e74b1f27c798')
 
-    depends_on('openmpi', type='build')
-    depends_on('boost', type='build')
-    depends_on('sparsehash', type='build')
-    depends_on('sqlite', type='build')
-
-    conflicts('boost', when='@1.51.0:1.52.0')
+    depends_on('mpi')
+    depends_on('boost@:1.50.0,1.53.0:')
+    depends_on('sparsehash')
+    depends_on('sqlite')
 
     def configure_args(self):
-        args = ['--with-mpi=%s' % self.spec['openmpi'].prefix,
-                '--with-boost=%s' % self.spec['boost'].prefix,
+        args = ['--with-boost=%s' % self.spec['boost'].prefix,
                 '--with-sqlite=%s' % self.spec['sqlite'].prefix]
+	if self.spec['mpi'].name in ('openmpi', 'mpich'):
+		args.append('--with-mpi=%s' % self.spec['mpi'].prefix)
+	if self.spec['mpi'].name == 'mpich':
+		args.append('--enable-mpich')
         return args
