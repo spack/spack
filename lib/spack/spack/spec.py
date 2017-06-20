@@ -1985,6 +1985,8 @@ class Spec(object):
         if build_only:
             dep_contexts = list(dep_contexts)
             build_context = {}
+            # TODO: note that _merge_dependency always adds all deps regardless
+            # of type, so this should probably add all deps except build deps
             for dep in self.traverse(root=False, deptype='run'):
                 build_context[dep.name] = dep
             for dep in self.dependencies(deptype='build'):
