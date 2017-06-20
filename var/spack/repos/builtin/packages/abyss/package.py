@@ -22,43 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install abyss
-#
-# You can edit this file again by typing:
-#
-#     spack edit abyss
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
 class Abyss(AutotoolsPackage):
-    """ABySS is a de novo, parallel, paired-end sequence assembler that is designed for short reads. The single-processor version is useful for assembling genomes up to 100 Mbases in size."""
-
+    """ABySS is a de novo, parallel, paired-end sequence assembler
+       that is designed for short reads. The single-processor version
+       is useful for assembling genomes up to 100 Mbases in size."""
 
     homepage = "http://www.bcgsc.ca/platform/bioinfo/software/abyss"
     url      = "http://www.bcgsc.ca/platform/bioinfo/software/abyss/releases/2.0.2/abyss-2.0.2.tar.gz"
 
     version('2.0.2', '1623f55ad7f4586e80f6e74b1f27c798')
 
-    depends_on('openmpi')
-    depends_on('boost')
-    depends_on('sparsehash')
-    depends_on('sqlite')
+    depends_on('openmpi', type='build')
+    depends_on('boost', type='build')
+    depends_on('sparsehash', type='build')
+    depends_on('sqlite', type='build')
 
+    conflicts('boost', when='@1.51.0:1.52.0')
 
     def configure_args(self):
         args = ['--with-mpi=%s' % self.spec['openmpi'].prefix,
                 '--with-boost=%s' % self.spec['boost'].prefix,
-                '--with-sqlite=%s' % self.spec['sqlite'].prefix] 
+                '--with-sqlite=%s' % self.spec['sqlite'].prefix]
         return args
-
-    
