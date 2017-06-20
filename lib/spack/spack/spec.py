@@ -2474,9 +2474,19 @@ class Spec(object):
         return changed
 
     def _dup_deps(self, other, deptypes):
-        for spec_dep in other._dependencies.values():
-            dep_copy = spec_dep.spec.copy()
-            self._add_dependency(dep_copy, spec_dep.deptypes)
+        new_specs = {id(other): self}
+        for dspec in other.traverse_edges(cover='edges', root=False):
+            if (dspec.deptypes and
+                not any(d in deptypes for d in dspec.deptypes)):
+                continue
+
+            if id(dspec.parent) not in new_specs:
+                new_specs[id(dspec.parent)] = dspec.parent.copy(deps=False)
+            if id(dspec.spec) not in new_specs:
+                new_specs[id(dspec.spec)] = dspec.spec.copy(deps=False)
+
+            new_specs[id(dspec.parent)]._add_dependency(
+                new_specs[id(dspec.spec)], dspec.deptypes)
 
     def copy(self, deps=True):
         """Return a copy of this spec.
