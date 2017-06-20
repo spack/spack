@@ -30,6 +30,7 @@ documentation on :ref:`configuration-scopes` for details on how Spack's
 configuration system behaves.  The scopes are:
 
   #. ``default``
+  #. ``system``
   #. ``site``
   #. ``user``
 
@@ -211,10 +212,16 @@ class ConfigScope(object):
 _platform = spack.architecture.platform().name
 
 """Default configuration scope is the lowest-level scope. These are
-   versioned with Spack and can be overridden by sites or users."""
+   versioned with Spack and can be overridden by systems, sites or users."""
 _defaults_path = os.path.join(spack.etc_path, 'spack', 'defaults')
 ConfigScope('defaults', _defaults_path)
 ConfigScope('defaults/%s' % _platform, os.path.join(_defaults_path, _platform))
+
+"""System configuration is per machine.
+   No system-level configs should be checked into spack by default"""
+_system_path = os.path.join(spack.system_etc_path, 'spack')
+ConfigScope('system', _system_path)
+ConfigScope('system/%s' % _platform, os.path.join(_system_path, _platform))
 
 """Site configuration is per spack instance, for sites or projects.
    No site-level configs should be checked into spack by default."""
@@ -398,6 +405,7 @@ def get_config(section, scope=None):
 
     for scope in scopes:
         # read potentially cached data from the scope.
+
         data = scope.get_section(section)
 
         # Skip empty configs

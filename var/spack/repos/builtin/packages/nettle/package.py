@@ -30,8 +30,9 @@ class Nettle(AutotoolsPackage):
     that is designed to fit easily in many contexts."""
 
     homepage = "https://www.lysator.liu.se/~nisse/nettle/"
-    url      = "http://ftp.gnu.org/gnu/nettle/nettle-3.2.tar.gz"
+    url      = "http://ftp.gnu.org/gnu/nettle/nettle-3.3.tar.gz"
 
+    version('3.3',   '10f969f78a463704ae73529978148dbe')
     version('3.2',   'afb15b4764ebf1b4e6d06c62bd4d29e4')
     version('2.7.1', '003d5147911317931dd453520eb234a5')
     version('2.7',   '2caa1bd667c35db71becb93c5d89737f')

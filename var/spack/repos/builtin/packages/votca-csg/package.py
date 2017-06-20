@@ -36,14 +36,15 @@ class VotcaCsg(CMakePackage):
     homepage = "http://www.votca.org"
     url      = "https://github.com/votca/csg/tarball/v1.4"
 
-    version('develop', git='https://github.com/csg/tools', branch='master')
+    version('develop', git='https://github.com/votca/csg', branch='master')
     version('1.4', 'd009e761e5e3afd51eed89c420610a67')
 
     variant('debug', default=False, description='Build debug version')
 
     depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools")
-    depends_on("gromacs@5.1:")
+    depends_on("votca-tools@1.4:1.4.999", when='@1.4:1.4.999')
+    depends_on("votca-tools@develop", when='@develop')
+    depends_on("gromacs~mpi@5.1:")
 
     def build_type(self):
         spec = self.spec
