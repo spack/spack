@@ -44,6 +44,7 @@ class Fftw(AutotoolsPackage):
 
     patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
+    patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
 
     variant(
         'float', default=True,
