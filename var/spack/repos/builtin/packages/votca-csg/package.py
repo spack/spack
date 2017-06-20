@@ -43,7 +43,7 @@ class VotcaCsg(CMakePackage):
 
     depends_on("cmake@2.8:", type='build')
     depends_on("votca-tools")
-    depends_on("gromacs@5.1:")
+    depends_on("gromacs~mpi@5.1:")
 
     def build_type(self):
         spec = self.spec
