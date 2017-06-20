@@ -42,7 +42,8 @@ class VotcaCsg(CMakePackage):
     variant('debug', default=False, description='Build debug version')
 
     depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools")
+    depends_on("votca-tools@1.4:1.4.999", when='@1.4:1.4.999')
+    depends_on("votca-tools@develop", when='@develop')
     depends_on("gromacs~mpi@5.1:")
 
     def build_type(self):
