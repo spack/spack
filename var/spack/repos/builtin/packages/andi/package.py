@@ -34,9 +34,9 @@ class Andi(AutotoolsPackage):
 
     version('0.10',    '3aaba7961798bb4aaa546baa44e469d8')
  
-    depends_on('m4')
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
+    depends_on('m4', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
     depends_on('gsl')
     depends_on('libdivsufsort')
