@@ -942,13 +942,16 @@ class Spec(object):
         self.compiler = other.compiler
         self.compiler_flags = other.compiler_flags
         self.compiler_flags.spec = self
-        self._dependencies = other._dependencies
-        self._dependents = other._dependents
         self.variants = other.variants
         self.variants.spec = self
         self.namespace = other.namespace
         self._hash = other._hash
         self._cmp_key_cache = other._cmp_key_cache
+
+        self._dependents = DependencyMap()
+        self._dependencies = DependencyMap()
+        for dspec in other._dependencies.values():
+            self._add_dependency(dspec.spec, dspec.deptypes)
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
