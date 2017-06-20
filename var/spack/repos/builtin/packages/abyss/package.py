@@ -40,11 +40,15 @@ class Abyss(AutotoolsPackage):
     depends_on('sparsehash')
     depends_on('sqlite')
 
+    conflicts('^intel-mpi')
+    conflicts('^intel-parallel-studio+mpi')
+    conflicts('^mvapich2')
+    conflicts('^spectrum-mpi')
+
     def configure_args(self):
         args = ['--with-boost=%s' % self.spec['boost'].prefix,
-                '--with-sqlite=%s' % self.spec['sqlite'].prefix]
-	if self.spec['mpi'].name in ('openmpi', 'mpich'):
-		args.append('--with-mpi=%s' % self.spec['mpi'].prefix)
-	if self.spec['mpi'].name == 'mpich':
-		args.append('--enable-mpich')
+                '--with-sqlite=%s' % self.spec['sqlite'].prefix,
+                '--with-mpi=%s' % self.spec['mpi'].prefix]
+        if self.spec['mpi'].name == 'mpich':
+                args.append('--enable-mpich')
         return args
