@@ -35,6 +35,7 @@ class Fontconfig(AutotoolsPackage):
     version('2.11.1', 'e75e303b4f7756c2b16203a57ac87eba')
 
     depends_on('freetype')
+    depends_on('gperf', type='build', when='@2.12.2:')
     depends_on('libxml2')
     depends_on('pkg-config', type='build')
     depends_on('font-util')
