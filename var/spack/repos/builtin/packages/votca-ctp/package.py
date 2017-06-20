@@ -34,8 +34,8 @@ class VotcaCtp(CMakePackage):
        This package contains the VOTCA charge transport engine.
     """
     homepage = "http://www.votca.org"
-    #No release yet
-    #url      = "https://github.com/votca/ctp/tarball/v1.4"
+    # No release yet
+    # url      = "https://github.com/votca/ctp/tarball/v1.4"
 
     version('develop', git='https://github.com/votca/ctp', branch='master')
 
