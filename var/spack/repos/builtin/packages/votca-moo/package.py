@@ -1,4 +1,4 @@
-##############################################################################
+#############################################################################
 # Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
 #
 # This file is part of Spack.
@@ -25,26 +25,24 @@
 from spack import *
 
 
-class VotcaCsg(CMakePackage):
+class VotcaMoo(CMakePackage):
     """Versatile Object-oriented Toolkit for Coarse-graining
        Applications (VOTCA) is a package intended to reduce the amount of
        routine work when doing systematic coarse-graining of various
        systems. The core is written in C++.
 
-       This package contains the VOTCA coarse-graining engine.
+       This package contains the VOTCA molecular orbital module.
     """
     homepage = "http://www.votca.org"
-    url      = "https://github.com/votca/csg/tarball/v1.4"
+    # No release yet
+    # url      = "https://github.com/votca/moo/tarball/v1.4"
 
-    version('develop', git='https://github.com/votca/csg', branch='master')
-    version('1.4', 'd009e761e5e3afd51eed89c420610a67')
+    version('develop', git='https://github.com/votca/moo', branch='master')
 
     variant('debug', default=False, description='Build debug version')
 
     depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@1.4:1.4.999", when='@1.4:1.4.999')
     depends_on("votca-tools@develop", when='@develop')
-    depends_on("gromacs~mpi@5.1:")
 
     def build_type(self):
         spec = self.spec
