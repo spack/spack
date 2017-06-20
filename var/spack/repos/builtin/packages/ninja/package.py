@@ -38,9 +38,8 @@ class Ninja(Package):
     def install(self, spec, prefix):
         python('configure.py', '--bootstrap')
 
-        cp = which('cp')
-
-        bindir = os.path.join(prefix, 'bin/')
-        mkdir(bindir)
-        cp('-a', 'ninja', bindir)
-        cp('-a', 'misc', prefix)
+        mkdir(prefix.bin)
+        install('ninja', prefix.bin)
+        install_tree('misc', join_path(prefix, 'misc'))
+        with working_dir(prefix.bin):
+            os.symlink('ninja', 'ninja-build')
