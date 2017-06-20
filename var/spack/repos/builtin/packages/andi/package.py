@@ -41,18 +41,17 @@ from spack import *
 
 
 class Andi(AutotoolsPackage):
-    """andi is used for for estimating the evolutionary distance between closely related genomes."""
+    """andi is used for for estimating the
+    evolutionary distance between closely related genomes."""
 
     homepage = "https://github.com/EvolBioInf/andi"
     url      = "https://github.com/EvolBioInf/andi/archive/v0.10.tar.gz"
 
     version('0.10',    '3aaba7961798bb4aaa546baa44e469d8')
-    
+ 
     depends_on('m4')
-    depends_on('autoconf') 
-    depends_on('automake') 
+    depends_on('autoconf')
+    depends_on('automake')
     depends_on('libtool')
     depends_on('gsl')
     depends_on('libdivsufsort')
-
-
