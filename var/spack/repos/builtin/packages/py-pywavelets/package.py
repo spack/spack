@@ -22,21 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Spot(AutotoolsPackage):
-    """Spot is a C++11 library for omega-automata manipulation and model
-       checking."""
-    homepage = "https://spot.lrde.epita.fr/"
-    url      = "http://www.lrde.epita.fr/dload/spot/spot-1.99.3.tar.gz"
+class PyPywavelets(PythonPackage):
+    """PyWavelets is a free Open Source library for wavelet transforms
+       in Python"""
 
-    version('1.99.3', 'd53adcb2d0fe7c69f45d4e595a58254e')
-    version('1.2.6', '799bf59ccdee646d12e00f0fe6c23902')
+    homepage = "https://github.com/PyWavelets"
+    url = "https://pypi.io/packages/source/P/PyWavelets/PyWavelets-0.5.2.tar.gz"
 
-    variant('python', default=True, description='Enable python API')
+    version('0.5.2', 'aedda732f064cf9395f03d37f1003d1a')
 
-    depends_on("python@3.3:", when='@1.99.5: +python')
-    depends_on("python@3.2:", when='@1.99: +python')
-    depends_on("python@2:", when='+python')
-    depends_on('boost', when='@:1.2.6')
+    import_modules = ['pywt']
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython', type='build')
+    depends_on('py-numpy@1.9.1:',  type=('build', 'run'))

@@ -25,18 +25,13 @@
 from spack import *
 
 
-class Spot(AutotoolsPackage):
-    """Spot is a C++11 library for omega-automata manipulation and model
-       checking."""
-    homepage = "https://spot.lrde.epita.fr/"
-    url      = "http://www.lrde.epita.fr/dload/spot/spot-1.99.3.tar.gz"
+class PyCounter(PythonPackage):
+    """Counter package defines the "counter.Counter" class similar to
+       bags or multisets in other languages."""
 
-    version('1.99.3', 'd53adcb2d0fe7c69f45d4e595a58254e')
-    version('1.2.6', '799bf59ccdee646d12e00f0fe6c23902')
+    homepage = "https://github.com/KelSolaar/Counter"
+    url      = "https://pypi.io/packages/source/C/Counter/Counter-1.0.0.tar.gz"
 
-    variant('python', default=True, description='Enable python API')
+    version('1.0.0', '1b49029693c28813ff276c2b16673f98')
 
-    depends_on("python@3.3:", when='@1.99.5: +python')
-    depends_on("python@3.2:", when='@1.99: +python')
-    depends_on("python@2:", when='+python')
-    depends_on('boost', when='@:1.2.6')
+    depends_on('py-setuptools', type='build')

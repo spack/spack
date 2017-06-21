@@ -25,18 +25,18 @@
 from spack import *
 
 
-class Spot(AutotoolsPackage):
-    """Spot is a C++11 library for omega-automata manipulation and model
-       checking."""
-    homepage = "https://spot.lrde.epita.fr/"
-    url      = "http://www.lrde.epita.fr/dload/spot/spot-1.99.3.tar.gz"
+class Libmatheval(AutotoolsPackage):
+    """GNU libmatheval is a library (callable from C and Fortran) to parse
+    and evaluate symbolic expressions input as text. It supports expressions
+    in any number of variables of arbitrary names, decimal and symbolic
+    constants, basic unary and binary operators, and elementary mathematical
+    functions. In addition to parsing and evaluation, libmatheval can also
+    compute symbolic derivatives and output expressions to strings."""
 
-    version('1.99.3', 'd53adcb2d0fe7c69f45d4e595a58254e')
-    version('1.2.6', '799bf59ccdee646d12e00f0fe6c23902')
+    homepage = "https://www.gnu.org/software/libmatheval/"
+    url      = "https://ftp.gnu.org/gnu/libmatheval/libmatheval-1.1.11.tar.gz"
 
-    variant('python', default=True, description='Enable python API')
+    version('1.1.11', '595420ea60f6ddd75623847f46ca45c4')
 
-    depends_on("python@3.3:", when='@1.99.5: +python')
-    depends_on("python@3.2:", when='@1.99: +python')
-    depends_on("python@2:", when='+python')
-    depends_on('boost', when='@:1.2.6')
+    # Only needed for unit tests, but configure crashes without it
+    depends_on('guile', type='build')
