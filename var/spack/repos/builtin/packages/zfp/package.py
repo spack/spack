@@ -41,16 +41,20 @@ class Zfp(MakefilePackage):
     version('0.5.1', '0ed7059a9b480635e0dd33745e213d17')
     version('0.5.0', '2ab29a852e65ad85aae38925c5003654')
 
-    variant('bswtuint8', default=False,
-            description='Build with bit stream word type of uint8')
+    variant('bsws',
+        default='64',
+        values=('8', '16', '32', '64'),
+        multi=False,
+        description='Bit stream word size: use smaller for finer \
+            rate granularity. Use 8 for H5Z-ZFP filter.')
 
     def edit(self, spec, prefix):
-        if '+bswtuint8' in self.spec:
-            config_file = FileFilter('Config')
-            config_file.filter(
-                '^\s*#\s*DEFS\s*\+=\s*-DBIT_STREAM_WORD_TYPE\s*=\s*uint8',
-                'DEFS += -DBIT_STREAM_WORD_TYPE=uint8')
- 
+        config_file = FileFilter('Config')
+        config_file.filter(
+            '^\s*#\s*DEFS\s*\+=\s*-DBIT_STREAM_WORD_TYPE\s*=\s*uint8',
+            'DEFS += -DBIT_STREAM_WORD_TYPE=uint%s' %
+            spec.variants['bsws'].value)
+
     def build(self, spec, prefix):
         make("shared")
 
