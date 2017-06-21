@@ -1,0 +1,11 @@
+--- a/src/esmumps/Makefile	2017-06-21 10:53:31.595758201 +0200
++++ b/src/esmumps/Makefile	2017-06-21 10:54:30.811757141 +0200
+@@ -44,7 +44,7 @@
+ 				$(CC) $(CFLAGS) $(CLIBFLAGS) -I$(includedir) -c $(<) -o $(@)
+ 
+ %$(EXE)	:	%.c
+-		 		$(CC) $(CFLAGS) -I$(includedir) $(<) -o $(@) -L$(libdir) $(LDFLAGS) -L. -l$(ESMUMPSLIB) -l$(SCOTCHLIB) -lscotch -l$(SCOTCHLIB)errexit -lm
++		 		$(CC) $(CFLAGS) -I$(includedir) $(<) -o $(@) -L$(libdir) -L. -l$(ESMUMPSLIB) -l$(SCOTCHLIB) -lscotch -l$(SCOTCHLIB)errexit -lm $(LDFLAGS)
+ 
+ ##
+ ##  Project rules.
