@@ -53,6 +53,7 @@ def modify_macho_object(path_name, old_dir, new_dir, gcc_prefix):
     the old install dir in LC_RPATH is replaced with the new install dir using
     install_name_tool  -rpath old new binary
     """
+    if 'libgcc_' in path_name : return
     otool = which('otool')
     output = otool("-l", path_name, output=str, err=str)
     if otool.returncode != 0:
