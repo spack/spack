@@ -239,7 +239,7 @@ def which(*args, **kwargs):
     Returns:
         Executable: The first executable that is found in the path
     """
-    path = kwargs.get('path', os.environ.get('PATH'))
+    path = kwargs.get('path', os.environ.get('PATH', ''))
     required = kwargs.get('required', False)
 
     if isinstance(path, string_types):
