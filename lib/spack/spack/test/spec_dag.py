@@ -363,7 +363,7 @@ class TestSpecDag(object):
         assert spec != non_unique_nodes
         assert not spec.eq_dag(non_unique_nodes)
 
-        spec.normalize()
+        spec.normalize_top()
 
         # After normalizing, spec_dag_equal should match the normalized spec.
         assert spec != expected_flat
