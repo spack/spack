@@ -4,6 +4,7 @@ import os
 import platform
 import tarfile
 import yaml
+import shutil
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, join_path
@@ -16,24 +17,6 @@ import spack.relocate
 from contextlib import closing
 import platform
 import re
-
-def get_full_system_from_platform():
-    system = platform.system()
-    if system == "Linux":
-        pf = platform.linux_distribution(full_distribution_name=0)[0]
-        version = platform.linux_distribution(full_distribution_name=0)[1]
-        if pf != 'Ubuntu':
-            # For non-Ubuntu major version number is enough
-            # to understand compatibility
-            version = version.split('.')[0]
-    elif system == "Darwin":
-        pf = "macos10"
-        version = platform.mac_ver()[0].split(".")[1]
-    else:
-        raise "System %s not supported" % system
-    sys_type = pf + version + '-' + platform.machine()
-    sys_type = re.sub(r'[^\w-]', '_', sys_type)
-    return sys_type.lower()
 
 
 def prepare():
@@ -104,7 +87,7 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>/
     """
-    return "%s/%s/%s" % (get_full_system_from_platform(),
+    return "%s/%s/%s" % (spack.architecture.sys_type(),
                          str(spec.compiler).replace("@", "-"),
                          spec.name)
 
@@ -114,7 +97,7 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    return "%s-%s-%s-%s%s" % (get_full_system_from_platform(),
+    return "%s-%s-%s-%s%s" % (spack.architecture.sys_type(),
                               spec.name,
                               spec.version,
                               spec.dag_hash(),
@@ -148,7 +131,20 @@ def build_tarball(spec, outdir, force=False, key=None):
                      spackfile_path)
             return
 
+    # need to copy the spec file so the build cache can be downloaded
+    # without concretizing with the current spack packages
+    # and preferences
     spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
+    specfile_name = tarball_name(spec, '.spec.yaml')
+    specfile_path = join_path(tarfile_dir, specfile_name)
+    if os.path.exists(specfile_path):
+        if force:
+            os.remove(specfile_path)
+        else:
+            tty.warn("file exists, use -f to force overwrite: %s" %
+                     specfile_path)
+            return
+    shutil.copyfile(spec_file,specfile_path)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec)
@@ -164,20 +160,20 @@ def build_tarball(spec, outdir, force=False, key=None):
     path1 = '%s.asc' % tarfile_path
     with open(path1, 'a'):
         os.utime(path1, None)
-    path2 = '%s.asc' % spec_file
+    path2 = '%s.asc' % specfile_path
     with open(path2, 'a'):
         os.utime(path2, None)
     # temporary to test adding and extracting .asc files
 
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
-        tar.add(name='%s' % spec_file, arcname='spec.yaml')
+        tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
         tar.add(name='%s.asc' % tarfile_path, arcname='%s.asc' % tarfile_name)
-        tar.add(name='%s.asc' % spec_file, arcname='spec.yaml.asc')
+        tar.add(name='%s.asc' % specfile_path, arcname='%s.asc' % specfile_name)
         os.remove(tarfile_path)
-        os.remove(path1)
-        os.remove(path2)
-    tty.msg(tarfile_path)
+
+    os.remove(path1)
+    os.remove(path2)
 
 
 def download_tarball(package):
@@ -212,9 +208,11 @@ def extract_tarball(package):
     mkdirp(package.prefix)
     tarfile_name = tarball_name(package.spec, '.tar.gz')
     tarfile_path = os.path.join(package.stage.path, tarfile_name)
+    specfile_name = tarball_name(package.spec, '.tar.gz')
+    specfile_path = os.path.join(package.stage.path, tarfile_name)
     with closing(tarfile.open(local_tarball, 'r')) as tar:
-        tar.extract('spec.yaml', package.stage.path)
-        tar.extract('spec.yaml.asc', package.stage.path)
+        tar.extract(specfile_name, package.stage.path)
+        tar.extract(specfile_name + '.asc', package.stage.path)
 
         # spack gpg verify os.path.join(package.prefix, 'spec.yaml')
 
@@ -226,8 +224,10 @@ def extract_tarball(package):
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
         tar.extractall(path=os.path.dirname(package.prefix))
 
-#    os.remove(tarfile_path)
-#    os.remove(tarfile_path + '.asc')
+    os.remove(tarfile_path)
+    os.remove(tarfile_path + '.asc')
+    os.remove(specfile_path)
+    os.remove(specfile_path + '.asc')
 
 
 def relocate_package(package):
