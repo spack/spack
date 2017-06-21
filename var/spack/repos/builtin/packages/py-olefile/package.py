@@ -22,21 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class PyPywavelets(PythonPackage):
-    """PyWavelets is a free Open Source library for wavelet transforms
-       in Python"""
+class PyOlefile(PythonPackage):
+    """Python package to parse, read and write Microsoft OLE2 files"""
 
-    homepage = "https://github.com/PyWavelets"
-    url = "https://pypi.io/packages/source/P/PyWavelets/PyWavelets-0.5.2.tar.gz"
+    homepage = "https://www.decalage.info/python/olefileio"
+    url      = "https://pypi.io/packages/source/o/olefile/olefile-0.44.zip"
 
-    version('0.5.2', 'aedda732f064cf9395f03d37f1003d1a')
+    import_modules = ['OleFileIO_PL']
 
-    import_modules = ['util', 'pywt', 'pywt._extensions', 'pywt.data']
+    version('0.44', 'fc625554e4e7f0c2ddcd00baa3c74ff5')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
-    depends_on('py-numpy@1.9.1:',  type=('build', 'run'))
