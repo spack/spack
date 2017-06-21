@@ -58,6 +58,7 @@ class Scotch(Package):
 
     # Version-specific patches
     patch('nonthreaded-6.0.4.patch', when='@6.0.4')
+    patch('esmumps-ldflags-6.0.4.patch', when='@6.0.4')
 
     # NOTE: In cross-compiling environment parallel build
     # produces weird linker errors.
@@ -73,6 +74,23 @@ class Scotch(Package):
     def url_for_version(self, version):
         url = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_{0}_esmumps.tar.gz"
         return url.format(version)
+
+    @property
+    def libs(self):
+
+        shared = '+shared' in self.spec
+        libraries = ['libscotch', 'libscotcherr']
+
+        if '+mpi' in self.spec:
+            libraries = ['libptscotch', 'libptscotcherr'] + libraries
+            if '+esmumps' in self.spec:
+                libraries = ['libptesmumps'] + libraries
+        elif '~mpi+esmumps' in self.spec:
+            libraries = ['libesmumps'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, recurse=True, shared=shared
+        )
 
     def patch(self):
         self.configure()
@@ -146,7 +164,7 @@ class Scotch(Package):
 
         if '+compression' in self.spec:
             cflags.append('-DCOMMON_FILE_COMPRESS_GZ')
-            ldflags.append('-L%s -lz' % (self.spec['zlib'].prefix.lib))
+            ldflags.append(' {0} '.format(self.spec['zlib'].libs.joined()))
 
         cflags.append('-DCOMMON_PTHREAD')
 
