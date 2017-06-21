@@ -200,7 +200,7 @@ def spec_externals(spec):
     """Return a list of external specs (w/external directory path filled in),
        one for each known external installation."""
     # break circular import.
-    from spack.build_environment import get_path_from_module  # noqa: F401
+    from spack.util.module_cmd import get_path_from_module # NOQA: ignore=F401
 
     allpkgs = get_packages_config()
     name = spec.name
