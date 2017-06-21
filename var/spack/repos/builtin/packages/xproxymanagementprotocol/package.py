@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xproxymanagementprotocol(Package):
+class Xproxymanagementprotocol(AutotoolsPackage):
     """The Proxy Management Protocol is an ICE based protocol that provides a
     way for application servers to easily locate proxy services available to
     them."""
@@ -34,8 +34,3 @@ class Xproxymanagementprotocol(Package):
     url      = "https://www.x.org/archive/individual/proto/xproxymanagementprotocol-1.0.3.tar.gz"
 
     version('1.0.3', 'c4ab05a6174b4e9b6ae5b7cfbb6d718e')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

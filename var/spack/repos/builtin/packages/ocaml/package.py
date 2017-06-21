@@ -38,6 +38,6 @@ class Ocaml(Package):
 
     def install(self, spec, prefix):
         configure('-prefix', '{0}'.format(prefix))
-
+        
         make('world.opt')
         make('install')

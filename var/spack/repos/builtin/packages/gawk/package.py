@@ -43,3 +43,13 @@ class Gawk(AutotoolsPackage):
     url      = "http://ftp.gnu.org/gnu/gawk/gawk-4.1.4.tar.xz"
 
     version('4.1.4', '4e7dbc81163e60fd4f0b52496e7542c9')
+
+    depends_on('gettext')
+    depends_on('libsigsegv')
+    depends_on('readline')
+    depends_on('mpfr')
+    depends_on('gmp')
+
+    provides('awk')
+
+    build_directory = 'spack-build'

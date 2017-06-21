@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Bdftopcf(Package):
+class Bdftopcf(AutotoolsPackage):
     """bdftopcf is a font compiler for the X server and font server.  Fonts
     in Portable Compiled Format can be read by any architecture, although
     the file is structured to allow one particular architecture to read
@@ -42,9 +42,3 @@ class Bdftopcf(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

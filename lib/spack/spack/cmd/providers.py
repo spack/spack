@@ -29,13 +29,15 @@ from llnl.util.tty.colify import colify
 import spack
 import spack.cmd
 
-description = "List packages that provide a particular virtual package"
+description = "list packages that provide a particular virtual package"
+section = "basic"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         'vpkg_spec', metavar='VPACKAGE_SPEC', nargs=argparse.REMAINDER,
-        help='Find packages that provide this virtual package')
+        help='find packages that provide this virtual package')
 
 
 def providers(parser, args):

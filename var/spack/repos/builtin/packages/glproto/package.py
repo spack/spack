@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Glproto(Package):
+class Glproto(AutotoolsPackage):
     """OpenGL Extension to the X Window System.
 
     This extension defines a protocol for the client to send 3D rendering
@@ -38,8 +38,3 @@ class Glproto(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

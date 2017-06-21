@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XcbProto(Package):
+class XcbProto(AutotoolsPackage):
     """xcb-proto provides the XML-XCB protocol descriptions that libxcb uses to
     generate the majority of its code and API."""
 
@@ -35,10 +35,7 @@ class XcbProto(Package):
     version('1.12', '5ee1ec124ea8d56bd9e83b8e9e0b84c4')
     version('1.11', 'c8c6cb72c84f58270f4db1f39607f66a')
 
-    extends('python')
+    # TODO: uncomment once build deps can be resolved separately
+    # extends('python')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        # make('check')  # fails xmllint validation
-        make('install')
+    patch('xcb-proto-1.12-schema-1.patch', when='@1.12')

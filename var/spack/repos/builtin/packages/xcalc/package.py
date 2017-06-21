@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xcalc(Package):
+class Xcalc(AutotoolsPackage):
     """xcalc is a scientific calculator X11 client that can emulate a TI-30
     or an HP-10C."""
 
@@ -41,9 +41,3 @@ class Xcalc(Package):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

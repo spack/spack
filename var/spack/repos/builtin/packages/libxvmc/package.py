@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxvmc(Package):
+class Libxvmc(AutotoolsPackage):
     """X.org libXvMC library."""
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXvMC"
@@ -41,9 +41,3 @@ class Libxvmc(Package):
     depends_on('videoproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

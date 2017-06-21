@@ -30,6 +30,5 @@ class RLabeling(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/labeling/index.html"
     url      = "https://cran.r-project.org/src/contrib/labeling_0.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/labeling"
 
     version('0.3', 'ccd7082ec0b211aba8a89d85176bb534')

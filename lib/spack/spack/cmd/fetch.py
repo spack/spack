@@ -27,19 +27,21 @@ import argparse
 import spack
 import spack.cmd
 
-description = "Fetch archives for packages"
+description = "fetch archives for packages"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="Do not check packages against checksum")
+        help="do not check packages against checksum")
     subparser.add_argument(
         '-m', '--missing', action='store_true',
-        help="Also fetch all missing dependencies")
+        help="also fetch all missing dependencies")
     subparser.add_argument(
         '-D', '--dependencies', action='store_true',
-        help="Also fetch all dependencies")
+        help="also fetch all dependencies")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to fetch")

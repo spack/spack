@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xf86dga(Package):
+class Xf86dga(AutotoolsPackage):
     """dga is a simple test client for the XFree86-DGA extension."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xf86dga"
@@ -38,9 +38,3 @@ class Xf86dga(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

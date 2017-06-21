@@ -29,7 +29,7 @@ class Gmake(Package):
     """GNU Make."""
 
     homepage = "http://gnu.org/gnu/make"
-    url      = "ftp://ftp.gnu.org/gnu/make/make-4.0.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/make/make-4.0.tar.gz"
 
     version('4.0', 'b5e558f981326d9ca1bfdb841640721a')
 

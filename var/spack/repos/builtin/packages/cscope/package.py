@@ -33,5 +33,10 @@ class Cscope(AutotoolsPackage):
 
     version('15.8b', '8f9409a238ee313a96f9f87fe0f3b176')
 
-    # Can be configured to use flex (not necessary)
-    # ./configure --with-flex
+    depends_on('ncurses')
+
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
+    depends_on('pkg-config', type='build')
+
+    build_targets = ['CURSES_LIBS=-lncursesw']

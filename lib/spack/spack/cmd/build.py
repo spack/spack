@@ -26,12 +26,17 @@ import spack.cmd.configure as cfg
 
 from spack import *
 
-description = 'Stops at build stage when installing a package, if possible'
+description = 'stops at build stage when installing a package, if possible'
+section = "build"
+level = "long"
+
 
 build_system_to_phase = {
-    CMakePackage: 'build',
     AutotoolsPackage: 'build',
-    PythonPackage: 'build'
+    CMakePackage: 'build',
+    WafPackage: 'build',
+    PythonPackage: 'build',
+    PerlPackage: 'build',
 }
 
 

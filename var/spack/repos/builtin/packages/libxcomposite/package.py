@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxcomposite(Package):
+class Libxcomposite(AutotoolsPackage):
     """libXcomposite - client library for the Composite extension to the
     X11 protocol."""
 
@@ -40,9 +40,3 @@ class Libxcomposite(Package):
     depends_on('compositeproto@0.4:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

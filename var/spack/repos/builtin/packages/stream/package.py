@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Stream(Package):
+class Stream(MakefilePackage):
     """The STREAM benchmark is a simple synthetic benchmark program that
     measures sustainable memory bandwidth (in MB/s) and the corresponding
     computation rate for simple vector kernels."""
@@ -36,7 +36,7 @@ class Stream(Package):
 
     variant('openmp', default=False, description='Build with OpenMP support')
 
-    def patch(self):
+    def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
 
         # Use the Spack compiler wrappers
@@ -54,8 +54,6 @@ class Stream(Package):
         makefile.filter('FFLAGS = .*', 'FFLAGS = {0}'.format(fflags))
 
     def install(self, spec, prefix):
-        make()
-
         # Manual installation
         mkdir(prefix.bin)
         install('stream_c.exe', prefix.bin)

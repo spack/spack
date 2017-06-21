@@ -25,7 +25,7 @@
 from spack import *
 
 
-class LibjpegTurbo(Package):
+class LibjpegTurbo(AutotoolsPackage):
     """libjpeg-turbo is a fork of the original IJG libjpeg which uses SIMD to
        accelerate baseline JPEG compression and decompression. libjpeg is a
        library that implements JPEG image encoding, decoding and
@@ -43,8 +43,3 @@ class LibjpegTurbo(Package):
     # TODO: Implement the selection between two supported assemblers.
     # depends_on("yasm", type='build')
     depends_on("nasm", type='build')
-
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
-        make()
-        make("install")

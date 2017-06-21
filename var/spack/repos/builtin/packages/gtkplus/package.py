@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gtkplus(Package):
+class Gtkplus(AutotoolsPackage):
     """The GTK+ 2 package contains libraries used for creating graphical user
        interfaces for applications."""
     homepage = "http://www.gtk.org"
@@ -36,19 +36,19 @@ class Gtkplus(Package):
 
     variant('X', default=False, description="Enable an X toolkit")
 
+    depends_on('pkg-config', type='build')
+
     depends_on("atk")
     depends_on("gdk-pixbuf")
     depends_on("glib")
     depends_on("pango")
     depends_on("pango~X", when='~X')
     depends_on("pango+X", when='+X')
+    depends_on('gobject-introspection', when='+X')
+
+    patch('no-demos.patch')
 
     def patch(self):
         # remove disable deprecated flag.
         filter_file(r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"',
                     '', 'configure', string=True)
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

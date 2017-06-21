@@ -54,7 +54,7 @@ class Cnl(OperatingSystem):
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
-        clist = reduce(lambda x, y: x + y, compiler_lists)
+        clist = [comp for cl in compiler_lists for comp in cl]
         return clist
 
     def find_compiler(self, cmp_cls, *paths):

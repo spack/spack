@@ -25,19 +25,21 @@
 import argparse
 import hashlib
 import os
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 
 import llnl.util.tty as tty
 import spack.util.crypto
 from spack.stage import Stage, FailedDownloadError
 
-description = "Calculate md5 checksums for files/urls."
+description = "calculate md5 checksums for files/urls"
+section = "packaging"
+level = "long"
 
 
 def setup_parser(subparser):
     setup_parser.parser = subparser
     subparser.add_argument('files', nargs=argparse.REMAINDER,
-                           help="Files/urls to checksum.")
+                           help="files/urls to checksum")
 
 
 def compute_md5_checksum(url):

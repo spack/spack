@@ -23,121 +23,130 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import unittest
 
+import pytest
 from llnl.util.filesystem import *
 from llnl.util.link_tree import LinkTree
-
 from spack.stage import Stage
 
 
-class LinkTreeTest(unittest.TestCase):
-    """Tests Spack's LinkTree class."""
+@pytest.fixture()
+def stage():
+    """Creates a stage with the directory structure for the tests."""
+    s = Stage('link-tree-test')
+    s.create()
 
-    def setUp(self):
-        self.stage = Stage('link-tree-test')
-        self.stage.create()
+    with working_dir(s.path):
+        touchp('source/1')
+        touchp('source/a/b/2')
+        touchp('source/a/b/3')
+        touchp('source/c/4')
+        touchp('source/c/d/5')
+        touchp('source/c/d/6')
+        touchp('source/c/d/e/7')
 
-        with working_dir(self.stage.path):
-            touchp('source/1')
-            touchp('source/a/b/2')
-            touchp('source/a/b/3')
-            touchp('source/c/4')
-            touchp('source/c/d/5')
-            touchp('source/c/d/6')
-            touchp('source/c/d/e/7')
+    yield s
 
-        source_path = os.path.join(self.stage.path, 'source')
-        self.link_tree = LinkTree(source_path)
+    s.destroy()
 
-    def tearDown(self):
-        self.stage.destroy()
 
-    def check_file_link(self, filename):
-        self.assertTrue(os.path.isfile(filename))
-        self.assertTrue(os.path.islink(filename))
+@pytest.fixture()
+def link_tree(stage):
+    """Return a properly initialized LinkTree instance."""
+    source_path = os.path.join(stage.path, 'source')
+    return LinkTree(source_path)
 
-    def check_dir(self, filename):
-        self.assertTrue(os.path.isdir(filename))
 
-    def test_merge_to_new_directory(self):
-        with working_dir(self.stage.path):
-            self.link_tree.merge('dest')
+def check_file_link(filename):
+    assert os.path.isfile(filename)
+    assert os.path.islink(filename)
 
-            self.check_file_link('dest/1')
-            self.check_file_link('dest/a/b/2')
-            self.check_file_link('dest/a/b/3')
-            self.check_file_link('dest/c/4')
-            self.check_file_link('dest/c/d/5')
-            self.check_file_link('dest/c/d/6')
-            self.check_file_link('dest/c/d/e/7')
 
-            self.link_tree.unmerge('dest')
+def check_dir(filename):
+    assert os.path.isdir(filename)
 
-            self.assertFalse(os.path.exists('dest'))
 
-    def test_merge_to_existing_directory(self):
-        with working_dir(self.stage.path):
+def test_merge_to_new_directory(stage, link_tree):
+    with working_dir(stage.path):
+        link_tree.merge('dest')
 
-            touchp('dest/x')
-            touchp('dest/a/b/y')
+        check_file_link('dest/1')
+        check_file_link('dest/a/b/2')
+        check_file_link('dest/a/b/3')
+        check_file_link('dest/c/4')
+        check_file_link('dest/c/d/5')
+        check_file_link('dest/c/d/6')
+        check_file_link('dest/c/d/e/7')
 
-            self.link_tree.merge('dest')
+        link_tree.unmerge('dest')
 
-            self.check_file_link('dest/1')
-            self.check_file_link('dest/a/b/2')
-            self.check_file_link('dest/a/b/3')
-            self.check_file_link('dest/c/4')
-            self.check_file_link('dest/c/d/5')
-            self.check_file_link('dest/c/d/6')
-            self.check_file_link('dest/c/d/e/7')
+        assert not os.path.exists('dest')
 
-            self.assertTrue(os.path.isfile('dest/x'))
-            self.assertTrue(os.path.isfile('dest/a/b/y'))
 
-            self.link_tree.unmerge('dest')
+def test_merge_to_existing_directory(stage, link_tree):
+    with working_dir(stage.path):
 
-            self.assertTrue(os.path.isfile('dest/x'))
-            self.assertTrue(os.path.isfile('dest/a/b/y'))
+        touchp('dest/x')
+        touchp('dest/a/b/y')
 
-            self.assertFalse(os.path.isfile('dest/1'))
-            self.assertFalse(os.path.isfile('dest/a/b/2'))
-            self.assertFalse(os.path.isfile('dest/a/b/3'))
-            self.assertFalse(os.path.isfile('dest/c/4'))
-            self.assertFalse(os.path.isfile('dest/c/d/5'))
-            self.assertFalse(os.path.isfile('dest/c/d/6'))
-            self.assertFalse(os.path.isfile('dest/c/d/e/7'))
+        link_tree.merge('dest')
 
-    def test_merge_with_empty_directories(self):
-        with working_dir(self.stage.path):
-            mkdirp('dest/f/g')
-            mkdirp('dest/a/b/h')
+        check_file_link('dest/1')
+        check_file_link('dest/a/b/2')
+        check_file_link('dest/a/b/3')
+        check_file_link('dest/c/4')
+        check_file_link('dest/c/d/5')
+        check_file_link('dest/c/d/6')
+        check_file_link('dest/c/d/e/7')
 
-            self.link_tree.merge('dest')
-            self.link_tree.unmerge('dest')
+        assert os.path.isfile('dest/x')
+        assert os.path.isfile('dest/a/b/y')
 
-            self.assertFalse(os.path.exists('dest/1'))
-            self.assertFalse(os.path.exists('dest/a/b/2'))
-            self.assertFalse(os.path.exists('dest/a/b/3'))
-            self.assertFalse(os.path.exists('dest/c/4'))
-            self.assertFalse(os.path.exists('dest/c/d/5'))
-            self.assertFalse(os.path.exists('dest/c/d/6'))
-            self.assertFalse(os.path.exists('dest/c/d/e/7'))
+        link_tree.unmerge('dest')
 
-            self.assertTrue(os.path.isdir('dest/a/b/h'))
-            self.assertTrue(os.path.isdir('dest/f/g'))
+        assert os.path.isfile('dest/x')
+        assert os.path.isfile('dest/a/b/y')
 
-    def test_ignore(self):
-        with working_dir(self.stage.path):
-            touchp('source/.spec')
-            touchp('dest/.spec')
+        assert not os.path.isfile('dest/1')
+        assert not os.path.isfile('dest/a/b/2')
+        assert not os.path.isfile('dest/a/b/3')
+        assert not os.path.isfile('dest/c/4')
+        assert not os.path.isfile('dest/c/d/5')
+        assert not os.path.isfile('dest/c/d/6')
+        assert not os.path.isfile('dest/c/d/e/7')
 
-            self.link_tree.merge('dest', ignore=lambda x: x == '.spec')
-            self.link_tree.unmerge('dest', ignore=lambda x: x == '.spec')
 
-            self.assertFalse(os.path.exists('dest/1'))
-            self.assertFalse(os.path.exists('dest/a'))
-            self.assertFalse(os.path.exists('dest/c'))
+def test_merge_with_empty_directories(stage, link_tree):
+    with working_dir(stage.path):
+        mkdirp('dest/f/g')
+        mkdirp('dest/a/b/h')
 
-            self.assertTrue(os.path.isfile('source/.spec'))
-            self.assertTrue(os.path.isfile('dest/.spec'))
+        link_tree.merge('dest')
+        link_tree.unmerge('dest')
+
+        assert not os.path.exists('dest/1')
+        assert not os.path.exists('dest/a/b/2')
+        assert not os.path.exists('dest/a/b/3')
+        assert not os.path.exists('dest/c/4')
+        assert not os.path.exists('dest/c/d/5')
+        assert not os.path.exists('dest/c/d/6')
+        assert not os.path.exists('dest/c/d/e/7')
+
+        assert os.path.isdir('dest/a/b/h')
+        assert os.path.isdir('dest/f/g')
+
+
+def test_ignore(stage, link_tree):
+    with working_dir(stage.path):
+        touchp('source/.spec')
+        touchp('dest/.spec')
+
+        link_tree.merge('dest', ignore=lambda x: x == '.spec')
+        link_tree.unmerge('dest', ignore=lambda x: x == '.spec')
+
+        assert not os.path.exists('dest/1')
+        assert not os.path.exists('dest/a')
+        assert not os.path.exists('dest/c')
+
+        assert os.path.isfile('source/.spec')
+        assert os.path.isfile('dest/.spec')

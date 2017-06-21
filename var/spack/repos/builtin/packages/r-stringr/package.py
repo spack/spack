@@ -33,9 +33,9 @@ class RStringr(RPackage):
     into the input of another."""
 
     homepage = "https://cran.r-project.org/web/packages/stringr/index.html"
-    url      = "https://cran.r-project.org/src/contrib/stringr_1.0.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/stringr"
+    url      = "https://cran.r-project.org/src/contrib/stringr_1.1.0.tar.gz"
 
+    version('1.1.0', '47973a33944c6d5db9524b1e835b8a5d')
     version('1.0.0', '5ca977c90351f78b1b888b379114a7b4')
 
     depends_on('r-stringi', type=('build', 'run'))

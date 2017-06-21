@@ -25,7 +25,9 @@
 import argparse
 import spack.modules
 
-description = "Remove package from environment using dotkit."
+description = "remove package from environment using dotkit"
+section = "environment"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -33,7 +35,7 @@ def setup_parser(subparser):
        message with -h. """
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help='Spec of package to unuse with dotkit.')
+        help='spec of package to unuse with dotkit')
 
 
 def unuse(parser, args):

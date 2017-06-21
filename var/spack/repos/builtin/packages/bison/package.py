@@ -25,20 +25,19 @@
 from spack import *
 
 
-class Bison(Package):
+class Bison(AutotoolsPackage):
     """Bison is a general-purpose parser generator that converts
     an annotated context-free grammar into a deterministic LR or
     generalized LR (GLR) parser employing LALR(1) parser tables."""
 
     homepage = "http://www.gnu.org/software/bison/"
-    url      = "http://ftp.gnu.org/gnu/bison/bison-3.0.tar.gz"
+    url      = "http://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.gz"
 
     version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
+    version('2.7',   'ded660799e76fb1667d594de1f7a0da9')
 
-    depends_on("m4", type='build')
+    depends_on('m4', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    patch('pgi.patch', when='@3.0.4')
 
-        make()
-        make("install")
+    build_directory = 'spack-build'

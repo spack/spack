@@ -29,7 +29,9 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 
-description = "Remove build stage and source tarball for packages."
+description = "remove build stage and source tarball for packages"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):

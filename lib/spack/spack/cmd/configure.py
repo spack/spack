@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import argparse
 
 import llnl.util.tty as tty
@@ -31,12 +30,16 @@ import spack.cmd.install as inst
 
 from spack import *
 
-description = 'Stops at configuration stage when installing a package, if possible'  # NOQA: ignore=E501
+description = 'stage and configure a package but do not install'
+section = "build"
+level = "long"
 
 
 build_system_to_phase = {
+    AutotoolsPackage: 'configure',
     CMakePackage: 'cmake',
-    AutotoolsPackage: 'configure'
+    WafPackage: 'configure',
+    PerlPackage: 'configure',
 }
 
 
@@ -49,7 +52,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-v', '--verbose',
         action='store_true',
-        help="Print additional output during builds"
+        help="print additional output during builds"
     )
 
 
