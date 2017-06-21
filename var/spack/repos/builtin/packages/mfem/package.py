@@ -64,19 +64,17 @@ class Mfem(Package):
             url='http://goo.gl/xrScXn', extension='.tar.gz')
 
     variant('mpi', default=True,
-        description='Enable MPI parallel features')
-    variant('metis', default=False,
-        description='Required for MPI parallel features')
-    variant('hypre', default=False,
-        description='Required for MPI parallel features')
+        description='Enable MPI parallelism')
+    variant('hypre', default=True,
+        description='Required for MPI parallelism')
     variant('openmp', default=False,
-        description='Enable OpenMP parallel features')
+        description='Enable OpenMP parallelism')
     variant('threadsafe', default=False,
         description=('Enable thread safe features.'
             ' Required for OpenMP.'
             ' May cause minor performance issues.'))
     variant('superlu-dist', default=False,
-        description='Enable parallel, sparse direct solvers')
+        description='Enable MPI parallel, sparse direct solvers')
     variant('suite-sparse', default=False,
         description='Enable serial, sparse direct solvers')
     variant('petsc', default=False,
@@ -100,20 +98,21 @@ class Mfem(Package):
     depends_on('lapack', when='+suite-sparse')
 
     depends_on('mpi', when='+mpi')
-    depends_on('metis', when='+mpi')
-    depends_on('metis@4:', when='+metis')
+    depends_on('metis')
+    depends_on('parmetis', when='+superlu-dist')
+    depends_on('metis@5:', when='+superlu-dist')
     depends_on('metis@5:', when='+suite-sparse ^suite-sparse@4.5:')
     depends_on('hypre~internal-superlu', when='+mpi')
     depends_on('hypre@develop~internal-superlu', when='+petsc +hypre')
 
-    depends_on('sundials', when='+sundials')
+    depends_on('sundials@2.7:+hypre', when='+sundials')
     depends_on('mesquite', when='+mesquite')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='@3.2: +superlu-dist')
     depends_on('petsc@develop', when='+petsc')
 
     depends_on('mpfr', when='+mpfr')
-    depends_on('cmake', when='^metis@5:', type='build')
+#    depends_on('cmake', when='^metis@5:', type='build')
     depends_on('netcdf', when='@3.2: +netcdf')
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
@@ -121,13 +120,11 @@ class Mfem(Package):
     patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
 
     def check_variants(self, spec):
-        if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):
-            raise InstallError('mfem+mpi must be built with +hypre ' +
-                               'and +metis!')
-        if '+suite-sparse' in spec and ('+metis' not in spec or
-                                        '+lapack' not in spec):
+        if '+mpi' in spec and '+hypre' not in spec:
+            raise InstallError('mfem+mpi must be built with +hypre')
+        if '+suite-sparse' in spec and '+lapack' not in spec:
             raise InstallError('mfem+suite-sparse must be built with ' +
-                               '+metis and +lapack!')
+                               '+lapack!')
         if 'metis@5:' in spec and '%clang' in spec and (
                 '^cmake %gcc' not in spec):
             raise InstallError('To work around CMake bug with clang, must ' +
@@ -146,10 +143,11 @@ class Mfem(Package):
 
         yes_no = ('NO', 'YES')
 
-        metis_str = 'NO'
-        if '+parmetis' in spec or \
-           ('+metis' in spec and spec['metis'].satisfies('@5:')):
-            metis_str = 'YES'
+        metis5_str = 'NO'
+        if '+superlu-dist' in spec or  \
+            spec.satisfies('+suite-sparse ^suite-sparse@4.5:') or \
+                spec['metis'].satisfies('@5:'):
+                metis5_str = 'YES'
 
         threadsafe_str = 'NO'
         if '+openmp' in spec or '+threadsafe' in spec:
@@ -158,7 +156,7 @@ class Mfem(Package):
         options = [
             'PREFIX=%s' % prefix,
             'MFEM_DEBUG=%s' % yes_no['+debug' in spec],
-            'MFEM_USE_METIS_5=%s' % metis_str,
+            'MFEM_USE_METIS_5=%s' % metis5_str,
             'MFEM_THREAD_SAFE=%s' % threadsafe_str,
             'MFEM_USE_MPI=%s' % yes_no['+mpi' in spec],
             'MFEM_USE_LAPACK=%s' % yes_no['+lapack' in spec],
@@ -183,26 +181,24 @@ class Mfem(Package):
                 'LAPACK_OPT=-I%s' % spec['lapack'].prefix.include,
                 'LAPACK_LIB=%s' % lapack_lib]
 
-        if '+parmetis' in spec:
+        if '+superlu-dist' in spec:
             metis_lib = '-L%s -lparmetis -lmetis' % spec['parmetis'].prefix.lib
             options += [
                 'METIS_DIR=%s' % spec['parmetis'].prefix,
                 'METIS_OPT=-I%s' % spec['parmetis'].prefix.include,
                 'METIS_LIB=%s' % metis_lib]
-        elif '+metis' in spec:
-            metis_lib = '-L%s -lmetis' % spec['metis'].prefix.lib
-            options += [
-                'METIS_DIR=%s' % spec['metis'].prefix,
-                'METIS_OPT=-I%s' % spec['metis'].prefix.include,
-                'METIS_LIB=%s' % metis_lib]
-
-        if '+superlu-dist' in spec:
             superlu_lib = '-L%s' % spec['superlu-dist'].prefix.lib
             superlu_lib += ' -lsuperlu_dist'
             options += [
                 'SUPERLU_DIR=%s' % spec['superlu-dist'].prefix,
                 'SUPERLU_OPT=-I%s' % spec['superlu-dist'].prefix.include,
                 'SUPERLU_LIB=%s' % superlu_lib]
+        else:
+            metis_lib = '-L%s -lmetis' % spec['metis'].prefix.lib
+            options += [
+                'METIS_DIR=%s' % spec['metis'].prefix,
+                'METIS_OPT=-I%s' % spec['metis'].prefix.include,
+                'METIS_LIB=%s' % metis_lib]
 
         if '+suite-sparse' in spec:
             ssp = spec['suite-sparse'].prefix
