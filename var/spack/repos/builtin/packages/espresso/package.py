@@ -60,7 +60,7 @@ class Espresso(Package):
     # still experimental, therefore we default to False for the variant
     variant('hdf5', default=False, description='Builds with HDF5 support')
 
-    variant('qmcpack', default=False, description='Build for qmcpack use')
+    variant('qmchdf', default=False, description='Build for qmcpack use')
 
     depends_on('blas')
     depends_on('lapack')
