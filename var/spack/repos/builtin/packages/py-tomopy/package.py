@@ -33,7 +33,7 @@ class PyTomopy(PythonPackage):
     homepage = "http://tomopy.readthedocs.io/en/latest/index.html"
     url      = "https://github.com/tomopy/tomopy/archive/1.0.0.tar.gz"
 
-    module_import = ['tomopy', 'doc', 'tomopy.util', 'tomopy.sim', 
+    import_modules = ['tomopy', 'doc', 'tomopy.util', 'tomopy.sim', 
     'tomopy.recon', 'tomopy.prep', 'tomopy.misc', 'tomopy.io', 'doc.demo']
 
     version('1.0.0', '986ac2c85a4af9ada0403b4c746d2cd4')
