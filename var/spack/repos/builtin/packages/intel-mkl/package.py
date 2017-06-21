@@ -183,6 +183,5 @@ class IntelMkl(IntelPackage):
         run_env.prepend_path('MIC_LIBRARY_PATH',
                              join_path(tbb_root.lib, 'intel64_lin_mic'))
         run_env.set('MKLROOT', mkl_root)
-        run_env.prepend_path('NLSPATH',
-                             join_path(mkl_root.lib, 'intel64_lin', 'locale',
-                                       '%l_%t', '%N'))
+        run_env.prepend_path('NLSPATH', join_path(
+            mkl_root.lib, 'intel64_lin', 'locale', '%l_%t', '%N'))

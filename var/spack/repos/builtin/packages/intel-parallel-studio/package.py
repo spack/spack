@@ -104,10 +104,10 @@ class IntelParallelStudio(IntelPackage):
     # Components available in all editions
     variant('daal', default=True,
             description='Install the Intel DAAL libraries')
-    variant('ipp',  default=True,
-            description='Install the Intel IPP libraries')
     variant('gdb',  default=False,
             description='Install the Intel Debugger for Heterogeneous Compute')
+    variant('ipp',  default=True,
+            description='Install the Intel IPP libraries')
     variant('mkl',  default=True,
             description='Install the Intel MKL library')
     variant('mpi',  default=True,
@@ -258,29 +258,29 @@ class IntelParallelStudio(IntelPackage):
                 'intel-compxe', 'intel-ccompxe', 'intel-fcompxe'
             ])
 
-        # Intel(R) MPI Library
-        if '+mpi' in spec:
-            components.extend(['intel-mpi', 'intel-mpirt', 'intel-imb'])
-
-        # Intel(R) Math Kernel Library
-        if '+mkl' in spec:
-            components.append('intel-mkl')
-
         # Intel(R) Data Analytics Acceleration Library
         if '+daal' in spec:
             components.append('intel-daal')
+
+        # Intel(R) Debugger for Heterogeneous Compute
+        if '+gdb' in spec:
+            components.append('intel-gdb')
 
         # Intel(R) Integrated Performance Primitives
         if '+ipp' in spec:
             components.extend(['intel-ipp', 'intel-crypto-ipp'])
 
+        # Intel(R) Math Kernel Library
+        if '+mkl' in spec:
+            components.append('intel-mkl')
+
+        # Intel(R) MPI Library
+        if '+mpi' in spec:
+            components.extend(['intel-mpi', 'intel-mpirt', 'intel-imb'])
+
         # Intel(R) Threading Building Blocks
         if '+tbb' in spec:
             components.append('intel-tbb')
-
-        # Intel(R) Debugger for Heterogeneous Compute
-        if '+gdb' in spec:
-            components.append('intel-gdb')
 
         # Intel(R) Advisor
         if '+advisor' in spec:
@@ -348,15 +348,15 @@ class IntelParallelStudio(IntelPackage):
                 vtune_amplifier_dir
             ])
 
-        #if ('+all' in spec or '+mpi' in spec) and spec.satisfies('@cluster'):
-        #    for ifile in os.listdir(os.path.join(self.prefix, 'itac')):
-        #        if os.path.isdir(os.path.join(self.prefix, 'itac', ifile)):
-        #            directories.append(os.path.join(
-        #                self.prefix, 'itac', ifile))
-        #        if os.path.isdir(os.path.join(self.prefix, 'itac',
-        #                                      ifile, 'intel64')):
-        #            directories.append(os.path.join(self.prefix, 'itac',
-        #                               ifile, 'intel64'))
+        # if ('+all' in spec or '+mpi' in spec) and spec.satisfies('@cluster'):
+        #     for ifile in os.listdir(os.path.join(self.prefix, 'itac')):
+        #         if os.path.isdir(os.path.join(self.prefix, 'itac', ifile)):
+        #             directories.append(os.path.join(
+        #                 self.prefix, 'itac', ifile))
+        #         if os.path.isdir(os.path.join(self.prefix, 'itac',
+        #                                       ifile, 'intel64')):
+        #             directories.append(os.path.join(self.prefix, 'itac',
+        #                                ifile, 'intel64'))
         #
         # This is the same as itac/2017.3.030/intel64/
         # Allow glob characters in license_files?
@@ -404,126 +404,209 @@ class IntelParallelStudio(IntelPackage):
 
            $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
         """
-        major_ver = self.version[1]
+        spec   = self.spec
+        prefix = self.prefix
 
-        # Remove paths that were guessed but are incorrect for this package.
-        run_env.remove_path('LIBRARY_PATH',
-                            join_path(self.prefix, 'lib'))
-        run_env.remove_path('LD_LIBRARY_PATH',
-                            join_path(self.prefix, 'lib'))
-        run_env.remove_path('CPATH',
-                            join_path(self.prefix, 'include'))
+        edition = self.version[0]
+        year    = self.version[1]
 
-        # Add the default set of variables
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'intel64'))
+        # Generic environment variables
+        compiler_root = Prefix(join_path(
+            prefix, 'compilers_and_libraries', 'linux', 'compiler'))
+
         run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'intel64'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib',
-                                       'intel64', 'gcc4.4'))
+                             join_path(compiler_root.lib, 'intel64_lin'))
         run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib',
-                                       'intel64', 'gcc4.4'))
-        run_env.prepend_path('CPATH',
-                             join_path(self.prefix, 'tbb', 'include'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'mic'))
+                             join_path(compiler_root.lib, 'intel64'))
+        run_env.prepend_path('LIBRARY_PATH',
+                             join_path(compiler_root.lib, 'intel64_lin'))
+        run_env.prepend_path('MANPATH', join_path(prefix.man, 'common'))
         run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'mic'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
+                             join_path(compiler_root.lib, 'intel64_lin_mic'))
         run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
+                             join_path(compiler_root.lib, 'mic'))
+        run_env.prepend_path('MIC_LIBRARY_PATH',
+                             join_path(compiler_root.lib, 'intel64_lin_mic'))
+        run_env.prepend_path('MIC_LIBRARY_PATH',
+                             join_path(compiler_root.lib, 'mic'))
+        run_env.prepend_path('NLSPATH', join_path(
+            compiler_root.lib, 'intel64', 'locale', '%l_%t', '%N'))
+        run_env.prepend_path('PATH', join_path(
+            prefix, 'compilers_and_libraries', 'linux', 'bin', 'intel64'))
 
-        if self.spec.satisfies('+all'):
+        # Components available in all editions
+        if '+daal' in spec or '+all' in spec:
+            daal_root = Prefix(join_path(
+                prefix, 'compilers_and_libraries', 'linux', 'daal'))
+
+            run_env.prepend_path('CLASSPATH', join_path(
+                daal_root.lib, 'daal.jar'))
+            run_env.prepend_path('CPATH', daal_root.include)
+            run_env.set('DAALROOT', daal_root)
             run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix,
-                                           'debugger_{0}'.format(major_ver),
-                                           'libipt', 'intel64', 'lib'))
-            run_env.set('GDBSERVER_MIC',
-                        join_path(self.prefix,
-                                  'debugger_{0}'.format(major_ver), 'gdb',
-                                  'targets', 'mic', 'bin', 'gdbserver'))
-            run_env.set('GDB_CROSS',
-                        join_path(self.prefix,
-                                  'debugger_{0}'.format(major_ver),
-                                  'gdb', 'intel64_mic', 'bin', 'gdb-mic'))
-            run_env.set('MPM_LAUNCHER',
-                        join_path(self.prefix,
-                                  'debugger_{0}'.format(major_ver), 'mpm',
-                                  'mic',
-                                  'bin', 'start_mpm.sh'))
+                                 join_path(daal_root.lib, 'intel64_lin'))
+            run_env.prepend_path('LIBRARY_PATH',
+                                 join_path(daal_root.lib, 'intel64_lin'))
+
+        if '+gdb' in spec or '+all' in spec:
+            debugger_root = Prefix(join_path(
+                prefix, 'debugger_{0}'.format(year)))
+            debugger_doc_root = Prefix(join_path(
+                prefix, 'documentation_{0}'.format(year), 'en', 'debugger'))
+
+            run_env.set('GDB_CROSS', join_path(
+                debugger_root, 'gdb', 'intel64_mic', 'bin', 'gdb-mic'))
+            run_env.set('GDBSERVER_MIC', join_path(
+                debugger_root, 'gdb', 'targets', 'mic', 'bin', 'gdbserver'))
+            run_env.prepend_path('INFOPATH', join_path(
+                debugger_doc_root, 'gdb-igfx', 'info'))
+            run_env.prepend_path('INFOPATH', join_path(
+                debugger_doc_root, 'gdb-mic', 'info'))
+            run_env.prepend_path('INFOPATH', join_path(
+                debugger_doc_root, 'gdb-ia', 'info'))
             run_env.set('INTEL_PYTHONHOME',
-                        join_path(self.prefix,
-                                  'debugger_{0}'.format(major_ver), 'python',
-                                  'intel64'))
-
-        if (self.spec.satisfies('+all') or self.spec.satisfies('+mpi')):
-            # Only I_MPI_ROOT is set here because setting the various PATH
-            # variables will potentially be in conflict with other MPI
-            # environment modules. The I_MPI_ROOT environment variable can be
-            # used as a base to set necessary PATH variables for using Intel
-            # MPI. It is also possible to set the variables in the modules.yaml
-            # file if Intel MPI is the dominant, or only, MPI on a system.
-            run_env.set('I_MPI_ROOT', join_path(self.prefix, 'impi'))
-
-        if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
-            spack_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
-
+                        join_path(debugger_root, 'python', 'intel64'))
+            run_env.prepend_path('LD_LIBRARY_PATH', join_path(
+                debugger_root, 'libipt', 'intel64', 'lib'))
             run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mkl', 'lib',
-                                           'intel64'))
+                                 join_path(debugger_root, 'iga', 'lib'))
+            run_env.prepend_path('MANPATH', join_path(
+                debugger_doc_root, 'gdb-igfx', 'man'))
+            run_env.prepend_path('MANPATH', join_path(
+                debugger_doc_root, 'gdb-mic', 'man'))
+            run_env.prepend_path('MANPATH', join_path(
+                debugger_doc_root, 'gdb-ia', 'man'))
+            run_env.set('MPM_LAUNCHER', join_path(
+                debugger_root, 'mpm', 'mic', 'bin', 'start_mpm.sh'))
+            run_env.prepend_path('NLSPATH',
+                                 join_path(debugger_root, 'gdb', 'intel64',
+                                           'share', 'locale', '%l_%t', '%N'))
+            run_env.prepend_path('NLSPATH',
+                                 join_path(debugger_root, 'gdb', 'intel64_mic',
+                                           'share', 'locale', '%l_%t', '%N'))
+            run_env.prepend_path('PATH', join_path(
+                debugger_root, 'gdb', 'intel64_mic', 'bin'))
+
+        if '+ipp' in spec or '+all' in spec:
+            ipp_root = Prefix(join_path(
+                prefix, 'compilers_and_libraries', 'linux', 'ipp'))
+
+            run_env.prepend_path('CPATH', ipp_root.include)
+            run_env.set('IPPROOT', ipp_root)
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(ipp_root.lib, 'intel64'))
             run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'mkl', 'lib',
-                                           'intel64'))
-            run_env.prepend_path('CPATH',
-                                 join_path(self.prefix, 'mkl', 'include'))
+                                 join_path(ipp_root.lib, 'intel64'))
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mkl', 'lib', 'mic'))
-            run_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
+                                 join_path(ipp_root.lib, 'mic'))
 
-        if self.spec.satisfies('+all') or self.spec.satisfies('+daal'):
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'daal', 'lib',
-                                           'intel64_lin'))
-            run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'daal', 'lib',
-                                           'intel64_lin'))
-            run_env.prepend_path('CPATH',
-                                 join_path(self.prefix, 'daal', 'include'))
-            run_env.prepend_path('CLASSPATH',
-                                 join_path(self.prefix, 'daal', 'lib',
-                                           'daal.jar'))
-            run_env.set('DAALROOT', join_path(self.prefix, 'daal'))
+        if '+mkl' in spec or '+all' in spec:
+            mkl_root = Prefix(join_path(
+                prefix, 'compilers_and_libraries', 'linux', 'mkl'))
 
-        if self.spec.satisfies('+all') or self.spec.satisfies('+ipp'):
+            run_env.prepend_path('CPATH', mkl_root.include)
             run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'ipp', 'lib',
-                                           'intel64'))
+                                 join_path(mkl_root.lib, 'intel64_lin'))
             run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'ipp', 'lib',
-                                           'intel64'))
-            run_env.prepend_path('CPATH',
-                                 join_path(self.prefix, 'ipp', 'include'))
+                                 join_path(mkl_root.lib, 'intel64_lin'))
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'ipp', 'lib', 'mic'))
-            run_env.set('IPPROOT', join_path(self.prefix, 'ipp'))
+                                 join_path(mkl_root.lib, 'intel64_lin_mic'))
+            run_env.prepend_path('MIC_LIBRARY_PATH',
+                                 join_path(mkl_root.lib, 'intel64_lin_mic'))
+            run_env.set('MKLROOT', mkl_root)
+            run_env.prepend_path('NLSPATH', join_path(
+                mkl_root.lib, 'intel64_lin', 'locale', '%l_%t', '%N'))
 
-        if self.spec.satisfies('+all') or self.spec.satisfies('+tools'):
+        if '+mpi' in spec or '+all' in spec:
+            mpi_root = Prefix(join_path(
+                prefix, 'compilers_and_libraries', 'linux', 'mpi'))
+
+            run_env.prepend_path('CLASSPATH', join_path(
+                mpi_root, 'intel64', 'lib', 'mpi.jar'))
+            run_env.set('I_MPI_ROOT', mpi_root)
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(mpi_root, 'mic', 'lib'))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(mpi_root, 'intel64', 'lib'))
+            run_env.prepend_path('MANPATH', mpi_root.man)
+            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                                 join_path(mpi_root, 'mic', 'lib'))
+            run_env.prepend_path('MIC_LIBRARY_PATH',
+                                 join_path(mpi_root, 'mic', 'lib'))
+            run_env.prepend_path('PATH', join_path(mpi_root, 'intel64', 'bin'))
+
+        if '+tbb' in spec or '+all' in spec:
+            tbb_root = Prefix(join_path(
+                prefix, 'compilers_and_libraries', 'linux', 'tbb'))
+
+            run_env.prepend_path('CPATH', tbb_root.include)
+            run_env.prepend_path('LD_LIBRARY_PATH', join_path(
+                tbb_root.lib, 'intel64', 'gcc4.4'))
+            run_env.prepend_path('LIBRARY_PATH', join_path(
+                tbb_root.lib, 'intel64', 'gcc4.4'))
+            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                                 join_path(tbb_root.lib, 'mic'))
+            run_env.prepend_path('MIC_LIBRARY_PATH',
+                                 join_path(tbb_root.lib, 'mic'))
+            run_env.set('TBBROOT', tbb_root)
+
+        if edition == 'composer':
+            return
+
+        # Components only available in the Professional and Cluster Editions
+        if '+advisor' in spec or '+all' in spec:
+            advisor_root = Prefix(join_path(prefix, 'advisor'))
+
+            run_env.set('ADVISOR_{0}_DIR'.format(year), advisor_root)
+            run_env.prepend_path('PATH', advisor_root.bin64)
+            run_env.prepend_path('PYTHONPATH',
+                                 join_path(advisor_root, 'pythonapi'))
+
+        if '+inspector' in spec or '+all' in spec:
+            inspector_root = Prefix(join_path(prefix, 'inspector'))
+
+            run_env.set('INSPECTOR_{0}_DIR'.format(year), inspector_root)
+            run_env.prepend_path('PATH', inspector_root.bin64)
+
+        if '+itac' in spec or '+all' in spec:
+            itac_root = Prefix(join_path(prefix, 'itac_{0}'.format(year)))
+
+            run_env.prepend_path('LD_LIBRARY_PATH', join_path(
+                itac_root, 'intel64', 'slib'))
+            run_env.prepend_path('LD_LIBRARY_PATH', join_path(
+                itac_root, 'mic', 'slib'))
+            run_env.prepend_path('MANPATH', itac_root.man)
+            run_env.set('MPS_INTEL_LIBITTNOTIFY64', 'libmps.so')
+            run_env.set('MPS_KMP_FORKJOIN_FRAMES_MODE', '3')
+            run_env.set('MPS_LD_PRELOAD', 'libmps.so')
+            run_env.set('MPS_STAT_DIR_POSTFIX', '_%D-%T')
+            run_env.set('MPS_STAT_ENABLE_IDLE', 'I_MPI_PVAR_IDLE')
+            run_env.set('MPS_STAT_ENABLE_IDLE_VAL', '1')
+            run_env.set('MPS_STAT_LEVEL', '5')
+            run_env.set('MPS_STAT_MESSAGES', '1')
+            run_env.set('MPS_TOOL_ROOT', itac_root)
             run_env.prepend_path('PATH',
-                                 join_path(self.prefix, 'vtune_amplifier_xe',
-                                           'bin64'))
-            run_env.prepend_path('VTUNE_AMPLIFIER_XE_{0}_DIR'.format(
-                                 major_ver),
-                                 join_path(self.prefix, 'vtune_amplifier_xe'))
+                                 join_path(itac_root, 'intel64', 'bin'))
+            run_env.set('VT_ADD_LIBS',
+                        '-ldwarf -lelf -lvtunwind -lm -lpthread')
+            run_env.set('VT_ARCH', 'intel64')
+            run_env.set('VT_LIB_DIR', join_path(itac_root, 'intel64', 'lib'))
+            run_env.set('VT_MPI', 'impi4')
+            run_env.set('VT_ROOT', itac_root)
+            run_env.set('VT_SLIB_DIR', join_path(itac_root, 'intel64', 'slib'))
+
+        if '+vtune' in spec or '+all' in spec:
+            vtune_root = Prefix(join_path(prefix, 'vtune_amplifier_xe'))
+
+            run_env.prepend_path('PATH', vtune_root.bin64)
+            run_env.set('VTUNE_AMPLIFIER_XE_{0}_DIR'.format(year), vtune_root)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('I_MPI_CC', spack_cc)
+        spack_env.set('I_MPI_CC',  spack_cc)
         spack_env.set('I_MPI_CXX', spack_cxx)
         spack_env.set('I_MPI_F77', spack_fc)
         spack_env.set('I_MPI_F90', spack_f77)
-        spack_env.set('I_MPI_FC', spack_fc)
+        spack_env.set('I_MPI_FC',  spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
         # Check for presence of bin64 or bin directory
@@ -534,7 +617,7 @@ class IntelParallelStudio(IntelPackage):
         else:
             raise RuntimeError('No suitable bindir found')
 
-        self.spec.mpicc = join_path(bindir, 'mpicc')
+        self.spec.mpicc  = join_path(bindir, 'mpicc')
         self.spec.mpicxx = join_path(bindir, 'mpic++')
-        self.spec.mpifc = join_path(bindir, 'mpif90')
+        self.spec.mpifc  = join_path(bindir, 'mpif90')
         self.spec.mpif77 = join_path(bindir, 'mpif77')

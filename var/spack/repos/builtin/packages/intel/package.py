@@ -104,9 +104,7 @@ class Intel(IntelPackage):
                              join_path(compiler_root.lib, 'mic'))
         run_env.prepend_path('MIC_LIBRARY_PATH',
                              join_path(compiler_root.lib, 'mic'))
-        run_env.prepend_path('NLSPATH',
-                             join_path(compiler_root.lib, 'intel64', 'locale',
-                                       '%l_%t', '%N'))
-        run_env.prepend_path('PATH',
-                             join_path(self.prefix, 'compilers_and_libraries',
-                                       'linux', 'bin', 'intel64'))
+        run_env.prepend_path('NLSPATH', join_path(
+            compiler_root.lib, 'intel64', 'locale', '%l_%t', '%N'))
+        run_env.prepend_path('PATH', join_path(
+            self.prefix, 'compilers_and_libraries', 'linux', 'bin', 'intel64'))
