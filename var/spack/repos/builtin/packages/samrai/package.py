@@ -81,7 +81,7 @@ class Samrai(AutotoolsPackage):
             '--with-hypre=no',
             '--with-petsc=no'])
 
-        if '+debug' in spec:
+        if '+debug' in self.spec:
             options.extend([
                 '--disable-opt',
                 '--enable-debug'])
