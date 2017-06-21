@@ -85,7 +85,7 @@ class TestSpecDag(object):
 
     def test_preorder_node_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize()
+        dag.normalize_top()
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'zmpi', 'fake']
@@ -99,7 +99,7 @@ class TestSpecDag(object):
 
     def test_preorder_edge_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize()
+        dag.normalize_top()
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'libelf', 'zmpi', 'fake', 'zmpi']
@@ -113,7 +113,7 @@ class TestSpecDag(object):
 
     def test_preorder_path_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize()
+        dag.normalize_top()
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'libelf', 'zmpi', 'fake', 'zmpi', 'fake']
@@ -127,7 +127,7 @@ class TestSpecDag(object):
 
     def test_postorder_node_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize()
+        dag.normalize_top()
 
         names = ['libelf', 'libdwarf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'mpileaks']
@@ -141,7 +141,7 @@ class TestSpecDag(object):
 
     def test_postorder_edge_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize()
+        dag.normalize_top()
 
         names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'zmpi', 'mpileaks']
@@ -155,7 +155,7 @@ class TestSpecDag(object):
 
     def test_postorder_path_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize()
+        dag.normalize_top()
 
         names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'fake', 'zmpi', 'mpileaks']
@@ -172,7 +172,7 @@ class TestSpecDag(object):
 
         # Normalize then add conflicting constraints to the DAG (this is an
         # extremely unlikely scenario, but we test for it anyway)
-        mpileaks.normalize()
+        mpileaks.normalize_top()
         mpileaks._dependencies['mpich'].spec = Spec('mpich@1.0')
         mpileaks._dependencies['callpath']. \
             spec._dependencies['mpich'].spec = Spec('mpich@2.0')
@@ -206,7 +206,7 @@ class TestSpecDag(object):
                              Spec('libelf')),
                         Spec('mpi')),
                    Spec('mpi'))
-        dag.normalize()
+        dag.normalize_top()
 
         # make sure nothing with the same name occurs twice
         counts = {}
@@ -478,7 +478,7 @@ class TestSpecDag(object):
 
     def test_deptype_traversal(self):
         dag = Spec('dtuse')
-        dag.normalize()
+        dag.normalize_top()
 
         names = ['dtuse', 'dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
                  'dtlink1', 'dtlink3', 'dtlink4']
@@ -488,7 +488,7 @@ class TestSpecDag(object):
 
     def test_deptype_traversal_with_builddeps(self):
         dag = Spec('dttop')
-        dag.normalize()
+        dag.normalize_top()
 
         names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
                  'dtlink1', 'dtlink3', 'dtlink4']
@@ -498,7 +498,7 @@ class TestSpecDag(object):
 
     def test_deptype_traversal_full(self):
         dag = Spec('dttop')
-        dag.normalize()
+        dag.normalize_top()
 
         names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2', 'dtrun2',
                  'dtlink1', 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5',
@@ -665,7 +665,7 @@ class TestSpecDag(object):
         """Ensure that dependency types are preserved even if the same thing is
            depended on in two different ways."""
         s = Spec('dt-diamond')
-        s.normalize()
+        s.normalize_top()
 
         self.check_diamond_deptypes(s)
         self.check_diamond_normalized_dag(s)
@@ -679,7 +679,7 @@ class TestSpecDag(object):
     def test_copy_deptypes(self):
         """Ensure that dependency types are preserved by spec copy."""
         s1 = Spec('dt-diamond')
-        s1.normalize()
+        s1.normalize_top()
         self.check_diamond_deptypes(s1)
         self.check_diamond_normalized_dag(s1)
 

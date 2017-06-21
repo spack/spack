@@ -2016,6 +2016,14 @@ class Spec(object):
 
         return any_change
 
+    def normalize_top(self):
+        dep_context = {}
+        for dep in self.traverse(root=False, deptype=('link', 'run')):
+            dep_context[dep.name] = dep.copy(deps=False)
+        self._dependencies.clear()
+        dep_contexts = [dep_context]
+        self.normalize(dep_contexts)
+
     def normalize(self, dep_contexts=None, force=False):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
