@@ -63,7 +63,7 @@ class Netgen(AutotoolsPackage):
         # due to a bug in netgen config, when --without-occ is specified
         #   or --with-occ=no, OCC flags is turned true, and build fails
         #   later; so do not specify anything like that
-        #else:
+        # else:
         #    args.append("--without-occ")
 
         if '~gui' in spec:

@@ -152,29 +152,29 @@ class Moab(AutotoolsPackage):
             options.append('--with-metis=%s' % spec['metis'].prefix)
         else:
             options.append('--without-metis')
- 
+
         if '+parmetis' in spec:
             options.append('--with-parmetis=%s' % spec['parmetis'].prefix)
         else:
             options.append('--without-parmetis')
- 
+
         if '+zoltan' in spec:
             options.append('--with-zoltan=%s' % spec['zoltan'].prefix)
         else:
             options.append('--without-zoltan')
- 
+
         if '+debug' in spec:
             options.append('--enable-debug')
         else:
             options.append('--disable-debug')
- 
+
         # FIXME it seems that with cgm and shared, we have a link
         #   issue  in tools/geometry
         if '+shared' in spec:
             options.append('--enable-shared')
         else:
             options.append('--disable-shared')
- 
+
         if '~fortran' in spec:
             options.append('--disable-fortran')
         else:
