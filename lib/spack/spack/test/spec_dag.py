@@ -647,7 +647,7 @@ class TestSpecDag(object):
             'dt-diamond-right'].deptypes == ('build', 'link')
 
         assert spec['dt-diamond-left']._dependencies[
-            'dt-diamond-bottom'].deptypes == ('build',)
+            'dt-diamond-bottom'].deptypes == ('build', 'link')
 
         assert spec['dt-diamond-right'] ._dependencies[
             'dt-diamond-bottom'].deptypes == ('build', 'link', 'run')
@@ -656,7 +656,7 @@ class TestSpecDag(object):
         bottom = Spec('dt-diamond-bottom')
         dag = Spec('dt-diamond',
                    ['build', 'link'], Spec('dt-diamond-left',
-                                           ['build'], bottom),
+                                           ['build', 'link'], bottom),
                    ['build', 'link'], Spec('dt-diamond-right',
                                            ['build', 'link', 'run'], bottom))
         assert spec.eq_dag(dag)
