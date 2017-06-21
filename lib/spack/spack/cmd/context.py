@@ -364,6 +364,7 @@ def context_list(args):
 
 def context_stage(args):
     context = read(args.context)
+    prepare_repository(context)
     for spec in context.specs_by_hash.values():
         for dep in spec.traverse():
             dep.package.do_stage()
