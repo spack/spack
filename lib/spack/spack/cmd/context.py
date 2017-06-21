@@ -321,18 +321,8 @@ def context_concretize(args):
     write(context, repo)
 
 def dump_to_context_repo(spec, repo):
-    source = spack.store.layout.build_packages_path(spec)
-    source_repo_root = fs.join_path(source, spec.namespace)
-    if os.path.isdir(source_repo_root):
-        source_repo = spack.repository.Repo(source_repo_root)
-        source_pkg_dir = source_repo.dirname_for_package_name(spec.name)
-    else:
-        source_pkg_dir = None
-
     dest_pkg_dir = repo.dirname_for_package_name(spec.name)
-    if source_pkg_dir:
-        fs.install_tree(source_pkg_dir, dest_pkg_dir)
-    else:
+    if not os.path.exists(dest_pkg_dir):
         spack.repo.dump_provenance(spec, dest_pkg_dir)
 
 def prepare_repository(context, remove=None):
