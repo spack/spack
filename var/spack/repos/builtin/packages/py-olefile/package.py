@@ -31,7 +31,7 @@ class PyOlefile(PythonPackage):
     homepage = "https://www.decalage.info/python/olefileio"
     url      = "https://pypi.io/packages/source/o/olefile/olefile-0.44.zip"
 
-    import_modules = ['OleFileIO_PL']
+    import_modules = ['olefile']
 
     version('0.44', 'fc625554e4e7f0c2ddcd00baa3c74ff5')
 
