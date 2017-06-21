@@ -33,7 +33,7 @@ class Andi(AutotoolsPackage):
     url      = "https://github.com/EvolBioInf/andi/archive/v0.10.tar.gz"
 
     version('0.10',    '3aaba7961798bb4aaa546baa44e469d8')
- 
+
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
