@@ -55,8 +55,16 @@ class Veclibfort(Package):
         if sys.platform != 'darwin':
             raise InstallError('vecLibFort can be installed on macOS only')
 
-        make('all')
-        make('PREFIX=%s' % prefix, 'install')
+        filter_file(r'^PREFIX=.*', '', 'Makefile')
+
+        make_args = []
+
+        if spec.satisfies('%gcc@6:'):
+            make_args += ['CFLAGS=-flax-vector-conversions']
+
+        make_args += ['PREFIX=%s' % prefix, 'install']
+
+        make(*make_args)
 
         # test
         fc = which('fc')
