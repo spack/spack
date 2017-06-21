@@ -50,7 +50,19 @@ class Dataspaces(AutotoolsPackage):
 
     variant('dimes', 
         default=False, 
-        description = 'enabled DIMES transport method')
+        description='enabled DIMES transport mode')
+
+    variant('infiniband',
+            default=False,
+            description='enabled infiniband transport fabric')
+
+    variant('ugni',
+            default=False,
+            description='enabled Cray uGNI transport fabric')
+
+    variant('tcp',
+            default=True,
+            description='enabled TCP socket transport')
 
     variant('piclibs',
         default=False,
@@ -70,4 +82,3 @@ class Dataspaces(AutotoolsPackage):
 	if self.spec.satisfies('+dimes'):
 	    args.extend(['--enable-dimes'])
 	return args
-	    
