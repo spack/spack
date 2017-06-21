@@ -92,14 +92,9 @@ class Mumps(Package):
         orderings = ['-Dpord']
 
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
-            join_lib = ' -l%s' % ('pt' if '+ptscotch' in self.spec else '')
             makefile_conf.extend([
                 "ISCOTCH = -I%s" % self.spec['scotch'].prefix.include,
-                "LSCOTCH = -L%s %s%s" % (self.spec['scotch'].prefix.lib,
-                                         join_lib,
-                                         join_lib.join(['esmumps',
-                                                        'scotch',
-                                                        'scotcherr']))
+                "LSCOTCH = {0}".format(self.spec['scotch'].libs.ld_flags)
             ])
 
             orderings.append('-Dscotch')
