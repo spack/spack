@@ -481,7 +481,7 @@ class TestSpecDag(object):
         dag.normalize_top()
 
         names = ['dtuse', 'dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
-                 'dtlink1', 'dtlink3', 'dtlink4']
+                 'dtlink1', 'dtlink3', 'dtbuild2', 'dtlink4']
 
         traversal = dag.traverse(deptype=('build', 'link'))
         assert [x.name for x in traversal] == names
@@ -491,7 +491,7 @@ class TestSpecDag(object):
         dag.normalize_top()
 
         names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
-                 'dtlink1', 'dtlink3', 'dtlink4']
+                 'dtlink1', 'dtlink3', 'dtbuild2', 'dtlink4']
 
         traversal = dag.traverse(deptype=('build', 'link'))
         assert [x.name for x in traversal] == names
@@ -501,8 +501,8 @@ class TestSpecDag(object):
         dag.normalize_top()
 
         names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2', 'dtrun2',
-                 'dtlink1', 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5',
-                 'dtrun3', 'dtbuild3']
+                 'dtlink1', 'dtlink3', 'dtbuild2', 'dtlink4', 'dtrun1',
+                 'dtlink5', 'dtrun3', 'dtbuild3']
 
         traversal = dag.traverse(deptype=spack.alldeps)
         assert [x.name for x in traversal] == names
