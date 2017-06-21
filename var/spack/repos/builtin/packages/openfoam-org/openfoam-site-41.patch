@@ -6,7 +6,7 @@ diff -uw OpenFOAM-v1612+.orig/etc/config.sh/settings OpenFOAM-v1612+/etc/config.
  
  # Location of the jobControl directory
 -export FOAM_JOB_DIR=$WM_PROJECT_INST_DIR/jobControl
-+export FOAM_JOB_DIR=$HOME/$WM_PROJECT/jobControl  #SPACK: non-central location
++export FOAM_JOB_DIR=$HOME/.OpenFOAM/jobControl  #SPACK: non-central location
  
  # wmake configuration
  export WM_DIR=$WM_PROJECT_DIR/wmake
@@ -15,7 +15,7 @@ diff -uw OpenFOAM-v1612+.orig/etc/config.sh/settings OpenFOAM-v1612+/etc/config.
  
  # Site-specific directory
 -siteDir="${WM_PROJECT_SITE:-$WM_PROJECT_INST_DIR/site}"
-+siteDir="${WM_PROJECT_SITE:-$WM_PROJECT/site}"  #SPACK: not in parent directory
++siteDir="${WM_PROJECT_SITE:-$WM_PROJECT_DIR/site}"  #SPACK: not in parent directory
  
  # Shared site executables/libraries
  # Similar naming convention as ~OpenFOAM expansion
@@ -27,7 +27,7 @@ diff -uw OpenFOAM-v1612+.orig/etc/config.csh/settings OpenFOAM-v1612+/etc/config
  
  # Location of the jobControl directory
 -setenv FOAM_JOB_DIR $WM_PROJECT_INST_DIR/jobControl
-+setenv FOAM_JOB_DIR=$HOME/$WM_PROJECT/jobControl  #SPACK: non-central location
++setenv FOAM_JOB_DIR=$HOME/.OpenFOAM/jobControl  #SPACK: non-central location
  
  # wmake configuration
  setenv WM_DIR $WM_PROJECT_DIR/wmake
