@@ -65,7 +65,8 @@ class Context(object):
         return new_specs
 
     def install(self):
-        for dag_hash, spec in self.specs_by_hash.items():
+        for concretized_hash in self.concretized_order:
+            spec = self.specs_by_hash[concretized_hash]
             spec.package.do_install(explicit=True)
 
     def list(self, stream, include_deps=False):
@@ -320,6 +321,11 @@ def context_concretize(args):
             dump_to_context_repo(dep, repo)
     write(context, repo)
 
+def context_install(args):
+    contexts = read(args.context)
+    prepare_repository(context)
+    context.install()
+
 def dump_to_context_repo(spec, repo):
     dest_pkg_dir = repo.dirname_for_package_name(spec.name)
     if not os.path.exists(dest_pkg_dir):
@@ -442,6 +448,11 @@ def setup_parser(subparser):
         help='Download all source files for all packages in a context')
     add_common_args(stage_parser)
 
+    install_parser = sp.add_parser(
+        'install',
+        help='Install all concretized specs in a context')
+    add_common_args(install_parser)
+
 def context(parser, args, **kwargs):
     action = {
         'create': context_create,
@@ -453,5 +464,6 @@ def context(parser, args, **kwargs):
         'relocate': context_relocate,
         'upgrade': context_upgrade_dependency,
         'stage': context_stage,
+        'install': context_install,
         }
     action[args.context_command](args)
