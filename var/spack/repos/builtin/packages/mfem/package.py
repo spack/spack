@@ -81,8 +81,6 @@ class Mfem(Package):
         description='Enable PETSc solvers, preconditioners, etc..')
     variant('sundials', default=False,
         description='Enable Sundials time integrators')
-    variant('mesquite', default=False,
-        description='Enable MESQUITE mesh quality features')
     variant('mpfr', default=False,
         description='Enable multi-precision floating point features')
     variant('lapack', default=False,
@@ -106,7 +104,6 @@ class Mfem(Package):
     depends_on('hypre@develop~internal-superlu', when='+petsc +hypre')
 
     depends_on('sundials@2.7:+hypre', when='+sundials')
-    depends_on('mesquite', when='+mesquite')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='@3.2: +superlu-dist')
     depends_on('petsc@develop', when='+petsc')
@@ -164,7 +161,6 @@ class Mfem(Package):
             'MFEM_USE_SUITESPARSE=%s' % yes_no['+suite-sparse' in spec],
             'MFEM_USE_SUNDIALS=%s' % yes_no['+sundials' in spec],
             'MFEM_USE_PETSC=%s' % yes_no['+petsc' in spec],
-            'MFEM_USE_MESQUITE=%s' % yes_no['+mesquite' in spec],
             'MFEM_USE_NETCDF=%s' % yes_no['+netcdf' in spec],
             'MFEM_USE_MPFR=%s' % yes_no['+mpfr' in spec],
             'MFEM_USE_OPENMP=%s' % yes_no['+openmp' in spec]]
@@ -242,12 +238,6 @@ class Mfem(Package):
                 'PETSC_OPT=%s' % petsc_opts,
                 'PETSC_LIB=-L%s -lpetsc %s' %
                 (spec['petsc'].prefix.lib, petsc_libs)]
-
-        if '+mesquite' in spec:
-            options += [
-                'MESQUITE_DIR=%s' % spec['mesquite'].prefix,
-                'MESQUITE_OPT=-I%s' % spec['mesquite'].prefix.include,
-                'MESQUITE_LIB=-L%s -lmesquite' % spec['mesquite'].prefix.lib]
 
         if '+netcdf' in spec:
             np = spec['netcdf'].prefix
