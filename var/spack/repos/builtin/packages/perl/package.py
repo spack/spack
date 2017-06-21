@@ -93,7 +93,20 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             '-Dloclibpth=' + self.spec['gdbm'].prefix.lib,
         ]
 
-        # Prepend default perl @INC path to allow package activation:
+	# Extensions are installed into their private tree via
+	# `INSTALL_BASE`/`--install_base` (see [1]) which results in a
+	# "predictable" installation tree that sadly does not match the
+	# Perl core's @INC structure.  This means that when activation
+	# merges the extension into the extendee[2], the directory tree
+	# containing the extensions is not on @INC and the extensions can
+	# not be found.
+	#
+	# This bit prepends @INC with the directory that is used when
+	# extensions are activated [3].
+	#
+	# [1] https://metacpan.org/pod/ExtUtils::MakeMaker#INSTALL_BASE
+	# [2] via the activate method in the PackageBase class
+	# [3] https://metacpan.org/pod/distribution/perl/INSTALL#APPLLIB_EXP
         config_args.append('-Accflags=-DAPPLLIB_EXP=\\"' + join_path(
                            self.spec.prefix, 'lib', 'perl5') + '\\"')
 
