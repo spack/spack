@@ -49,5 +49,3 @@ class PyTomopy(PythonPackage):
     depends_on('py-pywavelets', type=('build', 'run'))
     depends_on('py-pyfftw', type=('build', 'run'))
     depends_on('py-dxchange', type=('build', 'run'))
-    depends_on('py-numexpr', type=('build', 'run'))
-    depends_on('py-futures', type=('build', 'run'))

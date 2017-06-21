@@ -35,4 +35,4 @@ class PyOlefile(PythonPackage):
 
     version('0.44', 'fc625554e4e7f0c2ddcd00baa3c74ff5')
 
-    depends_on('python@2.6:', type='build')
+    depends_on('python@2.6:', type=('build', 'run'))
