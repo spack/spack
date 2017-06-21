@@ -34,9 +34,8 @@ class Albert(MakefilePackage):
 
     version('4.0a_opt4', '79e3d9623602f2ca5db7d84c81d4eb8c')
 
-    depends_on('readline', type='build')
+    depends_on('readline')
 
     def install(self, spec, prefix):
-        make()
         mkdirp(prefix.bin)
         install('albert', join_path(prefix.bin))
