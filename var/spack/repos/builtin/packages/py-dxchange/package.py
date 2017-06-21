@@ -47,3 +47,5 @@ class PyDxchange(PythonPackage):
     depends_on('py-edffile', type=('build', 'run'))
     depends_on('py-tifffile', type=('build', 'run'))
     depends_on('py-dxfile', type=('build', 'run'))
+    depends_on('py-olefile', type=('build', 'run'))
+    depends_on('py-astropy', type=('build', 'run'))
