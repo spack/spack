@@ -52,6 +52,8 @@ class Ipopt(Package):
     depends_on('coinhsl', when='+coinhsl')
     depends_on('metis@4.0:4.999', when='+metis')
 
+    patch('ipopt_ppc_build.patch', when='arch=ppc64le')
+
     def install(self, spec, prefix):
         # Dependency directories
         blas_dir = spec['blas'].prefix
