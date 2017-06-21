@@ -184,7 +184,7 @@ Done.
                "-L%s" % spec["hdf5"].prefix.lib, "-lhdf5")
             try:
                 check = Executable("./check")
-                output = check(return_output=True)
+                output = check(output=str)
             except:
                 output = ""
             success = output == expected

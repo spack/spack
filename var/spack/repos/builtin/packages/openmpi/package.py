@@ -182,6 +182,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
 
+    provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
@@ -191,6 +192,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('jdk', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
 
+    conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
@@ -311,12 +313,29 @@ class Openmpi(AutotoolsPackage):
                 config_args.append('--disable-mpi-thread-multiple')
 
         # CUDA support
+        # See https://www.open-mpi.org/faq/?category=buildcuda
         if spec.satisfies('@1.7:'):
             if '+cuda' in spec:
+                # OpenMPI dynamically loads libcuda.so, requires dlopen
+                config_args.append('--enable-dlopen')
+                # Searches for header files in DIR/include
                 config_args.append('--with-cuda={0}'.format(
                     spec['cuda'].prefix))
-                config_args.append('--with-cuda-libdir={0}'.format(
-                    spec['cuda'].libs.directories))
+                if spec.satisfies('@1.7:1.7.2'):
+                    # This option was removed from later versions
+                    config_args.append('--with-cuda-libdir={0}'.format(
+                        spec['cuda'].libs.directories[0]))
+                if spec.satisfies('@1.7.2'):
+                    # There was a bug in 1.7.2 when --enable-static is used
+                    config_args.append('--enable-mca-no-build=pml-bfo')
+                if spec.satisfies('%pgi^cuda@7.0:7.999'):
+                    # OpenMPI has problems with CUDA 7 and PGI
+                    config_args.append(
+                        '--with-wrapper-cflags=-D__LP64__ -ta:tesla')
+                    if spec.satisfies('%pgi@:15.8'):
+                        # With PGI 15.9 and later compilers, the
+                        # CFLAGS=-D__LP64__ is no longer needed.
+                        config_args.append('CFLAGS=-D__LP64__')
             else:
                 config_args.append('--without-cuda')
 

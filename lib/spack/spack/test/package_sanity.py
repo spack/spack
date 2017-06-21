@@ -49,16 +49,6 @@ def test_get_all_mock_packages():
     spack.repo.swap(db)
 
 
-def test_url_versions():
-    """Check URLs for regular packages, if they are explicitly defined."""
-    for pkg in spack.repo.all_packages():
-        for v, vattrs in pkg.versions.items():
-            if 'url' in vattrs:
-                # If there is a url for the version check it.
-                v_url = pkg.url_for_version(v)
-                assert vattrs['url'] == v_url
-
-
 def test_all_versions_are_lowercase():
     """Spack package names must be lowercase, and use `-` instead of `_`."""
     errors = []

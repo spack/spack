@@ -69,8 +69,10 @@ class Mumps(Package):
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
 
-    patch('spectrum-mpi-xl.patch', when='%xl^spectrum-mpi')
-    patch('spectrum-mpi-xl.patch', when='%xl_r^spectrum-mpi')
+    patch('mumps-5.0.2-spectrum-mpi-xl.patch', when='@5.0.2%xl^spectrum-mpi')
+    patch('mumps-5.0.2-spectrum-mpi-xl.patch', when='@5.0.2%xl_r^spectrum-mpi')
+    patch('mumps-5.1.1-spectrum-mpi-xl.patch', when='@5.1.1%xl^spectrum-mpi')
+    patch('mumps-5.1.1-spectrum-mpi-xl.patch', when='@5.1.1%xl_r^spectrum-mpi')
 
     # this function is not a patch function because in case scalapack
     # is needed it uses self.spec['scalapack'].fc_link set by the
@@ -90,14 +92,9 @@ class Mumps(Package):
         orderings = ['-Dpord']
 
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
-            join_lib = ' -l%s' % ('pt' if '+ptscotch' in self.spec else '')
             makefile_conf.extend([
                 "ISCOTCH = -I%s" % self.spec['scotch'].prefix.include,
-                "LSCOTCH = -L%s %s%s" % (self.spec['scotch'].prefix.lib,
-                                         join_lib,
-                                         join_lib.join(['esmumps',
-                                                        'scotch',
-                                                        'scotcherr']))
+                "LSCOTCH = {0}".format(self.spec['scotch'].libs.ld_flags)
             ])
 
             orderings.append('-Dscotch')
@@ -147,7 +144,7 @@ class Mumps(Package):
         else:
             if self.compiler.name == "xl" or self.compiler.name == "xl_r":
                 makefile_conf.extend(
-                    ['OPTF    = -O3',
+                    ['OPTF    = -O3 -qfixed',
                      'OPTL    = %s -O3' % fpic,
                      'OPTC    = %s -O3' % fpic])
             else:
