@@ -139,6 +139,9 @@ class Sundials(Package):
             make()
             make('install')
 
+            if (sys.platform == 'darwin'):
+                fix_darwin_install_name(prefix.lib)
+
         install('LICENSE', prefix)
 
         self.filter_compilers()

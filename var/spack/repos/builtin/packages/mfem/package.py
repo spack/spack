@@ -89,6 +89,10 @@ class Mfem(Package):
         description='Build debug instead of optimized version')
     variant('netcdf', default=False,
         description='Enable Cubit/Genesis reader')
+    variant('examples', default=False,
+        description='Build and install examples')
+    variant('minapps', default=False,
+        description='Build and install minapps')
 
     depends_on('blas', when='+lapack')
     depends_on('blas', when='+suite-sparse')
@@ -109,7 +113,7 @@ class Mfem(Package):
     depends_on('petsc@develop', when='+petsc')
 
     depends_on('mpfr', when='+mpfr')
-#    depends_on('cmake', when='^metis@5:', type='build')
+    depends_on('cmake', when='^metis@5:', type='build')
     depends_on('netcdf', when='@3.2: +netcdf')
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
@@ -262,15 +266,15 @@ class Mfem(Package):
         make('config', *options)
         make('all')
 
-        # Run a small test before installation
-        args = ['-m', join_path('data', 'star.mesh'), '--no-visualization']
-        if '+mpi' in spec:
-            Executable(join_path(spec['mpi'].prefix.bin,
-                                 'mpirun'))('-np',
-                                            '4',
-                                            join_path('examples', 'ex1p'),
-                                            *args)
-        else:
-            Executable(join_path('examples', 'ex1'))(*args)
+        if self.run_tests:
+            make('check')
 
         make('install')
+
+        if '+examples' in spec:
+            make('examples')
+            install_tree('examples', join_path(prefix, 'examples'))
+
+        if '+minapps' in spec:
+            make('miniapps')
+            install_tree('miniapps', join_path(prefix, 'miniapps'))
