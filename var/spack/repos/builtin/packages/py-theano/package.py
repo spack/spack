@@ -34,7 +34,7 @@ class PyTheano(PythonPackage):
 
     version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
 
-    variant('gpu', default=False, 
+    variant('gpu', default=False,
             description='Builds with support for GPUs via CUDA and cuDNN')
 
     depends_on('python@2.6:2.8,3.3:')
@@ -48,6 +48,7 @@ class PyTheano(PythonPackage):
 
     depends_on('cuda', when='+gpu')
     depends_on('libgpuarray', when='+gpu')
-    # test requirements
-    # depends_on('py-nose@1.3.0:', type=('build', 'run'))
-    # depends_on('py-nose-parameterized@0.5.0:', type=('build', 'run'))
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose@1.3.0:', type='test')
+    # depends_on('py-nose-parameterized@0.5.0:', type='test')
