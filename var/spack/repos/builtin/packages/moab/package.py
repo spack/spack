@@ -143,7 +143,7 @@ class Moab(AutotoolsPackage):
             options.append('--with-cgm=%s' % spec['cgm'].prefix)
             if '+irel' in spec:
                 options.append('--enable-irel')
-            else: 
+            else:
                 options.append('--disable-irel')
         else:
             options.append('--without-cgm')
