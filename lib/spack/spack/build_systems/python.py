@@ -201,11 +201,14 @@ class PythonPackage(PackageBase):
         # Spack compiler wrappers out after installation, so Python builds
         # its modules with the regular compilers. I haven't yet found a way
         # to override the compiler, so we explicitly set --rpath instead.
-        args.extend([
-            '--include-dirs={0}'.format(':'.join(include_dirs)),
-            '--library-dirs={0}'.format(':'.join(library_dirs)),
-            '--rpath={0}'.format(':'.join(library_dirs)),
-        ])
+        if include_dirs:
+            args.append('--include-dirs={0}'.format(':'.join(include_dirs)))
+
+        if library_dirs:
+            args.extend([
+                '--library-dirs={0}'.format(':'.join(library_dirs)),
+                '--rpath={0}'.format(':'.join(library_dirs)),
+            ])
 
         self.setup_py('build_ext', *args)
 
