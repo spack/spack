@@ -22,8 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import glob
+import os
+
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Converge(Package):
@@ -45,24 +47,54 @@ class Converge(Package):
     # https://download.convergecfd.com/wp-login.php?action=register
 
     version('2.4.10', '53f5bd4bfb39005bebae46b8d6ee3ce6')
-    version('2.3.16', '8b80f1e73a63181c427c7732ad279986')
+    version('2.3.23', '2913c3e440f82db069051f8822115e5e')
+    version('2.2.0',  'd949cfe338c83ee736ca0be8f77df6bf',
+            url="https://download.convergecfd.com/download/CONVERGE_2.2/Full_Solver_Packages/converge_install_2.2.0_042916.tar.gz")
     version('2.1.0',  '327a917d46aa3bc8dee9511375ce112c',
             url="https://download.convergecfd.com/download/CONVERGE_2.1/Full_Solver_Packages/converge_install_2.1.0_111615.tar.gz")
+    version('2.0.0',  '06f017521c3abc1a922b136e83d606dd',
+            url="https://download.convergecfd.com/download/CONVERGE_2.0/Full_Solver_Packages/converge_install_2.0.0_090214.tar.gz")
 
     variant('mpi', default=True, description='Build with MPI support')
 
-    # The CONVERGE Getting Started Guide recommends:
+    # The following MPI libraries are compatible with CONVERGE:
     #
-    # +--------------+--------+---------+---------+
-    # | MPI Packages |  v2.2  |  v2.3   |  v2.4   |
-    # +--------------+--------+---------+---------+
-    # | MPICH        | 1.2.1  | 3.1.4   |         |
-    # | HP-MPI       | 2.0.3+ | 2.0.3+  |         |
-    # | Platform MPI |        | 9.1.2   | 9.1.2   |
-    # | Open MPI     | 1.6+   | 1.6+    | 1.10.1+ |
-    # | Intel MPI    |        | 17.0.98 | 17.0.98 |
-    # +--------------+--------+---------+---------+
+    # +--------------+---------+---------+---------+---------+---------+
+    # | MPI Packages |  v2.0   |  v2.1   |  v2.2   |  v2.3   |  v2.4   |
+    # +--------------+---------+---------+---------+---------+---------+
+    # | HP-MPI       | 2.0.3+  | 2.0.3+  | 2.0.3+  | 2.0.3+  |         |
+    # | Intel MPI    |         |         |         |         | 17.0.98 |
+    # | MPICH        | ?.?.?   | ?.?.?   | 1.2.1   | 3.1.4   | ?.?.?   |
+    # | MVAPICH2     | ?.?.?   |         |         |         |         |
+    # | Open MPI     | 1.0-1.4 | 1.0-1.4 | 1.5-1.8 | 1.5-1.8 | 1.10    |
+    # | Platform MPI |         |         | 9.1.2   | 9.1.2   | 9.1.2   |
+    # +--------------+---------+---------+---------+---------+---------+
+    #
+    # NOTE: HP-MPI was bought out by Platform MPI
+    #
+    # These version requirements are more strict than for most packages.
+    # Since the tarball comes with pre-compiled executables,
+    # the version of libmpi.so must match exactly, or else
+    # you will end up with missing libraries and symbols.
+
     depends_on('mpi', when='+mpi')
+
+    # FIXME: Concretization is currently broken, so this causes:
+    #     $ spack spec converge
+    # to crash. You must explicitly state what MPI version you want:
+    #     $ spack spec converge@2.4.10 +mpi ^openmpi@:1.10
+    #
+    # TODO: Add version ranges for other MPI libraries
+    depends_on('openmpi@1.10.0:1.10.999', when='@2.4.0:2.4.999+mpi^openmpi')
+    depends_on('openmpi@1.5:1.8',         when='@2.2:2.3+mpi^openmpi')
+    depends_on('openmpi@:1.4',            when='@:2.1+mpi^openmpi')
+
+    # TODO: Add packages for hp-mpi and platform-mpi
+    # conflicts('^hp-mpi', when='@2.4:')
+    conflicts('^intel-mpi', when='@:2.3')
+    conflicts('^intel-parallel-studio+mpi', when='@:2.3')
+    # conflicts('^platform-mpi', when='@:2.1')
+    conflicts('^spectrum-mpi')
 
     # Licensing
     license_required = True
@@ -71,9 +103,138 @@ class Converge(Package):
     license_vars = ['RLM_LICENSE']
     license_url = 'http://www.reprisesoftware.com/RLM_License_Administration.pdf'
 
+    def url_for_version(self, version):
+        url = "https://download.convergecfd.com/download/CONVERGE_{0}/Full_Solver_Packages/converge_install_{1}.tar.gz"
+        return url.format(version.up_to(2), version)
+
     def install(self, spec, prefix):
-        copy_tree('.', prefix)
+        # 2.0.0
+        # converge                      -> converge-2.0.0-hpmpi-090214
+        # converge-2.0.0-hpmpi-090214   -> libmpi.so.1, libmpio.so.1
+        # converge-2.0.0-mpich2-090214  -> libmpich.so.1.2
+        # converge-2.0.0-mvapich-090214 -> libibumad.so.1
+        # converge-2.0.0-openmpi-090214 -> libmpi.so.0
+        # converge-2.0.0-serial-090214
+        # make_surface
+        # post_convert
+
+        # 2.1.0
+        # converge                      -> converge-2.1.0-hpmpi-111615
+        # converge-2.1.0-hpmpi-111615   -> libmpi.so.1, libmpio.so.1
+        # converge-2.1.0-mpich2-111615  -> libmpich.so.1.2
+        # converge-2.1.0-openmpi-111615 -> libmpi.so.0
+        # converge-2.1.0-serial-111615
+        # make_surface
+        # post_convert
+
+        # 2.2.0
+        # converge                      -> converge-2.2.0-hpmpi-042916
+        # converge-2.2.0-hpmpi-042916   -> libmpi.so.1, libmpio.so.1
+        # converge-2.2.0-mpich2-042916
+        # converge-2.2.0-openmpi-042916 -> libmpi.so.1
+        # converge-2.2.0-pmpi-042916    -> libmpi.so.1, libmpio.so.1
+        # converge-2.2.0-serial-042916
+        # make_surface
+        # post_convert
+
+        # 2.3.23
+        # converge-2.3.23-hpmpi-linux-64    -> libmpi.so.1, libmpio.so.1
+        # converge-2.3.23-mpich2-linux-64   -> libmpi.so.12
+        # converge-2.3.23-openmpi-linux-64  -> libmpi.so.1
+        # converge-2.3.23-pmpi-linux-64     -> libmpi.so.1, libmpio.so.1
+        # converge-2.3.23-serial-linux-64
+        # make_surface_64
+        # post_convert_mpich_64             -> libmpi.so.12
+        # post_convert_ompi_64              -> libmpi.so.1
+        # post_convert_pmpi_64              -> libmpi.so.1, libmpio.so.1
+        # post_convert_serial_64
+
+        # 2.4.10
+        # converge-2.4.10-intel     -> libmpi.so.12, libmpifort.so.12
+        # converge-2.4.10-mpich     -> libmpi.so.12
+        # converge-2.4.10-ompi      -> libmpi.so.12
+        # converge-2.4.10-pmpi      -> libmpi.so.1, libmpio.so.1
+        # converge-2.4.10-serial
+        # make_surface_64
+        # post_convert_mpich_64     -> libmpi.so.12
+        # post_convert_ompi_64      -> libmpi.so.1
+        # post_convert_pmpi_64      -> libmpi.so.1
+        # post_convert_serial_64
+
+        # The CONVERGE tarball comes with binaries for several MPI libraries.
+        # Only install the binary that matches the MPI we are building with.
+        with working_dir('l_x86_64/bin'):
+            if '~mpi' in spec:
+                converge = glob.glob('converge-*-serial*')
+                post_convert = glob.glob('post_convert_serial*')
+            elif 'hp-mpi' in spec:
+                converge = glob.glob('converge-*-hpmpi*')
+                # No HP-MPI version of post_convert
+                post_convert = glob.glob('post_convert_serial*')
+            elif 'intel-mpi' in spec or 'intel-parallel-studio+mpi' in spec:
+                converge = glob.glob('converge-*-intel*')
+                # No Intel MPI version of post_convert
+                post_convert = glob.glob('post_convert_serial*')
+            elif 'mpich' in spec:
+                converge = glob.glob('converge-*-mpich*')
+                post_convert = glob.glob('post_convert_mpich*')
+            elif 'mvapich2' in spec:
+                converge = glob.glob('converge-*-mvapich*')
+                # MVAPICH2 hasn't been supported since CONVERGE
+                # came with a single serial post_convert
+                post_convert = glob.glob('post_convert')
+            elif 'openmpi' in spec:
+                converge = glob.glob('converge-*-o*mpi*')
+                post_convert = glob.glob('post_convert_o*mpi*')
+            elif 'platform-mpi' in spec:
+                converge = glob.glob('converge-*-pmpi*')
+                post_convert = glob.glob('post_convert_pmpi*')
+            else:
+                raise InstallError('Unsupported MPI provider')
+
+            make_surface = glob.glob('make_surface*')
+
+            # Old versions of CONVERGE come with a single serial post_convert
+            if not post_convert:
+                post_convert = glob.glob('post_convert')
+
+            # Make sure glob actually found something
+            if not converge:
+                raise InstallError('converge executable not found')
+            if not post_convert:
+                raise InstallError('post_convert executable not found')
+            if not make_surface:
+                raise InstallError('make_surface executable not found')
+
+            # Make sure glob didn't find multiple matches
+            if len(converge) > 1:
+                raise InstallError('multiple converge executables found')
+            if len(post_convert) > 1:
+                raise InstallError('multiple post_convert executables found')
+            if len(make_surface) > 1:
+                raise InstallError('multiple make_surface executables found')
+
+            converge = converge[0]
+            post_convert = post_convert[0]
+            make_surface = make_surface[0]
+
+            mkdir(prefix.bin)
+
+            # Install the executables
+            install(converge,     join_path(prefix.bin, converge))
+            install(post_convert, join_path(prefix.bin, post_convert))
+            install(make_surface, join_path(prefix.bin, make_surface))
+
+        with working_dir(prefix.bin):
+            # Create generic symlinks to all executables
+            if not os.path.exists('converge'):
+                os.symlink(converge, 'converge')
+            if not os.path.exists('post_convert'):
+                os.symlink(post_convert, 'post_convert')
+            if not os.path.exists('make_surface'):
+                os.symlink(make_surface, 'make_surface')
 
     def setup_environment(self, spack_env, run_env):
+        # CONVERGE searches for a valid license file in:
+        #     $CONVERGE_ROOT/license/license.lic
         run_env.set('CONVERGE_ROOT', self.prefix)
-        run_env.prepend_path('PATH', join_path(self.prefix, 'l_x86_64', 'bin'))
