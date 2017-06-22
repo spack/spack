@@ -2055,7 +2055,7 @@ class Spec(object):
         Return a normalized copy of this spec without modifying this spec.
         """
         clone = self.copy()
-        clone.normalize()
+        clone.normalize_top()
         return clone
 
     def validate_or_raise(self):
