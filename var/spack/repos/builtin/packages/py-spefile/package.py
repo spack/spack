@@ -32,10 +32,12 @@ class PySpefile(PythonPackage):
     homepage = "https://github.com/conda-forge/spefile-feedstock"
     url      = "https://github.com/conda-forge/spefile-feedstock.git"
 
+    import_modules = ['spefile']
+
     version('1.6', git='https://github.com/conda-forge/spefile-feedstock.git',
             commit='24394e066da8dee5e7608f556ca0203c9db217f9')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type='run')
+    depends_on('py-numpy', type=('build', 'run'))
 
     build_directory = 'recipe/src'
