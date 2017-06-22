@@ -1528,57 +1528,37 @@ class Spec(object):
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
-    def _concretize_helper(self, dep_contexts=None):
+    def _concretize_helper(self, visited=None):
         """Recursive helper function for concretize().
            This concretizes everything bottom-up.  As things are
            concretized, they're added to the presets, and ancestors
            will prefer the settings of their children.
         """
-        changed = False
+        if visited is None:
+            visited = set()
 
-        if not dep_contexts:
-            dep_contexts = [{}]
-
-        if any((self.name in x) for x in dep_contexts):
+        if self in visited:
             return False
 
-        build_only = set()
-        pkg = self.package
-        for dep_name in pkg.dependencies:
-            deptypes = pkg.dependency_types[dep_name]
-            if set(deptypes) == set(['build']):
-                build_only.add(dep_name)
-        if build_only:
-            dep_contexts = list(dep_contexts)
-            build_context = {}
-            dep_contexts.append(build_context)
+        visited.add(self)
+        changed = False
 
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self._dependencies.keys()):
-            if name in build_only:
-                child_contexts = [build_context]
-            else:
-                child_contexts = dep_contexts
-
             changed |= self._dependencies[
-                name].spec._concretize_helper(child_contexts)
+                name].spec._concretize_helper(visited)
 
-        if any((self.name in x) for x in dep_contexts):
-            raise ValueError("Circular dependency for " + self.name)
-        else:
-            # Concretize virtual dependencies last.  Because they're added
-            # to presets below, their constraints will all be merged, but we'll
-            # still need to select a concrete package later.
-            if not self.virtual:
-                updated = (spack.concretizer.concretize_architecture(self),
-                    spack.concretizer.concretize_compiler(self),
-                    spack.concretizer.concretize_compiler_flags(
-                        self),  # has to be concretized after compiler
-                    spack.concretizer.concretize_version(self),
-                    spack.concretizer.concretize_variants(self))
-                changed |= any(updated)
-            for dep_context in dep_contexts:
-                dep_context[self.name] = self
+        # Concretize virtual dependencies last.  Because they're added
+        # to presets below, their constraints will all be merged, but we'll
+        # still need to select a concrete package later.
+        if not self.virtual:
+            updated = (spack.concretizer.concretize_architecture(self),
+                spack.concretizer.concretize_compiler(self),
+                spack.concretizer.concretize_compiler_flags(
+                    self),  # has to be concretized after compiler
+                spack.concretizer.concretize_version(self),
+                spack.concretizer.concretize_variants(self))
+            changed |= any(updated)
 
         return changed
 
