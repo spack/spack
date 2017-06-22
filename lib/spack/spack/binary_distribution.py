@@ -251,10 +251,21 @@ def relocate_package(spec):
         patchelf = spack.repo.get(patchelf_spec)
         patchelf_executable = os.path.join(patchelf.prefix, "bin", "patchelf")
 
+    gcc_path=None
+    cspec = spack.spec.CompilerSpec(spec.compiler)
+    compilers = spack.compilers.compilers_for_spec(cspec)
+
+    if not compilers:
+        tty.error("No compilers match spec %s" % cspec)
+    else:
+        for c in compilers:
+            gcc_path=getattr(c, 'cc', None)
+            tty.msg(gcc_path)
+
     # now do the actual relocation
     for filename in buildinfo['relocate_binaries']:
         path_name = os.path.join(spec.prefix, filename)
-        gcc_prefix=re.sub('/bin/.*$','',spec.compiler.cc)
+        gcc_prefix=re.sub('/bin/.*$','',gcc_path)
         spack.relocate.relocate_binary(path_name,
                                        old_path,
                                        new_path,
