@@ -167,6 +167,7 @@ class TestSpecDag(object):
         traversal = dag.traverse(cover='paths', depth=True, order='post')
         assert [(x, y.name) for x, y in traversal] == pairs
 
+    @pytest.mark.skip(reason="TODO: create an equivalent test")
     def test_conflicting_spec_constraints(self):
         mpileaks = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf ^libdwarf')
 
@@ -259,6 +260,7 @@ class TestSpecDag(object):
         with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
             spec.normalize()
 
+    @pytest.mark.skip(reason="TODO: need to reimplement this")
     def test_invalid_dep(self):
         spec = Spec('libelf ^mpich')
         with pytest.raises(spack.spec.InvalidDependencyError):
