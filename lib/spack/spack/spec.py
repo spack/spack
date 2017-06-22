@@ -1534,9 +1534,6 @@ class Spec(object):
            concretized, they're added to the presets, and ancestors
            will prefer the settings of their children.
         """
-        # TODO: If you have already ran concretize_helper on a package, dont do
-        # it a second time
-
         changed = False
 
         if not dep_contexts:
