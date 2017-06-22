@@ -1884,8 +1884,6 @@ class Spec(object):
             for name, vspec in items:
                 if index.providers_for(vspec):
                     vspec._replace_with(dep)
-                    for dep_context in dep_contexts:
-                        del dep_context[vspec.name]
                     changed = True
                 else:
                     required = index.providers_for(vspec.name)
