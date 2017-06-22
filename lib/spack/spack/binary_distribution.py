@@ -138,7 +138,7 @@ def build_tarball(spec, outdir, force=False, key=None):
     # and preferences
     spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
     specfile_name = tarball_name(spec, '.spec.yaml')
-    specfile_path = join_path(outdir, specfile_name)
+    specfile_path = join_path(outdir,"build_cache",specfile_name)
     if os.path.exists(specfile_path):
         if force:
             os.remove(specfile_path)
