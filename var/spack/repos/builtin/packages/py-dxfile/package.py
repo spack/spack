@@ -32,7 +32,9 @@ class PyDxfile(PythonPackage):
     homepage = "https://github.com/data-exchange/dxfile"
     url      = "https://github.com/data-exchange/dxfile/archive/v0.4.tar.gz"
 
+    import_modules = ['dxfile']
+
     version('0.4', '0402cd38aefdfd5ce92feb43dda18947')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-h5py', type='run')
+    depends_on('py-h5py', type=('build', 'run'))

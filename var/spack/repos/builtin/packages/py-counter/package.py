@@ -29,6 +29,8 @@ class PyCounter(PythonPackage):
     """Counter package defines the "counter.Counter" class similar to
        bags or multisets in other languages."""
 
+    import_modules = ['counter']
+
     homepage = "https://github.com/KelSolaar/Counter"
     url      = "https://pypi.io/packages/source/C/Counter/Counter-1.0.0.tar.gz"
 
