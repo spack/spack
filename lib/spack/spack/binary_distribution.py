@@ -1,4 +1,5 @@
 # "Benedikt Hegner (CERN)"
+# "Patrick Gartung (FNAL)"
 
 import os
 import platform
@@ -8,7 +9,7 @@ import shutil
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, join_path
-
+from spack.util.web import spider, find_versions_of_archive
 import spack.cmd
 import spack
 from spack.stage import Stage
@@ -41,11 +42,11 @@ def buildinfo_file_name(spec):
     return os.path.join(spec.prefix, ".spack", "binary_distribution")
 
 
-def read_buildinfo_file(package):
+def read_buildinfo_file(spec):
     """
     Read buildinfo file
     """
-    filename = buildinfo_file_name(package)
+    filename = buildinfo_file_name(spec)
     with open(filename, 'r') as inputfile:
         content = inputfile.read()
         buildinfo = yaml.load(content)
@@ -68,8 +69,7 @@ def write_buildinfo_file(spec):
             if spack.relocate.needs_binary_relocation(filetype):
                 rel_path_name = os.path.relpath(path_name, spec.prefix)
                 binary_to_relocate.append(rel_path_name)
-            elif spack.relocate.needs_text_relocation(path_name, spec.prefix,
-                                                      filetype):
+            elif spack.relocate.needs_text_relocation(filetype):
                 rel_path_name = os.path.relpath(path_name, spec.prefix)
                 text_to_relocate.append(rel_path_name)
 
@@ -88,9 +88,9 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>/
     """
-    return "%s/%s/%s" % (spack.architecture.sys_type(),
+    return "%s/%s/%s-%s" % (spack.architecture.sys_type(),
                          str(spec.compiler).replace("@", "-"),
-                         spec.name)
+                         spec.name,spec.version)
 
 
 def tarball_name(spec, ext):
@@ -98,7 +98,8 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    return "%s-%s-%s-%s%s" % (spack.architecture.sys_type(),
+    return "%s-%s-%s-%s-%s%s" % (spack.architecture.sys_type(),
+                              str(spec.compiler).replace("@", "-"),
                               spec.name,
                               spec.version,
                               spec.dag_hash(),
@@ -120,10 +121,10 @@ def build_tarball(spec, outdir, force=False, key=None):
     used at the mirror (following <tarball_directory_name>).
     """
     tarfile_name = tarball_name(spec, '.tar.gz')
-    tarfile_dir = join_path(outdir, tarball_directory_name(spec))
+    tarfile_dir = join_path(outdir,"build_cache", tarball_directory_name(spec))
     tarfile_path = join_path(tarfile_dir, tarfile_name)
     mkdirp(tarfile_dir)
-    spackfile_path = os.path.join(outdir, tarball_path_name(spec, '.spack'))
+    spackfile_path = os.path.join(outdir, "build_cache", tarball_path_name(spec, '.spack'))
     if os.path.exists(spackfile_path):
         if force:
             os.remove(spackfile_path)
@@ -137,7 +138,7 @@ def build_tarball(spec, outdir, force=False, key=None):
     # and preferences
     spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
     specfile_name = tarball_name(spec, '.spec.yaml')
-    specfile_path = join_path(tarfile_dir, specfile_name)
+    specfile_path = join_path(outdir, specfile_name)
     if os.path.exists(specfile_path):
         if force:
             os.remove(specfile_path)
@@ -177,7 +178,7 @@ def build_tarball(spec, outdir, force=False, key=None):
     os.remove(path2)
 
 
-def download_tarball(package):
+def download_tarball(spec):
     """
     Download binary tarball for given package into stage area
     Return True if successful
@@ -186,56 +187,55 @@ def download_tarball(package):
     if len(mirrors) == 0:
         tty.die("Please add a spack mirror to allow " +
                 "download of pre-compiled packages.")
-    tarball = tarball_path_name(package.spec, '.spack')
+    tarball = tarball_path_name(spec, '.spack')
     for key in mirrors:
-        url = mirrors[key] + "/" + tarball
+        url = mirrors[key] + "/build_cache/" + tarball
         # print url
         # stage the tarball into standard place
-        stage = Stage(url, name=package.stage.path)
+        stage=Stage(url, name="build_cache", keep=True)
         try:
             stage.fetch()
-            return True
+            return stage.save_filename
         except fs.FetchError:
             next
-    return False
+    return None
 
 
-def extract_tarball(package):
+def extract_tarball(spec,filename):
     """
     extract binary tarball for given package into install area
     """
-    tarball = tarball_name(package.spec, '.spack')
-    local_tarball = package.stage.path + "/" + tarball
-    mkdirp(package.prefix)
-    tarfile_name = tarball_name(package.spec, '.tar.gz')
-    tarfile_path = os.path.join(package.stage.path, tarfile_name)
-    specfile_name = tarball_name(package.spec, '.tar.gz')
-    specfile_path = os.path.join(package.stage.path, tarfile_name)
-    with closing(tarfile.open(local_tarball, 'r')) as tar:
-        tar.extract(specfile_name, package.stage.path)
-        tar.extract(specfile_name + '.asc', package.stage.path)
-
+    mkdirp(spec.prefix)
+    stagepath=os.path.dirname(filename)
+    tarfile_name = tarball_name(spec, '.tar.gz')
+    tarfile_path = os.path.join(stagepath, tarfile_name)
+    specfile_name = tarball_name(spec, '.spec.yaml')
+    specfile_path = os.path.join(stagepath, tarfile_name)
+    with closing(tarfile.open(filename, 'r')) as tar:
+        tar.extract(specfile_name, stagepath)
+        tar.extract(specfile_name + '.asc', stagepath)
+    
         # spack gpg verify os.path.join(package.prefix, 'spec.yaml')
-
-        tar.extract(tarfile_name, package.stage.path)
-        tar.extract(tarfile_name + '.asc', package.stage.path)
-
+    
+        tar.extract(tarfile_name, stagepath)
+        tar.extract(tarfile_name + '.asc', stagepath)
+    
         # spack gpg verify tarfile_path
-
+    
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=os.path.dirname(package.prefix))
+        tar.extractall(path=os.path.dirname(spec.prefix))
+    
+    #os.remove(tarfile_path)
+    #os.remove(tarfile_path + '.asc')
+    #os.remove(specfile_path)
+    #os.remove(specfile_path + '.asc')
 
-    os.remove(tarfile_path)
-    os.remove(tarfile_path + '.asc')
-    os.remove(specfile_path)
-    os.remove(specfile_path + '.asc')
 
-
-def relocate_package(package):
+def relocate_package(spec):
     """
     Relocate the given package
     """
-    buildinfo = read_buildinfo_file(package)
+    buildinfo = read_buildinfo_file(spec)
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
     if old_path == new_path:
@@ -253,8 +253,8 @@ def relocate_package(package):
 
     # now do the actual relocation
     for filename in buildinfo['relocate_binaries']:
-        path_name = os.path.join(package.prefix, filename)
-        gcc_prefix=re.sub('/bin/.*$','',package.compiler.cc)
+        path_name = os.path.join(spec.prefix, filename)
+        gcc_prefix=re.sub('/bin/.*$','',spec.compiler.cc)
         spack.relocate.relocate_binary(path_name,
                                        old_path,
                                        new_path,
@@ -262,5 +262,34 @@ def relocate_package(package):
                                        gcc_prefix)
 
     for filename in buildinfo['relocate_textfiles']:
-        path_name = os.path.join(package.prefix, filename)
+        path_name = os.path.join(spec.prefix, filename)
         spack.relocate.relocate_text(path_name, old_path, new_path)
+
+def get_specs():
+    """
+    Get spec.yaml's for build caches available on mirror
+    """
+    mirrors = spack.config.get_config('mirrors')
+    if len(mirrors) == 0:
+        tty.die("Please add a spack mirror to allow " +
+                "download of build caches.")
+    path=str(spack.architecture.sys_type())
+    specs = set()
+    from collections import defaultdict
+    durls = defaultdict(list)
+    for key in mirrors:
+        url = mirrors[key]
+        tty.msg("Finding buildcaches on %s" % url)
+        p, links = spider(url+"/build_cache")
+        for link in links:
+            if re.search("spec.yaml",link) and re.search(path,link) :
+                with Stage(link,name="build_cache",keep=True) as stage:
+                    try:
+                        stage.fetch()
+                    except fs.FetchError:
+                        next
+                    with open(stage.save_filename,'r') as f:
+                        spec = spack.spec.Spec.from_yaml(f)
+                        specs.add(spec)
+                        durls[spec].append(link)
+    return specs,durls
