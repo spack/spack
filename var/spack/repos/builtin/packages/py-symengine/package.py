@@ -34,8 +34,9 @@ class PySymengine(PythonPackage):
     version('0.2.0', 'e1d114fa12be4c8c7e9f24007e07718c')
     version('develop', git='https://github.com/symengine/symengine.py.git')
 
+    extends('python@2.7:2.8,3.3:')
+
     # Build dependencies
-    depends_on('python@2.7:2.8,3.3:')
     depends_on('py-setuptools',     type='build')
     depends_on('py-cython@0.19.1:', type='build')
     depends_on('cmake@2.8.7:',      type='build')

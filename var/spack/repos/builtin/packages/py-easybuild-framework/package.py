@@ -33,7 +33,7 @@ class PyEasybuildFramework(PythonPackage):
 
     version('3.1.2', '283bc5f6bdcb90016b32986d52fd04a8')
 
-    depends_on('python@2.6:2.8', type='run')
+    extends('python@2.6:2.8', type='run')
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-vsc-base@2.5.4:', when='@2.9:', type='run')
     depends_on('py-vsc-install', type='run')  # only required for tests (python -O -m test.framework.suite)

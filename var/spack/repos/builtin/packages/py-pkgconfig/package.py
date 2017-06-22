@@ -33,9 +33,9 @@ class PyPkgconfig(PythonPackage):
 
     version('1.2.2', '81a8f6ef3371831d081e03db39e09683')
 
-    depends_on('python@2.6:')
-    depends_on('py-setuptools', type='build')
+    extends('python@2.6:')
 
+    depends_on('py-setuptools', type='build')
     depends_on('pkg-config', type=('build', 'run'))
 
     # TODO: Add a 'test' deptype

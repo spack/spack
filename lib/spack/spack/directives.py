@@ -25,25 +25,24 @@
 """This package contains directives that can be used within a package.
 
 Directives are functions that can be called inside a package
-definition to modify the package, for example:
+definition to modify the package, for example::
 
-    class OpenMpi(Package):
-        depends_on("hwloc")
-        provides("mpi")
-        ...
+    class OpenMpi(AutotoolsPackage):
+        depends_on('hwloc')
+        provides('mpi')
 
 ``provides`` and ``depends_on`` are spack directives.
 
 The available directives are:
 
-  * ``version``
-  * ``depends_on``
-  * ``provides``
-  * ``extends``
-  * ``patch``
-  * ``variant``
-  * ``resource``
-
+* ``version``
+* ``conflicts``
+* ``depends_on``
+* ``extends``
+* ``provides``
+* ``patch``
+* ``variant``
+* ``resource``
 """
 
 import collections
@@ -294,10 +293,20 @@ def conflicts(conflict_spec, when=None):
 
 @directive(('dependencies', 'dependency_types'))
 def depends_on(spec, when=None, type=None):
-    """Creates a dict of deps with specs defining when they apply.
+    """Declare dependencies of a package.
+
+    Creates a dict of deps with specs defining when they apply.
     This directive is to be used inside a Package definition to declare
     that the package requires other packages to be built first.
-    @see The section "Dependency specs" in the Spack Packaging Guide."""
+    See section "Dependency specs" in the Spack Packaging Guide.
+
+    Parameters:
+        spec (str): A spec describing the dependency
+        when (str or bool): An optional descriptor describing when the
+            dependency is required
+        type (str or list): The dependency type. One or more of:
+            ``('build', 'link', 'run')``
+    """
     def _execute(pkg):
         _depends_on(pkg, spec, when=when, type=type)
     return _execute
@@ -305,7 +314,8 @@ def depends_on(spec, when=None, type=None):
 
 @directive(('extendees', 'dependencies', 'dependency_types'))
 def extends(spec, **kwargs):
-    """Same as depends_on, but dependency is symlinked into parent prefix.
+    """Same as ``depends_on``, but allows extendee to be symlinked
+    into parent prefix.
 
     This is for Python and other language modules where the module
     needs to be installed into the prefix of the Python installation.
@@ -313,19 +323,26 @@ def extends(spec, **kwargs):
     but allowing ONE module version to be symlinked into a parent
     Python install at a time.
 
-    keyword arguments can be passed to extends() so that extension
-    packages can pass parameters to the extendee's extension
-    mechanism.
+    Parameters:
+        spec (str): A spec describing the dependency
 
+    Keyword Arguments:
+        when (str or bool): An optional descriptor describing when the
+            dependency is required. By default, the dependency is always
+            required.
+        type (str or list): The dependency type. One or more of:
+            ``('build', 'link', 'run')``. By default, ``extends`` implies
+            ``type=('build', 'run')``
     """
     def _execute(pkg):
-        # if pkg.extendees:
-        #     directive = 'extends'
-        #     msg = 'Packages can extend at most one other package.'
-        #     raise DirectiveError(directive, msg)
+        # By default, dependency is always required
+        when = kwargs.get('when', True)
 
-        when = kwargs.pop('when', pkg.name)
-        _depends_on(pkg, spec, when=when)
+        # By default, deptype is build/run. This is the case for almost
+        # all non-compiled languages like Python, Perl, and R
+        type = kwargs.get('type', ('build', 'run'))
+
+        _depends_on(pkg, spec, when=when, type=type)
         pkg.extendees[spec] = (Spec(spec), kwargs)
     return _execute
 
@@ -427,14 +444,13 @@ def resource(**kwargs):
     staged in their own folder inside spack stage area, and then moved into
     the stage area of the package that needs them.
 
-    List of recognized keywords:
-
-    * 'when' : (optional) represents the condition upon which the resource is
-      needed
-    * 'destination' : (optional) path where to move the resource. This path
-      must be relative to the main package stage area.
-    * 'placement' : (optional) gives the possibility to fine tune how the
-      resource is moved into the main package stage area.
+    Keyword Arguments:
+        when: (optional) represents the condition upon which the resource is
+            needed
+        destination: (optional) path where to move the resource. This path
+            must be relative to the main package stage area.
+        placement: (optional) gives the possibility to fine tune how the
+            resource is moved into the main package stage area.
     """
     def _execute(pkg):
         when = kwargs.get('when', pkg.name)

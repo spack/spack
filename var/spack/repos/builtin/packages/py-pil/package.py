@@ -39,4 +39,4 @@ class PyPil(PythonPackage):
 
     # py-pil currently only works with Python2.
     # If you are using Python 3, try using py-pillow instead.
-    depends_on('python@1.5.2:2.8')
+    extends('python@1.5.2:2.8')

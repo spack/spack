@@ -36,5 +36,6 @@ class PyXopen(PythonPackage):
 
     version('0.1.1', '4e0e955546ee6bee4ea736b54623a671')
 
+    extends('python@2.6:')
+
     depends_on('py-setuptools', type='build')
-    depends_on('python@2.6:', type=('build', 'run'))

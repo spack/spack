@@ -54,7 +54,8 @@ class PyScipy(PythonPackage):
     version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
-    depends_on('python@2.6:2.8,3.2:')
+    extends('python@2.6:2.8,3.2:')
+
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.7.1:+blas+lapack', type=('build', 'run'))
 

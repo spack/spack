@@ -46,10 +46,8 @@ class PySphinx(PythonPackage):
     version('1.4.5', '5c2cd2dac45dfa6123d067e32a89e89a')
     version('1.3.1', '8786a194acf9673464c5455b11fd4332')
 
-    extends('python', ignore='bin/(pybabel|pygmentize)')
-
     # Sphinx requires at least Python 2.7 or 3.4 to run
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    extends('python@2.7:2.8,3.4:', ignore='bin/(pybabel|pygmentize)')
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-sphinx requires py-setuptools during runtime as well.

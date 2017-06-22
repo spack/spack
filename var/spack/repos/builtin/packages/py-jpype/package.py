@@ -36,7 +36,7 @@ class PyJpype(PythonPackage):
     version('0.6.1', '468ca2d4b2cff7802138789e951d5d58')
     version('0.6.0', 'f0cbbe1d0c4b563f7e435d2bffc31736')
 
-    depends_on('python@2.6:')
+    extends('python@2.6:')
 
     depends_on('py-setuptools', type='build')
     depends_on('jdk', type=('build', 'run'))

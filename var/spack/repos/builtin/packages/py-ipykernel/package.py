@@ -42,7 +42,7 @@ class PyIpykernel(PythonPackage):
     version('4.1.1', '51376850c46fb006e1f8d1cd353507c5')
     version('4.1.0', '638a43e4f8a15872f749090c3f0827b6')
 
-    depends_on('python@2.7:2.8,3.3:')
+    extends('python@2.7:2.8,3.3:')
     depends_on('py-traitlets@4.1.0:', type=('build', 'run'))
     depends_on('py-tornado@4.0:', type=('build', 'run'))
     depends_on('py-ipython@4.0:', type=('build', 'run'))

@@ -33,6 +33,7 @@ class PyNumpydoc(PythonPackage):
 
     version('0.6.0', '5f1763c44e613850d56ba1b1cf1cb146')
 
-    depends_on('python@2.6:2.8,3.3:')
+    extends('python@2.6:2.8,3.3:')
+
     depends_on('py-setuptools',    type='build')
     depends_on('py-sphinx@1.0.1:', type='build')

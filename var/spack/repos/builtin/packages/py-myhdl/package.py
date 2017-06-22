@@ -34,5 +34,6 @@ class PyMyhdl(PythonPackage):
 
     version('0.9.0', 'c3b4e7b857b6f51d43720413546df15c')
 
-    depends_on('python@2.6:2.8,3.4:')
+    extends('python@2.6:2.8,3.4:')
+
     depends_on('py-setuptools', type='build')

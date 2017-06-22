@@ -35,8 +35,7 @@ class PyAutopep8(PythonPackage):
     version('1.2.4', 'fcea19c0c5e505b425e2a78afb771f5c')
     version('1.2.2', '3d97f9c89d14a0975bffd32a2c61c36c')
 
-    extends('python', ignore='bin/pep8')
-    depends_on('python@2.6:2.8,3.2:')
+    extends('python@2.6:2.8,3.2:', ignore='bin/pep8')
 
     depends_on('py-pycodestyle@1.5.7:1.7.0', type=('build', 'run'))
 

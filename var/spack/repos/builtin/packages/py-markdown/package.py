@@ -48,4 +48,4 @@ class PyMarkdown(PythonPackage):
     version('2.5.1', 'be6f6ba65a8fb843d2aaf1fcdd68c755')
     version('2.5', '8393ceab9c6e33357fb8a7be063a4849')
 
-    depends_on('python@2.7:2.8,3.2:3.4')
+    extends('python@2.7:2.8,3.2:3.4')

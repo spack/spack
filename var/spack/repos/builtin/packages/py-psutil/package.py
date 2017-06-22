@@ -35,5 +35,6 @@ class PyPsutil(PythonPackage):
 
     version('5.0.1', '153dc8be94badc4072016ceeac7808dc')
 
-    depends_on('python@2.6:')
+    extends('python@2.6:')
+
     depends_on('py-setuptools', type='build')

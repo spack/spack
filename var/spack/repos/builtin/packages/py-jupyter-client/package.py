@@ -40,7 +40,8 @@ class PyJupyterClient(PythonPackage):
     version('4.1.0', 'cf42048b889c8434fbb5813a9eec1d34')
     version('4.0.0', '00fa63c67cb3adf359d09dc4d803aff5')
 
-    depends_on('python@2.7:2.8,3.3:')
+    extends('python@2.7:2.8,3.3:')
+
     depends_on('py-traitlets', type=('build', 'run'))
     depends_on('py-jupyter-core', type=('build', 'run'))
     depends_on('py-zmq@13:', type=('build', 'run'))

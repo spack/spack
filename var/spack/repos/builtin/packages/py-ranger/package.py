@@ -34,4 +34,4 @@ class PyRanger(PythonPackage):
 
     version('1.7.2', '27805c3ab7ec4b129e1b93249506d925')
 
-    depends_on('python@2.6:')
+    extends('python@2.6:')

@@ -38,7 +38,7 @@ class PyTheano(PythonPackage):
     variant('gpu', default=False,
             description='Builds with support for GPUs via CUDA and cuDNN')
 
-    depends_on('python@2.6:2.8,3.3:')
+    extends('python@2.6:2.8,3.3:')
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-scipy@0.11:', type=('build', 'run'))

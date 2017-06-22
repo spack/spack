@@ -35,5 +35,5 @@ class PyBinwalk(PythonPackage):
 
     version('2.1.0', '054867d9abe6a05f43200cf2591051e6')
 
-    depends_on('python')
+    extends('python')
     depends_on('py-setuptools', type='build')

@@ -37,4 +37,4 @@ class PyTyping(PythonPackage):
     version('3.6.1', '3fec97415bae6f742fb3c3013dedeb89')
 
     # You need Python 2.7 or 3.3+ to install the typing package
-    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
+    extends('python@2.7:2.8,3.3:')
