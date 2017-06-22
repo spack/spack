@@ -26,6 +26,7 @@ from spack import *
 import os
 import shutil
 
+
 class Augustus(MakefilePackage):
     """AUGUSTUS is a program that predicts genes in eukaryotic
        genomic sequences"""
@@ -41,21 +42,26 @@ class Augustus(MakefilePackage):
     depends_on('zlib')
 
     def edit(self, spec, prefix):
-        with working_dir(os.path.join(self.build_directory, 'auxprogs', 'filterBam', 'src')):
+        with working_dir(os.path.join(self.build_directory,
+                         'auxprogs', 'filterBam', 'src')):
             makefile = FileFilter('Makefile')
             makefile.filter('BAMTOOLS = .*', 'BAMTOOLS = %s' % self.spec[
-                'bamtools'].prefix)
-            makefile.filter('INCLUDES = *', 
-                'INCLUDES = -I$(BAMTOOLS)/include/bamtools ')
+                            'bamtools'].prefix)
+            makefile.filter('INCLUDES = *',
+                            'INCLUDES = -I$(BAMTOOLS)/include/bamtools ')
             makefile.filter('LIBS = -lbamtools -lz',
-                'LIBS = $(BAMTOOLS)/lib/bamtools/libbamtools.a -lz')
-        with working_dir(os.path.join(self.build_directory, 'auxprogs', 'bam2hints')):
+                            'LIBS = $(BAMTOOLS)/lib/bamtools'
+                            '/libbamtools.a -lz')
+        with working_dir(os.path.join(self.build_directory,
+                         'auxprogs', 'bam2hints')):
             makefile = FileFilter('Makefile')
-            makefile.filter('# Variable definition', 'BAMTOOLS = %s' % self.spec[
-                'bamtools'].prefix)
-            makefile.filter('INCLUDES = /usr/include/bamtools', 
-                'INCLUDES = $(BAMTOOLS)/include/bamtools')
-            makefile.filter('LIBS = -lbamtools -lz', 'LIBS = $(BAMTOOLS)/lib/bamtools/libbamtools.a -lz')
+            makefile.filter('# Variable definition',
+                            'BAMTOOLS = %s' % self.spec['bamtools'].prefix)
+            makefile.filter('INCLUDES = /usr/include/bamtools',
+                            'INCLUDES = $(BAMTOOLS)/include/bamtools')
+            makefile.filter('LIBS = -lbamtools -lz',
+                            'LIBS = $(BAMTOOLS)/lib/bamtools'
+                            '/libbamtools.a -lz')
 
     def install(self, spec, prefix):
         shutil.copytree('bin', os.path.join(self.spec.prefix, 'bin'))
