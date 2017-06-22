@@ -31,7 +31,7 @@ class Clhep(CMakePackage):
     homepage = "http://proj-clhep.web.cern.ch/proj-clhep/"
     url      = "http://proj-clhep.web.cern.ch/proj-clhep/DISTRIBUTION/tarFiles/clhep-2.2.0.5.tgz"
     list_url = "https://proj-clhep.web.cern.ch/proj-clhep/"
-    list_depth = 3
+    list_depth = 1
 
     version('2.3.4.4', '8b8a33d0d19213b60d6c22ce5fc93761')
     version('2.3.4.3', '6941279f70d69492fff1aa955f3f2562')
