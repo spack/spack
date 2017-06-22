@@ -35,7 +35,7 @@ from llnl.util.filesystem import working_dir
 
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using Python
-    setup.py files
+    ``setup.py`` files
 
     This class provides the following phases that can be overridden:
 
@@ -79,16 +79,16 @@ class PythonPackage(PackageBase):
 
        phases = ['build_ext', 'install', 'bdist']
 
-    Each phase provides a function <phase> that runs:
+    Each phase provides a function ``<phase>`` that runs:
 
     .. code-block:: console
 
        $ python setup.py --no-user-cfg <phase>
 
-    Each phase also has a <phase_args> function that can pass arguments to
-    this call.
+    Each phase also has a ``<phase>_args`` function that can pass arguments
+    to this call.
 
-    If you need to run a phase which is not a standard setup.py command,
+    If you need to run a phase which is not a standard ``setup.py`` command,
     you'll need to define a function for it like so:
 
     .. code-block:: python
@@ -101,8 +101,8 @@ class PythonPackage(PackageBase):
         'build_py', 'build_ext', 'build_clib', 'build_scripts', 'install'
     ]
 
-    #: Name of modules that the Python package provides
-    #: This is used to test whether or not the installation succeeded
+    #: Name of modules that the Python package provides.
+    #: This is used to test whether or not the installation succeeded.
     #: These names generally come from running:
     #:
     #: >>> import setuptools
@@ -119,7 +119,7 @@ class PythonPackage(PackageBase):
     build_time_test_callbacks = ['test']
 
     #: Callback names for install-time test
-    install_time_test_callbacks = ['import_module_test']
+    install_time_test_callbacks = ['install_test', 'import_module_test']
 
     extends('python')
 
@@ -142,27 +142,6 @@ class PythonPackage(PackageBase):
 
         with working_dir(self.build_directory):
             self.python(setup, '--no-user-cfg', *args, **kwargs)
-
-    def _setup_command_available(self, command):
-        """Determines whether or not a setup.py command exists.
-
-        Args:
-            command (str): The command to look for
-
-        Returns:
-            bool: True if the command is found, else False
-        """
-        kwargs = {
-            'output': os.devnull,
-            'error':  os.devnull,
-            'fail_on_error': False
-        }
-
-        python = inspect.getmodule(self).python
-        setup = self.setup_file()
-
-        python(setup, '--no-user-cfg', command, '--help', **kwargs)
-        return python.returncode == 0
 
     # The following phases and their descriptions come from:
     #   $ python setup.py --help-commands
@@ -436,18 +415,20 @@ class PythonPackage(PackageBase):
     def test(self):
         """Run unit tests after in-place build.
 
-        These tests are only run if the package actually has a 'test' command.
+        By default, this function does nothing. Override it to add custom
+        unit tests for the package.
         """
-        if self._setup_command_available('test'):
-            args = self.test_args(self.spec, self.prefix)
-
-            self.setup_py('test', *args)
-
-    def test_args(self, spec, prefix):
-        """Arguments to pass to test."""
-        return []
+        pass
 
     run_after('build_scripts')(PackageBase._run_default_build_time_test_callbacks)  # noqa
+
+    def install_test(self):
+        """Run unit tests post-installation.
+
+        By default, this function does nothing. Override it to add custom
+        unit tests for the package.
+        """
+        pass
 
     def import_module_test(self):
         """Attempts to import the module that was just installed.

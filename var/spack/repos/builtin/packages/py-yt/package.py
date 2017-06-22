@@ -77,9 +77,7 @@ class PyYt(PythonPackage):
             with open('rockstar.cfg', 'w') as rockstar_cfg:
                 rockstar_cfg.write(self.spec['rockstar'].prefix)
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def check_install(self):
+    def install_test(self):
         # The Python interpreter path can be too long for this
         # yt = Executable(join_path(prefix.bin, "yt"))
         # yt("--help")
