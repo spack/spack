@@ -223,12 +223,6 @@ if editor is not None:
 else:
     editor = which('vim', 'vi', 'emacs', 'nano')
 
-if not editor:
-    default = default_editors[0]
-    msg  = 'Default text editor, {0}, not found.\n'.format(default)
-    msg += 'Please set the EDITOR environment variable to your preferred '
-    msg += 'text editor, or install {0}.'.format(default)
-    raise EnvironmentError(msg)
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
