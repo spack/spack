@@ -31,6 +31,8 @@ class PyEdffile(PythonPackage):
     homepage = "https://github.com/vasole/pymca/blob/master/PyMca5/PyMcaIO/EdfFile.py"
     url      = "https://github.com/conda-forge/edffile-feedstock.git"
 
+    import_modules = ['EdfFile']
+
     version('5.0.0', git='https://github.com/conda-forge/edffile-feedstock.git',
             commit='be5ab4199db9f8209c59e31874934b8536b52301')
 

@@ -31,6 +31,8 @@ class PyLatexcodec(PythonPackage):
     homepage = "http://latexcodec.readthedocs.io"
     url      = "https://pypi.io/packages/source/l/latexcodec/latexcodec-1.0.4.tar.gz"
 
+    import_modules = ['latexcodec']
+
     version('1.0.4', '72010ec2a55227a5802239cff6fd32d6')
 
     depends_on('py-setuptools', type='build')

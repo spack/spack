@@ -35,7 +35,7 @@ class PyPywavelets(PythonPackage):
 
     version('0.5.2', 'aedda732f064cf9395f03d37f1003d1a')
 
-    import_modules = ['pywt']
+    import_modules = ['pywt', 'pywt.data']
 
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')

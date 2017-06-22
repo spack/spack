@@ -22,24 +22,30 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class PySphinxcontribBibtex(PythonPackage):
-    """A Sphinx extension for BibTeX style citations."""
+class PyTomopy(PythonPackage):
+    """TomoPy is an open-source Python package for tomographic data
+       processing and image reconstruction."""
 
-    homepage = "https://pypi.python.org/pypi/sphinxcontrib-bibtex"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-bibtex/sphinxcontrib-bibtex-0.3.5.tar.gz"
+    homepage = "http://tomopy.readthedocs.io/en/latest/index.html"
+    url      = "https://github.com/tomopy/tomopy/archive/1.0.0.tar.gz"
 
-    import_modules = ['sphinxcontrib', 'sphinxcontrib.bibtex']
+    import_modules = [
+        'tomopy', 'doc', 'tomopy.util', 'tomopy.sim', 'tomopy.recon',
+        'tomopy.prep', 'tomopy.misc', 'tomopy.io', 'doc.demo'
+    ]
 
-    version('0.3.5', 'd3c86836e2f6227b55a5ca9108590b1c')
+    version('1.0.0', '986ac2c85a4af9ada0403b4c746d2cd4')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-latexcodec@0.3.0:', type=('build', 'run'))
-    depends_on('py-pybtex@0.17:', type=('build', 'run'))
-    depends_on('py-pybtex-docutils@0.2.0:', type=('build', 'run'))
-    depends_on('py-six@1.4.1:', type=('build', 'run'))
-    depends_on('py-sphinx@1.0:', type=('build', 'run'))
-    depends_on('py-oset@0.1.3:', type=('build', 'run'))
-    depends_on('py-ordereddict@1.1:', when='^python@:2.6', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-h5py', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-scikit-image', type=('build', 'run'))
+    depends_on('py-pywavelets', type=('build', 'run'))
+    depends_on('py-pyfftw', type=('build', 'run'))
+    depends_on('py-dxchange', type=('build', 'run'))
