@@ -60,8 +60,13 @@ class Meshkit(AutotoolsPackage):
                 "CXX={0}".format(spec['mpi'].mpicxx),
                 "FC={0}".format(spec['mpi'].mpifc)
             ])
+#       FIXME without-mpi is not working
+#       else:
+#           args.append("--without-mpi")
         if '+netgen' in spec:
             args.append("--with-netgen={0}".format(spec['netgen'].prefix))
+        else:
+            args.append("--without-netgen")
 
         if '+debug' in spec:
             args.append("--enable-debug")

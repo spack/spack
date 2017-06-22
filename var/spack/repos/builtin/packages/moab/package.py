@@ -119,6 +119,9 @@ class Moab(AutotoolsPackage):
                 options.append('--with-parmetis=%s' % spec['parmetis'].prefix)
             else:
                 options.append('--without-parmetis')
+#          FIXME: --without-mpi does not configure right
+#       else:
+#           options.append('--without-mpi')
 
         if '+hdf5' in spec:
             options.append('--with-hdf5=%s' % spec['hdf5'].prefix)
@@ -140,8 +143,14 @@ class Moab(AutotoolsPackage):
             options.append('--with-cgm=%s' % spec['cgm'].prefix)
             if '+irel' in spec:
                 options.append('--enable-irel')
+            else: 
+                options.append('--disable-irel')
+        else:
+            options.append('--without-cgm')
         if '+fbigeom' in spec:
             options.append('--enable-fbigeom')
+        else:
+            options.append('--disable-fbigeom')
 
         if '+coupler' in spec:
             options.append('--enable-mbcoupler')

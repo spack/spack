@@ -33,7 +33,6 @@ class Netgen(AutotoolsPackage):
        NETGEN contains modules for mesh optimization and hierarchical
        mesh refinement. """
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://ngsolve.org/"
     url = "https://gigenet.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/5.3/netgen-5.3.1.tar.gz"
 
@@ -48,6 +47,10 @@ class Netgen(AutotoolsPackage):
     depends_on('oce+X11', when='+oce')
     depends_on('metis', when='+metis')
 
+    def url_for_version(self, version):
+        url = "https://gigenet.dl.sourceforge.net/project/netgen-mesher/netgen-mesher/{0}/netgen-{1}.tar.gz"
+        return url.format(version.up_to(2), version)
+
     def configure_args(self):
         spec = self.spec
         args = []
@@ -56,6 +59,8 @@ class Netgen(AutotoolsPackage):
                 "CC={0}".format(spec['mpi'].mpicc),
                 "CXX={0}".format(spec['mpi'].mpicxx)
             ])
+        else:
+            args.append("--without-mpi")
 
         if '+oce' in spec:
             args.append("--with-occ={0}".format(spec['oce'].prefix))
@@ -72,5 +77,7 @@ class Netgen(AutotoolsPackage):
             args.append("--enable-gui")
         if '+metis' in spec:
             args.append('--with-metis=%s' % spec['metis'].prefix)
+        else:
+            args.append("--without-metis")
 
         return args
