@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import shutil
 
 
 class Augustus(MakefilePackage):
@@ -42,8 +40,7 @@ class Augustus(MakefilePackage):
     depends_on('zlib')
 
     def edit(self, spec, prefix):
-        with working_dir(os.path.join(self.build_directory,
-                         'auxprogs', 'filterBam', 'src')):
+        with working_dir(join_path('auxprogs', 'filterBam', 'src')):
             makefile = FileFilter('Makefile')
             makefile.filter('BAMTOOLS = .*', 'BAMTOOLS = %s' % self.spec[
                             'bamtools'].prefix)
@@ -52,8 +49,7 @@ class Augustus(MakefilePackage):
             makefile.filter('LIBS = -lbamtools -lz',
                             'LIBS = $(BAMTOOLS)/lib/bamtools'
                             '/libbamtools.a -lz')
-        with working_dir(os.path.join(self.build_directory,
-                         'auxprogs', 'bam2hints')):
+        with working_dir(join_path('auxprogs', 'bam2hints')):
             makefile = FileFilter('Makefile')
             makefile.filter('# Variable definition',
                             'BAMTOOLS = %s' % self.spec['bamtools'].prefix)
@@ -64,11 +60,11 @@ class Augustus(MakefilePackage):
                             '/libbamtools.a -lz')
 
     def install(self, spec, prefix):
-        shutil.copytree('bin', os.path.join(self.spec.prefix, 'bin'))
-        shutil.copytree('config', os.path.join(self.spec.prefix, 'config'))
-        shutil.copytree('scripts', os.path.join(self.spec.prefix, 'scripts'))
+        install_tree('bin', join_path(self.spec.prefix, 'bin'))
+        install_tree('config', join_path(self.spec.prefix, 'config'))
+        install_tree('scripts', join_path(self.spec.prefix, 'scripts'))
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('AUGUSTUS_CONFIG_PATH', os.path.join(
+        run_env.set('AUGUSTUS_CONFIG_PATH', join_path(
             self.prefix, 'config'))
-        run_env.prepend_path('PATH', os.path.join(self.prefix, 'scripts'))
+        run_env.prepend_path('PATH', join_path(self.prefix, 'scripts'))
