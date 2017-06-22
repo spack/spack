@@ -238,9 +238,8 @@ def relocate_package(spec):
     buildinfo = read_buildinfo_file(spec)
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
-    if old_path == new_path:
-        return True  # No need to relocate
 
+# Need to relocate to add new compiler path to rpath 
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
 
@@ -260,12 +259,12 @@ def relocate_package(spec):
     else:
         for c in compilers:
             gcc_path=getattr(c, 'cc', None)
-            tty.msg(gcc_path)
 
     # now do the actual relocation
+    gcc_prefix=re.sub('/bin/.*$','',gcc_path)
+    tty.msg("Adding compiler rpath %s." % gcc_prefix)
     for filename in buildinfo['relocate_binaries']:
         path_name = os.path.join(spec.prefix, filename)
-        gcc_prefix=re.sub('/bin/.*$','',gcc_path)
         spack.relocate.relocate_binary(path_name,
                                        old_path,
                                        new_path,
