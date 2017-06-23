@@ -1177,7 +1177,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
             dirty (bool): Don't clean the build environment before installing.
-            force (bool): Install again, even if already installed.
+            force (bool): Install again, even if already installed or if
+                another package is installed to its prefix.
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
@@ -1204,11 +1205,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 return self._update_explicit_entry_in_db(rec, explicit)
             path_spec = spack.store.db.query_path(self.spec.prefix)
             if path_spec:
-                msg = '{0.name} is already installed in {0.prefix}'
-                if force:
-                    tty.warn(msg.format(path_spec))
-                else:
-                    tty.die(msg.format(path_spec))
+                msg = '{0.name} is already installed in {0.prefix}.\n'.format(path_spec)
+                ps_hash = path_spec.dag_hash(7)
+                msg += 'Uninstall {0.name} / {1}'.format(path_spec, ps_hash)
+                msg += 'to replace it with {0.name}.'.format(self.spec)
+                tty.die(msg.format(path_spec))
 
 
         # Dirty argument takes precedence over dirty config setting.

@@ -1383,6 +1383,12 @@ class Spec(object):
     def prefix(self):
         if self._prefix:
             return self._prefix
+        elif self._concrete:
+            spec = spack.store.db.query_one(self)
+            if spec:
+                print spec, spec.prefix
+                if spec and getattr(spec, '_prefix', None):
+                    return spec.prefix
         return Prefix(spack.store.layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
