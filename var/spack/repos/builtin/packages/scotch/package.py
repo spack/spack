@@ -81,6 +81,7 @@ class Scotch(Package):
 
         shared = '+shared' in self.spec
         libraries = ['libscotch', 'libscotcherr']
+        zlibs     = []
 
         if '+mpi' in self.spec:
             libraries = ['libptscotch', 'libptscotcherr'] + libraries
@@ -89,9 +90,17 @@ class Scotch(Package):
         elif '~mpi+esmumps' in self.spec:
             libraries = ['libesmumps'] + libraries
 
-        return find_libraries(
+        scotchlibs = find_libraries(
             libraries, root=self.prefix, recurse=True, shared=shared
         )
+        if '+compression' in self.spec:
+            zlibs = find_libraries(
+                ['libz'], root=self.spec['zlib'].prefix, recurse=True, shared=shared
+        )
+
+        return scotchlibs + zlibs
+
+
 
     def patch(self):
         self.configure()
