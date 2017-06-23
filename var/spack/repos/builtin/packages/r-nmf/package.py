@@ -41,7 +41,6 @@ class RNmf(RPackage):
     depends_on('r-pkgmaker', type=('build', 'run'))
     depends_on('r-registry', type=('build', 'run'))
     depends_on('r-rngtools', type=('build', 'run'))
-    depends_on('r-cluster', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-gridbase', type=('build', 'run'))

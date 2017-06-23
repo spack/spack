@@ -35,5 +35,3 @@ class RSp(RPackage):
     url      = "https://cran.r-project.org/src/contrib/sp_1.2-3.tar.gz"
 
     version('1.2-3', 'f0e24d993dec128642ee66b6b47b10c1')
-
-    depends_on('r-lattice', type=('build', 'run'))
