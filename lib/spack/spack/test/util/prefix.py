@@ -44,6 +44,11 @@ def test_multilevel_attributes():
     assert prefix.man.man8    == '/usr/man/man8'
     assert prefix.foo.bar.baz == '/usr/foo/bar/baz'
 
+    share = prefix.share
+
+    assert isinstance(share, Prefix)
+    assert share.man == '/usr/share/man'
+
 
 def test_string_like_behavior():
     """Test string-like behavior of the prefix object"""
