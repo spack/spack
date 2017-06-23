@@ -45,6 +45,7 @@ class Gtkplus(AutotoolsPackage):
     depends_on("pango~X", when='~X')
     depends_on("pango+X", when='+X')
     depends_on('gobject-introspection', when='+X')
+    depends_on('shared-mime-info')
 
     patch('no-demos.patch')
 
@@ -52,3 +53,9 @@ class Gtkplus(AutotoolsPackage):
         # remove disable deprecated flag.
         filter_file(r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"',
                     '', 'configure', string=True)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path("XDG_DATA_DIRS",
+                               self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS",
+                             self.prefix.share)
