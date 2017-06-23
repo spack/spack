@@ -32,6 +32,7 @@ class Flex(AutotoolsPackage):
     homepage = "https://github.com/westes/flex"
     url = "https://github.com/westes/flex/releases/download/v2.6.1/flex-2.6.1.tar.gz"
 
+    version('2.6.4', '2882e3179748cc9f9c23ec593d6adc8d')
     version('2.6.3', 'a5f65570cd9107ec8a8ec88f17b31bb1')
     # Problematic version:
     # See issue #2554; https://github.com/westes/flex/issues/113
@@ -68,13 +69,17 @@ class Flex(AutotoolsPackage):
 
     @run_after('install')
     def symlink_lex(self):
+        """Install symlinks for lex compatibility."""
         if self.spec.satisfies('+lex'):
             dso = dso_suffix
             for dir, flex, lex in \
-                    ((self.prefix.bin, 'flex', 'lex'),
-                     (self.prefix.lib, 'libfl.a', 'libl.a'),
-                     (self.prefix.lib, 'libfl.' + dso, 'libl.' + dso)):
-                with working_dir(dir):
-                    if (os.path.isfile(flex) and not
-                            os.path.lexists(lex)):
-                        symlink(flex, lex)
+                    ((self.prefix.bin,   'flex', 'lex'),
+                     (self.prefix.lib,   'libfl.a', 'libl.a'),
+                     (self.prefix.lib,   'libfl.' + dso, 'libl.' + dso),
+                     (self.prefix.lib64, 'libfl.a', 'libl.a'),
+                     (self.prefix.lib64, 'libfl.' + dso, 'libl.' + dso)):
+
+                if os.path.isdir(dir):
+                    with working_dir(dir):
+                        if (os.path.isfile(flex) and not os.path.lexists(lex)):
+                            symlink(flex, lex)
