@@ -82,13 +82,15 @@ class Mfem(Package):
     variant('sundials', default=False,
         description='Enable Sundials time integrators')
     variant('mpfr', default=False,
-        description='Enable multi-precision floating point features')
+        description='Enable precise, 1D quadrature rules')
     variant('lapack', default=False,
         description='Use external blas/lapack routines')
     variant('debug', default=False,
         description='Build debug instead of optimized version')
     variant('netcdf', default=False,
         description='Enable Cubit/Genesis reader')
+    variant('gzstream', default=True,
+        description='Support zip\'d streams for I/O')
     variant('examples', default=False,
         description='Build and install examples')
     variant('minapps', default=False,
@@ -117,6 +119,8 @@ class Mfem(Package):
     depends_on('netcdf', when='@3.2: +netcdf')
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
+    depends_on('libunwind', when='+debug')
+    depends_on('zlib', when='+gzstream')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
 
@@ -156,7 +160,10 @@ class Mfem(Package):
 
         options = [
             'PREFIX=%s' % prefix,
+            'MFEM_USE_MEMALLOC=YES',
             'MFEM_DEBUG=%s' % yes_no['+debug' in spec],
+            'MFEM_USE_LIBUNWIND=%s' % yes_no['+debug' in spec],
+            'MFEM_USE_GZSTREAM=%s' % yes_no['+gzstream' in spec],
             'MFEM_USE_METIS_5=%s' % metis5_str,
             'MFEM_THREAD_SAFE=%s' % threadsafe_str,
             'MFEM_USE_MPI=%s' % yes_no['+mpi' in spec],
