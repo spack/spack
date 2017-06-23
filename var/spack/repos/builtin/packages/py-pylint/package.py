@@ -37,5 +37,7 @@ class PyPylint(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-astroid', type=('build', 'run'))
     depends_on('py-logilab-common', type=('build', 'run'))
-    depends_on('py-nose', type='build')
     depends_on('py-setuptools', type='build')
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose', type='test')
