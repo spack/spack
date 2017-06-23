@@ -2430,7 +2430,7 @@ e.g.:
 
 .. code-block:: python
 
-   configure('--prefix=' + prefix)
+   configure('--prefix={0}'.format(prefix))
 
 For the most part, prefix objects behave exactly like strings.  For
 packages that do not have their own install target, or for those that
@@ -2451,29 +2451,19 @@ yourself, e.g.:
        mkdirp(prefix.lib)
        install('libfoo.a', prefix.lib)
 
-Most of the standard UNIX directory names are attributes on the
-``prefix`` object.  Here is a full list:
 
-  =========================  ================================================
-  Prefix Attribute           Location
-  =========================  ================================================
-  ``prefix.bin``             ``$prefix/bin``
-  ``prefix.sbin``            ``$prefix/sbin``
-  ``prefix.etc``             ``$prefix/etc``
-  ``prefix.include``         ``$prefix/include``
-  ``prefix.lib``             ``$prefix/lib``
-  ``prefix.lib64``           ``$prefix/lib64``
-  ``prefix.libexec``         ``$prefix/libexec``
-  ``prefix.share``           ``$prefix/share``
-  ``prefix.doc``             ``$prefix/doc``
-  ``prefix.info``            ``$prefix/info``
+Attributes of this object are created on the fly when you request them,
+so any of the following will work:
 
-  ``prefix.man``             ``$prefix/man``
-  ``prefix.man[1-8]``        ``$prefix/man/man[1-8]``
+======================  =======================
+Prefix Attribute        Location
+======================  =======================
+``prefix.bin``          ``$prefix/bin``
+``prefix.lib64``        ``$prefix/lib64``
+``prefix.share.man``    ``$prefix/share/man``
+``prefix.foo.bar.baz``  ``$prefix/foo/bar/baz``
+======================  =======================
 
-  ``prefix.share_man``       ``$prefix/share/man``
-  ``prefix.share_man[1-8]``  ``$prefix/share/man[1-8]``
-  =========================  ================================================
 
 .. _spec-objects:
 

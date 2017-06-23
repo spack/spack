@@ -22,40 +22,40 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-This file contains utilities for managing the installation prefix of a package.
-"""
-import os
+"""Tests various features of :py:class:`spack.util.prefix.Prefix`"""
+
+from spack.util.prefix import Prefix
 
 
-class Prefix(str):
-    """This class represents an installation prefix, but provides useful
-    attributes for referring to directories inside the prefix.
+def test_prefix_attributes():
+    """Test normal prefix attributes like ``prefix.bin``"""
+    prefix = Prefix('/usr')
 
-    Attributes of this object are created on the fly when you request them,
-    so any of the following is valid:
+    assert prefix.bin     == '/usr/bin'
+    assert prefix.lib     == '/usr/lib'
+    assert prefix.include == '/usr/include'
 
-    >>> prefix = Prefix('/usr')
-    >>> prefix.bin
-    /usr/bin
-    >>> prefix.lib64
-    /usr/lib64
-    >>> prefix.share.man
-    /usr/share/man
-    >>> prefix.foo.bar.baz
-    /usr/foo/bar/baz
 
-    Prefix objects behave identically to strings. In fact, they
-    subclass ``str``. So operators like ``+`` are legal::
+def test_multilevel_attributes():
+    """Test attributes of attributes, like ``prefix.share.man``"""
+    prefix = Prefix('/usr/')
 
-        print('foobar ' + prefix)
+    assert prefix.share.man   == '/usr/share/man'
+    assert prefix.man.man8    == '/usr/man/man8'
+    assert prefix.foo.bar.baz == '/usr/foo/bar/baz'
 
-    This prints ``foobar /usr``. All of this is meant to make custom
-    installs easy.
-    """
 
-    def __new__(cls, path):
-        return super(Prefix, cls).__new__(cls, path)
+def test_string_like_behavior():
+    """Test string-like behavior of the prefix object"""
+    prefix = Prefix('/usr')
 
-    def __getattr__(self, attr):
-        return Prefix(os.path.join(self, attr))
+    assert prefix == '/usr'
+    assert isinstance(prefix, str)
+
+    assert prefix + '/bin' == '/usr/bin'
+    assert '--prefix=%s' % prefix == '--prefix=/usr'
+    assert '--prefix={0}'.format(prefix) == '--prefix=/usr'
+
+    assert prefix.find('u', 1)
+    assert prefix.upper() == '/USR'
+    assert prefix.lstrip('/') == 'usr'
