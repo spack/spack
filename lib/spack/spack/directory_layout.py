@@ -123,6 +123,9 @@ class DirectoryLayout(object):
         """Return absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
 
+        if hasattr(spec, '_prefix') and spec._prefix:
+            return spec._prefix
+
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
         return os.path.join(self.root, path)
@@ -132,7 +135,6 @@ class DirectoryLayout(object):
            Raised RemoveFailedError if something goes wrong.
         """
         path = self.path_for_spec(spec)
-        assert(path.startswith(self.root))
 
         if os.path.exists(path):
             try:
@@ -194,6 +196,9 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         if spec.external:
             return spec.external_path
+
+        if hasattr(spec, '_prefix') and spec._prefix:
+            return spec._prefix
 
         path = spec.format(self.path_scheme)
         return path

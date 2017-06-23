@@ -1012,6 +1012,8 @@ class Spec(object):
         self._hash = other._hash
         self._cmp_key_cache = other._cmp_key_cache
 
+        self._prefix = getattr(other, '_prefix', None)
+
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
         # This allows us to manipulate specs that Spack doesn't have
@@ -1085,7 +1087,9 @@ class Spec(object):
         Known flags currently include "arch"
         """
         valid_flags = FlagMap.valid_compiler_flags()
-        if name == 'arch' or name == 'architecture':
+        if name == 'prefix':
+            self._set_prefix(value)
+        elif name == 'arch' or name == 'architecture':
             parts = tuple(value.split('-'))
             plat, os, tgt = parts if len(parts) == 3 else (None, None, value)
             self._set_architecture(platform=plat, platform_os=os, target=tgt)
@@ -1106,6 +1110,12 @@ class Spec(object):
                 self.variants[name] = BoolValuedVariant(name, value)
             else:
                 self.variants[name] = MultiValuedVariant(name, value)
+
+    def _set_prefix(self, value):
+        """Called by the parser to set the prefix."""
+        if hasattr(self, '_prefix') and self._prefix:
+            raise DuplicatePrefixError('A spec cannot have multiple prefixes')
+        self._prefix = Prefix(value)
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -1371,6 +1381,8 @@ class Spec(object):
 
     @property
     def prefix(self):
+        if self._prefix:
+            return self._prefix
         return Prefix(spack.store.layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
@@ -2491,6 +2503,7 @@ class Spec(object):
         self.external_path = other.external_path
         self.external_module = other.external_module
         self.namespace = other.namespace
+        self._prefix = getattr(other, '_prefix', None)
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if deps:

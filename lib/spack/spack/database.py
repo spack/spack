@@ -270,9 +270,13 @@ class Database(object):
         # to ensure it is read properly.
         for name in spec_dict:
             spec_dict[name]['hash'] = hash_key
-
         # Build spec from dict first.
         spec = spack.spec.Spec.from_node_dict(spec_dict)
+
+        # Attach the prefix to the spec
+        spec_path = installs[hash_key]['path']
+        spec._set_prefix(spec_path)
+
         return spec
 
     def _assign_dependencies(self, hash_key, installs, data):
@@ -371,7 +375,6 @@ class Database(object):
                 # TODO: would a more immmutable spec implementation simplify
                 #       this?
                 data[hash_key] = InstallRecord.from_dict(spec, rec)
-
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -734,6 +737,28 @@ class Database(object):
             except spack.directory_layout.NoSuchExtensionError:
                 continue
             # TODO: conditional way to do this instead of catching exceptions
+
+    def query_path(self, path, installed=True):
+        """Query the database for anything installed at a given path.
+
+        This protects the user from overwriting packages installed outside
+        of the spack prefix. The installed parameter allows spack to check
+        for only installed packages.
+        """
+        with self.read_transaction():
+            results = []
+            for rec in self._data.values():
+                if installed is not any  and installed != rec.installed:
+                    continue
+                if rec.path == path:
+                    results.append(rec.spec)
+
+        if len(results) > 1:
+            raise CorruptDatabaseError("Multiple specs installed "
+                                       "to prefix {}".format(path))
+
+        return results[0] if results else None
+
 
     def query(self, query_spec=any, known=any, installed=True, explicit=any):
         """Run a query on the database.

@@ -1197,11 +1197,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             if partial:
                 tty.msg(
                     "Continuing from partial install of %s" % self.name)
-            elif layout.check_installed(self.spec):
-                msg = '{0.name} is already installed in {0.prefix}'
-                tty.msg(msg.format(self))
+            elif spack.store.db.query_one(self.spec):
                 rec = spack.store.db.get_record(self.spec)
+                msg = '{0.name} is already installed in {0.prefix}'
+                tty.msg(msg.format(rec.spec))
                 return self._update_explicit_entry_in_db(rec, explicit)
+            path_spec = spack.store.db.query_path(self.spec.prefix)
+            if path_spec:
+                msg = '{0.name} is already installed in {0.prefix}'
+                if force:
+                    tty.warn(msg.format(path_spec))
+                else:
+                    tty.die(msg.format(path_spec))
+
 
         # Dirty argument takes precedence over dirty config setting.
         if dirty is None:
