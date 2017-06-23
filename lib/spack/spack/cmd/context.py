@@ -12,7 +12,12 @@ import itertools
 import os
 import shutil
 
+description = "group a subset of packages"
+section = "environment"
+level = "long"
+
 _db_dirname = fs.join_path(spack.var_path, 'contexts')
+
 
 class Context(object):
     def __init__(self, name):
@@ -22,10 +27,10 @@ class Context(object):
         self.specs_by_hash = dict()
         # Libs in this set must always appear as the dependency traced from any
         # root of link deps
-        self.common_libs = dict() # name -> hash
+        self.common_libs = dict()  # name -> hash
         # Packages in this set must always appear as the dependency traced from
         # any root of run deps
-        self.common_bins = dict() # name -> hash
+        self.common_bins = dict()  # name -> hash
 
     def add(self, user_spec):
         query_spec = Spec(user_spec)
@@ -71,7 +76,7 @@ class Context(object):
 
     def list(self, stream, include_deps=False):
         for user_spec, concretized_hash in itertools.izip_longest(
-            self.user_specs, self.concretized_order):
+                self.user_specs, self.concretized_order):
 
             stream.write('{0}\n'.format(user_spec))
 
@@ -85,13 +90,13 @@ class Context(object):
     def upgrade_dependency(self, dep_name, dry_run=False):
         """
         Note: if you have
-        
+
         w -> x -> y
-        
+
         and
-        
+
         v -> x -> y
-        
+
         Then if you upgrade y, you will start by re-concretizing w (and x).
         This should make sure that v uses the same x as w if this context is
         supposed to reuse dependencies where possible. The difference compared
@@ -190,6 +195,7 @@ class Context(object):
     def repo_path(self):
         return fs.join_path(self.path(), 'repo')
 
+
 def reset_os_and_compiler(spec, compiler=None):
     spec = spec.copy()
     for x in spec.traverse():
@@ -203,6 +209,7 @@ def reset_os_and_compiler(spec, compiler=None):
     spec.concretize()
     return spec
 
+
 def upgrade_dependency_version(spec, dep_name):
     spec = spec.copy()
     for x in spec.traverse():
@@ -211,6 +218,7 @@ def upgrade_dependency_version(spec, dep_name):
     spec[dep_name].versions = VersionList(':')
     spec.concretize()
     return spec
+
 
 def write(context, new_repo=None):
     tmp_new, dest, tmp_old = write_paths(context)
@@ -238,11 +246,13 @@ def write(context, new_repo=None):
     if os.path.exists(tmp_old):
         shutil.rmtree(tmp_old) 
 
+
 def write_paths(context):
     tmp_new = fs.join_path(_db_dirname, "_" + context.name)
     dest = context.path()
     tmp_old = fs.join_path(_db_dirname, "." + context.name)
     return tmp_new, dest, tmp_old
+
 
 def repair(context_name):
     """
@@ -267,6 +277,7 @@ def repair(context_name):
     if os.path.exists(tmp_new):
         shutil.rmtree(tmp_new)
 
+
 def store_specs_by_hash(specs_by_hash, stream):
     installs = dict((k, v.to_dict(all_deps=True))
                     for k, v in specs_by_hash.items())
@@ -276,6 +287,7 @@ def store_specs_by_hash(specs_by_hash, stream):
     except YAMLError as e:
         raise syaml.SpackYAMLError(
             "Error writing context full specs:", str(e))
+
 
 def read(context_name):
     tmp_new, context_dir, tmp_old = write_paths(Context(context_name))
@@ -293,11 +305,13 @@ def read(context_name):
 
     return context
 
+
 def context_create(args):
     context = Context(args.context)
     if os.path.exists(context.path()):
         raise tty.die("Context already exists: " + args.context)
     write(context)
+
 
 def context_add(args):
     context = read(args.context)
@@ -305,11 +319,13 @@ def context_add(args):
         context.add(spec.format())
     write(context)
 
+
 def context_remove(args):
     context = read(args.context)
     for spec in spack.cmd.parse_specs(args.package):
         context.remove(spec.format())
     write(context)
+
 
 def context_concretize(args):
     context = read(args.context)
@@ -321,15 +337,18 @@ def context_concretize(args):
             dump_to_context_repo(dep, repo)
     write(context, repo)
 
+
 def context_install(args):
-    contexts = read(args.context)
+    context = read(args.context)
     prepare_repository(context)
     context.install()
+
 
 def dump_to_context_repo(spec, repo):
     dest_pkg_dir = repo.dirname_for_package_name(spec.name)
     if not os.path.exists(dest_pkg_dir):
         spack.repo.dump_provenance(spec, dest_pkg_dir)
+
 
 def prepare_repository(context, remove=None):
     import tempfile
@@ -350,17 +369,20 @@ def prepare_repository(context, remove=None):
     spack.repo.put_first(repo)
     return repo
 
+
 def context_relocate(args):
     context = read(args.context)
     prepare_repository(context)
     context.reset_os_and_compiler(compiler=args.compiler)
     write(context)
 
+
 def context_list(args):
     # TODO? option to list packages w/ multiple instances?
     context = read(args.context)
     import sys
     context.list(sys.stdout, args.include_deps)
+
 
 def context_stage(args):
     context = read(args.context)
@@ -369,10 +391,12 @@ def context_stage(args):
         for dep in spec.traverse():
             dep.package.do_stage()
 
+
 def context_list_modules(args):
     context = read(args.context)
     for module_file in context.get_modules():
         print(module_file)
+
 
 def context_upgrade_dependency(args):
     context = read(args.context)
@@ -382,11 +406,13 @@ def context_upgrade_dependency(args):
         dump_to_context_repo(new_dep, repo)
         write(context, repo)
 
+
 def add_common_args(parser):
     parser.add_argument(
         'context',
         help="The context you are working with"
     )
+
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='context_command')
@@ -454,6 +480,7 @@ def setup_parser(subparser):
         help='Install all concretized specs in a context')
     add_common_args(install_parser)
 
+
 def context(parser, args, **kwargs):
     action = {
         'create': context_create,
@@ -466,5 +493,5 @@ def context(parser, args, **kwargs):
         'upgrade': context_upgrade_dependency,
         'stage': context_stage,
         'install': context_install,
-        }
+    }
     action[args.context_command](args)
