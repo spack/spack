@@ -22,51 +22,60 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
 
 
-class Cgm(AutotoolsPackage):
-    """The Common Geometry Module, Argonne (CGMA) is a code library
-       which provides geometry functionality used for mesh generation and
-       other applications."""
-    homepage = "http://sigma.mcs.anl.gov/cgm-library"         
-    url = "http://ftp.mcs.anl.gov/pub/fathom/cgm-16.0.tar.gz"
+class Meshkit(AutotoolsPackage):
+    """MeshKit is an open-source library of mesh generation functionality.
+       Its design philosophy is two-fold: it provides a collection of
+       meshing algorithms for use in real meshing problems, along with
+       other tools commonly needed to support mesh generation"""
 
-    version('16.0', 'a68aa5954d82502ff75d5eb91a29a01c')
-    version('13.1.1', '4e8dbc4ba8f65767b29f985f7a23b01f')
-    version('13.1.0', 'a6c7b22660f164ce893fb974f9cb2028')
-    version('13.1', '95f724bda04919fc76818a5b7bc0b4ed')
+    homepage = "http://sigma.mcs.anl.gov/meshkit-library"
+    url = "http://ftp.mcs.anl.gov/pub/fathom/meshkit-1.5.0.tar.gz"
+
+    version('1.5.0',       '90b52416598ef65525ce4457a50ffe68')
 
     variant("mpi", default=True, description='enable mpi support')
-    variant("oce", default=False, description='enable oce geometry kernel')
+    variant("netgen", default=False, description='enable netgen support')
     variant("debug", default=False, description='enable debug symbols')
     variant("shared", default=False, description='enable shared builds')
 
     depends_on('mpi', when='+mpi')
-    depends_on('oce+X11', when='+oce')
+    depends_on('netgen', when='+netgen')
+    depends_on('cgm')
+    depends_on('moab+irel+fbigeom')
 
     def configure_args(self):
         spec = self.spec
-        args = []
-
+        args = [
+            "--with-igeom={0}".format(spec['cgm'].prefix),
+            "--with-imesh={0}".format(spec['moab'].prefix)
+        ]
         if '+mpi' in spec:
             args.extend([
                 "--with-mpi",
                 "CC={0}".format(spec['mpi'].mpicc),
-                "CXX={0}".format(spec['mpi'].mpicxx)
+                "CXX={0}".format(spec['mpi'].mpicxx),
+                "FC={0}".format(spec['mpi'].mpifc)
             ])
+#       FIXME without-mpi is not working
+#       else:
+#           args.append("--without-mpi")
+        if '+netgen' in spec:
+            args.append("--with-netgen={0}".format(spec['netgen'].prefix))
         else:
-            args.append("--without-mpi")
-
-        if '+oce' in spec:
-            args.append("--with-occ={0}".format(spec['oce'].prefix))
-        else:
-            args.append("--without-occ")
+            args.append("--without-netgen")
 
         if '+debug' in spec:
             args.append("--enable-debug")
+        else:
+            args.append("--disable-debug")
 
         if '+shared' in spec:
             args.append("--enable-shared")
+        else:
+            args.append("--disable-shared")
 
         return args
