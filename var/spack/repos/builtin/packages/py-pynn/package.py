@@ -42,8 +42,10 @@ class PyPynn(PythonPackage):
     depends_on('python@2.6:2.8,3.3:')
     depends_on('py-jinja2@2.7:',        type=('build', 'run'))
     depends_on('py-docutils@0.10:',     type=('build', 'run'))
-    depends_on('py-mock@1.0:',          type=('build', 'run'))
     depends_on('py-numpy@1.5:',         type=('build', 'run'))
     depends_on('py-quantities@0.10:',   type=('build', 'run'))
     depends_on('py-lazyarray@0.2.9:',   type=('build', 'run'))
     depends_on('py-neo@0.3:',           type=('build', 'run'))
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-mock@1.0:', type='test')
