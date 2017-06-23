@@ -407,8 +407,9 @@ def variant(
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
+        iorder = len(pkg.variants)
         pkg.variants[name] = Variant(
-            name, default, description, values, multi, validator
+            name, default, description, values, multi, validator, iorder
         )
     return _execute
 
