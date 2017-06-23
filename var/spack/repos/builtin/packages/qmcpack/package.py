@@ -46,8 +46,9 @@ class Qmcpack(CMakePackage):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.qmcpack.org/"
-    url      = "https://github.com/QMCPACK/qmcpack/archive/v3.0.0.tar.gz"
+    url      = "https://github.com/QMCPACK/qmcpack/archive/v3.1.0.tar.gz"
 
+    version('3.1.0', 'bdf3acd090557acdb6cab5ddbf7c7960')
     version('3.0.0', '75f9cf70e6cc6d8b7ff11a86340da43d')
 
     #
@@ -77,17 +78,17 @@ class Qmcpack(CMakePackage):
     # depends_on('py-numpy', type=('build', 'run'))
     # depends_on('py-matplotlib', type=('build', 'run'))
 
-    depends_on('espresso@5.3.0+qmchdf') 
+    depends_on('espresso@5.3.0+qmchdf+mpi+openmp~elpa~hdf5') 
 
     def cmake_args(self):
         args = []
 
-        # if "%intel" in self.spec:
-            # xHost is seldom helpful
-        #    filter_file(r'-xHost',' ','CMake/IntelCompilers.cmake')
+        filter_file(r'$ENV{LIBXML2_HOME}/lib',
+                    '${LIBXML2_HOME}/lib $ENV{LIBXML2_HOME}/lib',
+                    'CMake/FindLibxml2QMC.cmake')
   
-        print dir(self.spec['hdf5'].libs)
-        print self.spec['boost'].libs
+        print dir(self.spec['hdf5'].prefix)
+        print self.spec['boost'].prefix
 
         if 'cxxflags' in self.compiler.flags:
             cxx_flags = ' '.join(self.compiler.flags['cxxflags'])
@@ -100,14 +101,15 @@ class Qmcpack(CMakePackage):
         args.append('-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc ))
         args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx ))
         args.append('-DMPI_BASE_DIR:PATH={0}'.format(self.spec['mpi'].prefix ))
-        #args.append('-DLIBXML2_HOME={0}'.format(self.spec['libxml2'].prefix))
+        args.append('-DLIBXML2_HOME={0}'.format(self.spec['libxml2'].prefix))
         args.append('-DLibxml2_INCLUDE_DIRS={0}'.format(self.spec['libxml2'].prefix.include))
-        args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(self.spec['libxml2'].libs))
+        args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(self.spec['libxml2'].prefix.lib))
         args.append('-DFFTW_HOME={0}'.format(self.spec['fftw'].prefix))
         args.append('-DBOOST_ROOT={0}'.format(self.spec['boost'].prefix))
         args.append('-DHDF5_ROOT={0}'.format(self.spec['hdf5'].prefix))
         args.append('-DFFTW_INCLUDE_DIRS={0}'.format(self.spec['fftw'].prefix.include))
         args.append('-DFFTW_LIBRARY_DIRS={0}'.format(self.spec['fftw'].prefix.lib))
+        
 
         if '+cuda' in self.spec:
             args.append('-D QMC_CUDA=1')
@@ -117,3 +119,22 @@ class Qmcpack(CMakePackage):
             args.append('-D QMC_MIXED_PRECISION=1')
 
         return args
+
+    def install(self, spec, prefix):
+        """Make the install targets"""
+        with working_dir(self.build_directory):
+            # qmcpack doesn't have a make install
+            # We have to do our own install here.
+            mkdirp(prefix.include)
+            install_tree(join_path(self.build_directory, 'include'),
+                         prefix.include)
+                         
+            mkdirp(prefix.lib)
+            install_tree(join_path(self.build_directory, 'lib'),
+                         prefix.lib)
+                         
+            
+            mkdirp(prefix.bin)
+            install_tree(join_path(self.build_directory, 'bin'),
+                         prefix.bin)
+

@@ -89,8 +89,7 @@ class Espresso(Package):
 
     # To build with qmcpack's hdf5 interface we need to do the
     # following
-    patch('https://svn.qmcpack.org/svn/trunk/external_codes/quantum_espresso/add_pw2qmcpack_to_espresso-5.3.0.diff',
-      md5='ae395964e4d124f5eef48a53001513a0',
+    patch('add_pw2qmcpack_to_espresso-5.3.0.diff',
       when='@5.3.0+qmchdf')
 
 
