@@ -22,63 +22,72 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install dataspaces
-#
-# You can edit this file again by typing:
-#
-#     spack edit dataspaces
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
+
 from spack import *
 from subprocess import call
+
+def is_string(x):
+    """validate a string"""
+    try:
+        return isinstance(x, basestring)
+    except ValueError:
+        return False
 
 class Dataspaces(AutotoolsPackage):
     """an extreme scale data management framework."""
 
     homepage = "http://www.dataspaces.org"
-    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.1.tar.gz"
+    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.2.tar.gz"
 
-    version('1.6.1', '1866b0a6c4c95714adcedec32ee212ac')
+    version('1.6.2', '002c17151694d04e3469bf199a2223cb')
+    version('develop', git='https://github.com/melrom/dataspaces.git',
+            branch='master')
 
-    variant('dimes', 
-        default=False, 
-        description='enabled DIMES transport mode')
-
-    variant('infiniband',
-            default=False,
-            description='enabled infiniband transport fabric')
-
-    variant('ugni',
-            default=False,
-            description='enabled Cray uGNI transport fabric')
-
-    variant('tcp',
-            default=True,
-            description='enabled TCP socket transport')
-
-    variant('piclibs',
+    variant('dimes',
         default=False,
-        description='Build PIC versions of dataspaces libraries')
+        description='enabled DIMES transport mode')
+    variant('cray-drc',
+        default=False,
+        description='using Cray Dynamic Credentials library')
+    variant('gni-cookie',
+        default='0x5420000',
+        description='Cray UGNI communication token',
+        values=is_string)
+    variant('ptag',
+        default='250',
+        description='Cray UGNI protection tag',
+        values=is_string)
+    variant('mpi',
+        default=False,
+        description='Use MPI for collective communication')
 
-    # FIXME: Add dependencies if required.
+
     depends_on('m4')
     depends_on('automake')
     depends_on('autoconf')
     depends_on('libtool')
+    # spack interal pkg-config seems to cause problems on Titan
+    #depends_on('pkg-config')
+    depends_on('mpi', when='+mpi')
 
     def autoreconf(spec, prefix, self):
         call(['sh', './autogen.sh'])
 
     def configure_args(self):
-        args = ['CC=mpicc','FC=mpif90','LIBS=-lpthread -lm']
-	if self.spec.satisfies('+dimes'):
-	    args.extend(['--enable-dimes'])
-	return args
+        args = []
+        cookie = self.spec.variants['gni-cookie'].value
+        ptag = self.spec.variants['ptag'].value
+        if self.spec.satisfies('+dimes'):
+            args.extend(['--enable-dimes'])
+        if self.spec.satisfies('+cray-drc'):
+            args.extend(['--enable-drc'])
+        else:
+            args.extend(['--with-gni-cookie=%s' % cookie])
+            args.extend(['--with-gni-ptag=%s' % ptag])
+        if self.spec.satisfies('+mpi'):
+            args.extend(['CC=%s' % self.spec['mpi'].mpicc])
+            args.extend(['FC=%s' % self.spec['mpi'].mpifc])
+        if self.spec.satisfies('+mpi'):
+            args.extend(['CC=%s' % self.spec['mpi'].mpicc])
+            args.extend(['FC=%s' % self.spec['mpi'].mpifc])
+        return args
