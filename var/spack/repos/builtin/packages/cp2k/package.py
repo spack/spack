@@ -93,6 +93,8 @@ class Cp2k(Package):
             cppflags = [
                 '-D__FFTW3',
                 '-D__LIBINT',
+                '-D__LIBINT_MAX_AM=6',
+                '-D__LIBDERIV_MAX_AM1=5',
                 spec['fftw'].headers.cpp_flags
             ]
 
