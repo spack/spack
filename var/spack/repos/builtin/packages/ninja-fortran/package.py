@@ -26,14 +26,18 @@ from spack import *
 import os
 
 
-class Ninja(Package):
-    """ A small, fast Make alternative """
-    homepage = "https://martine.github.io/ninja/"
-    url      = "https://github.com/martine/ninja/archive/v1.6.0.tar.gz"
+class NinjaFortran(Package):
+    """ A Fortran capable fork of ninja """
+    homepage = "https://github.com/Kitware/ninja"
+    url      = "https://github.com/Kitware/ninja/archive/v1.7.2.gcc0ea.kitware.dyndep-1.tar.gz"
 
-    version('1.6.0', '254133059f2da79d8727f654d7198f43')
+    version('1.7.2', '3982f508c415c0abaca34cb5e92e711a')
 
     extends('python')
+
+    def url_for_version(self, version):
+        url = 'https://github.com/Kitware/ninja/archive/v{0}.gcc0ea.kitware.dyndep-1.tar.gz'
+        return url.format(version)
 
     def install(self, spec, prefix):
         python('configure.py', '--bootstrap')
