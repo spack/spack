@@ -22,29 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
 
 
-class GdkPixbuf(AutotoolsPackage):
-    """The Gdk Pixbuf is a toolkit for image loading and pixel buffer
-       manipulation. It is used by GTK+ 2 and GTK+ 3 to load and
-       manipulate images. In the past it was distributed as part of
-       GTK+ 2 but it was split off into a separate package in
-       preparation for the change to GTK+ 3."""
-    homepage = "https://developer.gnome.org/gdk-pixbuf/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/2.31/gdk-pixbuf-2.31.2.tar.xz"
-    list_url = "http://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/"
-    list_depth = 2
+class SharedMimeInfo(AutotoolsPackage):
+    """Database of common MIME types."""
 
-    version('2.31.2', '6be6bbc4f356d4b79ab4226860ab8523')
+    homepage = "https://freedesktop.org/wiki/Software/shared-mime-info"
+    url      = "http://freedesktop.org/~hadess/shared-mime-info-1.8.tar.xz"
 
-    depends_on("pkg-config", type="build")
-    depends_on("gettext")
-    depends_on("glib")
-    depends_on("jpeg")
-    depends_on("libpng")
-    depends_on("libtiff")
-    depends_on("gobject-introspection")
+    version('1.8', 'f6dcadce764605552fc956563efa058c')
+
+    parallel = False
+
+    depends_on('glib')
+    depends_on('libxml2')
+    depends_on('intltool', type='build')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path("XDG_DATA_DIRS",
