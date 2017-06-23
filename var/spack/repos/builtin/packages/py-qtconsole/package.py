@@ -35,7 +35,6 @@ class PyQtconsole(PythonPackage):
 
     variant('docs', default=False, description='Build documentation')
 
-    depends_on('py-setuptools',          type='build')
     depends_on('py-ipykernel@4.1:',      type=('build', 'run'))
     depends_on('py-jupyter-client@4.1:', type=('build', 'run'))
     depends_on('py-jupyter-core',        type=('build', 'run'))

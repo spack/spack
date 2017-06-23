@@ -252,12 +252,6 @@ class PythonPackage(PackageBase):
 
         args.append('--prefix={0}'.format(prefix))
 
-        # Skip rebuilding everything
-        # Without this flag, distutils/setuptools will try to rebuild
-        # packages already build with build_ext --rpath, overwriting
-        # the RPATH settings we used.
-        args.append('--skip-build')
-
         # This option causes python packages (including setuptools) NOT
         # to create eggs or easy-install.pth files.  Instead, they
         # install naturally into $prefix/pythonX.Y/site-packages.
@@ -283,12 +277,6 @@ class PythonPackage(PackageBase):
         """Install all Python modules (extensions and pure Python)."""
         args = self.install_lib_args(spec, prefix)
 
-        # Skip rebuilding everything
-        # Without this flag, distutils/setuptools will try to rebuild
-        # packages already build with build_ext --rpath, overwriting
-        # the RPATH settings we used.
-        args.append('--skip-build')
-
         self.setup_py('install_lib', *args)
 
     def install_lib_args(self, spec, prefix):
@@ -308,12 +296,6 @@ class PythonPackage(PackageBase):
     def install_scripts(self, spec, prefix):
         """Install scripts (Python or otherwise)."""
         args = self.install_scripts_args(spec, prefix)
-
-        # Skip rebuilding everything
-        # Without this flag, distutils/setuptools will try to rebuild
-        # packages already build with build_ext --rpath, overwriting
-        # the RPATH settings we used.
-        args.append('--skip-build')
 
         self.setup_py('install_scripts', *args)
 

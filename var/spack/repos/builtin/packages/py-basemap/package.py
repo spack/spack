@@ -37,11 +37,23 @@ class PyBasemap(PythonPackage):
     # Per Github issue #3813, setuptools is required at runtime in order
     # to make mpl_toolkits a namespace package that can span multiple
     # directories (i.e., matplotlib and basemap)
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools', type='run')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
     depends_on('geos')
+
+    def install(self, spec, prefix):
+        # The default `install` method adds `--single-version-external-managed`
+        # because the package depends on py-setuptools. But the package doesn't
+        # actually build with `py-setuptools`, it just needs it at run-time.
+        # Until I can figure out how to query direct build dependencies only,
+        # override the default `install` method.
+        args = self.install_args(spec, prefix)
+
+        args.append('--prefix={0}'.format(prefix))
+
+        self.setup_py('install', *args)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GEOS_DIR', self.spec['geos'].prefix)

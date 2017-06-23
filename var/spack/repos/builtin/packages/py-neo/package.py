@@ -31,9 +31,11 @@ class PyNeo(PythonPackage):
     file formats"""
 
     homepage = "http://neuralensemble.org/neo"
-    url      = "https://pypi.io/packages/source/n/neo/neo-0.4.1.tar.gz"
+    url      = "https://pypi.io/packages/source/n/neo/neo-0.5.1.tar.gz"
 
+    version('0.5.1', '26c31dffde215c4d317a6ff3d0a31030')
     version('0.4.1', 'f706df3a1bce835cb490b812ac198a6e')
+    version('0.3.3', '98e7e8948158f4492fc94d9d44367c91')
 
     depends_on('py-setuptools',        type='build')
     depends_on('py-numpy@1.7.1:',      type=('build', 'run'))

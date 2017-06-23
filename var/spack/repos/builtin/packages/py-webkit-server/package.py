@@ -33,3 +33,6 @@ class PyWebkitServer(PythonPackage):
 
     version('develop', git="https://github.com/niklasb/webkit-server", branch="master")
     version('1.0', '8463245c2b4f0264d934c0ae20bd4654')
+
+    # Requires qmake to build
+    depends_on('qt', type='build')
