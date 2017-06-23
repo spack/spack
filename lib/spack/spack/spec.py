@@ -1629,16 +1629,18 @@ class Spec(object):
                         # Replace spec with the candidate and normalize
                         copy = self.copy()
                         copy[spec.name]._dup(replacement, deps=False)
-                        dep_contexts_copy = [
-                            dict(x.items()) for x in dep_contexts]
+
+                        dep_context = {}
+                        for dep in copy.traverse(
+                            root=False, deptype=('link', 'run')):
+                            dep_context[dep.name] = dep
+                        dep_contexts_copy = [dep_context]
 
                         try:
                             # If there are duplicate providers or duplicate
                             # provider deps, consolidate them and merge
                             # constraints.
                             copy.normalize(dep_contexts_copy, force=True)
-                            for x, y in zip(dep_contexts, dep_contexts_copy):
-                                x.update(y.items())
                             break
                         except SpecError:
                             # On error, we'll try the next replacement.
@@ -1673,6 +1675,8 @@ class Spec(object):
                 # place. TODO: make this more efficient.
                 if spec.virtual:
                     spec._replace_with(replacement)
+                    for dep_context in dep_contexts:
+                        dep_context[spec.name] = spec
                     changed = True
                 if spec._dup(replacement, deps=False, cleardeps=False):
                     changed = True
@@ -1971,7 +1975,6 @@ class Spec(object):
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
-                # Do we depend on dep_name?  If so pkg_dep is not None.
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
                 deptypes = pkg.dependency_types[dep_name]
 
@@ -1979,9 +1982,7 @@ class Spec(object):
                     child_contexts = [build_context]
                 else:
                     child_contexts = dep_contexts
-
-                # If pkg_dep is a dependency, merge it.
-                local_changed = False
+                
                 if pkg_dep:
                     local_changed = self._merge_dependency(
                         pkg_dep, deptypes, child_contexts, visited,
