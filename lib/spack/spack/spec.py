@@ -1900,23 +1900,14 @@ class Spec(object):
                         raise UnsatisfiableProviderSpecError(required[0], dep)
             provider_index.update(dep)
 
+        pre_existing = [x for x in dep_contexts if dep.name in x]
+
         # If the spec isn't already in the set of dependencies, add it.
         # Note: dep is always owned by this method. If it's from the
         # caller, it's a copy from _evaluate_dependency_conditions. If it
         # comes from a vdep, it's a defensive copy from _find_provider.
-        pre_existing = [x for x in dep_contexts if dep.name in x]
-
-        children = list(self.traverse(deptype=('link', 'run')))
-        children.extend(self.dependencies(deptype='build'))
-        child_matches = list(x for x in children if dep.name == x.name)
-
-        if child_matches or pre_existing:
-            if not pre_existing:
-                print "dep missing from dep_context", self.name, dep.name
-                for dep_context in dep_contexts:
-                    dep_context[dep.name] = child_matches[0]
-            else:
-                dep_context = pre_existing[0]
+        if pre_existing:
+            dep_context = pre_existing[0]
             # merge package/vdep information into spec
             try:
                 changed |= dep_context[dep.name].constrain(dep)
@@ -1944,7 +1935,7 @@ class Spec(object):
             raise ValueError(
                 "{0} has {1} as a dependency".
                     format(self.name, child.format()) +
-                " but dep_context contains a reference to a different {2}".
+                " but dep_context contains a reference to a different {0}".
                     format(resolved.format()))
 
         changed |= resolved._normalize_helper(
