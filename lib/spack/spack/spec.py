@@ -1675,13 +1675,16 @@ class Spec(object):
                 # place. TODO: make this more efficient.
                 if spec.virtual:
                     spec._replace_with(replacement)
-                    for dep_context in dep_contexts:
-                        dep_context[spec.name] = spec
-                    changed = True
-                if spec._dup(replacement, deps=False, cleardeps=False):
+                    dep_contexts[0][replacement.name] = replacement
+                    dep_contexts[0][spec.name] = replacement
                     changed = True
 
-                self_index.update(spec)
+                if (spec == self) or (not spec.virtual):
+                    changed |= spec._dup(
+                        replacement, deps=False, cleardeps=False)
+                    self_index.update(spec)
+                else:
+                    self_index.update(replacement)
                 done = False
                 break
 
@@ -1882,6 +1885,8 @@ class Spec(object):
             provider = self._find_provider(dep, provider_index)
             if provider:
                 dep = provider
+                # TODO: note that the provider index can store a copy of a dep
+                # that isn't in this DAG
         else:
             index = ProviderIndex([dep], restrict=True)
             items = list(dep_contexts[0].items())
@@ -1907,6 +1912,7 @@ class Spec(object):
 
         if child_matches or pre_existing:
             if not pre_existing:
+                print "dep missing from dep_context", self.name, dep.name
                 for dep_context in dep_contexts:
                     dep_context[dep.name] = child_matches[0]
             else:
@@ -1933,6 +1939,13 @@ class Spec(object):
         # Add merged spec to my deps and recurse
         if resolved.name not in self._dependencies:
             self._add_dependency(resolved, deptypes)
+        elif self._dependencies[resolved.name].spec != resolved:
+            child = self._dependencies[resolved.name].spec
+            raise ValueError(
+                "{0} has {1} as a dependency".
+                    format(self.name, child.format()) +
+                " but dep_context contains a reference to a different {2}".
+                    format(resolved.format()))
 
         changed |= resolved._normalize_helper(
             dep_contexts, visited, provider_index)
