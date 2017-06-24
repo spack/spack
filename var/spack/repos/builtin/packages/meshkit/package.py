@@ -45,7 +45,7 @@ class Meshkit(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     depends_on('netgen', when='+netgen')
     depends_on('cgm')
-    depends_on('moab+irel+fbigeom')
+    depends_on('moab+cgm+irel+fbigeom')
 
     def configure_args(self):
         spec = self.spec
