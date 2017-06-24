@@ -1885,8 +1885,6 @@ class Spec(object):
             provider = self._find_provider(dep, provider_index)
             if provider:
                 dep = provider
-                # TODO: note that the provider index can store a copy of a dep
-                # that isn't in this DAG
         else:
             index = ProviderIndex([dep], restrict=True)
             items = list(dep_contexts[0].items())
