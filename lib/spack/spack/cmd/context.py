@@ -227,10 +227,10 @@ def write(context, new_repo=None):
         tty.die("Partial write state, run 'spack context repair'")
 
     fs.mkdirp(tmp_new)
-    #create one file for the full specs in json format
+    # create one file for the full specs in json format
     with open(fs.join_path(tmp_new, 'full_specs.json'), 'w') as F:
         store_specs_by_hash(context.specs_by_hash, F)
-    #create one file for the rest of the data in yaml format
+    # create one file for the rest of the data in yaml format
     with open(fs.join_path(tmp_new, 'context.yaml'), 'w') as F:
         syaml.dump(context.to_dict(), stream=F, default_flow_style=False)
 
@@ -244,7 +244,7 @@ def write(context, new_repo=None):
         shutil.move(dest, tmp_old)
     shutil.move(tmp_new, dest)
     if os.path.exists(tmp_old):
-        shutil.rmtree(tmp_old) 
+        shutil.rmtree(tmp_old)
 
 
 def write_paths(context):
@@ -261,7 +261,7 @@ def repair(context_name):
         tmp_new, tmp_old
         tmp_old, dest
     """
-    c = Context(context_name)
+    context = Context(context_name)
     tmp_new, dest, tmp_old = write_paths(context)
     if os.path.exists(tmp_old):
         if not os.path.exists(dest):
