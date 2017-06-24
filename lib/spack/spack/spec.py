@@ -1943,6 +1943,9 @@ class Spec(object):
     def _normalize_helper(self, dep_contexts, visited, provider_index):
         """Recursive helper function for _normalize."""
         if self in visited:
+            for x in self.traverse(deptype=('link', 'run')):
+                for C in dep_contexts:
+                    C[x.name] = x
             return False
         visited.add(self)
 
