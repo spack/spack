@@ -51,18 +51,16 @@ class Qmcpack(CMakePackage):
     version('3.1.0', 'bdf3acd090557acdb6cab5ddbf7c7960')
     version('3.0.0', '75f9cf70e6cc6d8b7ff11a86340da43d')
 
-    #
+    # This download method is untrusted, and is not recommend by th Spack manual.
+    version('develop', git='https://github.com/QMCPACK/qmcpack.git')
+
+    # These defaults match those in the QMCPACK manual
+    variant('debug', default=False, description='Build debug version')
     variant('cuda', default=False, description='Enable CUDA and GPU acceleration.')
     variant('complex', default=True, description='Build the complex (general twist/k-point) version')
-    variant('debug', default=False, description='Build debug version')
-   
+    variant('mixed', default=False, description='Build the mixed precision (mixing double/float) version for gpu/cpu')
 
-    # if '+cuda' in spec:
-    #    variant('mixed', default=True, description='Build the mixed precision (mixing double/float) version')
-    # else:
-    variant('mixed', default=False, description='Build the mixed precision (mixing double/float) version for cuda')
-
-    depends_on('cmake@2.8.0:', type='build')
+    depends_on('cmake@3.4.3:', type='build')
     depends_on('mpi')
     depends_on('libxml2')
     depends_on('hdf5+mpi')
@@ -71,14 +69,13 @@ class Qmcpack(CMakePackage):
     depends_on('lapack')
     depends_on('fftw')
     depends_on('cuda', when='+cuda')
-    depends_on('cuda', when='+mixed')
    
-    # qmca needs 
+    # qmcpack needs these optional for data analysis, but it leads to a long complex DAG for dependencies
     # depends_on('python', type=('build', 'run'))
     # depends_on('py-numpy', type=('build', 'run'))
     # depends_on('py-matplotlib', type=('build', 'run'))
 
-    depends_on('espresso@5.3.0+qmchdf+mpi+openmp~elpa~hdf5') 
+    depends_on('espresso@5.3.0+qmcpack~elpa') 
 
     def cmake_args(self):
         args = []
@@ -111,11 +108,13 @@ class Qmcpack(CMakePackage):
         args.append('-DFFTW_LIBRARY_DIRS={0}'.format(self.spec['fftw'].prefix.lib))
         
 
+        # when '-D QMC_CUDA=1', CMake automatically sets '-D QMC_MIXED_PRECISION=1'
+        # there is a double-precision CUDA path, but it is deprecated
         if '+cuda' in self.spec:
             args.append('-D QMC_CUDA=1')
 
+        # this is for the experimental mixed-prescision CPU code 
         if '+mixed' in self.spec:
-            args.append('-D QMC_CUDA=1')
             args.append('-D QMC_MIXED_PRECISION=1')
 
         return args

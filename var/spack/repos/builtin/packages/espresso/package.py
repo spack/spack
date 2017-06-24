@@ -60,7 +60,8 @@ class Espresso(Package):
     # still experimental, therefore we default to False for the variant
     variant('hdf5', default=False, description='Builds with HDF5 support')
 
-    variant('qmchdf', default=False, description='Build for qmcpack use')
+    # Build using the QMCPACK patch. Only for Quantum-Epresso 5.3.0.
+    variant('qmcpack', default=False, description='Build for qmcpack use')
 
     depends_on('blas')
     depends_on('lapack')
@@ -87,10 +88,12 @@ class Espresso(Package):
     conflicts('+elpa', when='@:5.4.0')
     conflicts('+hdf5', when='@:5.4.0')
 
-    # To build with qmcpack's hdf5 interface we need to do the
-    # following
+    # To build with QMCPACK's hdf5 interface we version 5.3.0
+    # and hdf5
+    conflicts('+qmcpack', when='@5.4:')
+    depends_on('hdf5', when='+qmcpack')
     patch('add_pw2qmcpack_to_espresso-5.3.0.diff',
-      when='@5.3.0+qmchdf')
+      when='@5.3.0+qmcpack')
 
 
     # Spurious problems running in parallel the Makefile
