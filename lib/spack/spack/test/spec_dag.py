@@ -81,7 +81,7 @@ class TestSpecDag(object):
         # TODO: try to do something to show that the issue was with
         # TODO: the user's input or with package inconsistencies.
         with pytest.raises(spack.spec.UnsatisfiableVersionSpecError):
-            spec.normalize()
+            spec.normalize_top()
 
     def test_preorder_node_traversal(self):
         dag = Spec('mpileaks ^zmpi')
@@ -230,49 +230,49 @@ class TestSpecDag(object):
                     Spec('mpi'))
 
         check_links(spec)
-        spec.normalize()
+        spec.normalize_top()
         check_links(spec)
 
     def test_unsatisfiable_version(self, set_dependency):
         set_dependency('mpileaks', 'mpich@1.0')
         spec = Spec('mpileaks ^mpich@2.0 ^callpath ^dyninst ^libelf ^libdwarf')
         with pytest.raises(spack.spec.UnsatisfiableVersionSpecError):
-            spec.normalize()
+            spec.normalize_top()
 
     def test_unsatisfiable_compiler(self, set_dependency):
         set_dependency('mpileaks', 'mpich%gcc')
         spec = Spec('mpileaks ^mpich%intel ^callpath ^dyninst ^libelf'
                     ' ^libdwarf')
         with pytest.raises(spack.spec.UnsatisfiableCompilerSpecError):
-            spec.normalize()
+            spec.normalize_top()
 
     def test_unsatisfiable_compiler_version(self, set_dependency):
         set_dependency('mpileaks', 'mpich%gcc@4.6')
         spec = Spec('mpileaks ^mpich%gcc@4.5 ^callpath ^dyninst ^libelf'
                     ' ^libdwarf')
         with pytest.raises(spack.spec.UnsatisfiableCompilerSpecError):
-            spec.normalize()
+            spec.normalize_top()
 
     def test_unsatisfiable_architecture(self, set_dependency):
         set_dependency('mpileaks', 'mpich platform=test target=be')
         spec = Spec('mpileaks ^mpich platform=test target=fe ^callpath'
                     ' ^dyninst ^libelf ^libdwarf')
         with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
-            spec.normalize()
+            spec.normalize_top()
 
     @pytest.mark.skip(reason="TODO: need to reimplement this")
     def test_invalid_dep(self):
         spec = Spec('libelf ^mpich')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize()
+            spec.normalize_top()
 
         spec = Spec('libelf ^libdwarf')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize()
+            spec.normalize_top()
 
         spec = Spec('mpich ^dyninst ^libelf')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize()
+            spec.normalize_top()
 
     def test_equal(self):
         # Different spec structures to test for equality
@@ -380,7 +380,7 @@ class TestSpecDag(object):
 
     def test_normalize_with_virtual_package(self):
         spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
-        spec.normalize()
+        spec.normalize_top()
 
         expected_normalized = Spec(
             'mpileaks',
