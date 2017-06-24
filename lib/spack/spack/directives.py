@@ -126,7 +126,7 @@ class DirectiveMetaMixin(type):
             # Ensure the presence of the dictionaries associated
             # with the directives
             for d in DirectiveMetaMixin._directive_names:
-                setattr(cls, d, {})
+                setattr(cls, d, collections.OrderedDict())
             # Lazy execution of directives
             for command in cls._directives_to_be_executed:
                 command(cls)
@@ -407,9 +407,8 @@ def variant(
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
-        iorder = len(pkg.variants)
         pkg.variants[name] = Variant(
-            name, default, description, values, multi, validator, iorder
+            name, default, description, values, multi, validator
         )
     return _execute
 
