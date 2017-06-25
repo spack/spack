@@ -1045,7 +1045,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         touch(join_path(self.prefix.lib, library_name + dso_suffix))
         touch(join_path(self.prefix.lib, library_name + '.a'))
 
-        mkdirp(self.prefix.man1)
+        mkdirp(self.prefix.man.man1)
 
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)
