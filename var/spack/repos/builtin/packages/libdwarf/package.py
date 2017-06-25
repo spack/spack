@@ -68,7 +68,7 @@ class Libdwarf(Package):
             make.add_default_arg('ARFLAGS=rcs')
 
             # Dwarf doesn't provide an install, so we have to do it.
-            mkdirp(prefix.bin, prefix.include, prefix.lib, prefix.man1)
+            mkdirp(prefix.bin, prefix.include, prefix.lib, prefix.man.man1)
 
             with working_dir('libdwarf'):
                 extra_config_args = []
@@ -101,4 +101,4 @@ class Libdwarf(Package):
 
                 install('dwarfdump',      prefix.bin)
                 install('dwarfdump.conf', prefix.lib)
-                install('dwarfdump.1',    prefix.man1)
+                install('dwarfdump.1',    prefix.man.man1)

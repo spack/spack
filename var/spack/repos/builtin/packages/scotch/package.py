@@ -249,4 +249,4 @@ class Scotch(Package):
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
-        install_tree('man/man1', prefix.share_man1)
+        install_tree('man/man1', prefix.share.man.man1)

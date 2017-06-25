@@ -51,5 +51,5 @@ class Bwa(Package):
         mkdirp(prefix.doc)
         install('README.md', prefix.doc)
         install('NEWS.md', prefix.doc)
-        mkdirp(prefix.man1)
-        install('bwa.1', prefix.man1)
+        mkdirp(prefix.man.man1)
+        install('bwa.1', prefix.man.man1)

@@ -186,6 +186,6 @@ class Git(AutotoolsPackage):
         prefix = self.prefix
 
         with working_dir('git-manpages'):
-            install_tree('man1', prefix.share_man1)
-            install_tree('man5', prefix.share_man5)
-            install_tree('man7', prefix.share_man7)
+            install_tree('man1', prefix.share.man.man1)
+            install_tree('man5', prefix.share.man.man5)
+            install_tree('man7', prefix.share.man.man7)
