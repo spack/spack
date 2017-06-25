@@ -29,8 +29,9 @@ class Libmongoc(AutotoolsPackage):
     """libmongoc is a client library written in C for MongoDB."""
 
     homepage = "https://github.com/mongodb/mongo-c-driver"
-    url      = "https://github.com/mongodb/mongo-c-driver/releases/download/1.6.2/mongo-c-driver-1.6.2.tar.gz"
+    url      = "https://github.com/mongodb/mongo-c-driver/releases/download/1.6.3/mongo-c-driver-1.6.3.tar.gz"
 
+    version('1.6.3', '0193610cf1d98aae7008f272a1000972')
     version('1.6.2', 'aac86df153282cda1e4905cca181631a')
     version('1.6.1', '826946de9a15f7f453aefecdc76b1c0d')
 
