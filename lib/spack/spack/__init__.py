@@ -214,6 +214,8 @@ __all__ += spack.util.executable.__all__
 
 
 # Set up the user's editor
+_default_editors = ['vim', 'vi', 'emacs', 'nano']
+
 # $EDITOR environment variable has the highest precedence
 editor = os.environ.get('EDITOR')
 
@@ -221,14 +223,13 @@ editor = os.environ.get('EDITOR')
 if editor is not None:
     editor = Executable(editor)
 else:
-    editor = which('vim', 'vi', 'emacs', 'nano')
+    editor = which()
 
+# Editor doesn't exist, but this will only fail when someone tries to
+# invoke it.  Spack shouldn't raise an error if the editor is not found
+# here, because it will cause non-interactive Spack jobs to fail.
 if not editor:
-    default = default_editors[0]
-    msg  = 'Default text editor, {0}, not found.\n'.format(default)
-    msg += 'Please set the EDITOR environment variable to your preferred '
-    msg += 'text editor, or install {0}.'.format(default)
-    raise EnvironmentError(msg)
+    editor = Executable(_default_editors[0])
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
