@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -42,6 +42,6 @@ class Httpie(PythonPackage):
     depends_on('py-pysocks', type=('build', 'run'), when="+socks")
     # Concretization problem breaks this.  Unconditional for now...
     # https://github.com/LLNL/spack/issues/3628
-    # depends_on('py-argparse@1.2.1:', type=('build', 'run'), 
+    # depends_on('py-argparse@1.2.1:', type=('build', 'run'),
     #            when='^python@:2.6,3.0:3.1')
     depends_on('py-argparse@1.2.1:', type=('build', 'run'))
