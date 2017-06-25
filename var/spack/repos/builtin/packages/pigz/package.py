@@ -41,6 +41,6 @@ class Pigz(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        mkdirp(prefix.man1)
+        mkdirp(prefix.man.man1)
         install('pigz', "%s/pigz" % prefix.bin)
-        install('pigz.1', "%s/pigz.1" % prefix.man1)
+        install('pigz.1', "%s/pigz.1" % prefix.man.man1)

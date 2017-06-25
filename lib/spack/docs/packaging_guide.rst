@@ -2408,15 +2408,21 @@ is handy when a package supports additional variants like
 Blas and Lapack libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Different packages provide implementation of ``Blas`` and ``Lapack``
+Multiple packages provide implementations of ``Blas`` and ``Lapack``
 routines.  The names of the resulting static and/or shared libraries
 differ from package to package. In order to make the ``install()`` method
 independent of the choice of ``Blas`` implementation, each package which
 provides it sets up ``self.spec.blas_libs`` to point to the correct
 ``Blas`` libraries.  The same applies to packages which provide
 ``Lapack``. Package developers are advised to use these variables, for
-example ``spec['blas'].blas_libs.joined()`` instead of hard-coding
-``join_path(spec['blas'].prefix.lib, 'libopenblas.so')``.
+example ``spec['blas'].blas_libs.joined()`` instead of hard-coding them:
+
+.. code-block:: python
+
+   if 'openblas' in spec:
+       libs = join_path(spec['blas'].prefix.lib, 'libopenblas.so')
+   elif 'intel-mkl' in spec:
+       ...
 
 .. _prefix-objects:
 
@@ -2430,7 +2436,7 @@ e.g.:
 
 .. code-block:: python
 
-   configure('--prefix=' + prefix)
+   configure('--prefix={0}'.format(prefix))
 
 For the most part, prefix objects behave exactly like strings.  For
 packages that do not have their own install target, or for those that
@@ -2451,29 +2457,27 @@ yourself, e.g.:
        mkdirp(prefix.lib)
        install('libfoo.a', prefix.lib)
 
-Most of the standard UNIX directory names are attributes on the
-``prefix`` object.  Here is a full list:
 
-  =========================  ================================================
-  Prefix Attribute           Location
-  =========================  ================================================
-  ``prefix.bin``             ``$prefix/bin``
-  ``prefix.sbin``            ``$prefix/sbin``
-  ``prefix.etc``             ``$prefix/etc``
-  ``prefix.include``         ``$prefix/include``
-  ``prefix.lib``             ``$prefix/lib``
-  ``prefix.lib64``           ``$prefix/lib64``
-  ``prefix.libexec``         ``$prefix/libexec``
-  ``prefix.share``           ``$prefix/share``
-  ``prefix.doc``             ``$prefix/doc``
-  ``prefix.info``            ``$prefix/info``
+Attributes of this object are created on the fly when you request them,
+so any of the following will work:
 
-  ``prefix.man``             ``$prefix/man``
-  ``prefix.man[1-8]``        ``$prefix/man/man[1-8]``
+======================  =======================
+Prefix Attribute        Location
+======================  =======================
+``prefix.bin``          ``$prefix/bin``
+``prefix.lib64``        ``$prefix/lib64``
+``prefix.share.man``    ``$prefix/share/man``
+``prefix.foo.bar.baz``  ``$prefix/foo/bar/baz``
+======================  =======================
 
-  ``prefix.share_man``       ``$prefix/share/man``
-  ``prefix.share_man[1-8]``  ``$prefix/share/man[1-8]``
-  =========================  ================================================
+Of course, this only works if your file or directory is a valid Python
+variable name. If your file or directory contains dashes or dots, use
+``join_path`` instead:
+
+.. code-block:: python
+
+   join_path(prefix.lib, 'libz.a')
+
 
 .. _spec-objects:
 
@@ -2572,23 +2576,25 @@ of its dependencies satisfy the provided spec.
 Accessing Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^
 
-You may need to get at some file or binary that's in the prefix of one
-of your dependencies.  You can do that by sub-scripting the spec:
+You may need to get at some file or binary that's in the installation
+prefix of one of your dependencies. You can do that by sub-scripting
+the spec:
 
 .. code-block:: python
 
-   my_mpi = spec['mpi']
+   spec['mpi']
 
 The value in the brackets needs to be some package name, and spec
 needs to depend on that package, or the operation will fail.  For
 example, the above code will fail if the ``spec`` doesn't depend on
-``mpi``.  The value returned and assigned to ``my_mpi``, is itself
-just another ``Spec`` object, so you can do all the same things you
-would do with the package's own spec:
+``mpi``.  The value returned is itself just another ``Spec`` object,
+so you can do all the same things you would do with the package's
+own spec:
 
 .. code-block:: python
 
-   mpicc = join_path(my_mpi.prefix.bin, 'mpicc')
+   spec['mpi'].prefix.bin
+   spec['mpi'].version
 
 .. _multimethods:
 
@@ -3086,7 +3092,7 @@ Filtering functions
      .. code-block:: python
 
         filter_file(r'#!/usr/bin/perl',
-                    '#!/usr/bin/env perl', join_path(prefix.bin, 'bib2xhtml'))
+                    '#!/usr/bin/env perl', prefix.bin.bib2xhtml)
 
   #. Switching the compilers used by ``mpich``'s MPI wrapper scripts from
      ``cc``, etc. to the compilers used by the Spack build:
@@ -3094,10 +3100,10 @@ Filtering functions
      .. code-block:: python
 
         filter_file('CC="cc"', 'CC="%s"' % self.compiler.cc,
-                    join_path(prefix.bin, 'mpicc'))
+                    prefix.bin.mpicc)
 
         filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx,
-                    join_path(prefix.bin, 'mpicxx'))
+                    prefix.bin.mpicxx)
 
 :py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.change_sed_delim>`
     Some packages, like TAU, have a build system that can't install
@@ -3134,12 +3140,10 @@ File functions
 
   .. code-block:: python
 
-     install('my-header.h', join_path(prefix.include))
+     install('my-header.h', prefix.include)
 
-:py:func:`join_path(prefix, *args) <spack.join_path>`
-  Like ``os.path.join``, this joins paths using the OS path separator.
-  However, this version allows an arbitrary number of arguments, so
-  you can string together many path components.
+:py:func:`join_path(*paths) <spack.join_path>`
+  An alias for ``os.path.join``. This joins paths using the OS path separator.
 
 :py:func:`mkdirp(*paths) <spack.mkdirp>`
   Create each of the directories in ``paths``, creating any parent

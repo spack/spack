@@ -57,14 +57,14 @@ class Mercurial(PythonPackage):
         prefix = self.prefix
 
         # Install man pages
-        mkdirp(prefix.man1)
-        mkdirp(prefix.man5)
-        mkdirp(prefix.man8)
+        mkdirp(prefix.man.man1)
+        mkdirp(prefix.man.man5)
+        mkdirp(prefix.man.man8)
         with working_dir('doc'):
-            install('hg.1', prefix.man1)
-            install('hgignore.5', prefix.man5)
-            install('hgrc.5', prefix.man5)
-            install('hg-ssh.8', prefix.man8)
+            install('hg.1', prefix.man.man1)
+            install('hgignore.5', prefix.man.man5)
+            install('hgrc.5', prefix.man.man5)
+            install('hg-ssh.8', prefix.man.man8)
 
         # Install completion scripts
         contrib = join_path(prefix, 'contrib')
