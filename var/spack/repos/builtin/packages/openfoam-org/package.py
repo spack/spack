@@ -6,7 +6,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for the LLNL notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
 #
 # License
 # -------
