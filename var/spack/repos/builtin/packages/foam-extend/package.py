@@ -100,7 +100,7 @@ class FoamExtend(Package):
     depends_on('mpi')
     depends_on('python')
     depends_on('zlib')
-    depends_on('flex@:2.6.1')  # <- restriction due to scotch
+    depends_on('flex',  type='build')
     depends_on('cmake', type='build')
 
     depends_on('scotch~metis',     when='~ptscotch+scotch')
