@@ -34,9 +34,8 @@ class Flex(AutotoolsPackage):
 
     version('2.6.4', '2882e3179748cc9f9c23ec593d6adc8d')
     version('2.6.3', 'a5f65570cd9107ec8a8ec88f17b31bb1')
-    # Problematic version:
+    # Avoid flex '2.6.2' (major bug)
     # See issue #2554; https://github.com/westes/flex/issues/113
-    # version('2.6.2', 'cc6d76c333db7653d5caf423a3335239')
     version('2.6.1', '05bcd8fb629e0ae130311e8a6106fa82')
     version('2.6.0', '760be2ee9433e822b6eb65318311c19d')
     version('2.5.39', '5865e76ac69c05699f476515592750d7')
