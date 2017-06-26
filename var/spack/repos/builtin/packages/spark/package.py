@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -72,7 +72,7 @@ class Spark(Package):
         # spack_env.set('JAVA_HOME', self.spec['jdk'].prefix)
 
         hadoop = self.spec['hadoop'].command
-        hadoop_classpath = hadoop('classpath', return_output=True)
+        hadoop_classpath = hadoop('classpath', output=str)
 
         # Remove whitespaces, as they can compromise syntax in
         # module files

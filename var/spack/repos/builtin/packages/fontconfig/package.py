@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,12 +28,14 @@ from spack import *
 class Fontconfig(AutotoolsPackage):
     """Fontconfig is a library for configuring/customizing font access"""
     homepage = "http://www.freedesktop.org/wiki/Software/fontconfig/"
-    url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.12.1.tar.gz"
+    url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.12.3.tar.gz"
 
+    version('2.12.3', 'aca0c734c1a38eb3ba12b2447dd90ab0')
     version('2.12.1', 'ce55e525c37147eee14cc2de6cc09f6c')
     version('2.11.1', 'e75e303b4f7756c2b16203a57ac87eba')
 
     depends_on('freetype')
+    depends_on('gperf', type='build', when='@2.12.2:')
     depends_on('libxml2')
     depends_on('pkg-config', type='build')
     depends_on('font-util')
