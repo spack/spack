@@ -723,6 +723,43 @@ used on Cray machines, see :ref:`cray-support`
 
 .. _sec-virtual-dependencies:
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installation to an external prefix
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack installs packages to a location determined by the spec.
+
+.. code-block:: console
+
+    $SPACK_ROOT/opt/spack/<architecture>/<compiler>-<compilerversion>/<name>-<version>-<hash>
+
+Spack has a variety of convenience functions used to manage these
+installations, from the ``spack find`` command to see installed
+packages to the ``spack load`` command which sets the environment to
+use an installed package.
+
+It is also possible to specify an external prefix to which Spack will
+install a package. The syntax is similar to an architecture or a
+non-boolean variant.
+
+.. code-block:: console
+
+    $ spack install mpileaks prefix=/path/to/install %intel
+
+If the package is already installed, Spack will not install it to a
+new prefix. If another package is installed to the prefix specified,
+Spack will exit with an error and print a message pointing out the
+package that is installed in that prefix.
+
+.. warning::
+    Spack contains substantial logic to prevent package
+      installations from interfering with one another. Overriding the
+      installation prefix limits the efficacy of this logic. Only
+      override the installation prefix if you are prepared to ensure for
+      yourself that all packages (in all combinatorial versions) are
+      installed to unique prefixes. Overriding the installation prefix
+      is not recommended unless necessary.
+
 --------------------
 Virtual dependencies
 --------------------
