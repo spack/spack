@@ -83,18 +83,12 @@ class IntelMpi(IntelPackage):
         spack_env.set('I_MPI_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
-        # Check for presence of bin64 or bin directory
-        if os.path.isdir(self.prefix.bin):
-            bindir = self.prefix.bin
-        elif os.path.isdir(self.prefix.bin64):
-            bindir = self.prefix.bin64
-        else:
-            raise RuntimeError('No suitable bindir found')
+        bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
 
-        self.spec.mpicc = join_path(bindir, 'mpicc')
-        self.spec.mpicxx = join_path(bindir, 'mpicxx')
-        self.spec.mpifc = join_path(bindir, 'mpif90')
-        self.spec.mpif77 = join_path(bindir, 'mpif77')
+        self.spec.mpicc  = bindir.mpicc
+        self.spec.mpicxx = bindir.mpicxx
+        self.spec.mpifc  = bindir.mpif90
+        self.spec.mpif77 = bindir.mpif77
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
