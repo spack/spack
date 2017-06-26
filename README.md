@@ -105,7 +105,7 @@ If you are referencing Spack in a publication, please cite the following paper:
 Release
 ----------------
 Spack is released under an LGPL license.  For more details see the
-LICENSE file.
+NOTICE and LICENSE files.
 
 ``LLNL-CODE-647188``
 

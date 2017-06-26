@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ class PyPytestCov(PythonPackage):
     """Pytest plugin for measuring coverage."""
 
     homepage = "https://github.com/pytest-dev/pytest-cov"
-    url =      "https://pypi.io/packages/source/p/pytest-cov/pytest-cov-2.3.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pytest-cov/pytest-cov-2.3.1.tar.gz"
 
     version('2.3.1', '8e7475454313a035d08f387ee6d725cb')
 
