@@ -72,7 +72,7 @@ class Clhep(CMakePackage):
             return 'Debug'
         else:
             return 'MinSizeRel'
-        
+
     def cmake_args(self):
         spec = self.spec
         cmake_args = []
