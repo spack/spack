@@ -1177,8 +1177,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
             dirty (bool): Don't clean the build environment before installing.
-            force (bool): Install again, even if already installed or if
-                another package is installed to its prefix.
+            force (bool): Install again, even if already installed.
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
