@@ -244,21 +244,6 @@ index 2c2e5cee7..c9c0072c9 100755
  function find_gdk_include ()
  {
      find_dir "$default_gdk_includes" "$gdk_include_check"
-@@ -352,11 +382,14 @@ function show_help ()
-     echo "  --with-openblas[=directory] (experimental) $(show_default $(find_openblas))"
-     echo "  --with-buildtype=(debug|release) $(show_default $default_buildtype)"
-     echo "  --with-kaldi[=directory] $(show_default $(find_kaldi))"
-+    echo "  --with-openfst[=directory] $(show_default $(find_openfst))"
-     echo "  --with-opencv[=directory] $(show_default $(find_opencv))"
-     echo "  --with-libzip[=directory] $(show_default $(find_libzip))"
-     echo "  --with-code-coverage[=(yes|no)] $(show_default ${default_use_code_coverage})"
-     echo "  --with-boost[=directory] $(show_default $(find_boost))"
-     echo "  --with-protobuf[=directory] $(show_default $(find_protobuf))"
-+    echo "  --with-multiverso[=directory] $(show_default $(find_multiverso))"
-+    echo "  --with-1bitsgd[=directory] $(show_default $(find_onebitsgd))"
-     echo "  --with-py-versions=(space-separated list of 27, 34, 35)"
-     echo "  --with-py27-path[=directory] $(show_default $(find_python 27))"
-     echo "  --with-py34-path[=directory] $(show_default $(find_python 34))"
 @@ -751,6 +784,46 @@ do
                  fi
               fi
