@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -51,6 +51,8 @@ class PkgConfig(AutotoolsPackage):
         files."""
         spack_env.append_path('PKG_CONFIG_PATH', '/usr/lib64/pkgconfig')
         spack_env.append_path('PKG_CONFIG_PATH', '/usr/local/lib64/pkgconfig')
+        spack_env.append_path('ACLOCAL_PATH',
+                              join_path(self.prefix.share, 'aclocal'))
 
     def configure_args(self):
         config_args = ['--enable-shared']

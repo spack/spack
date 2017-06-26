@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,6 +30,5 @@ class RModeltools(RPackage):
 
     homepage = "https://cran.r-project.org/package=modeltools"
     url      = "https://cran.r-project.org/src/contrib/modeltools_0.2-21.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/modeltools"
 
     version('0.2-21', '3bf56b2e7bf78981444385d87eeccdd7')

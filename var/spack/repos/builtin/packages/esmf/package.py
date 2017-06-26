@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,7 +26,7 @@ from spack import *
 import os
 
 
-class Esmf(Package):
+class Esmf(MakefilePackage):
     """The Earth System Modeling Framework (ESMF) is high-performance, flexible
     software infrastructure for building and coupling weather, climate, and
     related Earth science applications. The ESMF defines an architecture for
@@ -47,25 +47,28 @@ class Esmf(Package):
     variant('debug',   default=False, description='Make a debuggable version of the library')
 
     # Required dependencies
-    depends_on('mpi', when='+mpi')
     depends_on('zlib')
     depends_on('libxml2')
-    # depends_on('perl', type='test')  # TODO: Add a test deptype
 
     # Optional dependencies
+    depends_on('mpi', when='+mpi')
     depends_on('lapack@3:', when='+lapack')
     depends_on('netcdf@3.6:', when='+netcdf')
     depends_on('netcdf-fortran@3.6:', when='+netcdf')
     depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
     depends_on('xerces-c@3.1.0:', when='+xerces')
 
+    # Testing dependencies
+    # depends_on('perl', type='test')  # TODO: Add a test deptype
+
     # NOTE: ESMF cannot be installed with GCC 6. It uses constructs that
     # are no longer valid in GCC 6. GCC 4 is recommended for installation.
+    conflicts('%gcc@6:')
 
     def url_for_version(self, version):
         return "http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
 
-    def install(self, spec, prefix):
+    def edit(self, spec, prefix):
         # Installation instructions can be found at:
         # http://www.earthsystemmodeling.org/esmf_releases/last_built/ESMF_usrdoc/node9.html
 
@@ -238,16 +241,5 @@ class Esmf(Package):
             # ESMF_XERCES_INCLUDE
             # ESMF_XERCES_LIBPATH
 
-        ################
-        # Installation #
-        ################
-
-        make()
-
-        if self.run_tests:
-            make('check', parallel=False)
-
-        make('install')
-
-        if self.run_tests:
-            make('installcheck')
+    def check(self):
+        make('check', parallel=False)

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,7 @@ class ImageMagick(AutotoolsPackage):
     homepage = "http://www.imagemagick.org"
     url = "https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz"
 
+    version('7.0.5-9', '0bcde35180778a61367599e46ff40cb4')
     version('7.0.2-7', 'c59cdc8df50e481b2bd1afe09ac24c08')
     version('7.0.2-6', 'aa5689129c39a5146a3212bf5f26d478')
 

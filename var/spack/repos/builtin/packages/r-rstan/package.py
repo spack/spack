@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,7 +38,6 @@ class RRstan(RPackage):
 
     homepage = "http://mc-stan.org/"
     url      = "https://cran.r-project.org/src/contrib/rstan_2.10.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstan"
 
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 

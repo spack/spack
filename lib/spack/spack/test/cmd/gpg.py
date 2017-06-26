@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
-import os.path
+import os
 
 import pytest
 import spack
@@ -42,7 +42,7 @@ def testing_gpg_directory(tmpdir):
 
 def has_gnupg2():
     try:
-        gpg_util.Gpg.gpg()('--version')
+        gpg_util.Gpg.gpg()('--version', output=os.devnull)
         return True
     except Exception:
         return False

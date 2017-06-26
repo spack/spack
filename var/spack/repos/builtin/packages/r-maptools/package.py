@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,7 +34,6 @@ class RMaptools(RPackage):
 
     homepage = "http://r-forge.r-project.org/projects/maptools/"
     url      = "https://cran.r-project.org/src/contrib/maptools_0.8-39.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/maptools"
 
     version('0.8-39', '3690d96afba8ef22c8e27ae540ffb836')
 

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,9 +40,8 @@ class HoomdBlue(CMakePackage):
     git      = "https://bitbucket.org/glotzer/hoomd-blue"
 
     # TODO: There is a bug in Spack that requires a url to be defined
-    # even if it isn't used. These URLs can hopefully be removed someday.
+    # even if it isn't used. This URL can hopefully be removed someday.
     url      = "https://bitbucket.org/glotzer/hoomd-blue/get/v2.1.6.tar.bz2"
-    list_url = "https://bitbucket.org/glotzer/hoomd-blue/downloads/?tab=tags"
 
     version('develop', git=git, submodules=True)
 

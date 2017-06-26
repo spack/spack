@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,3 +35,13 @@ class PerlXmlParser(PerlPackage):
     version('2.44', 'af4813fe3952362451201ced6fbce379')
 
     depends_on('expat')
+
+    def configure_args(self):
+        args = []
+
+        p = self.spec['expat'].prefix.lib
+        args.append('EXPATLIBPATH={0}'.format(p))
+        p = self.spec['expat'].prefix.include
+        args.append('EXPATINCPATH={0}'.format(p))
+
+        return args

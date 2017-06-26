@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -69,6 +69,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     variant('cpanm', default=True,
             description='Optionally install cpanm with the core packages.')
 
+    variant('shared', default=True,
+            description='Build a shared libperl.so library')
+
     resource(
         name="cpanm",
         url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
@@ -87,13 +90,17 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             '-des',
             '-Dprefix={0}'.format(prefix),
             '-Dlocincpth=' + self.spec['gdbm'].prefix.include,
-            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib
+            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib,
         ]
 
         # Discussion of -fPIC for Intel at:
-        # https://github.com/LLNL/spack/pull/3081
+        # https://github.com/LLNL/spack/pull/3081 and
+        # https://github.com/LLNL/spack/pull/4416
         if spec.satisfies('%intel'):
             config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
+
+        if '+shared' in spec:
+            config_args.append('-Duseshrplib')
 
         return config_args
 

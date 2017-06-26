@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,5 @@ class RFormula(RPackage):
 
     homepage = "https://cran.r-project.org/package=Formula"
     url      = "https://cran.r-project.org/src/contrib/Formula_1.2-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Formula"
 
     version('1.2-1', '2afb31e637cecd0c1106317aca1e4849')
