@@ -120,6 +120,7 @@ def build_tarball(spec, outdir, force=False, key=None):
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
     """
+    prelocate_package(spec)
     tarfile_name = tarball_name(spec, '.tar.gz')
     tarfile_dir = join_path(outdir,"build_cache", tarball_directory_name(spec))
     tarfile_path = join_path(tarfile_dir, tarfile_name)
@@ -230,6 +231,24 @@ def extract_tarball(spec,filename):
     #os.remove(specfile_path)
     #os.remove(specfile_path + '.asc')
 
+def prelocate_package(spec):
+    """
+    Prelocate the given package
+    """
+    buildinfo = read_buildinfo_file(spec)
+    old_path = buildinfo['buildpath']
+    # as we may need patchelf, find out where it is
+    patchelf_executable = ''
+    if platform.system() != 'Darwin':
+        patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
+        patchelf = spack.repo.get(patchelf_spec)
+        patchelf_executable = os.path.join(patchelf.prefix, "bin", "patchelf")
+    
+    for filename in buildinfo['relocate_binaries']:
+        path_name = os.path.join(spec.prefix, filename)
+        spack.relocate.prelocate_binary(path_name,
+                                       old_path,
+                                       patchelf_executable)
 
 def relocate_package(spec):
     """
@@ -250,26 +269,12 @@ def relocate_package(spec):
         patchelf = spack.repo.get(patchelf_spec)
         patchelf_executable = os.path.join(patchelf.prefix, "bin", "patchelf")
 
-    gcc_path=None
-    cspec = spack.spec.CompilerSpec(spec.compiler)
-    compilers = spack.compilers.compilers_for_spec(cspec)
-
-    if not compilers:
-        tty.error("No compilers match spec %s" % cspec)
-    else:
-        for c in compilers:
-            gcc_path=getattr(c, 'cc', None)
-
-    # now do the actual relocation
-    gcc_prefix=re.sub('/bin/.*$','',gcc_path)
-    tty.msg("Adding compiler rpath %s." % gcc_prefix)
     for filename in buildinfo['relocate_binaries']:
         path_name = os.path.join(spec.prefix, filename)
         spack.relocate.relocate_binary(path_name,
                                        old_path,
                                        new_path,
-                                       patchelf_executable,
-                                       gcc_prefix)
+                                       patchelf_executable)
 
     for filename in buildinfo['relocate_textfiles']:
         path_name = os.path.join(spec.prefix, filename)

@@ -86,6 +86,7 @@ def createtarball(args):
                                          deptype_query='run'):
                 tty.msg('adding dependency %s' % node)
                 specs.add(node)
+    spack.binary_distribution.prepare()
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec)
         build_tarball(spec, outdir, args.force)
