@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -239,7 +239,7 @@ def which(*args, **kwargs):
     Returns:
         Executable: The first executable that is found in the path
     """
-    path = kwargs.get('path', os.environ.get('PATH'))
+    path = kwargs.get('path', os.environ.get('PATH', ''))
     required = kwargs.get('required', False)
 
     if isinstance(path, string_types):
