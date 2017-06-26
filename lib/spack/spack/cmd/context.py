@@ -170,9 +170,12 @@ class Context(object):
 
     def to_dict(self):
         concretized_order = list(self.concretized_order)
+        concrete_specs = dict((k, v.to_dict(all_deps=True))
+                              for k, v in self.specs_by_hash.items())
         format = {
             'user_specs': self.user_specs,
             'concretized_order': concretized_order,
+            'concrete_specs': concrete_specs,
         }
         return format
 
@@ -181,6 +184,9 @@ class Context(object):
         c = Context(name)
         c.user_specs = list(d['user_specs'])
         c.concretized_order = list(d['concretized_order'])
+        specs_dict = d['concrete_specs']
+        c.specs_by_hash = dict((x, Spec.from_dict(y))
+                               for x, y in specs_dict.items())
         return c
 
     def path(self):
@@ -221,12 +227,9 @@ def write(context, new_repo=None):
         tty.die("Partial write state, run 'spack context repair'")
 
     fs.mkdirp(tmp_new)
-    # create one file for the full specs in json format
-    with open(fs.join_path(tmp_new, 'full_specs.json'), 'w') as F:
-        store_specs_by_hash(context.specs_by_hash, F)
-    # create one file for the rest of the data in yaml format
-    with open(fs.join_path(tmp_new, 'context.yaml'), 'w') as F:
-        syaml.dump(context.to_dict(), stream=F, default_flow_style=False)
+    # create one file for the context object
+    with open(fs.join_path(tmp_new, 'context.json'), 'w') as F:
+        sjson.dump(context.to_dict(), stream=F)
 
     dest_repo_dir = fs.join_path(tmp_new, 'repo')
     if new_repo:
@@ -272,30 +275,15 @@ def repair(context_name):
         shutil.rmtree(tmp_new)
 
 
-def store_specs_by_hash(specs_by_hash, stream):
-    installs = dict((k, v.to_dict(all_deps=True))
-                    for k, v in specs_by_hash.items())
-
-    try:
-        sjson.dump(installs, stream)
-    except YAMLError as e:
-        raise syaml.SpackYAMLError(
-            "Error writing context full specs:", str(e))
-
-
 def read(context_name):
     tmp_new, context_dir, tmp_old = write_paths(Context(context_name))
 
     if os.path.exists(tmp_new) or os.path.exists(tmp_old):
         tty.die("Partial write state, run 'spack context repair'")
 
-    with open(fs.join_path(context_dir, 'context.yaml'), 'r') as F:
-        context_dict = syaml.load(F)
+    with open(fs.join_path(context_dir, 'context.json'), 'r') as F:
+        context_dict = sjson.load(F)
     context = Context.from_dict(context_name, context_dict)
-    with open(fs.join_path(context_dir, 'full_specs.json'), 'r') as F:
-        install_dict = sjson.load(F)
-    installs = dict((x, Spec.from_dict(y)) for x, y in install_dict.items())
-    context.specs_by_hash = installs
 
     return context
 
