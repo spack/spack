@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -83,7 +83,9 @@ class SuperluDist(Package):
             'F90FLAGS     = -O2',
             'LOADER       = {0}'.format(self.spec['mpi'].mpif77),
             'LOADOPTS     =',
-            'CDEFS        = -DAdd_'
+            'CDEFS        = %s' % ("-DNoChange"
+                                       if '%xl' in spec or '%xl_r' in spec
+                                       else "-DAdd_")
         ])
 
         with open('make.inc', 'w') as fh:
