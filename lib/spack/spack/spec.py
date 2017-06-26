@@ -1386,7 +1386,7 @@ class Spec(object):
         elif self._concrete:
             spec = spack.store.db.query_one(self)
             if spec and getattr(spec, '_prefix', None):
-                return spec.prefix
+                return spec._prefix
         return Prefix(spack.store.layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
