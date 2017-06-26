@@ -37,12 +37,11 @@ class Dataspaces(AutotoolsPackage):
     """an extreme scale data management framework."""
 
     homepage = "http://www.dataspaces.org"
-    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.2.1.tar.gz"
+    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.2.tar.gz"
 
     version('develop', git='https://github.com/melrom/dataspaces.git',
             branch='master')
-    version('1.6.2.1', '5b8dc50cc6efb1fa583bfb6cf24b1110')
-    version('1.6.2', '002c17151694d04e3469bf199a2223cb')
+    version('1.6.2', '73caa4920b6f2c0c6d6cb87640ff04be')
 
     variant('dimes',
         default=False,
@@ -85,9 +84,6 @@ class Dataspaces(AutotoolsPackage):
         else:
             args.extend(['--with-gni-cookie=%s' % cookie])
             args.extend(['--with-gni-ptag=%s' % ptag])
-        if self.spec.satisfies('+mpi'):
-            args.extend(['CC=%s' % self.spec['mpi'].mpicc])
-            args.extend(['FC=%s' % self.spec['mpi'].mpifc])
         if self.spec.satisfies('+mpi'):
             args.extend(['CC=%s' % self.spec['mpi'].mpicc])
             args.extend(['FC=%s' % self.spec['mpi'].mpifc])
