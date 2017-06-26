@@ -37,11 +37,12 @@ class Dataspaces(AutotoolsPackage):
     """an extreme scale data management framework."""
 
     homepage = "http://www.dataspaces.org"
-    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.2.tar.gz"
+    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.2.1.tar.gz"
 
-    version('1.6.2', '002c17151694d04e3469bf199a2223cb')
     version('develop', git='https://github.com/melrom/dataspaces.git',
             branch='master')
+    version('1.6.2.1', '5b8dc50cc6efb1fa583bfb6cf24b1110')
+    version('1.6.2', '002c17151694d04e3469bf199a2223cb')
 
     variant('dimes',
         default=False,
