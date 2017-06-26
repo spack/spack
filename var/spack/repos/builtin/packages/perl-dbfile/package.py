@@ -38,4 +38,4 @@ class PerlDbfile(PerlPackage):
 
     version('1.840', '8a2e98d457a216840ac893913c24141e')
 
-    depends_on('perl-extutils-makemaker', type=('build', 'run'))
+    depends_on('perl-extutils-makemaker', type='build')

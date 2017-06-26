@@ -45,10 +45,10 @@ class PerlStarFusion(Package):
     depends_on('perl-uri-escape', type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', join_path(self.prefix, 'perl5'))
+        run_env.prepend_path('PERL5LIB', join_path(self.prefix, 'lib'))
 
     def install(self, spec, prefix):
-        perl5 = join_path(prefix, 'perl5')
+        perl5 = join_path(prefix, 'lib')
 
         mkdirp(prefix.bin)
         install('STAR-Fusion', prefix.bin)

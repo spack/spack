@@ -34,4 +34,4 @@ class PerlIntervaltree(PerlPackage):
 
     version('0.10', '42efe9369f1b30e7fd04e10c07226b06')
 
-    depends_on('perl-extutils-makemaker', type=('build', 'run'))
+    depends_on('perl-extutils-makemaker', type='build')
