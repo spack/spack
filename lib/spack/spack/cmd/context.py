@@ -170,13 +170,9 @@ class Context(object):
 
     def to_dict(self):
         concretized_order = list(self.concretized_order)
-        common_libs = syaml.syaml_dict(self.common_libs.items())
-        common_bins = syaml.syaml_dict(self.common_bins.items())
         format = {
             'user_specs': self.user_specs,
             'concretized_order': concretized_order,
-            'common_libs': common_libs,
-            'common_bins': common_bins
         }
         return format
 
@@ -185,8 +181,6 @@ class Context(object):
         c = Context(name)
         c.user_specs = list(d['user_specs'])
         c.concretized_order = list(d['concretized_order'])
-        c.common_libs = dict(d['common_libs'])
-        c.common_bins = dict(d['common_bins'])
         return c
 
     def path(self):
