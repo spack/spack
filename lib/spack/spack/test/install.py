@@ -79,6 +79,90 @@ def test_install_and_uninstall(mock_archive):
         raise
 
 
+@pytest.mark.usefixtures('install_mockery')
+def test_install_to_prefix(mock_archive, tmpdir):
+    spec = Spec('trivial-install-test-package prefix={}/pre'.format(tmpdir))
+    spec.concretize()
+    assert spec.concrete
+
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+
+    try:
+        pkg.do_install()
+        assert os.path.exists(spec.prefix)
+        pkg.do_uninstall()
+    except Exception:
+        pkg.remove_prefix
+        raise
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_install_to_multiple_prefix(mock_archive, tmpdir):
+    prefix1 = '{}/pre1'.format(tmpdir)
+    spec1 = Spec('trivial-install-test-package prefix={}'.format(prefix1))
+    spec1.concretize()
+    assert spec1.concrete
+
+    prefix2 = '{}/pre2'.format(tmpdir)
+    spec2 = Spec('trivial-install-test-package prefix={}'.format(prefix2))
+    spec2.concretize()
+    assert spec2.concrete
+
+    pkg1 = spack.repo.get(spec1)
+    fake_fetchify(mock_archive.url, pkg1)
+
+    pkg2 = spack.repo.get(spec2)
+    fake_fetchify(mock_archive.url, pkg2)
+
+    try:
+        pkg1.do_install()
+        pkg2.do_install()
+        installed = spack.store.db.query(Spec('trivial-install-test-package'))
+        assert len(installed) == 1
+        assert 'dummy_file' in os.listdir(prefix1)
+        pkg1.do_uninstall()
+    except Exception:
+        pkg1.remove_prefix()
+        pkg2.remove_prefix()
+        raise
+
+
+@pytest.mark.usefixtures('install_mockery')
+def test_multiple_install_to_prefix(mock_archive, tmpdir):
+    spec1 = Spec('trivial-install-test-package prefix={}/pre1'.format(tmpdir))
+    spec1.concretize()
+    assert spec1.concrete
+
+    spec2 = Spec('trivial-install-test-package cflags=-g prefix={}/pre1'.format(tmpdir))
+    spec2.concretize()
+    assert spec2.concrete
+
+    assert spec1.prefix == spec2.prefix
+
+    pkg1 = spack.repo.get(spec1)
+    fake_fetchify(mock_archive.url, pkg1)
+
+    pkg2 = spack.repo.get(spec2)
+    fake_fetchify(mock_archive.url, pkg2)
+
+    try:
+        pkg1.do_install()
+        try:
+            pkg2.do_install()
+            assert False
+        except SystemExit:
+            pass
+        installed = spack.store.db.query(Spec('trivial-install-test-package'))
+        assert len(installed) == 1
+        assert installed[0] == spec1
+        pkg1.do_uninstall()
+    except Exception:
+        pkg1.remove_prefix()
+        pkg2.remove_prefix()
+        raise
+
+
 def mock_remove_prefix(*args):
     raise MockInstallError(
         "Intentional error",

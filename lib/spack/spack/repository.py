@@ -571,7 +571,7 @@ class Repo(object):
                 "Repository %s does not contain package %s"
                 % (self.namespace, spec.fullname))
 
-        key = hash(spec)
+        key = hash((spec, getattr(spec, '_prefix', None)))
         if new or key not in self._instances:
             package_class = self.get_pkg_class(spec.name)
             try:

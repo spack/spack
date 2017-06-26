@@ -1385,10 +1385,8 @@ class Spec(object):
             return self._prefix
         elif self._concrete:
             spec = spack.store.db.query_one(self)
-            if spec:
-                print spec, spec.prefix
-                if spec and getattr(spec, '_prefix', None):
-                    return spec.prefix
+            if spec and getattr(spec, '_prefix', None):
+                return spec.prefix
         return Prefix(spack.store.layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
@@ -2492,7 +2490,10 @@ class Spec(object):
                        self.concrete != other.concrete and
                        self.external_path != other.external_path and
                        self.external_module != other.external_module and
-                       self.compiler_flags != other.compiler_flags)
+                       self.compiler_flags != other.compiler_flags and
+                       getattr(self, '_prefix', None) != getattr(other,
+                                                                 '_prefix',
+                                                                 None))
 
         # Local node attributes get copied first.
         self.name = other.name
