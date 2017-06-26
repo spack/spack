@@ -65,6 +65,7 @@ from spack.resource import Resource
 from spack.spec import Spec, parse_anonymous_spec
 from spack.variant import Variant
 from spack.version import Version
+from ordereddict_backport import OrderedDict
 
 __all__ = []
 
@@ -126,7 +127,7 @@ class DirectiveMetaMixin(type):
             # Ensure the presence of the dictionaries associated
             # with the directives
             for d in DirectiveMetaMixin._directive_names:
-                setattr(cls, d, {})
+                setattr(cls, d, OrderedDict())
             # Lazy execution of directives
             for command in cls._directives_to_be_executed:
                 command(cls)
