@@ -42,7 +42,6 @@ class PyMultiqc(PythonPackage):
     depends_on('py-lzstring', type=('build', 'run'))
     depends_on('py-future@0.14.1:', type=('build', 'run'))
     depends_on('py-spectra', type=('build', 'run'))
-    depends_on('py-colormath', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
