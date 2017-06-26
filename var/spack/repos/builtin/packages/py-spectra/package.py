@@ -29,7 +29,7 @@ class PySpectra(PythonPackage):
     """Color scales and color conversion made easy for Python."""
 
     homepage = "https://pypi.python.org/pypi/spectra/0.0.8"
-    url      = "https://files.pythonhosted.org/packages/31/67/f73242e5ac4fb772e8c901dafac5b7195f8dc179e9a0665c85b3e8512d2c/spectra-0.0.8.tar.gz"
+    url      = "https://pypi.io/packages/source/s/spectra/spectra-0.0.8.tar.gz"
 
     version('0.0.8', '83020b29e584389f24c7720f38f0136c')
 

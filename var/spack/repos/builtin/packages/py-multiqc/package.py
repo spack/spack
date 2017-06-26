@@ -35,10 +35,15 @@ class PyMultiqc(PythonPackage):
 
     version('1.0', '0b7310b3f75595e5be8099fbed2d2515')
 
+    depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')
     depends_on('py-click', type=('build', 'run'))
-    depends_on('py-jinja2', type=('build', 'run'))
+    depends_on('py-jinja2@2.9:', type=('build', 'run'))
     depends_on('py-lzstring', type=('build', 'run'))
-    depends_on('py-future', type=('build', 'run'))
+    depends_on('py-future@0.14.1:', type=('build', 'run'))
     depends_on('py-spectra', type=('build', 'run'))
     depends_on('py-colormath', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-simplejson', type=('build', 'run'))
