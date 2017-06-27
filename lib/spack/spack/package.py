@@ -1192,7 +1192,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         partial = self.check_for_unfinished_installation(keep_prefix, restage)
 
         # Ensure package is not already installed
-        layout = spack.store.layout
         with spack.store.db.prefix_read_lock(self.spec):
             if partial:
                 tty.msg(
@@ -1204,12 +1203,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 return self._update_explicit_entry_in_db(rec, explicit)
             path_spec = spack.store.db.query_path(self.spec.prefix)
             if path_spec:
-                msg = '{0.name} is already installed in {0.prefix}.\n'.format(path_spec)
+                msg = '{0.name} is already installed in '.format(path_spec)
+                msg += '{0.prefix}.\n'.format(path_spec)
                 ps_hash = path_spec.dag_hash(7)
                 msg += 'Uninstall {0.name} / {1}'.format(path_spec, ps_hash)
                 msg += 'to replace it with {0.name}.'.format(self.spec)
                 tty.die(msg.format(path_spec))
-
 
         # Dirty argument takes precedence over dirty config setting.
         if dirty is None:

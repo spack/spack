@@ -759,7 +759,6 @@ class Database(object):
 
         return results[0] if results else None
 
-
     def query(self, query_spec=any, known=any, installed=True, explicit=any):
         """Run a query on the database.
 

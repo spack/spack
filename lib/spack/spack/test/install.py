@@ -81,7 +81,7 @@ def test_install_and_uninstall(mock_archive):
 
 @pytest.mark.usefixtures('install_mockery')
 def test_install_to_prefix(mock_archive, tmpdir):
-    spec = Spec('trivial-install-test-package prefix={}/pre'.format(tmpdir))
+    spec = Spec('trivial-install-test-package prefix={0}/pre'.format(tmpdir))
     spec.concretize()
     assert spec.concrete
 
@@ -100,12 +100,12 @@ def test_install_to_prefix(mock_archive, tmpdir):
 @pytest.mark.usefixtures('install_mockery')
 def test_install_to_multiple_prefix(mock_archive, tmpdir):
     prefix1 = '{}/pre1'.format(tmpdir)
-    spec1 = Spec('trivial-install-test-package prefix={}'.format(prefix1))
+    spec1 = Spec('trivial-install-test-package prefix={0}'.format(prefix1))
     spec1.concretize()
     assert spec1.concrete
 
     prefix2 = '{}/pre2'.format(tmpdir)
-    spec2 = Spec('trivial-install-test-package prefix={}'.format(prefix2))
+    spec2 = Spec('trivial-install-test-package prefix={0}'.format(prefix2))
     spec2.concretize()
     assert spec2.concrete
 
@@ -130,11 +130,12 @@ def test_install_to_multiple_prefix(mock_archive, tmpdir):
 
 @pytest.mark.usefixtures('install_mockery')
 def test_multiple_install_to_prefix(mock_archive, tmpdir):
-    spec1 = Spec('trivial-install-test-package prefix={}/pre1'.format(tmpdir))
+    spec1 = Spec('trivial-install-test-package prefix={0}/pre1'.format(tmpdir))
     spec1.concretize()
     assert spec1.concrete
 
-    spec2 = Spec('trivial-install-test-package cflags=-g prefix={}/pre1'.format(tmpdir))
+    s = 'trivial-install-test-package cflags=-g prefix={0}/pre1'.format(tmpdir)
+    spec2 = Spec(s)
     spec2.concretize()
     assert spec2.concrete
 
