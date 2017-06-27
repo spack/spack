@@ -197,6 +197,8 @@ class Trilinos(CMakePackage):
     depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
+    patch('xlf_seacas.patch', when='@12.10.1%xl')
+    patch('xlf_seacas.patch', when='@12.10.1%xl_r')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
