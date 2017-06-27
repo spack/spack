@@ -31,13 +31,12 @@ def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
     for rpath in orig_rpaths:
         if re.match(orig_dir,rpath):
             rel=os.path.relpath(rpath,start=os.path.dirname(path_name))
-            #tty.msg(rel, rpath, os.path.dirname(path_name))
             rel_rpaths.add('$ORIGIN/%s' % rel)
         else:
             rel_rpaths.add(rpath)
     return rel_rpaths
 
-def modify_macho_object(path_name, old_dir, new_dir):
+def modify_macho_object(path_name, old_dir, new_dir, relative):
     """
     Modify MachO binaries by changing rpaths,and id and dependency lib paths.
     Examines the output of otool -l for these three patterns
@@ -89,15 +88,31 @@ def modify_macho_object(path_name, old_dir, new_dir):
                 idpath = rhs
             if lhs == 'name' and last_cmd == 'LC_LOAD_DYLIB':
                 deps.append(rhs)
-    id = idpath.replace(old_dir, new_dir)
+    id=None
     nrpaths = []
-    for rpath in rpaths:
-        nrpath = rpath.replace(old_dir, new_dir)
-        nrpaths.append(nrpath)
     ndeps = []
-    for dep in deps:
-        ndep = dep.replace(old_dir, new_dir)
-        ndeps.append(ndep)
+    if relative:
+        id = '@rpath/%s' % os.path.basename(idpath)
+        for rpath in rpaths:
+            if re.match(old_dir,rpath):
+                rel=os.path.relpath(rpath,start=os.path.dirname(path_name))
+                nrpaths.append('@loader_path/%s' % rel)
+            else:
+                nrpaths.append(rpath)
+        for dep in deps:
+            if re.match(old_dir,dep):
+                rel=os.path.relpath(dep,start=os.path.dirname(path_name))
+                ndeps.append('@loader_path/%s' % rel)
+            else:
+                ndeps.append(dep)
+    else:
+        id = idpath.replace(old_dir, new_dir)
+        for rpath in rpaths:
+            nrpath = rpath.replace(old_dir, new_dir)
+            nrpaths.append(nrpath)
+        for dep in deps:
+            ndep = dep.replace(old_dir, new_dir)
+            ndeps.append(ndep)
 
     st = os.stat(path_name)
     wmode = os.access(path_name, os.W_OK)
@@ -188,7 +203,7 @@ def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
     Change RPATHs in given elf or mach-o file
     """
     if platform.system() == 'Darwin':
-        modify_macho_object(path_name, old_dir, new_dir)
+        modify_macho_object(path_name, old_dir, new_dir, relative=False)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
         new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
@@ -202,7 +217,8 @@ def prelocate_binary(path_name, old_dir, patchelf_executable):
     Change RPATHs in given elf or mach-o file to relative
     """
     if platform.system() == 'Darwin':
-        modify_macho_object(path_name, old_dir, new_dir)
+        new_dir=''
+        modify_macho_object(path_name, old_dir, new_dir,relative=True)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
         new_rpaths = get_relative_rpaths(path_name, old_dir, orig_rpaths)
