@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -68,7 +68,6 @@ class Cmake(Package):
     depends_on("openssl", when='+openssl')
     depends_on("openssl@:1.0.99", when='@:3.6.9+openssl')
     depends_on('ncurses',        when='+ncurses')
-
 
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
