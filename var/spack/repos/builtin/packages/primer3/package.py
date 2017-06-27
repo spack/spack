@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Primer3(Package):
+class Primer3(MakefilePackage):
     """Primer3 is a widely used program for designing PCR primers
        (PCR = "Polymerase Chain Reaction"). PCR is an essential and
        ubiquitous tool in genetics and molecular biology. Primer3
@@ -36,9 +36,12 @@ class Primer3(Package):
 
     version('2.3.7', 'c6b89067bf465e62b6b1fd830b5b4418')
 
+    @property
+    def build_directory(self):
+        return join_path(self.stage.source_path, 'src')
+
     def install(self, spec, prefix):
-        with working_dir('src'):
-            make('all')
+        with working_dir(self.build_directory):
             mkdirp(prefix.bin)
             for binary in ('primer3_core', 'ntdpal', 'oligotm', 'long_seq_tm_test'):
                 install(binary, prefix.bin)
