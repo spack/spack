@@ -200,7 +200,6 @@ class Trilinos(CMakePackage):
     patch('xlf_seacas.patch', when='@12.10.1%xl')
     patch('xlf_seacas.patch', when='@12.10.1%xl_r')
 
-
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
