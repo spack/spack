@@ -1,0 +1,16 @@
+--- a/Modules/FindDoxygen.cmake	2017-06-26 17:24:53.931051717 -0400
++++ b/Modules/FindDoxygen.cmake	2017-06-26 17:25:09.391052479 -0400
+@@ -100,13 +100,6 @@
+ # Find Dot...
+ #
+ 
+-set(_x86 "(x86)")
+-file(GLOB _Doxygen_GRAPHVIZ_BIN_DIRS
+-  "$ENV{ProgramFiles}/Graphviz*/bin"
+-  "$ENV{ProgramFiles${_x86}}/Graphviz*/bin"
+-  )
+-unset(_x86)
+-
+ if(NOT DOXYGEN_SKIP_DOT)
+   find_program(DOXYGEN_DOT_EXECUTABLE
+     NAMES dot
