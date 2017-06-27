@@ -88,14 +88,13 @@ function spack {
             _sp_arg="$1"; shift
             if [ "$_sp_arg" = "-h" ]; then
                 command spack cd -h
-                return 0
             else
                 LOC="$(spack location $_sp_arg "$@")"
                 if [[ -d "$LOC" ]] ; then
                     cd "$LOC"
-                    return 0
+                else
+                    return 1
                 fi
-                return 1
             fi
             return
             ;;
