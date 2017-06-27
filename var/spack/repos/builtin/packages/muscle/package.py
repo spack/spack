@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Muscle(Package):
+class Muscle(MakefilePackage):
     """MUSCLE is one of the best-performing multiple alignment programs
        according to published benchmark tests, with accuracy and speed
        that are consistently better than CLUSTALW."""
@@ -36,6 +36,5 @@ class Muscle(Package):
     version('3.8.1551', '1b7c9661f275a82d3cf708f923736bf8')
 
     def install(self, spec, prefix):
-        make()
         mkdirp(prefix.bin)
         install('muscle', prefix.bin)
