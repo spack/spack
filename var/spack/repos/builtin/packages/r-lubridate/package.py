@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,7 +35,6 @@ class RLubridate(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/lubridate/index.html"
     url      = "https://cran.r-project.org/src/contrib/lubridate_1.5.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lubridate"
 
     version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
 

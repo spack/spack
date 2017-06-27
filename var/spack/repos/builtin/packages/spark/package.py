@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,7 +34,7 @@ class Spark(Package):
     """
 
     homepage = "http://spark.apache.org"
-    url      = "http://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
+    url = "http://archive.apache.org/dist/spark/spark-2.0.0/spark-2.0.0-bin-without-hadoop.tgz"
 
     variant('hadoop', default=False,
             description='Build with Hadoop')
@@ -47,6 +47,7 @@ class Spark(Package):
     version('2.0.0', '8a5307d973da6949a385aefb6ff747bb')
     version('1.6.2', '304394fbe2899211217f0cd9e9b2b5d9')
     version('1.6.1', 'fcf4961649f15af1fea78c882e65b001')
+    version('1.6.0', '2c28edc89ca0067e63e525c04f7b1d89')
 
     def install(self, spec, prefix):
 
@@ -71,7 +72,7 @@ class Spark(Package):
         # spack_env.set('JAVA_HOME', self.spec['jdk'].prefix)
 
         hadoop = self.spec['hadoop'].command
-        hadoop_classpath = hadoop('classpath', return_output=True)
+        hadoop_classpath = hadoop('classpath', output=str)
 
         # Remove whitespaces, as they can compromise syntax in
         # module files

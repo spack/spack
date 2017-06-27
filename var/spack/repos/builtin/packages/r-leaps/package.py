@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,6 +30,5 @@ class RLeaps(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=leaps"
     url      = "https://cran.r-project.org/src/contrib/leaps_3.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/leaps"
 
     version('3.0', '30823138890680e0493d1491c8f43edc')

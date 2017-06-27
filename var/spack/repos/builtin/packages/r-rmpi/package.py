@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,6 @@ class RRmpi(RPackage):
 
     homepage = "http://www.stats.uwo.ca/faculty/yu/Rmpi"
     url      = "https://cran.r-project.org/src/contrib/Rmpi_0.6-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpi"
 
     version('0.6-6', '59ae8ce62ff0ff99342d53942c745779')
 

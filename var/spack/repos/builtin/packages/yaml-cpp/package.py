@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,7 +36,7 @@ class YamlCpp(CMakePackage):
 
     variant('shared', default=True,
             description='Enable build of shared libraries')
-    variant('fpic',    default=False,
+    variant('fpic',   default=True,
             description='Build with position independent code')
 
     depends_on('boost', when='@:0.5.3')
@@ -45,13 +45,11 @@ class YamlCpp(CMakePackage):
         spec = self.spec
         options = []
 
-        if '+fpic' in spec:
-            options.extend([
-                '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true'
-            ])
-        if '+shared' in spec:
-            options.append('-DBUILD_SHARED_LIBS=ON')
-        else:
-            options.append('-DBUILD_SHARED_LIBS=OFF')
+        options.extend([
+            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF'),
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
+                'ON' if '+fpic' in spec else 'OFF'),
+        ])
 
         return options

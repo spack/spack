@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,7 +36,8 @@ class Intltool(AutotoolsPackage):
     version('0.51.0', '12e517cac2b57a0121cda351570f1e63')
 
     # requires XML::Parser perl module
-    # depends_on('perl@5.8.1:', type='build')
+    depends_on('perl-xml-parser', type=('build', 'run'))
+    depends_on('perl@5.8.1:',     type=('build', 'run'))
 
     def check(self):
         # `make check` passes but causes `make install` to fail

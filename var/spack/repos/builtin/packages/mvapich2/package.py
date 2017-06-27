@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -52,6 +52,7 @@ class Mvapich2(AutotoolsPackage):
 
     patch('ad_lustre_rwcontig_open_source.patch', when='@1.9')
 
+    provides('mpi')
     provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
     provides('mpi@:3.0', when='@2.0:')  # MVAPICH2-2.0 supports MPI 3.0
 

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -43,6 +43,18 @@ class Cctools(AutotoolsPackage):
     depends_on('swig')
     # depends_on('xrootd')
     depends_on('zlib')
+
+    # Generally SYS_foo is defined to __NR_foo (sys/syscall.h) which
+    # is then defined to a syscall number (asm/unistd_64.h).  Certain
+    # CentOS systems have SYS_memfd_create defined to
+    # __NR_memfd_create but are missing the second definition.
+    # This is a belt and suspenders solution to the problem.
+    def patch(self):
+        before = '#if defined(__linux__) && defined(SYS_memfd_create)'
+        after = '#if defined(__linux__) && defined(SYS_memfd_create) && defined(__NR_memfd_create)'  # noqa: E501
+        f = 'dttools/src/memfdexe.c'
+        kwargs = {'ignore_absent': False, 'backup': True, 'string': True}
+        filter_file(before, after, f, **kwargs)
 
     def configure_args(self):
         args = []

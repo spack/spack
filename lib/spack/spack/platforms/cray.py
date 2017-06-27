@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,6 +31,7 @@ from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
 from llnl.util.filesystem import join_path
+from spack.util.module_cmd import get_module_cmd
 
 
 def _get_modules_in_modulecmd_output(output):
@@ -142,8 +143,7 @@ class Cray(Platform):
     def _avail_targets(self):
         '''Return a list of available CrayPE CPU targets.'''
         if getattr(self, '_craype_targets', None) is None:
-            module = which('modulecmd', required=True)
-            module.add_default_arg('python')
+            module = get_module_cmd()
             output = module('avail', '-t', 'craype-', output=str, error=str)
             craype_modules = _get_modules_in_modulecmd_output(output)
             self._craype_targets = targets = []

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -78,7 +78,8 @@ class Gcc(AutotoolsPackage):
     depends_on('gmp@4.3.2:')
     depends_on('mpfr@2.4.2:')
     depends_on('mpc@0.8.1:', when='@4.5:')
-    depends_on('isl@0.15:', when='@5.0:')
+    depends_on('isl@0.14', when='@5:5.9')
+    depends_on('isl@0.15:', when='@6:')
     depends_on('zlib', when='@6:')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')

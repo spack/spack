@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,6 @@ class RGmodels(RPackage):
 
     homepage = "http://www.sf.net/projects/r-gregmisc"
     url      = "https://cran.r-project.org/src/contrib/gmodels_2.16.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gmodels"
 
     version('2.16.2', 'f13e5feb2a8b9f0cd47fdf25ddc74228')
 

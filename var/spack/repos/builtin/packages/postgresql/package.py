@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Postgresql(Package):
+class Postgresql(AutotoolsPackage):
     """PostgreSQL is a powerful, open source object-relational database system.
     It has more than 15 years of active development and a proven architecture
     that has earned it a strong reputation for reliability, data integrity, and
@@ -40,8 +40,13 @@ class Postgresql(Package):
     depends_on('openssl')
     depends_on('readline')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-openssl")
-        make()
-        make("install")
+    variant('threadsafe', default=False, description='Build with thread safe.')
+
+    def configure_arg(self):
+        config_args = ["--with-openssl"]
+        if '+threadsafe' in self.spec:
+            config_args.append("--enable-thread-safety")
+        else:
+            config_args.append("--disable-thread-safety")
+
+        return config_args
