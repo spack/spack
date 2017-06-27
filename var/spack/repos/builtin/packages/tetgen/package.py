@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,7 +34,7 @@ class Tetgen(Package):
        boundary conforming Delaunay meshes, and Voronoi paritions.
     """
 
-    homepage = "http://www.tetgen.org"
+    homepage = "http://wias-berlin.de/software/tetgen/"
 
     version('1.5.0', '3b9fd9cdec121e52527b0308f7aad5c1', url='http://www.tetgen.org/1.5/src/tetgen1.5.0.tar.gz')
     version('1.4.3', 'd6a4bcdde2ac804f7ec66c29dcb63c18', url='http://www.tetgen.org/files/tetgen1.4.3.tar.gz')

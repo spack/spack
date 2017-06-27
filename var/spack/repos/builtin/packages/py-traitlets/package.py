@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,7 +40,6 @@ class PyTraitlets(PythonPackage):
     version('4.0.0', 'b5b95ea5941fd9619b4704dfd8201568')
     version('4.0',   '14544e25ccf8e920ed1cbf833852481f')
 
-    depends_on('py-setuptools', type='build')
     depends_on('py-decorator', type=('build', 'run'))
     depends_on('py-ipython-genutils', type=('build', 'run'))
 

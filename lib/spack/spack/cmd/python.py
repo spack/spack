@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,8 @@ import spack
 
 
 description = "launch an interpreter as spack would launch a command"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -62,6 +64,9 @@ def python(parser, args):
         with open(python_args[0]) as file:
             console.runsource(file.read(), python_args[0], 'exec')
     else:
+        # Provides readline support, allowing user to use arrow keys
+        console.push('import readline')
+
         console.interact("Spack version %s\nPython %s, %s %s"""
                          % (spack.spack_version, platform.python_version(),
                             platform.system(), platform.machine()))

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -46,7 +46,7 @@ class Cmor(AutotoolsPackage):
     depends_on('hdf5@:1.8')
 
     extends('python', when='+python')
-    depends_on('python@:2.7', when='+python')
+    depends_on('python@:2.8', when='+python')
     depends_on('py-numpy', type=('build', 'run'), when='+python')
 
     @run_before('configure')

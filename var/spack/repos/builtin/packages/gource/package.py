@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -51,10 +51,6 @@ class Gource(AutotoolsPackage):
 
     parallel = False
     force_autoreconf = True
-
-    def url_for_version(self, version):
-        tmp = 'https://github.com/acaudwell/Gource/releases/download/gource-{0}/gource-{0}.tar.gz'  # NOQA: ignore=E501
-        return tmp.format(version.dotted)
 
     def configure_args(self):
         spec = self.spec

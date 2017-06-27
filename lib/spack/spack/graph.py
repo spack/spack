@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -63,6 +63,7 @@ can take a number of specs as input.
 """
 
 from heapq import *
+from six import iteritems
 
 from llnl.util.lang import *
 from llnl.util.tty.color import *
@@ -562,7 +563,7 @@ def graph_dot(specs, deptype=None, static=False, out=None):
                 continue
 
             # Add edges for each depends_on in the package.
-            for dep_name, dep in spec.package.dependencies.iteritems():
+            for dep_name, dep in iteritems(spec.package.dependencies):
                 deps.add((spec.name, dep_name))
 
             # If the package provides something, add an edge for that.

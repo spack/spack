@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,8 +31,10 @@ class Cmake(Package):
     homepage = 'https://www.cmake.org'
     url      = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
     list_url = 'https://cmake.org/files/'
-    list_depth = 2
+    list_depth = 1
 
+    version('3.8.1',    'e8ef820ddf7a650845252bca846696e7')
+    version('3.8.0',    'f28cba717ba38ad82a488daed8f45b5b')
     version('3.7.2',    '79bd7e65cd81ea3aa2619484ad6ff25a')
     version('3.7.1',    'd031d5a06e9f1c5367cdfc56fbd2a1c8')
     version('3.6.1',    'd6dd661380adacdb12f41b926ec99545')

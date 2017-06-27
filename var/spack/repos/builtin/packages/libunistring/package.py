@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,8 +30,7 @@ class Libunistring(AutotoolsPackage):
     and for manipulating C strings according to the Unicode standard."""
 
     homepage = "https://www.gnu.org/software/libunistring/"
-    url      = "http://ftp.gnu.org/gnu/libunistring/libunistring-0.9.6.tar.xz"
+    url      = "http://ftp.gnu.org/gnu/libunistring/libunistring-0.9.7.tar.xz"
 
+    version('0.9.7', '82e0545363d111bfdfec2ddbfe62ffd3')
     version('0.9.6', 'cb09c398020c27edac10ca590e9e9ef3')
-
-    # NOTE: `make check` fails test-verify

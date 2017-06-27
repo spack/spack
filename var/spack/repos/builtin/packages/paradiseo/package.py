@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -50,7 +50,6 @@ class Paradiseo(Package):
     variant('edo',      default=True,
             description='Compile with (Experimental) EDO module')
 
-    # variant('tests', default=False, description='Compile with build tests')
     # variant('doc', default=False, description='Compile with documentation')
     variant('debug',    default=False,
             description='Builds a debug version of the libraries')
@@ -87,7 +86,7 @@ class Paradiseo(Package):
             '-DSMP:BOOL=%s' % ('TRUE' if '+smp' in spec else 'FALSE'),
             '-DEDO:BOOL=%s' % ('TRUE' if '+edo' in spec else 'FALSE'),
             '-DENABLE_CMAKE_TESTING:BOOL=%s' % (
-                'TRUE' if '+tests' in spec else 'FALSE'),
+                'TRUE' if self.run_tests else 'FALSE'),
             '-DENABLE_OPENMP:BOOL=%s' % (
                 'TRUE' if '+openmp' in spec else 'FALSE'),
             '-DENABLE_GNUPLOT:BOOL=%s' % (
@@ -100,6 +99,6 @@ class Paradiseo(Package):
 
             # Build, test and install
             make("VERBOSE=1")
-            if '+tests' in spec:
+            if self.run_tests:
                 make("test")
             make("install")

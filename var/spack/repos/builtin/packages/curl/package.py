@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,13 +25,16 @@
 from spack import *
 
 
-class Curl(Package):
+class Curl(AutotoolsPackage):
     """cURL is an open source command line tool and library for
     transferring data with URL syntax"""
 
     homepage = "http://curl.haxx.se"
-    url      = "http://curl.haxx.se/download/curl-7.46.0.tar.bz2"
+    # URL must remain http:// so Spack can bootstrap curl
+    url      = "http://curl.haxx.se/download/curl-7.54.0.tar.bz2"
 
+    version('7.54.0', '89bb7ba87384dfbf4f1a3f953da42458')
+    version('7.53.1', 'fb1f03a142236840c1a77c035fa4c542')
     version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')
     version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
     version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
@@ -44,13 +47,13 @@ class Curl(Package):
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
-    depends_on("openssl")
-    depends_on("zlib")
+    depends_on('openssl')
+    depends_on('zlib')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-zlib=%s' % spec['zlib'].prefix,
-                  '--with-ssl=%s' % spec['openssl'].prefix)
+    def configure_args(self):
+        spec = self.spec
 
-        make()
-        make("install")
+        return [
+            '--with-zlib={0}'.format(spec['zlib'].prefix),
+            '--with-ssl={0}'.format(spec['openssl'].prefix),
+        ]

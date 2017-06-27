@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,6 @@ class RSp(RPackage):
 
     homepage = "https://github.com/edzer/sp/"
     url      = "https://cran.r-project.org/src/contrib/sp_1.2-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/sp"
 
     version('1.2-3', 'f0e24d993dec128642ee66b6b47b10c1')
 

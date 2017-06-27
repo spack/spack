@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,5 +34,6 @@ class PyPeriodictable(PythonPackage):
 
     version('1.4.1', '7246b63cc0b6b1be6e86b6616f9e866e')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))

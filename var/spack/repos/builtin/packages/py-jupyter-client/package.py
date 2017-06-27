@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,8 +40,7 @@ class PyJupyterClient(PythonPackage):
     version('4.1.0', 'cf42048b889c8434fbb5813a9eec1d34')
     version('4.0.0', '00fa63c67cb3adf359d09dc4d803aff5')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('python@2.7:2.7.999,3.3:')
+    depends_on('python@2.7:2.8,3.3:')
     depends_on('py-traitlets', type=('build', 'run'))
     depends_on('py-jupyter-core', type=('build', 'run'))
     depends_on('py-zmq@13:', type=('build', 'run'))

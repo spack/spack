@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -47,7 +47,7 @@ class NodeJs(Package):
 
     depends_on('libtool', type='build', when=sys.platform != 'darwin')
     depends_on('pkg-config', type='build')
-    depends_on('python@2.7:2.7.999', type='build')
+    depends_on('python@2.7:2.8', type='build')
     # depends_on('bash-completion', when="+bash-completion")
     depends_on('icu4c', when='+icu4c')
     depends_on('openssl', when='+openssl')
@@ -63,10 +63,10 @@ class NodeJs(Package):
         # On OSX, the system libtool must be used
         # So, we ensure that this is the case by...
         if sys.platform == 'darwin':
-            process_pipe = subprocess.Popen(["which", "libtool"], 
+            process_pipe = subprocess.Popen(["which", "libtool"],
                                             stdout=subprocess.PIPE)
             result_which = process_pipe.communicate()[0]
-            process_pipe = subprocess.Popen(["whereis", "libtool"], 
+            process_pipe = subprocess.Popen(["whereis", "libtool"],
                                             stdout=subprocess.PIPE)
             result_whereis = process_pipe.communicate()[0]
             assert result_which == result_whereis, (

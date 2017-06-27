@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,15 +31,36 @@ class Mfem(Package):
     homepage = 'http://www.mfem.org'
     url      = 'https://github.com/mfem/mfem'
 
+    # mfem is downloaded from a URL shortener at request of upstream
+    # author Tzanio Kolev <tzanio@llnl.gov>.  See here:
+    #     https://github.com/mfem/mfem/issues/53
+    #
+    # The following procedure should be used to verify security when a
+    # new verison is added:
+    #
+    # 1. Verify that no checksums on old versions have changed.
+    #
+    # 2. Verify that the shortened URL for the new version is listed at:
+    #    http://mfem.org/download/
+    #
+    # 3. Use http://getlinkinfo.com or similar to verify that the
+    #    underling download link for the latest version comes has the
+    #    prefix: http://mfem.github.io/releases
+    #
+    # If this quick verification procedure fails, additional discussion
+    # will be required to verify the new version.
+
+    version('3.3',
+            'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
+            url='http://goo.gl/Vrpsns', extension='.tar.gz')
+
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
-            url='http://goo.gl/Y9T75B', preferred=True, extension='.tar.gz')
+            url='http://goo.gl/Y9T75B', extension='.tar.gz')
 
     version('3.1',
             '841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
             url='http://goo.gl/xrScXn', extension='.tar.gz')
-#    version('3.1', git='https://github.com/mfem/mfem.git',
-#            commit='dbae60fe32e071989b52efaaf59d7d0eb2a3b574')
 
     variant('metis', default=False, description='Activate support for metis')
     variant('hypre', default=False, description='Activate support for hypre')
@@ -75,6 +96,8 @@ class Mfem(Package):
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
 
+    patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
+
     def check_variants(self, spec):
         if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):
             raise InstallError('mfem+mpi must be built with +hypre ' +
@@ -102,7 +125,7 @@ class Mfem(Package):
         options = ['PREFIX=%s' % prefix]
 
         if '+lapack' in spec:
-            lapack_lib = (spec['lapack'].lapack_libs + spec['blas'].blas_libs).ld_flags  # NOQA: ignore=E501
+            lapack_lib = (spec['lapack'].libs + spec['blas'].libs).ld_flags  # NOQA: ignore=E501
             options.extend([
                 'MFEM_USE_LAPACK=YES',
                 'LAPACK_OPT=-I%s' % spec['lapack'].prefix.include,
@@ -156,9 +179,7 @@ class Mfem(Package):
             ss_lib += (' -lumfpack -lcholmod -lcolamd' +
                        ' -lamd -lcamd -lccolamd -lsuitesparseconfig')
 
-            no_librt_archs = ['darwin-i686', 'darwin-x86_64']
-            no_rt = any(map(lambda a: spec.satisfies('=' + a),
-                            no_librt_archs))
+            no_rt = spec.satisfies('platform=darwin')
             if not no_rt:
                 ss_lib += ' -lrt'
             ss_lib += (' ' + metis_lib + ' ' + lapack_lib)

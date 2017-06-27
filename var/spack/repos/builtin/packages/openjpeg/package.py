@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -43,7 +43,3 @@ class Openjpeg(CMakePackage):
     version('2.0',   'cdf266530fee8af87454f15feb619609')
     version('1.5.2', '545f98923430369a6b046ef3632ef95c')
     version('1.5.1', 'd774e4b5a0db5f0f171c4fc0aabfa14e')
-
-    def url_for_version(self, version):
-        fmt = 'https://github.com/uclouvain/openjpeg/archive/version.{0}.tar.gz'
-        return fmt.format(version.dotted)

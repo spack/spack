@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,8 @@ import os
 
 import pytest
 import spack
-from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import (YamlDirectoryLayout,
+                                    InvalidDirectoryLayoutParametersError)
 from spack.repository import RepoPath
 from spack.spec import Spec
 
@@ -41,6 +42,46 @@ max_packages = 10
 def layout_and_dir(tmpdir):
     """Returns a directory layout and the corresponding directory."""
     yield YamlDirectoryLayout(str(tmpdir)), str(tmpdir)
+
+
+def test_yaml_directory_layout_parameters(
+        tmpdir, config
+):
+    """This tests the various parameters that can be used to configure
+    the install location """
+    spec = Spec('python')
+    spec.concretize()
+
+    # Ensure default layout matches expected spec format
+    layout_default = YamlDirectoryLayout(str(tmpdir))
+    path_default = layout_default.relative_path_for_spec(spec)
+    assert(path_default ==
+           spec.format("${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"))   # NOQA: ignore=E501
+
+    # Test hash_length parameter works correctly
+    layout_10 = YamlDirectoryLayout(str(tmpdir), hash_len=10)
+    path_10 = layout_10.relative_path_for_spec(spec)
+    layout_7 = YamlDirectoryLayout(str(tmpdir), hash_len=7)
+    path_7 = layout_7.relative_path_for_spec(spec)
+
+    assert(len(path_default) - len(path_10) == 22)
+    assert(len(path_default) - len(path_7) == 25)
+
+    # Test path_scheme
+    arch, compiler, package7 = path_7.split('/')
+    scheme_package7 = "${PACKAGE}-${VERSION}-${HASH:7}"
+
+    layout_package7 = YamlDirectoryLayout(str(tmpdir),
+                                          path_scheme=scheme_package7)
+    path_package7 = layout_package7.relative_path_for_spec(spec)
+
+    assert(package7 == path_package7)
+
+    # Ensure conflicting parameters caught
+    with pytest.raises(InvalidDirectoryLayoutParametersError):
+        YamlDirectoryLayout(str(tmpdir),
+                            hash_len=20,
+                            path_scheme=scheme_package7)
 
 
 def test_read_and_write_spec(
@@ -92,23 +133,25 @@ def test_read_and_write_spec(
         # TODO: increase reuse of build dependencies.
         stored_deptypes = ('link', 'run')
         expected = spec.copy(deps=stored_deptypes)
+        assert expected.concrete
         assert expected == spec_from_file
-        assert expected.eq_dag  # msg , spec_from_file
+        assert expected.eq_dag(spec_from_file)
         assert spec_from_file.concrete
 
         # Ensure that specs that come out "normal" are really normal.
         with open(spec_path) as spec_file:
             read_separately = Spec.from_yaml(spec_file.read())
 
-            # TODO: revise this when build deps are in dag_hash
-            norm = read_separately.normalized().copy(deps=stored_deptypes)
-            assert norm == spec_from_file
+        # TODO: revise this when build deps are in dag_hash
+        norm = read_separately.normalized().copy(deps=stored_deptypes)
+        assert norm == spec_from_file
+        assert norm.eq_dag(spec_from_file)
 
-            # TODO: revise this when build deps are in dag_hash
-            conc = read_separately.concretized().copy(deps=stored_deptypes)
-            assert conc == spec_from_file
+        # TODO: revise this when build deps are in dag_hash
+        conc = read_separately.concretized().copy(deps=stored_deptypes)
+        assert conc == spec_from_file
+        assert conc.eq_dag(spec_from_file)
 
-        # Make sure the hash of the read-in spec is the same
         assert expected.dag_hash() == spec_from_file.dag_hash()
 
         # Ensure directories are properly removed

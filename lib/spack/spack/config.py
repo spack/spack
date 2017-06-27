@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,6 +30,7 @@ documentation on :ref:`configuration-scopes` for details on how Spack's
 configuration system behaves.  The scopes are:
 
   #. ``default``
+  #. ``system``
   #. ``site``
   #. ``user``
 
@@ -52,6 +53,8 @@ import copy
 import os
 import re
 import sys
+from six import string_types
+from six import iteritems
 
 import yaml
 import jsonschema
@@ -108,7 +111,7 @@ def extend_with_default(validator_class):
         "patternProperties"]
 
     def set_defaults(validator, properties, instance, schema):
-        for property, subschema in properties.iteritems():
+        for property, subschema in iteritems(properties):
             if "default" in subschema:
                 instance.setdefault(property, subschema["default"])
         for err in validate_properties(
@@ -116,10 +119,10 @@ def extend_with_default(validator_class):
             yield err
 
     def set_pp_defaults(validator, properties, instance, schema):
-        for property, subschema in properties.iteritems():
+        for property, subschema in iteritems(properties):
             if "default" in subschema:
                 if isinstance(instance, dict):
-                    for key, val in instance.iteritems():
+                    for key, val in iteritems(instance):
                         if re.match(property, key) and val is None:
                             instance[key] = subschema["default"]
 
@@ -209,10 +212,16 @@ class ConfigScope(object):
 _platform = spack.architecture.platform().name
 
 """Default configuration scope is the lowest-level scope. These are
-   versioned with Spack and can be overridden by sites or users."""
+   versioned with Spack and can be overridden by systems, sites or users."""
 _defaults_path = os.path.join(spack.etc_path, 'spack', 'defaults')
 ConfigScope('defaults', _defaults_path)
 ConfigScope('defaults/%s' % _platform, os.path.join(_defaults_path, _platform))
+
+"""System configuration is per machine.
+   No system-level configs should be checked into spack by default"""
+_system_path = os.path.join(spack.system_etc_path, 'spack')
+ConfigScope('system', _system_path)
+ConfigScope('system/%s' % _platform, os.path.join(_system_path, _platform))
 
 """Site configuration is per spack instance, for sites or projects.
    No site-level configs should be checked into spack by default."""
@@ -306,8 +315,8 @@ def _mark_overrides(data):
 
     elif isinstance(data, dict):
         marked = {}
-        for key, val in data.iteritems():
-            if isinstance(key, basestring) and key.endswith(':'):
+        for key, val in iteritems(data):
+            if isinstance(key, string_types) and key.endswith(':'):
                 key = syaml.syaml_str(key[:-1])
                 key.override = True
             marked[key] = _mark_overrides(val)
@@ -348,7 +357,7 @@ def _merge_yaml(dest, source):
 
     # Source dict is merged into dest.
     elif they_are(dict):
-        for sk, sv in source.iteritems():
+        for sk, sv in iteritems(source):
             if override(sk) or sk not in dest:
                 # if sk ended with ::, or if it's new, completely override
                 dest[sk] = copy.copy(sv)
@@ -396,6 +405,7 @@ def get_config(section, scope=None):
 
     for scope in scopes:
         # read potentially cached data from the scope.
+
         data = scope.get_section(section)
 
         # Skip empty configs

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,11 +36,13 @@ class Ncl(Package):
 
     homepage = "https://www.ncl.ucar.edu"
 
-    version('6.3.0', '4834df63d3b56778441246303ab921c4',
-            url='https://www.earthsystemgrid.org/download/fileDownload.html?'
-                'logicalFileId=bec58cb3-cd9b-11e4-bb80-00c0f03d5b7c',
+    version('6.4.0', 'a981848ddcaf1c263279648265f24766',
+            url='https://www.earthsystemgrid.org/download/fileDownload.html?logicalFileId=86b9bec2-fa01-11e6-a976-00c0f03d5b7c',
             extension='tar.gz')
+
     patch('spack_ncl.patch')
+    # Make ncl compile with hdf5 1.10
+    patch('hdf5.patch')
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
@@ -54,17 +56,31 @@ class Ncl(Package):
     # Non-optional dependencies according to the manual:
     depends_on('jpeg')
     depends_on('netcdf')
-    depends_on('cairo')
+    depends_on('cairo+X')
+
+    # Extra dependencies that may be missing from build system:
+    depends_on('bison', type='build')
+    depends_on('flex+lex')
+    depends_on('libiconv')
 
     # Also, the manual says that ncl requires zlib, but that comes as a
     # mandatory dependency of libpng, which is a mandatory dependency of cairo.
+
+    # The following dependencies are required, otherwise several components
+    # fail to compile:
+    depends_on('curl')
+    depends_on('libiconv')
+    depends_on('libx11')
+    depends_on('libxaw')
+    depends_on('libxmu')
 
     # In Spack, we do not have an option to compile netcdf without netcdf-4
     # support, so we will tell the ncl configuration script that we want
     # support for netcdf-4, but the script assumes that hdf5 is compiled with
     # szip support. We introduce this restriction with the following dependency
     # statement.
-    depends_on('hdf5@:1.8+szip')
+    depends_on('hdf5+szip')
+    depends_on('szip')
 
     # In Spack, we also do not have an option to compile netcdf without DAP
     # support, so we will tell the ncl configuration script that we have it.
@@ -108,7 +124,7 @@ class Ncl(Package):
 
         if self.compiler.name == 'gcc':
             fc_flags.append('-fno-range-check')
-            c2f_flags.extend(['-lgfortran'])
+            c2f_flags.extend(['-lgfortran', '-lm'])
         elif self.compiler.name == 'intel':
             fc_flags.append('-fp-model precise')
             cc_flags.append('-fp-model precise')
@@ -180,6 +196,8 @@ class Ncl(Package):
             'y\n',
             # Build GDAL support (optional) into NCL?
             'y\n' if '+gdal' in self.spec else 'n\n',
+            # Build EEMD support (optional) into NCL?
+            'n\n',
             # Build Udunits-2 support (optional) into NCL?
             'y\n' if '+uduints2' in self.spec else 'n\n',
             # Build Vis5d+ support (optional) into NCL?
@@ -228,6 +246,6 @@ class Ncl(Package):
             if os.path.exists(filename):
                 try:
                     os.remove(filename)
-                except OSError, e:
+                except OSError as e:
                     raise InstallError('Failed to delete file %s: %s' % (
                         e.filename, e.strerror))

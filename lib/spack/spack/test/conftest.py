@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,11 +27,12 @@ import copy
 import os
 import re
 import shutil
+from six import StringIO
 
-import cStringIO
 import llnl.util.filesystem
 import llnl.util.lang
 import ordereddict_backport
+
 import py
 import pytest
 import spack
@@ -54,13 +55,10 @@ import spack.util.pattern
 @pytest.fixture(autouse=True)
 def no_stdin_duplication(monkeypatch):
     """Duplicating stdin (or any other stream) returns an empty
-    cStringIO object.
+    StringIO object.
     """
-    monkeypatch.setattr(
-        llnl.util.lang,
-        'duplicate_stream',
-        lambda x: cStringIO.StringIO()
-    )
+    monkeypatch.setattr(llnl.util.lang, 'duplicate_stream',
+                        lambda x: StringIO())
 
 
 @pytest.fixture(autouse=True)
@@ -170,15 +168,20 @@ def configuration_dir(tmpdir_factory, linux_os):
 def config(configuration_dir):
     """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope
+    spack.package_prefs.PackagePrefs.clear_caches()
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
     spack.config.config_scopes = ordereddict_backport.OrderedDict()
     spack.config.ConfigScope('site', str(configuration_dir.join('site')))
+    spack.config.ConfigScope('system', str(configuration_dir.join('system')))
     spack.config.ConfigScope('user', str(configuration_dir.join('user')))
     Config = collections.namedtuple('Config', ['real', 'mock'])
+
     yield Config(real=real_scope, mock=spack.config.config_scopes)
+
     spack.config.config_scopes = real_scope
     spack.config.clear_config_caches()
+    spack.package_prefs.PackagePrefs.clear_caches()
 
 
 @pytest.fixture(scope='module')
@@ -250,6 +253,7 @@ def database(tmpdir_factory, builtin_mock, config):
             _install('mpileaks ^mpich')
             _install('mpileaks ^mpich2')
             _install('mpileaks ^zmpi')
+            _install('externaltest')
 
     t = Database(
         real=real,
@@ -263,6 +267,7 @@ def database(tmpdir_factory, builtin_mock, config):
         t.install('mpileaks ^mpich')
         t.install('mpileaks ^mpich2')
         t.install('mpileaks ^zmpi')
+        t.install('externaltest')
 
     yield t
 
@@ -298,6 +303,7 @@ def mock_archive():
     repo_name = 'mock-archive-repo'
     tmpdir.ensure(repo_name, dir=True)
     repodir = tmpdir.join(repo_name)
+
     # Create the configure script
     configure_path = str(tmpdir.join(repo_name, 'configure'))
     with open(configure_path, 'w') as f:
@@ -312,16 +318,22 @@ def mock_archive():
             "\ttouch $prefix/dummy_file\n"
             "EOF\n"
         )
-    os.chmod(configure_path, 0755)
+    os.chmod(configure_path, 0o755)
+
     # Archive it
     current = tmpdir.chdir()
     archive_name = '{0}.tar.gz'.format(repo_name)
     tar('-czf', archive_name, repo_name)
     current.chdir()
-    Archive = collections.namedtuple('Archive', ['url', 'path'])
-    url = 'file://' + str(tmpdir.join(archive_name))
+    Archive = collections.namedtuple('Archive',
+                                     ['url', 'path', 'archive_file'])
+    archive_file = str(tmpdir.join(archive_name))
+
     # Return the url
-    yield Archive(url=url, path=str(repodir))
+    yield Archive(
+        url=('file://' + archive_file),
+        archive_file=archive_file,
+        path=str(repodir))
     stage.destroy()
 
 
@@ -463,7 +475,9 @@ def mock_svn_repository():
     url = 'file://' + str(repodir)
     # Initialize the repository
     current = repodir.chdir()
-    svnadmin('create', str(repodir))
+    # NOTE: Adding --pre-1.5-compatible works for NERSC
+    # Unknown if this is also an issue at other sites.
+    svnadmin('create', '--pre-1.5-compatible', str(repodir))
 
     # Import a structure (first commit)
     r0_file = 'r0_file'

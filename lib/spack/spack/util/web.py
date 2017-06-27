@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,10 +25,23 @@
 import re
 import os
 import sys
-import urllib2
-import urlparse
-from multiprocessing import Pool
-from HTMLParser import HTMLParser, HTMLParseError
+import traceback
+
+from six.moves.urllib.request import urlopen, Request
+from six.moves.urllib.error import URLError
+from six.moves.urllib.parse import urljoin
+import multiprocessing.pool
+
+try:
+    # Python 2 had these in the HTMLParser package.
+    from HTMLParser import HTMLParser, HTMLParseError
+except ImportError:
+    # In Python 3, things moved to html.parser
+    from html.parser import HTMLParser
+
+    # Also, HTMLParseError is deprecated and never raised.
+    class HTMLParseError(Exception):
+        pass
 
 import llnl.util.tty as tty
 
@@ -55,24 +68,41 @@ class LinkParser(HTMLParser):
                     self.links.append(val)
 
 
-def _spider(args):
-    """_spider(url, depth, max_depth)
+class NonDaemonProcess(multiprocessing.Process):
+    """Process tha allows sub-processes, so pools can have sub-pools."""
+    def _get_daemon(self):
+        return False
 
-       Fetches URL and any pages it links to up to max_depth.  depth should
-       initially be 1, and max_depth includes the root.  This function will
-       print out a warning only if the root can't be fetched; it ignores
+    def _set_daemon(self, value):
+        pass
+
+    daemon = property(_get_daemon, _set_daemon)
+
+
+class NonDaemonPool(multiprocessing.pool.Pool):
+    """Pool that uses non-daemon processes"""
+    Process = NonDaemonProcess
+
+
+def _spider(url, visited, root, depth, max_depth, raise_on_error):
+    """Fetches URL and any pages it links to up to max_depth.
+
+       depth should initially be zero, and max_depth is the max depth of
+       links to follow from the root.
+
+       Prints out a warning only if the root can't be fetched; it ignores
        errors with pages that the root links to.
 
-       This will return a list of the pages fetched, in no particular order.
-
-       Takes args as a tuple b/c it's intended to be used by a multiprocessing
-       pool.  Firing off all the child links at once makes the fetch MUCH
-       faster for pages with lots of children.
+       Returns a tuple of:
+       - pages: dict of pages visited (URL) mapped to their full text.
+       - links: set of links encountered while visiting the pages.
     """
-    url, visited, root, opener, depth, max_depth, raise_on_error = args
-
     pages = {}     # dict from page URL -> text content.
     links = set()  # set of all links seen on visited pages.
+
+    # root may end with index.html -- chop that off.
+    if root.endswith('/index.html'):
+        root = re.sub('/index.html$', '', root)
 
     try:
         # Make a HEAD request first to check the content type.  This lets
@@ -80,9 +110,9 @@ def _spider(args):
         # It would be nice to do this with the HTTP Accept header to avoid
         # one round-trip.  However, most servers seem to ignore the header
         # if you ask for a tarball with Accept: text/html.
-        req = urllib2.Request(url)
+        req = Request(url)
         req.get_method = lambda: "HEAD"
-        resp = urllib2.urlopen(req, timeout=TIMEOUT)
+        resp = urlopen(req, timeout=TIMEOUT)
 
         if "Content-type" not in resp.headers:
             tty.debug("ignoring page " + url)
@@ -95,11 +125,11 @@ def _spider(args):
 
         # Do the real GET request when we know it's just HTML.
         req.get_method = lambda: "GET"
-        response = urllib2.urlopen(req, timeout=TIMEOUT)
+        response = urlopen(req, timeout=TIMEOUT)
         response_url = response.geturl()
 
         # Read the page and and stick it in the map we'll return
-        page = response.read()
+        page = response.read().decode('utf-8')
         pages[response_url] = page
 
         # Parse out the links in the page
@@ -109,7 +139,7 @@ def _spider(args):
 
         while link_parser.links:
             raw_link = link_parser.links.pop()
-            abs_link = urlparse.urljoin(response_url, raw_link.strip())
+            abs_link = urljoin(response_url, raw_link.strip())
 
             links.add(abs_link)
 
@@ -127,22 +157,24 @@ def _spider(args):
 
             # If we're not at max depth, follow links.
             if depth < max_depth:
-                subcalls.append((abs_link, visited, root, None,
+                subcalls.append((abs_link, visited, root,
                                  depth + 1, max_depth, raise_on_error))
                 visited.add(abs_link)
 
         if subcalls:
+            pool = NonDaemonPool(processes=len(subcalls))
             try:
-                pool = Pool(processes=len(subcalls))
-                results = pool.map(_spider, subcalls)
+                results = pool.map(_spider_wrapper, subcalls)
+
                 for sub_pages, sub_links in results:
                     pages.update(sub_pages)
                     links.update(sub_links)
+
             finally:
                 pool.terminate()
                 pool.join()
 
-    except urllib2.URLError as e:
+    except URLError as e:
         tty.debug(e)
         if raise_on_error:
             raise spack.error.NoNetworkConnectionError(str(e), url)
@@ -159,46 +191,53 @@ def _spider(args):
 
     except Exception as e:
         # Other types of errors are completely ignored, except in debug mode.
-        tty.debug("Error in _spider: %s" % e)
+        tty.debug("Error in _spider: %s:%s" % (type(e), e),
+                  traceback.format_exc())
 
     return pages, links
 
 
-def spider(root_url, **kwargs):
+def _spider_wrapper(args):
+    """Wrapper for using spider with multiprocessing."""
+    return _spider(*args)
+
+
+def spider(root_url, depth=0):
+
     """Gets web pages from a root URL.
-       If depth is specified (e.g., depth=2), then this will also fetches pages
-       linked from the root and its children up to depth.
+
+       If depth is specified (e.g., depth=2), then this will also follow
+       up to <depth> levels of links from the root.
 
        This will spawn processes to fetch the children, for much improved
        performance over a sequential fetch.
+
     """
-    max_depth = kwargs.setdefault('depth', 1)
-    pages, links = _spider((root_url, set(), root_url, None,
-                            1, max_depth, False))
+    pages, links = _spider(root_url, set(), root_url, 0, depth, False)
     return pages, links
 
 
-def find_versions_of_archive(*archive_urls, **kwargs):
+def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     """Scrape web pages for new versions of a tarball.
 
     Arguments:
       archive_urls:
-          URLs for different versions of a package. Typically these
-          are just the tarballs from the package file itself.  By
-          default, this searches the parent directories of archives.
+          URL or sequence of URLs for different versions of a
+          package. Typically these are just the tarballs from the package
+          file itself.  By default, this searches the parent directories
+          of archives.
 
     Keyword Arguments:
       list_url:
-
           URL for a listing of archives.  Spack wills scrape these
           pages for download links that look like the archive URL.
 
       list_depth:
-          Max depth to follow links on list_url pages.
+          Max depth to follow links on list_url pages. Default 0.
 
     """
-    list_url   = kwargs.get('list_url', None)
-    list_depth = kwargs.get('list_depth', 1)
+    if not isinstance(archive_urls, (list, tuple)):
+        archive_urls = [archive_urls]
 
     # Generate a list of list_urls based on archive urls and any
     # explicitly listed list_url in the package
@@ -229,6 +268,14 @@ def find_versions_of_archive(*archive_urls, **kwargs):
         # part, not the full path.
         url_regex = os.path.basename(url_regex)
 
+        # We need to add a / to the beginning of the regex to prevent
+        # Spack from picking up similarly named packages like:
+        #   https://cran.r-project.org/src/contrib/pls_2.6-0.tar.gz
+        #   https://cran.r-project.org/src/contrib/enpls_5.7.tar.gz
+        #   https://cran.r-project.org/src/contrib/autopls_1.3.tar.gz
+        #   https://cran.r-project.org/src/contrib/matrixpls_1.0.4.tar.gz
+        url_regex = '/' + url_regex
+
         # We need to add a $ anchor to the end of the regex to prevent
         # Spack from picking up signature files like:
         #   .asc
@@ -236,7 +283,9 @@ def find_versions_of_archive(*archive_urls, **kwargs):
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        regexes.append(url_regex + '(\/download)?$')
+        url_regex += '(\/download)?$'
+
+        regexes.append(url_regex)
 
     # Build a dict version -> URL from any links that match the wildcards.
     versions = {}

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,12 +27,24 @@ from glob import glob
 
 
 class Bowtie2(Package):
-    """Description"""
-    homepage = "bowtie-bio.sourceforge.net/bowtie2/index.shtml"
-    version('2.2.5', '51fa97a862d248d7ee660efc1147c75f',
-            url="http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.2.5/bowtie2-2.2.5-source.zip")
+    """Bowtie 2 is an ultrafast and memory-efficient tool for aligning
+       sequencing reads to long reference sequences"""
 
-    patch('bowtie2-2.5.patch', when='@2.2.5', level=0)
+    homepage = "bowtie-bio.sourceforge.net/bowtie2/index.shtml"
+    url      = "http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.3.1/bowtie2-2.3.1-source.zip"
+
+    version('2.3.1', 'b4efa22612e98e0c23de3d2c9f2f2478')
+    version('2.2.5', '51fa97a862d248d7ee660efc1147c75f')
+
+    depends_on('tbb', when='@2.3.1')
+    depends_on('readline')
+    depends_on('zlib')
+
+    patch('bowtie2-2.2.5.patch', when='@2.2.5', level=0)
+    patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
+
+    # seems to have trouble with 6's -std=gnu++14
+    conflicts('%gcc@6:')
 
     def install(self, spec, prefix):
         make()

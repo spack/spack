@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,7 +26,6 @@ import os
 import stat
 import shutil
 import errno
-import exceptions
 import sys
 import inspect
 import imp
@@ -558,7 +557,7 @@ class Repo(object):
 
                 return yaml_data['repo']
 
-        except exceptions.IOError:
+        except IOError:
             tty.die("Error reading %s when opening %s"
                     % (self.config_file, self.root))
 
@@ -925,11 +924,11 @@ class DuplicateRepoError(RepoError):
     """Raised when duplicate repos are added to a RepoPath."""
 
 
-class PackageLoadError(spack.error.SpackError):
-    """Superclass for errors related to loading packages."""
+class UnknownEntityError(RepoError):
+    """Raised when we encounter a package spack doesn't have."""
 
 
-class UnknownPackageError(PackageLoadError):
+class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
     def __init__(self, name, repo=None):
@@ -942,7 +941,7 @@ class UnknownPackageError(PackageLoadError):
         self.name = name
 
 
-class UnknownNamespaceError(PackageLoadError):
+class UnknownNamespaceError(UnknownEntityError):
     """Raised when we encounter an unknown namespace"""
 
     def __init__(self, namespace):
@@ -950,7 +949,7 @@ class UnknownNamespaceError(PackageLoadError):
             "Unknown namespace: %s" % namespace)
 
 
-class FailedConstructorError(PackageLoadError):
+class FailedConstructorError(RepoError):
     """Raised when a package's class constructor fails."""
 
     def __init__(self, name, exc_type, exc_obj, exc_tb):

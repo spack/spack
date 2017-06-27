@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,6 +33,7 @@ class Numdiff(AutotoolsPackage):
     homepage  = 'https://www.nongnu.org/numdiff'
     url       = 'http://nongnu.askapache.com/numdiff/numdiff-5.8.1.tar.gz'
 
+    version('5.9.0', '794461a7285d8b9b1f2c4a8149889ea6')
     version('5.8.1', 'a295eb391f6cb1578209fc6b4f9d994e')
 
     variant('nls', default=False,

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,5 @@ class RUuid(RPackage):
 
     homepage = "http://www.rforge.net/uuid"
     url      = "https://cran.rstudio.com/src/contrib/uuid_0.1-2.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/uuid"
 
     version('0.1-2', 'f97d000c0b16bca455fb5bf2cd668ddf')

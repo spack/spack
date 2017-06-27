@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,9 +29,9 @@ import os
 class RustBindgen(Package):
     """The rust programming language toolchain"""
     homepage = "http://www.rust-lang.org"
-    url = "https://github.com/crabtw/rust-bindgen"
+    url = "https://github.com/servo/rust-bindgen/archive/v0.20.5.tar.gz"
 
-    version('0.16', tag='0.16', git='https://github.com/crabtw/rust-bindgen')
+    version('0.20.5', '3e4d70a5bec540324fdd95bc9e82bebc')
 
     extends("rust")
     depends_on("llvm")
