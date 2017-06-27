@@ -36,9 +36,7 @@ class Primer3(MakefilePackage):
 
     version('2.3.7', 'c6b89067bf465e62b6b1fd830b5b4418')
 
-    @property
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'src')
+    build_directory = 'src'
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
