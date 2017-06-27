@@ -38,24 +38,22 @@ class PerlStarFusion(Package):
 
     version('master', git='https://github.com/STAR-Fusion/STAR-Fusion.git', commit='a16a0a8')
 
+    extends('perl')
+
     depends_on('star', type=('build', 'run'))
+    depends_on('perl', type=('build', 'run'))
     depends_on('perl-intervaltree', type=('build', 'run'))
     depends_on('perl-dbi', type=('build', 'run'))
     depends_on('perl-dbfile', type=('build', 'run'))
     depends_on('perl-uri-escape', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', join_path(self.prefix, 'lib'))
-
     def install(self, spec, prefix):
-        perl5 = join_path(prefix, 'lib')
-
         mkdirp(prefix.bin)
         install('STAR-Fusion', prefix.bin)
-        mkdir(perl5)
+        mkdirp(perl_lib_dir)
         with working_dir('PerlLib'):
             for pm in glob("*.pm"):
-                install(pm, perl5)
+                install(pm, perl_lib_dir)
         with working_dir('util'):
             for files in glob("*"):
                 install(files, prefix.bin)
