@@ -27,12 +27,12 @@ from spack import *
 import subprocess
 
 class Sabre(Package):
-    """Sabre is a tool that will demultiplex barcoded reads into separate files. 
-       It will work on both single-end and paired-end data in fastq format. 
-       It simply compares the provided barcodes with each read and separates the 
-       read into its appropriate barcode file, after stripping the barcode from 
-       the read (and also stripping the quality values of the barcode bases). 
-       If a read does not have a recognized barcode, then it is put into the 
+    """Sabre is a tool that will demultiplex barcoded reads into separate files.
+       It will work on both single-end and paired-end data in fastq format.
+       It simply compares the provided barcodes with each read and separates the
+       read into its appropriate barcode file, after stripping the barcode from
+       the read (and also stripping the quality values of the barcode bases).
+       If a read does not have a recognized barcode, then it is put into the
        unknown file.
     """
 
@@ -48,15 +48,3 @@ class Sabre(Package):
         mkdirp(prefix.bin)
         install('sabre',join_path(prefix.bin))
  
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def check_install(self):
-        try:
-            subprocess.check_call('/myfiles/las/dept/BIT/tests/sabre/test.sh')
-            pass        
-            print ("it worked")
-        except subprocess.CalledProcessError:
-            print ("did not work")
-            
-            
-
