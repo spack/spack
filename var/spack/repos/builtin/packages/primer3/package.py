@@ -41,5 +41,6 @@ class Primer3(MakefilePackage):
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)
-            for binary in ('primer3_core', 'ntdpal', 'oligotm', 'long_seq_tm_test'):
+            for binary in ('primer3_core', 'ntdpal', 'oligotm',
+                           'long_seq_tm_test'):
                 install(binary, prefix.bin)
