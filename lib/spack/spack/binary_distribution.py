@@ -40,7 +40,8 @@ def buildinfo_file_name(spec):
     """
     Filename of the binary package meta-data file
     """
-    return os.path.join(spec.prefix, ".spack", "binary_distribution")
+    installpath=join_path(spack.store.layout.root,install_directory_name(spec))
+    return os.path.join(installpath, ".spack", "binary_distribution")
 
 
 def read_buildinfo_file(spec):
@@ -84,10 +85,20 @@ def write_buildinfo_file(spec):
         outfile.write(yaml.dump(buildinfo, default_flow_style=True))
 
 
+def install_directory_name(spec):
+    """
+    Return name of the install directory according to the convention
+    <os>-<architecture>/<compiler>/<package>-<version>-<dag_hash>/
+    """
+    return "%s/%s/%s/%s-%s-%s" % (spack.store.layout.root,
+                         spack.architecture.sys_type(),
+                         str(spec.compiler).replace("@", "-"),
+                         spec.name,spec.version,spec.dag_hash())
+
 def tarball_directory_name(spec):
     """
     Return name of the tarball directory according to the convention
-    <os>-<architecture>/<compiler>/<package>/
+    <os>-<architecture>/<compiler>/<package>-<version>/
     """
     return "%s/%s/%s-%s" % (spack.architecture.sys_type(),
                          str(spec.compiler).replace("@", "-"),
@@ -217,7 +228,8 @@ def extract_tarball(spec,filename):
     """
     extract binary tarball for given package into install area
     """
-    mkdirp(spec.prefix)
+    installpath=install_directory_name(spec)
+    mkdirp(installpath)
     stagepath=os.path.dirname(filename)
     tarfile_name = tarball_name(spec, '.tar.gz')
     tarfile_path = os.path.join(stagepath, tarfile_name)
@@ -235,7 +247,7 @@ def extract_tarball(spec,filename):
         # spack gpg verify tarfile_path
     
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=os.path.dirname(spec.prefix))
+        tar.extractall(path=join_path(installpath,'..'))
     
     #os.remove(tarfile_path)
     #os.remove(tarfile_path + '.asc')
@@ -272,7 +284,7 @@ def relocate_package(spec):
 # Need to relocate to add new compiler path to rpath 
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
-
+    installpath=install_directory_name(spec)
     # as we may need patchelf, find out where it is
     patchelf_executable = ''
     if platform.system() != 'Darwin':
@@ -281,14 +293,14 @@ def relocate_package(spec):
         patchelf_executable = os.path.join(patchelf.prefix, "bin", "patchelf")
 
     for filename in buildinfo['relocate_binaries']:
-        path_name = os.path.join(spec.prefix, filename)
+        path_name = os.path.join(installpath, filename)
         spack.relocate.relocate_binary(path_name,
                                        old_path,
                                        new_path,
                                        patchelf_executable)
 
     for filename in buildinfo['relocate_textfiles']:
-        path_name = os.path.join(spec.prefix, filename)
+        path_name = os.path.join(installpath, filename)
         spack.relocate.relocate_text(path_name, old_path, new_path)
 
 def get_specs():

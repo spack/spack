@@ -115,7 +115,7 @@ def install_tarball(spec,args):
          tty.msg("Installing buildcache for dependency spec %s" % d)
          install_tarball(d,args)
     package = spack.repo.get(spec)
-    if package.installed and not args.force:
+    if s.concrete and package.installed and not args.force:
         tty.warn("Package for spec %s already installed." % spec.format())
     else:
         tarball= spack.binary_distribution.download_tarball(spec)
