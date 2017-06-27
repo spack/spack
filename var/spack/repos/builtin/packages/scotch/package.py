@@ -94,13 +94,9 @@ class Scotch(Package):
             libraries, root=self.prefix, recurse=True, shared=shared
         )
         if '+compression' in self.spec:
-            zlibs = find_libraries(
-                ['libz'], root=self.spec['zlib'].prefix, recurse=True, shared=shared
-        )
+            zlibs = self.spec['zlib'].libs
 
         return scotchlibs + zlibs
-
-
 
     def patch(self):
         self.configure()
