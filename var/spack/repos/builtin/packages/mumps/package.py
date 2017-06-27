@@ -61,7 +61,6 @@ class Mumps(Package):
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
-#    depends_on('scotch + esmumps + mpi', when='+ptscotch')
     depends_on('scotch + esmumps ~ metis + mpi', when='+ptscotch')
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when="+parmetis")
