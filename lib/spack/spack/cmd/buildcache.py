@@ -85,11 +85,11 @@ def createtarball(args):
                                          deptype=('link', 'run'),
                                          deptype_query='run'):
                 if not node.external:
-                    tty.msg('adding dependency %s' % node)
+                    tty.msg('adding dependency %s' % node.format())
                     specs.add(node)
     spack.binary_distribution.prepare()
     for spec in specs:
-        tty.msg('creating binary cache file for package %s ' % spec)
+        tty.msg('creating binary cache file for package %s ' % spec.format())
         build_tarball(spec, outdir, args.force)
 
 def installtarball(args):
@@ -116,17 +116,17 @@ def install_tarball(spec,args):
          install_tarball(d,args)
     package = spack.repo.get(spec)
     if package.installed and not args.force:
-        tty.warn("Package for spec %s already installed." % spec)
+        tty.warn("Package for spec %s already installed." % spec.format())
     else:
         tarball= spack.binary_distribution.download_tarball(spec)
         if tarball:
-            tty.msg('Installing buildcache for spec %s' % spec)
+            tty.msg('Installing buildcache for spec %s' % spec.format())
             spack.binary_distribution.prepare()
             spack.binary_distribution.extract_tarball(spec,tarball)
             spack.binary_distribution.relocate_package(spec)
             spack.store.db.reindex(spack.store.layout)
         else:
-            tty.die('Download of binary cache file for spec %s failed.' % spec)
+            tty.die('Download of binary cache file for spec %s failed.' % spec.format())
         
 
 def listspecs(args):
