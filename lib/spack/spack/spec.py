@@ -1018,8 +1018,8 @@ class Spec(object):
         # cases we've read them from a file want to assume normal.
         # This allows us to manipulate specs that Spack doesn't have
         # package.py files for.
-        self._normal = kwargs.get('normal', False)
-        self._concrete = kwargs.get('concrete', False)
+        self._normal = False
+        self._concrete = False
 
         # Allow a spec to be constructed with an external path.
         self.external_path = kwargs.get('external_path', None)
