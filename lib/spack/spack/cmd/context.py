@@ -3,6 +3,7 @@ import spack
 import llnl.util.filesystem as fs
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+from spack.config import ConfigScope
 from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.repository import Repo
 from spack.version import VersionList
@@ -192,6 +193,9 @@ class Context(object):
     def path(self):
         return fs.join_path(_db_dirname, self.name)
 
+    def config_path(self):
+        return fs.join_path(self.path(), 'config')
+
     def repo_path(self):
         return fs.join_path(self.path(), 'repo')
 
@@ -236,6 +240,9 @@ def write(context, new_repo=None):
         shutil.copytree(new_repo.root, dest_repo_dir)
     elif os.path.exists(context.repo_path()):
         shutil.copytree(context.repo_path(), dest_repo_dir)
+
+    if os.path.exists(context.config_path()):
+        shutil.copytree(context.config_path(), fs.join_path(tmp_new, 'config'))
 
     if os.path.exists(dest):
         shutil.move(dest, tmp_old)
@@ -312,6 +319,7 @@ def context_remove(args):
 def context_concretize(args):
     context = read(args.context)
     repo = prepare_repository(context)
+    prepare_config_scope(context)
 
     new_specs = context.concretize()
     for spec in new_specs:
@@ -350,6 +358,13 @@ def prepare_repository(context, remove=None):
     repo = Repo(new_repo_dir)
     spack.repo.put_first(repo)
     return repo
+
+
+def prepare_config_scope(context):
+    tty.debug("Check for config scope at " + context.config_path())
+    if os.path.exists(context.config_path()):
+        tty.msg("Using config scope at " + context.config_path())
+        ConfigScope(context.name, context.config_path())
 
 
 def context_relocate(args):
