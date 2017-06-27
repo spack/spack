@@ -31,7 +31,7 @@ def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
     for rpath in orig_rpaths:
         if re.match(orig_dir,rpath):
             rel=os.path.relpath(rpath,start=os.path.dirname(path_name))
-            print rel, rpath, os.path.dirname(path_name)
+            #tty.msg(rel, rpath, os.path.dirname(path_name))
             rel_rpaths.add('$ORIGIN/%s' % rel)
         else:
             rel_rpaths.add(rpath)
