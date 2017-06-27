@@ -102,6 +102,9 @@ def installtarball(args):
         for pkg in pkgs:
             if re.match(re.escape(pkg),str(spec)):
                 matches.add(spec)
+            if re.match(re.escape(pkg),'/%s' % spec.dag_hash()):
+                matches.add(spec)
+
     for match in matches:
         install_tarball(match,args)
 
@@ -133,11 +136,11 @@ def listspecs(args):
             tty.msg("buildcache spec(s) matching %s \n" % pkg)
             for spec in sorted(specs):
                 if re.search("^"+re.escape(pkg),str(spec)):
-                    tty.msg('spack buildcache install "%s" \n' % spec)
+                    tty.msg('run "spack buildcache install /%s" to install  %s\n' % ( spec.dag_hash(7), spec.format()) )
     else: 
         tty.msg("buildcache specs ")
         for spec in sorted(specs):
-            tty.msg('spack buildcache install "%s" \n' % spec)
+            tty.msg('run "spack buildcache install /%s" to install  %s\n' % ( spec.dag_hash(7), spec.format() ) )
 
 def buildcache(parser, args):
     if args.func:

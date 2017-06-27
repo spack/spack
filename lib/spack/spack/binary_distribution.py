@@ -8,6 +8,7 @@ import yaml
 import shutil
 
 import llnl.util.tty as tty
+from spack.util.gpg import Gpg
 from llnl.util.filesystem import mkdirp, join_path
 from spack.util.web import spider, find_versions_of_archive
 import spack.cmd
@@ -120,7 +121,6 @@ def build_tarball(spec, outdir, force=False, key=None):
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
     """
-    prelocate_package(spec)
     tarfile_name = tarball_name(spec, '.tar.gz')
     tarfile_dir = join_path(outdir,"build_cache", tarball_directory_name(spec))
     tarfile_path = join_path(tarfile_dir, tarfile_name)
@@ -151,6 +151,7 @@ def build_tarball(spec, outdir, force=False, key=None):
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec)
+    prelocate_package(spec)
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % spec.prefix, arcname='%s' %
                 os.path.basename(spec.prefix))
@@ -158,7 +159,15 @@ def build_tarball(spec, outdir, force=False, key=None):
     # Sign the packages.
     # spack gpg sign [--key key] tarfile_path
     # spack gpg sign [--key key] tarfile_path + '/spec.yaml'
-
+    #if key == None:
+    #    keys = Gpg.signing_keys()
+    #    if len(keys) == 1:
+    #        key = keys[0]
+    #    elif not keys:
+    #        raise RuntimeError('no signing keys are available')
+    #    else:
+    #        raise RuntimeError('multiple signing keys are available; '
+    #                           'please choose one')
     # temporary to test adding and extracting .asc files
     path1 = '%s.asc' % tarfile_path
     with open(path1, 'a'):
@@ -167,6 +176,8 @@ def build_tarball(spec, outdir, force=False, key=None):
     with open(path2, 'a'):
         os.utime(path2, None)
     # temporary to test adding and extracting .asc files
+    #Gpg.sign(key, path1, '%s.asc' % path1)
+    #Gpg.sign(key, path2, '%s.asc' % path2)
 
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
