@@ -402,9 +402,8 @@ class IntelParallelStudio(IntelPackage):
         """Newer versions of Intel Parallel Studio have a bug in the
         ``psxevars.sh`` script."""
 
-        year = self.version[1]
-        bindir = os.path.join(
-            self.prefix, 'parallel_studio_xe_{0}'.format(year), 'bin')
+        bindir = glob.glob(join_path(
+            self.prefix, 'parallel_studio*', 'bin'))[0]
 
         filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
                     os.path.join(bindir, 'psxevars.sh'),
@@ -418,18 +417,18 @@ class IntelParallelStudio(IntelPackage):
         spack_env.set('I_MPI_FC',  spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
-        # Check for presence of bin64 or bin directory
-        if os.path.isdir(self.prefix.bin):
-            bindir = self.prefix.bin
-        elif os.path.isdir(self.prefix.bin64):
-            bindir = self.prefix.bin64
-        else:
-            raise RuntimeError('No suitable bindir found')
+        bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
 
-        self.spec.mpicc  = join_path(bindir, 'mpicc')
-        self.spec.mpicxx = join_path(bindir, 'mpic++')
-        self.spec.mpifc  = join_path(bindir, 'mpif90')
-        self.spec.mpif77 = join_path(bindir, 'mpif77')
+        if self.compiler.name == 'intel':
+            self.spec.mpicc  = bindir.mpiicc
+            self.spec.mpicxx = bindir.mpiicpc
+            self.spec.mpifc  = bindir.mpiifort
+            self.spec.mpif77 = bindir.mpiifort
+        else:
+            self.spec.mpicc  = bindir.mpicc
+            self.spec.mpicxx = bindir.mpicxx
+            self.spec.mpifc  = bindir.mpif90
+            self.spec.mpif77 = bindir.mpif77
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
