@@ -99,12 +99,12 @@ def test_install_to_prefix(mock_archive, tmpdir):
 
 @pytest.mark.usefixtures('install_mockery')
 def test_install_to_multiple_prefix(mock_archive, tmpdir):
-    prefix1 = '{}/pre1'.format(tmpdir)
+    prefix1 = '{0}/pre1'.format(tmpdir)
     spec1 = Spec('trivial-install-test-package prefix={0}'.format(prefix1))
     spec1.concretize()
     assert spec1.concrete
 
-    prefix2 = '{}/pre2'.format(tmpdir)
+    prefix2 = '{0}/pre2'.format(tmpdir)
     spec2 = Spec('trivial-install-test-package prefix={0}'.format(prefix2))
     spec2.concretize()
     assert spec2.concrete

@@ -755,7 +755,7 @@ class Database(object):
 
         if len(results) > 1:
             raise CorruptDatabaseError("Multiple specs installed "
-                                       "to prefix {}".format(path))
+                                       "to prefix {0}".format(path))
 
         return results[0] if results else None
 
