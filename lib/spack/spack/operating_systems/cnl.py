@@ -40,8 +40,7 @@ class Cnl(OperatingSystem):
     """
 
     def _detect_crayos_version(self):
-        modulecmd = which("modulecmd", required=True)
-        modulecmd.add_default_arg("python")
+        modulecmd = get_module_cmd()
         output = modulecmd("avail", "PrgEnv-gnu", output=str, error=str)
         matches = re.findall(r'PrgEnv-gnu/(\d+).\d+.\d+', output)
         version_set = set(matches)
