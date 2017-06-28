@@ -151,7 +151,7 @@ class IntelPackage(PackageBase):
 
             # Select target architecture of your applications,
             # valid values are: {IA32, INTEL64, ALL}
-            'ARCH_SELECTED': 'INTEL64',
+            'ARCH_SELECTED': 'ALL',
         }
 
         # Not all Intel software requires a license. Trying to specify
