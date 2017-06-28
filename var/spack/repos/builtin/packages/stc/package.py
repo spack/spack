@@ -30,9 +30,9 @@ class Stc(AutotoolsPackage):
     """STC: The Swift-Turbine Compiler"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/stc-0.7.3.tar.gz'
+    url      = 'http://swift-lang.github.io/swift-t-downloads/1.3/spack/stc-0.7.4.tar.gz'
 
-    version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
+    version('0.7.4', '88424cb7acdb0b712f76717aae40090f')
 
     depends_on('jdk')
     depends_on('ant')
