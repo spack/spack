@@ -83,10 +83,16 @@ class IntelMpi(IntelPackage):
     def setup_dependent_package(self, module, dep_spec):
         bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
 
-        self.spec.mpicc  = bindir.mpicc
-        self.spec.mpicxx = bindir.mpicxx
-        self.spec.mpifc  = bindir.mpif90
-        self.spec.mpif77 = bindir.mpif77
+        if self.compiler.name == 'intel':
+            self.spec.mpicc  = bindir.mpiicc
+            self.spec.mpicxx = bindir.mpiicpc
+            self.spec.mpifc  = bindir.mpiifort
+            self.spec.mpif77 = bindir.mpiifort
+        else:
+            self.spec.mpicc  = bindir.mpicc
+            self.spec.mpicxx = bindir.mpicxx
+            self.spec.mpifc  = bindir.mpif90
+            self.spec.mpif77 = bindir.mpif77
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
