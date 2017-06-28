@@ -480,7 +480,7 @@ class TestSpecDag(object):
 
     def test_deptype_traversal(self):
         dag = Spec('dtuse')
-        dag.normalize_top()
+        dag.concretize()
 
         names = ['dtuse', 'dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
                  'dtlink1', 'dtlink3', 'dtbuild2', 'dtlink4']
@@ -490,7 +490,7 @@ class TestSpecDag(object):
 
     def test_deptype_traversal_with_builddeps(self):
         dag = Spec('dttop')
-        dag.normalize_top()
+        dag.concretize()
 
         names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
                  'dtlink1', 'dtlink3', 'dtbuild2', 'dtlink4']
@@ -500,7 +500,7 @@ class TestSpecDag(object):
 
     def test_deptype_traversal_full(self):
         dag = Spec('dttop')
-        dag.normalize_top()
+        dag.concretize()
 
         names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2', 'dtrun2',
                  'dtlink1', 'dtlink3', 'dtbuild2', 'dtlink4', 'dtrun1',

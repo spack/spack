@@ -1010,9 +1010,9 @@ class DependencyConstraints(object):
     def update(self, spec):
         for context in self.contexts:
             if spec.name in context:
-                if spec != context[spec.name]:
+                if spec is not context[spec.name]:
                     import pdb; pdb.set_trace()
-                assert(spec == context[spec.name])
+                assert(spec is context[spec.name])
         for context in self.contexts:
             if spec.name not in context:
                 context[spec.name] = spec
@@ -1845,6 +1845,12 @@ class Spec(object):
             changed = any(changes)
             force = True
 
+        changed = True
+        while changed:
+            changes = (self.normalize(dep_constraints, force, all_deps=True),
+                       self._concretize_helper())
+            changed = any(changes)
+
         for s in self.traverse(deptype_query=alldeps):
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
@@ -1966,7 +1972,7 @@ class Spec(object):
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
     def _merge_dependency(self, dep, deptypes, dep_constraints, visited,
-                          provider_index):
+                          provider_index, all_deps):
         """Merge the dependency into this spec.
 
         Caller should assume that this routine can owns the dep parameter
@@ -2042,10 +2048,11 @@ class Spec(object):
                     format(resolved.format()))
 
         changed |= resolved._normalize_helper(
-            dep_constraints, visited, provider_index)
+            dep_constraints, visited, provider_index, all_deps)
         return changed
 
-    def _normalize_helper(self, dep_constraints, visited, provider_index):
+    def _normalize_helper(self, dep_constraints, visited, provider_index,
+                          all_deps):
         """Recursive helper function for _normalize."""
         if self in visited:
             dep_constraints.update_transitive(self)
@@ -2085,10 +2092,10 @@ class Spec(object):
                 else:
                     child_constraints = dep_constraints
                 
-                if pkg_dep:
+                if pkg_dep and (all_deps or dep_name not in build_only):
                     local_changed = self._merge_dependency(
                         pkg_dep, deptypes, child_constraints, visited,
-                        provider_index)
+                        provider_index, all_deps)
                     changed |= local_changed
             any_change |= changed
 
@@ -2099,7 +2106,7 @@ class Spec(object):
         self._dependencies.clear()
         self.normalize(dep_constraints)
 
-    def normalize(self, dep_constraints=None, force=False):
+    def normalize(self, dep_constraints=None, force=False, all_deps=False):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -2142,7 +2149,7 @@ class Spec(object):
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         any_change = self._normalize_helper(
-            dep_constraints, visited, provider_index)
+            dep_constraints, visited, provider_index, all_deps)
 
         # Mark the spec as normal once done.
         self._normal = True
