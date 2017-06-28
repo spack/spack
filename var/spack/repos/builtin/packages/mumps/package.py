@@ -160,7 +160,7 @@ class Mumps(Package):
                  'FC = {0}'.format(self.spec['mpi'].mpifc),
                  "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
-            if (self.spec.satisfies('%xl_r' or '%xl')) and self.spec.satisfies('^spectrum-mpi'): # noqa
+            if (self.spec.satisfies('%xl_r' or '%xl')) and self.spec.satisfies('^spectrum-mpi'):  # noqa
                 makefile_conf.extend(
                     ['FL = {0}'.format(self.spec['mpi'].mpicc)])
             else:

@@ -143,7 +143,7 @@ class IntelMkl(IntelInstaller):
         # set up MKLROOT for everyone using MKL package
         spack_env.set('MKLROOT', self.prefix)
         spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                          join_path(self.prefix.lib, 'intel64'))
+                              join_path(self.prefix.lib, 'intel64'))
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('MKLROOT', self.prefix)
