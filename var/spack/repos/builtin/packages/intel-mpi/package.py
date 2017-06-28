@@ -81,6 +81,18 @@ class IntelMpi(IntelPackage):
         spack_env.set('I_MPI_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
+        # Intel comes with 2 different flavors of MPI wrappers:
+        #
+        # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
+        #   the Intel compilers.
+        # * mpicc, mpicxx, mpif90, and mpif77 allow you to set which
+        #   compilers to wrap using I_MPI_CC and friends. By default,
+        #   wraps around the GCC compilers.
+        #
+        # In theory, these should be equivalent as long as I_MPI_CC
+        # and friends are set to point to the Intel compilers, but in
+        # practice, mpicc fails to compile some applications while
+        # mpiicc works.
         bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
 
         if self.compiler.name == 'intel':
