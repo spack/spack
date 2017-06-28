@@ -40,6 +40,7 @@ class Turbine(AutotoolsPackage):
     depends_on('adlbx')
     depends_on('tcl')
     depends_on('zsh')
+    depends_on('swig', type='build')
     depends_on('python', when='+python')
 
     def configure_args(self):
