@@ -34,13 +34,26 @@ class Turbine(AutotoolsPackage):
 
     version('1.1.0', '2575ce7ea7142ea7df139578b9e0ca94')
 
+    variant('python', default=False,
+            description='Enable calling python')
+
     depends_on('adlbx')
     depends_on('tcl')
     depends_on('zsh')
+    depends_on('swig', type='build')
+    depends_on('python', when='+python')
 
     def configure_args(self):
         args = ['--with-c-utils=' + self.spec['exmcutils'].prefix,
                 '--with-adlb='    + self.spec['adlbx'].prefix,
                 '--with-tcl='     + self.spec['tcl'].prefix,
                 '--with-mpi='     + self.spec['mpi'].prefix]
+        if '+python' in self.spec:
+            if self.spec['python'].satisfies('@3'):
+                # newer python3.X does not create python link by default
+                pythonex = 'python3'
+            else:
+                pythonex = 'python'
+            args += ['--with-python-exe='
+                     + join_path(self.spec['python'].prefix.bin, pythonex)]
         return args
