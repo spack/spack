@@ -22,8 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.util.prefix import Prefix
+import os
+
 from spack import *
+from spack.environment import EnvironmentModifications
 
 
 class IntelMkl(IntelPackage):
@@ -153,35 +155,16 @@ class IntelMkl(IntelPackage):
 
            $ source mkl/bin/mklvars.sh intel64
         """
-        mkl_root = Prefix(join_path(self.prefix, 'mkl'))
-        tbb_root = Prefix(join_path(self.prefix, 'tbb'))
-        compiler_root = Prefix(join_path(self.prefix, 'compiler'))
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        mklvars = os.path.join(self.prefix.mkl.bin, 'mklvars.sh')
 
-        run_env.prepend_path('CPATH', mkl_root.include)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(mkl_root.lib, 'intel64_lin'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'intel64_lin'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(tbb_root.lib, 'intel64_lin', 'gcc4.7'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(mkl_root.lib, 'intel64_lin'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'intel64_lin'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(tbb_root.lib, 'intel64_lin', 'gcc4.7'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(mkl_root.lib, 'intel64_lin_mic'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'intel64_lin_mic'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(tbb_root.lib, 'intel64_lin_mic'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(mkl_root.lib, 'intel64_lin_mic'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'intel64_lin_mic'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(tbb_root.lib, 'intel64_lin_mic'))
-        run_env.set('MKLROOT', mkl_root)
-        run_env.prepend_path('NLSPATH', join_path(
-            mkl_root.lib, 'intel64_lin', 'locale', '%l_%t', '%N'))
+        if os.path.isfile(mklvars):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                mklvars, 'intel64'))

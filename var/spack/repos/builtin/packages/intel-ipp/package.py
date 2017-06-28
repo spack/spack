@@ -22,8 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.util.prefix import Prefix
+import os
+
 from spack import *
+from spack.environment import EnvironmentModifications
 
 
 class IntelIpp(IntelPackage):
@@ -63,13 +65,16 @@ class IntelIpp(IntelPackage):
 
            $ source ipp/bin/ippvars.sh intel64
         """
-        ipp_root = Prefix(join_path(self.prefix, 'ipp'))
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        ippvars = os.path.join(self.prefix.ipp.bin, 'ippvars.sh')
 
-        run_env.prepend_path('CPATH', ipp_root.include)
-        run_env.prepend_path('IPPROOT', ipp_root)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(ipp_root.lib, 'intel64'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(ipp_root.lib, 'intel64'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(ipp_root.lib, 'mic'))
+        if os.path.isfile(ippvars):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                ippvars, 'intel64'))

@@ -22,8 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.util.prefix import Prefix
+import os
+
 from spack import *
+from spack.environment import EnvironmentModifications
 
 
 class IntelDaal(IntelPackage):
@@ -65,17 +67,16 @@ class IntelDaal(IntelPackage):
 
            $ source daal/bin/daalvars.sh intel64
         """
-        daal_root = Prefix(join_path(self.prefix, 'daal'))
-        tbb_root  = Prefix(join_path(self.prefix, 'tbb'))
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        daalvars = os.path.join(self.prefix.daal.bin, 'daalvars.sh')
 
-        run_env.prepend_path('CLASSPATH', join_path(daal_root.lib, 'daal.jar'))
-        run_env.prepend_path('CPATH', daal_root.include)
-        run_env.set('DAALROOT', daal_root)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(tbb_root.lib, 'intel64_lin', 'gcc4.4'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(daal_root.lib, 'intel64_lin'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(tbb_root.lib, 'intel64_lin', 'gcc4.4'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(daal_root.lib, 'intel64_lin'))
+        if os.path.isfile(daalvars):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                daalvars, 'intel64'))

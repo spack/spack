@@ -22,8 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.util.prefix import Prefix
+import os
+
 from spack import *
+from spack.environment import EnvironmentModifications
 
 
 class IntelMpi(IntelPackage):
@@ -71,10 +73,6 @@ class IntelMpi(IntelPackage):
         return find_headers(
             'mpi', root=self.prefix.include64, recurse=False)
 
-    def install(self, spec, prefix):
-        self.intel_prefix = prefix
-        IntelInstaller.install(self, spec, prefix)
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('I_MPI_CC', spack_cc)
         spack_env.set('I_MPI_CXX', spack_cxx)
@@ -99,15 +97,18 @@ class IntelMpi(IntelPackage):
 
            $ source compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
         """
-        mpi_root = Prefix(join_path(self.prefix, 'compilers_and_libraries',
-                                    'linux', 'mpi'))
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        mpivars = os.path.join(
+            self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
+            'mpivars.sh')
 
-        run_env.prepend_path('CLASSPATH',
-                             join_path(mpi_root, 'intel64', 'lib', 'mpi.jar'))
-        run_env.set('I_MPI_ROOT', mpi_root)
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(mpi_root, 'mic', 'lib'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(mpi_root, 'intel64', 'lib'))
-        run_env.prepend_path('MANPATH', mpi_root.man)
-        run_env.prepend_path('PATH', join_path(mpi_root, 'intel64', 'bin'))
+        if os.path.isfile(mpivars):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                mpivars))

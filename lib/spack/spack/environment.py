@@ -284,58 +284,67 @@ class EnvironmentModifications(object):
                 x.execute()
 
     @staticmethod
-    def from_sourcing_files(*args, **kwargs):
-        """Returns modifications that would be made by sourcing files.
+    def from_sourcing_file(filename, *args, **kwargs):
+        """Returns modifications that would be made by sourcing a file.
 
-        Args:
-            *args (list of str): list of files to be sourced
+        Parameters:
+            filename (str): The file to source
+            *args (list of str): Arguments to pass on the command line
+
+        Keyword Arguments:
+            shell (str): The shell to use (default: ``bash``)
+            shell_options (str): Options passed to the shell (default: ``-c``)
+            source_command (str): The command to run (default: ``source``)
+            suppress_output (str): Redirect used to suppress output of command
+                (default: ``&> /dev/null``)
+            concatenate_on_success (str): Operator used to execute a command
+                only when the previous command succeeds (default: ``&&``)
 
         Returns:
             EnvironmentModifications: an object that, if executed, has
-                the same effect on the environment as sourcing the files
-                passed as parameters
+                the same effect on the environment as sourcing the file
         """
         env = EnvironmentModifications()
 
-        # Check if the files are actually there
-        files = [line.split(' ')[0] for line in args]
-        non_existing = [file for file in files if not os.path.isfile(file)]
-        if non_existing:
-            message = 'trying to source non-existing files\n'
-            message += '\n'.join(non_existing)
-            raise RuntimeError(message)
+        # Check if the file actually exists
+        if not os.path.isfile(filename):
+            msg = 'Trying to source non-existing file: {0}'.format(filename)
+            raise RuntimeError(msg)
 
-        # Relevant kwd parameters and formats
-        info = dict(kwargs)
-        info.setdefault('shell', '/bin/bash')
-        info.setdefault('shell_options', '-c')
-        info.setdefault('source_command', 'source')
-        info.setdefault('suppress_output', '&> /dev/null')
-        info.setdefault('concatenate_on_success', '&&')
+        # Kwargs parsing and default values
+        shell                  = kwargs.get('shell', '/bin/bash')
+        shell_options          = kwargs.get('shell_options', '-c')
+        source_command         = kwargs.get('source_command', 'source')
+        suppress_output        = kwargs.get('suppress_output', '&> /dev/null')
+        concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
 
-        shell = '{shell}'.format(**info)
-        shell_options = '{shell_options}'.format(**info)
-        source_file = '{source_command} {file} {concatenate_on_success}'
+        source_file = [source_command, filename]
+        source_file.extend(args)
+        source_file = ' '.join(source_file)
 
-        dump_cmd = "import os, json; print(json.dumps(dict(os.environ)))"
-        dump_environment = 'python -c "%s"' % dump_cmd
+        dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
+        dump_environment = 'python -c "{0}"'.format(dump_cmd)
 
         # Construct the command that will be executed
-        command = [source_file.format(file=file, **info) for file in args]
-        command.append(dump_environment)
-        command = ' '.join(command)
         command = [
             shell,
             shell_options,
-            command
+            ' '.join([
+                source_file, suppress_output,
+                concatenate_on_success, dump_environment,
+            ]),
         ]
 
         # Try to source all the files,
         proc = subprocess.Popen(
             command, stdout=subprocess.PIPE, env=os.environ)
         proc.wait()
+
         if proc.returncode != 0:
-            raise RuntimeError('sourcing files returned a non-zero exit code')
+            msg = 'Sourcing file {0} returned a non-zero exit code'.format(
+                filename)
+            raise RuntimeError(msg)
+
         output = ''.join([line.decode('utf-8') for line in proc.stdout])
 
         # Construct a dictionaries of the environment before and after

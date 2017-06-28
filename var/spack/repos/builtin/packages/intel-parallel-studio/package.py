@@ -22,9 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.util.prefix import Prefix
-from spack import *
+import glob
 import os
+
+from spack import *
+from spack.environment import EnvironmentModifications
 
 
 class IntelParallelStudio(IntelPackage):
@@ -395,211 +397,18 @@ class IntelParallelStudio(IntelPackage):
                 with open(cfgfilename, 'w') as f:
                     f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
-    def setup_environment(self, spack_env, run_env):
-        """Adds environment variables to the generated module file.
+    @run_after('install')
+    def fix_psxevars(self):
+        """Newer versions of Intel Parallel Studio have a bug in the
+        ``psxevars.sh`` script."""
 
-        These environment variables come from running:
+        year = self.version[1]
+        bindir = os.path.join(
+            self.prefix, 'parallel_studio_xe_{0}'.format(year), 'bin')
 
-        .. code-block:: console
-
-           $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
-        """
-        spec   = self.spec
-        prefix = self.prefix
-
-        edition = self.version[0]
-        year    = self.version[1]
-
-        # Generic environment variables
-        compiler_root = Prefix(join_path(
-            prefix, 'compilers_and_libraries', 'linux', 'compiler'))
-
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'intel64_lin'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'intel64'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'intel64_lin'))
-        run_env.prepend_path('MANPATH', join_path(prefix.man, 'common'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'intel64_lin_mic'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'mic'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'intel64_lin_mic'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(compiler_root.lib, 'mic'))
-        run_env.prepend_path('NLSPATH', join_path(
-            compiler_root.lib, 'intel64', 'locale', '%l_%t', '%N'))
-        run_env.prepend_path('PATH', join_path(
-            prefix, 'compilers_and_libraries', 'linux', 'bin', 'intel64'))
-
-        # Components available in all editions
-        if '+daal' in spec or '+all' in spec:
-            daal_root = Prefix(join_path(
-                prefix, 'compilers_and_libraries', 'linux', 'daal'))
-
-            run_env.prepend_path('CLASSPATH', join_path(
-                daal_root.lib, 'daal.jar'))
-            run_env.prepend_path('CPATH', daal_root.include)
-            run_env.set('DAALROOT', daal_root)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(daal_root.lib, 'intel64_lin'))
-            run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(daal_root.lib, 'intel64_lin'))
-
-        if '+gdb' in spec or '+all' in spec:
-            debugger_root = Prefix(join_path(
-                prefix, 'debugger_{0}'.format(year)))
-            debugger_doc_root = Prefix(join_path(
-                prefix, 'documentation_{0}'.format(year), 'en', 'debugger'))
-
-            run_env.set('GDB_CROSS', join_path(
-                debugger_root, 'gdb', 'intel64_mic', 'bin', 'gdb-mic'))
-            run_env.set('GDBSERVER_MIC', join_path(
-                debugger_root, 'gdb', 'targets', 'mic', 'bin', 'gdbserver'))
-            run_env.prepend_path('INFOPATH', join_path(
-                debugger_doc_root, 'gdb-igfx', 'info'))
-            run_env.prepend_path('INFOPATH', join_path(
-                debugger_doc_root, 'gdb-mic', 'info'))
-            run_env.prepend_path('INFOPATH', join_path(
-                debugger_doc_root, 'gdb-ia', 'info'))
-            run_env.set('INTEL_PYTHONHOME',
-                        join_path(debugger_root, 'python', 'intel64'))
-            run_env.prepend_path('LD_LIBRARY_PATH', join_path(
-                debugger_root, 'libipt', 'intel64', 'lib'))
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(debugger_root, 'iga', 'lib'))
-            run_env.prepend_path('MANPATH', join_path(
-                debugger_doc_root, 'gdb-igfx', 'man'))
-            run_env.prepend_path('MANPATH', join_path(
-                debugger_doc_root, 'gdb-mic', 'man'))
-            run_env.prepend_path('MANPATH', join_path(
-                debugger_doc_root, 'gdb-ia', 'man'))
-            run_env.set('MPM_LAUNCHER', join_path(
-                debugger_root, 'mpm', 'mic', 'bin', 'start_mpm.sh'))
-            run_env.prepend_path('NLSPATH',
-                                 join_path(debugger_root, 'gdb', 'intel64',
-                                           'share', 'locale', '%l_%t', '%N'))
-            run_env.prepend_path('NLSPATH',
-                                 join_path(debugger_root, 'gdb', 'intel64_mic',
-                                           'share', 'locale', '%l_%t', '%N'))
-            run_env.prepend_path('PATH', join_path(
-                debugger_root, 'gdb', 'intel64_mic', 'bin'))
-
-        if '+ipp' in spec or '+all' in spec:
-            ipp_root = Prefix(join_path(
-                prefix, 'compilers_and_libraries', 'linux', 'ipp'))
-
-            run_env.prepend_path('CPATH', ipp_root.include)
-            run_env.set('IPPROOT', ipp_root)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(ipp_root.lib, 'intel64'))
-            run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(ipp_root.lib, 'intel64'))
-            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(ipp_root.lib, 'mic'))
-
-        if '+mkl' in spec or '+all' in spec:
-            mkl_root = Prefix(join_path(
-                prefix, 'compilers_and_libraries', 'linux', 'mkl'))
-
-            run_env.prepend_path('CPATH', mkl_root.include)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(mkl_root.lib, 'intel64_lin'))
-            run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(mkl_root.lib, 'intel64_lin'))
-            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(mkl_root.lib, 'intel64_lin_mic'))
-            run_env.prepend_path('MIC_LIBRARY_PATH',
-                                 join_path(mkl_root.lib, 'intel64_lin_mic'))
-            run_env.set('MKLROOT', mkl_root)
-            run_env.prepend_path('NLSPATH', join_path(
-                mkl_root.lib, 'intel64_lin', 'locale', '%l_%t', '%N'))
-
-        if '+mpi' in spec or '+all' in spec:
-            mpi_root = Prefix(join_path(
-                prefix, 'compilers_and_libraries', 'linux', 'mpi'))
-
-            run_env.prepend_path('CLASSPATH', join_path(
-                mpi_root, 'intel64', 'lib', 'mpi.jar'))
-            run_env.set('I_MPI_ROOT', mpi_root)
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(mpi_root, 'mic', 'lib'))
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(mpi_root, 'intel64', 'lib'))
-            run_env.prepend_path('MANPATH', mpi_root.man)
-            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(mpi_root, 'mic', 'lib'))
-            run_env.prepend_path('MIC_LIBRARY_PATH',
-                                 join_path(mpi_root, 'mic', 'lib'))
-            run_env.prepend_path('PATH', join_path(mpi_root, 'intel64', 'bin'))
-
-        if '+tbb' in spec or '+all' in spec:
-            tbb_root = Prefix(join_path(
-                prefix, 'compilers_and_libraries', 'linux', 'tbb'))
-
-            run_env.prepend_path('CPATH', tbb_root.include)
-            run_env.prepend_path('LD_LIBRARY_PATH', join_path(
-                tbb_root.lib, 'intel64', 'gcc4.4'))
-            run_env.prepend_path('LIBRARY_PATH', join_path(
-                tbb_root.lib, 'intel64', 'gcc4.4'))
-            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(tbb_root.lib, 'mic'))
-            run_env.prepend_path('MIC_LIBRARY_PATH',
-                                 join_path(tbb_root.lib, 'mic'))
-            run_env.set('TBBROOT', tbb_root)
-
-        if edition == 'composer':
-            return
-
-        # Components only available in the Professional and Cluster Editions
-        if '+advisor' in spec or '+all' in spec:
-            advisor_root = Prefix(join_path(prefix, 'advisor'))
-
-            run_env.set('ADVISOR_{0}_DIR'.format(year), advisor_root)
-            run_env.prepend_path('PATH', advisor_root.bin64)
-            run_env.prepend_path('PYTHONPATH',
-                                 join_path(advisor_root, 'pythonapi'))
-
-        if '+inspector' in spec or '+all' in spec:
-            inspector_root = Prefix(join_path(prefix, 'inspector'))
-
-            run_env.set('INSPECTOR_{0}_DIR'.format(year), inspector_root)
-            run_env.prepend_path('PATH', inspector_root.bin64)
-
-        if '+itac' in spec or '+all' in spec:
-            itac_root = Prefix(join_path(prefix, 'itac_{0}'.format(year)))
-
-            run_env.prepend_path('LD_LIBRARY_PATH', join_path(
-                itac_root, 'intel64', 'slib'))
-            run_env.prepend_path('LD_LIBRARY_PATH', join_path(
-                itac_root, 'mic', 'slib'))
-            run_env.prepend_path('MANPATH', itac_root.man)
-            run_env.set('MPS_INTEL_LIBITTNOTIFY64', 'libmps.so')
-            run_env.set('MPS_KMP_FORKJOIN_FRAMES_MODE', '3')
-            run_env.set('MPS_LD_PRELOAD', 'libmps.so')
-            run_env.set('MPS_STAT_DIR_POSTFIX', '_%D-%T')
-            run_env.set('MPS_STAT_ENABLE_IDLE', 'I_MPI_PVAR_IDLE')
-            run_env.set('MPS_STAT_ENABLE_IDLE_VAL', '1')
-            run_env.set('MPS_STAT_LEVEL', '5')
-            run_env.set('MPS_STAT_MESSAGES', '1')
-            run_env.set('MPS_TOOL_ROOT', itac_root)
-            run_env.prepend_path('PATH',
-                                 join_path(itac_root, 'intel64', 'bin'))
-            run_env.set('VT_ADD_LIBS',
-                        '-ldwarf -lelf -lvtunwind -lm -lpthread')
-            run_env.set('VT_ARCH', 'intel64')
-            run_env.set('VT_LIB_DIR', join_path(itac_root, 'intel64', 'lib'))
-            run_env.set('VT_MPI', 'impi4')
-            run_env.set('VT_ROOT', itac_root)
-            run_env.set('VT_SLIB_DIR', join_path(itac_root, 'intel64', 'slib'))
-
-        if '+vtune' in spec or '+all' in spec:
-            vtune_root = Prefix(join_path(prefix, 'vtune_amplifier_xe'))
-
-            run_env.prepend_path('PATH', vtune_root.bin64)
-            run_env.set('VTUNE_AMPLIFIER_XE_{0}_DIR'.format(year), vtune_root)
+        filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
+                    os.path.join(bindir, 'psxevars.sh'),
+                    os.path.join(bindir, 'psxevars.csh'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('I_MPI_CC',  spack_cc)
@@ -621,3 +430,27 @@ class IntelParallelStudio(IntelPackage):
         self.spec.mpicxx = join_path(bindir, 'mpic++')
         self.spec.mpifc  = join_path(bindir, 'mpif90')
         self.spec.mpif77 = join_path(bindir, 'mpif77')
+
+    def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
+        """
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        psxevars = glob.glob(join_path(
+            self.prefix, 'parallel_studio*', 'bin', 'psxevars.sh'))
+
+        if psxevars:
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                psxevars[0], 'intel64'))
