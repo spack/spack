@@ -73,11 +73,12 @@ class Gcc(AutotoolsPackage):
     variant('piclibs',
             default=False,
             description='Build PIC versions of libgfortran.a and libstdc++.a')
-    if sys.platform == 'darwin':
-        variant('rpathlibgcc',
-                default=False,
-                description='Apply patch to set libgcc_s.dylib Mach-O ID to' +
-                            ' @rpath/libgcc_s.dylib for relocatability')
+    variant('rpathlibgcc',
+            default=False,
+            description='Apply patch to set libgcc_s.dylib Mach-O ID to' +
+                    ' @rpath/libgcc_s.dylib for relocatability ' + 
+                    'Note: using this variant requires setting [extra_rpaths] '+
+                    'in compilers.yaml to the compiler library path' )
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
@@ -146,6 +147,9 @@ class Gcc(AutotoolsPackage):
     # GCC 5 added the ability to build GCC as a Just-In-Time compiler.
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
+
+    # This option only applies when building on Darwin
+    conflicts('+rpathlibgcc', when='platform=linux')
 
     if sys.platform == 'darwin':
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
