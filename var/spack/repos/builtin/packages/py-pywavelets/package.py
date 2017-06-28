@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,7 +35,7 @@ class PyPywavelets(PythonPackage):
 
     version('0.5.2', 'aedda732f064cf9395f03d37f1003d1a')
 
-    import_modules = ['pywt']
+    import_modules = ['pywt', 'pywt.data']
 
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')

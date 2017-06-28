@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -73,6 +73,11 @@ class Gcc(AutotoolsPackage):
     variant('piclibs',
             default=False,
             description='Build PIC versions of libgfortran.a and libstdc++.a')
+    if sys.platform == 'darwin':
+        variant('rpathlibgcc',
+                default=False,
+                description='Apply patch to set libgcc_s.dylib Mach-O ID to' +
+                            ' @rpath/libgcc_s.dylib for relocatability')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
@@ -177,10 +182,10 @@ class Gcc(AutotoolsPackage):
             filter_file('@zlibinc@',
                         '-I{0}'.format(spec['zlib'].prefix.include),
                         'gcc/Makefile.in')
-
-        # Make libgcc_s relocatable
-        filter_file(r"@shlib_slibdir@", "@rpath",
-                    'libgcc/config/t-slibgcc-darwin', string=True)
+        if spec.satisfies('+rpathlibgcc'):
+            # Make libgcc_s relocatable
+            filter_file(r"@shlib_slibdir@", "@rpath", 
+                        'libgcc/config/t-slibgcc-darwin', string=True)
 
     def configure_args(self):
         spec = self.spec

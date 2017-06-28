@@ -28,6 +28,6 @@ packages:
       mpe: [mpe2]
       mpi: [openmpi, mpich]
       opencl: [pocl]
-      openfoam: [foam-extend]
+      openfoam: [openfoam-com, openfoam-org, foam-extend]
       pil: [py-pillow]
       scalapack: [netlib-scalapack]
