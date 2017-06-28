@@ -43,6 +43,8 @@ def setup_parser(subparser):
     subparsers = subparser.add_subparsers(help='buildcache sub-commands')
 
     create = subparsers.add_parser('create')
+    create.add_argument('-r', '--rel', action='store_true',
+                        help="make all rpaths relative before creating tarballs.")
     create.add_argument('-f', '--force', action='store_true',
                         help="overwrite tarball if it exists.")
     create.add_argument('-d', '--directory', metavar='directory',
@@ -90,7 +92,7 @@ def createtarball(args):
     spack.binary_distribution.prepare()
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        build_tarball(spec, outdir, args.force)
+        build_tarball(spec, outdir, args.force, args.rel)
 
 def installtarball(args):
     if not args.packages:

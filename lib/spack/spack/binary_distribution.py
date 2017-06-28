@@ -127,7 +127,7 @@ def tarball_path_name(spec, ext):
                         tarball_name(spec, ext))
 
 
-def build_tarball(spec, outdir, force=False, key=None):
+def build_tarball(spec, outdir, force=False, rel=False, key=None):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
@@ -162,7 +162,7 @@ def build_tarball(spec, outdir, force=False, key=None):
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec)
-    prelocate_package(spec)
+    if rel : prelocate_package(spec)
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % spec.prefix, arcname='%s' %
                 os.path.basename(spec.prefix))
