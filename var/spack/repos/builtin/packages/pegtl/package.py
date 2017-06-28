@@ -41,7 +41,7 @@ class Pegtl(CMakePackage):
     version('2.0.0', 'c772828e7188459338a920c21f9896db')
 
     variant('debug', default=False, description='Build debug version')
-    
+
     def build_type(self):
         spec = self.spec
         if '+debug' in spec:
