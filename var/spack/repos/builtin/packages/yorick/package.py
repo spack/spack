@@ -51,6 +51,8 @@ class Yorick(Package):
 
     depends_on('libx11', when='+X')
 
+    extendable = True
+
     def url_for_version(self, version):
         url = "https://github.com/dhmunro/yorick/archive/y_{0}.tar.gz"
         return url.format(version.underscored)
