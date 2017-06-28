@@ -36,7 +36,7 @@ class Gcc(AutotoolsPackage):
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
     homepage = 'https://gcc.gnu.org'
-    url      = 'http://ftp.gnu.org/gnu/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
+    url = 'http://ftp.gnu.org/gnu/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
@@ -179,9 +179,8 @@ class Gcc(AutotoolsPackage):
                         'gcc/Makefile.in')
 
         # Make libgcc_s relocatable
-        filter_file(r"@shlib_slibdir@", "@rpath", 
+        filter_file(r"@shlib_slibdir@", "@rpath",
                     'libgcc/config/t-slibgcc-darwin', string=True)
-
 
     def configure_args(self):
         spec = self.spec
