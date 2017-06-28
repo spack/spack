@@ -20,7 +20,7 @@ config:
 
 
   # This is the scheme that will be the default for NERSC. 
- install_path_scheme: "${PLATFORM}/${OS}/${TARGET}/${PACKAGE}/${VERSION}/${COMPILERNAME}/${COMPILERVERSION}"  # NoQA: E501
+  install_path_scheme: "${PLATFORM}/${OS}/${TARGET}/${PACKAGE}/${VERSION}/${COMPILERNAME}/${COMPILERVERSION}"  # NoQA: E501
 
   # Locations where different types of modules should be installed.
   module_roots:
