@@ -974,6 +974,69 @@ class SpecBuildInterface(ObjectWrapper):
         )
 
 
+class DependencyConstraints(object):
+    def __init__(self, spec=None, copy=False):
+        if copy:
+            resolve = lambda x: x.copy(deps=False)
+        else:
+            resolve = lambda x: x
+
+        if spec:
+            context = {}
+
+            build_only = set()
+            if not spec.virtual:
+                pkg = spack.repo.get(spec.fullname)
+                for dep_name in pkg.dependencies:
+                    deptypes = pkg.dependency_types[dep_name]
+                    if set(deptypes) == set(['build']):
+                        build_only.add(dep_name)
+
+            for dep in spec.traverse(root=False, deptype=('link', 'run')):
+                context[dep.name] = resolve(dep)
+            for dep in spec.dependencies(deptype='build'):
+                if dep.name in build_only:
+                    for trans_dep in dep.traverse(deptype=('link', 'run')):
+                        context[trans_dep.name] = resolve(trans_dep)
+        else:
+            context = {}
+        self.contexts = [context]
+
+    def copy(self):
+        copy = DependencyConstraints()
+        copy.contexts = list(self.contexts)
+        return copy
+
+    def update(self, spec):
+        for context in self.contexts:
+            if spec.name in context:
+                if spec != context[spec.name]:
+                    import pdb; pdb.set_trace()
+                assert(spec == context[spec.name])
+        for context in self.contexts:
+            if spec.name not in context:
+                context[spec.name] = spec
+
+    def update_transitive(self, spec):
+        for x in spec.traverse(deptype=('link', 'run')):
+            self.update(x)
+
+    def get(self, name):
+        hits = list(c for c in self.contexts if name in c)
+        if hits:
+            return hits[0][name]
+
+    def append(self, other):
+        self.contexts.extend(other.contexts)
+
+    def root_deps(self):
+        return list(self.contexts[0].values())
+
+    def replace(self, spec_name, replacement):
+        self.contexts[0][replacement.name] = replacement
+        self.contexts[0][spec_name] = replacement
+
+
 @key_ordering
 class Spec(object):
 
@@ -1641,7 +1704,7 @@ class Spec(object):
             if concrete.name not in dependent._dependencies:
                 dependent._add_dependency(concrete, deptypes)
 
-    def _expand_virtual_packages(self, dep_contexts):
+    def _expand_virtual_packages(self, dep_constraints):
         """Find virtual packages in this spec, replace them with providers,
            and normalize again to include the provider's (potentially virtual)
            dependencies.  Repeat until there are no virtual deps.
@@ -1694,17 +1757,13 @@ class Spec(object):
                         copy = self.copy()
                         copy[spec.name]._dup(replacement, deps=False)
 
-                        dep_context = {}
-                        for dep in copy.traverse(
-                            root=False, deptype=('link', 'run')):
-                            dep_context[dep.name] = dep
-                        dep_contexts_copy = [dep_context]
+                        dep_constraints_copy = DependencyConstraints(copy)
 
                         try:
                             # If there are duplicate providers or duplicate
                             # provider deps, consolidate them and merge
                             # constraints.
-                            copy.normalize(dep_contexts_copy, force=True)
+                            copy.normalize(dep_constraints_copy, force=True)
                             break
                         except SpecError:
                             # On error, we'll try the next replacement.
@@ -1739,8 +1798,7 @@ class Spec(object):
                 # place. TODO: make this more efficient.
                 if spec.virtual:
                     spec._replace_with(replacement)
-                    dep_contexts[0][replacement.name] = replacement
-                    dep_contexts[0][spec.name] = replacement
+                    dep_constraints.replace(spec.name, replacement)
                     changed = True
 
                 if (spec == self) or (not spec.virtual):
@@ -1778,14 +1836,11 @@ class Spec(object):
         changed = True
         force = False
 
-        dep_context = {}
-        for dep in self.traverse(root=False, deptype=('link', 'run')):
-            dep_context[dep.name] = dep.copy(deps=False)
+        dep_constraints = DependencyConstraints(self, copy=True)
         self._dependencies.clear()
-        dep_contexts = [dep_context]
         while changed:
-            changes = (self.normalize(dep_contexts, force),
-                       self._expand_virtual_packages(dep_contexts),
+            changes = (self.normalize(dep_constraints, force),
+                       self._expand_virtual_packages(dep_constraints),
                        self._concretize_helper())
             changed = any(changes)
             force = True
@@ -1910,7 +1965,7 @@ class Spec(object):
             elif required:
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
-    def _merge_dependency(self, dep, deptypes, dep_contexts, visited,
+    def _merge_dependency(self, dep, deptypes, dep_constraints, visited,
                           provider_index):
         """Merge the dependency into this spec.
 
@@ -1942,8 +1997,7 @@ class Spec(object):
                 dep = provider
         else:
             index = ProviderIndex([dep], restrict=True)
-            items = list(dep_contexts[0].items())
-            for name, vspec in items:
+            for vspec in dep_constraints.root_deps():
                 if index.providers_for(vspec):
                     vspec._replace_with(dep)
                     changed = True
@@ -1953,30 +2007,26 @@ class Spec(object):
                         raise UnsatisfiableProviderSpecError(required[0], dep)
             provider_index.update(dep)
 
-        pre_existing = [x for x in dep_contexts if dep.name in x]
+        pre_existing = dep_constraints.get(dep.name)
 
         # If the spec isn't already in the set of dependencies, add it.
         # Note: dep is always owned by this method. If it's from the
         # caller, it's a copy from _evaluate_dependency_conditions. If it
         # comes from a vdep, it's a defensive copy from _find_provider.
         if pre_existing:
-            dep_context = pre_existing[0]
             # merge package/vdep information into spec
             try:
-                changed |= dep_context[dep.name].constrain(dep)
-                resolved = dep_context[dep.name]
-                for C in dep_contexts:
-                    if dep.name not in C:
-                        C[dep.name] = resolved
+                changed |= pre_existing.constrain(dep)
+                dep_constraints.update(pre_existing)
+                resolved = pre_existing
             except UnsatisfiableSpecError as e:
                 e.message = "Invalid spec: '%s'. "
                 e.message += "Package %s requires %s %s, but spec asked for %s"
-                e.message %= (dep_context[dep.name], dep.name,
+                e.message %= (pre_existing, dep.name,
                               e.constraint_type, e.required, e.provided)
                 raise e
         else:
-            for dep_context in dep_contexts:
-                dep_context[dep.name] = dep
+            dep_constraints.update(dep)
             resolved = dep
             changed = True
 
@@ -1988,19 +2038,17 @@ class Spec(object):
             raise ValueError(
                 "{0} has {1} as a dependency".
                     format(self.name, child.format()) +
-                " but dep_context contains a reference to a different {0}".
+                " but dep constraints contain a reference to a different {0}".
                     format(resolved.format()))
 
         changed |= resolved._normalize_helper(
-            dep_contexts, visited, provider_index)
+            dep_constraints, visited, provider_index)
         return changed
 
-    def _normalize_helper(self, dep_contexts, visited, provider_index):
+    def _normalize_helper(self, dep_constraints, visited, provider_index):
         """Recursive helper function for _normalize."""
         if self in visited:
-            for x in self.traverse(deptype=('link', 'run')):
-                for C in dep_contexts:
-                    C[x.name] = x
+            dep_constraints.update_transitive(self)
             return False
         visited.add(self)
 
@@ -2022,15 +2070,9 @@ class Spec(object):
             if set(deptypes) == set(['build']):
                 build_only.add(dep_name)
         if build_only:
-            dep_contexts = list(dep_contexts)
-            build_context = {}
-            for dep in self.traverse(root=False, deptype=('link', 'run')):
-                build_context[dep.name] = dep
-            for dep in self.dependencies(deptype='build'):
-                if dep.name in build_only:
-                    for trans_dep in dep.traverse(deptype=('link', 'run')):
-                        build_context[trans_dep.name] = trans_dep
-            dep_contexts.append(build_context)
+            build_constraints = DependencyConstraints(self)
+            dep_constraints = dep_constraints.copy()
+            dep_constraints.append(build_constraints)
 
         while changed:
             changed = False
@@ -2039,13 +2081,13 @@ class Spec(object):
                 deptypes = pkg.dependency_types[dep_name]
 
                 if dep_name in build_only:
-                    child_contexts = [build_context]
+                    child_constraints = build_constraints
                 else:
-                    child_contexts = dep_contexts
+                    child_constraints = dep_constraints
                 
                 if pkg_dep:
                     local_changed = self._merge_dependency(
-                        pkg_dep, deptypes, child_contexts, visited,
+                        pkg_dep, deptypes, child_constraints, visited,
                         provider_index)
                     changed |= local_changed
             any_change |= changed
@@ -2053,14 +2095,11 @@ class Spec(object):
         return any_change
 
     def normalize_top(self):
-        dep_context = {}
-        for dep in self.traverse(root=False, deptype=('link', 'run')):
-            dep_context[dep.name] = dep.copy(deps=False)
+        dep_constraints = DependencyConstraints(self, copy=True)
         self._dependencies.clear()
-        dep_contexts = [dep_context]
-        self.normalize(dep_contexts)
+        self.normalize(dep_constraints)
 
-    def normalize(self, dep_contexts=None, force=False):
+    def normalize(self, dep_constraints=None, force=False):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -2090,20 +2129,20 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
 
-        if not dep_contexts:
-            dep_contexts = [{}]
+        if not dep_constraints:
+            dep_constraints = DependencyConstraints()
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = ProviderIndex(
-            list(dep_contexts[0].values()), restrict=True)
+            list(dep_constraints.root_deps()), restrict=True)
 
         visited = set()
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         any_change = self._normalize_helper(
-            dep_contexts, visited, provider_index)
+            dep_constraints, visited, provider_index)
 
         # Mark the spec as normal once done.
         self._normal = True
