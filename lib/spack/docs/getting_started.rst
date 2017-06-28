@@ -1149,10 +1149,13 @@ Here's an example of an external configuration for cray modules:
 .. code-block:: yaml
 
    packages:
-     mpi:
+     mpich:
        modules:
          mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10: cray-mpich
          mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10: cray-mpich
+     all:
+       providers:
+         mpi: [mpich]
 
 This tells Spack that for whatever package that depends on mpi, load the
 cray-mpich module into the environment. You can then be able to use whatever
@@ -1169,7 +1172,7 @@ Here is an example of a full packages.yaml used at NERSC
 .. code-block:: yaml
 
    packages:
-     mpi:
+     mpich:
        modules:
          mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-mpich
          mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge: cray-mpich
@@ -1186,6 +1189,8 @@ Here is an example of a full packages.yaml used at NERSC
        buildable: False
      all:
        compiler: [gcc@5.2.0, intel@16.0.0.109]
+       providers:
+         mpi: [mpich]
 
 Here we tell spack that whenever we want to build with gcc use version 5.2.0 or
 if we want to build with intel compilers, use version 16.0.0.109. We add a spec
