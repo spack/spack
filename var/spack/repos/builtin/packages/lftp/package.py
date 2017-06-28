@@ -42,12 +42,11 @@ class Lftp(AutotoolsPackage):
     depends_on('zlib')
 
     def configure_args(self):
-        args = []
-        args.append('--with-expat={0}'.format(self.spec['expat'].prefix))
-        args.append('--with-libiconv={0}'.format(self.spec['libiconv'].prefix))
-        args.append('--with-openssl={0}'.format(self.spec['openssl'].prefix))
-        args.append('--with-readline={0}'.format(self.spec['readline'].prefix))
-        args.append('--with-zlib={0}'.format(self.spec['zlib'].prefix))
-
-        args.append('--disable-dependency-tracking')
-        return args
+        return [
+            '--with-expat={0}'.format(self.spec['expat'].prefix),
+            '--with-libiconv={0}'.format(self.spec['libiconv'].prefix),
+            '--with-openssl={0}'.format(self.spec['openssl'].prefix),
+            '--with-readline={0}'.format(self.spec['readline'].prefix),
+            '--with-zlib={0}'.format(self.spec['zlib'].prefix),
+            '--disable-dependency-tracking',
+        ]
