@@ -167,20 +167,6 @@ class TestSpecDag(object):
         traversal = dag.traverse(cover='paths', depth=True, order='post')
         assert [(x, y.name) for x, y in traversal] == pairs
 
-    @pytest.mark.skip(reason="TODO: create an equivalent test")
-    def test_conflicting_spec_constraints(self):
-        mpileaks = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf ^libdwarf')
-
-        # Normalize then add conflicting constraints to the DAG (this is an
-        # extremely unlikely scenario, but we test for it anyway)
-        mpileaks.normalize_top()
-        mpileaks._dependencies['mpich'].spec = Spec('mpich@1.0')
-        mpileaks._dependencies['callpath']. \
-            spec._dependencies['mpich'].spec = Spec('mpich@2.0')
-
-        with pytest.raises(spack.spec.InconsistentSpecError):
-            mpileaks.flat_dependencies(copy=False)
-
     def test_normalize_twice(self):
         """Make sure normalize can be run twice on the same spec,
            and that it is idempotent."""
