@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -51,7 +51,8 @@ class Scotch(Package):
     variant('int64', default=False,
             description='Use int64_t for SCOTCH_Num typedef')
 
-    depends_on('flex@:2.6.1', type='build')
+    # Does not build with flex 2.6.[23]
+    depends_on('flex@:2.6.1,2.6.4:', type='build')
     depends_on('bison', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('zlib', when='+compression')
@@ -80,6 +81,7 @@ class Scotch(Package):
 
         shared = '+shared' in self.spec
         libraries = ['libscotch', 'libscotcherr']
+        zlibs     = []
 
         if '+mpi' in self.spec:
             libraries = ['libptscotch', 'libptscotcherr'] + libraries
@@ -88,9 +90,13 @@ class Scotch(Package):
         elif '~mpi+esmumps' in self.spec:
             libraries = ['libesmumps'] + libraries
 
-        return find_libraries(
+        scotchlibs = find_libraries(
             libraries, root=self.prefix, recurse=True, shared=shared
         )
+        if '+compression' in self.spec:
+            zlibs = self.spec['zlib'].libs
+
+        return scotchlibs + zlibs
 
     def patch(self):
         self.configure()
@@ -249,4 +255,4 @@ class Scotch(Package):
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
-        install_tree('man/man1', prefix.share_man1)
+        install_tree('man/man1', prefix.share.man.man1)

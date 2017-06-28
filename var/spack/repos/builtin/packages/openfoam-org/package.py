@@ -6,7 +6,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for the LLNL notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
 #
 # License
 # -------
@@ -91,7 +91,7 @@ class OpenfoamOrg(Package):
     provides('openfoam')
     depends_on('mpi')
     depends_on('zlib')
-    depends_on('flex@:2.6.1')  # <- restriction due to scotch
+    depends_on('flex',  type='build')
     depends_on('cmake', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -52,9 +52,8 @@ class Paraview(CMakePackage):
     depends_on('py-numpy', when='+python', type='run')
     depends_on('py-matplotlib', when='+python', type='run')
     depends_on('mpi', when='+mpi')
-    depends_on('qt@:4', when='+qt')
-    # TODO# depends_on('qt@:4', when='@:5.2.0+qt')
-    # TODO# depends_on('qt@5',  when='@5.3.0:+qt')
+    depends_on('qt', when='@5.3.0:+qt')
+    depends_on('qt@:4', when='@:5.2.0+qt')
 
     depends_on('bzip2')
     depends_on('freetype')
