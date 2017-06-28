@@ -178,6 +178,11 @@ class Gcc(AutotoolsPackage):
                         '-I{0}'.format(spec['zlib'].prefix.include),
                         'gcc/Makefile.in')
 
+        # Make libgcc_s relocatable
+        filter_file(r"@shlib_slibdir@", "@rpath", 
+                    'libgcc/config/t-slibgcc-darwin', string=True)
+
+
     def configure_args(self):
         spec = self.spec
 
