@@ -32,7 +32,7 @@ class Turbine(AutotoolsPackage):
     homepage = 'http://swift-lang.org/Swift-T'
     url      = 'http://swift-lang.github.io/swift-t-downloads/1.3/spack/turbine-1.1.0.tar.gz'
 
-    version('1.1.0', '2575ce7ea7142ea7df139578b9e0ca94')
+    version('1.1.0', '9a347cf16df02707cb529f96c265a082')
 
     depends_on('adlbx')
     depends_on('tcl')
