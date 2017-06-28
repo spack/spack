@@ -34,9 +34,11 @@ class AllpathsLg(AutotoolsPackage):
 
     version('52488', 'bde9008e236d87708a48eb83af6d6d5b')
 
-    conflicts('%gcc@:4.6,6.0:')
+    # compiles with gcc 4.7.0 to 4.9.4)
+    conflicts('%gcc@:4.6.4,5.1.0:')
 
     def build(self, spec, prefix):
         if not spec.satisfies('%gcc'):
-            raise InstallError("ALLPATHS-LG requires the GCC compiler for building")
+            raise InstallError("ALLPATHS-LG requires GCC"
+                               " for building")
         make()
