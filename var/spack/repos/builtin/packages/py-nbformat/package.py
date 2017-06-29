@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,7 +35,6 @@ class PyNbformat(PythonPackage):
     version('4.0.1', 'ab7172e517c9d561c0c01eef5631b4c8')
     version('4.0.0', '7cf61359fa4e9cf3ef5e969e2fcb909e')
 
-    depends_on('py-setuptools', type='build')
     depends_on('py-ipython-genutils', type=('build', 'run'))
     depends_on('py-traitlets', type=('build', 'run'))
     depends_on('py-jsonschema', type=('build', 'run'))

@@ -1,0 +1,25 @@
+From 8b3e22b18791f2148da46e60040fc4d9270936b5 Mon Sep 17 00:00:00 2001
+From: Paul Eggert <eggert@cs.ucla.edu>
+Date: Tue, 14 Feb 2017 08:40:23 -0800
+Subject: argp: port to PGI 16.10
+
+* gnu/argp-pin.c (dummy): Declare as needed to make file nonempty.
+
+diff --git a/gnu/argp-pin.c b/gnu/argp-pin.c
+index 261191f..64d831d 100644
+--- a/gnu/argp-pin.c
++++ b/gnu/argp-pin.c
+@@ -24,3 +24,10 @@ char *program_invocation_short_name = 0;
+ #ifndef HAVE_PROGRAM_INVOCATION_NAME
+ char *program_invocation_name = 0;
+ #endif
++
++#if (defined HAVE_PROGRAM_INVOCATION_SHORT_NAME \
++     && defined HAVE_PROGRAM_INVOCATION_NAME)
++/* This declaration is solely to ensure that after preprocessing
++   this file is never empty.  */
++typedef int dummy;
++#endif
+-- 
+cgit v1.0-41-gc330
+

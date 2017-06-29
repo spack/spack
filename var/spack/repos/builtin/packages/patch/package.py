@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,3 +35,5 @@ class Patch(AutotoolsPackage):
     url      = "http://ftp.gnu.org/gnu/patch/patch-2.7.5.tar.xz"
 
     version('2.7.5', 'e3da7940431633fb65a01b91d3b7a27a')
+
+    build_directory = 'spack-build'

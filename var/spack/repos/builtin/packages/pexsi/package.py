@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,7 @@ import shutil
 from spack import *
 
 
-class Pexsi(Package):
+class Pexsi(MakefilePackage):
     """The PEXSI library is written in C++, and uses message passing interface
     (MPI) to parallelize the computation on distributed memory computing
     systems and achieve scalability on more than 10,000 processors.
@@ -46,20 +46,26 @@ class Pexsi(Package):
     homepage = 'https://math.berkeley.edu/~linlin/pexsi/index.html'
     url = 'https://math.berkeley.edu/~linlin/pexsi/download/pexsi_v0.9.0.tar.gz'
 
+    version('0.9.2', '0ce491a3a922d271c4edf9b20aa93076')
     version('0.9.0', '0c1a2de891ba1445dfc184b2fa270ed8')
 
     depends_on('parmetis')
     depends_on('superlu-dist@3.3', when='@0.9.0')
+    depends_on('superlu-dist@4.3', when='@0.9.2')
+
+    variant(
+        'fortran', default=False, description='Builds the Fortran interface'
+    )
 
     parallel = False
 
-    def install(self, spec, prefix):
+    def edit(self, spec, prefix):
 
         substitutions = {
             '@MPICC': self.spec['mpi'].mpicc,
             '@MPICXX': self.spec['mpi'].mpicxx,
             '@MPIFC': self.spec['mpi'].mpifc,
-            '@MPICXX_LIB': ' '.join(self.spec['mpi'].mpicxx_shared_libs),
+            '@MPICXX_LIB': self.spec['mpi:cxx'].libs.joined(),
             '@RANLIB': 'ranlib',
             '@PEXSI_STAGE': self.stage.source_path,
             '@SUPERLU_PREFIX': self.spec['superlu-dist'].prefix,
@@ -67,10 +73,15 @@ class Pexsi(Package):
             '@PARMETIS_PREFIX': self.spec['parmetis'].prefix,
             '@LAPACK_PREFIX': self.spec['lapack'].prefix,
             '@BLAS_PREFIX': self.spec['blas'].prefix,
-            '@LAPACK_LIBS': self.spec['lapack'].lapack_libs.joined(),
-            '@BLAS_LIBS': self.spec['lapack'].blas_libs.joined(),
-            '@STDCXX_LIB': ' '.join(self.compiler.stdcxx_libs)
+            '@LAPACK_LIBS': self.spec['lapack'].libs.joined(),
+            '@BLAS_LIBS': self.spec['blas'].libs.joined(),
+            # FIXME : what to do with compiler provided libraries ?
+            '@STDCXX_LIB': ' '.join(self.compiler.stdcxx_libs),
+            '@FLDFLAGS': ''
         }
+
+        if '@0.9.2' in self.spec:
+            substitutions['@FLDFLAGS'] = '-Wl,--allow-multiple-definition'
 
         template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),
@@ -84,20 +95,29 @@ class Pexsi(Package):
         for key, value in substitutions.items():
             filter_file(key, value, makefile)
 
-        make()
+    def build(self, spec, prefix):
+        super(Pexsi, self).build(spec, prefix)
+        if '+fortran' in self.spec:
+            make('-C', 'fortran')
+
+    def install(self, spec, prefix):
+
         # 'make install' does not exist, despite what documentation says
         mkdirp(self.prefix.lib)
+
         install(
             join_path(self.stage.source_path, 'src', 'libpexsi_linux.a'),
             join_path(self.prefix.lib, 'libpexsi.a')
         )
+
         install_tree(
             join_path(self.stage.source_path, 'include'),
             self.prefix.include
         )
+
         # fortran "interface"
-        make('-C', 'fortran')
-        install_tree(
-            join_path(self.stage.source_path, 'fortran'),
-            join_path(self.prefix, 'fortran')
-        )
+        if '+fortran' in self.spec:
+            install_tree(
+                join_path(self.stage.source_path, 'fortran'),
+                join_path(self.prefix, 'fortran')
+            )

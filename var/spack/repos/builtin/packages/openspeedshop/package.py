@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -60,7 +60,7 @@ class Openspeedshop(Package):
     """
 
     homepage = "http://www.openspeedshop.org"
-    url	= "https://github.com/OpenSpeedShop"
+    url = "https://github.com/OpenSpeedShop"
     version('2.2', '16cb051179c2038de4e8a845edf1d573')
     # Use when the git repository is available
     version('2.3', branch='master',
@@ -115,6 +115,8 @@ class Openspeedshop(Package):
     depends_on("bison", type='build')
     depends_on("flex", type='build')
     depends_on("binutils@2.24+krellpatch", type='build')
+    # TODO: when using dyninst@9.3.0:, we will need to use elf
+    # depends_on("elf", type="link")
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")
@@ -165,24 +167,18 @@ class Openspeedshop(Package):
         # Appends to cmakeOptions the options that will enable
         # the appropriate base level options to the openspeedshop
         # cmake build.
-        python_vers = format(spec['python'].version.up_to(2))
-        python_pv = '/python' + python_vers
-        python_pvs = '/libpython' + python_vers + '.' + format(dso_suffix)
+        python_exe = spec['python'].command.path
+        python_library = spec['python'].libs[0]
+        python_include = spec['python'].headers.directories[0]
 
         BaseOptions = []
 
         BaseOptions.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
         BaseOptions.append('-DLIBELF_DIR=%s' % spec['libelf'].prefix)
         BaseOptions.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
-        BaseOptions.append(
-            '-DPYTHON_EXECUTABLE=%s'
-            % join_path(spec['python'].prefix + '/bin/python'))
-        BaseOptions.append(
-            '-DPYTHON_INCLUDE_DIR=%s'
-            % join_path(spec['python'].prefix.include) + python_pv)
-        BaseOptions.append(
-            '-DPYTHON_LIBRARY=%s'
-            % join_path(spec['python'].prefix.lib) + python_pvs)
+        BaseOptions.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
+        BaseOptions.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
+        BaseOptions.append('-DPYTHON_LIBRARY=%s' % python_library)
         BaseOptions.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
         BaseOptions.append('-DBoost_NO_BOOST_CMAKE=TRUE')
         BaseOptions.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
@@ -230,7 +226,7 @@ class Openspeedshop(Package):
         # set the DYNINSTAPI_RT_LIB library which is
         # required for OpenSpeedShop to find loop level
         # performance information
-        dyninst_libdir = find_libraries(['libdyninstAPI_RT'],
+        dyninst_libdir = find_libraries('libdyninstAPI_RT',
                                         root=self.spec['dyninst'].prefix,
                                         shared=True, recurse=True)
 
@@ -238,7 +234,7 @@ class Openspeedshop(Package):
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
 
         # Find openspeedshop library path
-        oss_libdir = find_libraries(['libopenss-framework'],
+        oss_libdir = find_libraries('libopenss-framework',
                                     root=self.spec['openspeedshop'].prefix,
                                     shared=True, recurse=True)
         run_env.prepend_path('LD_LIBRARY_PATH',

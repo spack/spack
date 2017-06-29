@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,11 +26,12 @@
 from spack import *
 
 
+# Note: should probably be named 'mgridgen+mpi' (as per scotch, metis etc)
 class Parmgridgen(Package):
     """MGRIDGEN is a serial library written entirely in ANSI C that implements
     (serial) algorithms for obtaining a sequence of successive coarse grids
     that are well-suited for geometric multigrid methods.
-    ParMGridGen is the parallel version of MGridGen
+    ParMGridGen is the parallel version of MGridGen.
     """
 
     homepage = "http://www-users.cs.umn.edu/~moulitsa/software.html"
@@ -38,7 +39,10 @@ class Parmgridgen(Package):
 
     version('1.0', '2872fa95b7fb91d6bd525490eed62038')
 
-    depends_on('mpi')
+    variant('mpi', default=True,
+            description='Activate the compilation of parallel libraries')
+
+    depends_on('mpi', when='+mpi')
 
     def install(self, spec, prefix):
         make_opts = [
@@ -46,26 +50,30 @@ class Parmgridgen(Package):
             'COPTIONS=-fPIC',
             'LDOPTIONS=-fPIC',
             'CC={0}'.format(self.compiler.cc),
-            'PARCC={0}'.format(spec['mpi'].mpicc),
             'LD={0}'.format(self.compiler.cc),
-            'PARLD={0}'.format(spec['mpi'].mpicc),
             'LIBDIR=-L../..',
-            'PARLIBS=-L../../ -lparmgrid -lmgrid -lm',
-            'LIBS=-L../../ -lmgrid -lm',
-            'parallel'
+            'LIBS=-L../.. -lmgrid -lm',
         ]
+
+        if '+mpi' in spec:
+            make_opts.extend([
+                'PARCC={0}'.format(spec['mpi'].mpicc),
+                'PARLD={0}'.format(spec['mpi'].mpicc),
+                'PARLIBS=-L../.. -lparmgrid -lmgrid -lm',
+                'parallel'
+            ])
+        else:
+            make_opts.append('serial')
 
         make(*make_opts, parallel=False)
 
         mkdirp(prefix.include, prefix.lib, prefix.bin)
 
         install("mgridgen.h", prefix.include)
-        install("parmgridgen.h", prefix.include)
-
-        install("MGridGen/IMlib/libIMlib.a",
-                join_path(prefix.lib, 'libIMlib.a'))
         install("libmgrid.a", prefix.lib)
-        install("libparmgrid.a", prefix.lib)
+        install("mgridgen",   prefix.bin)
 
-        install("mgridgen", prefix.bin)
-        install("parmgridgen", prefix.bin)
+        if '+mpi' in spec:
+            install("parmgridgen.h", prefix.include)
+            install("libparmgrid.a", prefix.lib)
+            install("parmgridgen",   prefix.bin)

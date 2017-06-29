@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,8 @@ class PyRestview(PythonPackage):
 
     version('2.6.1', 'ac8b70e15b8f1732d1733d674813666b')
 
-    depends_on('python@2.7.0:2.7.999,3.3:3.5')
+    depends_on('python@2.7:2.8,3.3:3.5')
+    depends_on('py-setuptools', type='build')
     depends_on('py-docutils@0.13.1:', type=('build', 'run'))
     depends_on('py-readme-renderer', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))

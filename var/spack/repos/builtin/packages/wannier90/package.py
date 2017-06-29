@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ import shutil
 from spack import *
 
 
-class Wannier90(Package):
+class Wannier90(MakefilePackage):
     """Wannier90 calculates maximally-localised Wannier functions (MLWFs).
 
     Wannier90 is released under the GNU General Public License.
@@ -37,6 +37,7 @@ class Wannier90(Package):
     homepage = 'http://wannier.org'
     url = 'http://wannier.org/code/wannier90-2.0.1.tar.gz'
 
+    version('2.1.0', '07a81c002b41d6d0f97857e55c57d769')
     version('2.0.1', '4edd742506eaba93317249d33261fb22')
 
     depends_on('mpi')
@@ -45,66 +46,71 @@ class Wannier90(Package):
 
     parallel = False
 
-    def install(self, spec, prefix):
+    build_targets = [
+        'wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'w90pov'
+    ]
 
-        lapack = self.spec['lapack'].lapack_libs
-        blas = self.spec['blas'].blas_libs
+    @property
+    def makefile_name(self):
+        # Older versions use 'make.sys'
+        filename = 'make.sys'
+
+        # While newer search for 'make.inc'
+        if self.spec.satisfies('@2.1.0:'):
+            filename = 'make.inc'
+
+        abspath = join_path(self.stage.source_path, filename)
+        return abspath
+
+    def edit(self, spec, prefix):
+
+        lapack = self.spec['lapack'].libs
+        blas = self.spec['blas'].libs
         substitutions = {
             '@F90': spack_fc,
             '@MPIF90': self.spec['mpi'].mpifc,
             '@LIBS': (lapack + blas).joined()
         }
-        #######
-        # TODO : this part is replicated in PEXSI
-        # TODO : and may be a common pattern for Editable Makefiles
-        # TODO : see #1186
+
         template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),
             'make.sys'
         )
-        makefile = join_path(
-            self.stage.source_path,
-            'make.sys'
-        )
 
-        shutil.copy(template, makefile)
+        shutil.copy(template, self.makefile_name)
         for key, value in substitutions.items():
-            filter_file(key, value, makefile)
-        ######
+            filter_file(key, value, self.makefile_name)
 
-        make('wannier')
+    def install(self, spec, prefix):
+
         mkdirp(self.prefix.bin)
+        mkdirp(self.prefix.lib)
+
         install(
             join_path(self.stage.source_path, 'wannier90.x'),
             join_path(self.prefix.bin, 'wannier90.x')
         )
 
-        make('post')
         install(
             join_path(self.stage.source_path, 'postw90.x'),
             join_path(self.prefix.bin, 'postw90.x')
         )
 
-        make('lib')
-        mkdirp(self.prefix.lib)
         install(
             join_path(self.stage.source_path, 'libwannier.a'),
             join_path(self.prefix.lib, 'libwannier.a')
         )
 
-        make('w90chk2chk')
         install(
             join_path(self.stage.source_path, 'w90chk2chk.x'),
             join_path(self.prefix.bin, 'w90chk2chk.x')
         )
 
-        make('w90vdw')
         install(
             join_path(self.stage.source_path, 'utility', 'w90vdw', 'w90vdw.x'),
             join_path(self.prefix.bin, 'w90vdw.x')
         )
 
-        make('w90pov')
         install(
             join_path(self.stage.source_path, 'utility', 'w90pov', 'w90pov'),
             join_path(self.prefix.bin, 'w90pov')

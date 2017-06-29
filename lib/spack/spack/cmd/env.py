@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,13 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import os
 import argparse
+
 import llnl.util.tty as tty
 import spack.cmd
 import spack.build_environment as build_env
 
-description = "run a command with the install environment for a spec"
+description = "show install environment for a spec, and run commands"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -64,7 +69,7 @@ def env(parser, args):
     if not cmd:
         # If no command act like the "env" command and print out env vars.
         for key, val in os.environ.items():
-            print "%s=%s" % (key, val)
+            print("%s=%s" % (key, val))
 
     else:
         # Otherwise execute the command with the new environment

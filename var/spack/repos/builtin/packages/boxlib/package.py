@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,12 +36,19 @@ class Boxlib(CMakePackage):
 
     depends_on('mpi')
 
+    variant('dims',
+        default='3',
+        values=('1', '2', '3'),
+        multi=False,
+        description='Number of spatial dimensions'
+    )
+
     def cmake_args(self):
         spec = self.spec
         options = []
 
         options.extend([
-            # '-DBL_SPACEDIM=3',
+            '-DBL_SPACEDIM=%d' % int(spec.variants['dims'].value),
             '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
             '-DENABLE_FBASELIB=ON',
             '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,

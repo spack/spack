@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -47,8 +47,8 @@ import re
 import numbers
 from bisect import bisect_left
 from functools import wraps
+from six import string_types
 
-from functools_backport import total_ordering
 from spack.util.spack_yaml import syaml_dict
 
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
@@ -111,7 +111,6 @@ def _numeric_lt(self0, other):
     """Compares two versions, knowing they're both numeric"""
 
 
-@total_ordering
 class Version(object):
     """Class to represent versions"""
 
@@ -195,52 +194,29 @@ class Version(object):
         nother = len(other.version)
         return nother <= nself and self.version[:nother] == other.version
 
-    def wildcard(self):
-        """Create a regex that will match variants of this version string."""
-        def a_or_n(seg):
-            if type(seg) == int:
-                return r'[0-9]+'
-            else:
-                return r'[a-zA-Z]+'
-
-        version = self.version
-
-        # Use a wildcard for separators, in case a version is written
-        # two different ways (e.g., boost writes 1_55_0 and 1.55.0)
-        sep_re = '[_.-]'
-        separators = ('',) + (sep_re,) * len(self.separators)
-
-        version += (version[-1],) * 2
-        separators += (sep_re,) * 2
-
-        segments = [a_or_n(seg) for seg in version]
-
-        wc = segments[0]
-        for i in xrange(1, len(separators)):
-            wc += '(?:' + separators[i] + segments[i]
-
-        # Add possible alpha or beta indicator at the end of each segemnt
-        # We treat these specially b/c they're so common.
-        wc += '(?:[a-z]|alpha|beta)?)?' * (len(segments) - 1)
-        return wc
-
     def __iter__(self):
         return iter(self.version)
 
     def __getitem__(self, idx):
         cls = type(self)
+
         if isinstance(idx, numbers.Integral):
             return self.version[idx]
+
         elif isinstance(idx, slice):
             # Currently len(self.separators) == len(self.version) - 1
             extendend_separators = self.separators + ('',)
             string_arg = []
-            for token, sep in zip(self.version, extendend_separators)[idx]:
+
+            pairs = zip(self.version[idx], extendend_separators[idx])
+            for token, sep in pairs:
                 string_arg.append(str(token))
                 string_arg.append(str(sep))
+
             string_arg.pop()  # We don't need the last separator
             string_arg = ''.join(string_arg)
             return cls(string_arg)
+
         message = '{cls.__name__} indices must be integers'
         raise TypeError(message.format(cls=cls))
 
@@ -249,6 +225,9 @@ class Version(object):
 
     def __str__(self):
         return self.string
+
+    def __format__(self, format_spec):
+        return self.string.format(format_spec)
 
     @property
     def concrete(self):
@@ -323,8 +302,21 @@ class Version(object):
         return (other is not None and
                 type(other) == Version and self.version == other.version)
 
+    @coerced
     def __ne__(self, other):
         return not (self == other)
+
+    @coerced
+    def __le__(self, other):
+        return self == other or self < other
+
+    @coerced
+    def __ge__(self, other):
+        return not (self < other)
+
+    @coerced
+    def __gt__(self, other):
+        return not (self == other) and not (self < other)
 
     def __hash__(self):
         return hash(self.version)
@@ -371,13 +363,12 @@ class Version(object):
             return VersionList()
 
 
-@total_ordering
 class VersionRange(object):
 
     def __init__(self, start, end):
-        if isinstance(start, basestring):
+        if isinstance(start, string_types):
             start = Version(start)
-        if isinstance(end, basestring):
+        if isinstance(end, string_types):
             end = Version(end)
 
         self.start = start
@@ -414,8 +405,21 @@ class VersionRange(object):
                 type(other) == VersionRange and
                 self.start == other.start and self.end == other.end)
 
+    @coerced
     def __ne__(self, other):
         return not (self == other)
+
+    @coerced
+    def __le__(self, other):
+        return self == other or self < other
+
+    @coerced
+    def __ge__(self, other):
+        return not (self < other)
+
+    @coerced
+    def __gt__(self, other):
+        return not (self == other) and not (self < other)
 
     @property
     def concrete(self):
@@ -561,14 +565,13 @@ class VersionRange(object):
         return out
 
 
-@total_ordering
 class VersionList(object):
     """Sorted, non-redundant list of Versions and VersionRanges."""
 
     def __init__(self, vlist=None):
         self.versions = []
         if vlist is not None:
-            if isinstance(vlist, basestring):
+            if isinstance(vlist, string_types):
                 vlist = _string_to_version(vlist)
                 if type(vlist) == VersionList:
                     self.versions = vlist.versions
@@ -754,12 +757,25 @@ class VersionList(object):
     def __eq__(self, other):
         return other is not None and self.versions == other.versions
 
+    @coerced
     def __ne__(self, other):
         return not (self == other)
 
     @coerced
     def __lt__(self, other):
         return other is not None and self.versions < other.versions
+
+    @coerced
+    def __le__(self, other):
+        return self == other or self < other
+
+    @coerced
+    def __ge__(self, other):
+        return not (self < other)
+
+    @coerced
+    def __gt__(self, other):
+        return not (self == other) and not (self < other)
 
     def __hash__(self):
         return hash(tuple(self.versions))
@@ -796,7 +812,7 @@ def ver(obj):
     """
     if isinstance(obj, (list, tuple)):
         return VersionList(obj)
-    elif isinstance(obj, basestring):
+    elif isinstance(obj, string_types):
         return _string_to_version(obj)
     elif isinstance(obj, (int, float)):
         return _string_to_version(str(obj))

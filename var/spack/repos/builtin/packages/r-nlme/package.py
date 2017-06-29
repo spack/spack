@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,6 @@ class RNlme(RPackage):
 
     homepage = "https://cran.r-project.org/package=nlme"
     url      = "https://cran.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
 
     version('3.1-130', '1935d6e308a8018ed8e45d25c8731288')
     version('3.1-128', '3d75ae7380bf123761b95a073eb55008')

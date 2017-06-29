@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,8 +29,9 @@ class PyCoverage(PythonPackage):
     """ Testing coverage checker for python """
 
     homepage = "http://nedbatchelder.com/code/coverage/"
-    url      = "https://pypi.python.org/packages/source/c/coverage/coverage-4.0a6.tar.gz"
+    url      = "https://pypi.io/packages/source/c/coverage/coverage-4.3.4.tar.gz"
 
+    version('4.3.4', '89759813309185efcf4af8b9f7762630')
     version('4.0a6', '1bb4058062646148965bef0796b61efc')
 
     depends_on('py-setuptools', type='build')

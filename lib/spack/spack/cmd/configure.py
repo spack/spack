@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import argparse
 
 import llnl.util.tty as tty
@@ -31,12 +30,16 @@ import spack.cmd.install as inst
 
 from spack import *
 
-description = 'stops at configuration stage when installing a package, if possible'  # NOQA: ignore=E501
+description = 'stage and configure a package but do not install'
+section = "build"
+level = "long"
 
 
 build_system_to_phase = {
+    AutotoolsPackage: 'configure',
     CMakePackage: 'cmake',
-    AutotoolsPackage: 'configure'
+    WafPackage: 'configure',
+    PerlPackage: 'configure',
 }
 
 

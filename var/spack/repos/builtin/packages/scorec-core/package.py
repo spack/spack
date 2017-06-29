@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -50,7 +50,7 @@ class ScorecCore(CMakePackage):
     def cmake_args(self):
         options = []
         options.append('-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc)
-        options.append('-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx )
+        options.append('-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx)
         options.append('-DENABLE_ZOLTAN=ON')
 
         if self.compiler.name == 'xl':

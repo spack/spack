@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,6 +38,9 @@ class Launchmon(Package):
     depends_on('libtool', type='build')
     depends_on('libgcrypt')
     depends_on('libgpg-error')
+    depends_on("elf", type='link')
+    depends_on("boost")
+    depends_on("spectrum-mpi", when='arch=ppc64le')
 
     def install(self, spec, prefix):
         configure(

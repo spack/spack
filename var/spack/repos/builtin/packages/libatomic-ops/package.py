@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class LibatomicOps(Package):
+class LibatomicOps(AutotoolsPackage):
     """This package provides semi-portable access to hardware-provided
     atomic memory update operations on a number architectures."""
 
@@ -34,9 +34,5 @@ class LibatomicOps(Package):
 
     version('7.4.4', '426d804baae12c372967a6d183e25af2')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-shared')
-
-        make()
-        make('install')
+    def configure_args(self):
+        return ['--enable-shared']

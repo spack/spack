@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,44 +22,44 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""\
-This test does sanity checks on substituting new versions into URLs
-"""
-import unittest
-import spack.url as url
+"""Tests Spack's ability to substitute a different version into a URL."""
+
+import os
+
+import pytest
+import spack.url
 
 
-base = "https://comp.llnl.gov/linear_solvers/download/hypre-2.9.0b.tar.gz"
-stem = "https://comp.llnl.gov/linear_solvers/download/hypre-"
+@pytest.mark.parametrize('base_url,version,expected', [
+    # Ensures that substituting the same version results in the same URL
+    ('http://www.mr511.de/software/libelf-0.8.13.tar.gz', '0.8.13',
+     'http://www.mr511.de/software/libelf-0.8.13.tar.gz'),
+    # Test a completely different version syntax
+    ('http://www.prevanders.net/libdwarf-20130729.tar.gz', '8.12',
+     'http://www.prevanders.net/libdwarf-8.12.tar.gz'),
+    # Test a URL where the version appears twice
+    # It should get substituted both times
+    ('https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz', '2.1.3',
+     'https://github.com/hpc/mpileaks/releases/download/v2.1.3/mpileaks-2.1.3.tar.gz'),
+    # Test now with a partial prefix earlier in the URL
+    # This is hard to figure out so Spack only substitutes
+    # the last instance of the version
+    ('https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.0.tar.bz2', '2.2.0',
+     'https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.2.0.tar.bz2'),
+    ('https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.0.tar.bz2', '2.2',
+     'https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.2.tar.bz2'),
+    # No separator between the name and version of the package
+    ('file://{0}/turbolinux702.tar.gz'.format(os.getcwd()), '703',
+     'file://{0}/turbolinux703.tar.gz'.format(os.getcwd())),
 
-
-class PackageSanityTest(unittest.TestCase):
-
-    def test_hypre_url_substitution(self):
-        self.assertEqual(url.substitute_version(base, '2.9.0b'), base)
-        self.assertEqual(
-            url.substitute_version(base, '2.8.0b'), stem + "2.8.0b.tar.gz")
-        self.assertEqual(
-            url.substitute_version(base, '2.7.0b'), stem + "2.7.0b.tar.gz")
-        self.assertEqual(
-            url.substitute_version(base, '2.6.0b'), stem + "2.6.0b.tar.gz")
-        self.assertEqual(
-            url.substitute_version(base, '1.14.0b'), stem + "1.14.0b.tar.gz")
-        self.assertEqual(
-            url.substitute_version(base, '1.13.0b'), stem + "1.13.0b.tar.gz")
-        self.assertEqual(
-            url.substitute_version(base, '2.0.0'), stem + "2.0.0.tar.gz")
-        self.assertEqual(
-            url.substitute_version(base, '1.6.0'), stem + "1.6.0.tar.gz")
-
-    def test_otf2_url_substitution(self):
-        base = "http://www.vi-hps.org/upload/packages/otf2/otf2-1.4.tar.gz"
-
-        self.assertEqual(url.substitute_version(base, '1.4'), base)
-
-        self.assertEqual(
-            url.substitute_version(base, '1.3.1'),
-            "http://www.vi-hps.org/upload/packages/otf2/otf2-1.3.1.tar.gz")
-        self.assertEqual(
-            url.substitute_version(base, '1.2.1'),
-            "http://www.vi-hps.org/upload/packages/otf2/otf2-1.2.1.tar.gz")
+    ('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true', '2.0.7',
+     'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true'),
+    ('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true', '4.7',
+     'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v4.7.tgz?raw=true'),
+    # Package name contains regex characters
+    ('http://math.lbl.gov/voro++/download/dir/voro++-0.4.6.tar.gz', '1.2.3',
+     'http://math.lbl.gov/voro++/download/dir/voro++-1.2.3.tar.gz'),
+])
+def test_url_substitution(base_url, version, expected):
+    computed = spack.url.substitute_version(base_url, version)
+    assert computed == expected

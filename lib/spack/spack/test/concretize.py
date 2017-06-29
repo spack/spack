@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,6 +27,7 @@ import spack
 import spack.architecture
 from spack.concretize import find_spec
 from spack.spec import Spec, CompilerSpec
+from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
 
 
@@ -75,16 +76,33 @@ def check_concretize(abstract_spec):
         # dag
         'callpath', 'mpileaks', 'libelf',
         # variant
-        'mpich+debug', 'mpich~debug', 'mpich debug=2', 'mpich',
+        'mpich+debug', 'mpich~debug', 'mpich debug=True', 'mpich',
         # compiler flags
         'mpich cppflags="-O3"',
         # with virtual
         'mpileaks ^mpi', 'mpileaks ^mpi@:1.1', 'mpileaks ^mpi@2:',
         'mpileaks ^mpi@2.1', 'mpileaks ^mpi@2.2', 'mpileaks ^mpi@2.2',
         'mpileaks ^mpi@:1', 'mpileaks ^mpi@1.2:2'
+        # conflict not triggered
+        'conflict',
+        'conflict%clang~foo',
+        'conflict-parent%gcc'
     ]
 )
 def spec(request):
+    """Spec to be concretized"""
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        'conflict%clang',
+        'conflict%clang+foo',
+        'conflict-parent%clang',
+        'conflict-parent@0.9^conflict~foo'
+    ]
+)
+def conflict_spec(request):
     """Spec to be concretized"""
     return request.param
 
@@ -175,6 +193,16 @@ class TestConcretize(object):
         assert Spec('builtin.mock.multi-provider-mpi@1.10.0') in providers
         assert Spec('builtin.mock.multi-provider-mpi@1.8.8') in providers
 
+    def test_different_compilers_get_different_flags(self):
+        client = Spec('cmake-client %gcc@4.7.2 platform=test os=fe target=fe' +
+                      ' ^cmake %clang@3.5 platform=test os=fe target=fe')
+        client.concretize()
+        cmake = client['cmake']
+        assert set(client.compiler_flags['cflags']) == set(['-O0'])
+        assert set(cmake.compiler_flags['cflags']) == set(['-O3'])
+        assert set(client.compiler_flags['fflags']) == set(['-O0'])
+        assert not set(cmake.compiler_flags['fflags'])
+
     def concretize_multi_provider(self):
         s = Spec('mpileaks ^multi-provider-mpi@3.0')
         s.concretize()
@@ -209,6 +237,16 @@ class TestConcretize(object):
         """
         s = Spec('hypre ^openblas-with-lapack ^netlib-lapack')
         with pytest.raises(spack.spec.MultipleProviderError):
+            s.concretize()
+
+    def test_no_matching_compiler_specs(self):
+        s = Spec('a %gcc@0.0.0')
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            s.concretize()
+
+    def test_no_compilers_for_arch(self):
+        s = Spec('a arch=linux-rhel0-x86_64')
+        with pytest.raises(spack.concretize.NoCompilersForArchError):
             s.concretize()
 
     def test_virtual_is_fully_expanded_for_callpath(self):
@@ -256,7 +294,7 @@ class TestConcretize(object):
     def test_external_package(self):
         spec = Spec('externaltool%gcc')
         spec.concretize()
-        assert spec['externaltool'].external == '/path/to/external_tool'
+        assert spec['externaltool'].external_path == '/path/to/external_tool'
         assert 'externalprereq' not in spec
         assert spec['externaltool'].compiler.satisfies('gcc')
 
@@ -285,8 +323,8 @@ class TestConcretize(object):
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
         spec.concretize()
-        assert spec['externaltool'].external == '/path/to/external_tool'
-        assert spec['stuff'].external == '/path/to/external_virtual_gcc'
+        assert spec['externaltool'].external_path == '/path/to/external_tool'
+        assert spec['stuff'].external_path == '/path/to/external_virtual_gcc'
         assert spec['externaltool'].compiler.satisfies('gcc')
         assert spec['stuff'].compiler.satisfies('gcc')
 
@@ -352,3 +390,29 @@ class TestConcretize(object):
         s.concretize()
         assert s['mpileaks'].satisfies('%clang')
         assert s['dyninst'].satisfies('%gcc')
+
+    def test_conflicts_in_spec(self, conflict_spec):
+        # Check that an exception is raised an caught by the appropriate
+        # exception types.
+        for exc_type in (ConflictsInSpecError, RuntimeError, SpecError):
+            s = Spec(conflict_spec)
+            with pytest.raises(exc_type):
+                s.concretize()
+
+    def test_regression_issue_4492(self):
+        # Constructing a spec which has no dependencies, but is otherwise
+        # concrete is kind of difficult. What we will do is to concretize
+        # a spec, and then modify it to have no dependency and reset the
+        # cache values.
+
+        s = Spec('mpileaks')
+        s.concretize()
+
+        # Check that now the Spec is concrete, store the hash
+        assert s.concrete
+
+        # Remove the dependencies and reset caches
+        s._dependencies.clear()
+        s._concrete = False
+
+        assert not s.concrete

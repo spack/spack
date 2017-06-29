@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,8 +32,10 @@ class PyMatplotlib(PythonPackage):
     environments across platforms."""
 
     homepage = "https://pypi.python.org/pypi/matplotlib"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-1.4.2.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-2.0.2.tar.gz"
 
+    version('2.0.2', '061111784278bde89b5d4987014be4ca')
+    version('2.0.0', '7aa54b06327f0e1c4f3877fc2f7d6b17')
     version('1.5.3', 'ba993b06113040fee6628d74b80af0fd')
     version('1.5.1', 'f51847d8692cb63df64cd0bd0304fd20')
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
@@ -58,7 +60,10 @@ class PyMatplotlib(PythonPackage):
     extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
 
     # ------ Required dependencies
-    depends_on('py-setuptools', type='build')
+    # Per Github issue #3813, setuptools is required at runtime in order
+    # to make mpl_toolkits a namespace package that can span multiple
+    # directories (i.e., matplotlib and basemap)
+    depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('libpng@1.2:')
     depends_on('freetype@2.3:')
@@ -68,6 +73,8 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-pyparsing', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'))
     depends_on('py-cycler@0.9:', type=('build', 'run'))
+    depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
+    depends_on('py-functools32', type=('build', 'run'), when='^python@2.7')
 
     # ------ Optional GUI frameworks
     depends_on('tk@8.3:', when='+tk')  # not 8.6.0 or 8.6.1
@@ -81,13 +88,14 @@ class PyMatplotlib(PythonPackage):
     # --------- Optional dependencies
     depends_on('pkg-config', type='build')    # why not...
     depends_on('pil', when='+image', type=('build', 'run'))
-    depends_on('py-ipython', when='+ipython')
+    depends_on('py-ipython', when='+ipython', type=('build', 'run'))
     depends_on('ghostscript', when='+latex', type='run')
     depends_on('texlive', when='+latex', type='run')
 
     # Testing dependencies
-    depends_on('py-nose')  # type='test'
-    depends_on('py-mock')  # type='test'
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose', type='test')
+    # depends_on('py-mock', type='test')
 
     # Required libraries that ship with matplotlib
     # depends_on('agg@2.4:')

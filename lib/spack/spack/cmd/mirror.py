@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,6 +38,8 @@ from spack.error import SpackError
 from spack.util.spack_yaml import syaml_dict
 
 description = "manage mirrors"
+section = "config"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -141,7 +143,7 @@ def mirror_list(args):
     fmt = "%%-%ds%%s" % (max_len + 4)
 
     for name in mirrors:
-        print fmt % (name, mirrors[name])
+        print(fmt % (name, mirrors[name]))
 
 
 def _read_specs_from_file(filename):
@@ -152,7 +154,7 @@ def _read_specs_from_file(filename):
                 s = Spec(string)
                 s.package
                 specs.append(s)
-            except SpackError, e:
+            except SpackError as e:
                 tty.die("Parse error in %s, line %d:" % (args.file, i + 1),
                         ">>> " + string, str(e))
     return specs

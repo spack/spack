@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,6 @@ class RTtr(RPackage):
 
     homepage = "https://github.com/joshuaulrich/TTR"
     url      = "https://cran.r-project.org/src/contrib/TTR_0.23-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/TTR"
 
     version('0.23-1', '35f693ac0d97e8ec742ebea2da222986')
 

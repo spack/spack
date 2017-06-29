@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,8 +24,9 @@
 ##############################################################################
 
 import inspect
+import os
 
-from spack.directives import extends
+from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import working_dir
@@ -74,7 +75,7 @@ class PythonPackage(PackageBase):
 
     .. code-block:: console
 
-       $ python --no-user-cfg setup.py <phase>
+       $ python setup.py --no-user-cfg <phase>
 
     Each phase also has a <phase_args> function that can pass arguments to
     this call. All of these functions are empty except for the ``install_args``
@@ -91,11 +92,29 @@ class PythonPackage(PackageBase):
     # Default phases
     phases = ['build', 'install']
 
+    # Name of modules that the Python package provides
+    # This is used to test whether or not the installation succeeded
+    # These names generally come from running:
+    #
+    # >>> import setuptools
+    # >>> setuptools.find_packages()
+    #
+    # in the source tarball directory
+    import_modules = []
+
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'PythonPackage'
 
+    #: Callback names for build-time test
+    build_time_test_callbacks = ['test']
+
+    #: Callback names for install-time test
+    install_time_test_callbacks = ['import_module_test']
+
     extends('python')
+
+    depends_on('python', type=('build', 'run'))
 
     def setup_file(self):
         """Returns the name of the setup file to use."""
@@ -106,19 +125,40 @@ class PythonPackage(PackageBase):
         """The directory containing the ``setup.py`` file."""
         return self.stage.source_path
 
-    def python(self, *args):
-        inspect.getmodule(self).python(*args)
+    def python(self, *args, **kwargs):
+        inspect.getmodule(self).python(*args, **kwargs)
 
-    def setup_py(self, *args):
+    def setup_py(self, *args, **kwargs):
         setup = self.setup_file()
 
         with working_dir(self.build_directory):
-            self.python(setup, '--no-user-cfg', *args)
+            self.python(setup, '--no-user-cfg', *args, **kwargs)
+
+    def _setup_command_available(self, command):
+        """Determines whether or not a setup.py command exists.
+
+        Args:
+            command (str): The command to look for
+
+        Returns:
+            bool: True if the command is found, else False
+        """
+        kwargs = {
+            'output': os.devnull,
+            'error':  os.devnull,
+            'fail_on_error': False
+        }
+
+        python = inspect.getmodule(self).python
+        setup = self.setup_file()
+
+        python(setup, '--no-user-cfg', command, '--help', **kwargs)
+        return python.returncode == 0
 
     # The following phases and their descriptions come from:
     #   $ python setup.py --help-commands
-    # Only standard commands are included here, but some packages
-    # define extra commands as well
+
+    # Standard commands
 
     def build(self, spec, prefix):
         """Build everything needed to install."""
@@ -184,7 +224,24 @@ class PythonPackage(PackageBase):
 
     def install_args(self, spec, prefix):
         """Arguments to pass to install."""
-        return ['--prefix={0}'.format(prefix)]
+        args = ['--prefix={0}'.format(prefix)]
+
+        # This option causes python packages (including setuptools) NOT
+        # to create eggs or easy-install.pth files.  Instead, they
+        # install naturally into $prefix/pythonX.Y/site-packages.
+        #
+        # Eggs add an extra level of indirection to sys.path, slowing
+        # down large HPC runs.  They are also deprecated in favor of
+        # wheels, which use a normal layout when installed.
+        #
+        # Spack manages the package directory on its own by symlinking
+        # extensions into the site-packages directory, so we don't really
+        # need the .pth files or egg directories, anyway.
+        if ('py-setuptools' == spec.name or          # this is setuptools, or
+            'py-setuptools' in spec._dependencies):  # it's an immediate dep
+            args += ['--single-version-externally-managed', '--root=/']
+
+        return args
 
     def install_lib(self, spec, prefix):
         """Install all Python modules (extensions and pure Python)."""
@@ -305,6 +362,38 @@ class PythonPackage(PackageBase):
     def check_args(self, spec, prefix):
         """Arguments to pass to check."""
         return []
+
+    # Testing
+
+    def test(self):
+        """Run unit tests after in-place build.
+
+        These tests are only run if the package actually has a 'test' command.
+        """
+        if self._setup_command_available('test'):
+            args = self.test_args(self.spec, self.prefix)
+
+            self.setup_py('test', *args)
+
+    def test_args(self, spec, prefix):
+        """Arguments to pass to test."""
+        return []
+
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+
+    def import_module_test(self):
+        """Attempts to import the module that was just installed.
+
+        This test is only run if the package overrides
+        :py:attr:`import_modules` with a list of module names."""
+
+        # Make sure we are importing the installed modules,
+        # not the ones in the current directory
+        with working_dir('..'):
+            for module in self.import_modules:
+                self.python('-c', 'import {0}'.format(module))
+
+    run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

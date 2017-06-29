@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,7 +28,6 @@ than multiprocessing.Pool.apply() can.  For example, apply() will fail
 to pickle functions if they're passed indirectly as parameters.
 """
 from multiprocessing import Process, Pipe, Semaphore, Value
-from itertools import izip
 
 __all__ = ['spawn', 'parmap', 'Barrier']
 
@@ -43,7 +42,7 @@ def spawn(f):
 def parmap(f, X):
     pipe = [Pipe() for x in X]
     proc = [Process(target=spawn(f), args=(c, x))
-            for x, (p, c) in izip(X, pipe)]
+            for x, (p, c) in zip(X, pipe)]
     [p.start() for p in proc]
     [p.join() for p in proc]
     return [p.recv() for (p, c) in pipe]
@@ -93,5 +92,5 @@ class Barrier:
         self.turnstile2.release()
 
 
-class BarrierTimeoutError:
+class BarrierTimeoutError(Exception):
     pass

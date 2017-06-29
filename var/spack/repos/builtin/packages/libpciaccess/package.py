@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,26 +25,15 @@
 from spack import *
 
 
-class Libpciaccess(Package):
+class Libpciaccess(AutotoolsPackage):
     """Generic PCI access library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
-    url      = "http://xorg.freedesktop.org/archive/individual/lib/libpciaccess-0.13.4.tar.gz"
+    url      = "http://xorg.freedesktop.org/archive/individual/lib/libpciaccess-0.13.5.tar.gz"
 
+    version('0.13.5', '81468664fde96d1df2c3216fdf3c4a20')
     version('0.13.4', 'cc1fad87da60682af1d5fa43a5da45a4')
 
     depends_on('libtool', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        # libpciaccess does not support OS X
-        if spec.satisfies('platform=darwin'):
-            # create a dummy directory
-            mkdir(prefix.lib)
-            return
-
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

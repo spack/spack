@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -58,7 +58,7 @@ def test_dict_functions_for_architecture():
 
 def test_platform():
         output_platform_class = spack.architecture.real_platform()
-        if os.path.exists('/opt/cray/craype'):
+        if os.environ.get('CRAYPE_VERSION') is not None:
             my_platform_class = Cray()
         elif os.path.exists('/bgsys'):
             my_platform_class = Bgq()
@@ -138,8 +138,8 @@ def test_user_defaults(config):
 
 def test_user_input_combination(config):
     platform = spack.architecture.platform()
-    os_list = platform.operating_sys.keys()
-    target_list = platform.targets.keys()
+    os_list = list(platform.operating_sys.keys())
+    target_list = list(platform.targets.keys())
     additional = ["fe", "be", "frontend", "backend"]
 
     os_list.extend(additional)

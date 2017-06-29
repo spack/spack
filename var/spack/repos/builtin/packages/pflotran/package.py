@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,13 +33,12 @@ class Pflotran(AutotoolsPackage):
 
     homepage = "http://www.pflotran.org"
 
-    version('develop', hg='https://bitbucket.org/pflotran/pflotran-xsdk')
-    version('0.1.0', hg='https://bitbucket.org/pflotran/pflotran-xsdk',
-            commmit='4734cf5e606b')    
+    version('develop', git='https://bitbucket.org/pflotran/pflotran')
+    version('xsdk-0.2.0', git='https://bitbucket.org/pflotran/pflotran', tag='master')
 
     depends_on('mpi')
     depends_on('hdf5@1.8.12:+mpi+fortran')
-    depends_on('petsc@develop+hdf5+metis',when='@develop')
-    depends_on('petsc@for-pflotran-0.1.0+hdf5+metis',when='@0.1.0')    
+    depends_on('petsc@develop+hdf5+metis', when='@develop')
+    depends_on('petsc@xsdk-0.2.0+hdf5+metis', when='@xsdk-0.2.0')    
 
     parallel = False

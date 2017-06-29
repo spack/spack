@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,13 +30,12 @@ class PyCdo(PythonPackage):
     Operators from Python."""
 
     homepage = "https://pypi.python.org/pypi/cdo"
-    url      = "https://pypi.python.org/packages/sources/c/cdo/cdo-1.3.2.tar.gz"
+    url      = "https://pypi.io/packages/source/c/cdo/cdo-1.3.2.tar.gz"
 
-    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745',
-            url="https://pypi.python.org/packages/d6/13/908e7c1451e1f5fb68405f341cdcb3196a16952ebfe1f172cb788f864aa9/cdo-1.3.2.tar.gz")
+    version('1.3.2', '4b3686ec1b9b891f166c1c466c6db745')
 
     depends_on('cdo')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-netcdf', type=('build', 'run'))
+    depends_on('py-netcdf4', type=('build', 'run'))
