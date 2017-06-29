@@ -1382,12 +1382,12 @@ class Spec(object):
 
     @property
     def prefix(self):
+        assert self.concrete  # prefix of a non-concrete spec is nonsense
         if self._prefix:
             return self._prefix
-        elif self._concrete:
-            spec = spack.store.db.query_one(self)
-            if spec and getattr(spec, '_prefix', None):
-                return spec._prefix
+        spec = spack.store.db.query_one(self)
+        if spec and getattr(spec, '_prefix', None):
+            return spec._prefix
         return Prefix(spack.store.layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
