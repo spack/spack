@@ -1,3 +1,3 @@
 #!/bin/sh
 # convenience wrapper for the trimmomatic.jar file
-java -jar trimmomatic.jar "$@"
+java $JAVA_ARGS $JAVA_OPTS -jar trimmomatic.jar "$@"
