@@ -1369,10 +1369,12 @@ class Spec(object):
 
     @property
     def prefix(self):
+        assert self.concrete
         return Prefix(spack.store.layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
+        assert self.concrete
         if self._hash:
             return self._hash[:length]
         else:

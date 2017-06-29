@@ -571,8 +571,12 @@ def graph_dot(specs, deptype=None, static=False, out=None):
                 deps.add((provider, spec.name))
 
         else:
-            def key_label(s):
-                return s.dag_hash(), "%s/%s" % (s.name, s.dag_hash(7))
+            if spec.concrete:
+                def key_label(s):
+                    return s.dag_hash(), "%s/%s" % (s.name, s.dag_hash(7))
+            else:
+                def key_label(s):
+                    return hash(s._cmp_key()), s.name
 
             for s in spec.traverse(deptype=deptype):
                 skey, slabel = key_label(s)
