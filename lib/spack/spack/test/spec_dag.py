@@ -30,7 +30,10 @@ import spack
 import spack.architecture
 import spack.package
 
+from spack.version import Version
 from spack.spec import Spec
+
+from ordereddict_backport import OrderedDict
 
 
 def check_links(spec_to_check):
@@ -67,6 +70,89 @@ def set_dependency(saved_deps):
         pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
         pkg.dependency_types[spec.name] = set(deptypes)
     return _mock
+
+
+class MockPackage(object):
+
+    def __init__(self, name, dependencies, dependency_types, conditions=None,
+                 versions=None):
+        self.name = name
+        self.spec = None
+        dep_to_conditions = OrderedDict()
+        for dep in dependencies:
+            if not conditions or dep.name not in conditions:
+                dep_to_conditions[dep.name] = {name: dep.name}
+            else:
+                dep_to_conditions[dep.name] = conditions[dep.name]
+        self.dependencies = dep_to_conditions
+        self.dependency_types = dict(
+            (x.name, y) for x, y in zip(dependencies, dependency_types))
+        if versions:
+            self.versions = versions
+        else:
+            versions = list(Version(x) for x in [1, 2, 3])
+            self.versions = dict((x, {'preferred': False}) for x in versions)
+        self.variants = {}
+        self.provided = {}
+        self.conflicts = {}
+
+
+class MockPackageMultiRepo(object):
+
+    def __init__(self, packages):
+        self.specToPkg = dict((x.name, x) for x in packages)
+
+    def get(self, spec):
+        if not isinstance(spec, spack.spec.Spec):
+            spec = Spec(spec)
+        return self.specToPkg[spec.name]
+
+    def get_pkg_class(self, name):
+        return self.specToPkg[name]
+
+    def exists(self, name):
+        return name in self.specToPkg
+
+    def is_virtual(self, name):
+        return False
+
+    def repo_for_pkg(self, name):
+        import collections
+        Repo = collections.namedtuple('Repo', ['namespace'])
+        return Repo('mockrepo')
+
+
+@pytest.mark.usefixtures('config')
+def test_sync_build_and_link_deps():
+    """          w
+                /|
+               y x
+              /  |\
+             v   p q
+                 |  \
+                 v   v
+
+    All deptypes are (link, build) except for x dependency on p.
+    """
+    saved_repo = spack.repo
+
+    default = ('build', 'link')
+
+    v = MockPackage('v', [], [])
+    q_conditions = {v.name: {'q@2:': v.name}}
+    q = MockPackage('q', [v], [default], q_conditions)
+    p = MockPackage('p', [v], [default])
+    x = MockPackage('x', [p, q], [('build',), default])
+    y = MockPackage('y', [v], [default])
+    w = MockPackage('w', [y, x], [default, default])
+
+    mock_repo = MockPackageMultiRepo([v, q, p, x, y, w])
+    try:
+        spack.repo = mock_repo
+        spec = Spec('w')
+        spec.concretize()
+    finally:
+        spack.repo = saved_repo
 
 
 @pytest.mark.usefixtures('refresh_builtin_mock')
