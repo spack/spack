@@ -122,18 +122,20 @@ class Qmcpack(CMakePackage):
     def install(self, spec, prefix):
         """Make the install targets"""
         with working_dir(self.build_directory):
-            # qmcpack doesn't have a make install
-            # We have to do our own install here.
-            mkdirp(prefix.include)
+            # QMCPACK 'make install' does nothing, which causes
+            # Spack to throw an error.  
+            #
+            # This is install method creates the top level directory
+            # and copies include, lib, and bin subdirectories to the
+            # appropriate location.
+            mkdirp(prefix)
+
             install_tree(join_path(self.build_directory, 'include'),
                          prefix.include)
                          
-            mkdirp(prefix.lib)
             install_tree(join_path(self.build_directory, 'lib'),
                          prefix.lib)
                          
-            
-            mkdirp(prefix.bin)
             install_tree(join_path(self.build_directory, 'bin'),
                          prefix.bin)
 
