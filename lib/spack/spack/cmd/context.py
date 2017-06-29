@@ -2,7 +2,6 @@ import llnl.util.tty as tty
 import spack
 import llnl.util.filesystem as fs
 import spack.util.spack_json as sjson
-import spack.util.spack_yaml as syaml
 from spack.config import ConfigScope
 from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.repository import Repo
