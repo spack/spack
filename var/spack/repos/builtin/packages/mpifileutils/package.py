@@ -39,6 +39,7 @@ class Mpifileutils(AutotoolsPackage):
     url      = "https://github.com/hpc/mpifileutils/releases/download/v0.6/mpifileutils-0.6.tar.gz"
 
     version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
+    version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
 
     depends_on('mpi')
     depends_on('libcircle')
@@ -52,10 +53,8 @@ class Mpifileutils(AutotoolsPackage):
     variant('lustre', default=False,
         description="Enable optimizations and features for Lustre")
 
-    #  install experimental tools
-    #  (coming with v0.7)
-    # variant('experimental', default=False,
-    #    description="Install experimental tools")
+    variant('experimental', default=False,
+        description="Install experimental tools")
 
     def configure_args(self):
         args = []
@@ -65,11 +64,10 @@ class Mpifileutils(AutotoolsPackage):
         else:
             args.append('--disable-lustre')
 
-        #  coming with v0.7
-        # if '+experimental' in self.spec:
-        #     args.append('--enable-experimental')
-        # else:
-        #     args.append('--disable-experimental')
+        if '+experimental' in self.spec:
+            args.append('--enable-experimental')
+        else:
+            args.append('--disable-experimental')
 
         return args
 
