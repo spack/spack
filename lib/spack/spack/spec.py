@@ -1972,7 +1972,7 @@ class Spec(object):
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
     def _merge_dependency(self, dep, deptypes, dep_constraints, visited,
-                          provider_index, all_deps):
+                          provider_index, all_deps, in_build):
         """Merge the dependency into this spec.
 
         Caller should assume that this routine can owns the dep parameter
@@ -1998,6 +1998,13 @@ class Spec(object):
         # If it's a virtual dependency, try to find an existing
         # provider in the spec, and merge that.
         if dep.virtual:
+            if in_build:
+                parents = list(
+                    x.name for x in self.traverse(direction='parents'))
+                raise VirtualBuildDependencyError(
+                    "The dependency chain contains a build-only dependency" +
+                    " and {0} is virtual: {1}".format(
+                        dep.name, ' '.join(parents)))
             provider = self._find_provider(dep, provider_index)
             if provider:
                 dep = provider
@@ -2048,11 +2055,11 @@ class Spec(object):
                     format(resolved.format()))
 
         changed |= resolved._normalize_helper(
-            dep_constraints, visited, provider_index, all_deps)
+            dep_constraints, visited, provider_index, all_deps, in_build)
         return changed
 
     def _normalize_helper(self, dep_constraints, visited, provider_index,
-                          all_deps):
+                          all_deps, in_build=False):
         """Recursive helper function for _normalize."""
         if self in visited:
             dep_constraints.update_transitive(self)
@@ -2087,6 +2094,7 @@ class Spec(object):
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
                 deptypes = pkg.dependency_types[dep_name]
 
+                child_build = in_build or dep_name in build_only
                 if dep_name in build_only:
                     child_constraints = build_constraints
                 else:
@@ -2095,7 +2103,7 @@ class Spec(object):
                 if pkg_dep and (all_deps or dep_name not in build_only):
                     local_changed = self._merge_dependency(
                         pkg_dep, deptypes, child_constraints, visited,
-                        provider_index, all_deps)
+                        provider_index, all_deps, child_build)
                     changed |= local_changed
             any_change |= changed
 
@@ -3368,6 +3376,10 @@ class SpecParseError(SpecError):
 
 class DuplicateDependencyError(SpecError):
     """Raised when the same dependency occurs in a spec twice."""
+
+
+class VirtualBuildDependencyError(SpecError):
+    """Raised when a build dependency is virtual or depends on a virtual"""
 
 
 class DuplicateCompilerSpecError(SpecError):

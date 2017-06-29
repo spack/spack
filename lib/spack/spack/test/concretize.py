@@ -239,6 +239,16 @@ class TestConcretize(object):
         with pytest.raises(spack.spec.MultipleProviderError):
             s.concretize()
 
+    def test_virtual_build_conflict(self):
+        s = Spec('virtual-build1')
+        with pytest.raises(spack.spec.VirtualBuildDependencyError):
+            s.concretize()
+
+    def test_virtual_build_indirect_conflict(self):
+        s = Spec('virtual-build2')
+        with pytest.raises(spack.spec.VirtualBuildDependencyError):
+            s.concretize()
+
     def test_no_matching_compiler_specs(self):
         s = Spec('a %gcc@0.0.0')
         with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
