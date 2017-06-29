@@ -25,28 +25,26 @@
 from spack import *
 
 
-class OntAlbacore(Package):
-    """Albacore is a software project that provides an entry point to the Oxford
-    Nanopore basecalling algorithms. It can be run from the command line on
-    Windows and multiple Linux platforms. A selection of configuration files
-    allow basecalling DNA libraries made with our current range of sequencing
-    kits and Flow Cells."""
+class Angsd(MakefilePackage):
+    """Angsd is a program for analysing NGS data. The software can handle a
+       number of different input types from mapped reads to imputed genotype
+       probabilities. Most methods take genotype uncertainty into account
+       instead of basing the analysis on called genotypes. This is especially
+       useful for low and medium depth data."""
 
-    homepage = "https://nanoporetech.com"
-    url = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.2.4-cp35-cp35m-manylinux1_x86_64.whl"
+    homepage = "https://github.com/ANGSD/angsd"
+    url      = "https://github.com/ANGSD/angsd/archive/0.919.tar.gz"
 
-    version('1.2.4', '559640bec4693af12e4d923e8d77adf6', expand=False)
-    version('1.1.0', 'fab4502ea1bad99d813aa2629e03e83d', expand=False)
-    extends('python')
+    version('0.919', '79d342f49c24ac00d35934f2617048d4')
 
-    depends_on('python@3.5.0:3.5.999', type=('build', 'run'))
-    depends_on('py-setuptools',        type=('build', 'run'))
-    depends_on('py-numpy',             type=('build', 'run'))
-    depends_on('py-dateutil',          type=('build', 'run'))
-    depends_on('py-h5py',              type=('build', 'run'))
-    depends_on('py-ont-fast5-api',     type=('build', 'run'))
-    depends_on('py-pip',               type=('build'))
+    depends_on('htslib')
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('R_LIBS', prefix.R)
 
     def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+        mkdirp(prefix.bin)
+        install('angsd', join_path(prefix.bin))
+        install_tree('R', prefix.R)
+        install_tree('RES', prefix.RES)
+        install_tree('scripts', prefix.scripts)

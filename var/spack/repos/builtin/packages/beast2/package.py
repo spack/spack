@@ -25,28 +25,27 @@
 from spack import *
 
 
-class OntAlbacore(Package):
-    """Albacore is a software project that provides an entry point to the Oxford
-    Nanopore basecalling algorithms. It can be run from the command line on
-    Windows and multiple Linux platforms. A selection of configuration files
-    allow basecalling DNA libraries made with our current range of sequencing
-    kits and Flow Cells."""
+class Beast2(Package):
+    """BEAST is a cross-platform program for Bayesian inference using MCMC
+       of molecular sequences. It is entirely orientated towards rooted,
+       time-measured phylogenies inferred using strict or relaxed molecular
+       clock models. It can be used as a method of reconstructing phylogenies
+       but is also a framework for testing evolutionary hypotheses without
+       conditioning on a single tree topology."""
 
-    homepage = "https://nanoporetech.com"
-    url = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.2.4-cp35-cp35m-manylinux1_x86_64.whl"
+    homepage = "http://beast2.org/"
+    url      = "https://github.com/CompEvol/beast2/releases/download/v2.4.6/BEAST.v2.4.6.Linux.tgz"
 
-    version('1.2.4', '559640bec4693af12e4d923e8d77adf6', expand=False)
-    version('1.1.0', 'fab4502ea1bad99d813aa2629e03e83d', expand=False)
-    extends('python')
+    version('2.4.6', 'b446f4ab121df9b991f7bb7ec94c8217')
 
-    depends_on('python@3.5.0:3.5.999', type=('build', 'run'))
-    depends_on('py-setuptools',        type=('build', 'run'))
-    depends_on('py-numpy',             type=('build', 'run'))
-    depends_on('py-dateutil',          type=('build', 'run'))
-    depends_on('py-h5py',              type=('build', 'run'))
-    depends_on('py-ont-fast5-api',     type=('build', 'run'))
-    depends_on('py-pip',               type=('build'))
+    depends_on('jdk')
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('BEAST', self.prefix)
 
     def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+        install_tree('bin', prefix.bin)
+        install_tree('examples', join_path(self.prefix, 'examples'))
+        install_tree('images', join_path(self.prefix, 'images'))
+        install_tree('lib', prefix.lib)
+        install_tree('templates', join_path(self.prefix, 'templates'))

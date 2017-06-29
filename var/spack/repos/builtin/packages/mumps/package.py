@@ -61,7 +61,7 @@ class Mumps(Package):
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
-    depends_on('scotch + esmumps + mpi', when='+ptscotch')
+    depends_on('scotch + esmumps ~ metis + mpi', when='+ptscotch')
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
@@ -160,7 +160,7 @@ class Mumps(Package):
                  'FC = {0}'.format(self.spec['mpi'].mpifc),
                  "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
-            if (self.spec.satisfies('%xl_r' or '%xl')) and self.spec.satisfies('^spectrum-mpi'): # noqa
+            if (self.spec.satisfies('%xl_r' or '%xl')) and self.spec.satisfies('^spectrum-mpi'):  # noqa
                 makefile_conf.extend(
                     ['FL = {0}'.format(self.spec['mpi'].mpicc)])
             else:

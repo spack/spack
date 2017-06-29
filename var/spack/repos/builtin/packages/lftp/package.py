@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,29 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-# package has a Makefile, but only to build examples
-class Pegtl(CMakePackage):
-    """The Parsing Expression Grammar Template Library (PEGTL) is a
-        zero-dependency C++11 header-only library for creating parsers
-        according to a Parsing Expression Grammar (PEG).
-    """
+class Lftp(AutotoolsPackage):
+    """LFTP is a sophisticated file transfer program supporting a number
+       of network protocols (ftp, http, sftp, fish, torrent)."""
 
-    homepage = "https://github.com/taocpp/PEGTL"
-    url      = "https://github.com/taocpp/PEGTL/tarball/1.3.1"
+    homepage = "http://lftp.yar.ru/"
+    url      = "http://lftp.yar.ru/ftp/lftp-4.7.7.tar.gz"
 
-    version('develop', git='https://github.com/taocpp/PEGTL', branch='master')
-    version('2.1.4', 'e5288b6968e6e910287fce93dc5557bf')
-    version('2.0.0', 'c772828e7188459338a920c21f9896db')
+    version('4.7.7', 'ddc71b3b11a1af465e829075ae14b3ff')
 
-    variant('debug', default=False, description='Build debug version')
+    depends_on('expat')
+    depends_on('libiconv')
+    depends_on('ncurses')
+    depends_on('openssl')
+    depends_on('readline')
+    depends_on('zlib')
 
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
+    def configure_args(self):
+        return [
+            '--with-expat={0}'.format(self.spec['expat'].prefix),
+            '--with-libiconv={0}'.format(self.spec['libiconv'].prefix),
+            '--with-openssl={0}'.format(self.spec['openssl'].prefix),
+            '--with-readline={0}'.format(self.spec['readline'].prefix),
+            '--with-zlib={0}'.format(self.spec['zlib'].prefix),
+            '--disable-dependency-tracking',
+        ]

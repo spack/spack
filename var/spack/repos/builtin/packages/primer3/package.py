@@ -25,28 +25,22 @@
 from spack import *
 
 
-class OntAlbacore(Package):
-    """Albacore is a software project that provides an entry point to the Oxford
-    Nanopore basecalling algorithms. It can be run from the command line on
-    Windows and multiple Linux platforms. A selection of configuration files
-    allow basecalling DNA libraries made with our current range of sequencing
-    kits and Flow Cells."""
+class Primer3(MakefilePackage):
+    """Primer3 is a widely used program for designing PCR primers
+       (PCR = "Polymerase Chain Reaction"). PCR is an essential and
+       ubiquitous tool in genetics and molecular biology. Primer3
+       can also design hybridization probes and sequencing primers."""
 
-    homepage = "https://nanoporetech.com"
-    url = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.2.4-cp35-cp35m-manylinux1_x86_64.whl"
+    homepage = "http://primer3.sourceforge.net/"
+    url      = "https://sourceforge.net/projects/primer3/files/primer3/2.3.7/primer3-2.3.7.tar.gz/download"
 
-    version('1.2.4', '559640bec4693af12e4d923e8d77adf6', expand=False)
-    version('1.1.0', 'fab4502ea1bad99d813aa2629e03e83d', expand=False)
-    extends('python')
+    version('2.3.7', 'c6b89067bf465e62b6b1fd830b5b4418')
 
-    depends_on('python@3.5.0:3.5.999', type=('build', 'run'))
-    depends_on('py-setuptools',        type=('build', 'run'))
-    depends_on('py-numpy',             type=('build', 'run'))
-    depends_on('py-dateutil',          type=('build', 'run'))
-    depends_on('py-h5py',              type=('build', 'run'))
-    depends_on('py-ont-fast5-api',     type=('build', 'run'))
-    depends_on('py-pip',               type=('build'))
+    build_directory = 'src'
 
     def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+        with working_dir(self.build_directory):
+            mkdirp(prefix.bin)
+            for binary in ('primer3_core', 'ntdpal', 'oligotm',
+                           'long_seq_tm_test'):
+                install(binary, prefix.bin)
