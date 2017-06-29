@@ -56,6 +56,9 @@ class Mpifileutils(AutotoolsPackage):
     variant('experimental', default=False,
         description="Install experimental tools")
 
+    # --enable-experimental fails with v0.6 and earlier
+    conflicts('+experimental', when='@:0.6')
+
     def configure_args(self):
         args = []
 
