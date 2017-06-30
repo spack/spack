@@ -38,8 +38,8 @@ class Mpifileutils(AutotoolsPackage):
     homepage = "https://github.com/hpc/mpifileutils"
     url      = "https://github.com/hpc/mpifileutils/releases/download/v0.6/mpifileutils-0.6.tar.gz"
 
-    version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
     version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
+    version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
 
     depends_on('mpi')
     depends_on('libcircle')
@@ -67,10 +67,11 @@ class Mpifileutils(AutotoolsPackage):
         else:
             args.append('--disable-lustre')
 
-        if '+experimental' in self.spec:
-            args.append('--enable-experimental')
-        else:
-            args.append('--disable-experimental')
+        if self.spec.satisfies('@0.7:'):
+            if '+experimental' in self.spec:
+                args.append('--enable-experimental')
+            else:
+                args.append('--disable-experimental')
 
         return args
 
