@@ -1,4 +1,3 @@
-
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -1439,6 +1438,7 @@ class Spec(object):
         return syaml_dict([(self.name, d)])
 
     def to_dict(self):
+        assert self.concrete
         node_list = []
         for s in self.traverse(order='pre', deptype=('link', 'run')):
             node = s.to_node_dict()
