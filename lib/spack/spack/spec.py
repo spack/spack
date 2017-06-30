@@ -1,3 +1,4 @@
+
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -1386,8 +1387,7 @@ class Spec(object):
             if sys.version_info[0] >= 3:
                 b32_hash = b32_hash.decode('utf-8')
 
-            if self.concrete:
-                self._hash = b32_hash
+            self._hash = b32_hash
             return b32_hash[:length]
 
     def dag_hash_bit_prefix(self, bits):
