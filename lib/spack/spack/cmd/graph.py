@@ -64,7 +64,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-t', '--deptype', action='store',
         help="comma-separated list of deptypes to traverse. default=%s"
-        % ','.join(alldeps))
+        % ','.join(('link', 'run')))
 
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER,
@@ -87,7 +87,7 @@ def graph(parser, args):
         setup_parser.parser.print_help()
         return 1
 
-    deptype = alldeps
+    deptype = ('link', 'run')
     if args.deptype:
         deptype = tuple(args.deptype.split(','))
         validate_deptype(deptype)
