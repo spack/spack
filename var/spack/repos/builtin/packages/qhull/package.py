@@ -43,4 +43,6 @@ class Qhull(CMakePackage):
     version('2012.1', 'd0f978c0d8dfb2e919caefa56ea2953c',
             url="http://www.qhull.org/download/qhull-2012.1-src.tgz")
 
+    patch('qhull-unused-intel-17.02.patch', when='@2015.2')
+
     depends_on('cmake@2.6:', type='build')
