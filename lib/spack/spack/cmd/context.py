@@ -317,6 +317,10 @@ def context_remove(args):
 
 def context_concretize(args):
     context = read(args.context)
+    _context_concretize(context)
+
+
+def _context_concretize(context):
     repo = prepare_repository(context)
     prepare_config_scope(context)
 
