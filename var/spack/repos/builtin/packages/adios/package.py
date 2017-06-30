@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -34,7 +33,7 @@ class Adios(AutotoolsPackage):
     """
 
     homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
-    url      = "https://github.com/ornladios/ADIOS/archive/v1.11.1.tar.gz"
+    url = "https://github.com/ornladios/ADIOS/archive/v1.11.1.tar.gz"
 
     version('develop', git='https://github.com/ornladios/ADIOS.git',
             branch='master')
@@ -49,7 +48,9 @@ class Adios(AutotoolsPackage):
             description='Enable Fortran bindings support')
 
     variant('mpi', default=True, description='Enable MPI support')
+    variant('no_mpi', default=False, description='Disable MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
+    variant('mxml', default=False, description='Build with external mxml')
 
     # transforms
     variant('zlib', default=True, description='Enable zlib transform support')
@@ -66,11 +67,11 @@ class Adios(AutotoolsPackage):
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    depends_on('libtool@:2.4.2', type='build')
     depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
-    depends_on('mxml@2.9:')
+    depends_on('mxml@2.9:', when='+mxml')
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
@@ -108,14 +109,16 @@ class Adios(AutotoolsPackage):
         # required, otherwise building its python bindings on ADIOS will fail
         extra_args.append("CFLAGS=-fPIC")
 
-        # always build external MXML, even in ADIOS 1.10.0+
-        extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
+        if '+mxml' in spec:
+            extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
 
         if '+shared' in spec:
             extra_args.append('--enable-shared')
 
         if '+mpi' in spec:
             extra_args.append('--with-mpi')
+        if '+no_mpi' in spec:
+            extra_args.append('--without-mpi')
         if '+infiniband' in spec:
             extra_args.append('--with-infiniband')
         else:
