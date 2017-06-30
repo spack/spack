@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Sabre(Package):
+class Sabre(MakefilePackage):
     """Sabre is a tool that will demultiplex barcoded reads into separate
        files. It will work on both single-end and paired-end data in fastq
        format. It simply compares the provided barcodes with each read and
@@ -44,6 +44,5 @@ class Sabre(Package):
     depends_on('zlib')
 
     def install(self, spec, prefix):
-        make()
         mkdirp(prefix.bin)
-        install('sabre', join_path(prefix.bin))
+        install('sabre', prefix.bin)
