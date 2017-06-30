@@ -1,0 +1,20 @@
+diff --git a/Source/Common/CrossProcessMutex.h b/Source/Common/CrossProcessMutex.h
+index 2f3ce70..f0fcd42 100644
+--- a/Source/Common/CrossProcessMutex.h
++++ b/Source/Common/CrossProcessMutex.h
+@@ -127,9 +127,13 @@ class CrossProcessMutex
+
+ public:
+     CrossProcessMutex(const std::string& name)
+-        : m_fd(-1),
+-          m_fileName("/var/lock/" + name)
++        : m_fd(-1)
+     {
++        const char * const envLockDir = getenv("CNTK_LOCK_DIR");
++        if (envLockDir != NULL)
++            m_fileName = envLockDir + ('/' + name);
++        else
++            m_fileName = "/var/lock/" + name;
+     }
+
+     // Acquires the mutex. If 'wait' is true and mutex is acquired by someone else then
