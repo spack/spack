@@ -64,12 +64,10 @@ class Dataspaces(AutotoolsPackage):
         default=False,
         description='Use MPI for collective communication')
 
-    depends_on('m4')
-    depends_on('automake')
-    depends_on('autoconf')
-    depends_on('libtool')
-    # spack interal pkg-config seems to cause problems on Titan
-    #depends_on('pkg-config')
+    depends_on('m4', type='build')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
     depends_on('mpi', when='+mpi')
 
     def autoreconf(spec, prefix, self):
