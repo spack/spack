@@ -78,13 +78,13 @@ class Dataspaces(AutotoolsPackage):
         cookie = self.spec.variants['gni-cookie'].value
         ptag = self.spec.variants['ptag'].value
         if self.spec.satisfies('+dimes'):
-            args.extend(['--enable-dimes'])
+            args.append(['--enable-dimes'])
         if self.spec.satisfies('+cray-drc'):
-            args.extend(['--enable-drc'])
+            args.append(['--enable-drc'])
         else:
-            args.extend(['--with-gni-cookie=%s' % cookie])
-            args.extend(['--with-gni-ptag=%s' % ptag])
+            args.append(['--with-gni-cookie=%s' % cookie])
+            args.append(['--with-gni-ptag=%s' % ptag])
         if self.spec.satisfies('+mpi'):
-            args.extend(['CC=%s' % self.spec['mpi'].mpicc])
-            args.extend(['FC=%s' % self.spec['mpi'].mpifc])
+            args.append(['CC=%s' % self.spec['mpi'].mpicc])
+            args.append(['FC=%s' % self.spec['mpi'].mpifc])
         return args
