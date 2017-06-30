@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -34,7 +33,7 @@ class Adios(AutotoolsPackage):
     """
 
     homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
-    url      = "https://github.com/ornladios/ADIOS/archive/v1.11.1.tar.gz"
+    url = "https://github.com/ornladios/ADIOS/archive/v1.11.1.tar.gz"
 
     version('develop', git='https://github.com/ornladios/ADIOS.git',
             branch='master')
@@ -49,15 +48,21 @@ class Adios(AutotoolsPackage):
             description='Enable Fortran bindings support')
 
     variant('mpi', default=True, description='Enable MPI support')
+    variant('no_mpi', default=False, description='Disable MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
+    variant('mxml', default=False, description='Build with external mxml')
 
     # transforms
     variant('zlib', default=True, description='Enable zlib transform support')
     variant('bzip2', default=False, description='Enable bzip2 transform support')
     variant('szip', default=False, description='Enable szip transform support')
     variant('zfp', default=False, description='Enable ZFP transform support')
+    variant('sz', default=True, description='Enable SZ transform support')
     # transports and serial file converters
     variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
+    variant('flexpath', default=False, description='Enable flexpath transport')
+    variant('dataspaces', default=False, description='Enable dataspaces transport')
+    variant('staging', default=False, description='Enable dataspaces and flexpath staging transports')
 
     # Lots of setting up here for this package
     # module swap PrgEnv-intel PrgEnv-$COMP
@@ -66,18 +71,22 @@ class Adios(AutotoolsPackage):
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    depends_on('libtool@:2.4.2', type='build')
     depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
-    depends_on('mxml@2.9:')
+    depends_on('mxml@2.9:', when='+mxml')
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
-    depends_on('zfp@:0.5.0', when='+zfp')
+    depends_on('sz@develop', when='+sz')
+    depends_on('zfp@:0.5.0', when='@:1.11.1: +zfp')
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
+    depends_on('libevpath', when='+flexpath')
+    depends_on('libevpath', when='+staging')
+    depends_on('dataspaces+mpi', when='+staging')
 
     build_directory = 'spack-build'
 
@@ -108,14 +117,16 @@ class Adios(AutotoolsPackage):
         # required, otherwise building its python bindings on ADIOS will fail
         extra_args.append("CFLAGS=-fPIC")
 
-        # always build external MXML, even in ADIOS 1.10.0+
-        extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
+        if '+mxml' in spec:
+            extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
 
         if '+shared' in spec:
             extra_args.append('--enable-shared')
 
         if '+mpi' in spec:
             extra_args.append('--with-mpi')
+        if '+no_mpi' in spec:
+            extra_args.append('--without-mpi')
         if '+infiniband' in spec:
             extra_args.append('--with-infiniband')
         else:
@@ -134,7 +145,14 @@ class Adios(AutotoolsPackage):
             extra_args.append('--with-szip=%s' % spec['szip'].prefix)
         if '+zfp' in spec:
             extra_args.append('--with-zfp=%s' % spec['zfp'].prefix)
+        if '+sz' in spec:
+            extra_args.append('--with-sz=%s' % spec['sz'].prefix)
         if '+hdf5' in spec:
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
+        if ('+flexpath' in spec) or ('+staging' in spec):
+            extra_args.append('--with-flexpath=%s' % spec['libevpath'].prefix)
+        if ('+dataspaces' in spec) or ('+staging' in spec):
+            extra_args.append('--with-dataspaces=%s' %
+                              spec['dataspaces'].prefix)
 
         return extra_args
