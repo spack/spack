@@ -1010,8 +1010,6 @@ class DependencyConstraints(object):
     def update(self, spec):
         for context in self.contexts:
             if spec.name in context:
-                if spec is not context[spec.name]:
-                    import pdb; pdb.set_trace()
                 assert(spec is context[spec.name])
         for context in self.contexts:
             if spec.name not in context:
@@ -1679,7 +1677,8 @@ class Spec(object):
         # to presets below, their constraints will all be merged, but we'll
         # still need to select a concrete package later.
         if not self.virtual:
-            updated = (spack.concretizer.concretize_architecture(self),
+            updated = (
+                spack.concretizer.concretize_architecture(self),
                 spack.concretizer.concretize_compiler(self),
                 spack.concretizer.concretize_compiler_flags(
                     self),  # has to be concretized after compiler
@@ -2048,11 +2047,10 @@ class Spec(object):
             self._add_dependency(resolved, deptypes)
         elif self._dependencies[resolved.name].spec != resolved:
             child = self._dependencies[resolved.name].spec
-            raise ValueError(
-                "{0} has {1} as a dependency".
-                    format(self.name, child.format()) +
-                " but dep constraints contain a reference to a different {0}".
-                    format(resolved.format()))
+            err_msg = ("{0} has {1} as a dependency but dep constraints" +
+                       " contain a reference to a different {2}")
+            err_msg.format(self.name, child.format(), resolved.format())
+            raise ValueError(err_msg)
 
         changed |= resolved._normalize_helper(
             dep_constraints, visited, provider_index, all_deps, in_build)
@@ -2099,7 +2097,7 @@ class Spec(object):
                     child_constraints = build_constraints
                 else:
                     child_constraints = dep_constraints
-                
+
                 if pkg_dep and (all_deps or dep_name not in build_only):
                     local_changed = self._merge_dependency(
                         pkg_dep, deptypes, child_constraints, visited,
