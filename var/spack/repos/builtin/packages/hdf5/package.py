@@ -32,19 +32,16 @@ class Hdf5(AutotoolsPackage):
     flexible and efficient I/O and for high volume and complex data.
     """
 
-    homepage = "http://www.hdfgroup.org/HDF5/"
-    url = "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.13/src/hdf5-1.8.13.tar.gz"
-    list_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
+    homepage = "https://support.hdfgroup.org/HDF5/"
+    url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz"
+    list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
     version('1.10.1', '43a2f9466702fb1db31df98ae6677f15')
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
-    version('1.8.18', 'dd2148b740713ca0295442ec683d7b1c',
-            # The link for the latest version differs from the links for
-            # the previous releases. Do not forget to remove this once
-            # the version 1.8.18 is not the latest one for the 1.8.* branch.
-            url='http://hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.18.tar.gz')
+    version('1.8.19', '7f568e2464d4ab0a74d16b23956d900b')
+    version('1.8.18', 'dd2148b740713ca0295442ec683d7b1c')
     version('1.8.17', '7d572f8f3b798a628b8245af0391a0ca')
     version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
@@ -76,6 +73,10 @@ class Hdf5(AutotoolsPackage):
     # (taken from hdf5@1.10.0patch1)
     conflicts('+threadsafe', when='+cxx')
     conflicts('+threadsafe', when='+fortran')
+
+    def url_for_version(self, version):
+        url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
+        return url.format(version.up_to(2), version)
 
     @property
     def libs(self):
@@ -279,26 +280,3 @@ HDF5 version {version} {version}
                 print('-' * 80)
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
-
-    def url_for_version(self, version):
-        # If we have a specific URL for this version, return it.
-        version_urls = self.version_urls()
-        if version in version_urls:
-            return version_urls[version]
-
-        base_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
-
-        if version == Version("1.2.2"):
-            return "{0}/hdf5-{1}.tar.gz".format(base_url, version)
-        elif version < Version("1.6.6"):
-            return "{0}/hdf5-{1}/hdf5-{2}.tar.gz".format(
-                base_url, version.up_to(2), version)
-        elif version < Version("1.7"):
-            return "{0}/hdf5-{1}/hdf5-{2}/src/hdf5-{2}.tar.gz".format(
-                base_url, version.up_to(2), version)
-        elif version < Version("1.10"):
-            return "{0}/hdf5-{1}/src/hdf5-{1}.tar.gz".format(
-                base_url, version)
-        else:
-            return "{0}/hdf5-{1}/hdf5-{2}/src/hdf5-{2}.tar.gz".format(
-                base_url, version.up_to(2), version)
