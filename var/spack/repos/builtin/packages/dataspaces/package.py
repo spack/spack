@@ -1,5 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,12 +27,14 @@
 from spack import *
 from subprocess import call
 
+
 def is_string(x):
     """validate a string"""
     try:
         return isinstance(x, basestring)
     except ValueError:
         return False
+
 
 class Dataspaces(AutotoolsPackage):
     """an extreme scale data management framework."""
@@ -60,7 +63,6 @@ class Dataspaces(AutotoolsPackage):
     variant('mpi',
         default=False,
         description='Use MPI for collective communication')
-
 
     depends_on('m4')
     depends_on('automake')
