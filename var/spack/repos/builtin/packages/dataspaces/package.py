@@ -25,7 +25,6 @@
 ##############################################################################
 
 from spack import *
-from subprocess import call
 
 
 def is_string(x):
@@ -71,7 +70,8 @@ class Dataspaces(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
 
     def autoreconf(spec, prefix, self):
-        call(['sh', './autogen.sh'])
+        bash = which(bash)
+        bash('./autogen.sh')
 
     def configure_args(self):
         args = []
