@@ -443,26 +443,31 @@ Version URLs
 By default, each version's URL is extrapolated from the ``url`` field
 in the package.  For example, Spack is smart enough to download
 version ``8.2.1.`` of the ``Foo`` package above from
-``http://example.com/foo-8.2.1.tar.gz``.
+http://example.com/foo-8.2.1.tar.gz.
 
 If the URL is particularly complicated or changes based on the release,
 you can override the default URL generation algorithm by defining your
-own ``url_for_version()`` function. For example, the developers of HDF5
-keep changing the archive layout, so the ``url_for_version()`` function
-looks like:
+own ``url_for_version()`` function. For example, the download URL for
+OpenMPI contains the major.minor version in one spot and the
+major.minor.patch version in another:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/hdf5/package.py
-   :pyobject: Hdf5.url_for_version
+https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 
-With the use of this ``url_for_version()``, Spack knows to download HDF5 ``1.8.16``
-from ``http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.16/src/hdf5-1.8.16.tar.gz``
-but download HDF5 ``1.10.0`` from ``http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0/src/hdf5-1.10.0.tar.gz``.
+In order to handle this, you can define a ``url_for_version()`` function
+like so:
 
-You'll notice that HDF5's ``url_for_version()`` function makes use of a special
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/openmpi/package.py
+   :pyobject: Openmpi.url_for_version
+
+With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.1.1``
+from http://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
+but download OpenMPI ``1.10.7`` from http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.7.tar.bz2.
+
+You'll notice that OpenMPI's ``url_for_version()`` function makes use of a special
 ``Version`` function called ``up_to()``. When you call ``version.up_to(2)`` on a
 version like ``1.10.0``, it returns ``1.10``. ``version.up_to(1)`` would return
 ``1``. This can be very useful for packages that place all ``X.Y.*`` versions in
-a single directory and then places all ``X.Y.Z`` versions in a subdirectory.
+a single directory and then places all ``X.Y.Z`` versions in a sub-directory.
 
 There are a few ``Version`` properties you should be aware of. We generally
 prefer numeric versions to be separated by dots for uniformity, but not all
@@ -493,9 +498,6 @@ of its versions, you can add an explicit URL for a particular version:
    version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
            url='http://example.com/foo-8.2.1-special-version.tar.gz')
 
-This is common for Python packages that download from PyPi. Since newer
-download URLs often contain a unique hash for each version, there is no
-way to guess the URL systematically.
 
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
