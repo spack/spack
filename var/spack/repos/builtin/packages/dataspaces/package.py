@@ -70,7 +70,7 @@ class Dataspaces(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
 
     def autoreconf(spec, prefix, self):
-        bash = which(bash)
+        bash = which('bash')
         bash('./autogen.sh')
 
     def configure_args(self):
@@ -78,13 +78,13 @@ class Dataspaces(AutotoolsPackage):
         cookie = self.spec.variants['gni-cookie'].value
         ptag = self.spec.variants['ptag'].value
         if self.spec.satisfies('+dimes'):
-            args.append(['--enable-dimes'])
+            args.append('--enable-dimes')
         if self.spec.satisfies('+cray-drc'):
-            args.append(['--enable-drc'])
+            args.append('--enable-drc')
         else:
-            args.append(['--with-gni-cookie=%s' % cookie])
-            args.append(['--with-gni-ptag=%s' % ptag])
+            args.append('--with-gni-cookie=%s' % cookie)
+            args.append('--with-gni-ptag=%s' % ptag)
         if self.spec.satisfies('+mpi'):
-            args.append(['CC=%s' % self.spec['mpi'].mpicc])
-            args.append(['FC=%s' % self.spec['mpi'].mpifc])
+            args.append('CC=%s' % self.spec['mpi'].mpicc)
+            args.append('FC=%s' % self.spec['mpi'].mpifc)
         return args
