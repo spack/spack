@@ -39,6 +39,7 @@ class SharedMimeInfo(AutotoolsPackage):
     depends_on('glib')
     depends_on('libxml2')
     depends_on('intltool', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.prepend_path("XDG_DATA_DIRS",
