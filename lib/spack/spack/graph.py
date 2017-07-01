@@ -92,8 +92,8 @@ def topological_sort(spec, reverse=False, deptype=None):
     par = dict((name, set()) for name in nodes.keys())
     for node in spec.traverse(deptype=deptype):
         for child in children(node):
-            par[child.name].add(node) 
-    
+            par[child.name].add(node)
+
     remaining = [name for name in nodes.keys() if not par[name]]
     heapify(remaining)
 
