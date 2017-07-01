@@ -189,7 +189,8 @@ def set_build_environment_variables(pkg, env, dirty=False):
     """
     # Gather information about various types of dependencies
     build_deps      = pkg.spec.dependencies(deptype='build')
-    link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
+    link_deps       = pkg.spec.traverse(
+        root=False, deptype=('link', 'include'))
     build_link_deps = set(itertools.chain(build_deps, link_deps))
     rpath_deps      = get_rpath_deps(pkg)
 
