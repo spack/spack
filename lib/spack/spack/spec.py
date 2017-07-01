@@ -1762,7 +1762,7 @@ class Spec(object):
                             # If there are duplicate providers or duplicate
                             # provider deps, consolidate them and merge
                             # constraints.
-                            copy.normalize(dep_constraints_copy, force=True)
+                            copy._normalize(dep_constraints_copy, force=True)
                             break
                         except SpecError:
                             # On error, we'll try the next replacement.
@@ -1838,7 +1838,7 @@ class Spec(object):
         dep_constraints = DependencyConstraints(self, copy=True)
         self._dependencies.clear()
         while changed:
-            changes = (self.normalize(dep_constraints, force),
+            changes = (self._normalize(dep_constraints, force),
                        self._expand_virtual_packages(dep_constraints),
                        self._concretize_helper())
             changed = any(changes)
@@ -1846,7 +1846,7 @@ class Spec(object):
 
         changed = True
         while changed:
-            changes = (self.normalize(dep_constraints, force, all_deps=True),
+            changes = (self._normalize(dep_constraints, force, all_deps=True),
                        self._concretize_helper())
             changed = any(changes)
 
@@ -2107,12 +2107,12 @@ class Spec(object):
 
         return any_change
 
-    def normalize_top(self):
+    def normalize(self):
         dep_constraints = DependencyConstraints(self, copy=True)
         self._dependencies.clear()
-        self.normalize(dep_constraints)
+        self._normalize(dep_constraints, force=True)
 
-    def normalize(self, dep_constraints=None, force=False, all_deps=False):
+    def _normalize(self, dep_constraints, force=False, all_deps=False):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -2142,9 +2142,6 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
 
-        if not dep_constraints:
-            dep_constraints = DependencyConstraints()
-
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = ProviderIndex(
@@ -2166,7 +2163,7 @@ class Spec(object):
         Return a normalized copy of this spec without modifying this spec.
         """
         clone = self.copy()
-        clone.normalize_top()
+        clone.normalize()
         return clone
 
     def validate_or_raise(self):

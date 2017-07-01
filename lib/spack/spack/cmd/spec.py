@@ -83,8 +83,7 @@ def spec(parser, args):
 
         print("Normalized")
         print("--------------------------------")
-        norm_copy = spec.copy()
-        norm_copy.normalize_top()
+        norm_copy = spec.normalized()
         print(norm_copy.tree(**kwargs))
 
         print("Concretized")

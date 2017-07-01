@@ -167,11 +167,11 @@ class TestSpecDag(object):
         # TODO: try to do something to show that the issue was with
         # TODO: the user's input or with package inconsistencies.
         with pytest.raises(spack.spec.UnsatisfiableVersionSpecError):
-            spec.normalize_top()
+            spec.normalize()
 
     def test_preorder_node_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize_top()
+        dag.normalize()
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'zmpi', 'fake']
@@ -185,7 +185,7 @@ class TestSpecDag(object):
 
     def test_preorder_edge_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize_top()
+        dag.normalize()
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'libelf', 'zmpi', 'fake', 'zmpi']
@@ -199,7 +199,7 @@ class TestSpecDag(object):
 
     def test_preorder_path_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize_top()
+        dag.normalize()
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'libelf', 'zmpi', 'fake', 'zmpi', 'fake']
@@ -213,7 +213,7 @@ class TestSpecDag(object):
 
     def test_postorder_node_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize_top()
+        dag.normalize()
 
         names = ['libelf', 'libdwarf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'mpileaks']
@@ -227,7 +227,7 @@ class TestSpecDag(object):
 
     def test_postorder_edge_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize_top()
+        dag.normalize()
 
         names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'zmpi', 'mpileaks']
@@ -241,7 +241,7 @@ class TestSpecDag(object):
 
     def test_postorder_path_traversal(self):
         dag = Spec('mpileaks ^zmpi')
-        dag.normalize_top()
+        dag.normalize()
 
         names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'fake', 'zmpi', 'mpileaks']
@@ -279,7 +279,7 @@ class TestSpecDag(object):
                              Spec('libelf')),
                         Spec('mpi')),
                    Spec('mpi'))
-        dag.normalize_top()
+        dag.normalize()
 
         # make sure nothing with the same name occurs twice
         counts = {}
@@ -302,49 +302,49 @@ class TestSpecDag(object):
                     Spec('mpi'))
 
         check_links(spec)
-        spec.normalize_top()
+        spec.normalize()
         check_links(spec)
 
     def test_unsatisfiable_version(self, set_dependency):
         set_dependency('mpileaks', 'mpich@1.0')
         spec = Spec('mpileaks ^mpich@2.0 ^callpath ^dyninst ^libelf ^libdwarf')
         with pytest.raises(spack.spec.UnsatisfiableVersionSpecError):
-            spec.normalize_top()
+            spec.normalize()
 
     def test_unsatisfiable_compiler(self, set_dependency):
         set_dependency('mpileaks', 'mpich%gcc')
         spec = Spec('mpileaks ^mpich%intel ^callpath ^dyninst ^libelf'
                     ' ^libdwarf')
         with pytest.raises(spack.spec.UnsatisfiableCompilerSpecError):
-            spec.normalize_top()
+            spec.normalize()
 
     def test_unsatisfiable_compiler_version(self, set_dependency):
         set_dependency('mpileaks', 'mpich%gcc@4.6')
         spec = Spec('mpileaks ^mpich%gcc@4.5 ^callpath ^dyninst ^libelf'
                     ' ^libdwarf')
         with pytest.raises(spack.spec.UnsatisfiableCompilerSpecError):
-            spec.normalize_top()
+            spec.normalize()
 
     def test_unsatisfiable_architecture(self, set_dependency):
         set_dependency('mpileaks', 'mpich platform=test target=be')
         spec = Spec('mpileaks ^mpich platform=test target=fe ^callpath'
                     ' ^dyninst ^libelf ^libdwarf')
         with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
-            spec.normalize_top()
+            spec.normalize()
 
     @pytest.mark.skip(reason="TODO: need to reimplement this")
     def test_invalid_dep(self):
         spec = Spec('libelf ^mpich')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize_top()
+            spec.normalize()
 
         spec = Spec('libelf ^libdwarf')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize_top()
+            spec.normalize()
 
         spec = Spec('mpich ^dyninst ^libelf')
         with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.normalize_top()
+            spec.normalize()
 
     def test_equal(self):
         # Different spec structures to test for equality
@@ -437,7 +437,7 @@ class TestSpecDag(object):
         assert spec != non_unique_nodes
         assert not spec.eq_dag(non_unique_nodes)
 
-        spec.normalize_top()
+        spec.normalize()
 
         # After normalizing, spec_dag_equal should match the normalized spec.
         assert spec != expected_flat
@@ -452,7 +452,7 @@ class TestSpecDag(object):
 
     def test_normalize_with_virtual_package(self):
         spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
-        spec.normalize_top()
+        spec.normalize()
 
         expected_normalized = Spec(
             'mpileaks',
@@ -739,7 +739,7 @@ class TestSpecDag(object):
         """Ensure that dependency types are preserved even if the same thing is
            depended on in two different ways."""
         s = Spec('dt-diamond')
-        s.normalize_top()
+        s.normalize()
 
         self.check_diamond_deptypes(s)
         self.check_diamond_normalized_dag(s)
@@ -753,7 +753,7 @@ class TestSpecDag(object):
     def test_copy_deptypes(self):
         """Ensure that dependency types are preserved by spec copy."""
         s1 = Spec('dt-diamond')
-        s1.normalize_top()
+        s1.normalize()
         self.check_diamond_deptypes(s1)
         self.check_diamond_normalized_dag(s1)
 
