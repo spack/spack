@@ -124,16 +124,20 @@ class MockPackageMultiRepo(object):
 
 @pytest.mark.usefixtures('config')
 def test_sync_build_and_link_deps():
-    """          w
-                /|
-               y x
-              /  |\
-             v   p q
-                 |  \
-                 v   v
+    """Test that all instances of v are constrained to be the same for the
+following spec DAG::
 
-    All deptypes are (link, build) except for x dependency on p.
-    """
+        w
+       /|
+      y x
+     /  |\
+    v   p q
+        |  \
+        v   v
+
+All deptypes are (link, build) except for x dependency on p.
+
+"""
     saved_repo = spack.repo
 
     default = ('build', 'link')
