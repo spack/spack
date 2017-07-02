@@ -27,13 +27,13 @@ import sys
 
 
 class Libdrm(Package):
-    """A userspace  library for  accessing the  DRM, direct
-    rendering  manager, on  Linux,  BSD and  other  operating
-    systems that support the  ioctl interface."""
+    """A userspace library for accessing the DRM, direct rendering manager,
+    on Linux, BSD and other systems supporting the ioctl interface."""
 
     homepage = "http://dri.freedesktop.org/libdrm/"
     url      = "http://dri.freedesktop.org/libdrm/libdrm-2.4.59.tar.gz"
 
+    version('2.4.81', 'dc575dd661a082390e9f1366ca5734b0')
     version('2.4.75', '743c16109d91a2539dfc9cc56130d695')
     version('2.4.70', 'a8c275bce5f3d71a5ca25e8fb60df084')
     version('2.4.59', '105ac7af1afcd742d402ca7b4eb168b6')
