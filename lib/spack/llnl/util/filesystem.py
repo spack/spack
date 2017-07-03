@@ -251,7 +251,11 @@ def mkdirp(*paths):
     """Creates a directory, as well as parent directories if needed."""
     for path in paths:
         if not os.path.exists(path):
-            os.makedirs(path)
+            try:
+                os.makedirs(path)
+            except OSError as e:
+                if e.errno != errno.EEXIST or not os.path.isdir(path):
+                    raise e
         elif not os.path.isdir(path):
             raise OSError(errno.EEXIST, "File already exists", path)
 
@@ -291,8 +295,14 @@ def hide_files(*file_list):
 
 def touch(path):
     """Creates an empty file at the specified path."""
-    with open(path, 'a'):
+    perms = (os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY)
+    fd = None
+    try:
+        fd = os.open(path, perms)
         os.utime(path, None)
+    finally:
+        if fd is not None:
+            os.close(fd)
 
 
 def touchp(path):
