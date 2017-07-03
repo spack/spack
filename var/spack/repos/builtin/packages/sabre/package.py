@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,29 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Szip(AutotoolsPackage):
-    """Szip is an implementation of the extended-Rice lossless
-     compression algorithm.
-
-    It provides lossless compression of scientific data, and is
-    provided with HDF software products.
+class Sabre(MakefilePackage):
+    """Sabre is a tool that will demultiplex barcoded reads into separate
+       files. It will work on both single-end and paired-end data in fastq
+       format. It simply compares the provided barcodes with each read and
+       separates the read into its appropriate barcode file, after stripping
+       the barcode from the read (and also stripping the quality values of
+       the barcode bases). If a read does not have a recognized barcode,
+       then it is put into the unknown file.
     """
 
-    homepage = "https://support.hdfgroup.org/doc_resource/SZIP/"
-    url      = "https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz"
-    list_url = "https://support.hdfgroup.org/ftp/lib-external/szip"
-    list_depth = 2
+    homepage = "https://github.com/najoshi/sabre"
+    url = "https://github.com/najoshi/sabre"
 
-    version('2.1.1', 'dd579cf0f26d44afd10a0ad7291fc282')
-    version('2.1',   '902f831bcefb69c6b635374424acbead')
+    version('2013-09-27', git='https://github.com/najoshi/sabre.git', commit='039a55e500ba07b7e6432ea6ec2ddcfb3471d949')
 
-    def configure_args(self):
-        return [
-            '--enable-production',
-            '--enable-shared',
-            '--enable-static',
-            '--enable-encoding',
-        ]
+    depends_on('zlib')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('sabre', prefix.bin)
