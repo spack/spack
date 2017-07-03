@@ -147,12 +147,24 @@ class Trilinos(CMakePackage):
             description='Compile with explicit instantiation for complex')
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
+    variant('fortrilinos',  default=False,
+            description='Enable ForTrilinos')
+
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
              tag='master',
              placement='DataTransferKit',
              when='+dtk')
+    resource(name='fortrilinos',
+             git='https://github.com/trilinos/ForTrilinos',
+             tag='develop',
+             placement='packages/ForTrilinos',
+             when='+fortrilinos')
+
     conflicts('+dtk', when='~tpetra')
+    conflicts('+fortrilinos', when='~fortran')
+    conflicts('+fortrilinos', when='@:99')
+    conflicts('+fortrilinos', when='@master')
 
     # ###################### Dependencies ##########################
 
