@@ -25,12 +25,13 @@
 ##############################################################################
 
 from spack import *
+import six
 
 
 def is_string(x):
     """validate a string"""
     try:
-        return isinstance(x, basestring)
+        return isinstance(x, six.string_types)
     except ValueError:
         return False
 
