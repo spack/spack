@@ -103,8 +103,8 @@ class OpenfoamOrg(Package):
     assets = ['bin/foamEtcFile']
 
     # Version-specific patches
-    patch('openfoam-etc-41.patch', when='@4.1')
-    patch('openfoam-site-41.patch', when='@4.1')
+    patch('41-etc.patch', when='@4.1')
+    patch('41-site.patch', when='@4.1')
 
     # Some user config settings
     config = {
@@ -134,7 +134,6 @@ class OpenfoamOrg(Package):
         run_env.set('WM_PROJECT_DIR', self.projectdir)
         for d in ['wmake', self.archbin]:  # bin already added automatically
             run_env.prepend_path('PATH', join_path(self.projectdir, d))
-        run_env.set('MPI_BUFFER_SIZE', "20000000")
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Provide location of the OpenFOAM project.
