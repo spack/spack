@@ -73,6 +73,9 @@ class Gcc(AutotoolsPackage):
     variant('piclibs',
             default=False,
             description='Build PIC versions of libgfortran.a and libstdc++.a')
+    variant('strip',
+            default=False,
+            description='Strip executables to greatly reduce installation size')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
@@ -235,6 +238,12 @@ class Gcc(AutotoolsPackage):
         if sys.platform == 'darwin':
             return ['bootstrap']
         return []
+
+    @property
+    def install_targets(self):
+        if '+strip' in self.spec:
+            return ['install-strip']
+        return ['install']
 
     @property
     def spec_dir(self):
