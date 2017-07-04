@@ -61,7 +61,7 @@ class Dataspaces(AutotoolsPackage):
         description='Cray UGNI protection tag',
         values=is_string)
     variant('mpi',
-        default=False,
+        default=True,
         description='Use MPI for collective communication')
 
     depends_on('m4', type='build')
