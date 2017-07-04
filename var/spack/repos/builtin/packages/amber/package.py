@@ -50,7 +50,12 @@ class Amber(Package):
     depends_on('cuda', when='+cuda')
     depends_on('lapack')
 
-    # FIXME: depends_on('netcdf')
+    depends_on('netcdf~mpi', when='~mpi')
+    depends_on('netcdf-fortran ^netcdf~mpi', when='~mpi')
+
+    depends_on('netcdf+mpi', when='+mpi')
+    depends_on('netcdf-fortran ^netcdf+mpi', when='+mpi')
+
     # FIXME: depends_on('X')
 
     depends_on('python')
@@ -64,17 +69,46 @@ class Amber(Package):
 
     @property
     def configure_file(self):
-        return join_path(self.wdir, 'configure')
+        return join_path(self.stage.source_path, 'configure')
+
+    @property
+    def ambertools_configure_file(self):
+        return join_path(
+            self.stage.source_path, 'AmberTools', 'src', 'configure2'
+        )
 
     def setup_environment(self, spack_env, run_env):
+
         spack_env.set(
             'AMBERHOME',
             os.path.realpath(
                 join_path(self.prefix, 'amber16')
             )
         )
+
         if '+cuda' in self.spec:
             spack_env.set('CUDA_HOME', self.spec['cuda'].prefix)
+
+    def patch(self):
+        # Remove interaction from configure
+        filter_file('read answer', 'answer="yes"', self.configure_file)
+
+        # Add flags that are necessary to compile and link against an
+        # external NETCDF to the configure2 file
+        filter_file(
+            "^ldflags=''",
+            "ldflags='-L{0} '".format(self.spec['netcdf-fortran'].prefix.lib),
+            self.ambertools_configure_file
+        )
+
+        filter_file(
+            'netcdf=$netcdf_dir"/include/netcdf.mod"',
+            "netcdf='{0}/netcdf.mod '".format(
+                self.spec['netcdf-fortran'].prefix.include
+            ),
+            self.ambertools_configure_file,
+            string=True
+        )
 
     def install(self, spec, prefix):
 
@@ -83,8 +117,6 @@ class Amber(Package):
             self.stage.source_path,
             join_path(self.prefix, 'amber{0}'.format(spec.version))
         )
-        # Remove interaction from configure
-        filter_file('read answer', 'answer="yes"', self.configure_file)
 
         with working_dir(self.wdir):
             # Amber needs to be built serially first and then
@@ -92,6 +124,9 @@ class Amber(Package):
             configure_args = [
                 '--with-python {0}'.format(
                     join_path(spec['python'].prefix, 'bin', 'python')
+                ),
+                '--with-netcdf {0}'.format(
+                    join_path(spec['netcdf'].prefix)
                 ),
                 '-noX11'
             ]
@@ -109,11 +144,14 @@ class Amber(Package):
             serial_args.append(compiler_opts[self.compiler.name])
 
             configure(*serial_args)
+
+            # TODO: Here Amber documentation advise to source a shell script
+            # TODO: that sets AMBERHOME. Add it as it could have side effects?
             make('install')
 
             if '+mpi' in spec:
                 configure_args.append('-mpi')
-                if 'intelmpi' in spec:
+                if 'intel-mpi' in spec:
                     configure_args.append('-intelmpi')
                 parallel_args = configure_args[:]
                 parallel_args.append(compiler_opts[self.compiler.name])
