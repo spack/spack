@@ -41,6 +41,7 @@ class Gcc(AutotoolsPackage):
     list_depth = 1
 
     version('7.1.0', '6bf56a2bca9dac9dbbf8e8d1036964a8')
+    version('6.4.0', '11ba51a0cfb8471927f387c8895fe232')
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
@@ -152,6 +153,15 @@ class Gcc(AutotoolsPackage):
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
     build_directory = 'spack-build'
+
+    def url_for_version(self, version):
+        url = 'http://ftp.gnu.org/gnu/gcc/gcc-{0}/gcc-{0}.tar.{1}'
+        suffix = 'bz2'
+
+        if version >= Version('6.4.0') and version < Version('7.1.0'):
+            suffix = 'xz'
+
+        return url.format(version, suffix)
 
     def patch(self):
         spec = self.spec
