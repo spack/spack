@@ -45,9 +45,7 @@ class Bucky(MakefilePackage):
     conflicts('%xl')
     conflicts('%xl_r')
 
-    def build(self, spec, prefix):
-        with working_dir('src'):
-            make()
+    build_directory = 'src'
 
     def install(self, spec, prefix):
         with working_dir('src'):
