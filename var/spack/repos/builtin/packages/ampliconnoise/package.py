@@ -45,6 +45,7 @@ class Ampliconnoise(MakefilePackage):
                     'Tran.dat'))
 
     def install(self, spec, prefix):
+        make('install')
         install_tree('bin', prefix.bin)
         install_tree('Data', prefix.Data)
         install_tree('FastaUnique', prefix.FastaUnique)
