@@ -36,7 +36,7 @@ class Butter(Package):
 
     version('0.3.3', '806ff3cb7afc1d8b75126404056c629d')
 
-    depends_on('perl')
+    depends_on('perl', type=('build', 'run'))
     depends_on('samtools')
     depends_on('bowtie')
 
