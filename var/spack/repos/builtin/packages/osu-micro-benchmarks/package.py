@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class OsuMicroBenchmarks(Package):
@@ -46,7 +47,6 @@ class OsuMicroBenchmarks(Package):
         config_args = [
             'CC=%s'  % spec['mpi'].prefix.bin + '/mpicc',
             'CXX=%s' % spec['mpi'].prefix.bin + '/mpicxx',
-            'LDFLAGS=-lrt',
             '--prefix=%s' % prefix
         ]
 
@@ -55,6 +55,10 @@ class OsuMicroBenchmarks(Package):
                 '--enable-cuda',
                 '--with-cuda=%s' % spec['cuda'].prefix,
             ])
+
+        # librt not available on darwin (and not required)
+        if not sys.platform == 'darwin':
+            config_args.append('LDFLAGS=-lrt')
 
         configure(*config_args)
 
