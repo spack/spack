@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from distutils.dir_util import copy_tree
 
 
 class Savanna(Package):
@@ -47,4 +48,4 @@ class Savanna(Package):
 
     def install(self, spec, prefix):
         make()
-        install('README.md', prefix)
+        copy_tree('.', prefix)
