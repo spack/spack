@@ -61,19 +61,31 @@ class Libint(AutotoolsPackage):
         aclocal('-I', 'lib/autoconf')
         autoconf()
 
+    @property
+    def optflags(self):
+        flags = '-O2'
+
+        # Optimizations for the Intel compiler, suggested by CP2K
+        if '%intel' in self.spec:
+            # -xSSE2 will make it usable on old architecture
+            flags += ' -xSSE2 -xAVX -axCORE-AVX2 -ipo'
+
+        return flags
+
+    def setup_environment(self, build_env, run_env):
+        # Set optimization flags
+        build_env.set('CFLAGS', self.optflags)
+        build_env.set('CXXFLAGS', self.optflags)
+
+        # Change AR to xiar if we compile with Intel and we
+        # find the executable
+        if '%intel' in self.spec and which('xiar'):
+            build_env.set('AR', 'xiar')
+
     def configure_args(self):
 
         config_args = ['--enable-shared']
-
-        # Optimizations for the Intel compiler, suggested by CP2K
-        optflags = '-O2'
-        if self.compiler.name == 'intel':
-            optflags += ' -xAVX -axCORE-AVX2 -ipo'
-            if which('xiar'):
-                env['AR'] = 'xiar'
-
-        env['CFLAGS']   = optflags
-        env['CXXFLAGS'] = optflags
+        optflags = self.optflags
 
         # Optimization flag names have changed in libint 2
         if self.version < Version('2.0.0'):
