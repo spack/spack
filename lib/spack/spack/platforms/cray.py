@@ -81,6 +81,11 @@ class Cray(Platform):
                 safe_name = _target.replace('-', '_')
                 setattr(self, name, safe_name)
                 self.add_target(name, self.targets[safe_name])
+            if _target is None and name == 'front_end':
+                setattr(self, name, 'x86_64')
+                x86_64 = Target('x86_64')
+                self.add_target(name, x86_64)
+                self.add_target('x86_64', x86_64)
 
         if self.back_end is not None:
             self.default = self.back_end
