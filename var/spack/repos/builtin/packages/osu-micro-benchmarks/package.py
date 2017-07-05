@@ -56,9 +56,9 @@ class OsuMicroBenchmarks(Package):
                 '--with-cuda=%s' % spec['cuda'].prefix,
             ])
 
-        # librt not available on darwin (and not require)
+        # librt not available on darwin (and not required)
         if not sys.platform == 'darwin':
-            config_args.extend(['LDFLAGS=-lrt'])
+            config_args.append('LDFLAGS=-lrt')
 
         configure(*config_args)
 
