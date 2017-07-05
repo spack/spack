@@ -29,13 +29,9 @@ class GtkorvoCercsEnv(CMakePackage):
     """A utility library used by some GTkorvo packages.
     """
 
-    homepage = "http://www.example.com"
+    homepage = "https://github.com/GTkorvo/cercs_env"
     url = "https://github.com/GTkorvo/cercs_env/archive/v1.0.tar.gz"
 
     version('develop', git='https://github.com/GTkorvo/cercs_env.git',
             branch='master')
     version('1.0', '08f0532d0c2f7bc9b53dfa7a1c40ea4d')
-
-    def cmake_args(self):
-        args = ["-DENABLE_TESTING=0", "-DENABLE_SHARED_STATIC=STATIC"]
-        return args
