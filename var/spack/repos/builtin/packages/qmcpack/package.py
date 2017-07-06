@@ -125,17 +125,12 @@ class Qmcpack(CMakePackage):
             # QMCPACK 'make install' does nothing, which causes
             # Spack to throw an error.  
             #
-            # This is install method creates the top level directory
-            # and copies include, lib, and bin subdirectories to the
-            # appropriate location.
+            # This install method creates the top level directory
+            # and copies the bin subdirectory into the appropriate
+            # location. We do not copy include or lib at this time due
+            # to technical difficulties.
             mkdirp(prefix)
 
-            install_tree(join_path(self.build_directory, 'include'),
-                         prefix.include)
-                         
-            install_tree(join_path(self.build_directory, 'lib'),
-                         prefix.lib)
-                         
             install_tree(join_path(self.build_directory, 'bin'),
                          prefix.bin)
 
