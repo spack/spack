@@ -31,7 +31,8 @@ class Cap3(Package):
     homepage = "http://seq.cs.iastate.edu/"
     url      = "http://seq.cs.iastate.edu/CAP3/cap3.linux.x86_64.tar"
 
-    version('3', '5393d937978ecc5f18fcb741140e1f02')
+    version('2015-02-11', '5393d937978ecc5f18fcb741140e1f02',
+            url='http://seq.cs.iastate.edu/CAP3/cap3.linux.x86_64.tar')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
@@ -39,3 +40,4 @@ class Cap3(Package):
         install('formcon', prefix.bin)
         mkdirp(prefix.doc)
         install('doc', prefix.doc)
+        install('aceform', prefix.doc)
