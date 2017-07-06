@@ -65,5 +65,7 @@ class PkgConfig(AutotoolsPackage):
             # glib uses pkg-config as well, so break
             # the cycle by using the internal glib.
             config_args.append('--with-internal-glib')
+        if self.spec.satisfies("platform=cray") and self.spec.satisfies("os=cnl5"):
+            config_args.append("--host=x86_64")
 
         return config_args
