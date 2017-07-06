@@ -231,6 +231,11 @@ class Trilinos(CMakePackage):
             # Only choose one type of superlu
             raise RuntimeError('The superlu-dist and superlu variant' +
                                ' cannot be used together')
+        if ('+pnetcdf' in self.spec and
+            self.spec.satisfies('@11.14.1:12.10.1')):
+            # PnetCDF was implemented in > v12.10.1
+            raise RuntimeError('The pnetcdf variant' +
+                               ' can only be used with Trilinos > v12.10.1')
 
     def cmake_args(self):
         spec = self.spec
