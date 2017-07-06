@@ -25,16 +25,15 @@
 from spack import *
 
 
-class Cdbfasta(Package):
+class Cdbfasta(MakefilePackage):
     """Fast indexing and retrieval of fasta records from flat file databases"""
 
     homepage = "https://github.com/gpertea/cdbfasta"
     url      = "https://github.com/gpertea/cdbfasta"
 
-    version('20170316', git='https://github.com/gpertea/cdbfasta.git', commit='b3e481fe02dfbc767a3842bcb1b687c60376a5e8')
+    version('2017-03-16', git='https://github.com/gpertea/cdbfasta.git', commit='b3e481fe02dfbc767a3842bcb1b687c60376a5e8')
 
     def install(self, spec, prefix):
-        make()
         mkdirp(prefix.bin)
         install('cdbfasta', prefix.bin)
         install('cdbyank', prefix.bin)
