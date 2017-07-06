@@ -37,6 +37,7 @@ class Libxml2(AutotoolsPackage):
     version('2.7.8', '8127a65e8c3b08856093099b52599c86')
 
     variant('python', default=False, description='Enable Python support')
+    variant("shared", default=True, description="Enable shared libs")
 
     extends('python', when='+python',
             ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
@@ -48,12 +49,18 @@ class Libxml2(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
+        config_args = []
         if '+python' in spec:
-            python_args = [
+            config_args.extend([
                 '--with-python={0}'.format(spec['python'].home),
                 '--with-python-install-dir={0}'.format(site_packages_dir)
-            ]
+            ])
         else:
-            python_args = ['--without-python']
+            config_args.append('--without-python')
 
-        return python_args
+        if "+shared" in spec:
+            config_args.append("--enable-shared")
+        else:
+            config_args.append("--disable-shared")
+
+        return config_args
