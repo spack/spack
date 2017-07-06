@@ -85,7 +85,7 @@ def adapt_config(install_dir):
     spack.config.update_config("config", config, "bootstrap")
 
 def bootstrap(parser, args):
-    origin_url, branch = "https://github.com/TheTimmy/spack", "features/bootstrap" #get_origin_info(args.remote)
+    origin_url, branch = "https://github.com/TheTimmy/spack", "features/bootstrap-packagesystem" #get_origin_info(args.remote)
     prefix = args.prefix
     isolate = args.isolate
 
