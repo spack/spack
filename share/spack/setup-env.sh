@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -92,6 +92,8 @@ function spack {
                 LOC="$(spack location $_sp_arg "$@")"
                 if [[ -d "$LOC" ]] ; then
                     cd "$LOC"
+                else
+                    return 1
                 fi
             fi
             return

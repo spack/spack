@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,8 @@ from distutils.dir_util import copy_tree
 class Git(AutotoolsPackage):
     """Git is a free and open source distributed version control
     system designed to handle everything from small to very large
-    projects with speed and efficiency."""
+    projects with speed and efficiency.
+    """
 
     homepage = "http://git-scm.com"
     url      = "https://github.com/git/git/archive/v2.12.0.tar.gz"
@@ -42,6 +43,16 @@ class Git(AutotoolsPackage):
     #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.xz
 
     releases = [
+        {
+            'version': '2.13.0',
+            'md5': 'd0f14da0ef1d22f1ce7f7876fadcb39f',
+            'md5_manpages': 'fda8d6d5314eb5a47e315405830f9970',
+        },
+        {
+            'version': '2.12.2',
+            'md5': 'f1a50c09ce8b5dd197f3c6c6d5ea8e75',
+            'md5_manpages': '9358777e9a67e57427b03884c82311bd',
+        },
         {
             'version': '2.12.1',
             'md5': 'a05c614c80ecd41e50699f1562e1130c',
@@ -156,8 +167,7 @@ class Git(AutotoolsPackage):
             '--with-iconv={0}'.format(spec['libiconv'].prefix),
             '--with-libpcre={0}'.format(spec['pcre'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
-            '--with-perl={0}'.format(
-                join_path(spec['perl'].prefix.bin, 'perl')),
+            '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
 
@@ -176,6 +186,6 @@ class Git(AutotoolsPackage):
         prefix = self.prefix
 
         with working_dir('git-manpages'):
-            install_tree('man1', prefix.share_man1)
-            install_tree('man5', prefix.share_man5)
-            install_tree('man7', prefix.share_man7)
+            install_tree('man1', prefix.share.man.man1)
+            install_tree('man5', prefix.share.man.man5)
+            install_tree('man7', prefix.share.man.man7)

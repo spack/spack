@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,8 +29,9 @@ class Libxpm(AutotoolsPackage):
     """libXpm - X Pixmap (XPM) image file format library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXpm"
-    url      = "https://www.x.org/archive//individual/lib/libXpm-3.5.11.tar.gz"
+    url      = "https://www.x.org/archive//individual/lib/libXpm-3.5.12.tar.gz"
 
+    version('3.5.12', 'b286c884b11b5a0b4371175c5327141f')
     version('3.5.11', '7c67c878ee048206b070bc0b24154f04')
     version('3.5.10', 'a70507638d74541bf30a771f1e5938bb')
     version('3.5.9', 'd6d4b0f76248a6b346eb42dfcdaa72a6')

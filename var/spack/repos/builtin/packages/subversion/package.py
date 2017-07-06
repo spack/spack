@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -72,8 +72,7 @@ class Subversion(Package):
         if 'swig' in spec:
             options.append('--with-swig=%s' % spec['swig'].prefix)
         if 'perl' in spec:
-            options.append(
-                'PERL=%s' % join_path(spec['perl'].prefix.bin, 'perl'))
+            options.append('PERL=%s' % spec['perl'].command.path)
 
         configure(*options)
         make()

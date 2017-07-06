@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -47,9 +47,13 @@ class Legion(CMakePackage):
     version('17.02.0', '31ac3004e2fb0996764362d2b6f6844a')
 
     variant('debug', default=False, description='Build debug version')
+    variant('mpi', default=True,
+            description='Build on top of mpi conduit for mpi inoperability')
+    variant('shared', default=True, description='Build shared libraries')
 
     depends_on("cmake@3.1:", type='build')
-    depends_on("gasnet")
+    depends_on("gasnet", when='~mpi')
+    depends_on("gasnet+mpi", when='+mpi')
 
     def build_type(self):
         spec = self.spec
@@ -59,4 +63,12 @@ class Legion(CMakePackage):
             return 'Release'
 
     def cmake_args(self):
-        return ['-DLegion_USE_GASNet=ON', '-DLegion_BUILD_EXAMPLES=ON']
+        options = [
+            '-DLegion_USE_GASNet=ON',
+            '-DLegion_BUILD_EXAMPLES=ON',
+            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec)]
+
+        if '+mpi' in self.spec:
+            options.append('-DGASNet_CONDUIT=mpi')
+
+        return options

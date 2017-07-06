@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,6 +40,9 @@ from spack.util.naming import *
 from spack.url import *
 
 description = "create a new package file"
+section = "packaging"
+level = "short"
+
 
 package_template = '''\
 ##############################################################################
@@ -51,7 +54,7 @@ package_template = '''\
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -204,6 +207,16 @@ class SconsPackageTemplate(PackageTemplate):
         scons('install')"""
 
 
+class WafPackageTemplate(PackageTemplate):
+    """Provides appropriate override for Waf-based packages"""
+
+    base_class_name = 'WafPackage'
+
+    body = """\
+    # FIXME: Override configure_args(), build_args(),
+    # or install_args() if necessary."""
+
+
 class BazelPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Bazel-based packages"""
 
@@ -252,7 +265,11 @@ class RPackageTemplate(PackageTemplate):
     # depends_on('r-foo', type=('build', 'run'))"""
 
     body = """\
-    # FIXME: Override install() if necessary."""
+    def configure_args(self, spec, prefix):
+        # FIXME: Add arguments to pass to install via --configure-args
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
     def __init__(self, name, *args):
         # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp
@@ -347,6 +364,7 @@ templates = {
     'autoreconf': AutoreconfPackageTemplate,
     'cmake':      CMakePackageTemplate,
     'scons':      SconsPackageTemplate,
+    'waf':        WafPackageTemplate,
     'bazel':      BazelPackageTemplate,
     'python':     PythonPackageTemplate,
     'r':          RPackageTemplate,
@@ -354,7 +372,7 @@ templates = {
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
-    'generic':    PackageTemplate
+    'generic':    PackageTemplate,
 }
 
 
@@ -413,6 +431,7 @@ class BuildSystemGuesser:
             ('/Makefile.am$',       'autoreconf'),
             ('/CMakeLists.txt$',    'cmake'),
             ('/SConstruct$',        'scons'),
+            ('/waf$',               'waf'),
             ('/setup.py$',          'python'),
             ('/NAMESPACE$',         'r'),
             ('/WORKSPACE$',         'bazel'),
@@ -451,10 +470,12 @@ def get_name(args):
     If a name was provided, always use that. Otherwise, if a URL was
     provided, extract the name from that. Otherwise, use a default.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
+    Args:
+        args (param argparse.Namespace): The arguments given to
+            ``spack create``
 
-    :returns: The name of the package
-    :rtype: str
+    Returns:
+        str: The name of the package
     """
 
     # Default package name
@@ -487,10 +508,11 @@ def get_url(args):
 
     Use a default URL if none is provided.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
 
-    :returns: The URL of the package
-    :rtype: str
+    Returns:
+        str: The URL of the package
     """
 
     # Default URL
@@ -510,11 +532,13 @@ def get_versions(args, name):
 
     Returns default values if no URL is provided.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
-    :param str name: The name of the package
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
+        name (str): The name of the package
 
-    :returns: Versions and hashes, and a BuildSystemGuesser object
-    :rtype: str and BuildSystemGuesser
+    Returns:
+        str and BuildSystemGuesser: Versions and hashes, and a
+            BuildSystemGuesser object
     """
 
     # Default version, hash, and guesser
@@ -552,12 +576,13 @@ def get_build_system(args, guesser):
     is provided, download the tarball and peek inside to guess what
     build system it uses. Otherwise, use a generic template by default.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
-    :param BuildSystemGuesser guesser: The first_stage_function given to \
-        ``spack checksum`` which records the build system it detects
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
+        guesser (BuildSystemGuesser): The first_stage_function given to
+            ``spack checksum`` which records the build system it detects
 
-    :returns: The name of the build system template to use
-    :rtype: str
+    Returns:
+        str: The name of the build system template to use
     """
 
     # Default template
@@ -584,11 +609,12 @@ def get_repository(args, name):
     """Returns a Repo object that will allow us to determine the path where
     the new package file should be created.
 
-    :param argparse.Namespace args: The arguments given to ``spack create``
-    :param str name: The name of the package to create
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack create``
+        name (str): The name of the package to create
 
-    :returns: A Repo object capable of determining the path to the package file
-    :rtype: Repo
+    Returns:
+        Repo: A Repo object capable of determining the path to the package file
     """
     spec = Spec(name)
     # Figure out namespace for spec

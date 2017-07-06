@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -60,9 +60,8 @@ class Geos(Package):
     def install(self, spec, prefix):
         args = ["--prefix=%s" % prefix]
 #        if '+python' in spec:
-#            os.environ['PYTHON'] = join_path(spec['python'].prefix, 'bin',
-#                'python' if spec['python'].version[:1][0] <= 2 else 'python3')
-#            os.environ['SWIG'] = join_path(spec['swig'].prefix, 'bin', 'swig')
+#            os.environ['PYTHON'] = spec['python'].command.path
+#            os.environ['SWIG'] = spec['swig'].command.path
 #
 #            args.append("--enable-python")
 

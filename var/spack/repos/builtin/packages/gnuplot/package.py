@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,12 +39,13 @@ class Gnuplot(AutotoolsPackage):
 
     """
     homepage = "http://www.gnuplot.info"
-    url      = "http://downloads.sourceforge.net/project/gnuplot/gnuplot/5.0.1/gnuplot-5.0.1.tar.gz"
+    url      = "http://downloads.sourceforge.net/project/gnuplot/gnuplot/5.0.6/gnuplot-5.0.6.tar.gz"
 
     # There is a conflict in term.h between gnuplot and ncurses, which is a
     # dependency of readline. Fix it with a small patch
     patch('term_include.patch')
 
+    version('5.0.6', '8ec46520a86a61163a701b00404faf1a')
     version('5.0.5', 'c5e96fca73afbee4f57cbc1bfce6b3b8')
     version('5.0.1', '79b4f9e203728f76b60b28bcd402d3c7')
 

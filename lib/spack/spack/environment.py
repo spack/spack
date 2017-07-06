@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -262,12 +262,15 @@ class EnvironmentModifications(object):
 
     @staticmethod
     def from_sourcing_files(*args, **kwargs):
-        """Creates an instance of EnvironmentModifications that, if executed,
-        has the same effect on the environment as sourcing the files passed as
-        parameters
+        """Returns modifications that would be made by sourcing files.
 
-        :param \*args: list of files to be sourced
-        :rtype: instance of EnvironmentModifications
+        Args:
+            *args (list of str): list of files to be sourced
+
+        Returns:
+            EnvironmentModifications: an object that, if executed, has
+                the same effect on the environment as sourcing the files
+                passed as parameters
         """
         env = EnvironmentModifications()
 

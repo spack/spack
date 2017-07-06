@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,7 @@ import os.path
 import pytest
 import spack
 import spack.store
+from spack.util.executable import Executable
 from llnl.util.tty.colify import colify
 
 
@@ -114,11 +115,17 @@ def test_default_queries(database):
     rec = install_db.get_record('zmpi')
 
     spec = rec.spec
+
     libraries = spec['zmpi'].libs
     assert len(libraries) == 1
 
-    cppflags_expected = '-I' + spec.prefix.include
-    assert spec['zmpi'].cppflags == cppflags_expected
+    headers = spec['zmpi'].headers
+    assert len(headers) == 1
+
+    command = spec['zmpi'].command
+    assert isinstance(command, Executable)
+    assert command.name == 'zmpi'
+    assert os.path.exists(command.path)
 
 
 def test_005_db_exists(database):

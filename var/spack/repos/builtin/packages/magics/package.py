@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 
 
 class Magics(Package):
@@ -40,10 +41,6 @@ class Magics(Package):
     version('2.29.4', '91c561f413316fb665b3bb563f3878d1')
     version('2.29.0', 'db20a4d3c51a2da5657c31ae3de59709', preferred=True)
 
-    # The patch changes the hardcoded path to python in shebang to enable the
-    # usage of the first python installation that appears in $PATH
-    patch('no_hardcoded_python.patch')
-
     # The patch reorders includes and adds namespaces where necessary to
     # resolve ambiguity of invocations of isnan and isinf functions. The
     # patch is not needed since the version 2.29.1
@@ -54,6 +51,7 @@ class Magics(Package):
     variant('cairo', default=True, description='Enable cairo support[png/jpeg]')
     variant('metview', default=False, description='Enable metview support')
     variant('qt', default=False, description='Enable metview support with qt')
+    variant('eccodes', default=False, description='Use eccodes instead of grib-api')
 
     depends_on('cmake', type='build')
     depends_on('pkg-config', type='build')
@@ -63,7 +61,8 @@ class Magics(Package):
     depends_on('python', type='build')
     depends_on('perl', type='build')
     depends_on('perl-xml-parser', type='build')
-    depends_on('grib-api')
+    depends_on('eccodes', when='+eccodes')
+    depends_on('grib-api', when='~eccodes')
     depends_on('proj')
     depends_on('boost')
     depends_on('expat')
@@ -72,9 +71,14 @@ class Magics(Package):
     depends_on('libemos', when='+bufr')
     depends_on('qt', when='+metview+qt')
 
+    conflicts('+eccodes', when='@:2.29.0')
+
+    # Replace system python and perl by spack versions:
     def patch(self):
-        filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl',
-                    'tools/xml2cc_new.pl')
+        for plfile in glob.glob('*/*.pl'):
+            filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', plfile)
+        for pyfile in glob.glob('*/*.py'):
+            filter_file('#!/usr/bin/python', '#!/usr/bin/env python', pyfile)
 
     def install(self, spec, prefix):
         options = []
@@ -83,7 +87,6 @@ class Magics(Package):
         options.append('-DENABLE_PYTHON=OFF')
         options.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
         options.append('-DPROJ4_PATH=%s' % spec['proj'].prefix)
-        options.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
         options.append('-DENABLE_TESTS=OFF')
 
         if '+bufr' in spec:
@@ -112,6 +115,13 @@ class Magics(Package):
                 options.append('-DENABLE_METVIEW_NO_QT=ON')
         else:
             options.append('-DENABLE_METVIEW=OFF')
+
+        if '+eccodes' in spec:
+            options.append('-DENABLE_ECCODES=ON')
+            options.append('-DECCODES_PATH=%s' % spec['eccodes'].prefix)
+        else:
+            options.append('-DENABLE_ECCODES=OFF')
+            options.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
 
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
             options.append('-DENABLE_FORTRAN=OFF')

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -339,7 +339,7 @@ class Llvm(CMakePackage):
         cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
-            '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix
+            '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
         ]
 
         if '+gold' in spec:

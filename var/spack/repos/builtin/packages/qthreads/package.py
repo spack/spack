@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Qthreads(Package):
+class Qthreads(AutotoolsPackage):
     """The qthreads API is designed to make using large numbers of
        threads convenient and easy, and to allow portable access to
        threading constructs used in massively parallel shared memory
@@ -48,10 +48,10 @@ class Qthreads(Package):
 
     depends_on("hwloc")
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--enable-guard-pages",
-                  "--with-topology=hwloc",
-                  "--with-hwloc=%s" % spec["hwloc"].prefix)
-        make()
-        make("install")
+    def configure_args(self):
+        spec = self.spec
+        args = [
+            "--enable-guard-pages",
+            "--with-topology=hwloc",
+            "--with-hwloc=%s" % spec["hwloc"].prefix]
+        return args

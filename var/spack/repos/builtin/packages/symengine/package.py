@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,7 @@ class Symengine(CMakePackage):
     homepage = "https://github.com/symengine/symengine"
     url      = "https://github.com/symengine/symengine/archive/v0.2.0.tar.gz"
 
+    version('0.3.0', 'e61d7513cca4963cd062616891de54c6')
     version('0.2.0', '45401561add36a13c1f0b0c5f8d7422d')
     version('0.1.0', '41ad7daed61fc5a77c285eb6c7303425')
     version('develop', git='https://github.com/symengine/symengine.git')

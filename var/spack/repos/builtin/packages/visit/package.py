@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,6 +31,7 @@ class Visit(Package):
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
     url = "http://portal.nersc.gov/project/visit/releases/2.10.1/visit2.10.1.tar.gz"
 
+    version('2.12.2', '355779b1dbf440cdd548526eecd77b60')
     version('2.10.3', 'a1082a6f6dab3e2dcb58993603456c2b')
     version('2.10.2', '253de0837a9d69fb689befc98ea4d068')
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
@@ -52,7 +53,7 @@ class Visit(Package):
                 '-DVTK_MINOR_VERSION=1',
                 '-DVISIT_USE_GLEW=OFF',
                 '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin),
-                '-DPYTHON_DIR:PATH={0}'.format(spec['python'].prefix),
+                '-DPYTHON_DIR:PATH={0}'.format(spec['python'].home),
                 '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix),
                 '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix),
                 '-DVISIT_VTK_DIR:PATH={0}'.format(spec['vtk'].prefix),

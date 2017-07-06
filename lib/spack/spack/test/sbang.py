@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,13 +27,16 @@ Test that Spack's shebang filtering works correctly.
 """
 import os
 import stat
-import unittest
+import pytest
 import tempfile
 import shutil
 
 from llnl.util.filesystem import *
-from spack.hooks.sbang import filter_shebangs_in_directory
+
 import spack
+from spack.hooks.sbang import *
+from spack.util.executable import which
+
 
 short_line       = "#!/this/is/short/bin/bash\n"
 long_line        = "#!/this/" + ('x' * 200) + "/is/long\n"
@@ -43,14 +46,13 @@ sbang_line       = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
 last_line        = "last!\n"
 
 
-class SbangTest(unittest.TestCase):
-
-    def setUp(self):
+class ScriptDirectory(object):
+    """Directory full of test scripts to run sbang instrumentation on."""
+    def __init__(self):
         self.tempdir = tempfile.mkdtemp()
 
-        # make sure we can ignore non-files
-        directory = os.path.join(self.tempdir, 'dir')
-        mkdirp(directory)
+        self.directory = os.path.join(self.tempdir, 'dir')
+        mkdirp(self.directory)
 
         # Script with short shebang
         self.short_shebang = os.path.join(self.tempdir, 'short')
@@ -71,48 +73,70 @@ class SbangTest(unittest.TestCase):
             f.write(last_line)
 
         # Script already using sbang.
-        self.has_shebang = os.path.join(self.tempdir, 'shebang')
-        with open(self.has_shebang, 'w') as f:
+        self.has_sbang = os.path.join(self.tempdir, 'shebang')
+        with open(self.has_sbang, 'w') as f:
             f.write(sbang_line)
             f.write(long_line)
             f.write(last_line)
 
-    def tearDown(self):
+        # Fake binary file.
+        self.binary = os.path.join(self.tempdir, 'binary')
+        tar = which('tar', required=True)
+        tar('czf', self.binary, self.has_sbang)
+
+    def destroy(self):
         shutil.rmtree(self.tempdir, ignore_errors=True)
 
-    def test_shebang_handling(self):
-        filter_shebangs_in_directory(self.tempdir)
 
-        # Make sure this is untouched
-        with open(self.short_shebang, 'r') as f:
-            self.assertEqual(f.readline(), short_line)
-            self.assertEqual(f.readline(), last_line)
+@pytest.fixture
+def script_dir():
+    sdir = ScriptDirectory()
+    yield sdir
+    sdir.destroy()
 
-        # Make sure this got patched.
-        with open(self.long_shebang, 'r') as f:
-            self.assertEqual(f.readline(), sbang_line)
-            self.assertEqual(f.readline(), long_line)
-            self.assertEqual(f.readline(), last_line)
 
-        # Make sure this got patched.
-        with open(self.lua_shebang, 'r') as f:
-            self.assertEqual(f.readline(), sbang_line)
-            self.assertEqual(f.readline(), lua_line_patched)
-            self.assertEqual(f.readline(), last_line)
+def test_shebang_handling(script_dir):
+    assert shebang_too_long(script_dir.lua_shebang)
+    assert shebang_too_long(script_dir.long_shebang)
 
-        # Make sure this is untouched
-        with open(self.has_shebang, 'r') as f:
-            self.assertEqual(f.readline(), sbang_line)
-            self.assertEqual(f.readline(), long_line)
-            self.assertEqual(f.readline(), last_line)
+    assert not shebang_too_long(script_dir.short_shebang)
+    assert not shebang_too_long(script_dir.has_sbang)
+    assert not shebang_too_long(script_dir.binary)
+    assert not shebang_too_long(script_dir.directory)
 
-    def test_shebang_handles_non_writable_files(self):
-        # make a file non-writable
-        st = os.stat(self.long_shebang)
-        not_writable_mode = st.st_mode & ~stat.S_IWRITE
-        os.chmod(self.long_shebang, not_writable_mode)
+    filter_shebangs_in_directory(script_dir.tempdir)
 
-        self.test_shebang_handling()
+    # Make sure this is untouched
+    with open(script_dir.short_shebang, 'r') as f:
+        assert f.readline() == short_line
+        assert f.readline() == last_line
 
-        st = os.stat(self.long_shebang)
-        self.assertEqual(oct(not_writable_mode), oct(st.st_mode))
+    # Make sure this got patched.
+    with open(script_dir.long_shebang, 'r') as f:
+        assert f.readline() == sbang_line
+        assert f.readline() == long_line
+        assert f.readline() == last_line
+
+    # Make sure this got patched.
+    with open(script_dir.lua_shebang, 'r') as f:
+        assert f.readline() == sbang_line
+        assert f.readline() == lua_line_patched
+        assert f.readline() == last_line
+
+    # Make sure this is untouched
+    with open(script_dir.has_sbang, 'r') as f:
+        assert f.readline() == sbang_line
+        assert f.readline() == long_line
+        assert f.readline() == last_line
+
+
+def test_shebang_handles_non_writable_files(script_dir):
+    # make a file non-writable
+    st = os.stat(script_dir.long_shebang)
+    not_writable_mode = st.st_mode & ~stat.S_IWRITE
+    os.chmod(script_dir.long_shebang, not_writable_mode)
+
+    test_shebang_handling(script_dir)
+
+    st = os.stat(script_dir.long_shebang)
+    assert oct(not_writable_mode) == oct(st.st_mode)

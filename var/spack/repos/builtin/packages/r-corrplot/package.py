@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,6 +31,5 @@ class RCorrplot(RPackage):
 
     homepage = "https://cran.r-project.org/package=corrplot"
     url      = "https://cran.r-project.org/src/contrib/corrplot_0.77.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/corrplot"
 
     version('0.77', '2a5d54fd5c65618b9afba1a32f6b4542')

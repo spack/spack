@@ -574,7 +574,7 @@ You may also have noticed that there are some packages shown in the
 dependencies that were installed implicitly. A few packages installed
 implicitly are not shown as dependencies in the ``spack find -d``
 output. These are build dependencies. For example, ``libpciaccess`` is a
-dependency of openmpi and requires m4 to build. Spack will build `m4`` as
+dependency of openmpi and requires ``m4`` to build. Spack will build ``m4`` as
 part of the installation of ``openmpi``, but it does not become a part of
 the DAG because it is not linked in at run time. Spack handles build
 dependencies differently because of their different (less strict)
@@ -951,7 +951,7 @@ You can control how the output is displayed with a number of options.
 
 The ASCII output from ``spack graph`` can be difficult to parse for
 complicated packages. The output can be changed to the ``graphviz``
-``.dot`` format using the `--dot` flag.
+``.dot`` format using the ``--dot`` flag.
 
 .. code-block:: console
 
@@ -1093,13 +1093,13 @@ packages at once.
 Advanced ``spack find`` Usage
 -----------------------------
 
-We will go over some additional uses for the `spack find` command not
+We will go over some additional uses for the ``spack find`` command not
 already covered in the :ref:`basics-tutorial-install` and
 :ref:`basics-tutorial-uninstall` sections.
 
 The ``spack find`` command can accept what we call "anonymous specs."
 These are expressions in spec syntax that do not contain a package
-name. For example, `spack find %intel` will return every package built
+name. For example, ``spack find %intel`` will return every package built
 with the intel compiler, and ``spack find cppflags="-O3"`` will
 return every package which was built with ``cppflags="-O3"``.
 

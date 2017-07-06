@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ from spack import spack_root
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv
-from spack.util.environment import filter_system_paths, filter_system_bin_paths
+from spack.util.environment import filter_system_paths
 
 
 @pytest.fixture()
@@ -64,25 +64,18 @@ def miscellaneous_paths():
         '/usr/local/lib64',
         '/usr/local/opt/some-package/lib',
         '/usr/opt/lib',
+        '/usr/local/../bin',
         '/lib',
         '/',
         '/usr',
+        '/usr/',
+        '/usr/bin',
+        '/bin64',
         '/lib64',
         '/include',
+        '/include/',
         '/opt/some-package/include',
-    ]
-
-
-@pytest.fixture
-def bin_paths():
-    """Returns a list of bin paths, including system ones."""
-    return [
-        '/usr/local/Cellar/gcc/5.3.0/bin',
-        '/usr/local/bin',
-        '/usr/local/opt/some-package/bin',
-        '/usr/opt/bin',
-        '/bin',
-        '/opt/some-package/bin',
+        '/opt/some-package/local/..',
     ]
 
 
@@ -137,21 +130,8 @@ def test_filter_system_paths(miscellaneous_paths):
         '/usr/local/Cellar/gcc/5.3.0/lib',
         '/usr/local/opt/some-package/lib',
         '/usr/opt/lib',
-        '/opt/some-package/include'
-    ]
-    assert filtered == expected
-
-
-def test_filter_system_bin_paths(bin_paths):
-    """Tests that the filtering of system bin paths works as expected."""
-    filtered = filter_system_bin_paths(bin_paths)
-    expected = [
-        '/usr/local/bin',
-        '/bin',
-        '/usr/local/Cellar/gcc/5.3.0/bin',
-        '/usr/local/opt/some-package/bin',
-        '/usr/opt/bin',
-        '/opt/some-package/bin'
+        '/opt/some-package/include',
+        '/opt/some-package/local/..',
     ]
     assert filtered == expected
 

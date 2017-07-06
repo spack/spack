@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,6 +33,7 @@ class Miniconda3(Package):
     homepage = "https://conda.io/miniconda.html"
     url      = "https://repo.continuum.io/miniconda/Miniconda3-4.3.11-Linux-x86_64.sh"
 
+    version('4.3.14', 'fc6fc37479e3e3fcf3f9ba52cae98991', expand=False)
     version('4.3.11', '1924c8d9ec0abf09005aa03425e9ab1a', expand=False)
 
     def install(self, spec, prefix):

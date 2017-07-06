@@ -8,7 +8,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -49,7 +49,6 @@ from sphinx.apidoc import main as sphinx_apidoc
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('exts'))
 sys.path.insert(0, os.path.abspath('../external'))
 if sys.version_info[0] < 3:
     sys.path.insert(0, os.path.abspath('../external/yaml/lib'))
@@ -95,10 +94,21 @@ with open('command_index.rst', 'a') as index:
     for cmd in sorted(command_names):
         index.write('   * :ref:`%s`\n' % cmd)
 
-
+#
 # Run sphinx-apidoc
-sphinx_apidoc(['-T', '-o', '.', '../spack'])
-os.remove('modules.rst')
+#
+# Remove any previous API docs
+# Read the Docs doesn't clean up after previous builds
+# Without this, the API Docs will never actually update
+#
+apidoc_args = [
+    '--force',         # Older versions of Sphinx ignore the first argument
+    '--force',         # Overwrite existing files
+    '--no-toc',        # Don't create a table of contents file
+    '--output-dir=.',  # Directory to place all output
+]
+sphinx_apidoc(apidoc_args + ['../spack'])
+sphinx_apidoc(apidoc_args + ['../llnl'])
 
 #
 # Exclude everything in spack.__all__ from indexing.  All of these

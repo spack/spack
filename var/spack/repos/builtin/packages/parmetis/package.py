@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -70,7 +70,9 @@ class Parmetis(Package):
             '-DGKLIB_PATH:PATH=%s/GKlib' % spec['metis'].prefix.include,
             '-DMETIS_PATH:PATH=%s' % spec['metis'].prefix,
             '-DCMAKE_C_COMPILER:STRING=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER:STRING=%s' % spec['mpi'].mpicxx
+            '-DCMAKE_CXX_COMPILER:STRING=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_C_FLAGS:STRING=%s' % (
+                '-c11' if '%pgi' in spec else ''),
         ])
 
         if '+shared' in spec:

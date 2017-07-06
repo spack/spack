@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,6 +36,5 @@ class RSurvey(RPackage):
 
     homepage = "http://r-survey.r-forge.r-project.org/survey/"
     url      = "https://cran.r-project.org/src/contrib/survey_3.30-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/survey"
 
     version('3.30-3', 'c70cdae9cb43d35abddd11173d64cad0')

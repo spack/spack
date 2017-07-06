@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,8 +29,11 @@ class Libpng(AutotoolsPackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
-    url      = "http://download.sourceforge.net/libpng/libpng-1.6.27.tar.gz"
+    url      = "http://download.sourceforge.net/libpng/libpng-1.6.29.tar.gz"
+    list_url = "https://sourceforge.net/projects/libpng/files/"
+    list_depth = 2
 
+    version('1.6.29', '68553080685f812d1dd7a6b8215c37d8')
     version('1.6.27', '58698519e9f6126c1caeefc28dbcbd5f')
     # From http://www.libpng.org/pub/png/libpng.html (2017-01-04)
     #     Virtually all libpng versions through 1.6.26, 1.5.27,

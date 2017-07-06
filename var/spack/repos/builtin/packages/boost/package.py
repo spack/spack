@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,6 @@
 from spack import *
 import sys
 import os
-from glob import glob
 
 
 class Boost(Package):
@@ -42,8 +41,15 @@ class Boost(Package):
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
 
+    # NOTE: 1.64.0 seems fine for *most* applications, but if you need
+    #       +python and +mpi, there seem to be errors with out-of-date
+    #       API calls from mpi/python.
+    #       See: https://github.com/LLNL/spack/issues/3963
     version('1.64.0', '93eecce2abed9d2442c9676914709349')
-    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
+
+    # Set previous release to preferred for now, can be removed
+    # once boost+python+mpi is fixed.
+    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847', preferred=True)
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
     version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
@@ -142,6 +148,12 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
+    patch('call_once_variadic.patch', when='@:1.56.0%gcc@5:')
+
+    # Patch fix for PGI compiler
+    patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
+    patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
+
     def url_for_version(self, version):
         url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
         return url.format(version.dotted, version.underscored)
@@ -154,11 +166,12 @@ class Boost(Package):
                     'icpc': 'intel',
                     'clang++': 'clang',
                     'xlc++': 'xlcpp',
-                    'xlc++_r': 'xlcpp'}
+                    'xlc++_r': 'xlcpp',
+                    'pgc++': 'pgi'}
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
-        for cc, toolset in toolsets.iteritems():
+        for cc, toolset in toolsets.items():
             if cc in self.compiler.cxx_names:
                 return toolset
 
@@ -166,23 +179,11 @@ class Boost(Package):
         return 'gcc'
 
     def bjam_python_line(self, spec):
-        from os.path import dirname, splitext
-        pydir = 'python%s.%s*' % spec['python'].version.version[:2]
-        incs = join_path(spec['python'].prefix.include, pydir, "pyconfig.h")
-        incs = glob(incs)
-        incs = " ".join([dirname(u) for u in incs])
-
-        pylib = 'libpython%s.%s*' % spec['python'].version.version[:2]
-        all_libs = join_path(spec['python'].prefix.lib, pylib)
-        libs = [u for u in all_libs if splitext(u)[1] == dso_suffix]
-        if len(libs) == 0:
-            libs = [u for u in all_libs if splitext(u)[1] == '.a']
-
-        libs = " ".join(libs)
-        return 'using python : %s : %s : %s : %s ;\n' % (
+        return 'using python : {0} : {1} : {2} : {3} ;\n'.format(
             spec['python'].version.up_to(2),
-            join_path(spec['python'].prefix.bin, 'python'),
-            incs, libs
+            spec['python'].command.path,
+            spec['python'].headers.directories[0],
+            spec['python'].libs[0]
         )
 
     def determine_bootstrap_options(self, spec, withLibs, options):
@@ -191,7 +192,7 @@ class Boost(Package):
         options.append("--with-libraries=%s" % ','.join(withLibs))
 
         if '+python' in spec:
-            options.append('--with-python=%s' % python_exe)
+            options.append('--with-python=%s' % spec['python'].command.path)
 
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in

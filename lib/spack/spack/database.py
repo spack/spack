@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -473,13 +473,18 @@ class Database(object):
                         layout = spack.store.layout
                         if entry.spec.external:
                             layout = None
-                        kwargs = {
-                            'spec': entry.spec,
-                            'directory_layout': layout,
-                            'explicit': entry.explicit
-                        }
-                        self._add(**kwargs)
-                        processed_specs.add(entry.spec)
+                            install_check = True
+                        else:
+                            install_check = layout.check_installed(entry.spec)
+
+                        if install_check:
+                            kwargs = {
+                                'spec': entry.spec,
+                                'directory_layout': layout,
+                                'explicit': entry.explicit
+                            }
+                            self._add(**kwargs)
+                            processed_specs.add(entry.spec)
                     except Exception as e:
                         # Something went wrong, so the spec was not restored
                         # from old data
@@ -572,6 +577,8 @@ class Database(object):
         else:
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
+            with WriteTransaction(self.lock, timeout=_db_lock_timeout):
+                self._write(None, None, None)
             self.reindex(spack.store.layout)
 
     def _add(self, spec, directory_layout=None, explicit=False):

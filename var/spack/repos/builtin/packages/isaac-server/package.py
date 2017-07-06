@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,9 @@ class IsaacServer(CMakePackage):
     homepage = "http://computationalradiationphysics.github.io/isaac/"
     url      = "https://github.com/ComputationalRadiationPhysics/isaac/archive/v1.3.0.tar.gz"
 
-    root_cmakelists_dir = 'server'
+    @property
+    def root_cmakelists_dir(self):
+        return join_path(self.stage.source_path, 'server')
 
     version('develop', branch='dev',
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')
@@ -43,6 +45,8 @@ class IsaacServer(CMakePackage):
     #         'Support for RTP streams, e.g. to Twitch or Youtube')
 
     depends_on('cmake@3.3:', type='build')
-    depends_on('isaac')
-    depends_on('libwebsockets')
+    depends_on('libjpeg-turbo', type='link')
+    depends_on('jansson', type='link')
+    depends_on('boost@1.56:', type='link')
+    depends_on('libwebsockets', type='link')
     # depends_on('gstreamer@1.0', when='+gstreamer')

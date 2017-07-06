@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,7 +39,6 @@ class RJsonlite(RPackage):
 
     homepage = "https://github.com/jeroenooms/jsonlite"
     url      = "https://cran.r-project.org/src/contrib/jsonlite_1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/jsonlite"
 
     version('1.2', '80cd2678ae77254be470f5931db71c51')
     version('1.0', 'c8524e086de22ab39b8ac8000220cc87')

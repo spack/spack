@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-
 from spack import *
 
 
@@ -32,6 +31,8 @@ class Funhpc(CMakePackage):
     homepage = "https://github.com/eschnett/FunHPC.cxx"
     url = "https://github.com/eschnett/FunHPC.cxx/archive/version/0.1.0.tar.gz"
 
+    version('1.3.0', '71a1e57c4d882cdf001f29122edf7fc6')
+    version('1.2.0', 'ba2bbeea3091e999b6b85eaeb1b67a83')
     version('1.1.1', '7b9ef638b02fffe35b75517e8eeff580')
     version('1.1.0', '897bd968c42cd4f14f86fcf67da70444')
     version('1.0.0', 'f34e71ccd5548b42672e692c913ba5ee')
@@ -44,6 +45,7 @@ class Funhpc(CMakePackage):
             description="Produce position-independent code")
 
     depends_on('cereal')
+    depends_on('googletest')
     depends_on('hwloc')
     depends_on('jemalloc')
     depends_on('mpi')
@@ -51,9 +53,9 @@ class Funhpc(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        options = []
+        options = ["-DGTEST_ROOT=%s" % spec['googletest'].prefix]
         if '+pic' in spec:
-            options.extend(["-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true"])
+            options += ["-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true"]
         return options
 
     def check(self):

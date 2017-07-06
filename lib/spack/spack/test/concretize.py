@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,7 +26,8 @@ import pytest
 import spack
 import spack.architecture
 from spack.concretize import find_spec
-from spack.spec import Spec, CompilerSpec, ConflictsInSpecError, SpecError
+from spack.spec import Spec, CompilerSpec
+from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
 
 
@@ -75,7 +76,7 @@ def check_concretize(abstract_spec):
         # dag
         'callpath', 'mpileaks', 'libelf',
         # variant
-        'mpich+debug', 'mpich~debug', 'mpich debug=2', 'mpich',
+        'mpich+debug', 'mpich~debug', 'mpich debug=True', 'mpich',
         # compiler flags
         'mpich cppflags="-O3"',
         # with virtual
@@ -397,3 +398,21 @@ class TestConcretize(object):
             s = Spec(conflict_spec)
             with pytest.raises(exc_type):
                 s.concretize()
+
+    def test_regression_issue_4492(self):
+        # Constructing a spec which has no dependencies, but is otherwise
+        # concrete is kind of difficult. What we will do is to concretize
+        # a spec, and then modify it to have no dependency and reset the
+        # cache values.
+
+        s = Spec('mpileaks')
+        s.concretize()
+
+        # Check that now the Spec is concrete, store the hash
+        assert s.concrete
+
+        # Remove the dependencies and reset caches
+        s._dependencies.clear()
+        s._concrete = False
+
+        assert not s.concrete

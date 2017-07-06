@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -51,7 +51,7 @@ class _SkipWithBlock():
 class keyboard_input(object):
     """Disable canonical input and echo on a stream within a with block.
 
-    Use this with sys.stdin for keyboard input, e.g.:
+    Use this with ``sys.stdin`` for keyboard input, e.g.::
 
         with keyboard_input(sys.stdin):
             r, w, x = select.select([sys.stdin], [], [])
@@ -103,14 +103,16 @@ class keyboard_input(object):
 class log_output(object):
     """Spawns a daemon that reads from a pipe and writes to a file
 
-    Usage:
+    Usage::
+
         # Spawns the daemon
         with log_output('logfile.txt', 'w') as log_redirection:
            # do things ... output is not redirected
            with log_redirection:
                 # do things ... output will be logged
 
-    or:
+    or::
+
         with log_output('logfile.txt', echo=True) as log_redirection:
            # do things ... output is not redirected
            with log_redirection:

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -167,24 +167,18 @@ class Openspeedshop(Package):
         # Appends to cmakeOptions the options that will enable
         # the appropriate base level options to the openspeedshop
         # cmake build.
-        python_vers = format(spec['python'].version.up_to(2))
-        python_pv = '/python' + python_vers
-        python_pvs = '/libpython' + python_vers + '.' + format(dso_suffix)
+        python_exe = spec['python'].command.path
+        python_library = spec['python'].libs[0]
+        python_include = spec['python'].headers.directories[0]
 
         BaseOptions = []
 
         BaseOptions.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
         BaseOptions.append('-DLIBELF_DIR=%s' % spec['libelf'].prefix)
         BaseOptions.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
-        BaseOptions.append(
-            '-DPYTHON_EXECUTABLE=%s'
-            % join_path(spec['python'].prefix + '/bin/python'))
-        BaseOptions.append(
-            '-DPYTHON_INCLUDE_DIR=%s'
-            % join_path(spec['python'].prefix.include) + python_pv)
-        BaseOptions.append(
-            '-DPYTHON_LIBRARY=%s'
-            % join_path(spec['python'].prefix.lib) + python_pvs)
+        BaseOptions.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
+        BaseOptions.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
+        BaseOptions.append('-DPYTHON_LIBRARY=%s' % python_library)
         BaseOptions.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
         BaseOptions.append('-DBoost_NO_BOOST_CMAKE=TRUE')
         BaseOptions.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -56,6 +56,7 @@ class Go(Package):
 
     extendable = True
 
+    version('1.8.3', '64e9380e07bba907e26a00cf5fcbe77e')
     version('1.8.1', '409dd21e7347dd1ea9efe64a700073cc')
     version('1.8',   '7743960c968760437b6e39093cfe6f67')
     version('1.7.5', '506de2d870409e9003e1440bcfeb3a65')
@@ -117,7 +118,7 @@ class Go(Package):
         shutil.copytree('bin', os.path.join(prefix, '/bin'))
         """
         #  Add a go command/compiler for extensions
-        module.go = Executable(join_path(self.spec.prefix.bin, 'go'))
+        module.go = self.spec['go'].command
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if os.environ.get('GOROOT', False):

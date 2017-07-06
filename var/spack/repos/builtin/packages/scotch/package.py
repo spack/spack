@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
 
 
@@ -52,13 +51,15 @@ class Scotch(Package):
     variant('int64', default=False,
             description='Use int64_t for SCOTCH_Num typedef')
 
-    depends_on('flex@:2.6.1', type='build')
+    # Does not build with flex 2.6.[23]
+    depends_on('flex@:2.6.1,2.6.4:', type='build')
     depends_on('bison', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('zlib', when='+compression')
 
     # Version-specific patches
     patch('nonthreaded-6.0.4.patch', when='@6.0.4')
+    patch('esmumps-ldflags-6.0.4.patch', when='@6.0.4')
 
     # NOTE: In cross-compiling environment parallel build
     # produces weird linker errors.
@@ -74,6 +75,28 @@ class Scotch(Package):
     def url_for_version(self, version):
         url = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_{0}_esmumps.tar.gz"
         return url.format(version)
+
+    @property
+    def libs(self):
+
+        shared = '+shared' in self.spec
+        libraries = ['libscotch', 'libscotcherr']
+        zlibs     = []
+
+        if '+mpi' in self.spec:
+            libraries = ['libptscotch', 'libptscotcherr'] + libraries
+            if '+esmumps' in self.spec:
+                libraries = ['libptesmumps'] + libraries
+        elif '~mpi+esmumps' in self.spec:
+            libraries = ['libesmumps'] + libraries
+
+        scotchlibs = find_libraries(
+            libraries, root=self.prefix, recurse=True, shared=shared
+        )
+        if '+compression' in self.spec:
+            zlibs = self.spec['zlib'].libs
+
+        return scotchlibs + zlibs
 
     def patch(self):
         self.configure()
@@ -147,7 +170,7 @@ class Scotch(Package):
 
         if '+compression' in self.spec:
             cflags.append('-DCOMMON_FILE_COMPRESS_GZ')
-            ldflags.append('-L%s -lz' % (self.spec['zlib'].prefix.lib))
+            ldflags.append(' {0} '.format(self.spec['zlib'].libs.joined()))
 
         cflags.append('-DCOMMON_PTHREAD')
 
@@ -165,8 +188,8 @@ class Scotch(Package):
 
         # General Features #
 
-        flex_path = os.path.join(self.spec['flex'].prefix.bin, 'flex')
-        bison_path = os.path.join(self.spec['bison'].prefix.bin, 'bison')
+        flex_path = self.spec['flex'].command.path
+        bison_path = self.spec['bison'].command.path
         makefile_inc.extend([
             'EXE       =',
             'OBJ       = .o',
@@ -232,4 +255,4 @@ class Scotch(Package):
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
-        install_tree('man/man1', prefix.share_man1)
+        install_tree('man/man1', prefix.share.man.man1)
