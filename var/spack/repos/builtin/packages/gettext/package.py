@@ -41,6 +41,7 @@ class Gettext(AutotoolsPackage):
     variant('tar',      default=True, description='Enable tar support')
     variant('bzip2',    default=True, description='Enable bzip2 support')
     variant('xz',       default=True, description='Enable xz support')
+    variant("shared",   default=True, description="Enabel shared libs")
 
     # Optional variants
     variant('libunistring', default=False, description='Use libunistring')
@@ -100,5 +101,10 @@ class Gettext(AutotoolsPackage):
                 spec['libunistring'].prefix))
         else:
             config_args.append('--with-included-libunistring')
+
+        if "+shared" in spec:
+            config_args.append("--enable-shared")
+        else:
+            config_args.append("--disable-shared")
 
         return config_args
