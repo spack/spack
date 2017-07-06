@@ -41,6 +41,7 @@ class Glib(AutotoolsPackage):
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
     variant('libmount', default=False, description='Build with libmount support')
+    variant('shared', default=False, description="Enable shared libs")
 
     depends_on('pkg-config@0.16:+internal_glib', type='build')
     depends_on('libffi')
@@ -68,5 +69,10 @@ class Glib(AutotoolsPackage):
             args.append('--enable-libmount')
         else:
             args.append('--disable-libmount')
+
+        if "+shared" in spec:
+            args.append("--enable-shared")
+        else:
+            args.append("--disable-shared")
 
         return args
