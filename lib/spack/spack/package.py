@@ -796,14 +796,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         for ii, fetcher in enumerate(composite_fetcher):
             if ii == 0:
                 # Construct root stage first
+                name = 'root'
                 stage = self._make_root_stage(fetcher)
             else:
                 # Construct resource stage
                 resource = resources[ii - 1]  # ii == 0 is root!
+                name = resource.name
                 stage = self._make_resource_stage(composite_stage[0], fetcher,
                                                   resource)
             # Append the item to the composite
-            composite_stage.append(stage)
+            composite_stage.append(stage, name)
 
         return composite_stage
 

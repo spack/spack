@@ -104,8 +104,10 @@ class Atlas(Package):
 
         # Lapack resource to provide full lapack build. Note that
         # ATLAS only provides a few LAPACK routines natively.
-        options.append('--with-netlib-lapack-tarfile=%s' %
-                       self.stage[1].archive_file)
+        archive = self.stage['lapack'].archive_file
+        options.append(
+            '--with-netlib-lapack-tarfile={0}'.format(archive)
+        )
 
         with working_dir('spack-build', create=True):
             configure = Executable('../configure')
