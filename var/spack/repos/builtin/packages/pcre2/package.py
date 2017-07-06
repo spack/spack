@@ -33,3 +33,6 @@ class Pcre2(AutotoolsPackage):
     url      = "https://ftp.pcre.org/pub/pcre/pcre2-10.20.tar.bz2"
 
     version('10.20', 'dcd027c57ecfdc8a6c3af9d0acf5e3f7')
+
+    # dependency for isolation mode
+    depends_on('bzip2')

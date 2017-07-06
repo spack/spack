@@ -37,6 +37,9 @@ class Pcre(AutotoolsPackage):
     version('8.39', 'e3fca7650a0556a2647821679d81f585')
     version('8.38', '00aabbfe56d5a48b270f999b508c5ad2')
 
+    # dependency for isolation mode
+    depends_on('bzip2')
+
     patch('intel.patch', when='@8.38')
 
     variant('jit', default=False,
