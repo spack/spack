@@ -43,23 +43,45 @@ class Tealeaf(MakefilePackage):
 
     depends_on('mpi')
 
-    def edit(self, spec, prefix):
-        self.build_targets.extend(['--directory=TeaLeaf_ref'])
-        self.build_targets.extend(['MPI_COMPILER={0}'.format(
-                                   spec['mpi'].mpifc)])
-        self.build_targets.extend(['C_MPI_COMPILER={0}'.format(
-                                   spec['mpi'].mpicc)])
+    @property
+    def build_targets(self):
+        targets = [
+            '--directory=TeaLeaf_ref',
+            'MPI_COMPILER={0}'.format(self.spec['mpi'].mpifc),
+            'C_MPI_COMPILER={0}'.format(self.spec['mpi'].mpicc),
+        ]
 
-        if '%gcc' in spec:
-            self.build_targets.extend(['COMPILER=GNU'])
-        elif '%cce' in spec:
-            self.build_targets.extend(['COMPILER=CRAY'])
-        elif '%intel' in spec:
-            self.build_targets.extend(['COMPILER=INTEL'])
-        elif '%pgi' in spec:
-            self.build_targets.extend(['COMPILER=PGI'])
-        elif '%xl' in spec:
-            self.build_targets.extend(['COMPILER=XL'])
+        if '%gcc' in self.spec:
+            targets.append('COMPILER=GNU')
+        elif '%cce' in self.spec:
+            targets.append('COMPILER=CRAY')
+        elif '%intel' in self.spec:
+            targets.append('COMPILER=INTEL')
+        elif '%pgi' in self.spec:
+            targets.append('COMPILER=PGI')
+        elif '%xl' in self.spec:
+            targets.append('COMPILER=XL')
+
+        return targets
+
+
+#    def edit(self, spec, prefix):
+#        self.build_targets.extend(['--directory=TeaLeaf_ref'])
+#        self.build_targets.extend(['MPI_COMPILER={0}'.format(
+#                                   spec['mpi'].mpifc)])
+#        self.build_targets.extend(['C_MPI_COMPILER={0}'.format(
+#                                   spec['mpi'].mpicc)])
+#
+#        if '%gcc' in spec:
+#            self.build_targets.extend(['COMPILER=GNU'])
+#        elif '%cce' in spec:
+#            self.build_targets.extend(['COMPILER=CRAY'])
+#        elif '%intel' in spec:
+#            self.build_targets.extend(['COMPILER=INTEL'])
+#        elif '%pgi' in spec:
+#            self.build_targets.extend(['COMPILER=PGI'])
+#        elif '%xl' in spec:
+#            self.build_targets.extend(['COMPILER=XL'])
 
     def install(self, spec, prefix):
         # Manual Installation
