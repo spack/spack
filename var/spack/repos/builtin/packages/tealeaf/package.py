@@ -45,9 +45,9 @@ class Tealeaf(MakefilePackage):
 
     def edit(self, spec, prefix):
         self.build_targets.extend(['--directory=TeaLeaf_ref'])
-        self.build_targets.extend(['MPI_COMPILER={}'.format(
+        self.build_targets.extend(['MPI_COMPILER={0}'.format(
                                    spec['mpi'].mpifc)])
-        self.build_targets.extend(['C_MPI_COMPILER={}'.format(
+        self.build_targets.extend(['C_MPI_COMPILER={0}'.format(
                                    spec['mpi'].mpicc)])
 
         if '%gcc' in spec:
