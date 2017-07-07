@@ -85,6 +85,7 @@ class Netcdf(AutotoolsPackage):
     depends_on("zlib@1.2.5:")
 
     # Forward variants to hdf5
+    depends_on('hdf5')
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('hdf5~mpi', when='~mpi')
 
