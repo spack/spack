@@ -167,9 +167,13 @@ class Trilinos(CMakePackage):
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
     conflicts('+fortrilinos', when='@master')
+    # Can only use one type of SuperLU
     conflicts('+superlu-dist', when='+superlu')
-    conflicts('+superlu-dist', when='@11.14.1:11.14.3')
-    conflicts('+pnetcdf', when='@11.14.1:12.10.1')
+    # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
+    # deprecated SuperLUDist v3.3 together with an Amesos patch is working.
+    conflicts('+superlu-dist', when='@:11.14.3')
+    # PnetCDF was only added after v12.10.1
+    conflicts('+pnetcdf', when='@:12.10.1')
 
     # ###################### Dependencies ##########################
 
@@ -223,7 +227,6 @@ class Trilinos(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        self.variants_check()
 
         cxx_flags = []
         options = []
