@@ -75,7 +75,7 @@ class Gcc(AutotoolsPackage):
             description='Build PIC versions of libgfortran.a and libstdc++.a')
     variant('strip',
             default=False,
-            description='Strip executables to greatly reduce installation size')
+            description='Strip executables to reduce installation size')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
