@@ -167,6 +167,9 @@ class Trilinos(CMakePackage):
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
     conflicts('+fortrilinos', when='@master')
+    conflicts('+superlu-dist', when='+superlu')
+    conflicts('+superlu-dist', when='@11.14.1:11.14.3')
+    conflicts('+pnetcdf', when='@11.14.1:12.10.1')
 
     # ###################### Dependencies ##########################
 
@@ -217,25 +220,6 @@ class Trilinos(CMakePackage):
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
-
-    # check that the combination of variants makes sense
-    def variants_check(self):
-        if ('+superlu-dist' in self.spec and
-            self.spec.satisfies('@11.14.1:11.14.3')):
-            # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
-            # deprecated SuperLUDist v3.3 together with an Amesos patch is
-            # working.
-            raise RuntimeError('The superlu-dist variant can only be used' +
-                               ' with Trilinos @12.0.1:')
-        if '+superlu-dist' in self.spec and '+superlu' in self.spec:
-            # Only choose one type of superlu
-            raise RuntimeError('The superlu-dist and superlu variant' +
-                               ' cannot be used together')
-        if ('+pnetcdf' in self.spec and
-            self.spec.satisfies('@11.14.1:12.10.1')):
-            # PnetCDF was implemented in > v12.10.1
-            raise RuntimeError('The pnetcdf variant' +
-                               ' can only be used with Trilinos > v12.10.1')
 
     def cmake_args(self):
         spec = self.spec
