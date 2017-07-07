@@ -73,5 +73,5 @@ class Hpccg(MakefilePackage):
 
         install('test_HPCCG', prefix.bin)
         install('README', prefix.doc)
-        install('weakScalingRunScript', prefix.doc)
-        install('strongScalingRunScript', prefix.doc)
+        install('weakScalingRunScript', prefix.bin)
+        install('strongScalingRunScript', prefix.bin)
