@@ -49,4 +49,6 @@ class Exabayes(AutotoolsPackage):
         args = []
         if '+mpi' in self.spec:
             args.append('--enable-mpi')
+        else:
+            args.append('--disable-mpi')
         return args
