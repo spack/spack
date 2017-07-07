@@ -39,7 +39,11 @@ class EaUtils(MakefilePackage):
     depends_on('zlib')
     depends_on('gsl')
     depends_on('bamtools')
+
     # perl module required for make check
+    # TODO: Add a 'test' deptype                                                
+    # https://github.com/LLNL/spack/issues/1279                                 
+    # depends_on('perl', type='test')
     depends_on('perl', type='build')
 
     build_directory = 'clipper'
@@ -47,4 +51,4 @@ class EaUtils(MakefilePackage):
     def edit(self, spec, prefix):
         with working_dir('clipper'):
             makefile = FileFilter('Makefile')
-            makefile.filter('/usr', self.spec.prefix)
+            makefile.filter('/usr', prefix)
