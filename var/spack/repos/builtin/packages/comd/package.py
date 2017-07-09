@@ -44,15 +44,13 @@ class Comd(MakefilePackage):
 
     depends_on('mpi')
 
+    build_directory = 'src-mpi'
+
     def edit(self, spec, prefix):
         with working_dir('src-mpi'):
             filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
                         'Makefile.vanilla')
             shutil.move('Makefile.vanilla', 'Makefile')
-
-    def build(self, spec, prefix):
-        with working_dir('src-mpi'):
-            make()
 
     def install(self, spec, prefix):
         shutil.move('bin', prefix)
