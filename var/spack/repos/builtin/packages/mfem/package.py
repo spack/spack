@@ -137,6 +137,13 @@ class Mfem(Package):
                                '^cmake %gcc to force CMake to build with gcc')
         return
 
+    #
+    # Note: Although MFEM does support CMake configuration, MFEM
+    # development team indicates that vanilla GNU Make is the 
+    # preferred mode of configuration of MFEM and the mode most
+    # likely to be up to date in supporting *all* of MFEM's 
+    # configuration options. So, don't use CMake
+    #
     def install(self, spec, prefix):
         self.check_variants(spec)
 
