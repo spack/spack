@@ -6,7 +6,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for the LLNL notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
 #
 # License
 # -------
@@ -53,6 +53,9 @@
 # Known issues
 # - Combining +zoltan with +int64 has not been tested, but probably won't work.
 # - Combining +mgridgen with +int64 or +float32 probably won't work.
+#
+# The spack 'develop' version of openfoam-com retains the upstream
+# WM_PROJECT_VERSION=plus naming internally.
 #
 ##############################################################################
 from spack import *
@@ -258,12 +261,14 @@ class OpenfoamCom(Package):
     """
 
     homepage = "http://www.openfoam.com/"
-    baseurl  = "https://sourceforge.net/projects/openfoamplus/files"
+    baseurl  = "https://sourceforge.net/projects/openfoamplus/files/"
+    gitrepo  = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
 
+    version('1706', '630d30770f7b54d6809efbf94b7d7c8f',
+            url=baseurl + 'v1706/OpenFOAM-v1706.tgz')
     version('1612', 'ca02c491369150ab127cbb88ec60fbdf',
-            url=baseurl + '/v1612+/OpenFOAM-v1612+.tgz')
-    version('plus', branch='develop',  # Note: needs user credentials
-            git='https://develop.openfoam.com/Development/OpenFOAM-plus.git')
+            url=baseurl + 'v1612+/OpenFOAM-v1612+.tgz')
+    version('develop', branch='develop', git=gitrepo)  # Needs credentials
 
     variant('int64', default=False,
             description='Compile with 64-bit label')
@@ -291,7 +296,7 @@ class OpenfoamCom(Package):
     depends_on('fftw')
     depends_on('boost')
     depends_on('cgal')
-    depends_on('flex@:2.6.1')  # <- restriction due to scotch
+    depends_on('flex',  type='build')
     depends_on('cmake', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
@@ -309,27 +314,29 @@ class OpenfoamCom(Package):
     # Workaround: use preferred variants "+plugins +qt" in
     #   ~/.spack/packages.yaml
 
+    # 1706 ok with newer paraview but avoid pv-5.2, pv-5.3 readers
+    depends_on('paraview@5.4:',   when='@1706:+paraview')
     # 1612 plugins need older paraview
-    # The native reader in paraview 5.2 is broken, so start after that
     depends_on('paraview@:5.0.1', when='@1612+paraview')
-    depends_on('paraview@5.3:',   when='@1706:+paraview')
-    depends_on('paraview@5.3:',   when='@plus+paraview')
 
     # General patches
     common = ['spack-Allwmake', 'README-spack']
     assets = []
 
     # Version-specific patches
-    patch('openfoam-bin-1612.patch', when='@1612')
-    patch('openfoam-etc-1612.patch', when='@1612')
-    patch('openfoam-site-1612.patch', when='@1612')
-    patch('openfoam-mpi-1612.patch', when='@1612')
-    patch('openfoam-build-1612.patch', when='@1612')
-    patch('mgridgen-lib-1612.patch', when='@1612')
-    patch('scotch-metis-lib-1612.patch', when='@1612')
-    patch('zoltan-lib-1612.patch',   when='@1612')
+    patch('1612-bin.patch', when='@1612')
+    patch('1612-build.patch', when='@1612')
+    patch('1612-etc.patch', when='@1612')
+    patch('1612-site.patch', when='@1612')
+    patch('1612-mpi.patch', when='@1612')
+    patch('1612-mgridgen-lib.patch', when='@1612')
+    patch('1612-scotch-metis-lib.patch', when='@1612')
+    patch('1612-zoltan-lib.patch', when='@1612')
 
-    patch('openfoam-site-plus.patch', when='@plus')
+    # This patch is reasonably version-invariant
+    # 1) default site directly under WM_PROJECT_DIR
+    # 2) no FOAM_EXT_LIBBIN required
+    patch('openfoam-site.patch', when='@1706:')
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
@@ -349,7 +356,7 @@ class OpenfoamCom(Package):
     etc_config = {}
 
     phases = ['configure', 'build', 'install']
-    build_script = './spack-Allwmake'  # <- Added by patch() method.
+    build_script = './spack-Allwmake'  # From patch() method.
 
     #
     # - End of definitions / setup -
@@ -360,7 +367,6 @@ class OpenfoamCom(Package):
         run_env.set('WM_PROJECT_DIR', self.projectdir)
         for d in ['wmake', self.archbin]:  # bin already added automatically
             run_env.prepend_path('PATH', join_path(self.projectdir, d))
-        run_env.set('MPI_BUFFER_SIZE', "20000000")
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Provide location of the OpenFOAM project.

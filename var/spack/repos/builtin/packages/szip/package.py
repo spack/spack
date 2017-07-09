@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,13 +33,18 @@ class Szip(AutotoolsPackage):
     provided with HDF software products.
     """
 
-    homepage = "https://www.hdfgroup.org/doc_resource/SZIP/"
-    url = "http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz"
+    homepage = "https://support.hdfgroup.org/doc_resource/SZIP/"
+    url      = "https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz"
+    list_url = "https://support.hdfgroup.org/ftp/lib-external/szip"
+    list_depth = 2
 
-    version('2.1', '902f831bcefb69c6b635374424acbead')
+    version('2.1.1', 'dd579cf0f26d44afd10a0ad7291fc282')
+    version('2.1',   '902f831bcefb69c6b635374424acbead')
 
     def configure_args(self):
-        return ['--enable-production',
-                '--enable-shared',
-                '--enable-static',
-                '--enable-encoding']
+        return [
+            '--enable-production',
+            '--enable-shared',
+            '--enable-static',
+            '--enable-encoding',
+        ]

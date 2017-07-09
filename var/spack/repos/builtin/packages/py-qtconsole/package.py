@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -42,4 +42,6 @@ class PyQtconsole(PythonPackage):
     depends_on('py-pygments',            type=('build', 'run'))
     depends_on('py-traitlets',           type=('build', 'run'))
     depends_on('py-sphinx@1.3:',         type=('build', 'run'), when='+docs')
-    # mock; python_version=="2.7" and extra == 'test'
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-mock', type='test', when='^python@2.7:2.8')

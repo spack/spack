@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -142,6 +142,8 @@ class IntelMkl(IntelInstaller):
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package
         spack_env.set('MKLROOT', self.prefix)
+        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
+                              join_path(self.prefix.lib, 'intel64'))
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('MKLROOT', self.prefix)

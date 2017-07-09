@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # License
 # -------
@@ -100,7 +100,7 @@ class FoamExtend(Package):
     depends_on('mpi')
     depends_on('python')
     depends_on('zlib')
-    depends_on('flex@:2.6.1')  # <- restriction due to scotch
+    depends_on('flex',  type='build')
     depends_on('cmake', type='build')
 
     depends_on('scotch~metis',     when='~ptscotch+scotch')
@@ -143,7 +143,6 @@ class FoamExtend(Package):
         run_env.set('WM_PROJECT_DIR', self.projectdir)
         for d in ['wmake', self.archbin]:  # bin already added automatically
             run_env.prepend_path('PATH', join_path(self.projectdir, d))
-        run_env.set('MPI_BUFFER_SIZE', "20000000")
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Provide location of the OpenFOAM project.
