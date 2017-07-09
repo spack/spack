@@ -96,6 +96,11 @@ class Mfem(Package):
     variant('minapps', default=False,
         description='Build and install minapps')
 
+    conflicts('+mpi', when='~hypre')
+    conflicts('+suite-sparse', when='~lapack')
+    conflicts('+superlu-dist', when='@:3.1')
+    conflicts('+netcdf', when='@:3.1')
+
     depends_on('blas', when='+lapack')
     depends_on('blas', when='+suite-sparse')
     depends_on('lapack', when='+lapack')
@@ -125,22 +130,11 @@ class Mfem(Package):
     patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
 
     def check_variants(self, spec):
-        if '+mpi' in spec and '+hypre' not in spec:
-            raise InstallError('mfem+mpi must be built with +hypre')
-        if '+suite-sparse' in spec and '+lapack' not in spec:
-            raise InstallError('mfem+suite-sparse must be built with ' +
-                               '+lapack!')
         if 'metis@5:' in spec and '%clang' in spec and (
                 '^cmake %gcc' not in spec):
             raise InstallError('To work around CMake bug with clang, must ' +
                                'build mfem with mfem[+variants] %clang ' +
                                '^cmake %gcc to force CMake to build with gcc')
-        if '@:3.1' in spec and '+superlu-dist' in spec:
-            raise InstallError('MFEM does not support SuperLU_DIST for ' +
-                               'versions 3.1 and earlier')
-        if '@:3.1' in spec and '+netcdf' in spec:
-            raise InstallError('MFEM does not support NetCDF for versions' +
-                               '3.1 and earlier')
         return
 
     def install(self, spec, prefix):
