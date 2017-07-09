@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -127,8 +127,9 @@ class Lock(object):
 
                 return
 
-            except IOError as error:
-                if error.errno == errno.EAGAIN or error.errno == errno.EACCES:
+            except IOError as e:
+                if e.errno in (errno.EAGAIN, errno.EACCES):
+                    # EAGAIN and EACCES == locked by another process
                     pass
                 else:
                     raise
@@ -197,6 +198,8 @@ class Lock(object):
             tty.debug('READ LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
                       .format(self))
             self._lock(fcntl.LOCK_SH, timeout=timeout)   # can raise LockError.
+            tty.debug('READ LOCK: {0.path}[{0._start}:{0._length}] [Acquired]'
+                      .format(self))
             self._reads += 1
             return True
         else:
@@ -219,6 +222,8 @@ class Lock(object):
                 'WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquiring]'
                 .format(self))
             self._lock(fcntl.LOCK_EX, timeout=timeout)   # can raise LockError.
+            tty.debug('WRITE LOCK: {0.path}[{0._start}:{0._length}] [Acquired]'
+                      .format(self))
             self._writes += 1
             return True
         else:

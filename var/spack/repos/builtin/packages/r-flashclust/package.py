@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,6 @@ class RFlashclust(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=flashClust"
     url      = "https://cran.r-project.org/src/contrib/flashClust_1.01-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/flashClust"
 
     version('1.01-2', '23409aeeef98bf35d0b3d5dd755fdeff')
 

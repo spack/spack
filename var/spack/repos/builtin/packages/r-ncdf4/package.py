@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -43,7 +43,6 @@ class RNcdf4(RPackage):
 
     homepage = "http://cirrus.ucsd.edu/~pierce/ncdf"
     url      = "https://cran.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ncdf4"
 
     version('1.15', 'cd60dadbae3be31371e1ed40ddeb420a')
 

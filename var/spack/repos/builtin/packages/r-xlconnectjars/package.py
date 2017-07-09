@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,6 @@ class RXlconnectjars(RPackage):
 
     homepage = "http://miraisolutions.wordpress.com/"
     url      = "https://cran.r-project.org/src/contrib/XLConnectJars_0.2-9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/XLConnectJars"
 
     version('0.2-12', '6984e5140cd1c887c017ef6f88cbba81')
     version('0.2-9', 'e6d6b1acfede26acaa616ee421bd30fb')

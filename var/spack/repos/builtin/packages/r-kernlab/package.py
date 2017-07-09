@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,6 @@ class RKernlab(RPackage):
 
     homepage = "https://cran.r-project.org/package=kernlab"
     url      = "https://cran.r-project.org/src/contrib/kernlab_0.9-25.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/kernlab"
 
     version('0.9-25', '1182a2a336a79fd2cf70b4bc5a35353f')
 

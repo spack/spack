@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,10 +31,10 @@ class Cntk(Package):
     via a directed graph."""
 
     homepage = "https://www.microsoft.com/en-us/research/product/cognitive-toolkit"
-    url      = "https://github.com/Microsoft/CNTK/archive/v2.0.beta15.0.tar.gz"
+    url      = "https://github.com/Microsoft/CNTK/archive/v2.0.tar.gz"
 
     version('master', git='https://github.com/Microsoft/CNTK.git', branch='master')
-    version('2.0.rc1', url='https://github.com/Microsoft/CNTK/archive/v2.0.rc1.tar.gz')
+    version('2.0', '8038780f1169ceea578e5ef4d69e4c6f')
 
     variant('opencv', default=False, description="Enable OpenCV support.")
     variant('kaldi', default=False, description="Enable Kaldi support.")
@@ -64,6 +64,8 @@ class Cntk(Package):
     patch('build.patch')
     # Patch to fix BLAS inconsistency between CNTK and KaldiReader
     patch('kaldireader-openblas.patch')
+    # Patch to change behaviour of lock file - https://github.com/Microsoft/CNTK/issues/62
+    patch('lock-file.patch')
 
     def install(self, spec, prefix):
         args = []
@@ -106,6 +108,10 @@ class Cntk(Package):
             args.append('--with-cudnn={0}'
                         .format(spec['cudnn'].prefix))
             args.append('--with-nccl={0}'.format(spec['nccl'].prefix))
+            args.append('--with-gdk-include={0}'
+                        .format(spec['cuda'].prefix.include))
+            args.append('--with-gdk-nvml-lib={0}/stubs'
+                        .format(spec['cuda'].prefix.lib64))
 
         configure(*args)
 

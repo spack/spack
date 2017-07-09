@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -100,8 +100,10 @@ class Petsc(Package):
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')
-    depends_on('metis@5:~int64', when='+metis~int64')
-    depends_on('metis@5:+int64', when='+metis+int64')
+    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
+    depends_on('metis@5:+int64', when='+metis+int64~double')
+    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
+    depends_on('metis@5:+int64', when='+metis+int64~double')
 
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('parmetis', when='+metis+mpi')

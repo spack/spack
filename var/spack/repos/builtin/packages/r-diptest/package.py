@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,6 +30,5 @@ class RDiptest(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=diptest"
     url      = "https://cran.r-project.org/src/contrib/diptest_0.75-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/diptest"
 
     version('0.75-7', '1a4a958fda763f7c99cb485dbe5954ab')

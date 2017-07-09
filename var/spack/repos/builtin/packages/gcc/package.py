@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -41,6 +41,7 @@ class Gcc(AutotoolsPackage):
     list_depth = 1
 
     version('7.1.0', '6bf56a2bca9dac9dbbf8e8d1036964a8')
+    version('6.4.0', '11ba51a0cfb8471927f387c8895fe232')
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
@@ -73,12 +74,16 @@ class Gcc(AutotoolsPackage):
     variant('piclibs',
             default=False,
             description='Build PIC versions of libgfortran.a and libstdc++.a')
+    variant('strip',
+            default=False,
+            description='Strip executables to reduce installation size')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
     depends_on('mpfr@2.4.2:')
     depends_on('mpc@0.8.1:', when='@4.5:')
-    depends_on('isl@0.15:', when='@5.0:')
+    depends_on('isl@0.14', when='@5:5.9')
+    depends_on('isl@0.15:', when='@6:')
     depends_on('zlib', when='@6:')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
@@ -151,6 +156,15 @@ class Gcc(AutotoolsPackage):
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
     build_directory = 'spack-build'
+
+    def url_for_version(self, version):
+        url = 'http://ftp.gnu.org/gnu/gcc/gcc-{0}/gcc-{0}.tar.{1}'
+        suffix = 'bz2'
+
+        if version >= Version('6.4.0') and version < Version('7.1.0'):
+            suffix = 'xz'
+
+        return url.format(version, suffix)
 
     def patch(self):
         spec = self.spec
@@ -234,6 +248,12 @@ class Gcc(AutotoolsPackage):
         if sys.platform == 'darwin':
             return ['bootstrap']
         return []
+
+    @property
+    def install_targets(self):
+        if '+strip' in self.spec:
+            return ['install-strip']
+        return ['install']
 
     @property
     def spec_dir(self):
