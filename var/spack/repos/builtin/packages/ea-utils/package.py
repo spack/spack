@@ -31,7 +31,7 @@ class EaUtils(MakefilePackage):
        Illumina based pipeline - but should work with any FASTQs."""
 
     homepage = "http://expressionanalysis.github.io/ea-utils/"
-    url      = "https://github.com/ExpressionAnalysis/ea-utils/archive/1.04.807.tar.gz"
+    url = "https://github.com/ExpressionAnalysis/ea-utils/archive/1.04.807.tar.gz"
 
     version('1.04.807', '5972b9f712920603b7527f46c0063a09')
 
@@ -39,7 +39,8 @@ class EaUtils(MakefilePackage):
     depends_on('zlib')
     depends_on('gsl')
     depends_on('bamtools')
-    # perl module required for make check, which is included in the default target
+    # perl module required for make check, which is included in the default
+    # target
     depends_on('perl', type='build')
 
     build_directory = 'clipper'
