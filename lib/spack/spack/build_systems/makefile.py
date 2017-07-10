@@ -85,6 +85,14 @@ class MakefilePackage(PackageBase):
         :return: build directory
         """
         return self.stage.source_path
+    
+    def make_args(self):
+        """Produces a list containing all the extra arguments 
+        that must be passed to make, e.g. CC=spack_cc
+
+        :return: list of arguments for make
+        """
+        return []
 
     def edit(self, spec, prefix):
         """Edits the Makefile before calling make. This phase cannot
@@ -93,11 +101,12 @@ class MakefilePackage(PackageBase):
         tty.msg('Using default implementation: skipping edit phase.')
 
     def build(self, spec, prefix):
-        """Calls make, passing :py:attr:`~.MakefilePackage.build_targets`
-        as targets.
+        """Calls make, passing :py:attr:`~.MakefilePackage.make_args`
+        and :py:attr:`~.MakefilePackage.build_targets` as targets.
         """
+        options = self.make_args() + self.build_targets
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make(*self.build_targets)
+            inspect.getmodule(self).make(*options)
 
     def install(self, spec, prefix):
         """Calls make, passing :py:attr:`~.MakefilePackage.install_targets`
