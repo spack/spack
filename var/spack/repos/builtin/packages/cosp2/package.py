@@ -67,6 +67,6 @@ class Cosp2(MakefilePackage):
         install('README.md', prefix.doc)
         install('LICENSE.md', prefix.doc)
         for files in glob.glob('examples/*.*'):
-            install(files,prefix.examples)
+            install(files, prefix.examples)
         for files in glob.glob('pots/*.*'):
-            install(files,prefix.examples)
+            install(files, prefix.examples)
