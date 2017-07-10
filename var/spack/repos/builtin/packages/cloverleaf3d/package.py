@@ -83,12 +83,11 @@ class Cloverleaf3d(MakefilePackage):
 
         install('README.md', prefix.doc)
 
-        if self.type_of_build:
-            install('CloverLeaf3D_{0}/clover_leaf'.format(self.type_of_build),
-                    prefix.bin)
-            install('CloverLeaf3D_{0}/clover.in'.format(self.type_of_build),
-                    prefix.bin)
+        install('CloverLeaf3D_{0}/clover_leaf'.format(self.type_of_build),
+                prefix.bin)
+        install('CloverLeaf3D_{0}/clover.in'.format(self.type_of_build),
+                prefix.bin)
 
-            for f in glob.glob(
-                    'CloverLeaf3D_{0}/*.in'.format(self.type_of_build)):
-                install(f, prefix.doc.samples)
+        for f in glob.glob(
+                'CloverLeaf3D_{0}/*.in'.format(self.type_of_build)):
+            install(f, prefix.doc.samples)
