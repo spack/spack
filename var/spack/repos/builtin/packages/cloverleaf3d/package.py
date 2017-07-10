@@ -73,7 +73,7 @@ class Cloverleaf3d(MakefilePackage):
             targets.append('COMPILER=PGI')
         elif '%xl' in self.spec:
             targets.append('COMPILER=XLF')
-        
+
         return targets
 
     def install(self, spec, prefix):
