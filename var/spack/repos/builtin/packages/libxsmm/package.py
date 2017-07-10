@@ -26,7 +26,7 @@ from spack import *
 from glob import glob
 
 
-class Libxsmm(Package):
+class Libxsmm(MakefilePackage):
     '''Library targeting Intel Architecture
     for small, dense or sparse matrix multiplications,
     and small convolutions.'''
@@ -60,22 +60,42 @@ class Libxsmm(Package):
             description='Unoptimized with call-trace (LIBXSMM_TRACE).')
     variant('header-only', default=False,
             description='Produce header-only installation')
+    
+    def make_args(self):
+        options = [
+            "CC=%s" % spack_cc,
+            "CXX=%s" % spack_cxx,
+            "FC=%s" % spack_fc,
+            'SYM=1' ] # include symbols by default
 
-    def patch(self):
-        kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
-        makefile = FileFilter('Makefile.inc')
+        # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
+#       make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
 
-        # Spack sets CC, CXX, and FC to point to the compiler wrappers
-        # Don't let Makefile.inc overwrite these
-        makefile.filter('CC = icc',         'CC ?= icc', **kwargs)
-        makefile.filter('CC = gcc',         'CC ?= gcc', **kwargs)
-        makefile.filter('CXX = icpc',       'CXX ?= icpc', **kwargs)
-        makefile.filter('CXX = g++',        'CXX ?= g++', **kwargs)
-        makefile.filter('FC = ifort',       'FC ?= ifort', **kwargs)
-        makefile.filter('FC = gfortran',    'FC ?= gfortran', **kwargs)
+        # include call trace as the build is already de-optimized
+        if '+debug' in self.spec:
+            options += ['DBG=1']
+            options += ['TRACE=1']
 
-    def manual_install(self, prefix):
+        return options
+
+    @run_before('build')
+    def header_check(self):
         spec = self.spec
+        if '+header-only' in spec and '@1.6.2:' not in spec:
+            raise RuntimeError(
+                "The variant +header-only is only available " +
+                "for versions @1.6.2:")
+
+    @property
+    def build_targets(self):
+        targets = []
+
+        if '+header-only' in self.spec:
+            targets = ['header-only']
+
+        return targets
+
+    def install(self, spec, prefix):
         install_tree('include', prefix.include)
         if '~header-only' in spec:
             install_tree('lib', prefix.lib)
@@ -87,26 +107,3 @@ class Libxsmm(Package):
             install(doc_file, doc_path)
         install('README.md', doc_path)
         install('LICENSE', doc_path)
-
-    def install(self, spec, prefix):
-        if '+header-only' in spec and '@1.6.2:' not in spec:
-            raise InstallError(
-                "The variant +header-only is only available " +
-                "for versions @1.6.2:")
-
-        # include symbols by default
-        make_args = ['SYM=1']
-
-        if '+header-only' in spec:
-            make_args += ['header-only']
-
-        # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
-#       make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
-
-        # include call trace as the build is already de-optimized
-        if '+debug' in spec:
-            make_args += ['DBG=1']
-            make_args += ['TRACE=1']
-
-        make(*make_args)
-        self.manual_install(prefix)
