@@ -46,7 +46,7 @@ class Miniamr(MakefilePackage):
     def build_targets(self):
         targets = []
         if '+mpi' in self.spec:
-            targets.append('CC={}'.format(self.spec['mpi'].mpicc))
+            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
             targets.append('LDLIBS=-lm')
             targets.append('--file=Makefile.mpi')
             targets.append('--directory=miniAMR_ref')
