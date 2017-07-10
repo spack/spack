@@ -139,9 +139,9 @@ class Mfem(Package):
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
-    # development team indicates that vanilla GNU Make is the 
+    # development team indicates that vanilla GNU Make is the
     # preferred mode of configuration of MFEM and the mode most
-    # likely to be up to date in supporting *all* of MFEM's 
+    # likely to be up to date in supporting *all* of MFEM's
     # configuration options. So, don't use CMake
     #
     def install(self, spec, prefix):
