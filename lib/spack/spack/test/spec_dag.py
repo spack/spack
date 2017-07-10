@@ -159,6 +159,41 @@ All deptypes are (link, build) except for x dependency on p.
         spack.repo = saved_repo
 
 
+@pytest.mark.usefixtures('config')
+def test_user_mentioned_deptypes_are_preserved():
+    """Test that when a user explicitly mentions a dependency as part of a
+spec, that the deptypes are preserved for it. Given the following DAG::
+
+      w
+     /|
+    z x
+      |
+      y
+
+"""
+    xy_deptypes = ('build',)
+    wz_deptypes = ('build', 'link')
+    wx_deptypes = ('link', 'run')
+
+    y = MockPackage('y', [], [])
+    z = MockPackage('z', [], [])
+    x = MockPackage('x', [y], [xy_deptypes])
+    w = MockPackage('w', [z, x], [wz_deptypes, wx_deptypes])
+
+    mock_repo = MockPackageMultiRepo([w, x, y, z])
+    saved_repo = spack.repo
+    try:
+        spack.repo = mock_repo
+        spec = Spec('w ^x@2')
+        spec.concretize()
+
+        assert spec._dependencies['z'].deptypes == wz_deptypes
+        assert spec._dependencies['x'].deptypes == wx_deptypes
+        assert spec['x']._dependencies['y'].deptypes == xy_deptypes
+    finally:
+        spack.repo = saved_repo
+
+
 @pytest.mark.usefixtures('refresh_builtin_mock')
 class TestSpecDag(object):
 

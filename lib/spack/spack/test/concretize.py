@@ -112,16 +112,6 @@ class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
 
-    def test_concretize_mention_build_dep(self):
-        spec = check_concretize('cmake-client ^cmake@3.4.3')
-        # Check parent's perspective of child
-        dependency = spec.dependencies_dict()['cmake']
-        assert set(dependency.deptypes) == set(['build'])
-        # Check child's perspective of parent
-        cmake = spec['cmake']
-        dependent = cmake.dependents_dict()['cmake-client']
-        assert set(dependent.deptypes) == set(['build'])
-
     def test_concretize_preferred_version(self):
         spec = check_concretize('python')
         assert spec.versions == ver('2.7.11')

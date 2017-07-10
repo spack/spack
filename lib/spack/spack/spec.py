@@ -1836,6 +1836,7 @@ class Spec(object):
         force = False
 
         dep_constraints = DependencyConstraints(self, copy=True)
+        user_specified_deps = set(self.traverse(root=False))
         self._dependencies.clear()
         while changed:
             changes = (self._normalize(dep_constraints, force),
@@ -1873,6 +1874,8 @@ class Spec(object):
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
+
+        assert_user_deps_are_satisfied(user_specified_deps, self)
 
         # Now that the spec is concrete we should check if
         # there are declared conflicts
@@ -2112,11 +2115,7 @@ class Spec(object):
         user_specified_deps = set(self.traverse(root=False))
         self._dependencies.clear()
         self._normalize(dep_constraints, force=True)
-        remaining = unsatisfied(user_specified_deps, self)
-        if remaining:
-            err_msg = "The following explicit dependencies are not satisfied:"
-            err_msg += "\n\t" + "\n\t".join(x.format() for x in remaining)
-            raise InvalidDependencyError(err_msg)
+        assert_user_deps_are_satisfied(user_specified_deps, self)
 
     def _normalize(self, dep_constraints, force=False, all_deps=False):
         """When specs are parsed, any dependencies specified are hanging off
@@ -3008,6 +3007,14 @@ class Spec(object):
 
     def __repr__(self):
         return str(self)
+
+
+def assert_user_deps_are_satisfied(user_specified_deps, root):
+    remaining = unsatisfied(user_specified_deps, root)
+    if remaining:
+        err_msg = "The following explicit dependencies are not satisfied:"
+        err_msg += "\n\t" + "\n\t".join(x.format() for x in remaining)
+        raise InvalidDependencyError(err_msg)
 
 
 def unsatisfied(specs, root):
