@@ -60,13 +60,13 @@ class Libxsmm(MakefilePackage):
             description='Unoptimized with call-trace (LIBXSMM_TRACE).')
     variant('header-only', default=False,
             description='Produce header-only installation')
-    
+
     def make_args(self):
         options = [
             "CC=%s" % spack_cc,
             "CXX=%s" % spack_cxx,
             "FC=%s" % spack_fc,
-            'SYM=1' ] # include symbols by default
+            'SYM=1']    # include symbols by default
 
         # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
 #       make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']

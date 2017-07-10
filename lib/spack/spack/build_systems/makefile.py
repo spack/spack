@@ -85,9 +85,9 @@ class MakefilePackage(PackageBase):
         :return: build directory
         """
         return self.stage.source_path
-    
+
     def make_args(self):
-        """Produces a list containing all the extra arguments 
+        """Produces a list containing all the extra arguments
         that must be passed to make, e.g. CC=spack_cc
 
         :return: list of arguments for make
