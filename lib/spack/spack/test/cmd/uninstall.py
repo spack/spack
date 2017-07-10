@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -53,7 +53,7 @@ def test_uninstall(database):
     uninstall(parser, args)
 
     all_specs = spack.store.layout.all_specs()
-    assert len(all_specs) == 7
+    assert len(all_specs) == 8
     # query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
     callpath_specs = [s for s in all_specs if s.satisfies('callpath')]

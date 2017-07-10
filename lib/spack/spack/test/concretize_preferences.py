@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,7 +27,7 @@ import pytest
 import spack
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec
-from spack.package_prefs import PreferredPackages
+import spack.package_prefs
 
 
 @pytest.fixture()
@@ -41,7 +41,7 @@ def concretize_scope(config, tmpdir):
     # This is kind of weird, but that's how config scopes are
     # set in ConfigScope.__init__
     spack.config.config_scopes.pop('concretize')
-    spack.package_prefs._pkgsort = PreferredPackages()
+    spack.package_prefs.PackagePrefs.clear_caches()
 
     # reset provider index each time, too
     spack.repo._provider_index = None
@@ -55,7 +55,7 @@ def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
     spack.config.update_config('packages', conf, 'concretize')
-    spack.package_prefs._pkgsort = PreferredPackages()
+    spack.package_prefs.PackagePrefs.clear_caches()
 
 
 def assert_variant_values(spec, **variants):
@@ -146,7 +146,7 @@ all:
         spack.config.update_config('packages', conf, 'concretize')
 
         # should be no error for 'all':
-        spack.package_prefs._pkgsort = PreferredPackages()
+        spack.package_prefs.PackagePrefs.clear_caches()
         spack.package_prefs.get_packages_config()
 
     def test_external_mpi(self):
@@ -170,4 +170,4 @@ mpich:
         # ensure that once config is in place, external is used
         spec = Spec('mpi')
         spec.concretize()
-        assert spec['mpich'].external == '/dummy/path'
+        assert spec['mpich'].external_path == '/dummy/path'

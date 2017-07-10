@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,6 +36,7 @@ class Dealii(CMakePackage):
     # only add for immediate deps.
     transitive_rpaths = False
 
+    version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
     version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
     version('8.4.1', 'efbaf16f9ad59cfccad62302f36c3c1d')
     version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')
@@ -125,24 +126,26 @@ class Dealii(CMakePackage):
     depends_on("slepc",            when='+slepc+petsc+mpi')
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("slepc~arpack",     when='+slepc+petsc+mpi+int64')
-    depends_on("trilinos",         when='+trilinos+mpi~int64')
-    depends_on("trilinos~hypre",   when="+trilinos+mpi+int64")
+    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos",       when='+trilinos+mpi~int64')
+    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre", when="+trilinos+mpi+int64")
 
     # check that the combination of variants makes sense
-    def variants_check(self):
-        for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
-                  '+slepc', '+trilinos']:
-            if p in self.spec and '+mpi' not in self.spec:
-                raise RuntimeError('The ' + p + ' variant requires +mpi')
+    conflicts('+gsl',    when='@:8.4.2')
+    conflicts('+python', when='@:8.4.2')
+    for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
+              '+slepc', '+trilinos']:
+        conflicts(p, when='~mpi')
 
     def build_type(self):
         # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
         return 'DebugRelease'
 
     def cmake_args(self):
-        self.variants_check()
         spec = self.spec
         options = []
+        # release flags
+        cxx_flags_release = []
+        # debug and release flags
         cxx_flags = []
 
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
@@ -167,11 +170,14 @@ class Dealii(CMakePackage):
         # Set recommended flags for maximum (matrix-free) performance, see
         # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
         if spec.satisfies('%gcc'):
-            cxx_flags.extend(['-O3', '-march=native'])
+            cxx_flags_release.extend(['-O3'])
+            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%intel'):
-            cxx_flags.extend(['-O3', '-march=native'])
+            cxx_flags_release.extend(['-O3'])
+            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%clang'):
-            cxx_flags.extend(['-O3', '-march=native', '-ffp-contract=fast'])
+            cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
+            cxx_flags.extend(['-march=native'])
 
         # Python bindings
         if spec.satisfies('@8.5.0:'):
@@ -280,9 +286,12 @@ class Dealii(CMakePackage):
         ])
 
         # collect CXX flags:
-        if len(cxx_flags) > 0 and '+optflags' in spec:
+        if len(cxx_flags_release) > 0 and '+optflags' in spec:
             options.extend([
-                '-DCMAKE_CXX_FLAGS_RELEASE:STRING=%s' % (' '.join(cxx_flags))
+                '-DCMAKE_CXX_FLAGS_RELEASE:STRING=%s' % (
+                    ' '.join(cxx_flags_release)),
+                '-DCMAKE_CXX_FLAGS:STRING=%s' % (
+                    ' '.join(cxx_flags))
             ])
 
         return options

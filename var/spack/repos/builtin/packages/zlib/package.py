@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,11 +39,21 @@ class Zlib(Package):
     # Due to the bug fixes, any installations of 1.2.9 or 1.2.10 should be
     # immediately replaced with 1.2.11.
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
+    version('1.2.3', 'debc62758716a169df9f62e6ab2bc634')
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True,
             description='Enables the build of shared libraries.')
+
+    patch('w_patch.patch', when="@1.2.11%cce")
+
+    @property
+    def libs(self):
+        shared = '+shared' in self.spec
+        return find_libraries(
+            ['libz'], root=self.prefix, recurse=True, shared=shared
+        )
 
     def setup_environment(self, spack_env, run_env):
         if '+pic' in self.spec:

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,6 +31,7 @@ from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
 from llnl.util.filesystem import join_path
+from spack.util.module_cmd import get_module_cmd
 
 
 def _get_modules_in_modulecmd_output(output):
@@ -80,6 +81,11 @@ class Cray(Platform):
                 safe_name = _target.replace('-', '_')
                 setattr(self, name, safe_name)
                 self.add_target(name, self.targets[safe_name])
+            if _target is None and name == 'front_end':
+                setattr(self, name, 'x86_64')
+                x86_64 = Target('x86_64')
+                self.add_target(name, x86_64)
+                self.add_target('x86_64', x86_64)
 
         if self.back_end is not None:
             self.default = self.back_end
@@ -148,9 +154,8 @@ class Cray(Platform):
     def _avail_targets(self):
         '''Return a list of available CrayPE CPU targets.'''
         if getattr(self, '_craype_targets', None) is None:
-            modulecmd = which("modulecmd")
-            modulecmd.add_default_arg("python")
-            output = modulecmd('avail', '-t', 'craype-', output=str, error=str)
+            module = get_module_cmd()
+            output = module('avail', '-t', 'craype-', output=str, error=str)
             craype_modules = _get_modules_in_modulecmd_output(output)
             self._craype_targets = targets = []
             _fill_craype_targets_from_modules(targets, craype_modules)

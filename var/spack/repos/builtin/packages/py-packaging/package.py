@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,6 +30,8 @@ class PyPackaging(PythonPackage):
 
     homepage = "https://github.com/pypa/packaging"
     url      = "https://pypi.io/packages/source/p/packaging/packaging-16.8.tar.gz"
+
+    import_modules = ['packaging']
 
     version('16.8', '53895cdca04ecff80b54128e475b5d3b')
 

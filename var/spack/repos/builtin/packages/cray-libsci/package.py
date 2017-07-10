@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -37,31 +37,44 @@
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
 #
-from llnl.util.filesystem import LibraryList
 from spack import *
-
+from spack.concretize import NoBuildError
+from spack.util.module_cmd import load_module
+from llnl.util.filesystem import LibraryList
 
 class CrayLibsci(Package):
     """The Cray Scientific Libraries package, LibSci, is a collection of
     numerical routines optimized for best performance on Cray systems."""
 
-    homepage = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci/"
-    url      = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci/"
+    homepage = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci"
+    url      = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci"
 
-    version("16.11.1")
-    version("16.09.1")
-    version('16.07.1')
-    version("16.06.1")
-    version("16.03.1")
+    variant("shared", default=True, description="enable shared libs")
+
+    version('1.2.3', '0123456789abcdef0123456789abcdef')
 
     provides("blas")
     provides("lapack")
     provides("scalapack")
 
-    # NOTE: Cray compiler wrappers already include linking for the following
     @property
     def blas_libs(self):
-        return LibraryList([self.prefix.lib])
+        """Return the path to the library"""
+        shared = True if "+shared" in self.spec else False
+        compiler = self.spec.compiler.name
+
+        if compiler == "gcc":
+            compiler = "gnu"
+        elif compiler == "cce":
+            compiler = "cray"
+
+        libraries = ["libsci_%s" % (compiler),
+                     "libsci_%s_mp" % (compiler),
+                     "libsci_%s_mpi" % (compiler),
+                     "libsci_%s_mpi_mp" % (compiler)]
+
+        return find_libraries(libraries, root=self.prefix.lib, shared=shared,
+                recurse=False)
 
     @property
     def lapack_libs(self):
@@ -70,6 +83,10 @@ class CrayLibsci(Package):
     @property
     def scalapack_libs(self):
         return self.blas_libs
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """ Load the module into the environment for dependents """
+        load_module('cray-libsci')
 
     def install(self, spec, prefix):
         raise NoBuildError(spec)

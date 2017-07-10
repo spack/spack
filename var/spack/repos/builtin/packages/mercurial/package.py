@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,16 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import llnl.util.tty as tty
-import os
+from llnl.util import tty
 
 
-class Mercurial(Package):
+class Mercurial(PythonPackage):
     """Mercurial is a free, distributed source control management tool."""
 
     homepage = "https://www.mercurial-scm.org"
-    url      = "https://www.mercurial-scm.org/release/mercurial-3.9.tar.gz"
+    url      = "https://www.mercurial-scm.org/release/mercurial-4.1.2.tar.gz"
 
+    import_modules = [
+        'hgext', 'hgext3rd', 'mercurial', 'hgext.convert', 'hgext.fsmonitor',
+        'hgext.highlight', 'hgext.largefiles', 'hgext.zeroconf',
+        'hgext.fsmonitor.pywatchman', 'mercurial.hgweb',
+        'mercurial.httpclient', 'mercurial.pure'
+    ]
+
+    version('4.1.2', '934c99808bdc8385e074b902d59b0d93')
     version('3.9.1', '3759dd10edb8c1a6dfb8ff0ce82658ce')
     version('3.9',   'e2b355da744e94747daae3a5339d28a0')
     version('3.8.4', 'cec2c3db688cb87142809089c6ae13e9')
@@ -40,30 +47,62 @@ class Mercurial(Package):
     version('3.8.2', 'c38daa0cbe264fc621dc3bb05933b0b3')
     version('3.8.1', '172a8c588adca12308c2aca16608d7f4')
 
-    extends('python')
     depends_on('python@2.6:2.8')
     depends_on('py-docutils', type='build')
+    depends_on('py-pygments', type=('build', 'run'))
+    depends_on('py-certifi',  type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        make('install', 'PREFIX={0}'.format(prefix))
+    @run_after('install')
+    def post_install(self):
+        prefix = self.prefix
 
-        # Configuration of HTTPS certificate authorities
-        # https://www.mercurial-scm.org/wiki/CACertificates
-        hgrc_filename = join_path(prefix.etc, 'mercurial', 'hgrc')
-        mkdirp(os.path.dirname(hgrc_filename))
+        # Install man pages
+        mkdirp(prefix.man.man1)
+        mkdirp(prefix.man.man5)
+        mkdirp(prefix.man.man8)
+        with working_dir('doc'):
+            install('hg.1', prefix.man.man1)
+            install('hgignore.5', prefix.man.man5)
+            install('hgrc.5', prefix.man.man5)
+            install('hg-ssh.8', prefix.man.man8)
 
+        # Install completion scripts
+        contrib = join_path(prefix, 'contrib')
+        mkdir(contrib)
+        with working_dir('contrib'):
+            install('bash_completion', join_path(contrib, 'bash_completion'))
+            install('zsh_completion',  join_path(contrib, 'zsh_completion'))
+
+    @run_after('install')
+    def configure_certificates(self):
+        """Configuration of HTTPS certificate authorities
+        https://www.mercurial-scm.org/wiki/CACertificates"""
+
+        etc_dir = join_path(self.prefix.etc, 'mercurial')
+        mkdirp(etc_dir)
+
+        hgrc_filename = join_path(etc_dir, 'hgrc')
+
+        # Use certifi to find the location of the CA certificate
+        certificate = python('-c', 'import certifi; print certifi.where()',
+                             output=str)
+
+        if not certificate:
+            tty.warn('CA certificate not found. You may not be able to '
+                     'connect to an HTTPS server. If your CA certificate '
+                     'is in a non-standard location, you should add it to '
+                     '{0}.'.format(hgrc_filename))
+
+        # Write the global mercurial configuration file
         with open(hgrc_filename, 'w') as hgrc:
-            if os.path.exists('/etc/ssl/certs/ca-certificates.crt'):
-                # Debian/Ubuntu/Gentoo/Arch Linux
-                hgrc.write('[web]\ncacerts = /etc/ssl/certs/ca-certificates.crt')  # noqa
-            elif os.path.exists('/etc/pki/tls/certs/ca-bundle.crt'):
-                # Fedora/RHEL/CentOS
-                hgrc.write('[web]\ncacerts = /etc/pki/tls/certs/ca-bundle.crt')
-            elif os.path.exists('/etc/ssl/ca-bundle.pem'):
-                # openSUSE/SLE
-                hgrc.write('[web]\ncacerts = /etc/ssl/ca-bundle.pem')
-            else:
-                tty.warn('CA certificate not found. You may not be able to '
-                         'connect to an HTTPS server. If your CA certificate '
-                         'is in a non-standard location, you should add it to '
-                         '{0}'.format(hgrc_filename))
+            hgrc.write('[web]\ncacerts = {0}'.format(certificate))
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        """Sanity-check setup."""
+
+        hg = Executable(join_path(self.prefix.bin, 'hg'))
+
+        hg('debuginstall')
+        hg('version')

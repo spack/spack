@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -42,8 +42,9 @@ class Hwloc(AutotoolsPackage):
     homepage = "http://www.open-mpi.org/projects/hwloc/"
     url      = "http://www.open-mpi.org/software/hwloc/v1.9/downloads/hwloc-1.9.tar.gz"
     list_url = "http://www.open-mpi.org/software/hwloc/"
-    list_depth = 3
+    list_depth = 2
 
+    version('1.11.7', '867a5266675e5bf1ef4ab66c459653f8')
     version('1.11.6', 'b4e95eadd2fbdb6d40bbd96be6f03c84')
     version('1.11.5', '8f5fe6a9be2eb478409ad5e640b2d3ba')
     version('1.11.4', 'b6f23eb59074fd09fdd84905d50b103d')

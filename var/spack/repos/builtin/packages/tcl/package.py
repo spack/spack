@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,6 +34,7 @@ class Tcl(AutotoolsPackage):
        that is truly cross platform, easily deployed and highly
        extensible."""
     homepage = "http://www.tcl.tk"
+    url      = "http://prdownloads.sourceforge.net/tcl/tcl8.6.5-src.tar.gz"
 
     version('8.6.6', '5193aea8107839a79df8ac709552ecb7')
     version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
@@ -45,15 +46,18 @@ class Tcl(AutotoolsPackage):
 
     configure_directory = 'unix'
 
-    def url_for_version(self, version):
-        base_url = 'http://prdownloads.sourceforge.net/tcl'
-        return '{0}/tcl{1}-src.tar.gz'.format(base_url, version)
-
     def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
         run_env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
             self.spec.version.up_to(2))))
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+            make('install')
+
+            # Some applications like Expect require private Tcl headers.
+            make('install-private-headers')
 
     @run_after('install')
     def symlink_tclsh(self):

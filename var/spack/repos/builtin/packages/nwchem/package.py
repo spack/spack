@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -68,7 +68,7 @@ class Nwchem(Package):
         ]
     }
     # Iterate over patches
-    for condition, urls in urls_for_patches.iteritems():
+    for condition, urls in urls_for_patches.items():
         for url, md5 in urls:
             patch(url, when=condition, level=0, md5=md5)
 
@@ -88,7 +88,7 @@ class Nwchem(Package):
             'MPI_LOC=%s' % spec['mpi'].prefix,
             'USE_PYTHONCONFIG=y',
             'PYTHONVERSION=%s' % spec['python'].version.up_to(2),
-            'PYTHONHOME=%s' % spec['python'].prefix,
+            'PYTHONHOME=%s' % spec['python'].home,
             'BLASOPT=%s' % ((lapack + blas).ld_flags),
             'BLAS_LIB=%s' % blas.ld_flags,
             'LAPACK_LIB=%s' % lapack.ld_flags,

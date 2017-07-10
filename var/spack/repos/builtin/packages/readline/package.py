@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,6 +40,13 @@ class Readline(AutotoolsPackage):
     version('6.3', '33c8fb279e981274f485fd91da77e94a')
 
     depends_on('ncurses')
+    # from url=http://www.linuxfromscratch.org/patches/downloads/readline/readline-6.3-upstream_fixes-1.patch
+    # this fixes a bug that could lead to seg faults in ipython
+    patch('readline-6.3-upstream_fixes-1.patch', when='@6.3')
 
     def build(self, spec, prefix):
-        make('SHLIB_LIBS=-lncurses')
+        options = [
+            'SHLIB_LIBS=-L{0} -lncursesw'.format(spec['ncurses'].prefix.lib)
+        ]
+
+        make(*options)

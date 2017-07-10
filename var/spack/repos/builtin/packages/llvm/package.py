@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,12 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-
 from spack import *
 
 
-class Llvm(Package):
+class Llvm(CMakePackage):
     """The LLVM Project is a collection of modular and reusable compiler and
        toolchain technologies. Despite its name, LLVM has little to do
        with traditional virtual machines, though it does provide helpful
@@ -37,6 +35,7 @@ class Llvm(Package):
 
     homepage = 'http://llvm.org/'
     url = 'http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz'
+    list_url = 'http://releases.llvm.org/download.html'
 
     family = 'compiler'  # Used by lmod
 
@@ -73,7 +72,7 @@ class Llvm(Package):
             "<current arch>,NVPTX,AMDGPU,CppBackend")
 
     # Build dependency
-    depends_on('cmake@2.8.12.2:', type='build')
+    depends_on('cmake@3.4.3:', type='build')
 
     # Universal dependency
     depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
@@ -166,6 +165,21 @@ class Llvm(Package):
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
                 }
             },
+            {
+                'version': '4.0.0',
+                'md5': 'ea9139a604be702454f6acf160b4f3a2',
+                'resources': {
+                    'compiler-rt': '2ec11fb7df827b086341131c5d7f1814',
+                    'openmp': '3d06d2801dd4808f551a1a70068e01f5',
+                    'polly': 'f36e4e7cf872f8b3bbb9cdcddc5fd964',
+                    'libcxx': '4cf7df466e6f803ec4611ee410ff6781',
+                    'libcxxabi': '8b5d7b9bfcf7dec2dc901c8a6746f97c',
+                    'cfe': '756e17349fdc708c62974b883bf72d37',
+                    'clang-tools-extra': '99e711337ec3e9a8bb36e8dd62b2cd6e',
+                    'lldb': 'bd41ba7fcca55d2a554409bbccd34d2d',
+                    'libunwind': '0c3534eaa11c0cae33a1dcf5f36ce287',
+                    }
+                },
             {
                 'version': '3.9.1',
                 'md5': '3259018a7437e157f3642df80f1983ea',
@@ -307,30 +321,43 @@ class Llvm(Package):
                              resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
 
-    def install(self, spec, prefix):
-        env['CXXFLAGS'] = self.compiler.cxx11_flag
-        cmake_args = [arg for arg in std_cmake_args if 'BUILD_TYPE' not in arg]
+    conflicts('+clang_extra', when='~clang')
+    conflicts('+lldb',        when='~clang')
 
-        build_type = 'RelWithDebInfo' if '+debug' in spec else 'Release'
-        cmake_args.extend([
-            '..',
-            '-DCMAKE_BUILD_TYPE=' + build_type,
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('CXXFLAGS', self.compiler.cxx11_flag)
+
+    def build_type(self):
+        if '+debug' in self.spec:
+            return 'RelWithDebInfo'
+        else:
+            return 'Release'
+
+    def cmake_args(self):
+        spec = self.spec
+
+        cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
-            '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix])
+            '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
+        ]
 
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
-                              os.path.join(spec['binutils'].prefix, 'include'))
+                              spec['binutils'].prefix.include)
         if '+polly' in spec:
             cmake_args.append('-DLINK_POLLY_INTO_TOOLS:Bool=ON')
         else:
-            cmake_args.append('-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF')
+            cmake_args.extend(['-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF',
+                               '-DLLVM_TOOL_POLLY_BUILD:Bool=OFF',
+                               '-DLLVM_POLLY_BUILD:Bool=OFF',
+                               '-DLLVM_POLLY_LINK_INTO_TOOLS:Bool=OFF'])
 
         if '+clang' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=OFF')
         if '+lldb' not in spec:
-            cmake_args.append('-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF')
+            cmake_args.extend(['-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF',
+                               '-DLLVM_TOOL_LLDB_BUILD:Bool=OFF'])
         if '+internal_unwind' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=OFF')
         if '+libcxx' not in spec:
@@ -362,17 +389,12 @@ class Llvm(Package):
             cmake_args.append(
                 '-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))
 
-        if '+clang' not in spec:
-            if '+clang_extra' in spec:
-                raise SpackException(
-                    'The clang_extra variant requires the `+clang` variant.')
-            if '+lldb' in spec:
-                raise SpackException(
-                    'The lldb variant requires the `+clang` variant')
+        if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
+            cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
 
-        with working_dir('spack-build', create=True):
-            cmake(*cmake_args)
-            make()
-            make("install")
-            cp = which('cp')
-            cp('-a', 'bin/', prefix)
+        return cmake_args
+
+    @run_after('install')
+    def post_install(self):
+        with working_dir(self.build_directory):
+            install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))

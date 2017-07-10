@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,12 +33,10 @@ class Cscope(AutotoolsPackage):
 
     version('15.8b', '8f9409a238ee313a96f9f87fe0f3b176')
 
-    variant('flex', default=False, description="Builds with flex")
+    depends_on('ncurses')
 
-    depends_on('flex', when='+flex')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
+    depends_on('pkg-config', type='build')
 
-    def configure_args(self):
-        args = []
-        if '+flex' in self.spec:
-            args.append('--with-flex')
-        return args
+    build_targets = ['CURSES_LIBS=-lncursesw']

@@ -476,10 +476,11 @@ if the view is built with hardlinks.
 
 .. FIXME: reference the relocation work of Hegner and Gartung (PR #1013)
 
+.. _cmd-spack-view:
 
-""""""""""""""""""""""
-Using Filesystem Views
-""""""""""""""""""""""
+""""""""""""""
+``spack view``
+""""""""""""""
 
 A filesystem view is created, and packages are linked in, by the ``spack
 view`` command's ``symlink`` and ``hardlink`` sub-commands.  The

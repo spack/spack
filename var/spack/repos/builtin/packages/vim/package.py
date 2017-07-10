@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -37,6 +37,7 @@ class Vim(AutotoolsPackage):
     homepage = "http://www.vim.org"
     url      = "https://github.com/vim/vim/archive/v8.0.0134.tar.gz"
 
+    version('8.0.0503', '82b77bd5cb38b70514bed47cfe033b8c')
     version('8.0.0454', '4030bf677bdfbd14efb588e4d9a24128')
     version('8.0.0134', 'c74668d25c2acc85d655430dd60886cd')
     version('7.4.2367', 'a0a7bc394f7ab1d95571fe6ab05da3ea')
@@ -89,6 +90,8 @@ class Vim(AutotoolsPackage):
 
         configure_args = ["--enable-fail-if-missing"]
 
+        configure_args.append("--with-tlib=ncursesw")
+
         configure_args.append("--with-features=" + feature_set)
 
         if '+python' in spec:
@@ -126,3 +129,9 @@ class Vim(AutotoolsPackage):
             configure_args.append("--enable-cscope")
 
         return configure_args
+
+    # Run the install phase with -j 1.  There seems to be a problem with
+    # parallel builds that results in the creation of the links (e.g. view)
+    # to the vim binary silently failing.
+    def install(self, spec, prefix):
+        make('install', parallel=False)

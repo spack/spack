@@ -16,8 +16,11 @@
 config:
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
-  install_tree: $spack/opt/spack
+  install_tree: $spack/opt/spack   # Change to the desired installation
 
+
+  # This is the scheme that will be the default for NERSC. 
+  install_path_scheme: "${PLATFORM}/${OS}/${TARGET}/${PACKAGE}/${VERSION}/${COMPILERNAME}/${COMPILERVERSION}"  # NoQA: E501
 
   # Locations where different types of modules should be installed.
   module_roots:
@@ -66,3 +69,9 @@ config:
   # If set to true, `spack install` and friends will NOT clean
   # potentially harmful variables from the build environment. Use wisely.
   dirty: false
+
+
+  # The default number of jobs to use when running `make` in parallel.
+  # If set to 4, for example, `spack install` will run `make -j4`.
+  # If not set, all available cores are used by default.
+  # build_jobs: 4 

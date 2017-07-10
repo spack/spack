@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,6 +36,22 @@ class PyNumpy(PythonPackage):
     homepage = "http://www.numpy.org/"
     url      = "https://pypi.io/packages/source/n/numpy/numpy-1.9.1.tar.gz"
 
+    install_time_test_callbacks = ['install_test', 'import_module_test']
+
+    import_modules = [
+        'numpy', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc',
+        'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma',
+        'numpy.matrixlib', 'numpy.polynomial', 'numpy.random', 'numpy.testing',
+        'numpy.distutils.command', 'numpy.distutils.fcompiler'
+    ]
+
+    # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
+    # FIXME: Is this expected?
+
+    version('1.13.0', 'fd044f0b8079abeaf5e6d2e93b2c1d03',
+            url="https://pypi.io/packages/source/n/numpy/numpy-1.13.0.zip")
+    version('1.12.1', 'c75b072a984028ac746a6a332c209a91',
+            url="https://pypi.io/packages/source/n/numpy/numpy-1.12.1.zip")
     version('1.12.0', '33e5a84579f31829bbbba084fe0a4300',
             url="https://pypi.io/packages/source/n/numpy/numpy-1.12.0.zip")
     version('1.11.2', '03bd7927c314c43780271bf1ab795ebc')
@@ -52,6 +68,10 @@ class PyNumpy(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
+
+    # Tests require:
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose@1.0.0:', type='test')
 
     def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
@@ -132,3 +152,22 @@ class PyNumpy(PythonPackage):
             args = ['-j', str(make_jobs)]
 
         return args
+
+    def test(self):
+        # `setup.py test` is not supported.  Use one of the following
+        # instead:
+        #
+        # - `python runtests.py`              (to build and test)
+        # - `python runtests.py --no-build`   (to test installed numpy)
+        # - `>>> numpy.test()`           (run tests for installed numpy
+        #                                 from within an interpreter)
+        pass
+
+    def install_test(self):
+        # Change directories due to the following error:
+        #
+        # ImportError: Error importing numpy: you should not try to import
+        #       numpy from its source directory; please exit the numpy
+        #       source tree, and relaunch your python interpreter from there.
+        with working_dir('..'):
+            python('-c', 'import numpy; numpy.test("full", verbose=2)')

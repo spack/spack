@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,86 +34,78 @@ TODO: make this customizable and allow users to configure
       concretization  policies.
 """
 from __future__ import print_function
+from six import iteritems
+from spack.version import *
+from itertools import chain
+from ordereddict_backport import OrderedDict
+from functools_backport import reverse_order
+
 import spack
 import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
-from spack.version import *
-from functools import partial
-from itertools import chain
 from spack.package_prefs import *
 
 
 class DefaultConcretizer(object):
-
     """This class doesn't have any state, it just provides some methods for
        concretization.  You can subclass it to override just some of the
        default concretization strategies, or you can override all of them.
     """
-
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
-           packages that coiuld be used to concretize a spec."""
+           packages that coiuld be used to concretize a spec.
+
+           Preferred specs come first in the list.
+        """
         # First construct a list of concrete candidates to replace spec with.
         candidates = [spec]
+        pref_key = lambda spec: 0  # no-op pref key
+
         if spec.virtual:
-            providers = spack.repo.providers_for(spec)
-            if not providers:
-                raise UnsatisfiableProviderSpecError(providers[0], spec)
-            spec_w_preferred_providers = find_spec(
-                spec,
-                lambda x: pkgsort().spec_has_preferred_provider(
-                    x.name, spec.name))
-            if not spec_w_preferred_providers:
-                spec_w_preferred_providers = spec
-            provider_cmp = partial(pkgsort().provider_compare,
-                                   spec_w_preferred_providers.name,
-                                   spec.name)
-            candidates = sorted(providers, cmp=provider_cmp)
+            candidates = spack.repo.providers_for(spec)
+            if not candidates:
+                raise UnsatisfiableProviderSpecError(candidates[0], spec)
+
+            # Find nearest spec in the DAG (up then down) that has prefs.
+            spec_w_prefs = find_spec(
+                spec, lambda p: PackagePrefs.has_preferred_providers(
+                    p.name, spec.name),
+                spec)  # default to spec itself.
+
+            # Create a key to sort candidates by the prefs we found
+            pref_key = PackagePrefs(spec_w_prefs.name, 'providers', spec.name)
 
         # For each candidate package, if it has externals, add those
         # to the usable list.  if it's not buildable, then *only* add
         # the externals.
-        usable = []
+        #
+        # Use an OrderedDict to avoid duplicates (use it like a set)
+        usable = OrderedDict()
         for cspec in candidates:
             if is_spec_buildable(cspec):
-                usable.append(cspec)
+                usable[cspec] = True
+
             externals = spec_externals(cspec)
             for ext in externals:
                 if ext.satisfies(spec):
-                    usable.append(ext)
+                    usable[ext] = True
 
         # If nothing is in the usable list now, it's because we aren't
         # allowed to build anything.
         if not usable:
             raise NoBuildError(spec)
 
-        def cmp_externals(a, b):
-            if a.name != b.name and (not a.external or a.external_module and
-                                     not b.external and b.external_module):
-                # We're choosing between different providers, so
-                # maintain order from provider sort
-                index_of_a = next(i for i in range(0, len(candidates))
-                                  if a.satisfies(candidates[i]))
-                index_of_b = next(i for i in range(0, len(candidates))
-                                  if b.satisfies(candidates[i]))
-                return index_of_a - index_of_b
+        # Use a sort key to order the results
+        return sorted(usable, key=lambda spec: (
+            not spec.external,                            # prefer externals
+            pref_key(spec),                               # respect prefs
+            spec.name,                                    # group by name
+            reverse_order(spec.versions),                 # latest version
+            spec                                          # natural order
+        ))
 
-            result = cmp_specs(a, b)
-            if result != 0:
-                return result
-
-            # prefer external packages to internal packages.
-            if a.external is None or b.external is None:
-                return -cmp(a.external, b.external)
-            else:
-                return cmp(a.external, b.external)
-
-        usable.sort(cmp=cmp_externals)
-        return usable
-
-    # XXX(deptypes): Look here.
     def choose_virtual_or_external(self, spec):
         """Given a list of candidate virtual and external packages, try to
            find one that is most ABI compatible.
@@ -124,25 +116,16 @@ class DefaultConcretizer(object):
 
         # Find the nearest spec in the dag that has a compiler.  We'll
         # use that spec to calibrate compiler compatibility.
-        abi_exemplar = find_spec(spec, lambda x: x.compiler)
-        if not abi_exemplar:
-            abi_exemplar = spec.root
-
-        # Make a list including ABI compatibility of specs with the exemplar.
-        strict = [spack.abi.compatible(c, abi_exemplar) for c in candidates]
-        loose = [spack.abi.compatible(c, abi_exemplar, loose=True)
-                 for c in candidates]
-        keys = zip(strict, loose, candidates)
+        abi_exemplar = find_spec(spec, lambda x: x.compiler, spec.root)
 
         # Sort candidates from most to least compatibility.
-        # Note:
-        #   1. We reverse because True > False.
-        #   2. Sort is stable, so c's keep their order.
-        keys.sort(key=lambda k: k[:2], reverse=True)
-
-        # Pull the candidates back out and return them in order
-        candidates = [c for s, l, c in keys]
-        return candidates
+        #   We reverse because True > False.
+        #   Sort is stable, so candidates keep their order.
+        return sorted(candidates,
+                      reverse=True,
+                      key=lambda spec: (
+                          spack.abi.compatible(spec, abi_exemplar, loose=True),
+                          spack.abi.compatible(spec, abi_exemplar)))
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
@@ -162,26 +145,12 @@ class DefaultConcretizer(object):
         if spec.versions.concrete:
             return False
 
-        # If there are known available versions, return the most recent
-        # version that satisfies the spec
-        pkg = spec.package
-
-        # ---------- Produce prioritized list of versions
-        # Get list of preferences from packages.yaml
-        preferred = pkgsort()
-        # NOTE: pkgsort() == spack.package_prefs.PreferredPackages()
-
-        yaml_specs = [
-            x[0] for x in
-            preferred._spec_for_pkgname(spec.name, 'version', None)]
-        n = len(yaml_specs)
-        yaml_index = dict(
-            [(spc, n - index) for index, spc in enumerate(yaml_specs)])
-
         # List of versions we could consider, in sorted order
-        unsorted_versions = [
-            v for v in pkg.versions
-            if any(v.satisfies(sv) for sv in spec.versions)]
+        pkg = spec.package
+        usable = [v for v in pkg.versions
+                  if any(v.satisfies(sv) for sv in spec.versions)]
+
+        yaml_prefs = PackagePrefs(spec.name, 'version')
 
         # The keys below show the order of precedence of factors used
         # to select a version when concretizing.  The item with
@@ -189,12 +158,11 @@ class DefaultConcretizer(object):
         #
         # NOTE: When COMPARING VERSIONS, the '@develop' version is always
         #       larger than other versions.  BUT when CONCRETIZING,
-        #       the largest NON-develop version is selected by
-        #       default.
-        keys = [(
+        #       the largest NON-develop version is selected by default.
+        keyfn = lambda v: (
             # ------- Special direction from the user
             # Respect order listed in packages.yaml
-            yaml_index.get(v, -1),
+            -yaml_prefs(v),
 
             # The preferred=True flag (packages or packages.yaml or both?)
             pkg.versions.get(Version(v)).get('preferred', False),
@@ -209,15 +177,11 @@ class DefaultConcretizer(object):
             #    a) develop > everything (disabled by "not v.isdevelop() above)
             #    b) numeric > non-numeric
             #    c) Numeric or string comparison
-            v) for v in unsorted_versions]
-        keys.sort(reverse=True)
+            v)
+        usable.sort(key=keyfn, reverse=True)
 
-        # List of versions in complete sorted order
-        valid_versions = [x[-1] for x in keys]
-        # --------------------------
-
-        if valid_versions:
-            spec.versions = ver([valid_versions[0]])
+        if usable:
+            spec.versions = ver([usable[0]])
         else:
             # We don't know of any SAFE versions that match the given
             # spec.  Grab the spec's versions and grab the highest
@@ -241,7 +205,7 @@ class DefaultConcretizer(object):
 
     def concretize_architecture(self, spec):
         """If the spec is empty provide the defaults of the platform. If the
-        architecture is not a basestring, then check if either the platform,
+        architecture is not a string type, then check if either the platform,
         target or operating system are concretized. If any of the fields are
         changed then return True. If everything is concretized (i.e the
         architecture attribute is a namedtuple of classes) then return False.
@@ -254,19 +218,25 @@ class DefaultConcretizer(object):
         sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
         spec_changed = False
 
-        if spec.architecture is None:
+        if spec.architecture is None and root_arch is None:
             spec.architecture = spack.spec.ArchSpec(sys_arch)
             spec_changed = True
+        else:
+            spec.architecture = root_arch
 
-        default_archs = [root_arch, sys_arch]
-        while not spec.architecture.concrete and default_archs:
-            arch = default_archs.pop(0)
+        default_archs = list(x for x in [root_arch, sys_arch] if x)
+        for arch in default_archs:
+            if spec.architecture.concrete:
+                break
 
-            replacement_fields = [k for k, v in arch.to_cmp_dict().iteritems()
+            replacement_fields = [k for k, v in iteritems(arch.to_cmp_dict())
                                   if v and not getattr(spec.architecture, k)]
             for field in replacement_fields:
                 setattr(spec.architecture, field, getattr(arch, field))
                 spec_changed = True
+
+        if not spec.architecture.concrete:
+            raise InsufficientArchitectureInfoError(spec, default_archs)
 
         return spec_changed
 
@@ -276,16 +246,16 @@ class DefaultConcretizer(object):
            the package specification.
         """
         changed = False
-        preferred_variants = pkgsort().spec_preferred_variants(
-            spec.package_class.name)
-        for name, variant in spec.package_class.variants.items():
+        preferred_variants = PackagePrefs.preferred_variants(spec.name)
+        pkg_cls = spec.package_class
+        for name, variant in pkg_cls.variants.items():
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
                     spec.variants[name] = preferred_variants.get(name)
                 else:
-                    spec.variants[name] = \
-                        spack.spec.VariantSpec(name, variant.default)
+                    spec.variants[name] = variant.make_default()
+
         return changed
 
     def concretize_compiler(self, spec):
@@ -327,12 +297,9 @@ class DefaultConcretizer(object):
                     spec.compiler, spec.architecture)
             return False
 
-        # Find the another spec that has a compiler, or the root if none do
+        # Find another spec that has a compiler, or the root if none do
         other_spec = spec if spec.compiler else find_spec(
-            spec, lambda x: x.compiler)
-
-        if not other_spec:
-            other_spec = spec.root
+            spec, lambda x: x.compiler, spec.root)
         other_compiler = other_spec.compiler
         assert(other_spec)
 
@@ -351,9 +318,9 @@ class DefaultConcretizer(object):
         if not compiler_list:
             # No compiler with a satisfactory spec was found
             raise UnavailableCompilerVersionError(other_compiler)
-        cmp_compilers = partial(
-            pkgsort().compiler_compare, other_spec.name)
-        matches = sorted(compiler_list, cmp=cmp_compilers)
+
+        ppk = PackagePrefs(other_spec.name, 'compiler')
+        matches = sorted(compiler_list, key=ppk)
 
         # copy concrete version into other_compiler
         try:
@@ -418,7 +385,7 @@ class DefaultConcretizer(object):
         return ret
 
 
-def find_spec(spec, condition):
+def find_spec(spec, condition, default=None):
     """Searches the dag from spec in an intelligent order and looks
        for a spec that matches a condition"""
     # First search parents, then search children
@@ -445,7 +412,7 @@ def find_spec(spec, condition):
     if condition(spec):
         return spec
 
-    return None   # Nothing matched the condition.
+    return default   # Nothing matched the condition; return default.
 
 
 def _compiler_concretization_failure(compiler_spec, arch):
@@ -464,7 +431,7 @@ def _compiler_concretization_failure(compiler_spec, arch):
 class NoCompilersForArchError(spack.error.SpackError):
     def __init__(self, arch, available_os_targets):
         err_msg = ("No compilers found"
-                   " for operating system %s and target %s." 
+                   " for operating system %s and target %s."
                    "\nIf previous installations have succeeded, the"
                    " operating system may have been updated." %
                    (arch.platform_os, arch.target))
@@ -483,22 +450,21 @@ class NoCompilersForArchError(spack.error.SpackError):
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):
-
     """Raised when there is no available compiler that satisfies a
        compiler spec."""
 
     def __init__(self, compiler_spec, arch=None):
-        err_msg = "No compilers with spec %s found" % compiler_spec
+        err_msg = "No compilers with spec {0} found".format(compiler_spec)
         if arch:
-            err_msg += (" for operating system %s and target %s." %
-                        (compiler_spec, arch.platform_os, arch.target))
+            err_msg += " for operating system {0} and target {1}.".format(
+                arch.platform_os, arch.target
+            )
 
         super(UnavailableCompilerVersionError, self).__init__(
             err_msg, "Run 'spack compiler find' to add compilers.")
 
 
 class NoValidVersionError(spack.error.SpackError):
-
     """Raised when there is no way to have a concrete version for a
        particular spec."""
 
@@ -506,6 +472,17 @@ class NoValidVersionError(spack.error.SpackError):
         super(NoValidVersionError, self).__init__(
             "There are no valid versions for %s that match '%s'"
             % (spec.name, spec.versions))
+
+
+class InsufficientArchitectureInfoError(spack.error.SpackError):
+
+    """Raised when details on architecture cannot be collected from the
+       system"""
+
+    def __init__(self, spec, archs):
+        super(InsufficientArchitectureInfoError, self).__init__(
+            "Cannot determine necessary architecture information for '%s': %s"
+            % (spec.name, str(archs)))
 
 
 class NoBuildError(spack.error.SpackError):

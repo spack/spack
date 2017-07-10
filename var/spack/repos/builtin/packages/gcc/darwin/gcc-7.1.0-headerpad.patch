@@ -1,0 +1,19 @@
+# Use -headerpad_max_install_names in the build,
+# otherwise lto1 load commands cannot be edited on El Capitan
+
+# Stolen from Homebrew:
+# https://raw.githubusercontent.com/Homebrew/formula-patches/32cf103/gcc/7.1.0-headerpad.patch
+
+diff --git a/config/mh-darwin b/config/mh-darwin
+index 148b730..c2318b5 100644
+--- a/config/mh-darwin
++++ b/config/mh-darwin
+@@ -16,7 +16,7 @@ DARWIN_GCC_MDYNAMIC_NO_PIC := \
+ DARWIN_NO_PIE := `case ${host} in *-*-darwin[1][1-9]*) echo -Wl,-no_pie ;; esac;`
+ 
+ BOOT_CFLAGS += $(DARWIN_MDYNAMIC_NO_PIC)
+-BOOT_LDFLAGS += $(DARWIN_NO_PIE)
++BOOT_LDFLAGS += $(DARWIN_NO_PIE) -Wl,-headerpad_max_install_names
+ 
+ # Similarly, for cross-compilation.
+ STAGE1_CFLAGS += $(DARWIN_MDYNAMIC_NO_PIC)

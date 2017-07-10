@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,8 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import argparse
 import sys
+from six import iteritems
 
 import llnl.util.tty as tty
 import spack.compilers
@@ -36,6 +39,8 @@ from spack.spec import CompilerSpec, ArchSpec
 from spack.util.environment import get_path
 
 description = "manage compilers"
+section = "system"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -142,36 +147,36 @@ def compiler_info(args):
         tty.error("No compilers match spec %s" % cspec)
     else:
         for c in compilers:
-            print str(c.spec) + ":"
-            print "\tpaths:"
+            print(str(c.spec) + ":")
+            print("\tpaths:")
             for cpath in ['cc', 'cxx', 'f77', 'fc']:
-                print "\t\t%s = %s" % (cpath, getattr(c, cpath, None))
+                print("\t\t%s = %s" % (cpath, getattr(c, cpath, None)))
             if c.flags:
-                print "\tflags:"
-                for flag, flag_value in c.flags.iteritems():
-                    print "\t\t%s = %s" % (flag, flag_value)
+                print("\tflags:")
+                for flag, flag_value in iteritems(c.flags):
+                    print("\t\t%s = %s" % (flag, flag_value))
             if len(c.environment) != 0:
                 if len(c.environment['set']) != 0:
-                    print "\tenvironment:"
-                    print "\t    set:"
-                    for key, value in c.environment['set'].iteritems():
-                        print "\t        %s = %s" % (key, value)
+                    print("\tenvironment:")
+                    print("\t    set:")
+                    for key, value in iteritems(c.environment['set']):
+                        print("\t        %s = %s" % (key, value))
             if c.extra_rpaths:
-                print "\tExtra rpaths:"
+                print("\tExtra rpaths:")
                 for extra_rpath in c.extra_rpaths:
-                    print "\t\t%s" % extra_rpath
-            print "\tmodules  = %s" % c.modules
-            print "\toperating system  = %s" % c.operating_system
+                    print("\t\t%s" % extra_rpath)
+            print("\tmodules  = %s" % c.modules)
+            print("\toperating system  = %s" % c.operating_system)
 
 
 def compiler_list(args):
     tty.msg("Available compilers")
     index = index_by(spack.compilers.all_compilers(scope=args.scope),
                      lambda c: (c.spec.name, c.operating_system, c.target))
-    ordered_sections = sorted(index.items(), key=lambda (k, v): k)
+    ordered_sections = sorted(index.items(), key=lambda item: item[0])
     for i, (key, compilers) in enumerate(ordered_sections):
         if i >= 1:
-            print
+            print()
         name, os, target = key
         os_str = os
         if target:

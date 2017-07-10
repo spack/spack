@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,6 +34,7 @@ class Parallel(AutotoolsPackage):
     homepage = "http://www.gnu.org/software/parallel/"
     url      = "http://ftp.gnu.org/gnu/parallel/parallel-20170122.tar.bz2"
 
+    version('20170322', '4fe1b8d2e3974d26c77f0b514988214d')
     version('20170122', 'c9f0ec01463dc75dbbf292fd8be5f1eb')
     version('20160422', '24621f684130472694333709bd4454cb')
     version('20160322', '4e81e0d36902ab4c4e969ee6f35e6e57')

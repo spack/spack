@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -50,13 +50,21 @@ class Cosmomc(Package):
     variant('mpi', default=True, description='Enable MPI support')
     variant('planck', default=False,
             description='Enable Planck Likelihood code and baseline data')
+    variant('python', default=True, description='Enable Python bindings')
 
-    patch('Makefile.patch')
-    patch('errorstop.patch')
+    extends('python', when='+python')
 
     depends_on('mpi', when='+mpi')
     depends_on('planck-likelihood', when='+planck')
-    depends_on('python @2.7:2.999,3.4:')
+    depends_on('py-matplotlib', type=('build', 'run'), when='+python')
+    depends_on('py-numpy', type=('build', 'run'), when='+python')
+    depends_on('py-pandas', type=('build', 'run'), when='+python')
+    depends_on('py-scipy', type=('build', 'run'), when='+python')
+    depends_on('py-six', type=('build', 'run'), when='+python')
+    depends_on('python @2.7:2.999,3.4:', type=('build', 'run'), when='+python')
+
+    patch('Makefile.patch')
+    patch('errorstop.patch')
 
     parallel = False
 
@@ -108,7 +116,7 @@ class Cosmomc(Package):
         else:
             wantmpi = 'BUILD=NOMPI'
             mpif90 = 'MPIF90C='
-        
+
         # Choose BLAS and LAPACK
         lapack = ("LAPACKL=%s" %
                   (spec['lapack'].libs + spec['blas'].libs).ld_flags)
@@ -141,7 +149,6 @@ class Cosmomc(Package):
             'paramnames',
             'params_generic.ini',
             'planck_covmats',
-            'python',
             'scripts',
             # don't copy 'source'
             'test.ini',
@@ -149,6 +156,8 @@ class Cosmomc(Package):
             'test_planck.ini',
             'tests',
         ]
+        if '+python' in spec:
+            entries += ['python']
         for entry in entries:
             if os.path.isfile(entry):
                 install(entry, root)
@@ -158,8 +167,8 @@ class Cosmomc(Package):
             for filename in fnmatch.filter(filenames, '*~'):
                 os.remove(os.path.join(dirpath, filename))
 
-    @on_package_attributes(run_tests=True)
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         prefix = self.prefix
         spec = self.spec
@@ -178,7 +187,7 @@ class Cosmomc(Package):
         os.environ.pop('CLIKPATH', '')
         os.environ.pop('PLANCKLIKE', '')
 
-        exe = join_path(prefix.bin, 'cosmomc')
+        exe = spec['cosmomc'].command.path
         args = []
         if '+mpi' in spec:
             # Add mpirun prefix

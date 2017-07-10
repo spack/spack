@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,6 +31,8 @@ import platform as py_platform
 import spack
 import spack.architecture
 from spack.spec import Spec
+from spack.operating_systems.cnl import Cnl
+from spack.operating_systems.linux_distro import LinuxDistro
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
 from spack.platforms.bgq import Bgq
@@ -58,8 +60,7 @@ def test_dict_functions_for_architecture():
 
 def test_platform():
         output_platform_class = spack.architecture.real_platform()
-        cray_dir = os.environ.get("CRAYPE_DIR", "")
-        if cray_dir:
+        if os.environ.get('CRAYPE_VERSION') is not None:
             my_platform_class = Cray()
         elif os.path.exists('/bgsys'):
             my_platform_class = Bgq()
@@ -69,6 +70,18 @@ def test_platform():
             my_platform_class = Darwin()
 
         assert str(output_platform_class) == str(my_platform_class)
+
+
+def test_crayos_version():
+    cray_platform = spack.architecture.real_platform()
+    detected_back_end = Cnl()
+    detected_front_end = LinuxDistro()
+    if (cray_platform.name != "cray"):
+        pytest.skip("test only for cray systems")
+    real_oss = [name for name, o in cray_platform.operating_sys.items()]
+
+    assert str(detected_back_end) in real_oss
+    assert str(detected_front_end) in real_oss
 
 
 def test_boolness():
@@ -139,8 +152,8 @@ def test_user_defaults(config):
 
 def test_user_input_combination(config):
     platform = spack.architecture.platform()
-    os_list = platform.operating_sys.keys()
-    target_list = platform.targets.keys()
+    os_list = list(platform.operating_sys.keys())
+    target_list = list(platform.targets.keys())
     additional = ["fe", "be", "frontend", "backend"]
 
     os_list.extend(additional)

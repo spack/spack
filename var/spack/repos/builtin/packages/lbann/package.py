@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -46,7 +46,7 @@ class Lbann(CMakePackage):
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
     depends_on('opencv@3.2.0', when='+opencv')
-    depends_on('protobuf@3.0.2')
+    depends_on('protobuf@3.0.2:')
 
     def build_type(self):
         if '+debug' in self.spec:

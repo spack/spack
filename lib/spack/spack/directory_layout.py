@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import exceptions
 import shutil
 import glob
 import tempfile
@@ -138,7 +137,7 @@ class DirectoryLayout(object):
         if os.path.exists(path):
             try:
                 shutil.rmtree(path)
-            except exceptions.OSError as e:
+            except OSError as e:
                 raise RemoveFailedError(spec, path, e)
 
         path = os.path.dirname(path)
@@ -169,7 +168,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir   = kwargs.get('metadata_dir', '.spack')
         self.hash_len       = kwargs.get('hash_len')
         self.path_scheme    = kwargs.get('path_scheme') or (
-            "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}")  # NOQA: ignore=E501
+            "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}")  # NOQA: E501
         if self.hash_len is not None:
             if re.search('\${HASH:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(
@@ -194,7 +193,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
 
         if spec.external:
-            return spec.external
+            return spec.external_path
 
         path = spec.format(self.path_scheme)
         return path
@@ -284,8 +283,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         if not os.path.isdir(self.root):
             return []
 
-        pattern = join_path(
-            self.root, '*', '*', '*', self.metadata_dir, self.spec_file_name)
+        path_elems = ["*"] * len(self.path_scheme.split(os.sep))
+        path_elems += [self.metadata_dir, self.spec_file_name]
+        pattern = join_path(self.root, *path_elems)
         spec_files = glob.glob(pattern)
         return [self.read_spec(s) for s in spec_files]
 

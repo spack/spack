@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -262,12 +262,15 @@ class EnvironmentModifications(object):
 
     @staticmethod
     def from_sourcing_files(*args, **kwargs):
-        """Creates an instance of EnvironmentModifications that, if executed,
-        has the same effect on the environment as sourcing the files passed as
-        parameters
+        """Returns modifications that would be made by sourcing files.
 
-        :param \*args: list of files to be sourced
-        :rtype: instance of EnvironmentModifications
+        Args:
+            *args (list of str): list of files to be sourced
+
+        Returns:
+            EnvironmentModifications: an object that, if executed, has
+                the same effect on the environment as sourcing the files
+                passed as parameters
         """
         env = EnvironmentModifications()
 
@@ -291,7 +294,7 @@ class EnvironmentModifications(object):
         shell_options = '{shell_options}'.format(**info)
         source_file = '{source_command} {file} {concatenate_on_success}'
 
-        dump_cmd = "import os, json; print json.dumps(dict(os.environ))"
+        dump_cmd = "import os, json; print(json.dumps(dict(os.environ)))"
         dump_environment = 'python -c "%s"' % dump_cmd
 
         # Construct the command that will be executed
@@ -310,7 +313,7 @@ class EnvironmentModifications(object):
         proc.wait()
         if proc.returncode != 0:
             raise RuntimeError('sourcing files returned a non-zero exit code')
-        output = ''.join([line for line in proc.stdout])
+        output = ''.join([line.decode('utf-8') for line in proc.stdout])
 
         # Construct a dictionaries of the environment before and after
         # sourcing the files, so that we can diff them.

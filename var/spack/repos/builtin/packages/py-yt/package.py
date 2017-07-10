@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -57,6 +57,7 @@ class PyYt(PythonPackage):
     variant("astropy", default=True, description="enable astropy support")
     variant("h5py", default=True, description="enable h5py support")
     variant("scipy", default=True, description="enable scipy support")
+    variant("rockstar", default=False, description="enable rockstar support")
 
     depends_on("py-astropy", type=('build', 'run'), when="+astropy")
     depends_on("py-cython", type=('build', 'run'))
@@ -65,11 +66,19 @@ class PyYt(PythonPackage):
     depends_on("py-matplotlib", type=('build', 'run'))
     depends_on("py-numpy", type=('build', 'run'))
     depends_on("py-scipy", type=('build', 'run'), when="+scipy")
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools", type=('build', 'run'))
     depends_on("py-sympy", type=('build', 'run'))
-    depends_on("python @2.7:2.999,3.4:")
+    depends_on("rockstar@yt", type=('build', 'run'), when="+rockstar")
+    depends_on("python@2.7:2.8,3.4:")
+
+    @run_before('install')
+    def prep_yt(self):
+        if '+rockstar' in self.spec:
+            with open('rockstar.cfg', 'w') as rockstar_cfg:
+                rockstar_cfg.write(self.spec['rockstar'].prefix)
 
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         # The Python interpreter path can be too long for this
         # yt = Executable(join_path(prefix.bin, "yt"))

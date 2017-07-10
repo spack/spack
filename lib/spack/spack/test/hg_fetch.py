@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,16 +29,18 @@ import spack
 from llnl.util.filesystem import *
 from spack.spec import Spec
 from spack.version import ver
+from spack.util.executable import which
 
 
-@pytest.fixture(params=['default', 'rev0'])
-def type_of_test(request):
-    """Returns one of the test type available for the mock_hg_repository"""
-    return request.param
+pytestmark = pytest.mark.skipif(
+    not which('hg'), reason='requires mercurial to be installed')
 
 
+@pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
+@pytest.mark.parametrize("secure", [True, False])
 def test_fetch(
         type_of_test,
+        secure,
         mock_hg_repository,
         config,
         refresh_builtin_mock
@@ -55,14 +57,21 @@ def test_fetch(
     # Retrieve the right test parameters
     t = mock_hg_repository.checks[type_of_test]
     h = mock_hg_repository.hash
+
     # Construct the package under test
     spec = Spec('hg-test')
     spec.concretize()
     pkg = spack.repo.get(spec, new=True)
     pkg.versions[ver('hg')] = t.args
+
     # Enter the stage directory and check some properties
     with pkg.stage:
-        pkg.do_stage()
+        try:
+            spack.insecure = secure
+            pkg.do_stage()
+        finally:
+            spack.insecure = False
+
         assert h() == t.revision
 
         file_path = join_path(pkg.stage.source_path, t.file)

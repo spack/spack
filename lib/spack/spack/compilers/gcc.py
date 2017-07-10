@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -86,6 +86,16 @@ class Gcc(Compiler):
     @property
     def pic_flag(self):
         return "-fPIC"
+
+    @classmethod
+    def default_version(cls, cc):
+        # Skip any gcc versions that are actually clang, like Apple's gcc.
+        # Returning "unknown" makes them not detected by default.
+        # Users can add these manually to compilers.yaml at their own risk.
+        if spack.compilers.clang.Clang.default_version(cc) != 'unknown':
+            return 'unknown'
+
+        return super(Gcc, cls).default_version(cc)
 
     @classmethod
     def fc_version(cls, fc):

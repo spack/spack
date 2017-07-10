@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,7 +40,7 @@ class Gasnet(AutotoolsPackage):
     version('1.24.0', 'c8afdf48381e8b5a7340bdb32ca0f41a')
 
     variant('ibv', default=False, description="Support InfiniBand")
-    variant('mpi', default=False, description="Support MPI")
+    variant('mpi', default=True, description="Support MPI")
 
     depends_on('mpi', when='+mpi')
 
@@ -48,11 +48,9 @@ class Gasnet(AutotoolsPackage):
         args = [
             # TODO: factor IB suport out into architecture description.
             "--enable-ibv" if '+ibv' in self.spec else '--disable-ibv',
-            "--enable-mpi" if '+mpi' in self.spec else '--disable-mpi',
             "--enable-par",
             "--enable-smp",
             "--enable-udp",
-            "--enable-mpi-compat",
             "--enable-smp-safe",
             "--enable-segment-fast",
             "--disable-aligned-segments",
@@ -60,5 +58,13 @@ class Gasnet(AutotoolsPackage):
             # See the Legion webpage for details on when to/not to use.
             "--disable-pshm",
             "--with-segment-mmap-max=64MB",
+            # for consumers with shared libs
+            "CC=%s %s" % (spack_cc, self.compiler.pic_flag),
+            "CXX=%s %s" % (spack_cxx, self.compiler.pic_flag),
         ]
+        if '+mpi' in self.spec:
+            args.extend(['--enable-mpi', '--enable-mpi-compat', "MPI_CC=%s %s"
+                        % (self.spec['mpi'].mpicc, self.compiler.pic_flag)])
+        else:
+            args.extend(['--disable-mpi', '--disable-mpi-compat'])
         return args
