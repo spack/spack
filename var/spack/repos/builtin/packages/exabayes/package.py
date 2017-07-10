@@ -38,6 +38,9 @@ class Exabayes(AutotoolsPackage):
 
     depends_on('mpi', when='+mpi')
 
+    # ExaBayes manual states the program succesfully compiles with GCC, version
+    # 4.6 or greater, and Clang, version 3.2 or greater. The build fails when
+    # GCC 7.1.0 is used.
     conflicts('%gcc@:4.5.4, 7.1.0:')
     conflicts('%clang@:3.1')
     conflicts('^intel-mpi', when='+mpi')
