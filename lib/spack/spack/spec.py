@@ -2109,8 +2109,14 @@ class Spec(object):
 
     def normalize(self):
         dep_constraints = DependencyConstraints(self, copy=True)
+        user_specified_deps = set(self.traverse(root=False))
         self._dependencies.clear()
         self._normalize(dep_constraints, force=True)
+        remaining = unsatisfied(user_specified_deps, self)
+        if remaining:
+            err_msg = "The following explicit dependencies are not satisfied:"
+            err_msg += "\n\t" + "\n\t".join(x.format() for x in remaining)
+            raise InvalidDependencyError(err_msg)
 
     def _normalize(self, dep_constraints, force=False, all_deps=False):
         """When specs are parsed, any dependencies specified are hanging off
@@ -3002,6 +3008,14 @@ class Spec(object):
 
     def __repr__(self):
         return str(self)
+
+
+def unsatisfied(specs, root):
+    remaining = set(specs)
+    for dep in root.traverse(deptype=('link', 'run', 'include')):
+        satisfied = set(spec for spec in specs if dep.satisfies(spec))
+        remaining.difference_update(satisfied)
+    return remaining
 
 
 #
