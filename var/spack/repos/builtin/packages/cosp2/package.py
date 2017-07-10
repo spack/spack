@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install cosp2
-#
-# You can edit this file again by typing:
-#
-#     spack edit cosp2
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 import shutil
 import glob
@@ -56,16 +41,20 @@ class Cosp2(MakefilePackage):
     homepage = "http://www.exmatex.org/cosp2.html"
     url      = "https://github.com/exmatex/CoSP2/archive/master.tar.gz"
 
-    version('master',git='https://github.com/exmatex/CoSP2.git',description='master')
+    version('master', git='https://github.com/exmatex/CoSP2.git', description='master')
+    
+    variant('precision', default=True, description='Flag to hold Precesion Status')
+    variant('serial', default=True, description='Serial Build')
+    variant('parallel', default=True, description='Build with MPI Support')
 
-    variant('serial',default=True,description='Serial Build ')
-    variant('parallel',default=True,description=' Build with MPI Support ')
-
-    depends_on('mpi')
+    depends_on('mpi', when='+parallel')
+    
     build_directory = 'src-mpi'
+    
     def edit(self, spec, prefix):
-       with working_dir('src-mpi'):
-        filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,'Makefile.vanilla')
+        with working_dir('src-mpi'):
+            filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc, 
+                'Makefile.vanilla')
         if '+precision' in spec:
             makefile.filter('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF')
         shutil.copy('Makefile.vanilla', 'Makefile')   
@@ -81,13 +70,3 @@ class Cosp2(MakefilePackage):
             install(files,prefix.examples)
         for files in glob.glob('pots/*.*'):
             install(files,prefix.examples)
-
-
-
-
-
-
-
-
-
-
