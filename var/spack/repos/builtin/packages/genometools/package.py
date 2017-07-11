@@ -34,12 +34,12 @@ class Genometools(MakefilePackage):
 
     version('1.5.9', 'e400d69092f9f13db09b33f9dea39d2e')
 
-    depends_on('perl')
+    depends_on('perl', type=('build', 'run'))
     depends_on('cairo')
     depends_on('pango')
 
     # build fails with gcc 7"
-    conflicts('%gcc@7.1.0:')        
+    conflicts('%gcc@7.1.0:')
 
     def install(self, spec, prefix):
         make('install', 'prefix=%s' % prefix)
