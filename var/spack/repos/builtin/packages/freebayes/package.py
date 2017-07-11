@@ -30,7 +30,6 @@ class Freebayes(MakefilePackage):
        genotyping."""
 
     homepage = "https://github.com/ekg/freebayes"
-    url      = "https://github.com/ekg/freebayes/archive/v1.1.0.tar.gz"
 
     version('1.1.0', git='https://github.com/ekg/freebayes.git',
             commit='39e5e4bcb801556141f2da36aba1df5c5c60701f',
