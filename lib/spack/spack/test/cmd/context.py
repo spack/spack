@@ -30,6 +30,32 @@ class TestContext(unittest.TestCase):
         assert any(x.name == 'mpileaks' for x in env_specs)
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    def test_remove_after_concretize(self):
+        c = Context('test')
+        c.add('mpileaks')
+        c.concretize()
+        c.add('python')
+        c.concretize()
+        c.remove('mpileaks')
+        env_specs = c._get_environment_specs()
+        assert not any(x.name == 'mpileaks' for x in env_specs)
+
+    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    def test_reset_compiler(self):
+        c = Context('test')
+        c.add('mpileaks')
+        c.concretize()
+
+        first_spec = c.specs_by_hash[c.concretized_order[0]]
+        available = set(['gcc', 'clang'])
+        available.remove(first_spec.compiler.name)
+        new_compiler = iter(available).next()
+        c.reset_os_and_compiler(compiler=new_compiler)
+
+        new_spec = c.specs_by_hash[c.concretized_order[0]]
+        assert new_spec.compiler != first_spec.compiler
+
+    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_to_dict(self):
         c = Context('test')
         c.add('mpileaks')
