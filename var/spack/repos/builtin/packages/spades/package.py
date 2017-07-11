@@ -26,6 +26,7 @@ from spack import *
 import os
 import subprocess
 
+
 class Spades(Package):
     """SPAdes - St. Petersburg genome assembler - is intended for both
        standard isolates and single-cell MDA bacteria assemblies."""

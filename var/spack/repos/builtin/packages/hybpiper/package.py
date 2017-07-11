@@ -23,7 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import glob, os
+import glob
+import os
+
 
 class Hybpiper(Package):
     """HybPiper was designed for targeted sequence capture, in which DNA
@@ -50,7 +52,7 @@ class Hybpiper(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        files = glob.iglob( "*.py")
+        files = glob.iglob("*.py")
         for file in files:
             if os.path.isfile(file):
                 install(file, prefix.bin)
