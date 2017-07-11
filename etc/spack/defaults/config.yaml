@@ -16,11 +16,11 @@
 config:
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
-  install_tree: $spack/opt/spack   # Change to the desired installation
+  install_tree: $home/common/software   # Change to the desired installation
 
 
   # This is the scheme that will be the default for NERSC. 
-  install_path_scheme: "${PLATFORM}/${OS}/${TARGET}/${PACKAGE}/${VERSION}/${COMPILERNAME}/${COMPILERVERSION}"  # NoQA: E501
+  install_path_scheme: "${PLATFORM}/${OS}/${TARGET}/${PACKAGE}/${VERSION}/${COMPILERNAME}/${COMPILERVERSION}/${HASH:7}"  # NoQA: E501
 
   # Locations where different types of modules should be installed.
   module_roots:
@@ -41,6 +41,7 @@ config:
   #
   # The build stage can be purged with `spack purge --stage`.
   build_stage:
+    - $scratch
     - $tempdir
     - /nfs/tmp2/$user
     - $spack/var/spack/stage
