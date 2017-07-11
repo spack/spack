@@ -38,7 +38,7 @@ class Freebayes(MakefilePackage):
     depends_on('cmake', type='build')
     depends_on('zlib')
 
-    parallel=False
+    parallel = False
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
