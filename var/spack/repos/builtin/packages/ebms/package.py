@@ -47,4 +47,3 @@ class Ebms(Package):
         make()
         install('ebmc-iallgather', prefix.bin)
         install('ebmc-rget', prefix.bin)
-
