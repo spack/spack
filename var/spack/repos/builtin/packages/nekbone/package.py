@@ -41,58 +41,15 @@ class Nekbone(Package):
 
     def install(self, spec, prefix):
 
-        if not os.path.exists(prefix.bin):
-            mkdir(prefix.bin)
+        working_dirs = ['example1', 'example2', 'example3', 'nek_comm',
+                        'nek_delay', 'nek_mgrid']
+        mkdir(prefix.bin)
 
-        os.chdir(os.getcwd() + '/test/example1/')
-        os.system('./makenek ex1  ../../src')
-
-        if not os.path.exists(prefix.bin + '/example1/'):
-            mkdir(prefix.bin + '/example1/')
-
-        install('nekbone', prefix.bin + '/example1/')
-        install('nekpmpi', prefix.bin + '/example1/')
-
-        os.chdir('../example2/')
-        os.system('./makenek ex1  ../../src')
-
-        if not os.path.exists(prefix.bin + '/example2/'):
-            mkdir(prefix.bin + '/example2/')
-
-        install('nekbone', prefix.bin + '/example2/')
-        install('nekpmpi', prefix.bin + '/example2/')
-
-        os.chdir('../example3/')
-        os.system('./makenek ex1  ../../src')
-
-        if not os.path.exists(prefix.bin + '/example3/'):
-            mkdir(prefix.bin + '/example3/')
-
-        install('nekbone', prefix.bin + '/example3/')
-        install('nekpmpi', prefix.bin + '/example3/')
-
-        os.chdir('../nek_comm/')
-        os.system('./makenek ex1  ../../src')
-
-        if not os.path.exists(prefix.bin + '/nek_comm/'):
-            mkdir(prefix.bin + '/nek_comm/')
-        install('nekbone', prefix.bin + '/nek_comm/')
-        install('nekpmpi', prefix.bin + '/nek_comm/')
-
-        os.chdir('../nek_delay/')
-        os.system('./makenek ex1  ../../src')
-
-        if not os.path.exists(prefix.bin + '/nek_delay/'):
-            mkdir(prefix.bin + '/nek_delay/')
-        install('nekbone', prefix.bin + '/nek_delay/')
-        install('nekpmpi', prefix.bin + '/nek_delay/')
-
-        os.chdir('../nek_mgrid/')
-        os.system('./makenek ex1  ../../src')
-
-        if not os.path.exists(prefix.bin + '/nek_mgrid/'):
-            mkdir(prefix.bin + '/nek_mgrid/')
-
-        install('nekbone', prefix.bin + '/nek_mgrid/')
-        install('nekpmpi', prefix.bin + '/nek_mgrid/')
+        for wdir in working_dirs:
+            with working_dir('test/' + wdir):
+                makenek = Executable('./makenek')
+                makenek('ex1', '../../src')
+                mkdir(prefix.bin + '/' + wdir)
+                install('nekbone', prefix.bin + '/' + wdir)
+                install('nekpmpi', prefix.bin + '/' + wdir)
 
