@@ -34,10 +34,9 @@ class Hpx(CMakePackage):
 
     version('1.0.0', '4983e7c6402417ec794d40343e36e417')
 
-    depends_on('boost')
-    depends_on('hwloc')
-    depends_on('zlib')
-    depends_on('libunwind')
+    depends_on('boost@1.51.0:')
+    depends_on('hwloc@1.2:')
+    depends_on('libunwind@0.97:')
 
     def cmake_args(self):
         args = ['-DHPX_BUILD_EXAMPLES=OFF', '-DHPX_MALLOC=system']
