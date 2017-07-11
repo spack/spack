@@ -42,7 +42,7 @@ class Savanna(Package):
 
     depends_on('mpi')
     depends_on('stc')
-    depends_on('adios@develop +staging')
+    depends_on('adios +staging')
     depends_on('mpix-launch-swift')
     depends_on('tau', when='+tau')
 
