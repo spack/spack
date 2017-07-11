@@ -2,6 +2,7 @@ import llnl.util.tty as tty
 import spack
 import llnl.util.filesystem as fs
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 from spack.config import ConfigScope
 from spack.spec import Spec, CompilerSpec, FlagMap
 from spack.repository import Repo
@@ -310,7 +311,34 @@ def context_create(args):
     context = Context(args.context)
     if os.path.exists(context.path()):
         raise tty.die("Context already exists: " + args.context)
-    write(context)
+
+    config_paths = None
+    if args.init_file:
+        with open(args.init_file) as F:
+            data = syaml.load(F)
+        user_specs = list()
+        config_sections = {}
+        for key, val in data.items():
+            if key == 'user_specs':
+                user_specs.extend(val)
+            else:
+                config_sections[key] = val
+
+        for user_spec in user_specs:
+            context.add(user_spec)
+        if config_sections:
+            import tempfile
+            tmp_cfg_dir = tempfile.mkdtemp()
+            config_paths = []
+        for key, val in config_sections.items():
+            yaml_section = syaml.dump({key: val}, default_flow_style=False)
+            yaml_file = '{0}.yaml'.format(key)
+            yaml_path = fs.join_path(tmp_cfg_dir, yaml_file)
+            with open(yaml_path, 'w') as F:
+                F.write(yaml_section)
+
+    write(context, config_files=config_paths)
+    shutil.rmtree(tmp_cfg_dir)
 
 
 def context_update_config(args):
@@ -436,6 +464,10 @@ def setup_parser(subparser):
 
     create_parser = sp.add_parser('create', help='Make a context')
     add_common_args(create_parser)
+    create_parser.add_argument(
+        '--init-file', dest='init_file',
+        help='File with user specs to add and configuration yaml to use'
+    )
 
     add_parser = sp.add_parser('add', help='Add a spec to a context')
     add_common_args(add_parser)
