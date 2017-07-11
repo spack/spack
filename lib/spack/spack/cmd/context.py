@@ -334,11 +334,13 @@ def context_create(args):
             yaml_section = syaml.dump({key: val}, default_flow_style=False)
             yaml_file = '{0}.yaml'.format(key)
             yaml_path = fs.join_path(tmp_cfg_dir, yaml_file)
+            config_paths.append(yaml_path)
             with open(yaml_path, 'w') as F:
                 F.write(yaml_section)
 
     write(context, config_files=config_paths)
-    shutil.rmtree(tmp_cfg_dir)
+    if config_paths:
+        shutil.rmtree(tmp_cfg_dir)
 
 
 def context_update_config(args):
