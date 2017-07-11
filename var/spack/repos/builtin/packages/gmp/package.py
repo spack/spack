@@ -30,7 +30,7 @@ class Gmp(AutotoolsPackage):
     on signed integers, rational numbers, and floating-point numbers."""
 
     homepage = "https://gmplib.org"
-    url      = "https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2"
+    url = "https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2"
 
     version('6.1.2',  '8ddbb26dc3bd4e2302984debba1406a5')
     version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
@@ -43,6 +43,10 @@ class Gmp(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
 
+    variant('generic',
+            default=False,
+            description='Build with -mtune=generic for portability of gcc')
+
     # gmp's configure script seems to be broken; it sometimes misdetects
     # shared library support. Regenerating it fixes the issue.
     force_autoreconf = True
@@ -52,5 +56,8 @@ class Gmp(AutotoolsPackage):
         # This flag is necessary for the Intel build to pass `make check`
         if self.spec.compiler.name == 'intel':
             args.append('CXXFLAGS=-no-ftz')
-
+        if self.spec.compiler.name == 'gcc' and '+generic' in self.spec:
+            args.append('CFLAGS=-mtune=generic')
+            args.append('CXXFLAGS=-mtune=generic')
+            args.append('--build=x86_64-linux-gnu')
         return args
