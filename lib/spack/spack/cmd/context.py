@@ -223,7 +223,10 @@ def upgrade_dependency_version(spec, dep_name):
     return spec
 
 
-def write(context, new_repo=None):
+def write(context, new_repo=None, config_files=None):
+    """
+    config_files will overwrite any existing config files in the context.
+    """
     tmp_new, dest, tmp_old = write_paths(context)
 
     if os.path.exists(tmp_new) or os.path.exists(tmp_old):
@@ -240,8 +243,17 @@ def write(context, new_repo=None):
     elif os.path.exists(context.repo_path()):
         shutil.copytree(context.repo_path(), dest_repo_dir)
 
+    new_config_dir = fs.join_path(tmp_new, 'config')
     if os.path.exists(context.config_path()):
-        shutil.copytree(context.config_path(), fs.join_path(tmp_new, 'config'))
+        shutil.copytree(context.config_path(), new_config_dir)
+    else:
+        fs.mkdirp(new_config_dir)
+
+    if config_files:
+        for cfg_path in config_files:
+            dst_fname = os.path.basename(cfg_path)
+            dst = fs.join_path(new_config_dir, dst_fname)
+            shutil.copyfile(cfg_path, dst)
 
     if os.path.exists(dest):
         shutil.move(dest, tmp_old)
@@ -299,6 +311,11 @@ def context_create(args):
     if os.path.exists(context.path()):
         raise tty.die("Context already exists: " + args.context)
     write(context)
+
+
+def context_update_config(args):
+    context = Context(args.context)
+    write(context, config_files=args.config_files)
 
 
 def context_add(args):
@@ -475,6 +492,16 @@ def setup_parser(subparser):
         help='Download all source files for all packages in a context')
     add_common_args(stage_parser)
 
+    config_update_parser = sp.add_parser(
+        'update-config',
+        help='Add config yaml file to context')
+    add_common_args(config_update_parser)
+    config_update_parser.add_argument(
+        'config_files',
+        nargs=argparse.REMAINDER,
+        help="Configuration files to add"
+    )
+
     install_parser = sp.add_parser(
         'install',
         help='Install all concretized specs in a context')
@@ -493,5 +520,6 @@ def context(parser, args, **kwargs):
         'upgrade': context_upgrade_dependency,
         'stage': context_stage,
         'install': context_install,
+        'update-config': context_update_config,
     }
     action[args.context_command](args)
