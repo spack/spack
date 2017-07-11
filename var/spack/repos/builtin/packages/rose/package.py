@@ -29,19 +29,18 @@
 from spack import *
 
 
-class Rose(Package):
+class Rose(AutotoolsPackage):
     """A compiler infrastructure to build source-to-source program
        transformation and analysis tools.
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
+    #url = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
 
-    version('0.9.7', 'e14ce5250078df4b09f4f40559d46c75')
-    version('master', branch='master',
+    version('0.9.9.0', commit='14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff',
             git='https://github.com/rose-compiler/rose.git')
-
-    patch('add_spack_compiler_recognition.patch')
+    version('dev', branch='master',
+            git='https://github.com/rose-compiler/rose-develop.git')
 
     depends_on("autoconf@2.69", type='build')
     depends_on("automake@1.14", type='build')
@@ -89,6 +88,7 @@ class Rose(Package):
         cxx = self.compiler.cxx
         return [
             '--disable-boost-version-check',
+            "--enable-edg_version=4.12",
             "--with-alternate_backend_C_compiler={0}".format(cc),
             "--with-alternate_backend_Cxx_compiler={0}".format(cxx),
             "--with-boost={0}".format(spec['boost'].prefix),
@@ -98,4 +98,9 @@ class Rose(Package):
             '--enable-tutorial-directory={0}'.format('no'),
         ]
 
+    @property
+    def build_directory(self):
+        return 'rose-build'
+
     install_targets = ["install-core"]
+
