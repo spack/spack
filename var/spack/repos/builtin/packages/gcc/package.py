@@ -76,9 +76,9 @@ class Gcc(AutotoolsPackage):
     variant('rpathlibgcc',
             default=False,
             description='Apply patch to set libgcc_s.dylib Mach-O ID to' +
-                    ' @rpath/libgcc_s.dylib for relocatability ' + 
-                    'Note: using this variant requires setting [extra_rpaths] '+
-                    'in compilers.yaml to the compiler library path' )
+            ' @rpath/libgcc_s.dylib for relocatability ' +
+            'Note: using this variant requires setting [extra_rpaths] ' +
+            'in compilers.yaml to the compiler library path')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
@@ -188,7 +188,7 @@ class Gcc(AutotoolsPackage):
                         'gcc/Makefile.in')
         if spec.satisfies('+rpathlibgcc'):
             # Make libgcc_s relocatable
-            filter_file(r"@shlib_slibdir@", "@rpath", 
+            filter_file(r"@shlib_slibdir@", "@rpath",
                         'libgcc/config/t-slibgcc-darwin', string=True)
 
     def configure_args(self):
