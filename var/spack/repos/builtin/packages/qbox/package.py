@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import os
 import shutil
 from spack import *
 
@@ -88,8 +87,8 @@ class Qbox(MakefilePackage):
         filter_file(r'\$\(TARGET\)', 'gcc_atlas', 'src/Makefile')
 
     def install(self, spec, prefix):
-        os.mkdir(prefix + '/src')
-        shutil.move('src/qb', prefix + '/src/qb')
+        mkdir(prefix.src)
+        install('src/qb', prefix.src)
         shutil.move('test', prefix)
         shutil.move('xml', prefix)
         shutil.move('util', prefix)
