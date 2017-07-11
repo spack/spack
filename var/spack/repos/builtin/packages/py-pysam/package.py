@@ -25,23 +25,16 @@
 from spack import *
 
 
-class Bcftools(Package):
-    """BCFtools is a set of utilities that manipulate variant calls in the
-       Variant Call Format (VCF) and its binary counterpart BCF. All
-       commands work transparently with both VCFs and BCFs, both
-       uncompressed and BGZF-compressed."""
+class PyPysam(PythonPackage):
+    """A python module for reading, manipulating and writing genomic data
+       sets."""
 
-    homepage = "http://samtools.github.io/bcftools/"
-    url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
+    homepage = "https://pypi.python.org/pypi/pysam"
+    url      = "https://pypi.python.org/packages/a4/1b/b6dfd92aea876647d20d9a8bd8618e4f2af6300539426be83c8bb0912d6f/pysam-0.11.2.2.tar.gz#md5=56230cd5f55b503845915b76c22d620a"
 
-    version('1.4', '50ccf0a073bd70e99cdb3c8be830416e')
-    version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
+    version('0.11.2.2', '56230cd5f55b503845915b76c22d620a')
 
-    depends_on('zlib')
-    depends_on('bzip2', when="@1.4:")
-    # build fails without xz
-    depends_on('xz', when="@1.4")
-
-    def install(self, spec, prefix):
-        make("prefix=%s" % prefix, "all")
-        make("prefix=%s" % prefix, "install")
+    depends_on('python', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython@0.24.1:', type=('build', 'run'))
+    depends_on('bcftools')

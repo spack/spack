@@ -25,23 +25,12 @@
 from spack import *
 
 
-class Bcftools(Package):
-    """BCFtools is a set of utilities that manipulate variant calls in the
-       Variant Call Format (VCF) and its binary counterpart BCF. All
-       commands work transparently with both VCFs and BCFs, both
-       uncompressed and BGZF-compressed."""
+class PyPy2bit(PythonPackage):
+    """A package for accessing 2bit files using lib2bit."""
 
-    homepage = "http://samtools.github.io/bcftools/"
-    url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
+    homepage = "https://pypi.python.org/pypi/py2bit"
+    url      = "https://pypi.python.org/packages/b2/ad/72d0d1cf2a588d9d2b16f5e531063aa33d1c80bf424e810fc1dfe5c5dc72/py2bit-0.2.1.tar.gz#md5=eaf5b1c80a0bbf0b35af1f002f83a556"
 
-    version('1.4', '50ccf0a073bd70e99cdb3c8be830416e')
-    version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
+    version('0.2.1', 'eaf5b1c80a0bbf0b35af1f002f83a556')
 
-    depends_on('zlib')
-    depends_on('bzip2', when="@1.4:")
-    # build fails without xz
-    depends_on('xz', when="@1.4")
-
-    def install(self, spec, prefix):
-        make("prefix=%s" % prefix, "all")
-        make("prefix=%s" % prefix, "install")
+    depends_on('py-setuptools', type='build')

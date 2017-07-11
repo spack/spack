@@ -25,23 +25,13 @@
 from spack import *
 
 
-class Bcftools(Package):
-    """BCFtools is a set of utilities that manipulate variant calls in the
-       Variant Call Format (VCF) and its binary counterpart BCF. All
-       commands work transparently with both VCFs and BCFs, both
-       uncompressed and BGZF-compressed."""
+class PyPybigwig(PythonPackage):
+    """A package for accessing bigWig files using libBigWig."""
 
-    homepage = "http://samtools.github.io/bcftools/"
-    url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
+    homepage = "https://pypi.python.org/pypi/pyBigWig"
+    url      = "https://pypi.python.org/packages/4d/7c/911e92392cf2d70d1a0da8fbb95be1e203f3cf9f858e030e98d4882c9ec7/pyBigWig-0.3.4.tar.gz#md5=8e0a91e26e87eeaa071408a3a749bfa9"
 
-    version('1.4', '50ccf0a073bd70e99cdb3c8be830416e')
-    version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
+    version('0.3.4', '8e0a91e26e87eeaa071408a3a749bfa9')
 
-    depends_on('zlib')
-    depends_on('bzip2', when="@1.4:")
-    # build fails without xz
-    depends_on('xz', when="@1.4")
-
-    def install(self, spec, prefix):
-        make("prefix=%s" % prefix, "all")
-        make("prefix=%s" % prefix, "install")
+    depends_on('py-setuptools', type='build')
+    depends_on('curl', type='build')

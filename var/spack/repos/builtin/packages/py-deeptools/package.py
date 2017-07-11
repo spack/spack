@@ -25,23 +25,20 @@
 from spack import *
 
 
-class Bcftools(Package):
-    """BCFtools is a set of utilities that manipulate variant calls in the
-       Variant Call Format (VCF) and its binary counterpart BCF. All
-       commands work transparently with both VCFs and BCFs, both
-       uncompressed and BGZF-compressed."""
+class PyDeeptools(PythonPackage):
+    """deepTools addresses the challenge of handling the large amounts of data
+       that are now routinely generated from DNA sequencing centers."""
 
-    homepage = "http://samtools.github.io/bcftools/"
-    url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
+    homepage = "https://github.com/fidelram/deepTools"
+    url      = "https://github.com/fidelram/deepTools/archive/2.5.2.tar.gz"
 
-    version('1.4', '50ccf0a073bd70e99cdb3c8be830416e')
-    version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
+    version('2.5.2', '76d6550f9341e9d751508ae8f6e76310')
 
-    depends_on('zlib')
-    depends_on('bzip2', when="@1.4:")
-    # build fails without xz
-    depends_on('xz', when="@1.4")
-
-    def install(self, spec, prefix):
-        make("prefix=%s" % prefix, "all")
-        make("prefix=%s" % prefix, "install")
+    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.8.0:', type=('build', 'run'))
+    depends_on('py-scipy@0.17.0:', type=('build', 'run'))
+    depends_on('py-py2bit@0.1.0:', type=('build', 'run'))
+    depends_on('py-pybigwig@0.2.1:', type=('build', 'run'))
+    depends_on('py-pysam@0.8:', type=('build', 'run'))
+    depends_on('py-matplotlib@1.4.0:', type=('build', 'run'))
