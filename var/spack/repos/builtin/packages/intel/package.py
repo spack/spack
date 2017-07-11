@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -122,8 +122,8 @@ class Intel(IntelInstaller):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    version('17.0.4', '3cd2a5763bf2ebe97889a067a1a7c800',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11485/parallel_studio_xe_2017_update4_composer_edition.tgz')
+    version('17.0.4', 'd03d351809e182c481dc65e07376d9a2',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
     version('17.0.3', '52344df122c17ddff3687f84ceb21623',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
     version('17.0.2',     '2891ab1ece43eb61b6ab892f07c47f01',

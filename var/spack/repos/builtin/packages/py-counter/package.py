@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,6 +28,8 @@ from spack import *
 class PyCounter(PythonPackage):
     """Counter package defines the "counter.Counter" class similar to
        bags or multisets in other languages."""
+
+    import_modules = ['counter']
 
     homepage = "https://github.com/KelSolaar/Counter"
     url      = "https://pypi.io/packages/source/C/Counter/Counter-1.0.0.tar.gz"

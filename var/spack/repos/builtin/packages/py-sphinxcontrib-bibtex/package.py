@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,12 +31,14 @@ class PySphinxcontribBibtex(PythonPackage):
     homepage = "https://pypi.python.org/pypi/sphinxcontrib-bibtex"
     url      = "https://pypi.io/packages/source/s/sphinxcontrib-bibtex/sphinxcontrib-bibtex-0.3.5.tar.gz"
 
+    import_modules = ['sphinxcontrib', 'sphinxcontrib.bibtex']
+
     version('0.3.5', 'd3c86836e2f6227b55a5ca9108590b1c')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-latexcodec@0.3.0:', type=('build', 'run'))
     depends_on('py-pybtex@0.17:', type=('build', 'run'))
-    depends_on('pybtex-docutils@0.2.0:', type=('build', 'run'))
+    depends_on('py-pybtex-docutils@0.2.0:', type=('build', 'run'))
     depends_on('py-six@1.4.1:', type=('build', 'run'))
     depends_on('py-sphinx@1.0:', type=('build', 'run'))
     depends_on('py-oset@0.1.3:', type=('build', 'run'))

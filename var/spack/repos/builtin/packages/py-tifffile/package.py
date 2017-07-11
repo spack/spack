@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,9 @@ class PyTifffile(PythonPackage):
     homepage = "https://github.com/blink1073/tifffile"
     url      = "https://pypi.io/packages/source/t/tifffile/tifffile-0.12.1.tar.gz"
 
+    import_modules = ['tifffile']
+
     version('0.12.1', '8a8afa74dd0df7915ac376a6cd7eeffc')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.8.2:',        type=('build', 'run'))
+    depends_on('py-numpy@1.8.2:', type=('build', 'run'))

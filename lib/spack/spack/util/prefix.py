@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,74 +23,35 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
-This file contains utilities to help with installing packages.
+This file contains utilities for managing the installation prefix of a package.
 """
-from llnl.util.filesystem import join_path
+import os
 
 
 class Prefix(str):
     """This class represents an installation prefix, but provides useful
-       attributes for referring to directories inside the prefix.
+    attributes for referring to directories inside the prefix.
 
-       For example, you can do something like this::
+    Attributes of this object are created on the fly when you request them,
+    so any of the following is valid:
 
-           prefix = Prefix('/usr')
-           print(prefix.lib)
-           print(prefix.lib64)
-           print(prefix.bin)
-           print(prefix.share)
-           print(prefix.man4)
+    >>> prefix = Prefix('/usr')
+    >>> prefix.bin
+    /usr/bin
+    >>> prefix.lib64
+    /usr/lib64
+    >>> prefix.share.man
+    /usr/share/man
+    >>> prefix.foo.bar.baz
+    /usr/foo/bar/baz
 
-       This program would print:
+    Prefix objects behave identically to strings. In fact, they
+    subclass ``str``. So operators like ``+`` are legal::
 
-           /usr/lib
-           /usr/lib64
-           /usr/bin
-           /usr/share
-           /usr/share/man/man4
+        print('foobar ' + prefix)
 
-       Prefix objects behave identically to strings.  In fact, they
-       subclass str.  So operators like + are legal:
-
-           print("foobar " + prefix)
-
-       This prints 'foobar /usr". All of this is meant to make custom
-       installs easy.
+    This prints ``foobar /usr``. All of this is meant to make custom
+    installs easy.
     """
-
-    def __new__(cls, path):
-        s = super(Prefix, cls).__new__(cls, path)
-        s.bin       = join_path(s, 'bin')
-        s.bin64     = join_path(s, 'bin64')
-        s.sbin      = join_path(s, 'sbin')
-        s.etc       = join_path(s, 'etc')
-        s.include   = join_path(s, 'include')
-        s.include64 = join_path(s, 'include64')
-        s.lib       = join_path(s, 'lib')
-        s.lib64     = join_path(s, 'lib64')
-        s.libexec   = join_path(s, 'libexec')
-        s.share     = join_path(s, 'share')
-        s.doc       = join_path(s.share, 'doc')
-        s.info      = join_path(s.share, 'info')
-
-        s.man  = join_path(s, 'man')
-        s.man1 = join_path(s.man, 'man1')
-        s.man2 = join_path(s.man, 'man2')
-        s.man3 = join_path(s.man, 'man3')
-        s.man4 = join_path(s.man, 'man4')
-        s.man5 = join_path(s.man, 'man5')
-        s.man6 = join_path(s.man, 'man6')
-        s.man7 = join_path(s.man, 'man7')
-        s.man8 = join_path(s.man, 'man8')
-
-        s.share_man  = join_path(s.share, 'man')
-        s.share_man1 = join_path(s.share_man, 'man1')
-        s.share_man2 = join_path(s.share_man, 'man2')
-        s.share_man3 = join_path(s.share_man, 'man3')
-        s.share_man4 = join_path(s.share_man, 'man4')
-        s.share_man5 = join_path(s.share_man, 'man5')
-        s.share_man6 = join_path(s.share_man, 'man6')
-        s.share_man7 = join_path(s.share_man, 'man7')
-        s.share_man8 = join_path(s.share_man, 'man8')
-
-        return s
+    def __getattr__(self, attr):
+        return Prefix(os.path.join(self, attr))

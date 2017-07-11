@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,10 +31,13 @@ import sys
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
     homepage = 'http://qt.io'
+    # Alternative location 'http://download.qt.io/official_releases/qt/'
     url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
 
+    version('5.9.1',  '77b4af61c49a09833d4df824c806acaf')
+    version('5.9.0',  '9c8bc8b828c2b56721980368266df9d9')
     version('5.8.0',  'a9f2494f75f966e2f22358ec367d8f41')
     version('5.7.1',  '031fb3fd0c3cc0f1082644492683f18d')
     version('5.7.0',  '9a46cce61fc64c20c3ac0a0e0fa41b42')
@@ -150,7 +153,11 @@ class Qt(Package):
         elif version >= Version('3'):
             url += 'free-'
 
-        url += str(version) + '.tar.gz'
+        # 5.9 only has xz format. From 5.2.1 -> 5.8.0 .gz or .xz were possible
+        if version >= Version('5.9'):
+            url += str(version) + '.tar.xz'
+        else:
+            url += str(version) + '.tar.gz'
 
         return url
 

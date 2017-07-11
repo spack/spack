@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,6 +38,7 @@ class Mpifileutils(AutotoolsPackage):
     homepage = "https://github.com/hpc/mpifileutils"
     url      = "https://github.com/hpc/mpifileutils/releases/download/v0.6/mpifileutils-0.6.tar.gz"
 
+    version('0.7', 'c081f7f72c4521dddccdcf9e087c5a2b')
     version('0.6', '620bcc4966907481f1b1a965b28fc9bf')
 
     depends_on('mpi')
@@ -52,10 +53,11 @@ class Mpifileutils(AutotoolsPackage):
     variant('lustre', default=False,
         description="Enable optimizations and features for Lustre")
 
-    #  install experimental tools
-    #  (coming with v0.7)
-    # variant('experimental', default=False,
-    #    description="Install experimental tools")
+    variant('experimental', default=False,
+        description="Install experimental tools")
+
+    # --enable-experimental fails with v0.6 and earlier
+    conflicts('+experimental', when='@:0.6')
 
     def configure_args(self):
         args = []
@@ -65,11 +67,11 @@ class Mpifileutils(AutotoolsPackage):
         else:
             args.append('--disable-lustre')
 
-        #  coming with v0.7
-        # if '+experimental' in self.spec:
-        #     args.append('--enable-experimental')
-        # else:
-        #     args.append('--disable-experimental')
+        if self.spec.satisfies('@0.7:'):
+            if '+experimental' in self.spec:
+                args.append('--enable-experimental')
+            else:
+                args.append('--disable-experimental')
 
         return args
 
