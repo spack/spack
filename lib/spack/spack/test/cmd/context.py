@@ -49,7 +49,7 @@ class TestContext(unittest.TestCase):
         first_spec = c.specs_by_hash[c.concretized_order[0]]
         available = set(['gcc', 'clang'])
         available.remove(first_spec.compiler.name)
-        new_compiler = iter(available).next()
+        new_compiler = next(iter(available))
         c.reset_os_and_compiler(compiler=new_compiler)
 
         new_spec = c.specs_by_hash[c.concretized_order[0]]
