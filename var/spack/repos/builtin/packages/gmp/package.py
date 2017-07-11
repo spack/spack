@@ -59,5 +59,4 @@ class Gmp(AutotoolsPackage):
         if self.spec.compiler.name == 'gcc' and '+generic' in self.spec:
             args.append('CFLAGS=-mtune=generic')
             args.append('CXXFLAGS=-mtune=generic')
-            args.append('--build=x86_64-linux-gnu')
         return args
