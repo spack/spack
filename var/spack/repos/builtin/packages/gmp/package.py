@@ -46,7 +46,7 @@ class Gmp(AutotoolsPackage):
     variant('generic',
             default=False,
             description='Build with -mtune=generic for portability of gcc')
-  
+
     # gmp's configure script seems to be broken; it sometimes misdetects
     # shared library support. Regenerating it fixes the issue.
     force_autoreconf = True
