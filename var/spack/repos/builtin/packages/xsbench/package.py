@@ -47,8 +47,6 @@ class Xsbench(MakefilePackage):
 
     def edit(self, spec, prefix):
 
-        makefile = FileFilter('src/Makefile')
-
         if '+mpi' in self.spec:
             self.build_targets.extend(['MPI=yes'])
 
