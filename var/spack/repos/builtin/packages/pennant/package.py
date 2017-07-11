@@ -60,7 +60,6 @@ class Pennant(MakefilePackage):
         if self.compiler.name == 'pgi':
             opt += ' -fastsse'
 
-        makefile.filter('CXX .*', 'CXX := c++')
         makefile.filter(
             'CXXFLAGS_DEBUG .*',
             'CXXFLAGS_DEBUG := {0}'.format(debug))
@@ -76,8 +75,9 @@ class Pennant(MakefilePackage):
                 'CXX .*',
                 'CXX := {0}'.format(spec['mpi'].mpicxx))
 
-        if '+mpi' not in spec:
+        if '~mpi' in spec:
             makefile.filter('-DUSE_MPI', '#')
+            makefile.filter('CXX .*', 'CXX := c++')
 
         if '+openmp' not in spec:
             makefile.filter('.*CXXFLAGS_OPENMP.*', '#')
