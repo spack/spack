@@ -41,4 +41,4 @@ class Jags(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
 
-    depends_on('atlas')
+    depends_on('netlib-lapack')
