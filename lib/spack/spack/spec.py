@@ -2011,15 +2011,6 @@ class Spec(object):
             if provider:
                 dep = provider
         else:
-            index = ProviderIndex([dep], restrict=True)
-            for vspec in dep_constraints.root_deps():
-                if index.providers_for(vspec):
-                    vspec._replace_with(dep)
-                    changed = True
-                else:
-                    required = index.providers_for(vspec.name)
-                    if required:
-                        raise UnsatisfiableProviderSpecError(required[0], dep)
             provider_index.update(dep)
 
         pre_existing = dep_constraints.get(dep.name)
