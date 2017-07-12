@@ -925,7 +925,7 @@ Submodules
   .. code-block:: python
 
      version('1.0.1', git='https://github.com/example-project/example.git',
-             tag='v1.0.1', submdoules=True)
+             tag='v1.0.1', submodules=True)
 
 
 .. _github-fetch:
