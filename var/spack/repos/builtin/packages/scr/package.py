@@ -69,16 +69,19 @@ class Scr(CMakePackage):
             description="Build SCR with fortran bindings")
 
     variant('resource_manager', default='SLURM',
-            description="Resource manager for which to configure SCR. "
-            "Possible values are SLURM, APRUN, PMIX, LSF, NONE")
+            values=('SLURM', 'APRUN', 'PMIX', 'LSF', 'NONE'),
+            multi=False,
+            description="Resource manager for which to configure SCR.")
 
     variant('async_api', default='NONE',
-            description="Asynchronous data transfer API to use with SCR. "
-            "Possible values are NONE, CRAY_DW, INTEL_CPPR.")
+            values=('NONE', 'CRAY_DW', 'INTEL_CPPR'),
+            multi=False,
+            description="Asynchronous data transfer API to use with SCR.")
 
     variant('file_lock', default='FLOCK',
-            description='File locking style for SCR. '
-            'Possible values are FLOCK, FNCTL, NONE')
+            values=('FLOCK', 'FNCTL', 'NONE'),
+            multi=False,
+            description='File locking style for SCR.')
 
     variant('cache_base', default='/tmp',
             description='Compile time default location for checkpoint cache.')
