@@ -65,12 +65,9 @@ class Snbone(MakefilePackage):
 
         dirs = ['/C', '/Fortran', '/MakeMesh', '/ProcessMesh']
 
-        files = [
-                 'SNaCFE.x',
-                 '../src_fortran/SNaCFE.x',
+        files = ['SNaCFE.x', '../src_fortran/SNaCFE.x',
                  '../src_makemesh/makemesh.x',
-                 '../src_processmesh/processmesh.x'
-                ]
+                 '../src_processmesh/processmesh.x']
 
         mkdir(prefix.bin)
 
