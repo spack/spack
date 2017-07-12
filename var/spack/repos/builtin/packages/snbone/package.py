@@ -74,7 +74,7 @@ class Snbone(MakefilePackage):
 
         mkdir(prefix.bin)
 
-    for idx, dir in enumerate(dirs):
+        for idx, dir in enumerate(dirs):
             with working_dir('src_c', create=False):
                 mkdir(prefix.bin + dir)
                 install(files[idx], prefix.bin + dir)
