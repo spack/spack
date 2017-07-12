@@ -55,4 +55,3 @@ class Simplemoc(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         make('src/SimpleMOC', prefix.bin)
-
