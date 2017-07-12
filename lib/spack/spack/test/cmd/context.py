@@ -2,6 +2,10 @@ import unittest
 import tempfile
 import shutil
 import pytest
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 import spack.cmd.context
 from spack.cmd.context import Context, prepare_repository, _context_concretize
@@ -62,8 +66,7 @@ class TestContext(unittest.TestCase):
         c.add('mpileaks')
         c.concretize()
         c.add('python')
-        import StringIO
-        mock_stream = StringIO.StringIO()
+        mock_stream = StringIO()
         c.list(mock_stream)
         list_content = mock_stream.getvalue()
         assert 'mpileaks' in list_content

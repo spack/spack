@@ -9,7 +9,10 @@ from spack.repository import Repo
 from spack.version import VersionList
 
 import argparse
-import itertools
+try:
+    from itertools import izip_longest as zip_longest
+except ImportError:
+    from itertools import zip_longest
 import os
 import shutil
 
@@ -76,7 +79,7 @@ class Context(object):
             spec.package.do_install(explicit=True)
 
     def list(self, stream, include_deps=False):
-        for user_spec, concretized_hash in itertools.izip_longest(
+        for user_spec, concretized_hash in zip_longest(
                 self.user_specs, self.concretized_order):
 
             stream.write('{0}\n'.format(user_spec))
