@@ -56,6 +56,21 @@ class TestContext(unittest.TestCase):
         assert new_spec.compiler != first_spec.compiler
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    def test_context_list(self):
+        c = Context('test')
+        c.add('mpileaks')
+        c.concretize()
+        c.add('python')
+        import StringIO
+        mock_stream = StringIO.StringIO()
+        c.list(mock_stream)
+        list_content = mock_stream.getvalue()
+        assert 'mpileaks' in list_content
+        assert 'python' in list_content
+        mpileaks_spec = c.specs_by_hash[c.concretized_order[0]]
+        assert mpileaks_spec.format() in list_content
+
+    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_to_dict(self):
         c = Context('test')
         c.add('mpileaks')
