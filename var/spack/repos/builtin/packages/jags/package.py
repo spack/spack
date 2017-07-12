@@ -27,10 +27,12 @@ from spack import *
 
 
 class Jags(AutotoolsPackage):
-    """JAGS is Just Another Gibbs Sampler.  It is a program for analysis of Bayesian hierarchical models using Markov Chain Monte Carlo (MCMC) simulation  not wholly unlike BUGS"""
+    """JAGS is Just Another Gibbs Sampler.  It is a program for analysis of
+       Bayesian hierarchical models using Markov Chain Monte Carlo (MCMC)
+       simulation  not wholly unlike BUGS"""
 
     homepage = "http://mcmc-jags.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/mcmc-jags/JAGS/4.x/Source/JAGS-4.2.0.tar.gz"
+    url = "https://downloads.sourceforge.net/project/mcmc-jags/JAGS/4.x/Source/JAGS-4.2.0.tar.gz"
 
     version('4.2.0', '9e521b3cfb23d3290a8c6bc0b79bf426')
 
