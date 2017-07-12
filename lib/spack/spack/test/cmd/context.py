@@ -5,6 +5,7 @@ import pytest
 
 import spack.cmd.context
 from spack.cmd.context import Context, prepare_repository, _context_concretize
+from spack.version import Version
 
 
 class TestContext(unittest.TestCase):
@@ -69,6 +70,19 @@ class TestContext(unittest.TestCase):
         assert 'python' in list_content
         mpileaks_spec = c.specs_by_hash[c.concretized_order[0]]
         assert mpileaks_spec.format() in list_content
+
+    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    def test_upgrade_dependency(self):
+        c = Context('test')
+        c.add('mpileaks ^callpath@0.9')
+        c.concretize()
+
+        c.upgrade_dependency('callpath')
+        env_specs = c._get_environment_specs()
+        callpath_dependents = list(x for x in env_specs if 'callpath' in x)
+        assert callpath_dependents
+        for spec in callpath_dependents:
+            assert spec['callpath'].version == Version('1.0')
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_to_dict(self):
