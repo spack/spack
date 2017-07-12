@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,8 +28,10 @@ from spack import *
 class Libtiff(AutotoolsPackage):
     """libtiff graphics format library"""
     homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "ftp://download.osgeo.org/libtiff/tiff-4.0.3.tar.gz"
+    url      = "http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz"
 
+    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
+    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
     version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
     version('4.0.3', '051c1068e6a0627f461948c365290410')
 

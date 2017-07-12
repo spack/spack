@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,7 +28,7 @@ from spack.util.environment import *
 import shutil
 
 
-class R(Package):
+class R(AutotoolsPackage):
     """R is 'GNU S', a freely available language and environment for
     statistical computing and graphics which provides a wide variety of
     statistical and graphical techniques: linear and nonlinear modelling,
@@ -36,10 +36,13 @@ class R(Package):
     Please consult the R project homepage for further information."""
 
     homepage = "https://www.r-project.org"
-    url = "http://cran.cnr.berkeley.edu/src/base/R-3/R-3.1.2.tar.gz"
+    url = "https://cloud.r-project.org/src/base/R-3/R-3.4.0.tar.gz"
 
     extendable = True
 
+    version('3.4.0', '75083c23d507b9c16d5c6afbd7a827e7')
+    version('3.3.3', '0ac211ec15e813a24f8f4a5a634029a4')
+    version('3.3.2', '2437014ef40641cdc9673e89c040b7a8')
     version('3.3.1', 'f50a659738b73036e2f5635adbd229c5')
     version('3.3.0', '5a7506c8813432d1621c9725e86baf7a')
     version('3.2.3', '1ba3dac113efab69e706902810cc2970')
@@ -63,7 +66,7 @@ class R(Package):
     depends_on('ncurses')
     depends_on('icu4c')
     depends_on('glib')
-    depends_on('zlib@:1.2.8')
+    depends_on('zlib@1.2.5:')
     depends_on('bzip2')
     depends_on('libtiff')
     depends_on('jpeg')
@@ -71,44 +74,57 @@ class R(Package):
     depends_on('cairo+X', when='+X')
     depends_on('cairo~X', when='~X')
     depends_on('pango')
+    depends_on('pango+X', when='+X')
+    depends_on('pango~X', when='~X')
     depends_on('freetype')
     depends_on('tcl')
     depends_on('tk')
-    depends_on('tk+X', when='+X')
-    depends_on('tk~X', when='~X')
     depends_on('libx11', when='+X')
     depends_on('libxt', when='+X')
     depends_on('curl')
     depends_on('pcre')
     depends_on('jdk')
 
+    patch('zlib.patch', when='@:3.3.2')
+
     @property
     def etcdir(self):
         return join_path(prefix, 'rlib', 'R', 'etc')
 
-    def install(self, spec, prefix):
-        rlibdir = join_path(prefix, 'rlib')
-        configure_args = ['--prefix=%s' % prefix,
-                          '--libdir=%s' % rlibdir,
-                          '--enable-R-shlib',
-                          '--enable-BLAS-shlib',
-                          '--enable-R-framework=no']
+    def configure_args(self):
+        spec   = self.spec
+        prefix = self.prefix
+
+        config_args = [
+            '--libdir={0}'.format(join_path(prefix, 'rlib')),
+            '--enable-R-shlib',
+            '--enable-BLAS-shlib',
+            '--enable-R-framework=no'
+        ]
+
         if '+external-lapack' in spec:
-            configure_args.extend(['--with-blas', '--with-lapack'])
+            config_args.extend([
+                '--with-blas',
+                '--with-lapack'
+            ])
 
-        configure(*configure_args)
-        make()
-        make('install')
+        if '+X' in spec:
+            config_args.append('--with-x')
+        else:
+            config_args.append('--without-x')
 
+        return config_args
+
+    @run_after('install')
+    def copy_makeconf(self):
         # Make a copy of Makeconf because it will be needed to properly build R
         # dependencies in Spack.
         src_makeconf = join_path(self.etcdir, 'Makeconf')
         dst_makeconf = join_path(self.etcdir, 'Makeconf.spack')
         shutil.copy(src_makeconf, dst_makeconf)
 
-        self.filter_compilers(spec, prefix)
-
-    def filter_compilers(self, spec, prefix):
+    @run_after('install')
+    def filter_compilers(self):
         """Run after install to tell the configuration files and Makefiles
         to use the compilers that Spack built the package with.
 
@@ -135,11 +151,11 @@ class R(Package):
     def r_lib_dir(self):
         return join_path('rlib', 'R', 'library')
 
-    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # Set R_LIBS to include the library dir for the
         # extension and any other R extensions it depends on.
         r_libs_path = []
-        for d in extension_spec.traverse(
+        for d in dependent_spec.traverse(
                 deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 r_libs_path.append(join_path(d.prefix, self.r_lib_dir))
@@ -153,11 +169,11 @@ class R(Package):
         # determine how many jobs can actually be started.
         spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
 
-        # For run time environment set only the path for extension_spec and
+        # For run time environment set only the path for dependent_spec and
         # prepend it to R_LIBS
-        if extension_spec.package.extends(self.spec):
+        if dependent_spec.package.extends(self.spec):
             run_env.prepend_path('R_LIBS', join_path(
-                extension_spec.prefix, self.r_lib_dir))
+                dependent_spec.prefix, self.r_lib_dir))
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('LIBRARY_PATH',
@@ -167,7 +183,7 @@ class R(Package):
         run_env.prepend_path('CPATH',
                              join_path(self.prefix, 'rlib', 'R', 'include'))
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """Called before R modules' install() methods. In most cases,
         extensions will only need to have one line:
             R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
@@ -177,9 +193,9 @@ class R(Package):
         module.R = Executable(join_path(self.spec.prefix.bin, 'R'))
 
         # Add variable for library directry
-        module.r_lib_dir = join_path(ext_spec.prefix, self.r_lib_dir)
+        module.r_lib_dir = join_path(dependent_spec.prefix, self.r_lib_dir)
 
         # Make the site packages directory for extensions, if it does not exist
         # already.
-        if ext_spec.package.is_extension:
+        if dependent_spec.package.is_extension:
             mkdirp(module.r_lib_dir)

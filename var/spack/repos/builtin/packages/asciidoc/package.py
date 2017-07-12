@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Asciidoc(Package):
+class Asciidoc(AutotoolsPackage):
     """A presentable text document format for writing articles, UNIX man
     pages and other small to medium sized documents."""
 
@@ -38,9 +38,3 @@ class Asciidoc(Package):
     depends_on('libxslt')
     depends_on('docbook-xml')
     depends_on('docbook-xsl')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

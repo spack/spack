@@ -1,0 +1,10 @@
+--- old/unittests/CMakeLists.txt
++++ new/unittests/CMakeLists.txt
+@@ -1,4 +1,7 @@
+ file(GLOB TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
++if(NOT Boost_FOUND)
++ list(REMOVE_ITEM TESTS boost_variant.cpp)
++endif(Boost_FOUND)
+ 
+ # A semi-colon separated list of test sources that should not be automatically built with doctest 
+ set(SPECIAL_TESTS "portability_test.cpp")

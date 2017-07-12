@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -51,7 +51,7 @@ class _SkipWithBlock():
 class keyboard_input(object):
     """Disable canonical input and echo on a stream within a with block.
 
-    Use this with sys.stdin for keyboard input, e.g.:
+    Use this with ``sys.stdin`` for keyboard input, e.g.::
 
         with keyboard_input(sys.stdin):
             r, w, x = select.select([sys.stdin], [], [])
@@ -103,14 +103,16 @@ class keyboard_input(object):
 class log_output(object):
     """Spawns a daemon that reads from a pipe and writes to a file
 
-    Usage:
+    Usage::
+
         # Spawns the daemon
         with log_output('logfile.txt', 'w') as log_redirection:
            # do things ... output is not redirected
            with log_redirection:
                 # do things ... output will be logged
 
-    or:
+    or::
+
         with log_output('logfile.txt', echo=True) as log_redirection:
            # do things ... output is not redirected
            with log_redirection:
@@ -165,8 +167,12 @@ class log_output(object):
         self.p.join(60.0)  # 1 minute to join the child
 
     def _spawn_writing_daemon(self, read, input_stream):
-        # Parent: read from child, skip the with block.
-        read_file = os.fdopen(read, 'r', 0)
+        # This is the Parent: read from child, skip the with block.
+
+        # Use line buffering (3rd param = 1) since Python 3 has a bug
+        # that prevents unbuffered text I/O.
+        read_file = os.fdopen(read, 'r', 1)
+
         with open(self.filename, 'w') as log_file:
             with keyboard_input(input_stream):
                 while True:

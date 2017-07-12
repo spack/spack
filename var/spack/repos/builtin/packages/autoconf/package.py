@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,7 +36,11 @@ class Autoconf(AutotoolsPackage):
     version('2.59', 'd4d45eaa1769d45e59dcb131a4af17a0')
     version('2.13', '9de56d4a161a723228220b0f425dc711')
 
-    depends_on('m4@1.4.6:',   type='build')
+    # Note: m4 is not a pure build-time dependency of autoconf. m4 is
+    # needed when autoconf runs, not only when autoconf is built.
+    depends_on('m4@1.4.6:', type=('build', 'run'))
+
+    build_directory = 'spack-build'
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))

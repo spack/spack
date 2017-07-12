@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XcbUtilCursor(Package):
+class XcbUtilCursor(AutotoolsPackage):
     """The XCB util modules provides a number of libraries which sit on top
     of libxcb, the core X protocol library, and some of the extension
     libraries. These experimental libraries provide convenience functions
@@ -43,9 +43,3 @@ class XcbUtilCursor(Package):
     depends_on('xcb-util-image')
 
     depends_on('pkg-config@0.9.0:', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

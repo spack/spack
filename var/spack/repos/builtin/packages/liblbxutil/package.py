@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Liblbxutil(Package):
+class Liblbxutil(AutotoolsPackage):
     """liblbxutil - Low Bandwith X extension (LBX) utility routines."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/liblbxutil"
@@ -43,9 +43,3 @@ class Liblbxutil(Package):
     # undefined symbol: Xalloc
     # See https://bugs.freedesktop.org/show_bug.cgi?id=8421
     # Adding a dependency on libxdmcp and adding LIBS=-lXdmcp did not fix it
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

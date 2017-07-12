@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Proj(Package):
+class Proj(AutotoolsPackage):
     """Cartographic Projections"""
     homepage = "https://github.com/OSGeo/proj.4/wiki"
     url      = "http://download.osgeo.org/proj/proj-4.9.2.tar.gz"
@@ -35,11 +35,3 @@ class Proj(Package):
     version('4.8.0', 'd815838c92a29179298c126effbb1537')
     version('4.7.0', '927d34623b52e0209ba2bfcca18fe8cd')
     version('4.6.1', '7dbaab8431ad50c25669fd3fb28dc493')
-
-    # No dependencies
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

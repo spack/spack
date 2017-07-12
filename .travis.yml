@@ -1,8 +1,6 @@
 #=============================================================================
 # Project settings
 #=============================================================================
-language: python
-
 # Only build master and develop on push; do not build every branch.
 branches:
   only:
@@ -13,29 +11,52 @@ branches:
 #=============================================================================
 # Build matrix
 #=============================================================================
-python:
-  - 2.6
-  - 2.7
-
-env:
-  - TEST_SUITE=unit
-  - TEST_SUITE=flake8
-  - TEST_SUITE=doc
-
 matrix:
-  # Flake8 and Sphinx no longer support Python 2.6, and one run is enough.
-  exclude:
-  - python: 2.6
-    env: TEST_SUITE=flake8
-  - python: 2.6
-    env: TEST_SUITE=doc
-  # Explicitly include an OS X build with homebrew's python.
-  # Works around Python issues on Travis for OSX, described here:
-  # http://blog.fizyk.net.pl/blog/running-python-tests-on-traviss-osx-workers.html
+  fast_finish: true
   include:
-  - os: osx
-    language: generic
-    env: TEST_SUITE=unit
+    - python: '2.6'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=hypre^mpich' ]
+    - python: '3.3'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.4'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.5'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.6'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
+    - python: '3.6'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=hypre^mpich' ]
+    - python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=flake8
+    - python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
+    - os: osx
+      language: generic
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
 
 #=============================================================================
 # Environment
@@ -48,23 +69,27 @@ addons:
   apt:
     packages:
       - gfortran
+      - mercurial
       - graphviz
-      - libyaml-dev
+      - gnupg2
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions python > /dev/null || brew install python; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions gcc    > /dev/null || brew install gcc;    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew ls --versions gnupg2 > /dev/null || brew install gnupg2; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then virtualenv venv; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source venv/bin/activate; fi
 
 # Install various dependencies
 install:
-  - pip install --upgrade coveralls
+  - pip install --upgrade pip
+  - pip install --upgrade six
+  - pip install --upgrade setuptools
+  - pip install --upgrade codecov
   - pip install --upgrade flake8
-  - pip install --upgrade sphinx
-  - pip install --upgrade mercurial
+  - if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade -r lib/spack/docs/requirements.txt; fi
 
 before_script:
   # Need this for the git tests to succeed.
@@ -80,7 +105,7 @@ before_script:
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 && $TRAVIS_OS_NAME == "linux" ]]; then coveralls; fi
+  - codecov --env PY_VERSION
 
 #=============================================================================
 # Notifications

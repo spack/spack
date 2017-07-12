@@ -1,0 +1,22 @@
+--- ncbi-blast-2.5.0+-src/c++/src/build-system/Makefile.in.top	2014-11-12 17:41:55.000000000 +0100
++++ MakeFile	2016-12-19 18:00:58.000000000 +0100
+@@ -1,4 +1,4 @@
+-# $Id: Makefile.in.top 451817 2014-11-12 16:41:55Z ucko $
++# $Id$
+ # Top-level meta-makefile that simplifies building even further.
+
+ # include @builddir@/Makefile.mk
+@@ -49,9 +49,10 @@
+ 	    for x in *.a; do \
+ 	        $(LN_S) "$$x" "`$(BASENAME) \"$$x\" .a`-static.a"; \
+ 	    done
+-	cd $(includedir0) && find * -name CVS -prune -o -print |\
+-            cpio -pd $(pincludedir)
+-	$(INSTALL) -m 644 $(incdir)/* $(pincludedir)
++	#for d in $(includedir0) $(incdir); do \
++	#    cd $$d && find * -name .svn prune -o -print | \
++	#         cpio -pd $(pincludedir) ; \
++	#done
+ ## set up appropriate build and status directories somewhere under $(libdir)?
+
+ install-gbench:

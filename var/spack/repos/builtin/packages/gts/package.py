@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gts(Package):
+class Gts(AutotoolsPackage):
     """GTS stands for the GNU Triangulated Surface Library.
 
     It is an Open Source Free Software Library intended to provide a set of
@@ -46,8 +46,3 @@ class Gts(Package):
     version('121130', '023ebb6b13b8707534182a3ef0d12908')
 
     depends_on('glib')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-        make()
-        make('install')

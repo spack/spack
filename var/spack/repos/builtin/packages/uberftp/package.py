@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Uberftp(Package):
+class Uberftp(AutotoolsPackage):
     """UberFTP is an interactive (text-based) client for GridFTP"""
 
     homepage = "http://toolkit.globus.org/grid_software/data/uberftp.php"
@@ -36,9 +36,3 @@ class Uberftp(Package):
     version('2_6', '784210976f259f9d19c0798c19778d34')
 
     depends_on('globus-toolkit')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

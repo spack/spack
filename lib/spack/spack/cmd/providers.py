@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,13 +29,15 @@ from llnl.util.tty.colify import colify
 import spack
 import spack.cmd
 
-description = "List packages that provide a particular virtual package"
+description = "list packages that provide a particular virtual package"
+section = "basic"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         'vpkg_spec', metavar='VPACKAGE_SPEC', nargs=argparse.REMAINDER,
-        help='Find packages that provide this virtual package')
+        help='find packages that provide this virtual package')
 
 
 def providers(parser, args):

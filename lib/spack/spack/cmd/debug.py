@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,13 +33,15 @@ from llnl.util.filesystem import working_dir
 import spack
 from spack.util.executable import which
 
-description = "Debugging commands for troubleshooting Spack."
+description = "debugging commands for troubleshooting Spack"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='debug_command')
     sp.add_parser('create-db-tarball',
-                  help="Create a tarball of Spack's installation metadata.")
+                  help="create a tarball of Spack's installation metadata")
 
 
 def _debug_tarball_suffix():

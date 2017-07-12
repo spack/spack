@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,19 +25,15 @@
 from spack import *
 
 
-class LibgpgError(Package):
+class LibgpgError(AutotoolsPackage):
     """Libgpg-error is a small library that defines common error
        values for all GnuPG components. Among these are GPG, GPGSM,
        GPGME, GPG-Agent, libgcrypt, Libksba, DirMngr, Pinentry,
        SmartCard Daemon and possibly more in the future. """
 
     homepage = "https://www.gnupg.org/related_software/libgpg-error"
-    url      = "ftp://ftp.gnupg.org/gcrypt/libgpg-error/libgpg-error-1.18.tar.bz2"
+    url = "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.27.tar.bz2"
 
+    version('1.27', '5217ef3e76a7275a2a3b569a12ddc989')
     version('1.21', 'ab0b5aba6d0a185b41d07bda804fd8b2')
     version('1.18', '12312802d2065774b787cbfc22cc04e9')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

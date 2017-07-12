@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,20 +30,22 @@ import spack.cmd
 import spack.store
 from spack.graph import topological_sort
 
-description = "Deactivate a package extension."
+description = "deactivate a package extension"
+section = "extensions"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true',
-        help="Run deactivation even if spec is NOT currently activated.")
+        help="run deactivation even if spec is NOT currently activated")
     subparser.add_argument(
         '-a', '--all', action='store_true',
-        help="Deactivate all extensions of an extendable package, or "
-        "deactivate an extension AND its dependencies.")
+        help="deactivate all extensions of an extendable package, or "
+        "deactivate an extension AND its dependencies")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="spec of package extension to deactivate.")
+        help="spec of package extension to deactivate")
 
 
 def deactivate(parser, args):

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Zeromq(Package):
+class Zeromq(AutotoolsPackage):
     """ The ZMQ networking/concurrency library and core API """
     homepage = "http://zguide.zeromq.org/"
     url      = "http://download.zeromq.org/zeromq-4.1.2.tar.gz"
@@ -40,8 +40,9 @@ class Zeromq(Package):
     depends_on("libsodium")
     depends_on("libsodium@:1.0.3", when='@:4.1.2')
 
-    def install(self, spec, prefix):
-        configure("--with-libsodium", "--prefix=%s" % prefix)
-
-        make()
-        make("install")
+    def configure_args(self):
+        config_args = ['--with-libsodium']
+        if 'clang' in self.compiler.cc:
+            config_args.append("CFLAGS=-Wno-gnu")
+            config_args.append("CXXFLAGS=-Wno-gnu")
+        return config_args

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,15 +25,10 @@
 from spack import *
 
 
-class Uncrustify(Package):
+class Uncrustify(AutotoolsPackage):
     """Source Code Beautifier for C, C++, C#, ObjectiveC, Java, and others."""
 
     homepage = "http://uncrustify.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/uncrustify/uncrustify/uncrustify-0.61/uncrustify-0.61.tar.gz"
 
     version('0.61', 'b6140106e74c64e831d0b1c4b6cf7727')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

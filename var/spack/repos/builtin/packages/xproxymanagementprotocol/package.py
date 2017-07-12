@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xproxymanagementprotocol(Package):
+class Xproxymanagementprotocol(AutotoolsPackage):
     """The Proxy Management Protocol is an ICE based protocol that provides a
     way for application servers to easily locate proxy services available to
     them."""
@@ -34,8 +34,3 @@ class Xproxymanagementprotocol(Package):
     url      = "https://www.x.org/archive/individual/proto/xproxymanagementprotocol-1.0.3.tar.gz"
 
     version('1.0.3', 'c4ab05a6174b4e9b6ae5b7cfbb6d718e')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

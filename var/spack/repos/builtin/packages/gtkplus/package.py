@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gtkplus(Package):
+class Gtkplus(AutotoolsPackage):
     """The GTK+ 2 package contains libraries used for creating graphical user
        interfaces for applications."""
     homepage = "http://www.gtk.org"
@@ -36,19 +36,26 @@ class Gtkplus(Package):
 
     variant('X', default=False, description="Enable an X toolkit")
 
+    depends_on('pkg-config', type='build')
+
     depends_on("atk")
     depends_on("gdk-pixbuf")
     depends_on("glib")
     depends_on("pango")
     depends_on("pango~X", when='~X')
     depends_on("pango+X", when='+X')
+    depends_on('gobject-introspection', when='+X')
+    depends_on('shared-mime-info')
+
+    patch('no-demos.patch')
 
     def patch(self):
         # remove disable deprecated flag.
         filter_file(r'CFLAGS="-DGDK_PIXBUF_DISABLE_DEPRECATED $CFLAGS"',
                     '', 'configure', string=True)
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path("XDG_DATA_DIRS",
+                               self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS",
+                             self.prefix.share)

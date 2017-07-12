@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,19 +35,21 @@ from spack.stage import Stage, FailedDownloadError
 from spack.util.naming import *
 from spack.version import *
 
-description = "Checksum available versions of a package."
+description = "checksum available versions of a package"
+section = "packaging"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         'package',
-        help='Package to checksum versions for')
+        help='package to checksum versions for')
     subparser.add_argument(
         '--keep-stage', action='store_true',
-        help="Don't clean up staging area when command completes.")
+        help="don't clean up staging area when command completes")
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER,
-        help='Versions to generate checksums for')
+        help='versions to generate checksums for')
 
 
 def get_checksums(url_dict, name, **kwargs):
@@ -57,13 +59,14 @@ def get_checksums(url_dict, name, **kwargs):
     The ``first_stage_function`` kwarg allows ``spack create`` to determine
     things like the build system of the archive.
 
-    :param dict url_dict: A dictionary of the form: version -> URL
-    :param str name: The name of the package
-    :param callable first_stage_function: Function to run on first staging area
-    :param bool keep_stage: Don't clean up staging area when command completes
+    Args:
+        url_dict (dict): A dictionary of the form: version -> URL
+        name (str): The name of the package
+        first_stage_function (callable): Function to run on first staging area
+        keep_stage (bool): Don't clean up staging area when command completes
 
-    :returns: A multi-line string containing versions and corresponding hashes
-    :rtype: str
+    Returns:
+        str: A multi-line string containing versions and corresponding hashes
     """
     first_stage_function = kwargs.get('first_stage_function', None)
     keep_stage = kwargs.get('keep_stage', False)
@@ -78,7 +81,7 @@ def get_checksums(url_dict, name, **kwargs):
             num_ver, '' if num_ver == 1 else 's', name),
             "",
             *spack.cmd.elide_list(
-                ["{0:{1}}  {2}".format(v, max_len, url_dict[v])
+                ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
     print()
 

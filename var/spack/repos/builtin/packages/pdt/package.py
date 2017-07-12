@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,10 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 from spack import *
 
 
-class Pdt(Package):
+class Pdt(AutotoolsPackage):
     """Program Database Toolkit (PDT) is a framework for analyzing source
        code written in several programming languages and for making rich
        program knowledge accessible to developers of static and dynamic
@@ -44,7 +45,18 @@ class Pdt(Package):
     version('3.19',   '5c5e1e6607086aa13bf4b1b9befc5864')
     version('3.18.1', 'e401534f5c476c3e77f05b7f73b6c4f2')
 
-    def install(self, spec, prefix):
-        configure('-prefix=%s' % prefix)
-        make()
-        make('install')
+    def configure(self, spec, prefix):
+        configure('-prefix={0}'.format(prefix))
+
+    @run_after('install')
+    def link_arch_dirs(self):
+        # Link arch-specific directories into prefix
+        for dir in os.listdir(self.prefix):
+            path = join_path(self.prefix, dir)
+            if not os.path.isdir(path) or os.path.islink(path):
+                continue
+            for d in ('bin', 'lib'):
+                src = join_path(path, d)
+                dst = join_path(self.prefix, d)
+                if os.path.isdir(src) and not os.path.exists(dst):
+                    os.symlink(join_path(dir, d), dst)

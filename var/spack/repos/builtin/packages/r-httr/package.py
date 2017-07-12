@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,13 +31,15 @@ class RHttr(RPackage):
     request components (authenticate(), add_headers() and so on)."""
 
     homepage = "https://github.com/hadley/httr"
-    url      = "https://cran.r-project.org/src/contrib/httr_1.1.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/httr"
+    url      = "https://cran.r-project.org/src/contrib/httr_1.2.1.tar.gz"
 
+    version('1.2.1', 'c469948dedac9ab3926f23cf484b33d9')
     version('1.1.0', '5ffbbc5c2529e49f00aaa521a2b35600')
+
+    depends_on('r@3.0.0:')
 
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-curl', type=('build', 'run'))
+    depends_on('r-curl@0.9.1:', type=('build', 'run'))
     depends_on('r-openssl', type=('build', 'run'))
     depends_on('r-r6', type=('build', 'run'))

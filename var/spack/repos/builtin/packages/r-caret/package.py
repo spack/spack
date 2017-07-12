@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,15 +30,18 @@ class RCaret(RPackage):
     models."""
 
     homepage = "https://github.com/topepo/caret/"
-    url      = "https://cran.r-project.org/src/contrib/caret_6.0-70.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/caret"
+    url      = "https://cran.r-project.org/src/contrib/caret_6.0-73.tar.gz"
 
+    version('6.0-73', 'ca869e3357b5358f028fb926eb62eb70')
     version('6.0-70', '202d7abb6a679af716ea69fb2573f108')
 
-    depends_on('r-lattice', type=('build','run'))
-    depends_on('r-ggplot2', type=('build','run'))
-    depends_on('r-car', type=('build','run'))
-    depends_on('r-foreach', type=('build','run'))
-    depends_on('r-plyr', type=('build','run'))
-    depends_on('r-nlme', type=('build','run'))
-    depends_on('r-reshape2', type=('build','run'))
+    depends_on('r@2.10:')
+
+    depends_on('r-lattice@0.20:', type=('build', 'run'))
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-car', type=('build', 'run'))
+    depends_on('r-foreach', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-modelmetrics@1.1.0:', type=('build', 'run'))
+    depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-reshape2', type=('build', 'run'))

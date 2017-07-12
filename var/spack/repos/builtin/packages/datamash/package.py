@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Datamash(Package):
+class Datamash(AutotoolsPackage):
     """GNU datamash is a command-line program which performs basic numeric,
     textual and statistical operations on input textual data files.
     """
@@ -38,7 +38,4 @@ class Datamash(Package):
     version('1.0.6', 'ff26fdef0f343cb695cf1853e14a1a5b')
     version('1.0.5', '9a29549dc7feca49fdc5fab696614e11')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")
+    build_directory = 'spack-build'

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -51,8 +51,8 @@ class PyMeep(PythonPackage):
 
     phases = ['clean', 'build_ext', 'install', 'bdist']
 
-    def setup_file(self, spec, prefix):
-        return 'setup-mpi.py' if '+mpi' in spec else 'setup.py'
+    def setup_file(self):
+        return 'setup-mpi.py' if '+mpi' in self.spec else 'setup.py'
 
     def common_args(self, spec, prefix):
         include_dirs = [

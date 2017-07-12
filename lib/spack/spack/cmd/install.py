@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,7 +40,9 @@ from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
 from spack.package import PackageBase
 
-description = "Build and install packages"
+description = "build and install packages"
+section = "build"
+level = "short"
 
 
 def setup_parser(subparser):
@@ -49,29 +51,35 @@ def setup_parser(subparser):
         default='package,dependencies',
         dest='things_to_install',
         choices=['package', 'dependencies'],
-        help="""Select the mode of installation.
-The default is to install the package along with all its dependencies.
-Alternatively one can decide to install only the package or only
-the dependencies."""
+        help="""select the mode of installation.
+the default is to install the package along with all its dependencies.
+alternatively one can decide to install only the package or only
+the dependencies"""
     )
     subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
-        help="Explicitly set number of make jobs.  Default is #cpus.")
+        help="explicitly set number of make jobs. default is #cpus")
     subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
-        help="Don't remove the install prefix if installation fails.")
+        help="don't remove the install prefix if installation fails")
     subparser.add_argument(
         '--keep-stage', action='store_true', dest='keep_stage',
-        help="Don't remove the build stage if installation succeeds.")
+        help="don't remove the build stage if installation succeeds")
+    subparser.add_argument(
+        '--restage', action='store_true', dest='restage',
+        help="if a partial install is detected, delete prior state")
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="Do not check packages against checksum")
+        help="do not check packages against checksum")
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
-        help="Display verbose build output while installing.")
+        help="display verbose build output while installing")
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
-        help="Fake install. Just remove prefix and create a fake file.")
+        help="fake install. just remove prefix and create a fake file")
+    subparser.add_argument(
+        '-f', '--file', action='store_true', dest='file',
+        help="install from file. Read specs to install from .yaml files")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -83,18 +91,18 @@ the dependencies."""
     )
     subparser.add_argument(
         '--run-tests', action='store_true', dest='run_tests',
-        help="Run package level tests during installation."
+        help="run package level tests during installation"
     )
     subparser.add_argument(
         '--log-format',
         default=None,
         choices=['junit'],
-        help="Format to be used for log files."
+        help="format to be used for log files"
     )
     subparser.add_argument(
         '--log-file',
         default=None,
-        help="Filename for the log file. If not passed a default will be used."
+        help="filename for the log file. if not passed a default will be used"
     )
 
 
@@ -305,6 +313,7 @@ def install(parser, args, **kwargs):
     kwargs.update({
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
+        'restage': args.restage,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,
         'run_tests': args.run_tests,
@@ -314,7 +323,13 @@ def install(parser, args, **kwargs):
     })
 
     # Spec from cli
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    specs = []
+    if args.file:
+        for file in args.package:
+            with open(file, 'r') as f:
+                specs.append(spack.spec.Spec.from_yaml(f))
+    else:
+        specs = spack.cmd.parse_specs(args.package, concretize=True)
     if len(specs) == 0:
         tty.error('The `spack install` command requires a spec to install.')
 

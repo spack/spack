@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,9 @@ class RWithr(RPackage):
     dependencies to provide access to these functions."""
 
     homepage = "http://github.com/jimhester/withr"
-    url      = "https://cran.r-project.org/src/contrib/withr_1.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/withr"
+    url      = "https://cran.r-project.org/src/contrib/withr_1.0.2.tar.gz"
 
+    version('1.0.2', 'ca52b729af9bbaa14fc8b7bafe38663c')
     version('1.0.1', 'ac38af2c6f74027c9592dd8f0acb7598')
+
+    depends_on('r@3.0.2:')

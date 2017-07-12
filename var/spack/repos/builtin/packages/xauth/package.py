@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xauth(Package):
+class Xauth(AutotoolsPackage):
     """The xauth program is used to edit and display the authorization
     information used in connecting to the X server."""
 
@@ -43,9 +43,4 @@ class Xauth(Package):
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        # make('check')  # TODO: add package for cmdtest build dependency
-        make('install')
+    # TODO: add package for cmdtest test dependency

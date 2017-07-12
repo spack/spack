@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ class Mpe2(Package):
     """Message Passing Extensions (MPE): Parallel, shared X window graphics"""
 
     homepage = "http://www.mcs.anl.gov/research/projects/perfvis/software/MPE/"
-    url      = "ftp://ftp.mcs.anl.gov/pub/mpi/mpe/mpe2-1.3.0.tar.gz"
+    url      = "http://ftp.mcs.anl.gov/pub/mpi/mpe/mpe2-1.3.0.tar.gz"
 
     version('1.3.0', '67bf0c7b2e573df3ba0d2059a96c2f7b')
 

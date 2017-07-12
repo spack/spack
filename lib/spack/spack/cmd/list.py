@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,18 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import argparse
 import cgi
 import fnmatch
 import re
 import sys
-from StringIO import StringIO
+from six import StringIO
 
 import llnl.util.tty as tty
 import spack
 from llnl.util.tty.colify import colify
 
-description = "Print available spack packages to stdout in different formats"
+description = "list and search available packages"
+section = "basic"
+level = "short"
+
 
 formatters = {}
 
@@ -47,13 +52,13 @@ def formatter(func):
 def setup_parser(subparser):
     subparser.add_argument(
         'filter', nargs=argparse.REMAINDER,
-        help='Optional case-insensitive glob patterns to filter results.')
+        help='optional case-insensitive glob patterns to filter results')
     subparser.add_argument(
         '-d', '--search-description', action='store_true', default=False,
-        help='Filtering will also search the description for a match.')
+        help='filtering will also search the description for a match')
     subparser.add_argument(
         '--format', default='name_only', choices=formatters,
-        help='Format to be used to print the output [default: name_only]')
+        help='format to be used to print the output [default: name_only]')
 
 
 def filter_by_name(pkgs, args):
@@ -123,42 +128,42 @@ def rst(pkgs):
     pkgs = [spack.repo.get(name) for name in pkg_names]
 
     print('.. _package-list:')
-    print('')
+    print()
     print('============')
     print('Package List')
     print('============')
-    print('')
+    print()
     print('This is a list of things you can install using Spack.  It is')
     print('automatically generated based on the packages in the latest Spack')
     print('release.')
-    print('')
+    print()
     print('Spack currently has %d mainline packages:' % len(pkgs))
-    print('')
+    print()
     print(rst_table('`%s`_' % p for p in pkg_names))
-    print('')
+    print()
 
     # Output some text for each package.
     for pkg in pkgs:
         print('-----')
-        print('')
+        print()
         print('.. _%s:' % pkg.name)
-        print('')
+        print()
         # Must be at least 2 long, breaks for single letter packages like R.
         print('-' * max(len(pkg.name), 2))
         print(pkg.name)
         print('-' * max(len(pkg.name), 2))
-        print('')
+        print()
         print('Homepage:')
         print('  * `%s <%s>`__' % (cgi.escape(pkg.homepage), pkg.homepage))
-        print('')
+        print()
         print('Spack package:')
         print('  * `%s/package.py <%s>`__' % (pkg.name, github_url(pkg)))
-        print('')
+        print()
         if pkg.versions:
             print('Versions:')
             print('  ' + ', '.join(str(v) for v in
                                    reversed(sorted(pkg.versions))))
-            print('')
+            print()
 
         for deptype in spack.alldeps:
             deps = pkg.dependencies_of_type(deptype)
@@ -166,11 +171,11 @@ def rst(pkgs):
                 print('%s Dependencies' % deptype.capitalize())
                 print('  ' + ', '.join('%s_' % d if d in pkg_names
                                        else d for d in deps))
-                print('')
+                print()
 
         print('Description:')
         print(pkg.format_doc(indent=2))
-        print('')
+        print()
 
 
 def list(parser, args):

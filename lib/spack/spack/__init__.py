@@ -8,7 +8,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,6 +23,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import multiprocessing
 import os
 import sys
 import tempfile
@@ -46,6 +47,7 @@ build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
 platform_path  = join_path(module_path, 'platforms')
 compilers_path = join_path(module_path, "compilers")
+build_systems_path = join_path(module_path, 'build_systems')
 operating_system_path = join_path(module_path, 'operating_systems')
 test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
@@ -62,8 +64,15 @@ mock_packages_path = join_path(repos_path, "builtin.mock")
 user_config_path = os.path.expanduser('~/.spack')
 
 prefix = spack_root
-opt_path       = join_path(prefix, "opt")
-etc_path       = join_path(prefix, "etc")
+opt_path        = join_path(prefix, "opt")
+etc_path        = join_path(prefix, "etc")
+system_etc_path = '/etc'
+
+# GPG paths.
+gpg_keys_path      = join_path(var_path, "gpg")
+mock_gpg_data_path = join_path(var_path, "gpg.mock", "data")
+mock_gpg_keys_path = join_path(var_path, "gpg.mock", "keys")
+gpg_path           = join_path(opt_path, "spack", "gpg")
 
 
 #-----------------------------------------------------------------------------
@@ -77,7 +86,6 @@ import spack.error
 import spack.config
 import spack.fetch_strategy
 from spack.file_cache import FileCache
-from spack.package_prefs import PreferredPackages
 from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
@@ -95,7 +103,7 @@ spack_version = Version("0.10.0")
 try:
     repo = spack.repository.RepoPath()
     sys.meta_path.append(repo)
-except spack.error.SpackError, e:
+except spack.error.SpackError as e:
     tty.die('while initializing Spack RepoPath:', e.message)
 
 
@@ -141,6 +149,11 @@ do_checksum = _config.get('checksum', True)
 dirty = _config.get('dirty', False)
 
 
+# The number of jobs to use when building in parallel.
+# By default, use all cores on the machine.
+build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
+
+
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
@@ -155,14 +168,28 @@ dirty = _config.get('dirty', False)
 #-----------------------------------------------------------------------------
 __all__ = []
 
-from spack.package import Package
+from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.waf import WafPackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
-__all__ += ['Package', 'CMakePackage', 'AutotoolsPackage', 'MakefilePackage',
-            'PythonPackage', 'RPackage']
+from spack.build_systems.perl import PerlPackage
+
+__all__ += [
+    'run_before',
+    'run_after',
+    'on_package_attributes',
+    'Package',
+    'MakefilePackage',
+    'AutotoolsPackage',
+    'CMakePackage',
+    'WafPackage',
+    'PythonPackage',
+    'RPackage',
+    'PerlPackage',
+]
 
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
@@ -185,8 +212,24 @@ import spack.util.executable
 from spack.util.executable import *
 __all__ += spack.util.executable.__all__
 
-# User's editor from the environment
-editor = Executable(os.environ.get("EDITOR", "vi"))
+
+# Set up the user's editor
+# $EDITOR environment variable has the highest precedence
+editor = os.environ.get('EDITOR')
+
+# if editor is not set, use some sensible defaults
+if editor is not None:
+    editor = Executable(editor)
+else:
+    editor = which('vim', 'vi', 'emacs', 'nano')
+
+# If there is no editor, only raise an error if we actually try to use it.
+if not editor:
+    def editor_not_found(*args, **kwargs):
+        raise EnvironmentError(
+            'No text editor found! Please set the EDITOR environment variable '
+            'to your preferred text editor.')
+    editor = editor_not_found
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
@@ -197,5 +240,5 @@ __all__ += [
 
 # Add default values for attributes that would otherwise be modified from
 # Spack main script
-debug = True
+debug = False
 spack_working_dir = None

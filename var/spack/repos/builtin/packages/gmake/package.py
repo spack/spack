@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ class Gmake(Package):
     """GNU Make."""
 
     homepage = "http://gnu.org/gnu/make"
-    url      = "ftp://ftp.gnu.org/gnu/make/make-4.0.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/make/make-4.0.tar.gz"
 
     version('4.0', 'b5e558f981326d9ca1bfdb841640721a')
 

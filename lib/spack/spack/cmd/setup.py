@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,19 +38,21 @@ from llnl.util.filesystem import set_executable
 from spack import which
 from spack.stage import DIYStage
 
-description = "Create a configuration script and module, but don't build."
+description = "create a configuration script and module, but don't build"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
-        help="Do not try to install dependencies of requested packages.")
+        help="do not try to install dependencies of requested packages")
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
-        help="Display verbose build output while installing.")
+        help="display verbose build output while installing")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install.  Must contain package AND version.")
+        help="specs to use for install. must contain package AND version")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,7 +40,11 @@ filesystem.
 
 """
 import os
+import sys
 import socket
+import contextlib
+from six import string_types
+from six import iteritems
 
 from yaml.error import MarkedYAMLError, YAMLError
 
@@ -50,21 +54,22 @@ from llnl.util.lock import *
 
 import spack.store
 import spack.repository
-from spack.directory_layout import DirectoryLayoutError
-from spack.version import Version
 import spack.spec
-from spack.error import SpackError
 import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
+from spack.util.crypto import bit_length
+from spack.directory_layout import DirectoryLayoutError
+from spack.error import SpackError
+from spack.version import Version
 
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
-_db_version = Version('0.9.2')
+_db_version = Version('0.9.3')
 
-# Default timeout for spack database locks is 5 min.
+# Timeout for spack database locks in seconds
 _db_lock_timeout = 60
 
 # Types of dependencies tracked by the database
@@ -125,6 +130,9 @@ class InstallRecord(object):
 
 class Database(object):
 
+    """Per-process lock objects for each install prefix."""
+    _prefix_locks = {}
+
     def __init__(self, root, db_dir=None):
         """Create a Database for Spack installations under ``root``.
 
@@ -183,6 +191,47 @@ class Database(object):
         """Get a read lock context manager for use in a `with` block."""
         return ReadTransaction(self.lock, self._read, timeout=timeout)
 
+    def prefix_lock(self, spec):
+        """Get a lock on a particular spec's installation directory.
+
+        NOTE: The installation directory **does not** need to exist.
+
+        Prefix lock is a byte range lock on the nth byte of a file.
+
+        The lock file is ``spack.store.db.prefix_lock`` -- the DB
+        tells us what to call it and it lives alongside the install DB.
+
+        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
+        likelihood of collision is very low AND it gives us
+        readers-writer lock semantics with just a single lockfile, so no
+        cleanup required.
+        """
+        prefix = spec.prefix
+        if prefix not in self._prefix_locks:
+            self._prefix_locks[prefix] = Lock(
+                self.prefix_lock_path,
+                spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
+
+        return self._prefix_locks[prefix]
+
+    @contextlib.contextmanager
+    def prefix_read_lock(self, spec):
+        prefix_lock = self.prefix_lock(spec)
+        try:
+            prefix_lock.acquire_read(60)
+            yield self
+        finally:
+            prefix_lock.release_read()
+
+    @contextlib.contextmanager
+    def prefix_write_lock(self, spec):
+        prefix_lock = self.prefix_lock(spec)
+        try:
+            prefix_lock.acquire_write(60)
+            yield self
+        finally:
+            prefix_lock.release_write()
+
     def _write_to_file(self, stream):
         """Write out the databsae to a JSON file.
 
@@ -239,7 +288,7 @@ class Database(object):
                 if dhash not in data:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
-                                 spec.format('$_$#'), dname, dhash[:7]))
+                                 spec.format('$_$/'), dname, dhash[:7]))
                     continue
 
                 child = data[dhash].spec
@@ -260,7 +309,7 @@ class Database(object):
             raise ValueError("Invalid database format: %s" % format)
 
         try:
-            if isinstance(stream, basestring):
+            if isinstance(stream, string_types):
                 with open(stream, 'r') as f:
                     fdata = load(f)
             else:
@@ -360,30 +409,87 @@ class Database(object):
                 self._data = {}
 
         transaction = WriteTransaction(
-            self.lock, _read_suppress_error, self._write, _db_lock_timeout)
+            self.lock, _read_suppress_error, self._write, _db_lock_timeout
+        )
 
         with transaction:
             if self._error:
                 tty.warn(
                     "Spack database was corrupt. Will rebuild. Error was:",
-                    str(self._error))
+                    str(self._error)
+                )
                 self._error = None
+
+            # Read first the `spec.yaml` files in the prefixes. They should be
+            # considered authoritative with respect to DB reindexing, as
+            # entries in the DB may be corrupted in a way that still makes
+            # them readable. If we considered DB entries authoritative
+            # instead, we would perpetuate errors over a reindex.
 
             old_data = self._data
             try:
+                # Initialize data in the reconstructed DB
                 self._data = {}
 
-                # Ask the directory layout to traverse the filesystem.
+                # Start inspecting the installed prefixes
+                processed_specs = set()
+
                 for spec in directory_layout.all_specs():
                     # Try to recover explicit value from old DB, but
-                    # default it to False if DB was corrupt.
-                    explicit = False
+                    # default it to True if DB was corrupt. This is
+                    # just to be conservative in case a command like
+                    # "autoremove" is run by the user after a reindex.
+                    tty.debug(
+                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec)
+                    )
+                    explicit = True
                     if old_data is not None:
                         old_info = old_data.get(spec.dag_hash())
                         if old_info is not None:
                             explicit = old_info.explicit
 
                     self._add(spec, directory_layout, explicit=explicit)
+
+                    processed_specs.add(spec)
+
+                for key, entry in old_data.items():
+                    # We already took care of this spec using
+                    # `spec.yaml` from its prefix.
+                    if entry.spec in processed_specs:
+                        msg = 'SKIPPING RECONSTRUCTION FROM OLD DB: {0}'
+                        msg += ' [already reconstructed from spec.yaml]'
+                        tty.debug(msg.format(entry.spec))
+                        continue
+
+                    # If we arrived here it very likely means that
+                    # we have external specs that are not dependencies
+                    # of other specs. This may be the case for externally
+                    # installed compilers or externally installed
+                    # applications.
+                    tty.debug(
+                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec)
+                    )
+                    try:
+                        layout = spack.store.layout
+                        if entry.spec.external:
+                            layout = None
+                            install_check = True
+                        else:
+                            install_check = layout.check_installed(entry.spec)
+
+                        if install_check:
+                            kwargs = {
+                                'spec': entry.spec,
+                                'directory_layout': layout,
+                                'explicit': entry.explicit
+                            }
+                            self._add(**kwargs)
+                            processed_specs.add(entry.spec)
+                    except Exception as e:
+                        # Something went wrong, so the spec was not restored
+                        # from old data
+                        tty.debug(e.message)
+                        pass
 
                 self._check_ref_counts()
 
@@ -471,6 +577,8 @@ class Database(object):
         else:
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
+            with WriteTransaction(self.lock, timeout=_db_lock_timeout):
+                self._write(None, None, None)
             self.reindex(spack.store.layout)
 
     def _add(self, spec, directory_layout=None, explicit=False):
@@ -493,7 +601,7 @@ class Database(object):
 
         key = spec.dag_hash()
         if key not in self._data:
-            installed = False
+            installed = bool(spec.external)
             path = None
             if not spec.external and directory_layout:
                 path = directory_layout.path_for_spec(spec)
@@ -511,7 +619,7 @@ class Database(object):
                 new_spec, path, installed, ref_count=0, explicit=explicit)
 
             # Connect dependencies from the DB to the new copy.
-            for name, dep in spec.dependencies_dict(_tracked_deps).iteritems():
+            for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
                 dkey = dep.spec.dag_hash()
                 new_spec._add_dependency(self._data[dkey].spec, dep.deptypes)
                 self._data[dkey].ref_count += 1
@@ -619,13 +727,12 @@ class Database(object):
         Return the specs of all packages that extend
         the given spec
         """
-        for s in self.query():
+        for spec in self.query():
             try:
-                if s.package.extends(extendee_spec):
-                    yield s.package
-            except spack.repository.UnknownPackageError:
+                spack.store.layout.check_activated(extendee_spec, spec)
+                yield spec.package
+            except spack.directory_layout.NoSuchExtensionError:
                 continue
-            # skips unknown packages
             # TODO: conditional way to do this instead of catching exceptions
 
     def query(self, query_spec=any, known=any, installed=True, explicit=any):

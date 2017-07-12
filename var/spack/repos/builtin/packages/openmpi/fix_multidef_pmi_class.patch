@@ -1,0 +1,54 @@
+diff -Naur openmpi-2.0.1.orig/opal/mca/pmix/cray/pmix_cray.c openmpi-2.0.1/opal/mca/pmix/cray/pmix_cray.c
+--- openmpi-2.0.1.orig/opal/mca/pmix/cray/pmix_cray.c	2016-08-23 04:56:37.000000000 +0800
++++ openmpi-2.0.1/opal/mca/pmix/cray/pmix_cray.c	2017-01-31 01:05:34.302807465 +0800
+@@ -6,7 +6,7 @@
+  * Copyright (c) 2011-2015 Los Alamos National Security, LLC. All
+  *                         rights reserved.
+  * Copyright (c) 2013-2015 Intel, Inc.  All rights reserved.
+- * Copyright (c) 2014-2015 Research Organization for Information Science
++ * Copyright (c) 2014-2016 Research Organization for Information Science
+  *                         and Technology (RIST). All rights reserved.
+  * $COPYRIGHT$
+  *
+@@ -127,7 +127,7 @@
+     opal_pmix_op_cbfunc_t opcbfunc;
+     void *cbdata;
+ } pmi_opcaddy_t;
+-OBJ_CLASS_INSTANCE(pmi_opcaddy_t,
++static OBJ_CLASS_INSTANCE(pmi_opcaddy_t,
+                    opal_object_t,
+                    NULL, NULL);
+ 
+diff -Naur openmpi-2.0.1.orig/opal/mca/pmix/s1/pmix_s1.c openmpi-2.0.1/opal/mca/pmix/s1/pmix_s1.c
+--- openmpi-2.0.1.orig/opal/mca/pmix/s1/pmix_s1.c	2016-08-23 04:56:37.000000000 +0800
++++ openmpi-2.0.1/opal/mca/pmix/s1/pmix_s1.c	2017-01-31 01:06:08.014808847 +0800
+@@ -1,7 +1,7 @@
+ /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil -*- */
+ /*
+  * Copyright (c) 2014-2015 Intel, Inc.  All rights reserved.
+- * Copyright (c) 2014-2015 Research Organization for Information Science
++ * Copyright (c) 2014-2016 Research Organization for Information Science
+  *                         and Technology (RIST). All rights reserved.
+  * $COPYRIGHT$
+  *
+@@ -88,7 +88,7 @@
+     opal_pmix_op_cbfunc_t opcbfunc;
+     void *cbdata;
+ } pmi_opcaddy_t;
+-OBJ_CLASS_INSTANCE(pmi_opcaddy_t,
++static OBJ_CLASS_INSTANCE(pmi_opcaddy_t,
+                    opal_object_t,
+                    NULL, NULL);
+ 
+diff -Naur openmpi-2.0.1.orig/opal/mca/pmix/s2/pmix_s2.c openmpi-2.0.1/opal/mca/pmix/s2/pmix_s2.c
+--- openmpi-2.0.1.orig/opal/mca/pmix/s2/pmix_s2.c	2016-08-23 04:56:37.000000000 +0800
++++ openmpi-2.0.1/opal/mca/pmix/s2/pmix_s2.c	2017-01-31 01:06:27.718809655 +0800
+@@ -95,7 +95,7 @@
+     opal_pmix_op_cbfunc_t opcbfunc;
+     void *cbdata;
+ } pmi_opcaddy_t;
+-OBJ_CLASS_INSTANCE(pmi_opcaddy_t,
++static OBJ_CLASS_INSTANCE(pmi_opcaddy_t,
+                    opal_object_t,
+                    NULL, NULL);
+ 

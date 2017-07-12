@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,8 @@ class Parmetis(Package):
        computing fill-reducing orderings of sparse matrices."""
 
     homepage = 'http://glaros.dtc.umn.edu/gkhome/metis/parmetis/overview'
-    base_url = 'http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis'
+    url      = 'http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz'
+    list_url = 'http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/OLD'
 
     version('4.0.3', 'f69c479586bf6bb7aff6a9bc0c739628')
     version('4.0.2', '0912a953da5bb9b5e5e10542298ffdce')
@@ -54,8 +55,11 @@ class Parmetis(Package):
     patch('pkg-parmetis-82409d68aa1d6cbc70740d0f35024aae17f7d5cb.patch')
 
     def url_for_version(self, version):
-        verdir = 'OLD/' if version < Version('3.2.0') else ''
-        return '%s/%sparmetis-%s.tar.gz' % (Parmetis.base_url, verdir, version)
+        url = 'http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis'
+        if version < Version('3.2.0'):
+            url += '/OLD'
+        url += '/parmetis-{0}.tar.gz'.format(version)
+        return url
 
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
@@ -66,11 +70,23 @@ class Parmetis(Package):
             '-DGKLIB_PATH:PATH=%s/GKlib' % spec['metis'].prefix.include,
             '-DMETIS_PATH:PATH=%s' % spec['metis'].prefix,
             '-DCMAKE_C_COMPILER:STRING=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER:STRING=%s' % spec['mpi'].mpicxx
+            '-DCMAKE_CXX_COMPILER:STRING=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_C_FLAGS:STRING=%s' % (
+                '-c11' if '%pgi' in spec else ''),
         ])
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
+        else:
+            # Remove all RPATH options
+            # (RPATHxxx options somehow trigger cmake to link dynamically)
+            rpath_options = []
+            for o in options:
+                if o.find('RPATH') >= 0:
+                    rpath_options.append(o)
+            for o in rpath_options:
+                options.remove(o)
+
         if '+debug' in spec:
             options.extend(['-DDEBUG:BOOL=ON',
                             '-DCMAKE_BUILD_TYPE:STRING=Debug'])

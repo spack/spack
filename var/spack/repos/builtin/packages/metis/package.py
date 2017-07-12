@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -37,7 +37,8 @@ class Metis(Package):
        partitioning schemes."""
 
     homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
-    base_url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"
+    url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
+    list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
 
     version('5.1.0', '5465e67079419a69e0116de24fce58fe')
     version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
@@ -55,12 +56,11 @@ class Metis(Package):
     patch('install_gklib_defs_rename.patch', when='@5:')
 
     def url_for_version(self, version):
-        verdir = 'OLD/' if version < Version('4.0.3') else ''
-        return '%s/%smetis-%s.tar.gz' % (Metis.base_url, verdir, version)
-
-    @when('@:4')
-    def patch(self):
-        pass
+        url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"
+        if version < Version('4.0.3'):
+            url += "/OLD"
+        url += "/metis-{0}.tar.gz".format(version)
+        return url
 
     @when('@5:')
     def patch(self):
@@ -135,7 +135,8 @@ class Metis(Package):
 
         # Set up and run tests on installation
         ccompile('-I%s' % prefix.include, '-L%s' % prefix.lib,
-                 '-Wl,-rpath=%s' % (prefix.lib if '+shared' in spec else ''),
+                 self.compiler.cc_rpath_arg +
+                 '%s' % (prefix.lib if '+shared' in spec else ''),
                  join_path('Programs', 'io.o'), join_path('Test', 'mtest.c'),
                  '-o', '%s/mtest' % prefix.bin, '-lmetis', '-lm')
 
@@ -186,6 +187,15 @@ class Metis(Package):
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
+        else:
+            # Remove all RPATH options
+            # (RPATHxxx options somehow trigger cmake to link dynamically)
+            rpath_options = []
+            for o in options:
+                if o.find('RPATH') >= 0:
+                    rpath_options.append(o)
+            for o in rpath_options:
+                options.remove(o)
         if '+debug' in spec:
             options.extend(['-DDEBUG:BOOL=ON',
                             '-DCMAKE_BUILD_TYPE:STRING=Debug'])

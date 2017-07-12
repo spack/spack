@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,17 +28,17 @@ The idea is to allow package creators to supply nothing more than the
 download location of the package, and figure out version and name information
 from there.
 
-Example: when spack is given the following URL:
+**Example:** when spack is given the following URL:
 
-    ftp://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.9.1-p243.tar.gz
+    https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz
 
-It can figure out that the package name is ruby, and that it is at version
-1.9.1-p243.  This is useful for making the creation of packages simple: a user
+It can figure out that the package name is ``hdf``, and that it is at version
+``4.2.12``. This is useful for making the creation of packages simple: a user
 just supplies a URL and skeleton code is generated automatically.
 
-Spack can also figure out that it can most likely download 1.8.1 at this URL:
+Spack can also figure out that it can most likely download 4.2.6 at this URL:
 
-    ftp://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.8.1.tar.gz
+    https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.6/src/hdf-4.2.6.tar.gz
 
 This is useful if a user asks for a package at a particular version number;
 spack doesn't need anyone to tell it where to get the tarball even though
@@ -46,8 +46,8 @@ it's never been told about that version before.
 """
 import os
 import re
-from StringIO import StringIO
-from urlparse import urlsplit, urlunsplit
+from six import StringIO
+from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import *
@@ -63,16 +63,49 @@ from spack.version import Version
 # "path" seemed like the most generic term.
 #
 def find_list_url(url):
-    """Finds a good list URL for the supplied URL.  This depends on
-       the site.  By default, just assumes that a good list URL is the
-       dirname of an archive path.  For github URLs, this returns the
-       URL of the project's releases page.
+    """Finds a good list URL for the supplied URL.
+
+    By default, returns the dirname of the archive path.
+
+    Provides special treatment for the following websites, which have a
+    unique list URL different from the dirname of the download URL:
+
+    =========  =======================================================
+    GitHub     https://github.com/<repo>/<name>/releases
+    GitLab     https://gitlab.\*/<repo>/<name>/tags
+    BitBucket  https://bitbucket.org/<repo>/<name>/downloads/?tab=tags
+    CRAN       https://\*.r-project.org/src/contrib/Archive/<name>
+    =========  =======================================================
+
+    Parameters:
+        url (str): The download URL for the package
+
+    Returns:
+        str: The list URL for the package
     """
 
     url_types = [
+        # GitHub
         # e.g. https://github.com/llnl/callpath/archive/v1.0.1.tar.gz
-        (r'^(https://github.com/[^/]+/[^/]+)/archive/',
-         lambda m: m.group(1) + '/releases')]
+        (r'(.*github\.com/[^/]+/[^/]+)',
+         lambda m: m.group(1) + '/releases'),
+
+        # GitLab
+        # e.g. https://gitlab.dkrz.de/k202009/libaec/uploads/631e85bcf877c2dcaca9b2e6d6526339/libaec-1.0.0.tar.gz
+        (r'(.*gitlab[^/]+/[^/]+/[^/]+)',
+         lambda m: m.group(1) + '/tags'),
+
+        # BitBucket
+        # e.g. https://bitbucket.org/eigen/eigen/get/3.3.3.tar.bz2
+        (r'(.*bitbucket.org/[^/]+/[^/]+)',
+         lambda m: m.group(1) + '/downloads/?tab=tags'),
+
+        # CRAN
+        # e.g. https://cran.r-project.org/src/contrib/Rcpp_0.12.9.tar.gz
+        # e.g. https://cloud.r-project.org/src/contrib/rgl_0.98.1.tar.gz
+        (r'(.*\.r-project\.org/src/contrib)/([^_]+)',
+         lambda m: m.group(1) + '/Archive/' + m.group(2)),
+    ]
 
     for pattern, fun in url_types:
         match = re.search(pattern, url)
@@ -101,32 +134,208 @@ def strip_query_and_fragment(path):
         return (path, '')  # Ignore URL parse errors here
 
 
+def strip_version_suffixes(path):
+    """Some tarballs contain extraneous information after the version:
+
+    * ``bowtie2-2.2.5-source``
+    * ``libevent-2.0.21-stable``
+    * ``cuda_8.0.44_linux.run``
+
+    These strings are not part of the version number and should be ignored.
+    This function strips those suffixes off and returns the remaining string.
+    The goal is that the version is always the last thing in ``path``:
+
+    * ``bowtie2-2.2.5``
+    * ``libevent-2.0.21``
+    * ``cuda_8.0.44``
+
+    Args:
+        path (str): The filename or URL for the package
+
+    Returns:
+        str: The ``path`` with any extraneous suffixes removed
+    """
+    # NOTE: This could be done with complicated regexes in parse_version_offset
+    # NOTE: The problem is that we would have to add these regexes to the end
+    # NOTE: of every single version regex. Easier to just strip them off
+    # NOTE: permanently
+
+    suffix_regexes = [
+        # Download type
+        '[Ii]nstall',
+        'all',
+        'src(_0)?',
+        '[Ss]ources?',
+        'file',
+        'full',
+        'single',
+        'public',
+        'with[a-zA-Z_-]+',
+        'bin',
+        'binary',
+        'run',
+        '[Uu]niversal',
+        'jar',
+        'complete',
+        'oss',
+        'gem',
+        'tar',
+        'sh',
+
+        # Download version
+        'stable',
+        '[Ff]inal',
+        'rel',
+        'orig',
+        'dist',
+        '\+',
+
+        # License
+        'gpl',
+
+        # Arch
+        # Needs to come before and after OS, appears in both orders
+        'ia32',
+        'intel',
+        'amd64',
+        'x64',
+        'x86_64',
+        'x86',
+        'i[36]86',
+        'ppc64(le)?',
+        'armv?(7l|6l|64)',
+
+        # OS
+        '[Ll]inux(_64)?',
+        '[Uu]ni?x',
+        '[Ss]un[Oo][Ss]',
+        '[Mm]ac[Oo][Ss][Xx]?',
+        '[Oo][Ss][Xx]',
+        '[Dd]arwin(64)?',
+        '[Aa]pple',
+        '[Ww]indows',
+        '[Ww]in(64|32)?',
+        '[Cc]ygwin(64|32)?',
+        '[Mm]ingw',
+
+        # Arch
+        # Needs to come before and after OS, appears in both orders
+        'ia32',
+        'intel',
+        'amd64',
+        'x64',
+        'x86_64',
+        'x86',
+        'i[36]86',
+        'ppc64(le)?',
+        'armv?(7l|6l|64)?',
+
+        # PyPI
+        '[._-]py[23].*\.whl',
+        '[._-]cp[23].*\.whl',
+        '[._-]win.*\.exe',
+    ]
+
+    for regex in suffix_regexes:
+        # Remove the suffix from the end of the path
+        # This may be done multiple times
+        path = re.sub(r'[._-]?' + regex + '$', '', path)
+
+    return path
+
+
+def strip_name_suffixes(path, version):
+    """Most tarballs contain a package name followed by a version number.
+    However, some also contain extraneous information in-between the name
+    and version:
+
+    * ``rgb-1.0.6``
+    * ``converge_install_2.3.16``
+    * ``jpegsrc.v9b``
+
+    These strings are not part of the package name and should be ignored.
+    This function strips the version number and any extraneous suffixes
+    off and returns the remaining string. The goal is that the name is
+    always the last thing in ``path``:
+
+    * ``rgb``
+    * ``converge``
+    * ``jpeg``
+
+    Args:
+        path (str): The filename or URL for the package
+        version (str): The version detected for this URL
+
+    Returns:
+        str: The ``path`` with any extraneous suffixes removed
+    """
+    # NOTE: This could be done with complicated regexes in parse_name_offset
+    # NOTE: The problem is that we would have to add these regexes to every
+    # NOTE: single name regex. Easier to just strip them off permanently
+
+    suffix_regexes = [
+        # Strip off the version and anything after it
+
+        # name-ver
+        # name_ver
+        # name.ver
+        r'[._-]v?' + str(version) + '.*',
+
+        # namever
+        str(version) + '.*',
+
+        # Download type
+        'install',
+        'src',
+        '(open)?[Ss]ources?',
+        '[._-]std',
+
+        # Download version
+        'release',
+        'snapshot',
+        'distrib',
+
+        # VCS
+        '0\+bzr',
+
+        # License
+        'gpl',
+    ]
+
+    for regex in suffix_regexes:
+        # Remove the suffix from the end of the path
+        # This may be done multiple times
+        path = re.sub('[._-]?' + regex + '$', '', path)
+
+    return path
+
+
 def split_url_extension(path):
     """Some URLs have a query string, e.g.:
 
-          1. https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true
-          2. http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz
-          3. https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
+    1. https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true
+    2. http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz
+    3. https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
 
-       In (1), the query string needs to be stripped to get at the
-       extension, but in (2) & (3), the filename is IN a single final query
-       argument.
+    In (1), the query string needs to be stripped to get at the
+    extension, but in (2) & (3), the filename is IN a single final query
+    argument.
 
-       This strips the URL into three pieces: prefix, ext, and suffix.
-       The suffix contains anything that was stripped off the URL to
-       get at the file extension.  In (1), it will be '?raw=true', but
-       in (2), it will be empty. In (3) the suffix is a parameter that follows
-       after the file extension, e.g.:
+    This strips the URL into three pieces: ``prefix``, ``ext``, and ``suffix``.
+    The suffix contains anything that was stripped off the URL to
+    get at the file extension.  In (1), it will be ``'?raw=true'``, but
+    in (2), it will be empty. In (3) the suffix is a parameter that follows
+    after the file extension, e.g.:
 
-           1. ('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7', '.tgz', '?raw=true')
-           2. ('http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin',
-               '.tar.gz', None)
-           3. ('https://gitlab.kitware.com/vtk/vtk/repository/archive', '.tar.bz2', '?ref=v7.0.0')
+    1. ``('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7', '.tgz', '?raw=true')``
+    2. ``('http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin', '.tar.gz', None)``
+    3. ``('https://gitlab.kitware.com/vtk/vtk/repository/archive', '.tar.bz2', '?ref=v7.0.0')``
     """
     prefix, ext, suffix = path, '', ''
 
     # Strip off sourceforge download suffix.
-    match = re.search(r'((?:sourceforge.net|sf.net)/.*)(/download)$', path)
+    # e.g. https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download
+    match = re.search(r'(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$', path)
     if match:
         prefix, suffix = match.groups()
 
@@ -149,7 +358,7 @@ def determine_url_file_extension(path):
     """This returns the type of archive a URL refers to.  This is
        sometimes confusing because of URLs like:
 
-           (1) https://github.com/petdance/ack/tarball/1.93_02
+       (1) https://github.com/petdance/ack/tarball/1.93_02
 
        Where the URL doesn't actually contain the filename.  We need
        to know what type it is so that we can appropriately name files
@@ -166,181 +375,355 @@ def determine_url_file_extension(path):
     return ext
 
 
-def parse_version_offset(path, debug=False):
-    """Try to extract a version string from a filename or URL.  This is taken
-       largely from Homebrew's Version class."""
+def parse_version_offset(path):
+    """Try to extract a version string from a filename or URL.
+
+    Args:
+        path (str): The filename or URL for the package
+
+    Returns:
+        tuple of (Version, int, int, int, str): A tuple containing:
+            version of the package,
+            first index of version,
+            length of version string,
+            the index of the matching regex
+            the matching regex
+
+    Raises:
+        UndetectableVersionError: If the URL does not match any regexes
+    """
     original_path = path
 
+    # path:   The prefix of the URL, everything before the ext and suffix
+    # ext:    The file extension
+    # suffix: Any kind of query string that begins with a '?'
     path, ext, suffix = split_url_extension(path)
 
-    # Allow matches against the basename, to avoid including parent
-    # dirs in version name Remember the offset of the stem in the path
-    stem = os.path.basename(path)
-    offset = len(path) - len(stem)
+    # stem:   Everything from path after the final '/'
+    original_stem = os.path.basename(path)
 
-    version_types = [
-        # GitHub tarballs, e.g. v1.2.3
-        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+)$', path),
+    # Try to strip off anything after the version number
+    stem = strip_version_suffixes(original_stem)
 
-        # e.g. https://github.com/sam-github/libnet/tarball/libnet-1.1.4
-        (r'github.com/.+/(?:zip|tar)ball/.*-((\d+\.)+\d+)$', path),
+    # Assumptions:
+    #
+    # 1. version always comes after the name
+    # 2. separators include '-', '_', and '.'
+    # 3. names can contain A-Z, a-z, 0-9, '+', separators
+    # 4. versions can contain A-Z, a-z, 0-9, separators
+    # 5. versions always start with a digit
+    # 6. versions are often prefixed by a 'v' character
+    # 7. separators are most reliable to determine name/version boundaries
 
-        # e.g. https://github.com/isaacs/npm/tarball/v0.2.5-1
-        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+-(\d+))$', path),
+    # List of the following format:
+    #
+    # [
+    #     (regex, string),
+    #     ...
+    # ]
+    #
+    # The first regex that matches string will be used to determine
+    # the version of the package. Thefore, hyperspecific regexes should
+    # come first while generic, catch-all regexes should come last.
+    # With that said, regular expressions are slow, so if possible, put
+    # ones that only catch one or two URLs at the bottom.
+    version_regexes = [
+        # 1st Pass: Simplest case
+        # Assume name contains no digits and version contains no letters
+        # e.g. libpng-1.6.27
+        (r'^[a-zA-Z+._-]+[._-]v?(\d[\d._-]*)$', stem),
 
-        # e.g. https://github.com/petdance/ack/tarball/1.93_02
-        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+_(\d+))$', path),
+        # 2nd Pass: Version only
+        # Assume version contains no letters
 
-        # Yorick is very special.
-        # e.g. https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz
-        (r'github.com/[^/]+/yorick/archive/y_(\d+(?:_\d+)*)$', path),
+        # ver
+        # e.g. 3.2.7, 7.0.2-7, v3.3.0, v1_6_3
+        (r'^v?(\d[\d._-]*)$', stem),
 
-        # e.g. https://github.com/hpc/lwgrp/archive/v1.0.1.tar.gz
-        (r'github.com/[^/]+/[^/]+/archive/(?:release-)?v?(\w+(?:[.-]\w+)*)$', path),  # noqa
+        # 3rd Pass: No separator characters are used
+        # Assume name contains no digits
 
-        # e.g. https://github.com/erlang/otp/tarball/OTP_R15B01 (erlang style)
-        (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
+        # namever
+        # e.g. turbolinux702, nauty26r7
+        (r'^[a-zA-Z+]*(\d[\da-zA-Z]*)$', stem),
 
-        # e.g., https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz
-        # e.g.,
-        # https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
-        (r'github.com/[^/]+/[^/]+/releases/download/v?([^/]+)/.*$', path),
+        # 4th Pass: A single separator character is used
+        # Assume name contains no digits
 
-        # GitLab syntax:
-        #   {baseUrl}{/organization}{/projectName}/repository/archive.{fileEnding}?ref={gitTag}
-        #   as with github releases, we hope a version can be found in the
-        #   git tag
-        # Search dotted versions:
-        #   e.g., https://gitlab.kitware.com/vtk/vtk/repository/archive.tar.bz2?ref=v7.0.0
-        #   e.g., https://example.com/org/repo/repository/archive.tar.bz2?ref=SomePrefix-2.1.1
-        (r'\?ref=(?:.*-|v)*((\d+\.)+\d+).*$', suffix),
+        # name-name-ver-ver
+        # e.g. panda-2016-03-07, gts-snapshot-121130, cdd-061a
+        (r'^[a-zA-Z+-]*(\d[\da-zA-Z-]*)$', stem),
 
-        # e.g. boost_1_39_0
-        (r'((\d+_)+\d+)$', stem),
+        # name_name_ver_ver
+        # e.g. tinyxml_2_6_2, boost_1_55_0, tbb2017_20161128, v1_6_3
+        (r'^[a-zA-Z+_]*(\d[\da-zA-Z_]*)$', stem),
 
-        # e.g. foobar-4.5.1-1
-        # e.g. ruby-1.9.1-p243
-        (r'-((\d+\.)*\d\.\d+-(p|rc|RC)?\d+)(?:[-._](?:bin|dist|stable|src|sources))?$', stem),  # noqa
+        # name.name.ver.ver
+        # e.g. prank.source.150803, jpegsrc.v9b, atlas3.11.34, geant4.10.01.p03
+        (r'^[a-zA-Z+.]*(\d[\da-zA-Z.]*)$', stem),
 
-        # e.g. lame-398-1
-        (r'-((\d)+-\d)', stem),
+        # 5th Pass: Two separator characters are used
+        # Name may contain digits, version may contain letters
 
-        # e.g. foobar_1.2-3 or 3.98-1.4
-        (r'_((\d+\.)+\d+(-(\d+(\.\d+)?))?[a-z]?)', stem),
+        # name-name-ver.ver
+        # e.g. m4-1.4.17, gmp-6.0.0a, launchmon-v1.0.2
+        (r'^[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),
 
-        # e.g. foobar-4.5.1
-        (r'-((\d+\.)*\d+)$', stem),
+        # name-name-ver_ver
+        # e.g. icu4c-57_1
+        (r'^[a-zA-Z\d+-]+-v?(\d[\da-zA-Z_]*)$', stem),
 
-        # e.g. foobar-4.5.1b, foobar4.5RC, foobar.v4.5.1b
-        (r'[-._]?v?((\d+\.)*\d+[-._]?([a-z]|rc|RC|tp|TP?)\d*)$', stem),
+        # name_name_ver.ver
+        # e.g. superlu_dist_4.1, pexsi_v0.9.0
+        (r'^[a-zA-Z\d+_]+_v?(\d[\da-zA-Z.]*)$', stem),
 
-        # e.g. foobar-4.5.0-beta1, or foobar-4.50-beta
-        (r'-((\d+\.)*\d+-beta(\d+)?)$', stem),
+        # name_name.ver.ver
+        # e.g. fer_source.v696
+        (r'^[a-zA-Z\d+_]+\.v?(\d[\da-zA-Z.]*)$', stem),
 
-        # e.g. foobar4.5.1
-        (r'((\d+\.)*\d+)$', stem),
+        # name-name-ver.ver-ver.ver
+        # e.g. sowing-1.1.23-p1, bib2xhtml-v3.0-15-gf506, 4.6.3-alpha04
+        (r'^(?:[a-zA-Z\d+-]+-)?v?(\d[\da-zA-Z.-]*)$', stem),
 
-        # e.g. foobar-4.5.0-bin
-        (r'-((\d+\.)+\d+[a-z]?)[-._](bin|dist|stable|src|sources?)$', stem),
+        # namever.ver-ver.ver
+        # e.g. go1.4-bootstrap-20161024
+        (r'^[a-zA-Z+]+v?(\d[\da-zA-Z.-]*)$', stem),
 
-        # e.g. dash_0.5.5.1.orig.tar.gz (Debian style)
-        (r'_((\d+\.)+\d+[a-z]?)[.]orig$', stem),
+        # 6th Pass: All three separator characters are used
+        # Name may contain digits, version may contain letters
 
-        # e.g. http://www.openssl.org/source/openssl-0.9.8s.tar.gz
-        (r'-v?([^-]+(-alpha|-beta)?)', stem),
+        # name_name-ver.ver
+        # e.g. the_silver_searcher-0.32.0, sphinx_rtd_theme-0.1.10a0
+        (r'^[a-zA-Z\d+_]+-v?(\d[\da-zA-Z.]*)$', stem),
 
-        # e.g. astyle_1.23_macosx.tar.gz
-        (r'_([^_]+(_alpha|_beta)?)', stem),
+        # name.name_ver.ver-ver.ver
+        # e.g. TH.data_1.0-8, XML_3.98-1.4
+        (r'^[a-zA-Z\d+.]+_v?(\d[\da-zA-Z.-]*)$', stem),
 
-        # e.g. http://mirrors.jenkins-ci.org/war/1.486/jenkins.war
-        (r'\/(\d\.\d+)\/', path),
+        # name-name-ver.ver_ver.ver
+        # e.g. pypar-2.1.5_108
+        (r'^[a-zA-Z\d+-]+-v?(\d[\da-zA-Z._]*)$', stem),
 
-        # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz
-        (r'\.v(\d+[a-z]?)', stem)]
+        # name.name_name-ver.ver
+        # e.g. tap.py-1.6, backports.ssl_match_hostname-3.5.0.1
+        (r'^[a-zA-Z\d+._]+-v?(\d[\da-zA-Z.]*)$', stem),
 
-    for i, vtype in enumerate(version_types):
-        regex, match_string = vtype
+        # name-namever.ver_ver.ver
+        # e.g. STAR-CCM+11.06.010_02
+        (r'^[a-zA-Z+-]+(\d[\da-zA-Z._]*)$', stem),
+
+        # 7th Pass: Specific VCS
+
+        # bazaar
+        # e.g. libvterm-0+bzr681
+        (r'bzr(\d[\da-zA-Z._-]*)$', stem),
+
+        # 8th Pass: Version in path
+
+        # github.com/repo/name/releases/download/vver/name
+        # e.g. https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow
+        (r'github\.com/[^/]+/[^/]+/releases/download/[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)/', path),  # noqa
+
+        # 9th Pass: Query strings
+
+        # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
+        (r'\?ref=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
+
+        # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
+        (r'\?version=v?(\d[\da-zA-Z._-]*)$', suffix),
+
+        # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
+        (r'\?filename=[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),
+
+        # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
+        (r'\?package=[a-zA-Z\d+-]+&get=[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),  # noqa
+    ]
+
+    for i, version_regex in enumerate(version_regexes):
+        regex, match_string = version_regex
         match = re.search(regex, match_string)
         if match and match.group(1) is not None:
-            if debug:
-                tty.msg("Parsing URL: %s" % path,
-                        "  Matched regex %d: r'%s'" % (i, regex))
-
             version = match.group(1)
             start   = match.start(1)
 
-            # if we matched from the basename, then add offset in.
+            # If we matched from the stem or suffix, we need to add offset
+            offset = 0
             if match_string is stem:
-                start += offset
+                offset = len(path) - len(original_stem)
+            elif match_string is suffix:
+                offset = len(path)
+                if ext:
+                    offset += len(ext) + 1  # .tar.gz is converted to tar.gz
+            start += offset
 
-            return version, start, len(version)
+            return version, start, len(version), i, regex
 
     raise UndetectableVersionError(original_path)
 
 
-def parse_version(path, debug=False):
-    """Given a URL or archive name, extract a version from it and return
-       a version object.
+def parse_version(path):
+    """Try to extract a version string from a filename or URL.
+
+    Args:
+        path (str): The filename or URL for the package
+
+    Returns:
+        spack.version.Version: The version of the package
+
+    Raises:
+        UndetectableVersionError: If the URL does not match any regexes
     """
-    ver, start, l = parse_version_offset(path, debug=debug)
-    return Version(ver)
+    version, start, length, i, regex = parse_version_offset(path)
+    return Version(version)
 
 
-def parse_name_offset(path, v=None, debug=False):
+def parse_name_offset(path, v=None):
+    """Try to determine the name of a package from its filename or URL.
+
+    Args:
+        path (str): The filename or URL for the package
+        v (str): The version of the package
+
+    Returns:
+        tuple of (str, int, int, int, str): A tuple containing:
+            name of the package,
+            first index of name,
+            length of name,
+            the index of the matching regex
+            the matching regex
+
+    Raises:
+        UndetectableNameError: If the URL does not match any regexes
+    """
+    original_path = path
+
+    # We really need to know the version of the package
+    # This helps us prevent collisions between the name and version
     if v is None:
-        v = parse_version(path, debug=debug)
+        try:
+            v = parse_version(path)
+        except UndetectableVersionError:
+            # Not all URLs contain a version. We still want to be able
+            # to determine a name if possible.
+            v = 'unknown'
 
+    # path:   The prefix of the URL, everything before the ext and suffix
+    # ext:    The file extension
+    # suffix: Any kind of query string that begins with a '?'
     path, ext, suffix = split_url_extension(path)
 
-    # Allow matching with either path or stem, as with the version.
-    stem = os.path.basename(path)
-    offset = len(path) - len(stem)
+    # stem:   Everything from path after the final '/'
+    original_stem = os.path.basename(path)
 
-    name_types = [
-        (r'/sourceforge/([^/]+)/', path),
-        (r'github.com/[^/]+/[^/]+/releases/download/%s/(.*)-%s$' %
-         (v, v), path),
-        (r'/([^/]+)/(tarball|zipball)/', path),
-        (r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % v, path),
-        (r'github.com/[^/]+/([^/]+)/archive', path),
-        (r'[^/]+/([^/]+)/repository/archive', path),  # gitlab
+    # Try to strip off anything after the package name
+    stem = strip_name_suffixes(original_stem, v)
 
-        (r'([^/]+)[_.-]v?%s' % v, stem),   # prefer the stem
-        (r'([^/]+)%s' % v, stem),
+    # List of the following format:
+    #
+    # [
+    #     (regex, string),
+    #     ...
+    # ]
+    #
+    # The first regex that matches string will be used to determine
+    # the name of the package. Thefore, hyperspecific regexes should
+    # come first while generic, catch-all regexes should come last.
+    # With that said, regular expressions are slow, so if possible, put
+    # ones that only catch one or two URLs at the bottom.
+    name_regexes = [
+        # 1st Pass: Common repositories
 
-        # accept the path if name is not in stem.
-        (r'/([^/]+)[_.-]v?%s' % v, path),
-        (r'/([^/]+)%s' % v, path),
+        # GitHub: github.com/repo/name/
+        # e.g. https://github.com/nco/nco/archive/4.6.2.tar.gz
+        (r'github\.com/[^/]+/([^/]+)', path),
 
-        (r'^([^/]+)[_.-]v?%s' % v, path),
-        (r'^([^/]+)%s' % v, path)]
+        # GitLab: gitlab.*/repo/name/
+        # e.g. http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0
+        (r'gitlab[^/]+/[^/]+/([^/]+)', path),
 
-    for i, name_type in enumerate(name_types):
-        regex, match_string = name_type
+        # Bitbucket: bitbucket.org/repo/name/
+        # e.g. https://bitbucket.org/glotzer/hoomd-blue/get/v1.3.3.tar.bz2
+        (r'bitbucket\.org/[^/]+/([^/]+)', path),
+
+        # PyPI: pypi.(python.org|io)/packages/source/first-letter/name/
+        # e.g. https://pypi.python.org/packages/source/m/mpmath/mpmath-all-0.19.tar.gz
+        # e.g. https://pypi.io/packages/source/b/backports.ssl_match_hostname/backports.ssl_match_hostname-3.5.0.1.tar.gz
+        (r'pypi\.(?:python\.org|io)/packages/source/[A-Za-z\d]/([^/]+)', path),
+
+        # 2nd Pass: Query strings
+
+        # ?filename=name-ver.ver
+        # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
+        (r'\?filename=([A-Za-z\d+-]+)$', stem),
+
+        # ?package=name
+        # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
+        (r'\?package=([A-Za-z\d+-]+)', stem),
+
+        # download.php
+        # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
+        (r'([^/]+)/download.php$', path),
+
+        # 3rd Pass: Name followed by version in archive
+
+        (r'^([A-Za-z\d+\._-]+)$', stem),
+    ]
+
+    for i, name_regex in enumerate(name_regexes):
+        regex, match_string = name_regex
         match = re.search(regex, match_string)
         if match:
             name  = match.group(1)
             start = match.start(1)
 
-            # if we matched from the basename, then add offset in.
+            # If we matched from the stem or suffix, we need to add offset
+            offset = 0
             if match_string is stem:
-                start += offset
+                offset = len(path) - len(original_stem)
+            elif match_string is suffix:
+                offset = len(path)
+                if ext:
+                    offset += len(ext) + 1  # .tar.gz is converted to tar.gz
+            start += offset
 
-            # package names should be lowercase and separated by dashes.
-            name = name.lower()
-            name = re.sub('[_.]', '-', name)
+            return name, start, len(name), i, regex
 
-            return name, start, len(name)
-
-    raise UndetectableNameError(path)
+    raise UndetectableNameError(original_path)
 
 
 def parse_name(path, ver=None):
-    name, start, l = parse_name_offset(path, ver)
+    """Try to determine the name of a package from its filename or URL.
+
+    Args:
+        path (str): The filename or URL for the package
+        ver (str): The version of the package
+
+    Returns:
+        str: The name of the package
+
+    Raises:
+        UndetectableNameError: If the URL does not match any regexes
+    """
+    name, start, length, i, regex = parse_name_offset(path, ver)
     return name
 
 
 def parse_name_and_version(path):
+    """Try to determine the name of a package and extract its version
+    from its filename or URL.
+
+    Args:
+        path (str): The filename or URL for the package
+
+    Returns:
+        tuple of (str, Version)A tuple containing:
+            The name of the package
+            The version of the package
+
+    Raises:
+        UndetectableVersionError: If the URL does not match any regexes
+        UndetectableNameError: If the URL does not match any regexes
+    """
     ver = parse_version(path)
     name = parse_name(path, ver)
     return (name, ver)
@@ -366,96 +749,82 @@ def cumsum(elts, init=0, fn=lambda x: x):
     return sums
 
 
+def find_all(substring, string):
+    """Returns a list containing the indices of
+    every occurrence of substring in string."""
+
+    occurrences = []
+    index = 0
+    while index < len(string):
+        index = string.find(substring, index)
+        if index == -1:
+            break
+        occurrences.append(index)
+        index += len(substring)
+
+    return occurrences
+
+
 def substitution_offsets(path):
     """This returns offsets for substituting versions and names in the
-       provided path.  It is a helper for substitute_version().
+       provided path.  It is a helper for :func:`substitute_version`.
     """
     # Get name and version offsets
     try:
-        ver,  vs, vl = parse_version_offset(path)
-        name, ns, nl = parse_name_offset(path, ver)
+        ver,  vs, vl, vi, vregex = parse_version_offset(path)
+        name, ns, nl, ni, nregex = parse_name_offset(path, ver)
     except UndetectableNameError:
         return (None, -1, -1, (), ver, vs, vl, (vs,))
     except UndetectableVersionError:
-        return (None, -1, -1, (), None, -1, -1, ())
+        try:
+            name, ns, nl, ni, nregex = parse_name_offset(path)
+            return (name, ns, nl, (ns,), None, -1, -1, ())
+        except UndetectableNameError:
+            return (None, -1, -1, (), None, -1, -1, ())
 
-    # protect extensions like bz2 from getting inadvertently
-    # considered versions.
-    path = comp.strip_extension(path)
+    # Find the index of every occurrence of name and ver in path
+    name_offsets = find_all(name, path)
+    ver_offsets  = find_all(ver,  path)
 
-    # Construct a case-insensitive regular expression for the package name.
-    name_re = '(%s)' % insensitize(name)
-
-    # Split the string apart by things that match the name so that if the
-    # name contains numbers or things that look like versions, we don't
-    # accidentally substitute them with a version.
-    name_parts = re.split(name_re, path)
-
-    offsets = cumsum(name_parts, 0, len)
-    name_offsets = offsets[1::2]
-
-    ver_offsets = []
-    for i in xrange(0, len(name_parts), 2):
-        vparts = re.split(ver, name_parts[i])
-        voffsets = cumsum(vparts, offsets[i], len)
-        ver_offsets.extend(voffsets[1::2])
-
-    return (name, ns, nl, tuple(name_offsets),
-            ver,  vs, vl, tuple(ver_offsets))
+    return (name, ns, nl, name_offsets,
+            ver,  vs, vl, ver_offsets)
 
 
 def wildcard_version(path):
     """Find the version in the supplied path, and return a regular expression
        that will match this path with any version in its place.
     """
-    # Get name and version, so we can treat them specially
-    name, v = parse_name_and_version(path)
+    # Get version so we can replace it with a wildcard
+    version = parse_version(path)
 
-    path, ext, suffix = split_url_extension(path)
+    # Split path by versions
+    vparts = path.split(str(version))
 
-    # Construct a case-insensitive regular expression for the package name.
-    name_re = '(%s)' % insensitize(name)
+    # Replace each version with a generic capture group to find versions
+    # and escape everything else so it's not interpreted as a regex
+    result = '(\d.*)'.join(re.escape(vp) for vp in vparts)
 
-    # Split the string apart by things that match the name so that if the
-    # name contains numbers or things that look like versions, we don't
-    # catch them with the version wildcard.
-    name_parts = re.split(name_re, path)
-
-    # Even elements in the array did *not* match the name
-    for i in xrange(0, len(name_parts), 2):
-        # Split each part by things that look like versions.
-        vparts = re.split(v.wildcard(), name_parts[i])
-
-        # Replace each version with a generic capture group to find versions.
-        # And escape everything else so it's not interpreted as a regex
-        vgroup = '(%s)' % v.wildcard()
-        name_parts[i] = vgroup.join(re.escape(vp) for vp in vparts)
-
-    # Put it all back together with original name matches intact.
-    result = ''.join(name_parts)
-    if ext:
-        result += '.' + ext
-    result += suffix
     return result
 
 
 def substitute_version(path, new_version):
     """Given a URL or archive name, find the version in the path and
-       substitute the new version for it.  Replace all occurrences of
-       the version *if* they don't overlap with the package name.
+    substitute the new version for it.  Replace all occurrences of
+    the version *if* they don't overlap with the package name.
 
-       Simple example::
-         substitute_version('http://www.mr511.de/software/libelf-0.8.13.tar.gz', '2.9.3')
-         ->'http://www.mr511.de/software/libelf-2.9.3.tar.gz'
+    Simple example:
 
-       Complex examples::
-         substitute_version('http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.0.tar.gz', 2.1)
-         -> 'http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.1.tar.gz'
+    .. code-block:: python
 
-         # In this string, the "2" in mvapich2 is NOT replaced.
-         substitute_version('http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.tar.gz', 2.1)
-         -> 'http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.1.tar.gz'
+       substitute_version('http://www.mr511.de/software/libelf-0.8.13.tar.gz', '2.9.3')
+       >>> 'http://www.mr511.de/software/libelf-2.9.3.tar.gz'
 
+    Complex example:
+
+    .. code-block:: python
+
+       substitute_version('https://www.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz', '2.3')
+       >>> 'https://www.hdfgroup.org/ftp/HDF/releases/HDF2.3/src/hdf-2.3.tar.gz'
     """
     (name, ns, nl, noffs,
      ver,  vs, vl, voffs) = substitution_offsets(path)
@@ -474,17 +843,17 @@ def substitute_version(path, new_version):
 def color_url(path, **kwargs):
     """Color the parts of the url according to Spack's parsing.
 
-       Colors are:
-          Cyan: The version found by parse_version_offset().
-          Red:  The name found by parse_name_offset().
+    Colors are:
+       | Cyan: The version found by :func:`parse_version_offset`.
+       | Red:  The name found by :func:`parse_name_offset`.
 
-          Green:   Instances of version string from substitute_version().
-          Magenta: Instances of the name (protected from substitution).
+       | Green:   Instances of version string from :func:`substitute_version`.
+       | Magenta: Instances of the name (protected from substitution).
 
-       Optional args:
-          errors=True    Append parse errors at end of string.
-          subs=True      Color substitutions as well as parsed name/version.
-
+    Args:
+        path (str): The filename or URL for the package
+        errors (bool): Append parse errors at end of string.
+        subs (bool): Color substitutions as well as parsed name/version.
     """
     errors = kwargs.get('errors', False)
     subs   = kwargs.get('subs', False)

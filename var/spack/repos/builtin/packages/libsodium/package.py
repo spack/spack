@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,11 +25,12 @@
 from spack import *
 
 
-class Libsodium(Package):
+class Libsodium(AutotoolsPackage):
     """Sodium is a modern, easy-to-use software library for encryption,
     decryption, signatures, password hashing and more."""
     homepage = "https://download.libsodium.org/doc/"
     url      = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.11.tar.gz"
+    list_url = "https://download.libsodium.org/libsodium/releases/old"
 
     version('1.0.11', 'b58928d035064b2a46fb564937b83540')
     version('1.0.10', 'ea89dcbbda0b2b6ff6a1c476231870dd')
@@ -44,9 +45,3 @@ class Libsodium(Package):
         if version < Version('1.0.4'):
             url += 'old/'
         return url + 'libsodium-{0}.tar.gz'.format(version)
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")

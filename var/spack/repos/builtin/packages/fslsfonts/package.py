@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Fslsfonts(Package):
+class Fslsfonts(AutotoolsPackage):
     """fslsfonts produces a list of fonts served by an X font server."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/fslsfonts"
@@ -38,9 +38,3 @@ class Fslsfonts(Package):
     depends_on('xproto@7.0.25:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

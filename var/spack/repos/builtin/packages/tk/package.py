@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,27 +33,22 @@ class Tk(AutotoolsPackage):
        applications that run unchanged across Windows, Mac OS X, Linux
        and more."""
     homepage = "http://www.tcl.tk"
+    url      = "http://prdownloads.sourceforge.net/tcl/tk8.6.5-src.tar.gz"
 
+    version('8.6.6', 'dd7dbb3a6523c42d05f6ab6e86096e99')
     version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
-    variant('X', default=False, description='Enable X11 support')
+    depends_on('tcl')
+    depends_on('libx11')
 
-    depends_on("tcl")
-    depends_on("libx11", when='+X')
-
-    def url_for_version(self, version):
-        base_url = "http://prdownloads.sourceforge.net/tcl"
-        return "{0}/tk{1}-src.tar.gz".format(base_url, version)
+    configure_directory = 'unix'
 
     def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
         run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
-
-    def build_directory(self):
-        return 'unix'
 
     def configure_args(self):
         spec = self.spec

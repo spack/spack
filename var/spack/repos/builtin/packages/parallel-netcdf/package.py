@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,9 @@ class ParallelNetcdf(AutotoolsPackage):
 
     homepage = "https://trac.mcs.anl.gov/projects/parallel-netcdf"
     url      = "http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-1.6.1.tar.gz"
+    list_url = "http://cucis.ece.northwestern.edu/projects/PnetCDF/download.html"
 
+    version('1.8.0', '825825481aa629eb82f21ca37afff1609b8eeb07')
     version('1.7.0', '267eab7b6f9dc78c4d0e6def2def3aea4bc7c9f0')
     version('1.6.1', '62a094eb952f9d1e15f07d56e535052604f1ac34')
 
@@ -51,6 +53,7 @@ class ParallelNetcdf(AutotoolsPackage):
         spec = self.spec
 
         args = ['--with-mpi={0}'.format(spec['mpi'].prefix)]
+        args.append('SEQ_CC=%s' % spack_cc)
 
         if '+fpic' in spec:
             args.extend(['CFLAGS=-fPIC', 'CXXFLAGS=-fPIC', 'FFLAGS=-fPIC'])

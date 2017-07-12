@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XorgServer(Package):
+class XorgServer(AutotoolsPackage):
     """X.Org Server is the free and open source implementation of the display
     server for the X Window System stewarded by the X.Org Foundation."""
 
@@ -100,9 +100,3 @@ class XorgServer(Package):
     # LIBUDEV="libudev >= 143"
     # LIBSELINUX="libselinux >= 2.0.86"
     # LIBDBUS="dbus-1 >= 1.0"
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,18 +23,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
+import shutil
 
 
 class Cppcheck(Package):
     """A tool for static C/C++ code analysis."""
     homepage = "http://cppcheck.sourceforge.net/"
-    url      = "http://downloads.sourceforge.net/project/cppcheck/cppcheck/1.68/cppcheck-1.68.tar.bz2"
+    url      = "https://downloads.sourceforge.net/project/cppcheck/cppcheck/1.78/cppcheck-1.78.tar.bz2"
 
+    version('1.78', 'f02d0ee0a4e71023703c6c5efff6cf9d')
+    version('1.72', '2bd36f91ae0191ef5273bb7f6dc0d72e')
     version('1.68', 'c015195f5d61a542f350269030150708')
 
     def install(self, spec, prefix):
         # cppcheck does not have a configure script
-        make()
+        make("CFGDIR=%s" % os.path.join(prefix, 'cfg'))
         # manually install the final cppcheck binary
         mkdirp(prefix.bin)
         install('cppcheck', prefix.bin)
+        shutil.copytree('cfg', os.path.join(prefix, 'cfg'))

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Screen(Package):
+class Screen(AutotoolsPackage):
     """Screen is a full-screen window manager that multiplexes a physical
     terminal between several processes, typically interactive shells.
     """
@@ -51,8 +51,3 @@ class Screen(Package):
     version('3.7.1', '27cdd29318446561ef7c966041cbd2c9')
 
     depends_on('ncurses')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")

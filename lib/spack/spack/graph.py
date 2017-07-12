@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -63,6 +63,7 @@ can take a number of specs as input.
 """
 
 from heapq import *
+from six import iteritems
 
 from llnl.util.lang import *
 from llnl.util.tty.color import *
@@ -138,7 +139,7 @@ class AsciiGraph(object):
     def __init__(self):
         # These can be set after initialization or after a call to
         # graph() to change behavior.
-        self.node_character = '*'
+        self.node_character = 'o'
         self.debug = False
         self.indent = 0
         self.deptype = alldeps
@@ -364,7 +365,7 @@ class AsciiGraph(object):
         self._set_state(EXPAND_RIGHT, index)
         self._out.write("\n")
 
-    def write(self, spec, **kwargs):
+    def write(self, spec, color=None, out=None):
         """Write out an ascii graph of the provided spec.
 
         Arguments:
@@ -378,14 +379,13 @@ class AsciiGraph(object):
                  based on output file.
 
         """
-        out = kwargs.get('out', None)
-        if not out:
+        if out is None:
             out = sys.stdout
 
-        color = kwargs.get('color', None)
-        if not color:
+        if color is None:
             color = out.isatty()
-        self._out = ColorStream(sys.stdout, color=color)
+
+        self._out = ColorStream(out, color=color)
 
         # We'll traverse the spec in topo order as we graph it.
         topo_order = topological_sort(spec, reverse=True, deptype=self.deptype)
@@ -563,7 +563,7 @@ def graph_dot(specs, deptype=None, static=False, out=None):
                 continue
 
             # Add edges for each depends_on in the package.
-            for dep_name, dep in spec.package.dependencies.iteritems():
+            for dep_name, dep in iteritems(spec.package.dependencies):
                 deps.add((spec.name, dep_name))
 
             # If the package provides something, add an edge for that.
@@ -572,7 +572,7 @@ def graph_dot(specs, deptype=None, static=False, out=None):
 
         else:
             def key_label(s):
-                return s.dag_hash(), "%s-%s" % (s.name, s.dag_hash(7))
+                return s.dag_hash(), "%s/%s" % (s.name, s.dag_hash(7))
 
             for s in spec.traverse(deptype=deptype):
                 skey, slabel = key_label(s)

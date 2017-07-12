@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,7 @@ class RAssertthat(RPackage):
     producing friendly error messages so that your users know what they've done
     wrong."""
 
-    homepage = "https://cran.r-project.org/web/packages/assertthat/index.html"
+    homepage = "https://cran.r-project.org/package=assertthat"
     url      = "https://cran.r-project.org/src/contrib/assertthat_0.1.tar.gz"
 
     version('0.1', '59f9d7f7c00077ea54d763b78eeb5798')

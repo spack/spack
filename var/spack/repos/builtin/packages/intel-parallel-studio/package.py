@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,25 +31,64 @@ from spack.pkg.builtin.intel import IntelInstaller, filter_pick, \
 
 
 class IntelParallelStudio(IntelInstaller):
-    """Intel Parallel Studio.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+    """Intel Parallel Studio."""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
-    version('professional.2017.1', '7f75a4a7e2c563be778c377f9d35a542')
-    version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542')
-    version('composer.2017.1',     '1f31976931ed8ec424ac7c3ef56f5e85')
-    version('professional.2017.0', '34c98e3329d6ac57408b738ae1daaa01')
-    version('cluster.2017.0',      '34c98e3329d6ac57408b738ae1daaa01')
-    version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9')
-    version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3')
-    version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3')
-    version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa')
-    version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832')
-    version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832')
+    version('professional.2017.4', '27398416078e1e4005afced3e9a6df7e',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
+    version('cluster.2017.4', '27398416078e1e4005afced3e9a6df7e',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
+    version('composer.2017.4', 'd03d351809e182c481dc65e07376d9a2',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
+    version('professional.2017.3', '691874735458d3e88fe0bcca4438b2a9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
+    version('cluster.2017.3', '691874735458d3e88fe0bcca4438b2a9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
+    version('composer.2017.3', '52344df122c17ddff3687f84ceb21623',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
+    version('professional.2017.2', '70e54b33d940a1609ff1d35d3c56e3b3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
+    version('cluster.2017.2',      '70e54b33d940a1609ff1d35d3c56e3b3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
+    version('composer.2017.2',     '2891ab1ece43eb61b6ab892f07c47f01',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
+    version('professional.2017.1', '7f75a4a7e2c563be778c377f9d35a542',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
+    version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
+    version('composer.2017.1',     '1f31976931ed8ec424ac7c3ef56f5e85',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10978/parallel_studio_xe_2017_update1_composer_edition.tgz')
+    version('professional.2017.0', '34c98e3329d6ac57408b738ae1daaa01',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9651/parallel_studio_xe_2017.tgz')
+    version('cluster.2017.0',      '34c98e3329d6ac57408b738ae1daaa01',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9651/parallel_studio_xe_2017.tgz')
+    version('composer.2017.0',     'b67da0065a17a05f110ed1d15c3c6312',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9656/parallel_studio_xe_2017_composer_edition.tgz')
+    version('professional.2016.4', '16a641a06b156bb647c8a56e71f3bb33',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9781/parallel_studio_xe_2016_update4.tgz')
+    version('cluster.2016.4',      '16a641a06b156bb647c8a56e71f3bb33',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9781/parallel_studio_xe_2016_update4.tgz')
+    version('composer.2016.4',      '2bc9bfc9be9c1968a6e42efb4378f40e',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9785/parallel_studio_xe_2016_composer_edition_update4.tgz')
+    version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
+    version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
+    version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9063/parallel_studio_xe_2016_composer_edition_update3.tgz')
+    version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
+    version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
+    version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
+    version('professional.2015.6', 'd460f362c30017b60f85da2e51ad25bf',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+    version('cluster.2015.6',      'd460f362c30017b60f85da2e51ad25bf',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+    version('composer.2015.6',      'da9f8600c18d43d58fba0488844f79c9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
     variant('newdtags', default=False,
@@ -69,7 +108,7 @@ class IntelParallelStudio(IntelInstaller):
     variant('ilp64', default=False, description='64 bit integers')
     variant('openmp', default=False, description='OpenMP multithreading layer')
 
-    provides('mpi', when='@cluster:+mpi')
+    provides('mpi', when='@cluster.0:cluster.9999+mpi')
     provides('mkl', when='+mkl')
     provides('daal', when='+daal')
     provides('ipp', when='+ipp')
@@ -77,70 +116,78 @@ class IntelParallelStudio(IntelInstaller):
     # virtual dependency
     provides('blas', when='+mkl')
     provides('lapack', when='+mkl')
-    # TODO: MKL also provides implementation of Scalapack.
+    provides('scalapack', when='+mkl')
 
     @property
     def blas_libs(self):
-        shared = True if '+shared' in self.spec else False
-        suffix = dso_suffix if '+shared' in self.spec else 'a'
-        mkl_integer = ['libmkl_intel_ilp64'] if '+ilp64' in self.spec else ['libmkl_intel_lp64']  # NOQA: ignore=E501
+        spec = self.spec
+        prefix = self.prefix
+        shared = '+shared' in spec
+
+        if '+ilp64' in spec:
+            mkl_integer = ['libmkl_intel_ilp64']
+        else:
+            mkl_integer = ['libmkl_intel_lp64']
+
         mkl_threading = ['libmkl_sequential']
-        if '+openmp' in self.spec:
-            mkl_threading = ['libmkl_intel_thread', 'libiomp5'] if '%intel' in self.spec else ['libmkl_gnu_thread']  # NOQA: ignore=E501
+
+        if '+openmp' in spec:
+            if '%intel' in spec:
+                mkl_threading = ['libmkl_intel_thread', 'libiomp5']
+            else:
+                mkl_threading = ['libmkl_gnu_thread']
+
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
+
+        mkl_root = join_path(prefix, 'mkl', 'lib', 'intel64')
+
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
-            root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
+            root=mkl_root,
             shared=shared
         )
-        system_libs = [
-            'libpthread.{0}'.format(suffix),
-            'libm.{0}'.format(suffix),
-            'libdl.{0}'.format(suffix)
-        ]
+
+        # Intel MKL link line advisor recommends these system libraries
+        system_libs = find_system_libraries(
+            ['libpthread', 'libm', 'libdl'],
+            shared=shared
+        )
+
         return mkl_libs + system_libs
 
     @property
     def lapack_libs(self):
         return self.blas_libs
 
-    def url_for_version(self, version):
-        """Assume the tarball is in the current directory."""
-
-        version_tuple = str(version).split('.')
-        year = int(version_tuple[1])
-
-        url = "file://{0}/parallel_studio_xe_{1}".format(
-            os.getcwd(), version_tuple[1])
-
-        update_string = ""
-        if version_tuple[2] != '0':
-            update_string = "_update{0}".format(version_tuple[2])
-
-        if version_tuple[0] == 'composer':
-            if year == 2016:
-                url += "_composer_edition{0}".format(update_string)
-            else:
-                url += "{0}_composer_edition".format(update_string)
+    @property
+    def scalapack_libs(self):
+        libnames = ['libmkl_scalapack']
+        if self.spec.satisfies('^openmpi'):
+            libnames.append('libmkl_blacs_openmpi')
+        elif self.spec.satisfies('^mpich@1'):
+            libnames.append('libmkl_blacs')
+        elif self.spec.satisfies('^mpich@2:'):
+            libnames.append('libmkl_blacs_intelmpi')
+        elif self.spec.satisfies('^mvapich2'):
+            libnames.append('libmkl_blacs_intelmpi')
+        elif self.spec.satisfies('^mpt'):
+            libnames.append('libmkl_blacs_sgimpt')
+        # TODO: ^intel-parallel-studio can mean intel mpi, a compiler or a lib
+        # elif self.spec.satisfies('^intel-parallel-studio'):
+        #     libnames.append('libmkl_blacs_intelmpi')
         else:
-            url += update_string
+            raise InstallError("No MPI found for scalapack")
 
-        return url + ".tgz"
-
-    def check_variants(self, spec):
-        error_message = '\t{variant} can not be turned off if "+all" is set'
-
-        if self.spec.satisfies('+all'):
-            errors = [error_message.format(variant=x)
-                      for x in ('mpi', 'mkl', 'daal', 'ipp', 'tools')
-                      if ('~' + x) in self.spec]
-            if errors:
-                errors = ['incompatible variants given'] + errors
-                raise InstallError('\n'.join(errors))
+        shared = True if '+shared' in self.spec else False
+        integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
+        libs = find_libraries(
+            ['{0}_{1}'.format(l, integer) for l in libnames],
+            root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
+            shared=shared
+        )
+        return libs
 
     def install(self, spec, prefix):
-        self.check_variants(spec)
-
         base_components = "ALL"  # when in doubt, install everything
         mpi_components = ""
         mkl_components = ""
@@ -360,3 +407,32 @@ class IntelParallelStudio(IntelInstaller):
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'ipp', 'lib', 'mic'))
             run_env.set('IPPROOT', join_path(self.prefix, 'ipp'))
+
+        if self.spec.satisfies('+all') or self.spec.satisfies('+tools'):
+            run_env.prepend_path('PATH',
+                                 join_path(self.prefix, 'vtune_amplifier_xe',
+                                           'bin64'))
+            run_env.prepend_path('VTUNE_AMPLIFIER_XE_{0}_DIR'.format(
+                                 major_ver),
+                                 join_path(self.prefix, 'vtune_amplifier_xe'))
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('I_MPI_CC', spack_cc)
+        spack_env.set('I_MPI_CXX', spack_cxx)
+        spack_env.set('I_MPI_F77', spack_fc)
+        spack_env.set('I_MPI_F90', spack_f77)
+        spack_env.set('I_MPI_FC', spack_fc)
+
+    def setup_dependent_package(self, module, dep_spec):
+        # Check for presence of bin64 or bin directory
+        if os.path.isdir(self.prefix.bin):
+            bindir = self.prefix.bin
+        elif os.path.isdir(self.prefix.bin64):
+            bindir = self.prefix.bin64
+        else:
+            raise RuntimeError('No suitable bindir found')
+
+        self.spec.mpicc = join_path(bindir, 'mpicc')
+        self.spec.mpicxx = join_path(bindir, 'mpic++')
+        self.spec.mpifc = join_path(bindir, 'mpif90')
+        self.spec.mpif77 = join_path(bindir, 'mpif77')

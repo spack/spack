@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,10 +25,10 @@
 from spack import *
 
 
-class Mrnet(Package):
+class Mrnet(AutotoolsPackage):
     """The MRNet Multi-Cast Reduction Network."""
     homepage = "http://paradyn.org/mrnet"
-    url      = "ftp://ftp.cs.wisc.edu/paradyn/mrnet/mrnet_5.0.1.tar.gz"
+    url      = "http://ftp.cs.wisc.edu/pub/paradyn/mrnet/mrnet_5.0.1.tar.gz"
     list_url = "http://ftp.cs.wisc.edu/paradyn/mrnet"
 
     version('5.0.1-2', git='https://github.com/dyninst/mrnet.git',
@@ -43,14 +43,13 @@ class Mrnet(Package):
 
     depends_on("boost")
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+        config_args = ['--enable-shared']
+
         # Build the MRNet LW thread safe libraries when the
         # lwthreads variant is present
         if '+lwthreads' in spec:
-            configure("--prefix=%s" % prefix, "--enable-shared",
-                      "--enable-ltwt-threadsafe")
-        else:
-            configure("--prefix=%s" % prefix, "--enable-shared")
+            config_args.append('--enable-ltwt-threadsafe')
 
-        make()
-        make("install")
+        return config_args
