@@ -39,6 +39,9 @@ replacements = {
     'spack': spack.prefix,
     'user': getpass.getuser(),
     'tempdir': tempfile.gettempdir(),
+    'home': os.environ.get("HOME", ""), # $home and $scratch are NERSC specific
+    'scratch': os.environ.get("SCRATCH", ""),
+    'suser': os.environ.get("SUSER", "")  # same with suser
 }
 
 
