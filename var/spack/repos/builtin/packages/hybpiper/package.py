@@ -39,7 +39,10 @@ class Hybpiper(Package):
 
     version('1.2.0', '0ad78e9ca5e3f23ae0eb6236b07e1780')
 
-    depends_on('python@2.7:')
+    # Only needed for building docs
+    depends_on('python@2.7:', type='build')
+
+    depends_on('py-biopython', type=('build', 'run'))
     depends_on('exonerate')
     depends_on('blast-plus')
     depends_on('spades')

@@ -23,26 +23,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import subprocess
 
 
-class Spades(Package):
+class Spades(CMakePackage):
     """SPAdes - St. Petersburg genome assembler - is intended for both
        standard isolates and single-cell MDA bacteria assemblies."""
 
-    homepage = "http://www.example.com"
+    homepage = "http://cab.spbu.ru/software/spades/"
     url      = "http://cab.spbu.ru/files/release3.10.1/SPAdes-3.10.1.tar.gz"
 
     version('3.10.1', 'dcab7d145af81b59cc867562f27536c3')
 
-    depends_on('python')
+    depends_on('python', type=('build', 'run'))
     depends_on('cmake', type='build')
     depends_on('zlib')
     depends_on('bzip2')
 
     conflicts('%gcc@7.1.0:')
 
-    def install(self, spec, prefix):
-        os.environ['PREFIX'] = prefix
-        subprocess.call(['./spades_compile.sh'])
+    @property
+    def root_cmakelists_dir(self):
+        return join_path(self.stage.source_path, 'src')
