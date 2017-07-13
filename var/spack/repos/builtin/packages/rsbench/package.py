@@ -37,8 +37,6 @@ class Rsbench(MakefilePackage):
 
     depends_on('pgi', when='+pgi')
 
-    tags = ['proxy-app']
-
     version('2', '15a3ac5ea72529ac1ed9ed016ee68b4f')
     version('0', '3427634dc5e7cd904d88f9955b371757')
 
