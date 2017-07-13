@@ -49,7 +49,7 @@ class Snbone(MakefilePackage):
                     make('COMPILER=gfortran', 'LDFLAGS={0}'.format('-lm'))
 
                 if self.compiler.name == 'xl':
-                    make('COMPILER={0}.format(spec[mpi].mpixlf90_r)', 'LDFLAGS={0}'.format('-lm'))
+                    make('COMPILER=bgq', 'LDFLAGS={0}'.format('-lm'))
                 if self.compiler.name == 'intel':
                     make('COMPILER=intel', 'LDFLAGS={0}'.format('-lm'))
 
