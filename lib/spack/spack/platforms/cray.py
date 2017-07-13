@@ -108,6 +108,12 @@ class Cray(Platform):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
+        # unload cray-libsci to avoid silently linking if another blas/lapack
+        # is used.
+        modulecmd = which("modulecmd")
+        modulecmd.add_default_arg("python")
+        exec(compile(modulecmd("unload", "cray-libsci", output=str, error=str),
+            "<string>", "exec"))
         env.set('CRAYPE_LINK_TYPE', 'dynamic')
         cray_wrapper_names = join_path(build_env_path, 'cray')
         if os.path.isdir(cray_wrapper_names):

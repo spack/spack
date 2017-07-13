@@ -187,7 +187,7 @@ color_formats = {'%': compiler_color,
                  '+': enabled_variant_color,
                  '~': disabled_variant_color,
                  '^': dependency_color,
-                 '#': hash_color}
+                 '/': hash_color}
 
 """Regex used for splitting by spec field separators."""
 _separators = '[%s]' % ''.join(color_formats.keys())
@@ -2682,7 +2682,7 @@ class Spec(object):
                  prefixes as above
             $+   Options
             $=   Architecture prefixed by 'arch='
-            $/   7-char prefix of DAG hash with '-' prefix
+            $#   7-char prefix of DAG hash with '-' prefix
             $$   $
 
         You can also use full-string versions, which elide the prefixes::
@@ -2716,7 +2716,7 @@ class Spec(object):
         of the package, but no dependencies, arch, or compiler.
 
         TODO: allow, e.g., ``$6#`` to customize short hash length
-        TODO: allow, e.g., ``$//`` for full hash.
+        TODO: allow, e.g., ``$##`` for full hash.
         """
         color = kwargs.get('color', False)
         length = len(format_string)
@@ -2763,8 +2763,8 @@ class Spec(object):
                     if self.architecture and str(self.architecture):
                         a_str = ' arch' + c + str(self.architecture) + ' '
                         write(fmt % (a_str), c)
-                elif c == '/':
-                    out.write('/' + fmt % (self.dag_hash(7)))
+                elif c == ('/'):
+                    write('/' + fmt % (self.dag_hash(7)), '/')
                 elif c == '$':
                     if fmt != '%s':
                         raise ValueError("Can't use format width with $$.")
@@ -2821,17 +2821,27 @@ class Spec(object):
                         write(fmt % str(self.variants), '+')
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture), ' arch=')
+                        #sleak ' arch=' is not a valid key for color_formats,
+                        #        I think it should be '=' for arch
+                        #        Also, trailing space seems to cause path trouble
+                        #write(fmt % str(self.architecture),' arch=')
+                        write(fmt % str(self.architecture), '=')
                 elif named_str == "PLATFORM":
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture.platform),
-                              'platform=')
+                        #sleak: same for platform= as arch=
+                        write(fmt % str(self.architecture.platform), '=')
+                        #write(fmt % str(self.architecture.platform),
+                        #      'platform=')
                 elif named_str == "TARGET":
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture.target), 'target=')
+                        #sleak: same for target= as arch=
+                        write(fmt % str(self.architecture.target), '=')
+                        #write(fmt % str(self.architecture.target), 'target=')
                 elif named_str == "OS":
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture.platform_os), 'os=')
+                        #sleak: same for target= as arch=
+                        write(fmt % str(self.architecture.platform_os), '=')
+                        #write(fmt % str(self.architecture.platform_os), 'os=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dag_hash(7)))
@@ -3423,7 +3433,7 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 
 class AmbiguousHashError(SpecError):
     def __init__(self, msg, *specs):
-        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$/')
+        specs_str = '\n  ' + '\n  '.join(spec.format('$.$@$%@+$+$=$#')
                                          for spec in specs)
         super(AmbiguousHashError, self).__init__(msg + specs_str)
 

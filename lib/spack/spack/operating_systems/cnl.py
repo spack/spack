@@ -26,6 +26,7 @@ import re
 
 from spack.architecture import OperatingSystem
 import spack.spec
+import spack.version
 from spack.util.multiproc import parmap
 import spack.compilers
 from spack.util.module_cmd import get_module_cmd
