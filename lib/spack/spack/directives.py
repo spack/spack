@@ -372,7 +372,8 @@ def variant(
         name,
         default=None,
         description='',
-        values=(True, False),
+#        values=(True, False),
+        values=None,
         multi=False,
         validator=None
 ):
@@ -394,6 +395,13 @@ def variant(
             logic. It receives a tuple of values and should raise an instance
             of SpackError if the group doesn't meet the additional constraints
     """
+    if values is None:
+        if default is None or (default in (True, False) or
+                               (type(default) is str and
+                               default.upper() in ('TRUE', 'FALSE'))):
+            values = (True, False)
+        else:
+            values = lambda x: True
 
     if default is None:
         default = False if values == (True, False) else ''
