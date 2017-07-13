@@ -32,7 +32,7 @@ class Libbeagle(AutotoolsPackage):
     homepage = "https://github.com/beagle-dev/beagle-lib"
     url      = "https://github.com/beagle-dev/beagle-lib/archive/beagle_release_2_1_2.tar.gz"
 
-    version('2_1_2', '1107614e86f652f8ee45c1c92f2af3d4')
+    version('2.1.2', '1107614e86f652f8ee45c1c92f2af3d4')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -41,3 +41,7 @@ class Libbeagle(AutotoolsPackage):
 
     depends_on('subversion')
     depends_on('pkg-config')
+
+    def url_for_version(self, version):
+        url = "https://github.com/beagle-dev/beagle-lib/archive/beagle_release_{0}.tar.gz"
+        return url.format(version.underscored)
