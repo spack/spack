@@ -37,6 +37,7 @@ class Rose(AutotoolsPackage):
     homepage = "http://rosecompiler.org/"
     #url = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
 
+    version('0.9.7', 'e14ce5250078df4b09f4f40559d46c75')
     version('0.9.9.0', commit='14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff',
             git='https://github.com/rose-compiler/rose.git')
     version('dev', branch='master',
@@ -102,5 +103,7 @@ class Rose(AutotoolsPackage):
     def build_directory(self):
         return 'rose-build'
 
-    install_targets = ["install-core"]
-
+    def install(self, spec, prefix):
+        make('install-core')
+        with working_dir('tools'):
+            make('install')
