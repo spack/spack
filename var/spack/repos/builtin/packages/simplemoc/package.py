@@ -35,8 +35,6 @@ class Simplemoc(MakefilePackage):
     homepage = "https://github.com/ANL-CESAR/SimpleMOC/"
     url = "https://github.com/ANL-CESAR/SimpleMOC/archive/master.tar.gz"
 
-    tags = ['proxy-app']
-
     version('1.0', 'd8827221a4ae76e9766a32e16d143e60')
 
     @property
