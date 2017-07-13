@@ -2298,9 +2298,9 @@ class Spec(object):
         """Return names of dependencies that self an other have in common."""
         # XXX(deptype): handle deptypes via deptype kwarg.
         common = set(
-            s.name for s in self.traverse(root=False))
+            s.name for s in self.visible_dependencies())
         common.intersection_update(
-            s.name for s in other.traverse(root=False))
+            s.name for s in other.visible_dependencies())
         return common
 
     def constrained(self, other, deps=True):
@@ -2311,9 +2311,9 @@ class Spec(object):
 
     def dep_difference(self, other):
         """Returns dependencies in self that are not in other."""
-        mine = set(s.name for s in self.traverse(root=False))
+        mine = set(s.name for s in self.visible_dependencies())
         mine.difference_update(
-            s.name for s in other.traverse(root=False))
+            s.name for s in other.visible_dependencies())
         return mine
 
     def _autospec(self, spec_like):
@@ -2431,8 +2431,8 @@ class Spec(object):
             if other._dependencies and not self._dependencies:
                 return False
 
-            selfdeps = self.traverse(root=False)
-            otherdeps = other.traverse(root=False)
+            selfdeps = self.visible_dependencies()
+            otherdeps = other.visible_dependencies()
             if not all(any(d.satisfies(dep) for d in selfdeps)
                        for dep in otherdeps):
                 return False
@@ -2603,17 +2603,9 @@ class Spec(object):
             csv = query_parameters.pop().strip()
             query_parameters = re.split(r'\s*,\s*', csv)
 
-        build_only = (set(self.dependencies()) - 
-                      set(self.dependencies(
-                          deptype=('link', 'run', 'include'))))
-        search_deps = itertools.chain.from_iterable(
-            x.traverse(deptype=('link', 'run', 'include')) for x in build_only)
-        search_deps = itertools.chain(
-            self.traverse(deptype=('link', 'run', 'include')),
-            search_deps)
-
         value = None
-        iterated = list()        
+        iterated = list()
+        search_deps = itertools.chain([self], self.visible_dependencies())
         for x in search_deps:
             if x.name == name:
                 value = x
@@ -2631,6 +2623,17 @@ class Spec(object):
             return SpecBuildInterface(value, name, query_parameters)
 
         return value
+
+    def visible_dependencies(self):
+        build_only = (set(self.dependencies()) - 
+                      set(self.dependencies(
+                          deptype=('link', 'run', 'include'))))
+        visible = itertools.chain.from_iterable(
+            x.traverse(deptype=('link', 'run', 'include')) for x in build_only)
+        visible = itertools.chain(
+            self.traverse(root=False, deptype=('link', 'run', 'include')),
+            visible)
+        return visible
 
     def __contains__(self, spec):
         """True if this spec satisfies the provided spec, or if any dependency
