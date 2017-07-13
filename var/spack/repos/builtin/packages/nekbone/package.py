@@ -34,8 +34,6 @@ class Nekbone(Package):
     homepage = "https://github.com/ANL-CESAR/"
     url = "https://github.com/ANL-CESAR/nekbone.git"
 
-    tags = ['proxy-app']
-
     version('develop', git='https://github.com/ANL-CESAR/nekbone.git')
 
     def install(self, spec, prefix):
