@@ -57,11 +57,3 @@ class Busco(PythonPackage):
             mkdirp(prefix.bin)
             install('BUSCO.py', prefix.bin)
             install('BUSCO_plot.py', prefix.bin)
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec['augustus'].prefix.bin)
-        run_env.prepend_path('PATH', self.spec['augustus'].prefix.scripts)
-        run_env.prepend_path('PATH', self.spec['blast-plus'].prefix.bin)
-        run_env.prepend_path('PATH', self.spec['hmmer'].prefix.bin)
-        run_env.set('AUGUSTUS_CONFIG_PATH',
-                    self.spec['augustus'].prefix.config)
