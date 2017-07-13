@@ -58,6 +58,8 @@ class Openssl(Package):
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
 
+    variant("shared", default=True, description="Enable shared libs")
+
     depends_on('zlib')
 
     # TODO: 'make test' requires Perl module Test::More version 0.96
@@ -83,7 +85,8 @@ class Openssl(Package):
             # where it happens automatically?)
             env['KERNEL_BITS'] = '64'
 
-        options = ['zlib', 'shared']
+        options = ['zlib'] + ["shared"] if "+shared" in spec else []
+
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
         # clang does not support the .arch directive in assembly files.
