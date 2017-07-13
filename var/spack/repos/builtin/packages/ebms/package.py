@@ -38,8 +38,6 @@ class Ebms(MakefilePackage):
     homepage = "http://www.example.com"
     url = "https://github.com/ANL-CESAR/EBMS/archive/master.tar.gz"
 
-    tags = ['proxy-app']
-
     version('master', git='https://github.com/ANL-CESAR/EBMS.git')
 
     def install(self, spec, prefix):
