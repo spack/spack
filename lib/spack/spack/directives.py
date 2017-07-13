@@ -396,9 +396,8 @@ def variant(
             of SpackError if the group doesn't meet the additional constraints
     """
     if values is None:
-        if default is None or (default in (True, False) or
-                               (type(default) is str and
-                               default.upper() in ('TRUE', 'FALSE'))):
+        if default in (True, False) or (type(default) is str and
+                                         default.upper() in ('TRUE', 'FALSE')):
             values = (True, False)
         else:
             values = lambda x: True
