@@ -41,25 +41,10 @@ class Minife(MakefilePackage):
     version('2.0.1', '3113d7c8fc01495d08552672b0dbd015')
 
     variant('build', default='ref', description='Type of Parallelism',
-            values=('ref', 'openmp', 'qthreads', 'kokkos'))
+            values=('ref', 'openmp_ref', 'qthreads', 'kokkos'))
 
     depends_on('mpi')
     depends_on('qthreads', when='build=qthreads')
-
-    @property
-    def type_of_build(self):
-        build = 'ref'
-
-        if 'build=openmp' in self.spec:
-            build = 'openmp_ref'
-
-        if 'build=qthreads' in self.spec:
-            build = 'qthreads'
-
-        if 'build=kokkos' in self.spec:
-            build = 'kokkos'
-
-        return build
 
     @property
     def build_version(self):
@@ -68,8 +53,8 @@ class Minife(MakefilePackage):
     @property
     def build_targets(self):
         targets = [
-            '--directory=miniFE-{0}_{1}/src'.format(self.build_version,
-                                                    self.type_of_build),
+            '--directory=miniFE-{0}_{1}/src'.format(
+                self.build_version, self.spec.variants['build'].value),
             'CXX={0}'.format(self.spec['mpi'].mpicxx),
             'CC={0}'.format(self.spec['mpi'].mpicc)
         ]
@@ -78,16 +63,18 @@ class Minife(MakefilePackage):
 
     def edit(self, spec, prefix):
         inner_tar = tarfile.open(name='miniFE-{0}_{1}.tgz'.format(
-                                 self.build_version, self.type_of_build))
+                                 self.build_version,
+                                 self.spec.variants['build'].value))
         inner_tar.extractall()
 
         makefile = FileFilter('miniFE-{0}_{1}/src/Makefile'.format(
-                              self.build_version, self.type_of_build))
+                              self.build_version,
+                              self.spec.variants['build'].value))
 
         makefile.filter('-fopenmp', self.compiler.openmp_flag, string=True)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('miniFE-{0}_{1}/src/miniFE.x'.format(
-                self.build_version, self.type_of_build),
+                self.build_version, self.spec.variants['build'].value),
                 prefix.bin)
