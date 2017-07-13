@@ -45,6 +45,6 @@ class Libxpm(AutotoolsPackage):
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
 
-#    def setup_environment(self, spack_env, run_env):
-#        spack_env.set('LDFLAGS', '-L{0} -lintl'.format(
-#            self.spec['gettext'].prefix.lib))
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('LDFLAGS', '-L{0} -lintl'.format(
+            self.spec['gettext'].prefix.lib))
