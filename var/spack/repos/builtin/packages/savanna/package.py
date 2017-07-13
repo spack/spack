@@ -26,7 +26,7 @@ from spack import *
 from distutils.dir_util import copy_tree
 
 
-class Savanna(Package):
+class Savanna(MakefilePackage):
     """CODARcode Savanna runtime framework for high performance,
     workflow management using Swift/T and ADIOS.
     """
@@ -47,5 +47,4 @@ class Savanna(Package):
     depends_on('tau', when='+tau')
 
     def install(self, spec, prefix):
-        make()
         copy_tree('.', prefix)
