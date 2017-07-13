@@ -54,25 +54,27 @@ class Clamr(CMakePackage):
     depends_on('mpe', when='graphics=mpe')
 
     def build_type(self):
-        if 'build=debug':
+        spec = self.spec
+        if 'build=debug' in spec:
             return 'Debug'
-        elif 'build=release':
+        elif 'build=release' in spec:
             return 'Release'
         else:
             return 'RelWithDebInfo'
 
     def cmake_args(self):
+        spec = self.spec
         cmake_args = []
-        if 'graphics=none':
+        if 'graphics=none' in spec:
             cmake_args.append('-DGRAPHICS_TYPE=None')
-        elif 'graphics=mpe':
+        elif 'graphics=mpe' in spec:
             cmake_args.append('-DGRAPHICS_TYPE=MPE')
         else:
             cmake_args.append('-DGRAPHICS_TYPE=OpenGL')
 
-        if 'precision=full':
+        if 'precision=full' in spec:
             cmake_args.append('-DPRECISION_TYPE=full_precision')
-        elif 'precision=single':
+        elif 'precision=single' in spec:
             cmake_args.append('-DPRECISION_TYPE=minimum_precision')
         else:
             cmake_args.append('-DPRECISION_TYPE=mixed_precision')
