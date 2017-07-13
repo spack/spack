@@ -51,8 +51,8 @@ class Xsbench(MakefilePackage):
         ]
 
         if '+mpi' in self.spec:
-            targets.extend(['MPI=yes'])
-            targets.extend(['CC={0}'.format(self.spec['mpi'].mpicc)])
+            targets.append(['MPI=yes'])
+            targets.append(['CC={0}'.format(self.spec['mpi'].mpicc)])
 
         return targets
 
