@@ -26,11 +26,12 @@ def get_existing_elf_rpaths(path_name, patchelf_executable):
         tty.die('relocation not supported for this platform')
     return retval
 
+
 def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
-    rel_rpaths=set()
+    rel_rpaths = set()
     for rpath in orig_rpaths:
-        if re.match(orig_dir,rpath):
-            rel=os.path.relpath(rpath,start=os.path.dirname(path_name))
+        if re.match(orig_dir, rpath):
+            rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
             rel_rpaths.add('$ORIGIN/%s' % rel)
         else:
             rel_rpaths.add(rpath)
@@ -62,7 +63,8 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
     the old install dir in LC_RPATH is replaced with the new install dir using
     install_name_tool  -rpath old new binary
     """
-    if 'libgcc_' in path_name : return
+    if 'libgcc_' in path_name:
+        return
     otool = which('otool')
     output = otool("-l", path_name, output=str, err=str)
     if otool.returncode != 0:
@@ -88,7 +90,7 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
                 idpath = rhs
             if lhs == 'name' and last_cmd == 'LC_LOAD_DYLIB':
                 deps.append(rhs)
-    id=None
+    id = None
     nrpaths = []
     ndeps = []
     if relative:
@@ -100,8 +102,8 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
             else:
                 nrpaths.append(rpath)
         for dep in deps:
-            if re.match(old_dir,dep):
-                rel=os.path.relpath(dep,start=os.path.dirname(path_name))
+            if re.match(old_dir, dep):
+                rel = os.path.relpath(dep, start=os.path.dirname(path_name))
                 ndeps.append('@loader_path/%s' % rel)
             else:
                 ndeps.append(dep)
@@ -217,8 +219,8 @@ def prelocate_binary(path_name, old_dir, patchelf_executable):
     Change RPATHs in given elf or mach-o file to relative
     """
     if platform.system() == 'Darwin':
-        new_dir=''
-        modify_macho_object(path_name, old_dir, new_dir,relative=True)
+        new_dir = ''
+        modify_macho_object(path_name, old_dir, new_dir, relative=True)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
         new_rpaths = get_relative_rpaths(path_name, old_dir, orig_rpaths)
@@ -233,10 +235,9 @@ def relocate_text(path_name, old_dir, new_dir):
     Replace old path with new path in text files
     """
 #    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir, path_name)
-    perl=which('perl')
-    perl('-p','-i~','-e', 's|%s|%s|g'%(old_dir,new_dir), path_name)
-    rm=which('rm')
-    rm('%s~' % path_name)
+    perl = which('perl')
+    perl('-p', '-i', '-e', 's|%s|%s|g' % (old_dir, new_dir), path_name)
+
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
     """

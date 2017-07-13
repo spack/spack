@@ -69,6 +69,7 @@ def setup_parser(subparser):
         help="specs of packages to search for")
     listcache.set_defaults(func=listspecs)
 
+
 def createtarball(args):
     if not args.packages:
         tty.die("build cache file creation requires at least one" +
@@ -94,56 +95,62 @@ def createtarball(args):
         tty.msg('creating binary cache file for package %s ' % spec.format())
         build_tarball(spec, outdir, args.force, args.rel)
 
+
 def installtarball(args):
     if not args.packages:
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.packages)
-    specs,links=spack.binary_distribution.get_specs()
+    specs, links = spack.binary_distribution.get_specs()
     matches = set()
     for spec in specs:
         for pkg in pkgs:
-            if re.match(re.escape(pkg),str(spec)):
+            if re.match(re.escape(pkg), str(spec)):
                 matches.add(spec)
-            if re.match(re.escape(pkg),'/%s' % spec.dag_hash()):
+            if re.match(re.escape(pkg), '/%s' % spec.dag_hash()):
                 matches.add(spec)
 
     for match in matches:
-        install_tarball(match,args)
+        install_tarball(match, args)
 
-def install_tarball(spec,args):
-    s=spack.spec.Spec(spec)
+
+def install_tarball(spec, args):
+    s = spack.spec.Spec(spec)
     for d in s.dependencies():
-         tty.msg("Installing buildcache for dependency spec %s" % d)
-         install_tarball(d,args)
+        tty.msg("Installing buildcache for dependency spec %s" % d)
+        install_tarball(d, args)
     package = spack.repo.get(spec)
     if s.concrete and package.installed and not args.force:
         tty.warn("Package for spec %s already installed." % spec.format())
     else:
-        tarball= spack.binary_distribution.download_tarball(spec)
+        tarball = spack.binary_distribution.download_tarball(spec)
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
             spack.binary_distribution.prepare()
-            spack.binary_distribution.extract_tarball(spec,tarball)
+            spack.binary_distribution.extract_tarball(spec, tarball)
             spack.binary_distribution.relocate_package(spec)
             spack.store.db.reindex(spack.store.layout)
         else:
-            tty.die('Download of binary cache file for spec %s failed.' % spec.format())
-        
+            tty.die('Download of binary cache file for spec %s failed.' %
+                    spec.format())
+
 
 def listspecs(args):
-    specs,links=spack.binary_distribution.get_specs()
-    if args.packages: 
+    specs, links = spack.binary_distribution.get_specs()
+    if args.packages:
         pkgs = set(args.packages)
         for pkg in pkgs:
             tty.msg("buildcache spec(s) matching %s \n" % pkg)
             for spec in sorted(specs):
-                if re.search("^"+re.escape(pkg),str(spec)):
-                    tty.msg('run "spack buildcache install /%s" to install  %s\n' % ( spec.dag_hash(7), spec.format()) )
-    else: 
+                if re.search("^" + re.escape(pkg), str(spec)):
+                    tty.msg('run "spack buildcache install /%s" to install  %s\n' %
+                            (spec.dag_hash(7), spec.format()))
+    else:
         tty.msg("buildcache specs ")
         for spec in sorted(specs):
-            tty.msg('run "spack buildcache install /%s" to install  %s\n' % ( spec.dag_hash(7), spec.format() ) )
+            tty.msg('run "spack buildcache install /%s" to install  %s\n' %
+                    (spec.dag_hash(7), spec.format()))
+
 
 def buildcache(parser, args):
     if args.func:
