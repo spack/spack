@@ -51,7 +51,7 @@ class Rsbench(MakefilePackage):
         ]
 
         if '%intel' in self.spec:
-            targets.append(['COMPILER=intel'])
+            targets.append('COMPILER=intel')
 
         if '%pgi' in self.spec:
             targets.append('COMPILER=pgi')
