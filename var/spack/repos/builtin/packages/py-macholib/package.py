@@ -34,4 +34,3 @@ class PyMacholib(PythonPackage):
     version('1.8', '65af8f20dada7bdb2a142afbec51330e')
 
     depends_on('py-setuptools', type='build')
-
