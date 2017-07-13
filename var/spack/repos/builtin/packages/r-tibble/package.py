@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,6 @@ class RTibble(RPackage):
 
     homepage = "https://github.com/hadley/tibble"
     url      = "https://cran.r-project.org/src/contrib/tibble_1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/tibble"
 
     version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
     version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')

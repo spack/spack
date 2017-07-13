@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,6 @@ class RGmp(RPackage):
 
     homepage = "http://mulcyber.toulouse.inra.fr/projects/gmp"
     url      = "https://cran.r-project.org/src/contrib/gmp_0.5-13.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gmp"
 
     version('0.5-13.1', '4a45d45e53bf7140720bd44f10b075ed')
 

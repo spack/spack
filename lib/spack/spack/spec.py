@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -120,7 +120,7 @@ import spack.util.spack_yaml as syaml
 from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import *
 from llnl.util.tty.color import *
-from spack.build_environment import get_path_from_module, load_module
+from spack.util.module_cmd import get_path_from_module, load_module
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
 from spack.util.crypto import prefix_bits
@@ -678,10 +678,72 @@ class DependencyMap(HashableMap):
     """Each spec has a DependencyMap containing specs for its dependencies.
        The DependencyMap is keyed by name. """
 
+    def __init__(self, owner):
+        super(DependencyMap, self).__init__()
+
+        # Owner Spec for the current map
+        self.owner = owner
+
     @property
     def concrete(self):
-        return all((d.spec.concrete and d.deptypes)
-                   for d in self.values())
+
+        # Check if the dependencies are concrete and of the correct type
+        dependencies_are_concrete = all(
+            (d.spec.concrete and d.deptypes) for d in self.values()
+        )
+
+        if not dependencies_are_concrete:
+            return False
+
+        # If we are dealing with an external spec, it clearly has no
+        # dependencies managed by spack
+        if self.owner.external:
+            return True
+
+        # Now check we have every dependency we need
+        pkg = self.owner.package
+        for dependency in pkg.dependencies.values():
+            # Check that for every condition we satisfy we satisfy also
+            # the associated constraint
+            for condition, constraint in dependency.items():
+                # WARNING: This part relies on the fact that dependencies are
+                # the last item to be checked when computing if a spec is
+                # concrete. This means that we are ensured that all variants,
+                # versions, compilers, etc. are there with their final value
+                # when we call 'Spec.satisfies(..., strict=True)'
+
+                # FIXME: at the moment check only for non conditional
+                # FIXME: dependencies, to avoid infinite recursion
+
+                # satisfy_condition = self.owner.satisfies(
+                #     condition, strict=True
+                # )
+
+                satisfy_condition = str(condition) == self.owner.name
+
+                if not satisfy_condition:
+                    continue
+
+                dependency_name = constraint.name
+
+                # We don't want to check build dependencies
+                if pkg.dependency_types[dependency_name] == set(['build']):
+                    continue
+
+                try:
+                    dependency = self.owner[dependency_name]
+                    satisfy_constraint = dependency.satisfies(
+                        constraint, strict=True
+                    )
+                except KeyError:
+                    # If the dependency is not there we don't
+                    # satisfy the constraint
+                    satisfy_constraint = False
+
+                if satisfy_condition and not satisfy_constraint:
+                    return False
+
+        return True
 
     def __str__(self):
         return "{deps: %s}" % ', '.join(str(d) for d in sorted(self.values()))
@@ -950,12 +1012,9 @@ class Spec(object):
         self._hash = other._hash
         self._cmp_key_cache = other._cmp_key_cache
 
-        # Specs are by default not assumed to be normal, but in some
-        # cases we've read them from a file want to assume normal.
-        # This allows us to manipulate specs that Spack doesn't have
-        # package.py files for.
-        self._normal = kwargs.get('normal', False)
-        self._concrete = kwargs.get('concrete', False)
+        # Specs are by default not assumed to be normal or concrete.
+        self._normal = False
+        self._concrete = False
 
         # Allow a spec to be constructed with an external path.
         self.external_path = kwargs.get('external_path', None)
@@ -1037,13 +1096,14 @@ class Spec(object):
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = value.split()
         else:
+            # FIXME:
             # All other flags represent variants. 'foo=true' and 'foo=false'
             # map to '+foo' and '~foo' respectively. As such they need a
             # BoolValuedVariant instance.
             if str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
                 self.variants[name] = BoolValuedVariant(name, value)
             else:
-                self.variants[name] = MultiValuedVariant(name, value)
+                self.variants[name] = AbstractVariant(name, value)
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -1144,9 +1204,13 @@ class Spec(object):
            If any of the name, version, architecture, compiler,
            variants, or depdenencies are ambiguous,then it is not concrete.
         """
+        # If we have cached that the spec is concrete, then it's concrete
         if self._concrete:
             return True
 
+        # Otherwise check if the various parts of the spec are concrete.
+        # It's crucial to have the check on dependencies last, as it relies
+        # on all the other parts to be already checked for concreteness.
         self._concrete = bool(not self.virtual and
                               self.namespace is not None and
                               self.versions.concrete and
@@ -1647,8 +1711,8 @@ class Spec(object):
                 if replacement.external:
                     if (spec._dependencies):
                         changed = True
-                        spec._dependencies = DependencyMap()
-                    replacement._dependencies = DependencyMap()
+                        spec._dependencies = DependencyMap(spec)
+                    replacement._dependencies = DependencyMap(replacement)
                     replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
@@ -1676,6 +1740,7 @@ class Spec(object):
                 if spec._dup(replacement, deps=False, cleardeps=False):
                     changed = True
 
+                spec._dependencies.owner = spec
                 self_index.update(spec)
                 done = False
                 break
@@ -1807,7 +1872,7 @@ class Spec(object):
     def index(self, deptype=None):
         """Return DependencyMap that points to all the dependencies in this
            spec."""
-        dm = DependencyMap()
+        dm = DependencyMap(None)
         for spec in self.traverse(deptype=deptype):
             dm[spec.name] = spec
         return dm
@@ -1825,18 +1890,6 @@ class Spec(object):
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
         for when_spec, dep_spec in conditions.items():
-            # If self was concrete it would have changed the variants in
-            # when_spec automatically. As here we are for sure during the
-            # concretization process, self is not concrete and we must change
-            # the variants in when_spec on our own to avoid using a
-            # MultiValuedVariant whe it is instead a SingleValuedVariant
-            try:
-                substitute_single_valued_variants(when_spec)
-            except SpecError as e:
-                msg = 'evaluating a `when=` statement gives ' + e.message
-                e.message = msg
-                raise
-
             sat = self.satisfies(when_spec, strict=True)
             if sat:
                 if dep is None:
@@ -2064,7 +2117,6 @@ class Spec(object):
                 if not compilers.supported(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
-            # FIXME: Move the logic below into the variant.py module
             # Ensure correctness of variants (if the spec is not virtual)
             if not spec.virtual:
                 pkg_cls = spec.package_class
@@ -2073,7 +2125,7 @@ class Spec(object):
                 if not_existing:
                     raise UnknownVariantError(spec.name, not_existing)
 
-                substitute_single_valued_variants(spec)
+                substitute_abstract_variants(spec)
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
@@ -2284,24 +2336,6 @@ class Spec(object):
         elif strict and (other.compiler and not self.compiler):
             return False
 
-        # If self is a concrete spec, and other is not virtual, then we need
-        # to substitute every multi-valued variant that needs it with a
-        # single-valued variant.
-        if self.concrete:
-            try:
-                # When parsing a spec every variant of the form
-                # 'foo=value' will be interpreted by default as a
-                # multi-valued variant. During validation of the
-                # variants we use the information in the package
-                # to turn any variant that needs it to a single-valued
-                # variant.
-                substitute_single_valued_variants(other)
-            except (SpecError, KeyError):
-                # Catch the two things that could go wrong above:
-                # 1. name is not a valid variant (KeyError)
-                # 2. the variant is not validated (SpecError)
-                return False
-
         var_strict = strict
         if (not self.name) or (not other.name):
             var_strict = True
@@ -2416,8 +2450,8 @@ class Spec(object):
             else None
         self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
-            self._dependents = DependencyMap()
-            self._dependencies = DependencyMap()
+            self._dependents = DependencyMap(self)
+            self._dependencies = DependencyMap(self)
         self.compiler_flags = other.compiler_flags.copy()
         self.variants = other.variants.copy()
         self.variants.spec = self
@@ -2958,16 +2992,23 @@ class SpecParser(spack.parse.Parser):
                         # We're parsing an anonymous spec beginning with a
                         # key-value pair.
                         if not specs:
+                            self.push_tokens([self.previous, self.token])
+                            self.previous = None
                             specs.append(self.spec(None))
-                        self.expect(VAL)
-                        # Raise an error if the previous spec is already
-                        # concrete (assigned by hash)
-                        if specs[-1]._hash:
-                            raise RedundantSpecError(specs[-1],
-                                                     'key-value pair')
-                        specs[-1]._add_flag(
-                            self.previous.value, self.token.value)
-                        self.previous = None
+                        else:
+                            if specs[-1].concrete:
+                                # Trying to add k-v pair to spec from hash
+                                raise RedundantSpecError(specs[-1],
+                                                         'key-value pair')
+                            # We should never end up here.
+                            # This requires starting a new spec with ID, EQ
+                            # After another spec that is not concrete
+                            # If the previous spec is not concrete, this is
+                            # handled in the spec parsing loop
+                            # If it is concrete, see the if statement above
+                            # If there is no previous spec, we don't land in
+                            # this else case.
+                            self.unexpected_token()
                     else:
                         # We're parsing a new spec by name
                         self.previous = None
@@ -3071,8 +3112,8 @@ class SpecParser(spack.parse.Parser):
         spec.external_path = None
         spec.external_module = None
         spec.compiler_flags = FlagMap(spec)
-        spec._dependents = DependencyMap()
-        spec._dependencies = DependencyMap()
+        spec._dependents = DependencyMap(spec)
+        spec._dependencies = DependencyMap(spec)
         spec.namespace = spec_namespace
         spec._hash = None
         spec._cmp_key_cache = None
@@ -3135,7 +3176,6 @@ class SpecParser(spack.parse.Parser):
         return spec
 
     def variant(self, name=None):
-        # TODO: Make generalized variants possible
         if name:
             return name
         else:
@@ -3151,7 +3191,11 @@ class SpecParser(spack.parse.Parser):
 
         if self.accept(COLON):
             if self.accept(ID):
-                end = self.token.value
+                if self.next and self.next.type is EQ:
+                    # This is a start: range followed by a key=value pair
+                    self.push_tokens([self.token])
+                else:
+                    end = self.token.value
         elif start:
             # No colon, but there was a version.
             return Version(start)
@@ -3384,7 +3428,8 @@ class InvalidHashError(SpecError):
 class NoSuchHashError(SpecError):
     def __init__(self, hash):
         super(NoSuchHashError, self).__init__(
-            "No installed spec matches the hash: '%s'")
+            "No installed spec matches the hash: '%s'"
+            % hash)
 
 
 class RedundantSpecError(SpecError):

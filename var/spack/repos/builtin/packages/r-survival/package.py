@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,6 @@ class RSurvival(RPackage):
 
     homepage = "https://cran.r-project.org/package=survival"
     url      = "https://cran.r-project.org/src/contrib/survival_2.40-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/survival"
 
     version('2.40-1', 'a2474b656cd723791268e3114481b8a7')
     version('2.39-5', 'a3cc6b5762e8c5c0bb9e64a276710be2')

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,4 +34,6 @@ class MesaGlu(AutotoolsPackage):
 
     version('9.0.0', 'bbc57d4fe3bd3fb095bdbef6fcb977c4')
 
-    depends_on('mesa')
+    variant('mesa', default=True,
+       description='Usually depends on mesa, disable for accelerated OpenGL')
+    depends_on('mesa', when='+mesa')

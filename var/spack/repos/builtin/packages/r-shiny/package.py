@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,6 @@ class RShiny(RPackage):
 
     homepage = "http://shiny.rstudio.com/"
     url      = "https://cran.r-project.org/src/contrib/shiny_0.13.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/shiny"
 
     version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
 

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,10 +32,10 @@ class Flex(AutotoolsPackage):
     homepage = "https://github.com/westes/flex"
     url = "https://github.com/westes/flex/releases/download/v2.6.1/flex-2.6.1.tar.gz"
 
+    version('2.6.4', '2882e3179748cc9f9c23ec593d6adc8d')
     version('2.6.3', 'a5f65570cd9107ec8a8ec88f17b31bb1')
-    # Problematic version:
+    # Avoid flex '2.6.2' (major bug)
     # See issue #2554; https://github.com/westes/flex/issues/113
-    # version('2.6.2', 'cc6d76c333db7653d5caf423a3335239')
     version('2.6.1', '05bcd8fb629e0ae130311e8a6106fa82')
     version('2.6.0', '760be2ee9433e822b6eb65318311c19d')
     version('2.5.39', '5865e76ac69c05699f476515592750d7')
@@ -68,13 +68,17 @@ class Flex(AutotoolsPackage):
 
     @run_after('install')
     def symlink_lex(self):
+        """Install symlinks for lex compatibility."""
         if self.spec.satisfies('+lex'):
             dso = dso_suffix
             for dir, flex, lex in \
-                    ((self.prefix.bin, 'flex', 'lex'),
-                     (self.prefix.lib, 'libfl.a', 'libl.a'),
-                     (self.prefix.lib, 'libfl.' + dso, 'libl.' + dso)):
-                with working_dir(dir):
-                    if (os.path.isfile(flex) and not
-                            os.path.lexists(lex)):
-                        symlink(flex, lex)
+                    ((self.prefix.bin,   'flex', 'lex'),
+                     (self.prefix.lib,   'libfl.a', 'libl.a'),
+                     (self.prefix.lib,   'libfl.' + dso, 'libl.' + dso),
+                     (self.prefix.lib64, 'libfl.a', 'libl.a'),
+                     (self.prefix.lib64, 'libfl.' + dso, 'libl.' + dso)):
+
+                if os.path.isdir(dir):
+                    with working_dir(dir):
+                        if (os.path.isfile(flex) and not os.path.lexists(lex)):
+                            symlink(flex, lex)
