@@ -35,6 +35,3 @@ class PyMacholib(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    def build_args(self, spec, prefix):
-        args = []
-        return args
