@@ -74,8 +74,7 @@ class Pennant(MakefilePackage):
             makefile.filter(
                 'CXX .*',
                 'CXX := {0}'.format(spec['mpi'].mpicxx))
-
-        if '~mpi' in spec:
+        else:
             makefile.filter('-DUSE_MPI', '#')
             makefile.filter('CXX .*', 'CXX := c++')
 
