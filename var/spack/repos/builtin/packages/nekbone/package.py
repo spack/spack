@@ -36,7 +36,7 @@ class Nekbone(Package):
 
     tags = ['proxy-app']
 
-    version('master', git='https://github.com/ANL-CESAR/nekbone.git')
+    version('develop', git='https://github.com/ANL-CESAR/nekbone.git')
 
     def install(self, spec, prefix):
 
@@ -47,7 +47,7 @@ class Nekbone(Package):
         for wdir in working_dirs:
             with working_dir('test/' + wdir):
                 makenek = Executable('./makenek')
-		path = join_path(prefix.bin,  wdir)
+                path = join_path(prefix.bin,  wdir)
                 makenek('ex1', '../../src')
                 mkdir(path)
                 install('nekbone', path)
