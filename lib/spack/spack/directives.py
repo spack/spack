@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -51,6 +51,7 @@ import functools
 import inspect
 import os.path
 import re
+from six import string_types
 
 import llnl.util.lang
 import spack
@@ -174,7 +175,7 @@ class DirectiveMetaMixin(type):
         """
         global __all__
 
-        if isinstance(dicts, basestring):
+        if isinstance(dicts, string_types):
             dicts = (dicts, )
         if not isinstance(dicts, collections.Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
@@ -262,6 +263,35 @@ def _depends_on(pkg, spec, when=None, type=None):
         conditions[when_spec] = dep_spec
 
 
+@directive('conflicts')
+def conflicts(conflict_spec, when=None):
+    """Allows a package to define a conflict.
+
+    Currently, a "conflict" is a concretized configuration that is known
+    to be non-valid. For example, a package that is known not to be
+    buildable with intel compilers can declare::
+
+        conflicts('%intel')
+
+    To express the same constraint only when the 'foo' variant is
+    activated::
+
+        conflicts('%intel', when='+foo')
+
+    Args:
+        conflict_spec (Spec): constraint defining the known conflict
+        when (Spec): optional constraint that triggers the conflict
+    """
+    def _execute(pkg):
+        # If when is not specified the conflict always holds
+        condition = pkg.name if when is None else when
+        when_spec = parse_anonymous_spec(condition, pkg.name)
+
+        when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
+        when_spec_list.append(when_spec)
+    return _execute
+
+
 @directive(('dependencies', 'dependency_types'))
 def depends_on(spec, when=None, type=None):
     """Creates a dict of deps with specs defining when they apply.
@@ -338,9 +368,37 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
 
 
 @directive('variants')
-def variant(name, default=False, description=""):
+def variant(
+        name,
+        default=None,
+        description='',
+        values=(True, False),
+        multi=False,
+        validator=None
+):
     """Define a variant for the package. Packager can specify a default
-    value (on or off) as well as a text description."""
+    value as well as a text description.
+
+    Args:
+        name (str): name of the variant
+        default (str or bool): default value for the variant, if not
+            specified otherwise the default will be False for a boolean
+            variant and 'nothing' for a multi-valued variant
+        description (str): description of the purpose of the variant
+        values (tuple or callable): either a tuple of strings containing the
+            allowed values, or a callable accepting one value and returning
+            True if it is valid
+        multi (bool): if False only one value per spec is allowed for
+            this variant
+        validator (callable): optional group validator to enforce additional
+            logic. It receives a tuple of values and should raise an instance
+            of SpackError if the group doesn't meet the additional constraints
+    """
+
+    if default is None:
+        default = False if values == (True, False) else ''
+
+    default = default
     description = str(description).strip()
 
     def _execute(pkg):
@@ -349,7 +407,9 @@ def variant(name, default=False, description=""):
             msg = "Invalid variant name in {0}: '{1}'"
             raise DirectiveError(directive, msg.format(pkg.name, name))
 
-        pkg.variants[name] = Variant(default, description)
+        pkg.variants[name] = Variant(
+            name, default, description, values, multi, validator
+        )
     return _execute
 
 

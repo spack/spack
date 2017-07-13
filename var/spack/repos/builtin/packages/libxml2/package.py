@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,8 +34,10 @@ class Libxml2(AutotoolsPackage):
 
     version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
     version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
+    version('2.7.8', '8127a65e8c3b08856093099b52599c86')
 
     variant('python', default=False, description='Enable Python support')
+    variant("shared", default=True, description="Enable shared libs")
 
     extends('python', when='+python',
             ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
@@ -47,12 +49,18 @@ class Libxml2(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
+        config_args = []
         if '+python' in spec:
-            python_args = [
-                '--with-python={0}'.format(spec['python'].prefix),
+            config_args.extend([
+                '--with-python={0}'.format(spec['python'].home),
                 '--with-python-install-dir={0}'.format(site_packages_dir)
-            ]
+            ])
         else:
-            python_args = ['--without-python']
+            config_args.append('--without-python')
 
-        return python_args
+        if "+shared" in spec:
+            config_args.append("--enable-shared")
+        else:
+            config_args.append("--disable-shared")
+
+        return config_args

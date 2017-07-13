@@ -1,0 +1,92 @@
+diff -Naurd mpfr-3.1.5-a/PATCHES mpfr-3.1.5-b/PATCHES
+--- mpfr-3.1.5-a/PATCHES	2016-12-19 22:11:17.022676737 +0000
++++ mpfr-3.1.5-b/PATCHES	2016-12-19 22:11:17.094676820 +0000
+@@ -0,0 +1 @@
++strtofr
+diff -Naurd mpfr-3.1.5-a/VERSION mpfr-3.1.5-b/VERSION
+--- mpfr-3.1.5-a/VERSION	2016-12-15 08:35:46.544430346 +0000
++++ mpfr-3.1.5-b/VERSION	2016-12-19 22:11:17.094676820 +0000
+@@ -1 +1 @@
+-3.1.5-p1
++3.1.5-p2
+diff -Naurd mpfr-3.1.5-a/src/mpfr.h mpfr-3.1.5-b/src/mpfr.h
+--- mpfr-3.1.5-a/src/mpfr.h	2016-12-15 08:35:46.540430340 +0000
++++ mpfr-3.1.5-b/src/mpfr.h	2016-12-19 22:11:17.090676815 +0000
+@@ -27,7 +27,7 @@
+ #define MPFR_VERSION_MAJOR 3
+ #define MPFR_VERSION_MINOR 1
+ #define MPFR_VERSION_PATCHLEVEL 5
+-#define MPFR_VERSION_STRING "3.1.5-p1"
++#define MPFR_VERSION_STRING "3.1.5-p2"
+ 
+ /* Macros dealing with MPFR VERSION */
+ #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
+diff -Naurd mpfr-3.1.5-a/src/strtofr.c mpfr-3.1.5-b/src/strtofr.c
+--- mpfr-3.1.5-a/src/strtofr.c	2016-09-27 07:58:15.000000000 +0000
++++ mpfr-3.1.5-b/src/strtofr.c	2016-12-19 22:11:17.066676788 +0000
+@@ -743,11 +743,14 @@
+          of the pstr_size most significant digits of pstr->mant, with
+          equality in case exact is non-zero. */
+ 
+-      /* test if rounding is possible, and if so exit the loop */
+-      if (exact || mpfr_can_round_raw (result, ysize,
+-                                       (pstr->negative) ? -1 : 1,
+-                                       ysize_bits - err - 1,
+-                                       MPFR_RNDN, rnd, MPFR_PREC(x)))
++      /* test if rounding is possible, and if so exit the loop.
++         Note: we also need to be able to determine the correct ternary value,
++         thus we use the MPFR_PREC(x) + (rnd == MPFR_RNDN) trick.
++         For example if result = xxx...xxx111...111 and rnd = RNDN,
++         then we know the correct rounding is xxx...xx(x+1), but we cannot know
++         the correct ternary value. */
++      if (exact || mpfr_round_p (result, ysize, ysize_bits - err - 1,
++                                 MPFR_PREC(x) + (rnd == MPFR_RNDN)))
+         break;
+ 
+     next_loop:
+diff -Naurd mpfr-3.1.5-a/src/version.c mpfr-3.1.5-b/src/version.c
+--- mpfr-3.1.5-a/src/version.c	2016-12-15 08:35:46.544430346 +0000
++++ mpfr-3.1.5-b/src/version.c	2016-12-19 22:11:17.094676820 +0000
+@@ -25,5 +25,5 @@
+ const char *
+ mpfr_get_version (void)
+ {
+-  return "3.1.5-p1";
++  return "3.1.5-p2";
+ }
+diff -Naurd mpfr-3.1.5-a/tests/tstrtofr.c mpfr-3.1.5-b/tests/tstrtofr.c
+--- mpfr-3.1.5-a/tests/tstrtofr.c	2016-09-27 07:58:14.000000000 +0000
++++ mpfr-3.1.5-b/tests/tstrtofr.c	2016-12-19 22:11:17.066676788 +0000
+@@ -1191,6 +1191,24 @@
+   mpfr_clears (e, x1, x2, (mpfr_ptr) 0);
+ }
+ 
++/* Note: the number is 5^47/2^9. */
++static void
++bug20161217 (void)
++{
++  mpfr_t fp, z;
++  static const char * num = "0.1387778780781445675529539585113525390625e31";
++  int inex;
++
++  mpfr_init2 (fp, 110);
++  mpfr_init2 (z, 110);
++  inex = mpfr_strtofr (fp, num, NULL, 10, MPFR_RNDN);
++  MPFR_ASSERTN(inex == 0);
++  mpfr_set_str_binary (z, "10001100001000010011110110011101101001010000001011011110010001010100010100100110111101000010001011001100001101E-9");
++  MPFR_ASSERTN(mpfr_equal_p (fp, z));
++  mpfr_clear (fp);
++  mpfr_clear (z);
++}
++
+ int
+ main (int argc, char *argv[])
+ {
+@@ -1205,6 +1223,7 @@
+   test20100310 ();
+   bug20120814 ();
+   bug20120829 ();
++  bug20161217 ();
+ 
+   tests_end_mpfr ();
+   return 0;

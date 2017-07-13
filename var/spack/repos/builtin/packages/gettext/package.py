@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,8 +25,9 @@
 from spack import *
 
 
-class Gettext(Package):
+class Gettext(AutotoolsPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
+
     homepage = "https://www.gnu.org/software/gettext/"
     url      = "http://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
 
@@ -40,6 +41,7 @@ class Gettext(Package):
     variant('tar',      default=True, description='Enable tar support')
     variant('bzip2',    default=True, description='Enable bzip2 support')
     variant('xz',       default=True, description='Enable xz support')
+    variant("shared",   default=True, description="Enabel shared libs")
 
     # Optional variants
     variant('libunistring', default=False, description='Use libunistring')
@@ -60,9 +62,12 @@ class Gettext(Package):
     depends_on('libunistring', when='+libunistring')
     # depends_on('cvs')
 
-    def install(self, spec, prefix):
+    patch('test-verify-parallel-make-check.patch', when='@:0.19.8.1')
+
+    def configure_args(self):
+        spec = self.spec
+
         config_args = [
-            '--prefix={0}'.format(prefix),
             '--disable-java',
             '--disable-csharp',
             '--with-included-glib',
@@ -97,7 +102,9 @@ class Gettext(Package):
         else:
             config_args.append('--with-included-libunistring')
 
-        configure(*config_args)
+        if "+shared" in spec:
+            config_args.append("--enable-shared")
+        else:
+            config_args.append("--disable-shared")
 
-        make()
-        make("install")
+        return config_args

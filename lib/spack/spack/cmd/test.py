@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,25 +22,33 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import sys
 import os
 import re
 import argparse
 import pytest
-from StringIO import StringIO
+from six import StringIO
 
 from llnl.util.filesystem import *
 from llnl.util.tty.colify import colify
 
 import spack
 
-description = "a thin wrapper around the pytest command"
+description = "run spack's unit tests"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-H', '--pytest-help', action='store_true', default=False,
         help="print full pytest help message, showing advanced options")
+    subparser.add_argument(
+        '-c', '--clean-config', action='store_true', dest='clean_config',
+        default=False,
+        help="backup (to ~/.spack-saved) and remove ~/.spack first") 
 
     list_group = subparser.add_mutually_exclusive_group()
     list_group.add_argument(
@@ -79,12 +87,14 @@ def do_list(args, unknown_args):
                 output_lines.append(
                     os.path.basename(name).replace('.py', ''))
         else:
-            print indent + name
+            print(indent + name)
 
     if args.list:
         colify(output_lines)
 
-
+import os
+import shutil
+import datetime
 def test(parser, args, unknown_args):
     if args.pytest_help:
         # make the pytest.main help output more accurate
@@ -92,17 +102,34 @@ def test(parser, args, unknown_args):
         pytest.main(['-h'])
         return
 
+    #sleak: save ~/.spack from being overwritten:
+    sd = os.path.expandvars('$HOME/.spack-saved')
+    try:
+        os.makedirs(sd)
+    except OSError as err:
+        if err.errno == 17: # already exists
+            pass
+    now = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+    shutil.move(os.path.expandvars('$HOME/.spack'), sd+'/spack.save.'+now)
+    if not args.clean_config:
+        shutil.copytree(sd+'/spack.save.'+now, os.path.expandvars('$HOME/.spack'))
+
     # pytest.ini lives in the root of the sapck repository.
     with working_dir(spack.prefix):
         # --list and --long-list print the test output better.
         if args.list or args.long_list:
             do_list(args, unknown_args)
-            return
+            errcode = 0
 
         # Allow keyword search without -k if no options are specified
         if (args.tests and not unknown_args and
             not any(arg.startswith('-') for arg in args.tests)):
-            return pytest.main(['-k'] + args.tests)
+            errcode = pytest.main(['-k'] + args.tests)
 
         # Just run the pytest command
-        return pytest.main(unknown_args + args.tests)
+        errcode = pytest.main(unknown_args + args.tests)
+
+    # restore saved config:
+    shutil.move(os.path.expandvars('$HOME/.spack'), sd+'/spack.test.'+now)
+    shutil.move(sd+'/spack.save.'+now, os.path.expandvars('$HOME/.spack'))
+    return errcode

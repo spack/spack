@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,6 +34,8 @@ class SuperluDist(Package):
     url = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
 
     version('develop', git='https://github.com/xiaoyeli/superlu_dist', tag='master')
+    version('xsdk-0.2.0', git='https://github.com/xiaoyeli/superlu_dist', tag='xsdk-0.2.0')    
+    version('5.1.3', 'fec21a9207ef94f57501c9406da78285')
     version('5.1.1', '12638c631733a27dcbd87110e9f9cb1e')
     version('5.1.0', '6bb86e630bd4bd8650243aed8fd92eb9')
     version('5.0.0', '2b53baf1b0ddbd9fcf724992577f0670')
@@ -69,16 +71,21 @@ class SuperluDist(Package):
             'ARCHFLAGS    = cr',
             'RANLIB       = true',
             'CC           = {0}'.format(self.spec['mpi'].mpicc),
-            'CFLAGS       = -fPIC -std=c99 -O2 %s %s %s' % (
-                spec['parmetis'].cppflags,
-                spec['metis'].cppflags,
+            'CFLAGS       = %s %s -O2 %s %s %s' % (
+                self.compiler.pic_flag,
+                '' if '%pgi' in spec else '-std=c99',
+                spec['parmetis'].headers.cpp_flags,
+                spec['metis'].headers.cpp_flags,
                 '-D_LONGINT' if '+int64' in spec else ''),
-            'NOOPTS       = -fPIC -std=c99',
+            'NOOPTS       = %s -std=c99' % (
+                self.compiler.pic_flag),
             'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),
             'F90FLAGS     = -O2',
             'LOADER       = {0}'.format(self.spec['mpi'].mpif77),
             'LOADOPTS     =',
-            'CDEFS        = -DAdd_'
+            'CDEFS        = %s' % ("-DNoChange"
+                                       if '%xl' in spec or '%xl_r' in spec
+                                       else "-DAdd_")
         ])
 
         with open('make.inc', 'w') as fh:

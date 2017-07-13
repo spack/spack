@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,8 +38,9 @@ class Pocl(CMakePackage):
     url = "http://portablecl.org/downloads/pocl-0.13.tar.gz"
 
     version("master", git="https://github.com/pocl/pocl.git")
-    version("0.14-rc",
-            git="https://github.com/pocl/pocl.git", branch="release_0_14")
+    version('0.14', '1d35f09299e76b9e3918c42826555194')
+    # version("0.14-rc",
+    #         git="https://github.com/pocl/pocl.git", branch="release_0_14")
     version("0.13", "344480864d4269f2f63f1509395898bd")
     version("0.12", "e197ba3aa01a35f40581c48e053330dd")
     version("0.11", "9be0640cde2983062c47393d9e8e8fe7")
@@ -50,7 +51,8 @@ class Pocl(CMakePackage):
     patch("vecmathlib.patch", when="@:0.13")
 
     # Note: We should describe correctly which pocl versions provide
-    # what OpenCL version
+    # which version of the  OpenCL standard
+    # OpenCL standard versions are: 1.0, 1.1, 1.2, 2.0, 2.1, 2.2
     provides('opencl@:2.0')
 
     depends_on("cmake @2.8.12:", type="build")
@@ -64,7 +66,7 @@ class Pocl(CMakePackage):
 
     # These are the supported LLVM versions
     depends_on("llvm @3.7:3.9", when="@master")
-    depends_on("llvm @3.7:3.9", when="@0.14")
+    depends_on("llvm @3.7:4.0", when="@0.14")
     depends_on("llvm @3.7:3.8", when="@0.13")
     depends_on("llvm @3.2:3.7", when="@0.12")
     depends_on("llvm @3.2:3.6", when="@0.11")
@@ -93,6 +95,7 @@ class Pocl(CMakePackage):
             os.symlink("OpenCL", join_path(self.prefix.include, "CL"))
 
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         # Build and run a small program to test the installed OpenCL library
         spec = self.spec
@@ -101,7 +104,7 @@ class Pocl(CMakePackage):
         with working_dir(checkdir, create=True):
             source = join_path(os.path.dirname(self.module.__file__),
                                "example1.c")
-            cflags = spec["pocl"].cppflags.split()
+            cflags = spec["pocl"].headers.cpp_flags.split()
             # ldflags = spec["pocl"].libs.ld_flags.split()
             ldflags = ["-L%s" % spec["pocl"].prefix.lib,
                        "-lOpenCL", "-lpoclu"]

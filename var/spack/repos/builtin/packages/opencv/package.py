@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from glob import glob
 
 
 class Opencv(Package):
@@ -43,6 +42,7 @@ class Opencv(Package):
     homepage = 'http://opencv.org/'
     url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
 
+    version('3.2.0', 'a43b65488124ba33dde195fea9041b70')
     version('3.1.0', '70e1dd07f0aa06606f1bc0e3fa15abd3')
 
     variant('shared', default=True,
@@ -166,22 +166,11 @@ class Opencv(Package):
 
         # Python
         if '+python' in spec:
-            python = spec['python']
-
-            try:
-                python_lib = glob(join_path(
-                    python.prefix.lib, 'libpython*.{0}'.format(dso_suffix)))[0]
-            except KeyError:
-                raise InstallError('Cannot find libpython')
-
-            try:
-                python_include_dir = glob(join_path(python.prefix.include,
-                                                    'python*'))[0]
-            except KeyError:
-                raise InstallError('Cannot find python include directory')
+            python_exe = spec['python'].command.path
+            python_lib = spec['python'].libs[0]
+            python_include_dir = spec['python'].headers.directories[0]
 
             if '^python@3:' in spec:
-                python_exe = join_path(python.prefix.bin, 'python3')
                 cmake_options.extend([
                     '-DBUILD_opencv_python3=ON',
                     '-DPYTHON3_EXECUTABLE={0}'.format(python_exe),
@@ -190,7 +179,6 @@ class Opencv(Package):
                     '-DBUILD_opencv_python2=OFF',
                 ])
             elif '^python@2:3' in spec:
-                python_exe = join_path(python.prefix.bin, 'python2')
                 cmake_options.extend([
                     '-DBUILD_opencv_python2=ON',
                     '-DPYTHON2_EXECUTABLE={0}'.format(python_exe),

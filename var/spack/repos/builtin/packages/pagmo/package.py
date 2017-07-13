@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -49,7 +49,6 @@ class Pagmo(CMakePackage):
     variant('mpi',      default=True,  description='Enable support for MPI')
     variant('nlopt',    default=False, description='Enable support for NLopt minimisers')
     variant('snopt',    default=False, description='Enable support for SNOPT minimiser')
-    variant('tests',    default=False, description='Build test set')
     variant('worhp',    default=False, description='Enable support for WORHP minimiser')
     variant('headers',  default=True,  description='Installs the header files')
     variant('blas',     default=True,  description='Enable support for BLAS')
@@ -60,7 +59,7 @@ class Pagmo(CMakePackage):
 
     extends('python', when='+python')
 
-    # Concretization in Python is currently broken
+    # Concretization in Spack is currently broken
     # depends_on('boost+system+serialization+thread')
     # depends_on('boost+python',    when='+python')
     # depends_on('boost+date_time', when='+gtop')
@@ -103,15 +102,15 @@ class Pagmo(CMakePackage):
             '-DENABLE_MPI={0}'.format(self.variant_to_bool('+mpi')),
             '-DENABLE_NLOPT={0}'.format(self.variant_to_bool('+nlopt')),
             '-DENABLE_SNOPT={0}'.format(self.variant_to_bool('+snopt')),
-            '-DENABLE_TESTS={0}'.format(self.variant_to_bool('+tests')),
             '-DENABLE_WORHP={0}'.format(self.variant_to_bool('+worhp')),
             '-DINSTALL_HEADERS={0}'.format(self.variant_to_bool('+headers')),
+            '-DENABLE_TESTS={0}'.format('ON' if self.run_tests else 'OFF'),
         ]
 
         if '+python' in spec:
             args.extend([
                 # By default picks up the system python not the Spack build
-                '-DPYTHON_EXECUTABLE={0}'.format(python_exe),
+                '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
                 # By default installs to the python prefix not the pagmo prefix
                 '-DPYTHON_MODULES_DIR={0}'.format(site_packages_dir),
             ])

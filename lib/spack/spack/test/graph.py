@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,7 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from StringIO import StringIO
+from six import StringIO
 
 from spack.spec import Spec
 from spack.graph import AsciiGraph, topological_sort, graph_dot
@@ -84,16 +84,16 @@ def test_dynamic_dot_graph_mpileaks(builtin_mock):
 
     dot = stream.getvalue()
 
-    mpileaks_hash, mpileaks_lbl = s.dag_hash(), s.format('$_$/')
-    mpi_hash, mpi_lbl = s['mpi'].dag_hash(), s['mpi'].format('$_$/')
+    mpileaks_hash, mpileaks_lbl = s.dag_hash(), s.format('$_$#')
+    mpi_hash, mpi_lbl = s['mpi'].dag_hash(), s['mpi'].format('$_$#')
     callpath_hash, callpath_lbl = (
-        s['callpath'].dag_hash(), s['callpath'].format('$_$/'))
+        s['callpath'].dag_hash(), s['callpath'].format('$_$#'))
     dyninst_hash, dyninst_lbl = (
-        s['dyninst'].dag_hash(), s['dyninst'].format('$_$/'))
+        s['dyninst'].dag_hash(), s['dyninst'].format('$_$#'))
     libdwarf_hash, libdwarf_lbl = (
-        s['libdwarf'].dag_hash(), s['libdwarf'].format('$_$/'))
+        s['libdwarf'].dag_hash(), s['libdwarf'].format('$_$#'))
     libelf_hash, libelf_lbl = (
-        s['libelf'].dag_hash(), s['libelf'].format('$_$/'))
+        s['libelf'].dag_hash(), s['libelf'].format('$_$#'))
 
     assert '  "%s" [label="%s"]\n' % (mpileaks_hash, mpileaks_lbl) in dot
     assert '  "%s" [label="%s"]\n' % (callpath_hash, callpath_lbl) in dot

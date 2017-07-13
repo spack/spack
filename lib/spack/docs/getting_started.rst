@@ -11,9 +11,10 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-1. Python 2.6 or 2.7
+1. Python 2 (2.6 or 2.7) or 3 (3.3 - 3.6)
 2. A C/C++ compiler
 3. The ``git`` and ``curl`` commands.
+4. If using the ``gpg`` subcommand, ``gnupg2`` is required.
 
 These requirements can be easily installed on most modern Linux systems;
 on Macintosh, XCode is required.  Spack is designed to run on HPC
@@ -640,6 +641,7 @@ Or it can be set permanently in your ``compilers.yaml``:
       fflags: -mismatch
     spec: nag@6.1
 
+
 ---------------
 System Packages
 ---------------
@@ -774,7 +776,7 @@ This problem is related to OpenSSL, and in some cases might be solved
 by installing a new version of ``git`` and ``openssl``:
 
 #. Run ``spack install git``
-#. Add the output of ``spack module loads git`` to your ``.bahsrc``.
+#. Add the output of ``spack module loads git`` to your ``.bashrc``.
 
 If this doesn't work, it is also possible to disable checking of SSL
 certificates by using:
@@ -985,6 +987,73 @@ written in C/C++/Fortran would need it.  A potential workaround is to
 load a recent ``binutils`` into your environment and use the ``--dirty``
 flag.
 
+-----------
+GPG Signing
+-----------
+
+.. _cmd-spack-gpg:
+
+^^^^^^^^^^^^^
+``spack gpg``
+^^^^^^^^^^^^^
+
+Spack has support for signing and verifying packages using GPG keys. A
+separate keyring is used for Spack, so any keys available in the user's home
+directory are not used.
+
+^^^^^^^^^^^^^^^^^^
+``spack gpg init``
+^^^^^^^^^^^^^^^^^^
+
+When Spack is first installed, its keyring is empty. Keys stored in
+:file:`var/spack/gpg` are the default keys for a Spack installation. These
+keys may be imported by running ``spack gpg init``. This will import the
+default keys into the keyring as trusted keys.
+
+^^^^^^^^^^^^^
+Trusting keys
+^^^^^^^^^^^^^
+
+Additional keys may be added to the keyring using
+``spack gpg trust <keyfile>``. Once a key is trusted, packages signed by the
+owner of they key may be installed.
+
+^^^^^^^^^^^^^
+Creating keys
+^^^^^^^^^^^^^
+
+You may also create your own key so that you may sign your own packages using
+``spack gpg create <name> <email>``. By default, the key has no expiration,
+but it may be set with the ``--expires <date>`` flag (see the ``gnupg2``
+documentation for accepted date formats). It is also recommended to add a
+comment as to the use of the key using the ``--comment <comment>`` flag. The
+public half of the key can also be exported for sharing with others so that
+they may use packages you have signed using the ``--export <keyfile>`` flag.
+Secret keys may also be later exported using the
+``spack gpg export <location> [<key>...]`` command.
+
+^^^^^^^^^^^^
+Listing keys
+^^^^^^^^^^^^
+
+In order to list the keys available in the keyring, the
+``spack gpg list`` command will list trusted keys with the ``--trusted`` flag
+and keys available for signing using ``--signing``. If you would like to
+remove keys from your keyring, ``spack gpg untrust <keyid>``. Key IDs can be
+email addresses, names, or (best) fingerprints.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Signing and Verifying Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to sign a package, ``spack gpg sign <file>`` should be used. By
+default, the signature will be written to ``<file>.asc``, but that may be
+changed by using the ``--output <file>`` flag. If there is only one signing
+key available, it will be used, but if there is more than one, the key to use
+must be specified using the ``--key <keyid>`` flag. The ``--clearsign`` flag
+may also be used to create a signed file which contains the contents, but it
+is not recommended. Signed packages may be verified by using
+``spack gpg verify <file>``.
 
 .. _cray-support:
 
@@ -1080,10 +1149,13 @@ Here's an example of an external configuration for cray modules:
 .. code-block:: yaml
 
    packages:
-     mpi:
+     mpich:
        modules:
          mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10: cray-mpich
          mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10: cray-mpich
+     all:
+       providers:
+         mpi: [mpich]
 
 This tells Spack that for whatever package that depends on mpi, load the
 cray-mpich module into the environment. You can then be able to use whatever
@@ -1100,7 +1172,7 @@ Here is an example of a full packages.yaml used at NERSC
 .. code-block:: yaml
 
    packages:
-     mpi:
+     mpich:
        modules:
          mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-mpich
          mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge: cray-mpich
@@ -1117,6 +1189,8 @@ Here is an example of a full packages.yaml used at NERSC
        buildable: False
      all:
        compiler: [gcc@5.2.0, intel@16.0.0.109]
+       providers:
+         mpi: [mpich]
 
 Here we tell spack that whenever we want to build with gcc use version 5.2.0 or
 if we want to build with intel compilers, use version 16.0.0.109. We add a spec

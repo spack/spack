@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -49,7 +49,8 @@ class AutotoolsPackage(PackageBase):
         4. :py:meth:`~.AutotoolsPackage.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override the helper method :py:meth:`.configure_args`.
+    necessary will be to override the helper method
+    :py:meth:`~.AutotoolsPackage.configure_args`.
     For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
@@ -94,10 +95,15 @@ class AutotoolsPackage(PackageBase):
     #: Options to be passed to autoreconf when using the default implementation
     autoreconf_extra_args = []
 
+    @run_after('autoreconf')
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
         this updated when installed on a newer architecture."""
 
+        if not self.patch_config_guess or not self.spec.satisfies(
+                'arch=linux-rhel7-ppc64le'
+        ):
+            return
         my_config_guess = None
         config_guess = None
         if os.path.exists('config.guess'):
@@ -119,11 +125,11 @@ class AutotoolsPackage(PackageBase):
             try:
                 check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
                 # The package's config.guess already runs OK, so just use it
-                return True
+                return
             except Exception:
                 pass
         else:
-            return True
+            return
 
         # Look for a spack-installed automake package
         if 'automake' in self.spec:
@@ -145,14 +151,14 @@ class AutotoolsPackage(PackageBase):
         if config_guess is not None:
             try:
                 check_call([config_guess], stdout=PIPE, stderr=PIPE)
-                mod = stat(my_config_guess).st_mode & 0777 | S_IWUSR
+                mod = stat(my_config_guess).st_mode & 0o777 | S_IWUSR
                 os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
-                return True
+                return
             except Exception:
                 pass
 
-        return False
+        raise RuntimeError('Failed to find suitable config.guess')
 
     @property
     def configure_directory(self):
@@ -174,20 +180,6 @@ class AutotoolsPackage(PackageBase):
     def build_directory(self):
         """Override to provide another place to build the package"""
         return self.configure_directory
-
-    def patch(self):
-        """Patches config.guess if
-        :py:attr:``~.AutotoolsPackage.patch_config_guess`` is True
-
-        :raise RuntimeError: if something goes wrong when patching
-            ``config.guess``
-        """
-
-        if self.patch_config_guess and self.spec.satisfies(
-                'arch=linux-rhel7-ppc64le'
-        ):
-            if not self._do_patch_config_guess():
-                raise RuntimeError('Failed to find suitable config.guess')
 
     @run_before('autoreconf')
     def delete_configure_to_force_update(self):
@@ -234,7 +226,7 @@ class AutotoolsPackage(PackageBase):
         appropriately, otherwise raises an error.
 
         :raises RuntimeError: if a configure script is not found in
-            :py:meth:`~.configure_directory`
+            :py:meth:`~AutotoolsPackage.configure_directory`
         """
         # Check if a configure script is there. If not raise a RuntimeError.
         if not os.path.exists(self.configure_abs_path):
@@ -255,7 +247,8 @@ class AutotoolsPackage(PackageBase):
         return []
 
     def configure(self, spec, prefix):
-        """Runs configure with the arguments specified in :py:meth:`.configure_args`
+        """Runs configure with the arguments specified in
+        :py:meth:`~.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
@@ -286,6 +279,51 @@ class AutotoolsPackage(PackageBase):
         with working_dir(self.build_directory):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
+
+    def _activate_or_not(self, active, inactive, name, active_parameters=None):
+        spec = self.spec
+        args = []
+        # For each allowed value in the list of values
+        for value in self.variants[name].values:
+            # Check if the value is active in the current spec
+            condition = '{name}={value}'.format(name=name, value=value)
+            activated = condition in spec
+            # Search for an override in the package for this value
+            override_name = '{0}_or_{1}_{2}'.format(active, inactive, value)
+            line_generator = getattr(self, override_name, None)
+            # If not available use a sensible default
+            if line_generator is None:
+                def _default_generator(is_activated):
+                    if is_activated:
+                        line = '--{0}-{1}'.format(active, value)
+                        if active_parameters is not None and active_parameters(value):  # NOQA=ignore=E501
+                            line += '={0}'.format(active_parameters(value))
+                        return line
+                    return '--{0}-{1}'.format(inactive, value)
+                line_generator = _default_generator
+            args.append(line_generator(activated))
+        return args
+
+    def with_or_without(self, name, active_parameters=None):
+        """Inspects the multi-valued variant 'name' and returns the configure
+        arguments that activate / deactivate the selected feature.
+
+        :param str name: name of a valid multi-valued variant
+        :param callable active_parameters: if present accepts a single value
+            and returns the parameter to be used leading to an entry of the
+            type '--with-{name}={parameter}
+        """
+        return self._activate_or_not(
+            'with', 'without', name, active_parameters
+        )
+
+    def enable_or_disable(self, name, active_parameters=None):
+        """Inspects the multi-valued variant 'name' and returns the configure
+        arguments that activate / deactivate the selected feature.
+        """
+        return self._activate_or_not(
+            'enable', 'disable', name, active_parameters
+        )
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 

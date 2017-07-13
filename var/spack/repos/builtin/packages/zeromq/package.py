@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -41,4 +41,8 @@ class Zeromq(AutotoolsPackage):
     depends_on("libsodium@:1.0.3", when='@:4.1.2')
 
     def configure_args(self):
-        return ['--with-libsodium']
+        config_args = ['--with-libsodium']
+        if 'clang' in self.compiler.cc:
+            config_args.append("CFLAGS=-Wno-gnu")
+            config_args.append("CXXFLAGS=-Wno-gnu")
+        return config_args

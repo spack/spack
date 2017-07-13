@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -41,7 +41,7 @@ schema = {
             'additionalProperties': False,
             'properties': {
                 'install_tree': {'type': 'string'},
-                'install_hash_length': {'type': 'integer', 'minimum': 0},
+                'install_hash_length': {'type': 'integer', 'minimum': 1},
                 'install_path_scheme': {'type': 'string'},
                 'build_stage': {
                     'oneOf': [
@@ -63,6 +63,7 @@ schema = {
                 'verify_ssl': {'type': 'boolean'},
                 'checksum': {'type': 'boolean'},
                 'dirty': {'type': 'boolean'},
+                'build_jobs': {'type': 'integer', 'minimum': 1},
             }
         },
     },

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -100,7 +100,8 @@ def get_compiler_config(scope=None, init_config=True):
             # Check the site config and update the user config if
             # nothing is configured at the site level.
             site_config = spack.config.get_config('compilers', scope='site')
-            if not site_config:
+            sys_config = spack.config.get_config('compilers', scope='system')
+            if not site_config and not sys_config:
                 init_compiler_config()
                 config = spack.config.get_config('compilers', scope=scope)
         return config
@@ -335,7 +336,7 @@ def get_compiler_duplicates(compiler_spec, arch_spec):
             scope_to_compilers[scope] = compilers
 
     cfg_file_to_duplicates = dict()
-    for scope, compilers in scope_to_compilers.iteritems():
+    for scope, compilers in scope_to_compilers.items():
         config_file = config_scopes[scope].get_section_filename('compilers')
         cfg_file_to_duplicates[config_file] = compilers
 
@@ -401,7 +402,7 @@ class CompilerDuplicateError(spack.error.SpackError):
         config_file_to_duplicates = get_compiler_duplicates(
             compiler_spec, arch_spec)
         duplicate_table = list(
-            (x, len(y)) for x, y in config_file_to_duplicates.iteritems())
+            (x, len(y)) for x, y in config_file_to_duplicates.items())
         descriptor = lambda num: 'time' if num == 1 else 'times'
         duplicate_msg = (
             lambda cfgfile, count: "{0}: {1} {2}".format(

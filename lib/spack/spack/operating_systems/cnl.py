@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,11 +25,11 @@
 import re
 
 from spack.architecture import OperatingSystem
-from spack.util.executable import *
 import spack.spec
 import spack.version
 from spack.util.multiproc import parmap
 import spack.compilers
+from spack.util.module_cmd import get_module_cmd
 
 
 class Cnl(OperatingSystem):
@@ -40,9 +40,8 @@ class Cnl(OperatingSystem):
     updated to indicate that OS has been upgraded (or downgraded)
     """
 
-    def detect_crayos_version(self):
-        modulecmd = which("modulecmd")
-        modulecmd.add_default_arg("python")
+    def _detect_crayos_version(self):
+        modulecmd = get_module_cmd()
         output = modulecmd("avail", "PrgEnv-gnu", output=str, error=str)
         matches = re.findall(r'PrgEnv-gnu/(\d+).\d+.\d+', output)
         version_set = set(matches)
@@ -51,7 +50,7 @@ class Cnl(OperatingSystem):
 
     def __init__(self):
         name = 'cnl'
-        version = self.detect_crayos_version()
+        version = self._detect_crayos_version()
         super(Cnl, self).__init__(name, version)
 
     def __str__(self):
@@ -64,7 +63,7 @@ class Cnl(OperatingSystem):
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
-        clist = reduce(lambda x, y: x + y, compiler_lists)
+        clist = [comp for cl in compiler_lists for comp in cl]
         return clist
 
     def find_compiler(self, cmp_cls, *paths):
@@ -73,8 +72,7 @@ class Cnl(OperatingSystem):
             if not cmp_cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-            modulecmd = which("modulecmd")
-            modulecmd.add_default_arg("python")
+            modulecmd = get_module_cmd()
 
             output = modulecmd(
                 'avail', cmp_cls.PrgEnv_compiler, output=str, error=str)

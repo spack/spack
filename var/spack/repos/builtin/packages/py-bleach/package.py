@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,7 @@ class PyBleach(PythonPackage):
 
     version('1.5.0', 'b663300efdf421b3b727b19d7be9c7e7')
 
-    depends_on('python@2.6:2.7,3.2:3.5')
+    depends_on('python@2.6:2.8,3.2:3.5')
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-html5lib@0.999,0.999999:0.9999999', type=('build', 'run'))

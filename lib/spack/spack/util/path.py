@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,6 +39,9 @@ replacements = {
     'spack': spack.prefix,
     'user': getpass.getuser(),
     'tempdir': tempfile.gettempdir(),
+    'home': os.environ.get("HOME", ""), # $home and $scratch are NERSC specific
+    'scratch': os.environ.get("SCRATCH", ""),
+    'suser': os.environ.get("SUSER", "")  # same with suser
 }
 
 

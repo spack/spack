@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -52,6 +52,9 @@ class Libdwarf(Package):
 
     parallel = False
 
+    def patch(self):
+        filter_file(r'^typedef struct Elf Elf;$', '', 'libdwarf/libdwarf.h.in')
+
     def install(self, spec, prefix):
 
         # elfutils contains a dwarf.h that conflicts with libdwarf's
@@ -65,7 +68,7 @@ class Libdwarf(Package):
             make.add_default_arg('ARFLAGS=rcs')
 
             # Dwarf doesn't provide an install, so we have to do it.
-            mkdirp(prefix.bin, prefix.include, prefix.lib, prefix.man1)
+            mkdirp(prefix.bin, prefix.include, prefix.lib, prefix.man.man1)
 
             with working_dir('libdwarf'):
                 extra_config_args = []
@@ -98,4 +101,4 @@ class Libdwarf(Package):
 
                 install('dwarfdump',      prefix.bin)
                 install('dwarfdump.conf', prefix.lib)
-                install('dwarfdump.1',    prefix.man1)
+                install('dwarfdump.1',    prefix.man.man1)

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,7 @@ class Mpich(AutotoolsPackage):
     homepage = "http://www.mpich.org"
     url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
     list_url = "http://www.mpich.org/static/downloads/"
-    list_depth = 2
+    list_depth = 1
 
     version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
     version('3.1.4', '2ab544607986486562e076b83937bba2')
@@ -47,6 +47,7 @@ class Mpich(AutotoolsPackage):
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
 
+    provides('mpi')
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 

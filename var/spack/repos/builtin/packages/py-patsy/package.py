@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,10 +35,11 @@ class PyPatsy(PythonPackage):
     version('0.4.1', '9445f29e3426d1ed30d683a1e1453f84')
 
     variant('splines', description="Offers spline related functions")
-    variant('tests', description="allows nose tests")
 
     depends_on('py-setuptools',  type='build')
     depends_on('py-numpy',       type=('build', 'run'))
     depends_on('py-scipy',       type=('build', 'run'), when="+splines")
-    depends_on('py-nose',        type=('build', 'run'), when="+tests")
     depends_on('py-six',         type=('build', 'run'))
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose', type='test')

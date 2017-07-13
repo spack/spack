@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -46,7 +46,6 @@ class Dakota(Package):
 
     homepage = 'https://dakota.sandia.gov/'
     url = 'https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-6.3-public.src.tar.gz'
-    _url_str = 'https://dakota.sandia.gov/sites/default/files/distributions/public/dakota-{version}-public.src.tar.gz'
 
     version('6.3', '05a58d209fae604af234c894c3f73f6d')
 
@@ -63,9 +62,6 @@ class Dakota(Package):
     depends_on('python')
     depends_on('boost')
     depends_on('cmake', type='build')
-
-    def url_for_version(self, version):
-        return Dakota._url_str.format(version=version)
 
     def install(self, spec, prefix):
         options = []

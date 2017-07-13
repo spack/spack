@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,17 +29,27 @@ class PyRequests(PythonPackage):
     """Python HTTP for Humans."""
 
     homepage = "http://python-requests.org"
-    url = "https://pypi.io/packages/source/r/requests/requests-2.13.0.tar.gz"
+    url = "https://pypi.io/packages/source/r/requests/requests-2.14.2.tar.gz"
 
+    import_modules = [
+        'requests', 'requests.packages', 'requests.packages.chardet',
+        'requests.packages.urllib3', 'requests.packages.idna',
+        'requests.packages.chardet.cli', 'requests.packages.urllib3.util',
+        'requests.packages.urllib3.packages',
+        'requests.packages.urllib3.contrib',
+        'requests.packages.urllib3.packages.ssl_match_hostname',
+        'requests.packages.urllib3.packages.backports',
+        'requests.packages.urllib3.contrib._securetransport'
+    ]
+
+    version('2.14.2', '4c3c169ed67466088a2a6947784fe444')
     version('2.13.0', '921ec6b48f2ddafc8bb6160957baf444')
     version('2.11.1', 'ad5f9c47b5c5dfdb28363ad7546b0763')
 
-    depends_on('py-setuptools',              type='build')
-    # from setup.py:
-    # test_requirements = ['pytest>=2.8.0', 'pytest-httpbin'==0.0.7,
-    #                      'pytest-cov', 'pytest-mock']
-    # needs #1279 and #2869
-    # depends_on('py-pytest@2.8.7:',           type=('build', 'run'))
-    # depends_on('py-pytest-cov@2.2.1:',       type=('build', 'run'))
-    # depends_on('py-pytest-httpbin@0.2.0:',   type=('build', 'run'))
-    # depends_on('py-pytest-mock@0.11.0:',     type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-pytest@2.8.0:',        type='test')
+    # depends_on('py-pytest-cov',           type='test')
+    # depends_on('py-pytest-httpbin@0.0.7', type='test')
+    # depends_on('py-pytest-mock',          type='test')

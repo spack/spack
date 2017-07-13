@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,6 +33,7 @@ class Vtk(CMakePackage):
 
     homepage = "http://www.vtk.org"
     url      = "http://www.vtk.org/files/release/7.1/VTK-7.1.0.tar.gz"
+    list_url = "http://www.vtk.org/download/"
 
     version('7.1.0', 'a7e814c1db503d896af72458c2d0228f')
     version('7.0.0', '5fe35312db5fb2341139b8e4955c367d')
@@ -46,6 +47,9 @@ class Vtk(CMakePackage):
     patch('gcc.patch', when='@6.1.0')
 
     depends_on('qt')
+    depends_on('hdf5')
+    depends_on('netcdf')
+    depends_on('netcdf-cxx')
 
     extends('python', when='+python')
 
@@ -64,6 +68,11 @@ class Vtk(CMakePackage):
         cmake_args.extend([
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
+            '-DVTK_USE_SYSTEM_HDF5=ON',
+            '-DVTK_USE_SYSTEM_NETCDF=ON',
+            '-DNETCDF_DIR={0}'.format(spec['netcdf'].prefix),
+            '-DNETCDF_C_ROOT={0}'.format(spec['netcdf'].prefix),
+            '-DNETCDF_CXX_ROOT={0}'.format(spec['netcdf-cxx'].prefix),
 
             # Enable/Disable wrappers for Python.
             '-DVTK_WRAP_PYTHON={0}'.format(

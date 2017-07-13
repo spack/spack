@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,8 +31,7 @@ class RC50(RPackage):
 
     homepage = "https://cran.r-project.org/package=C50"
     url      = "https://cran.r-project.org/src/contrib/C50_0.1.0-24.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/C50"
 
     version('0.1.0-24', '42631e65c5c579532cc6edf5ea175949')
 
-    depends_on('r-partykit', type=('build','run'))
+    depends_on('r-partykit', type=('build', 'run'))

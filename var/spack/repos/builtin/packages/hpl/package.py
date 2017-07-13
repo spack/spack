@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,7 +27,7 @@ import os
 import platform
 
 
-class Hpl(Package):
+class Hpl(MakefilePackage):
     """HPL is a software package that solves a (random) dense linear system
     in double precision (64 bits) arithmetic on distributed-memory computers.
     It can thus be regarded as a portable as well as freely available
@@ -45,7 +45,11 @@ class Hpl(Package):
 
     parallel = False
 
-    def configure(self, spec, arch):
+    arch = '{0}-{1}'.format(platform.system(), platform.processor())
+
+    build_targets = ['arch={0}'.format(arch)]
+
+    def edit(self, spec, prefix):
         # List of configuration options
         # Order is important
         config = []
@@ -66,7 +70,7 @@ class Hpl(Package):
             'RM           = /bin/rm -f',
             'TOUCH        = touch',
             # Platform identifier
-            'ARCH         = {0}'.format(arch),
+            'ARCH         = {0}'.format(self.arch),
             # HPL Directory Structure / HPL library
             'TOPdir       = {0}'.format(os.getcwd()),
             'INCdir       = $(TOPdir)/include',
@@ -74,7 +78,7 @@ class Hpl(Package):
             'LIBdir       = $(TOPdir)/lib/$(ARCH)',
             'HPLlib       = $(LIBdir)/libhpl.a',
             # Message Passing library (MPI)
-            'MPinc        = -I{0}'.format(spec['mpi'].prefix.include),
+            'MPinc        = {0}'.format(spec['mpi'].prefix.include),
             'MPlib        = -L{0}'.format(spec['mpi'].prefix.lib),
             # Linear Algebra library (BLAS or VSIPL)
             'LAinc        = {0}'.format(spec['blas'].prefix.include),
@@ -99,21 +103,13 @@ class Hpl(Package):
         ])
 
         # Write configuration options to include file
-        with open('Make.{0}'.format(arch), 'w') as makefile:
+        with open('Make.{0}'.format(self.arch), 'w') as makefile:
             for var in config:
                 makefile.write('{0}\n'.format(var))
 
     def install(self, spec, prefix):
-        # Arch used for file naming purposes only
-        arch = '{0}-{1}'.format(platform.system(), platform.processor())
-
-        # Generate Makefile include
-        self.configure(spec, arch)
-
-        make('arch={0}'.format(arch))
-
         # Manual installation
-        install_tree(join_path('bin', arch), prefix.bin)
-        install_tree(join_path('lib', arch), prefix.lib)
-        install_tree(join_path('include', arch), prefix.include)
+        install_tree(join_path('bin', self.arch), prefix.bin)
+        install_tree(join_path('lib', self.arch), prefix.lib)
+        install_tree(join_path('include', self.arch), prefix.include)
         install_tree('man', prefix.man)

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,9 @@ import spack.repository
 
 from llnl.util import tty
 
-description = "remove an installed package"
+description = "remove installed packages"
+section = "build"
+level = "short"
 
 error_message = """You can either:
     a) use a more specific spec, or
@@ -76,9 +78,9 @@ def setup_parser(subparser):
         help="specs of packages to uninstall")
 
 
-def concretize_specs(specs, allow_multiple_matches=False, force=False):
-    """Returns a list of specs matching the non necessarily
-    concretized specs given from cli
+def find_matching_specs(specs, allow_multiple_matches=False, force=False):
+    """Returns a list of specs matching the not necessarily
+       concretized specs given from cli
 
     Args:
         specs: list of specs to be matched against installed packages
@@ -147,10 +149,10 @@ def do_uninstall(specs, force):
         try:
             # should work if package is known to spack
             packages.append(item.package)
-        except spack.repository.UnknownPackageError:
+        except spack.repository.UnknownEntityError:
             # The package.py file has gone away -- but still
             # want to uninstall.
-            spack.Package(item).do_uninstall(force=True)
+            spack.Package.uninstall_by_spec(item, force=True)
 
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order
@@ -169,7 +171,7 @@ def get_uninstall_list(args):
 
     # Gets the list of installed specs that match the ones give via cli
     # takes care of '-a' is given in the cli
-    uninstall_list = concretize_specs(specs, args.all, args.force)
+    uninstall_list = find_matching_specs(specs, args.all, args.force)
 
     # Takes care of '-d'
     dependent_list = installed_dependents(uninstall_list)
@@ -179,7 +181,7 @@ def get_uninstall_list(args):
     if dependent_list and not args.dependents and not args.force:
         for spec, lst in dependent_list.items():
             tty.error('Will not uninstall {0}'.format(
-                      spec.format("$_$@$%@$/", color=True)))
+                      spec.format("$_$@$%@$#", color=True)))
             print('')
             print('The following packages depend on it:')
             spack.cmd.display_specs(lst, **display_args)

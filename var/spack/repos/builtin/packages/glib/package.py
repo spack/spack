@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,22 +32,23 @@ class Glib(AutotoolsPackage):
        threads, dynamic loading and an object system."""
 
     homepage = "https://developer.gnome.org/glib/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/glib/2.42/glib-2.42.1.tar.xz"
+    url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.53.1', '3362ef4da713f834ea26904caf3a75f5')
     version('2.49.7', '397ead3fcf325cb921d54e2c9e7dfd7a')
     version('2.49.4', 'e2c87c03017b0cd02c4c73274b92b148')
     version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb')
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
-    depends_on('m4', type='build')
-    depends_on('pkg-config+internal_glib', type='build')
+    variant('libmount', default=False, description='Build with libmount support')
+    variant('shared', default=False, description="Enable shared libs")
+
+    depends_on('pkg-config@0.16:+internal_glib', type='build')
     depends_on('libffi')
     depends_on('zlib')
     depends_on('gettext')
     depends_on('pcre+utf', when='@2.48:')
+    depends_on('util-linux', when='+libmount')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch', when='@2.42.1')
@@ -55,9 +56,23 @@ class Glib(AutotoolsPackage):
     # around a legitimate usage.
     patch('no-Werror=format-security.patch')
 
-    force_autoreconf = True
-
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+
+        if '+libmount' in spec:
+            args.append('--enable-libmount')
+        else:
+            args.append('--disable-libmount')
+
+        if "+shared" in spec:
+            args.append("--enable-shared")
+        else:
+            args.append("--disable-shared")
+
+        return args

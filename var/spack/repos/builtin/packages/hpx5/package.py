@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,6 +39,7 @@ class Hpx5(AutotoolsPackage):
     homepage = "http://hpx.crest.iu.edu"
     url      = "http://hpx.crest.iu.edu/release/hpx-3.1.0.tar.gz"
 
+    version('4.1.0', '43cb78758506f77416b95276a472f84f')
     version('4.0.0', 'b40dc03449ae1039cbb48ee149952b22')
     version('3.1.0', '9e90b8ac46788c009079632828c77628')
     version('2.0.0', '3d2ff3aab6c46481f9ec65c5b2bfe7a6')
@@ -46,6 +47,9 @@ class Hpx5(AutotoolsPackage):
     version('1.2.0', '4972005f85566af4afe8b71afbf1480f')
     version('1.1.0', '646afb460ecb7e0eea713a634933ce4f')
     version('1.0.0', '8020822adf6090bd59ed7fe465f6c6cb')
+
+    # Don't second-guess what compiler we are using on Cray
+    patch("configure.patch", when='@4.0.0')
 
     variant('cuda', default=False, description='Enable CUDA support')
     variant('cxx11', default=False, description='Enable C++11 hpx++ interface')

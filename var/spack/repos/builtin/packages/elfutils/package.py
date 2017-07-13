@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,13 +35,12 @@ class Elfutils(AutotoolsPackage):
 
     homepage = "https://fedorahosted.org/elfutils/"
 
-    depends_on('libtool', type='build')
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
+    url      = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
+    list_url = "https://sourceware.org/elfutils/ftp"
+    list_depth = 1
 
-    version('0.163',
-            git='git://git.fedorahosted.org/git/elfutils.git',
-            tag='elfutils-0.163')
+    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
+    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
 
     provides('elf@1')
 

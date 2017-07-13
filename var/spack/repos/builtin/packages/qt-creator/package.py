@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,7 @@ class QtCreator(Package):
     url      = 'http://download.qt.io/official_releases/qtcreator/4.1/4.1.0/qt-creator-opensource-src-4.1.0.tar.gz'
 
     list_url = 'http://download.qt.io/official_releases/qtcreator/'
-    list_depth = 3
+    list_depth = 2
 
     version('4.1.0',  '657727e4209befa4bf5889dff62d9e0a')
 

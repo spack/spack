@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -89,6 +89,4 @@ class TestCompilerCommand(object):
         # Ensure new compiler is in there
         new_compilers = set(spack.compilers.all_compiler_specs())
         new_compiler = new_compilers - old_compilers
-        assert new_compiler
-        assert sum(1 for c in new_compiler if
-                   c.version == Version(test_version)) > 0
+        assert any(c.version == Version(test_version) for c in new_compiler)
