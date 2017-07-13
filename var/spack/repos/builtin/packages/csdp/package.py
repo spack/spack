@@ -25,15 +25,19 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Csdp(MakefilePackage):
+    """CSDP is a library of routines that implements a predictor corrector
+       variant of the semidefinite programming algorithm of Helmberg, Rendl,
+       Vanderbei, and Wolkowicz"""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "https://projects.coin-or.org/Csdp"
+    url      = "http://www.coin-or.org/download/source/Csdp/Csdp-6.1.1.tgz"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('6.1.1', '8388e8988e337bb5c1291068828de801')
 
-    depends_on('libgtextutils')
+    depends_on('atlas')
 
-    conflicts('%gcc@7.1.0:')
+    def edit(self, spec, prefix):
+        mkdirp(prefix.bin)
+        makefile = FileFilter('Makefile')
+        makefile.filter('/usr/local/bin', prefix.bin)

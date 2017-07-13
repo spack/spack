@@ -25,15 +25,19 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Cap3(Package):
+    """CAP3 is DNA Sequence Assembly Program"""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "http://seq.cs.iastate.edu/"
+    url      = "http://seq.cs.iastate.edu/CAP3/cap3.linux.x86_64.tar"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('2015-02-11', '5393d937978ecc5f18fcb741140e1f02',
+            url='http://seq.cs.iastate.edu/CAP3/cap3.linux.x86_64.tar')
 
-    depends_on('libgtextutils')
-
-    conflicts('%gcc@7.1.0:')
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('cap3', prefix.bin)
+        install('formcon', prefix.bin)
+        mkdirp(prefix.doc)
+        install('doc', prefix.doc)
+        install('aceform', prefix.doc)

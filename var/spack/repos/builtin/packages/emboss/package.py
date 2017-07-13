@@ -25,15 +25,16 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Emboss(AutotoolsPackage):
+    """EMBOSS is a free Open Source software analysis package specially
+       developed for the needs of the molecular biology (e.g. EMBnet) user
+       community"""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "http://emboss.sourceforge.net/"
+    url      = "ftp://emboss.open-bio.org/pub/EMBOSS/EMBOSS-6.6.0.tar.gz"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('6.6.0', 'cc3fca80cb0618deb10fa0d29fe90e4b')
 
-    depends_on('libgtextutils')
-
-    conflicts('%gcc@7.1.0:')
+    depends_on('libxpm')
+    depends_on('libgd')
+    depends_on('postgresql')

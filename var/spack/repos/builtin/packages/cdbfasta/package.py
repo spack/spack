@@ -25,15 +25,15 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Cdbfasta(MakefilePackage):
+    """Fast indexing and retrieval of fasta records from flat file databases"""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "https://github.com/gpertea/cdbfasta"
+    url      = "https://github.com/gpertea/cdbfasta"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('2017-03-16', git='https://github.com/gpertea/cdbfasta.git', commit='b3e481fe02dfbc767a3842bcb1b687c60376a5e8')
 
-    depends_on('libgtextutils')
-
-    conflicts('%gcc@7.1.0:')
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('cdbfasta', prefix.bin)
+        install('cdbyank', prefix.bin)

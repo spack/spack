@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,15 +25,31 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Clfft(CMakePackage):
+    """a software library containing FFT functions written in OpenCL"""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "https://github.com/clMathLibraries/clFFT"
+    url      = "https://github.com/clMathLibraries/clFFT/archive/v2.12.2.tar.gz"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    @property
+    def root_cmakelists_dir(self):
+        return join_path(self.stage.source_path, 'src')
 
-    depends_on('libgtextutils')
+    version('2.12.2', '9104d85f9f2f3c58dd8efc0e4b06496f')
 
-    conflicts('%gcc@7.1.0:')
+    variant('client', default=True,
+            description='build client and callback client')
+
+    depends_on('opencl@1.2:')
+    depends_on('boost@1.33.0:', when='+client')
+
+    def cmake_args(self):
+        spec = self.spec
+
+        args = [
+            '-DBUILD_CLIENT:BOOL={0}'.format((
+                'ON' if '+client' in spec else 'OFF')),
+            '-DBUILD_CALLBACK_CLIENT:BOOL={0}'.format((
+                'ON' if '+client' in spec else 'OFF'))
+        ]
+        return args

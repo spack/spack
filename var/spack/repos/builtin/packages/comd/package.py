@@ -22,18 +22,35 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+import shutil
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Comd(MakefilePackage):
+    """CoMD is a reference implementation of classical molecular dynamics
+    algorithms and workloads as used in materials science. It is created and
+    maintained by The Exascale Co-Design Center for Materials in Extreme
+    Environments (ExMatEx). The code is intended to serve as a vehicle for
+    co-design by allowing others to extend and/or reimplement it as needed to
+    test performance of new architectures, programming models, etc. New
+    versions of CoMD will be released to incorporate the lessons learned from
+    the co-design process."""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "http://exmatex.github.io/CoMD/"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('master', git='https://github.com/exmatex/CoMD.git',
+            branch='master')
 
-    depends_on('libgtextutils')
+    depends_on('mpi')
 
-    conflicts('%gcc@7.1.0:')
+    build_directory = 'src-mpi'
+
+    def edit(self, spec, prefix):
+        with working_dir('src-mpi'):
+            filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
+                        'Makefile.vanilla')
+            shutil.move('Makefile.vanilla', 'Makefile')
+
+    def install(self, spec, prefix):
+        shutil.move('bin', prefix)

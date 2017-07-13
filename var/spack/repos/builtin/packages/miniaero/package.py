@@ -22,18 +22,41 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Miniaero(MakefilePackage):
+    """Proxy Application. MiniAero is a mini-application for the evaulation
+       of programming models and hardware for next generation platforms.
+    """
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "http://mantevo.org"
+    url      = "https://github.com/Mantevo/miniAero.git"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    tags = ['proxy-app']
 
-    depends_on('libgtextutils')
+    version('2016-11-11', git='https://github.com/Mantevo/miniAero.git',
+            commit='f46d135479a5be19ec5d146ccaf0e581aeff4596')
 
-    conflicts('%gcc@7.1.0:')
+    depends_on('kokkos')
+
+    @property
+    def build_targets(self):
+        targets = [
+            '--directory=kokkos',
+            'CXX=c++',
+            'KOKKOS_PATH={0}'.format(self.spec['kokkos'].prefix)
+        ]
+
+        return targets
+
+    def install(self, spec, prefix):
+        # Manual Installation
+        mkdirp(prefix.bin)
+        mkdirp(prefix.doc)
+
+        install('kokkos/miniAero.host', prefix.bin)
+        install('kokkos/README', prefix.doc)
+        install('kokkos/tests/3D_Sod_Serial/miniaero.inp', prefix.bin)
+        install_tree('kokkos/tests', prefix.doc.tests)

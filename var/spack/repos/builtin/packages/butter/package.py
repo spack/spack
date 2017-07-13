@@ -25,15 +25,22 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Butter(Package):
+    """butter: Bowtie UTilizing iTerative placEment of Repetitive small rnas.
+       A wrapper for bowtie to produce small RNA-seq alignments where
+       multimapped small RNAs tend to be placed near regions of confidently
+       high density."""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "https://github.com/MikeAxtell/butter"
+    url      = "https://github.com/MikeAxtell/butter/archive/v0.3.3.tar.gz"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('0.3.3', '806ff3cb7afc1d8b75126404056c629d')
 
-    depends_on('libgtextutils')
+    depends_on('perl', type=('build', 'run'))
+    depends_on('samtools')
+    depends_on('bowtie')
 
-    conflicts('%gcc@7.1.0:')
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('butter', prefix.bin)
+        install('bam2wig', prefix.bin)

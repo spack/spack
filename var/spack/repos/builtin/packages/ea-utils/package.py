@@ -25,15 +25,27 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class EaUtils(MakefilePackage):
+    """Command-line tools for processing biological sequencing data. Barcode
+       demultiplexing, adapter trimming, etc. Primarily written to support an
+       Illumina based pipeline - but should work with any FASTQs."""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "http://expressionanalysis.github.io/ea-utils/"
+    url = "https://github.com/ExpressionAnalysis/ea-utils/archive/1.04.807.tar.gz"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('1.04.807', '5972b9f712920603b7527f46c0063a09')
 
-    depends_on('libgtextutils')
+    depends_on('subversion')
+    depends_on('zlib')
+    depends_on('gsl')
+    depends_on('bamtools')
+    # perl module required for make check, which is included in the default
+    # target
+    depends_on('perl', type='build')
 
-    conflicts('%gcc@7.1.0:')
+    build_directory = 'clipper'
+
+    def edit(self, spec, prefix):
+        with working_dir('clipper'):
+            makefile = FileFilter('Makefile')
+            makefile.filter('/usr', prefix)

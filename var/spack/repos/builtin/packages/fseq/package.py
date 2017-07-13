@@ -25,15 +25,17 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Fseq(Package):
+    """F-Seq: A Feature Density Estimator for High-Throughput Sequence Tags"""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "http://fureylab.web.unc.edu/software/fseq/"
+    url      = "http://fureylab.med.unc.edu/fseq/fseq_1.84.tgz"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('1.84', 'f9124ad0f45c60f3a7eb74dde8c945b9')
 
-    depends_on('libgtextutils')
+    depends_on('jdk', type=('build', 'run'))
 
-    conflicts('%gcc@7.1.0:')
+    def install(self, spec, prefix):
+        install_tree('bin', prefix.bin)
+        install_tree('lib', prefix.lib)
+        install('mapviewToBed.pl', prefix.bin)

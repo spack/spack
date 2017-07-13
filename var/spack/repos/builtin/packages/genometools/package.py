@@ -21,19 +21,25 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+#############################################################################
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Genometools(MakefilePackage):
+    """genometools is a free collection of bioinformatics tools (in the realm
+       of genome informatics) combined into a single binary named gt."""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "http://genometools.org/"
+    url      = "http://genometools.org/pub/genometools-1.5.9.tar.gz"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('1.5.9', 'e400d69092f9f13db09b33f9dea39d2e')
 
-    depends_on('libgtextutils')
+    depends_on('perl', type=('build', 'run'))
+    depends_on('cairo')
+    depends_on('pango')
 
+    # build fails with gcc 7"
     conflicts('%gcc@7.1.0:')
+
+    def install(self, spec, prefix):
+        make('install', 'prefix=%s' % prefix)

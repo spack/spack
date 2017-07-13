@@ -25,15 +25,23 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Tophat(AutotoolsPackage):
+    """Spliced read mapper for RNA-Seq."""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "http://ccb.jhu.edu/software/tophat/index.shtml"
+    url      = "https://github.com/infphilo/tophat/archive/v2.1.1.tar.gz"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('2.1.1', 'ffd18de2f893a95eb7e9d0c5283d241f')
 
-    depends_on('libgtextutils')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
 
-    conflicts('%gcc@7.1.0:')
+    depends_on('boost@1.47:')
+    depends_on('bowtie2', type='run')
+
+    parallel = False
+
+    def configure_args(self):
+        return ["--with-boost={0}".format(self.spec['boost'].prefix)]

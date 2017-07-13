@@ -25,15 +25,33 @@
 from spack import *
 
 
-class FastxToolkit(AutotoolsPackage):
-    """The FASTX-Toolkit is a collection of command line tools for
-       Short-Reads FASTA/FASTQ files preprocessing."""
+class Exabayes(AutotoolsPackage):
+    """ExaBayes is a software package for Bayesian tree inference. It is
+       particularly suitable for large-scale analyses on computer clusters."""
 
-    homepage = "http://hannonlab.cshl.edu/fastx_toolkit/"
-    url      = "https://github.com/agordon/fastx_toolkit/releases/download/0.0.14/fastx_toolkit-0.0.14.tar.bz2"
+    homepage = "https://sco.h-its.org/exelixis/web/software/exabayes/"
+    url      = "https://sco.h-its.org/exelixis/resource/download/software/exabayes-1.5.tar.gz"
 
-    version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
+    version('1.5', '6a734777b8f8eff0a520306500c8c419')
 
-    depends_on('libgtextutils')
+    variant('mpi', default=True, description='Enable MPI parallel support')
 
-    conflicts('%gcc@7.1.0:')
+    depends_on('mpi', when='+mpi')
+
+    # ExaBayes manual states the program succesfully compiles with GCC, version
+    # 4.6 or greater, and Clang, version 3.2 or greater. The build fails when
+    # GCC 7.1.0 is used.
+    conflicts('%gcc@:4.5.4, 7.1.0:')
+    conflicts('%clang@:3.1')
+    conflicts('^intel-mpi', when='+mpi')
+    conflicts('^intel-parallel-studio+mpi', when='+mpi')
+    conflicts('^mvapich2', when='+mpi')
+    conflicts('^spectrum-mpi', when='+mpi')
+
+    def configure_args(self):
+        args = []
+        if '+mpi' in self.spec:
+            args.append('--enable-mpi')
+        else:
+            args.append('--disable-mpi')
+        return args
