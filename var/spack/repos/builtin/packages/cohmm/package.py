@@ -39,7 +39,7 @@ class Cohmm(MakefilePackage):
     url = "https://github.com/exmatex/CoHMM/archive/sad.tar.gz"
 
     version('develop', git='https://github.com/exmatex/CoHMM.git',
-            branch='sad', description='Sad Branch')
+            branch='sad')
 
     variant('serial', default=True, description='Serial Build')
     variant('openmp', default=True, description='Build with OpenMP Support')
