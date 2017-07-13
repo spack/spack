@@ -66,6 +66,7 @@ section_descriptions = {
     'admin':       'administration',
     'basic':       'query packages',
     'build':       'build packages',
+    'caching':     'build caching',
     'config':      'configuration',
     'developer':   'developer',
     'environment': 'environment',
@@ -229,7 +230,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
   spack help <command>   help on a specific command
   spack help --spec      help on the spec syntax
   spack docs             open http://spack.rtfd.io/ in a browser"""
-.format(help=section_descriptions['help']))
+                           .format(help=section_descriptions['help']))
 
         # determine help from format above
         return formatter.format_help()
