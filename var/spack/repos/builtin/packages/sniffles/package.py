@@ -33,4 +33,10 @@ class Sniffles(CMakePackage):
 
     version('1.0.5', 'c2f2350d00418ba4d82c074e7f0b1832')
 
-    # FIXME: Still need to actually install the binaries
+    # the build process doesn't actually install anything, do it by hand
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        src = "bin/sniffles-core-{0}".format(spec.version.dotted)
+        binaries = ['sniffles', 'sniffles-debug']
+        for b in binaries:
+            install(join_path(src, b), join_path(prefix.bin, b))
