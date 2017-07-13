@@ -38,43 +38,43 @@ class Clamr(CMakePackage):
     version('master', git='https://github.com/lanl/CLAMR.git')
 
     variant(
-        'nographics', default=False,
-        description='Build without graphics')
+        'graphics', default='opengl',
+        values=('opengl', 'mpe', 'none'),
+        description='Build with specified graphics support')
     variant(
-        'opengl', default=True,
-        description='Build with OpenGL or MPE')
-    variant('debug', default=False, description='Debugging enabled')
-    variant('release', default=False, description='Release version')
-    variant('full', default=False, description='full double precision')
+        'build', default='RelWithDebInfo',
+        values=('Debug', 'Release', 'RelWithDebInfo'),
+        description='Build type')
     variant(
-        'mixed', default=False,
-        description='intermediates double, arrays single precision')
-    variant('single', default=False, description='single precision')
+        'precision', default='mixed',
+        values=('single', 'mixed', 'full'),
+        description='single, mixed, or full double precision values')
 
     depends_on('mpi')
-    depends_on('mpe', when='-opengl')
+    depends_on('mpe', when='graphics=mpe')
 
     def build_type(self):
-        if '+debug' in self.spec:
+        if 'build=Debug':
             return 'Debug'
-        if '+release' in self.spec:
+        elif 'build=Release':
             return 'Release'
-        return 'RelWithDebInfo'
+        else:
+            return 'RelWithDebInfo'
 
     def cmake_args(self):
         cmake_args = []
-        if '+nographics' in self.spec:
+        if 'graphics=none':
             cmake_args.append('-DGRAPHICS_TYPE=None')
-        elif '-opengl' in self.spec:
+        elif 'graphics=mpe':
             cmake_args.append('-DGRAPHICS_TYPE=MPE')
         else:
             cmake_args.append('-DGRAPHICS_TYPE=OpenGL')
 
-        if '+full' in self.spec:
+        if 'precision=full':
             cmake_args.append('-DPRECISION_TYPE=full_precision')
-        if '+single' in self.spec:
+        elif 'precision=single':
             cmake_args.append('-DPRECISION_TYPE=minimum_precision')
-        if '+mixed' in self.spec:
+        else:
             cmake_args.append('-DPRECISION_TYPE=mixed_precision')
 
         # if MIC, then -DMIC_NATIVE=yes
