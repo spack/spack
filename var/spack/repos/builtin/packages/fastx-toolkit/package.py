@@ -35,3 +35,5 @@ class FastxToolkit(AutotoolsPackage):
     version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
 
     depends_on('libgtextutils')
+
+    conflicts('%gcc@7.1.0:')

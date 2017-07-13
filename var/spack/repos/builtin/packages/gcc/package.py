@@ -41,6 +41,7 @@ class Gcc(AutotoolsPackage):
     list_depth = 1
 
     version('7.1.0', '6bf56a2bca9dac9dbbf8e8d1036964a8')
+    version('6.4.0', '11ba51a0cfb8471927f387c8895fe232')
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
@@ -73,6 +74,9 @@ class Gcc(AutotoolsPackage):
     variant('piclibs',
             default=False,
             description='Build PIC versions of libgfortran.a and libstdc++.a')
+    variant('strip',
+            default=False,
+            description='Strip executables to reduce installation size')
     variant('rpathlibgcc',
             default=False,
             description='Apply patch to set libgcc_s.dylib Mach-O ID to' +
@@ -162,6 +166,15 @@ class Gcc(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
+    def url_for_version(self, version):
+        url = 'http://ftp.gnu.org/gnu/gcc/gcc-{0}/gcc-{0}.tar.{1}'
+        suffix = 'bz2'
+
+        if version >= Version('6.4.0') and version < Version('7.1.0'):
+            suffix = 'xz'
+
+        return url.format(version, suffix)
+
     def patch(self):
         spec = self.spec
         prefix = self.spec.prefix
@@ -249,6 +262,12 @@ class Gcc(AutotoolsPackage):
         if sys.platform == 'darwin':
             return ['bootstrap']
         return []
+
+    @property
+    def install_targets(self):
+        if '+strip' in self.spec:
+            return ['install-strip']
+        return ['install']
 
     @property
     def spec_dir(self):

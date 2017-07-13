@@ -198,8 +198,8 @@ class Openmpi(AutotoolsPackage):
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
 
     def url_for_version(self, version):
-        return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (
-            version.up_to(2), version)
+        url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
+        return url.format(version.up_to(2), version)
 
     @property
     def libs(self):

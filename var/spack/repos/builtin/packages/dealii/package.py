@@ -113,8 +113,8 @@ class Dealii(CMakePackage):
     depends_on("hdf5+mpi",         when='+hdf5+mpi')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
-    depends_on("metis@5:+int64",   when='+metis+int64')
-    depends_on("metis@5:~int64",   when='+metis~int64')
+    depends_on("metis@5:+int64+real64",   when='+metis+int64')
+    depends_on("metis@5:~int64+real64",   when='+metis~int64')
     depends_on("netcdf+mpi",       when="+netcdf+mpi")
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
