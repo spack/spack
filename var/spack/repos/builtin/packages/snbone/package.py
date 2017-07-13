@@ -33,17 +33,14 @@ class Snbone(MakefilePackage):
     homepage = "https://github.com/ANL-CESAR/"
     url = "https://github.com/ANL-CESAR/SNbone.git"
 
-    version('master', git='https://github.com/ANL-CESAR/SNbone.git')
+    version('develop', git='https://github.com/ANL-CESAR/SNbone.git')
 
     depends_on('metis')
 
     def edit(self, spec, prefix):
-
         working_dirs = ['src_c', 'src_fortran', 'src_makemesh',
                         'src_processmesh']
-
         for wdir in working_dirs:
-
             with working_dir(wdir, create=False):
                 if self.compiler.name == 'gcc' and wdir == 'src_processmesh':
                     make('COMPILER=gfortran', 'METISLIB={0}'
@@ -51,24 +48,20 @@ class Snbone(MakefilePackage):
                 else:
                     make('COMPILER=gfortran', 'LDFLAGS={0}'.format('-lm'))
 
-                if self.compiler.name == 'mpixlf90_r':
-                    make('COMPILER=bgq', 'LDFLAGS={0}'.format('-lm'))
-                if self.compiler.name == 'icc':
+                if self.compiler.name == 'xl':
+                    make('COMPILER={0}.format(spec[mpi].mpixlf90_r)', 'LDFLAGS={0}'.format('-lm'))
+                if self.compiler.name == 'intel':
                     make('COMPILER=intel', 'LDFLAGS={0}'.format('-lm'))
 
     def build(self, spec, prefix):
         pass
 
     def install(self, spec, prefix):
-
         dirs = ['/C', '/Fortran', '/MakeMesh', '/ProcessMesh']
-
         files = ['SNaCFE.x', '../src_fortran/SNaCFE.x',
                  '../src_makemesh/makemesh.x',
                  '../src_processmesh/processmesh.x']
-
         mkdir(prefix.bin)
-
         for idx, dir in enumerate(dirs):
             with working_dir('src_c', create=False):
                 mkdir(prefix.bin + dir)
