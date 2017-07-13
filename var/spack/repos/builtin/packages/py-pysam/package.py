@@ -35,5 +35,5 @@ class PyPysam(PythonPackage):
     version('0.11.2.2', '56230cd5f55b503845915b76c22d620a')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython@0.24.1:', type='build')
+    depends_on('py-cython@0.21:', type='build')
     depends_on('bcftools')
