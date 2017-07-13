@@ -123,6 +123,8 @@ class Trilinos(CMakePackage):
             description='Compile with Amesos')
     variant('amesos2',      default=True,
             description='Compile with Amesos2')
+    variant('anasazi',       default=True,
+            description='Compile with Anasazi')
     variant('ifpack',       default=True,
             description='Compile with Ifpack')
     variant('ifpack2',      default=True,
@@ -305,6 +307,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+gtest' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Teuchos:BOOL=%s' % (
                 'ON' if '+teuchos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
+                'ON' if '+anasazi' in spec else 'OFF'),
         ])
 
         if '+xsdkflags' in spec:
