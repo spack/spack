@@ -29,7 +29,7 @@ class PyPy2bit(PythonPackage):
     """A package for accessing 2bit files using lib2bit."""
 
     homepage = "https://pypi.python.org/pypi/py2bit"
-    url      = "https://pypi.python.org/packages/b2/ad/72d0d1cf2a588d9d2b16f5e531063aa33d1c80bf424e810fc1dfe5c5dc72/py2bit-0.2.1.tar.gz#md5=eaf5b1c80a0bbf0b35af1f002f83a556"
+    url      = "https://pypi.io/packages/source/p/py2bit/py2bit-0.2.1.tar.gz"
 
     version('0.2.1', 'eaf5b1c80a0bbf0b35af1f002f83a556')
 

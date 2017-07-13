@@ -29,9 +29,9 @@ class PyPybigwig(PythonPackage):
     """A package for accessing bigWig files using libBigWig."""
 
     homepage = "https://pypi.python.org/pypi/pyBigWig"
-    url      = "https://pypi.python.org/packages/4d/7c/911e92392cf2d70d1a0da8fbb95be1e203f3cf9f858e030e98d4882c9ec7/pyBigWig-0.3.4.tar.gz#md5=8e0a91e26e87eeaa071408a3a749bfa9"
+    url      = "https://pypi.io/packages/source/p/pyBigWig/pyBigWig-0.3.4.tar.gz"
 
     version('0.3.4', '8e0a91e26e87eeaa071408a3a749bfa9')
 
     depends_on('py-setuptools', type='build')
-    depends_on('curl', type='build')
+    depends_on('curl', type=('build', 'run'))

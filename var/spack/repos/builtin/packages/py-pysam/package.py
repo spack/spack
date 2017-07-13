@@ -30,11 +30,10 @@ class PyPysam(PythonPackage):
        sets."""
 
     homepage = "https://pypi.python.org/pypi/pysam"
-    url      = "https://pypi.python.org/packages/a4/1b/b6dfd92aea876647d20d9a8bd8618e4f2af6300539426be83c8bb0912d6f/pysam-0.11.2.2.tar.gz#md5=56230cd5f55b503845915b76c22d620a"
+    url      = "https://pypi.io/packages/source/p/pysam/pysam-0.11.2.2.tar.gz"
 
     version('0.11.2.2', '56230cd5f55b503845915b76c22d620a')
 
-    depends_on('python', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython@0.24.1:', type=('build', 'run'))
+    depends_on('py-cython@0.24.1:', type='build')
     depends_on('bcftools')
