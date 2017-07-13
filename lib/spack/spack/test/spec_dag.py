@@ -733,15 +733,8 @@ class TestSpecDag(object):
         assert s['d']._dependencies['e'].deptypes == ('build', 'link')
         assert s['e']._dependencies['f'].deptypes == ('run',)
 
-        assert s['b']._dependencies['c'].deptypes == ('build',)
-        assert s['d']._dependencies['e'].deptypes == ('build', 'link')
-        assert s['e']._dependencies['f'].deptypes == ('run',)
-
-        assert s['c']._dependents['b'].deptypes == ('build',)
-        assert s['e']._dependents['d'].deptypes == ('build', 'link')
-        assert s['f']._dependents['e'].deptypes == ('run',)
-
-        assert s['c']._dependents['b'].deptypes == ('build',)
+        c_spec = s['b']._dependencies['c'].spec
+        assert c_spec._dependents['b'].deptypes == ('build',)
         assert s['e']._dependents['d'].deptypes == ('build', 'link')
         assert s['f']._dependents['e'].deptypes == ('run',)
 

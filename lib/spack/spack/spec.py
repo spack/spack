@@ -984,19 +984,13 @@ class DependencyConstraints(object):
         if spec:
             context = {}
 
-            build_only = set()
-            if not spec.virtual:
-                pkg = spack.repo.get(spec.fullname)
-                for dep_name in pkg.dependencies:
-                    deptypes = pkg.dependency_types[dep_name]
-                    if set(deptypes) == set(['build']):
-                        build_only.add(dep_name)
-
-            for dep in spec.traverse(root=False, deptype=('link', 'run')):
+            for dep in spec.traverse(
+                    root=False, deptype=('link', 'run', 'include')):
                 context[dep.name] = resolve(dep)
             for dep in spec.dependencies(deptype='build'):
-                if dep.name in build_only:
-                    for trans_dep in dep.traverse(deptype=('link', 'run')):
+                if dep.name not in context:
+                    for trans_dep in dep.traverse(
+                            deptype=('link', 'run', 'include')):
                         context[trans_dep.name] = resolve(trans_dep)
         else:
             context = {}
@@ -1016,7 +1010,7 @@ class DependencyConstraints(object):
                 context[spec.name] = spec
 
     def update_transitive(self, spec):
-        for x in spec.traverse(deptype=('link', 'run')):
+        for x in spec.traverse(deptype=('link', 'run', 'include')):
             self.update(x)
 
     def get(self, name):
@@ -2609,14 +2603,26 @@ class Spec(object):
             csv = query_parameters.pop().strip()
             query_parameters = re.split(r'\s*,\s*', csv)
 
+        build_only = (set(self.dependencies()) - 
+                      set(self.dependencies(
+                          deptype=('link', 'run', 'include'))))
+        search_deps = itertools.chain.from_iterable(
+            x.traverse(deptype=('link', 'run', 'include')) for x in build_only)
+        search_deps = itertools.chain(
+            self.traverse(deptype=('link', 'run', 'include')),
+            search_deps)
+
+        value = None
+        iterated = list()        
+        for x in search_deps:
+            if x.name == name:
+                value = x
+                break
+            iterated.append(x)
         try:
-            value = next(
-                itertools.chain(
-                    # Regular specs
-                    (x for x in self.traverse() if x.name == name),
-                    (x for x in self.traverse()
-                     if (not x.virtual) and x.package.provides(name))
-                )
+            value = value or next(
+                x for x in iterated if
+                (not x.virtual) and x.package.provides(name)
             )
         except StopIteration:
             raise KeyError("No spec with name %s in %s" % (name, self))
