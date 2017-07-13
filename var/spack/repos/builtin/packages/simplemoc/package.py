@@ -39,15 +39,17 @@ class Simplemoc(MakefilePackage):
 
     version('1.0', 'd8827221a4ae76e9766a32e16d143e60')
 
-    build_targets = ['--directory=src']
-
-    def edit(self, spec, prefix):
-
+    @property
+    def build_targets(self):
+        targets = ['--directory=src']
         if self.compiler.name == 'gcc':
-            self.build_targets.extend(['COMPILER=gnu'])
+            targets.append('COMPILER=gnu')
+        elif self.compiler.name == 'intel':
+            targets.append('COMPILER=intel')
+        else:
+            raise InstallError('{0} is an invalid compiler'.format(self.compiler.name))
 
-        if self.compiler.name == 'icc':
-            self.build_targets.extend(['COMPILER=intel'])
+        return targets
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
