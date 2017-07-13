@@ -44,6 +44,8 @@ class Ncurses(AutotoolsPackage):
 
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
+    variant("shared", default=True,
+            description="Enable shared libs")
 
     depends_on('pkg-config', type='build')
 
@@ -54,8 +56,6 @@ class Ncurses(AutotoolsPackage):
         opts = [
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag),
-            '--with-shared',
-            '--with-cxx-shared',
             '--enable-overwrite',
             '--without-ada',
             '--enable-pc-files',
@@ -70,6 +70,10 @@ class Ncurses(AutotoolsPackage):
 
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')
+        if "+shared" in self.spec:
+            opts.append("--with-shared")
+            opts.append("--with-cxx-shared")
+
 
         prefix = '--prefix={0}'.format(prefix)
 
