@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import shutil
-import glob
 
 
 class Cosp2(MakefilePackage):
@@ -33,41 +32,42 @@ class Cosp2(MakefilePackage):
         tructure theory. The algorithm is based on a recursive second-order
         Fermi-Operator expansion method (SP2) and is tailored for density
         functional based tight-binding calculations of non-metallic systems
-        tags : proxy-app
+        tags = proxy-app
     """
     tags = ['proxy-app']
-    homepage = "http://www.exmatex.org/cosp2.html"
 
+    homepage = "http://www.exmatex.org/cosp2.html"
     url = "https://github.com/exmatex/CoSP2/archive/master.tar.gz"
+
     version('master', git='https://github.com/exmatex/CoSP2.git',
             description='master')
 
-    variant('precision', default=True,
-            description='Flag to hold Precesion Status')
+    variant('double', default=True,
+            description='Flag to hold Precesion Status(ON/OFF)')
     variant('serial', default=True, description='Serial Build')
-    variant('parallel', default=True, description='Build with MPI Support')
+    variant('mpi', default=True, description='Build with MPI Support')
 
-    depends_on('mpi', when='+parallel')
+    depends_on('mpi', when='+mpi')
 
     build_directory = 'src-mpi'
 
     def edit(self, spec, prefix):
-        with working_dir('src-mpi'):
-            filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                        'Makefile.vanilla')
-            if '+precision' in spec:
-                filter_file('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF',
+        if '+mpi' in spec:
+            with working_dir('src-mpi'):
+                filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
                             'Makefile.vanilla')
-            shutil.copy('Makefile.vanilla', 'Makefile')
+        else:
+            with working_dir('src-mpi'):
+                filter_file(r'^CC\s*=.*', 'CC = gcc', 'Makefile.vanilla')
+        if '+double' in spec:
+            filter_file('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF',
+                        'src-mpi/Makefile.vanilla')
+        shutil.copy('src-mpi/Makefile.vanilla', 'src-mpi/Makefile')
 
     def install(self, spec, prefix):
-        shutil.move('bin', prefix)
-        mkdirp(prefix.examples)
-        mkdirp(prefix.pots)
-        mkdirp(prefix.doc)
+        install_tree('bin/', prefix.bin)
+        install_tree('examples/', prefix.examples)
+        install_tree('doc/', prefix.doc)
+        install('src-mpi/Doxyfile', prefix.doc)
         install('README.md', prefix.doc)
         install('LICENSE.md', prefix.doc)
-        for files in glob.glob('examples/*.*'):
-            install(files, prefix.examples)
-        for files in glob.glob('pots/*.*'):
-            install(files, prefix.examples)
