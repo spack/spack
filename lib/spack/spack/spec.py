@@ -2625,15 +2625,20 @@ class Spec(object):
         return value
 
     def visible_dependencies(self):
+        visited = set()
+        for dep in self.traverse(
+                root=False, deptype=('link', 'run', 'include')):
+            visited.add(dep)
+            yield dep
         build_only = (set(self.dependencies()) -
                       set(self.dependencies(
                           deptype=('link', 'run', 'include'))))
-        visible = itertools.chain.from_iterable(
+        visible_build_deps = itertools.chain.from_iterable(
             x.traverse(deptype=('link', 'run', 'include')) for x in build_only)
-        visible = itertools.chain(
-            self.traverse(root=False, deptype=('link', 'run', 'include')),
-            visible)
-        return visible
+        for dep in visible_build_deps:
+            if dep not in visited:
+                visited.add(dep)
+                yield dep
 
     def __contains__(self, spec):
         """True if this spec satisfies the provided spec, or if any dependency
@@ -2648,7 +2653,7 @@ class Spec(object):
 
     def sorted_deps(self):
         """Return a list of all dependencies sorted by name."""
-        deps = dict((x.name, x) for x in self.traverse(root=False))
+        deps = dict((x.name, x) for x in self.visible_dependencies())
         return tuple(deps[name] for name in sorted(deps))
 
     def _eq_dag(self, other, vs, vo, deptypes):
