@@ -2640,7 +2640,7 @@ class Spec(object):
            does.  If the spec has no name, then we parse this one first.
         """
         spec = self._autospec(spec)
-        for s in self.traverse():
+        for s in itertools.chain([self], self.visible_dependencies()):
             if s.satisfies(spec, strict=True):
                 return True
 
