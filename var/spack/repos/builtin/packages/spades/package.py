@@ -35,7 +35,6 @@ class Spades(CMakePackage):
     version('3.10.1', 'dcab7d145af81b59cc867562f27536c3')
 
     depends_on('python', type=('build', 'run'))
-    depends_on('cmake', type='build')
     depends_on('zlib')
     depends_on('bzip2')
 
