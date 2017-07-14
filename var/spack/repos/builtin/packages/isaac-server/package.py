@@ -49,5 +49,5 @@ class IsaacServer(CMakePackage):
     depends_on('libjpeg-turbo', type='link')
     depends_on('jansson', type='link')
     depends_on('boost@1.56:', type='link')
-    depends_on('libwebsockets', type='link')
+    depends_on('libwebsockets@2.1.1:', type='link')
     # depends_on('gstreamer@1.0', when='+gstreamer')
