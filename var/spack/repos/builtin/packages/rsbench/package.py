@@ -35,11 +35,10 @@ class Rsbench(MakefilePackage):
 
     variant('pgi', default=False, description='Build with PGI.')
 
-    depends_on('pgi', when='+pgi')
+    depends_on('pgi', when='%pgi')
 
     version('2', '15a3ac5ea72529ac1ed9ed016ee68b4f')
     version('0', '3427634dc5e7cd904d88f9955b371757')
-
 
     @property
     def build_targets(self):
@@ -48,15 +47,20 @@ class Rsbench(MakefilePackage):
             '--directory=src'
         ]
 
+        if '%gcc' in self.spec:
+            targets.append('COMPILER=gnu')
+
         if '%intel' in self.spec:
             targets.append('COMPILER=intel')
 
         if '%pgi' in self.spec:
             targets.append('COMPILER=pgi')
-            targets.append('CC={0}'.format(self.spec['pgi'].pgcc))
+            targets.append(
+                'CC={0}'.format(self.spec['pgi'].pgcc)
+            )
 
         return targets
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        make('src/rsbench', prefix.bin)
+        install('src/rsbench', prefix.bin)
