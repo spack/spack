@@ -40,9 +40,13 @@ class Cloverleaf(MakefilePackage):
     version('1.1', '65652b30a64eb237ec844a6fdd4cd518')
 
     variant('build', default='ref', description='Type of Parallelism Build',
-            values=('cuda', 'mpi', 'openacc_cray', 'openmp', 'ref', 'serial'))
+            values=('cuda', 'mpi_only', 'openacc_cray',
+                    'openmp_only', 'ref', 'serial'))
 
-    depends_on('mpi')
+    depends_on('mpi', when='build=cuda')
+    depends_on('mpi', when='build=mpi_only')
+    depends_on('mpi', when='build=openacc_cray')
+    depends_on('mpi', when='build=ref')
     depends_on('cuda', when='build=cuda')
 
     @property
@@ -51,11 +55,11 @@ class Cloverleaf(MakefilePackage):
 
         if 'build=cuda' in self.spec:
             build = 'CUDA'
-        elif 'build=mpi' in self.spec:
+        elif 'build=mpi_only' in self.spec:
             build = 'MPI'
         elif 'build=openacc_cray' in self.spec:
             build = 'OpenACC_CRAY'
-        elif 'build=openmp' in self.spec:
+        elif 'build=openmp_only' in self.spec:
             build = 'OpenMP'
         elif 'build=serial' in self.spec:
             build = 'Serial'
@@ -64,11 +68,14 @@ class Cloverleaf(MakefilePackage):
 
     @property
     def build_targets(self):
-        targets = [
-            'MPI_COMPILER={0}'.format(self.spec['mpi'].mpifc),
-            'C_MPI_COMPILER={0}'.format(self.spec['mpi'].mpicc),
-            '--directory=CloverLeaf_{0}'.format(self.type_of_build)
-        ]
+        targets = ['--directory=CloverLeaf_{0}'.format(self.type_of_build)]
+
+        if 'mpi' in self.spec:
+            targets.append('MPI_COMPILER={0}'.format(self.spec['mpi'].mpifc))
+            targets.append('C_MPI_COMPILER={0}'.format(self.spec['mpi'].mpicc))
+        else:
+            targets.append('MPI_COMPILER=f90')
+            targets.append('C_MPI_COMPILER=cc')
 
         if '%gcc' in self.spec:
             targets.append('COMPILER=GNU')
@@ -96,7 +103,6 @@ class Cloverleaf(MakefilePackage):
         install('CloverLeaf_{0}/clover.in'.format(self.type_of_build),
                 prefix.bin)
 
-        # Only Install '.in' Files in Directory
         for f in glob.glob(
                 'CloverLeaf_{0}/*.in'.format(self.type_of_build)):
             install(f, prefix.doc.tests)
