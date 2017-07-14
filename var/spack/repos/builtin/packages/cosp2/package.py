@@ -27,13 +27,13 @@ import shutil
 
 
 class Cosp2(MakefilePackage):
-    """ Proxy Application. CoSP2 represents a sparse linear algebra
+    """Proxy Application. CoSP2 represents a sparse linear algebra
         parallel algorithm for calculating the density matrix in electronic
         tructure theory. The algorithm is based on a recursive second-order
         Fermi-Operator expansion method (SP2) and is tailored for density
-        functional based tight-binding calculations of non-metallic systems
-        tags = proxy-app
+        functional based tight-binding calculations of non-metallic systems.
     """
+
     tags = ['proxy-app']
 
     homepage = "http://www.exmatex.org/cosp2.html"
@@ -43,8 +43,7 @@ class Cosp2(MakefilePackage):
             description='master')
 
     variant('double', default=True,
-            description='Flag to hold Precesion Status(ON/OFF)')
-    variant('serial', default=True, description='Serial Build')
+            description='Build with double precision.')
     variant('mpi', default=True, description='Build with MPI Support')
 
     depends_on('mpi', when='+mpi')
@@ -52,12 +51,11 @@ class Cosp2(MakefilePackage):
     build_directory = 'src-mpi'
 
     def edit(self, spec, prefix):
-        if '+mpi' in spec:
-            with working_dir('src-mpi'):
+        with working_dir('src-mpi'):
+            if '+mpi' in spec:
                 filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                            'Makefile.vanilla')
-        else:
-            with working_dir('src-mpi'):
+                                'Makefile.vanilla')
+            else:
                 filter_file(r'^CC\s*=.*', 'CC = gcc', 'Makefile.vanilla')
         if '+double' in spec:
             filter_file('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF',
