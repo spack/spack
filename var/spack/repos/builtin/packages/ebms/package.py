@@ -35,7 +35,7 @@ class Ebms(MakefilePackage):
        and tracking nodes.    Memory nodes do not participate in particle
        tracking. Obviously, there is a lot of resource waste in this design."""
 
-    homepage = "http://www.example.com"
+    homepage = "https://github.com/ANL-CESAR/EBMS"
     url = "https://github.com/ANL-CESAR/EBMS/archive/master.tar.gz"
 
     version('develop', git='https://github.com/ANL-CESAR/EBMS.git')
