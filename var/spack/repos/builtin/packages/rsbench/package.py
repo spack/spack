@@ -28,8 +28,9 @@ from spack import *
 
 class Rsbench(MakefilePackage):
     """A mini-app to represent the multipole resonance representation lookup
-       cross section algorithm."""
-
+       cross section algorithm.
+       tags: proxy-app, proxy application"""
+    
     homepage = "https://github.com/ANL-CESAR/RSBench"
     url = "https://github.com/ANL-CESAR/RSBench/archive/v2.tar.gz"
 
