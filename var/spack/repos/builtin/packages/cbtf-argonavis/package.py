@@ -51,8 +51,8 @@ class CbtfArgonavis(Package):
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
     # Mirror access template example
-    #url = "file:/home/jeg/cbtf-argonavis-1.8.1.tar.gz"
-    #version('1.8.1', 'b63db444fff92370a88197882a8d54d0')
+    # url = "file:/home/jeg/cbtf-argonavis-1.8.1.tar.gz"
+    # version('1.8.1', 'b63db444fff92370a88197882a8d54d0')
 
     version('1.8', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
