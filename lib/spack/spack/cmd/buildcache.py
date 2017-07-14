@@ -124,6 +124,8 @@ def installtarball(args):
 
 def install_tarball(spec, args):
     s = spack.spec.Spec(spec)
+    if args.verify:
+        verify = True
     for d in s.dependencies():
         tty.msg("Installing buildcache for dependency spec %s" % d)
         install_tarball(d, args)
@@ -135,7 +137,7 @@ def install_tarball(spec, args):
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
             spack.binary_distribution.prepare()
-            spack.binary_distribution.extract_tarball(spec, tarball, args)
+            spack.binary_distribution.extract_tarball(spec, tarball, verify)
             spack.binary_distribution.relocate_package(spec)
             spack.store.db.reindex(spack.store.layout)
         else:

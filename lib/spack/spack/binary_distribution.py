@@ -229,8 +229,6 @@ def extract_tarball(spec, filename, verify=False):
     """
     extract binary tarball for given package into install area
     """
-    if arg.verify:
-        verify = True
     installpath = install_directory_name(spec)
     mkdirp(installpath)
     stagepath = os.path.dirname(filename)
