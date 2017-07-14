@@ -38,7 +38,7 @@ class Ebms(MakefilePackage):
     homepage = "http://www.example.com"
     url = "https://github.com/ANL-CESAR/EBMS/archive/master.tar.gz"
 
-    version('master', git='https://github.com/ANL-CESAR/EBMS.git')
+    version('develop', git='https://github.com/ANL-CESAR/EBMS.git')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
