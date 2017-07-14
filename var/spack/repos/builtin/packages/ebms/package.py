@@ -33,7 +33,8 @@ class Ebms(MakefilePackage):
        described in [1], where only one process in a compute node
        is used, and the compute nodes are divided into memory nodes
        and tracking nodes.    Memory nodes do not participate in particle
-       tracking. Obviously, there is a lot of resource waste in this design."""
+       tracking. Obviously, there is a lot of resource waste in this design.
+       tags: proxy-app, proxy application"""
 
     homepage = "https://github.com/ANL-CESAR/EBMS"
     url = "https://github.com/ANL-CESAR/EBMS/archive/master.tar.gz"
