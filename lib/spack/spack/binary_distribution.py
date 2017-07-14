@@ -337,3 +337,26 @@ def get_specs():
                         specs.add(spec)
                         durls[spec].append(link)
     return specs, durls
+
+
+def get_keys(install=False):
+    """
+    Get pgp public keys available on mirror
+    """
+    mirrors = spack.config.get_config('mirrors')
+    if len(mirrors) == 0:
+        tty.die("Please add a spack mirror to allow " +
+                "download of build caches.")
+    for key in mirrors:
+        url = mirrors[key]
+        tty.msg("Finding public keys on %s" % url)
+        p, links = spider(url + "/build_cache")
+        for link in links:
+            if re.search("\.key", link):
+                with Stage(link, name="build_cache", keep=True) as stage:
+                    try:
+                        stage.fetch()
+                    except fs.FetchError:
+                        next
+                if install:
+                    Gpg.trust(stage.save_filename)

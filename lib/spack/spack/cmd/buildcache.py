@@ -75,6 +75,12 @@ def setup_parser(subparser):
         help="specs of packages to search for")
     listcache.set_defaults(func=listspecs)
 
+    dlkeys = subparsers.add_parser('keys')
+    dlkeys.add_argument(
+        '-i', '--install', action='store_true',
+        help="install gpg2 keys pulled from mirror")
+    dlkeys.set_defaults(func=getkeys)
+
 
 def createtarball(args):
     if not args.packages:
@@ -170,6 +176,13 @@ def listspecs(args):
         for spec in sorted(specs):
             tty.msg('run "spack buildcache install /%s" to install  %s\n' %
                     (spec.dag_hash(7), spec.format()))
+
+
+def getkeys(args):
+    install = False
+    if args.install:
+        install = True
+    spack.binary_distribution.get_keys(install)
 
 
 def buildcache(parser, args):
