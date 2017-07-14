@@ -51,8 +51,8 @@ class CbtfArgonavis(Package):
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
     # Mirror access template example
-    # url = "file:/home/jeg/OpenSpeedShop_ROOT/SOURCES/cbtf-argonavis-1.6.tar.gz"
-    # version('1.6', '0fafa0008478405c2c2319450f174ed4')
+    #url = "file:/home/jeg/cbtf-argonavis-1.8.1.tar.gz"
+    #version('1.8.1', 'b63db444fff92370a88197882a8d54d0')
 
     version('1.8', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
@@ -101,39 +101,38 @@ class CbtfArgonavis(Package):
         cmake_prefix_path = join_path(
             spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
 
-        with working_dir('CUDA'):
-            with working_dir('build', create=True):
+        with working_dir('build', create=True):
 
-                cmakeOptions = []
-                cmakeOptions.extend(
-                    ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                     '-DCMAKE_PREFIX_PATH=%s' % cmake_prefix_path,
-                     '-DCUDA_DIR=%s' % spec['cuda'].prefix,
-                     '-DCUDA_INSTALL_PATH=%s' % spec['cuda'].prefix,
-                     '-DCUDA_TOOLKIT_ROOT_DIR=%s' % spec['cuda'].prefix,
-                     '-DCUPTI_DIR=%s' % join_path(
-                         spec['cuda'].prefix + '/extras/CUPTI'),
-                     '-DCUPTI_ROOT=%s' % join_path(
-                         spec['cuda'].prefix + '/extras/CUPTI'),
-                     '-DPAPI_ROOT=%s' % spec['papi'].prefix,
-                     '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
-                     '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
-                     '-DBOOST_ROOT=%s' % spec['boost'].prefix,
-                     '-DBoost_DIR=%s' % spec['boost'].prefix,
-                     '-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib,
-                     '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
-                     '-DBoost_NO_SYSTEM_PATHS=ON'])
+            cmakeOptions = []
+            cmakeOptions.extend(
+                ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
+                 '-DCMAKE_PREFIX_PATH=%s' % cmake_prefix_path,
+                 '-DCUDA_DIR=%s' % spec['cuda'].prefix,
+                 '-DCUDA_INSTALL_PATH=%s' % spec['cuda'].prefix,
+                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % spec['cuda'].prefix,
+                 '-DCUPTI_DIR=%s' % join_path(
+                     spec['cuda'].prefix + '/extras/CUPTI'),
+                 '-DCUPTI_ROOT=%s' % join_path(
+                     spec['cuda'].prefix + '/extras/CUPTI'),
+                 '-DPAPI_ROOT=%s' % spec['papi'].prefix,
+                 '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
+                 '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
+                 '-DBOOST_ROOT=%s' % spec['boost'].prefix,
+                 '-DBoost_DIR=%s' % spec['boost'].prefix,
+                 '-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib,
+                 '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
+                 '-DBoost_NO_SYSTEM_PATHS=ON'])
 
-                # Add in the standard cmake arguments
-                cmakeOptions.extend(std_cmake_args)
+            # Add in the standard cmake arguments
+            cmakeOptions.extend(std_cmake_args)
 
-                # Adjust the standard cmake arguments to what we want the build
-                # type, etc to be
-                self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
+            # Adjust the standard cmake arguments to what we want the build
+            # type, etc to be
+            self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
 
-                # Invoke cmake
-                cmake('..', *cmakeOptions)
+            # Invoke cmake
+            cmake('..', *cmakeOptions)
 
-                make("clean")
-                make()
-                make("install")
+            make("clean")
+            make()
+            make("install")

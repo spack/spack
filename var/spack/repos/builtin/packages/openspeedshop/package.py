@@ -83,8 +83,8 @@ class Openspeedshop(Package):
                          to point to target build.")
     variant('cuda', default=False,
             description="build with cuda packages included.")
-    variant('ptgf', default=False,
-            description="build with the PTGF based gui package enabled.")
+    variant('noqt3gui', default=False,
+            description="build without the build Qt3 gui package enabled.")
     variant('rtfe', default=False,
             description="build for clusters heterogeneous processors \
                          on fe/be nodes.")
@@ -115,15 +115,13 @@ class Openspeedshop(Package):
     depends_on("bison", type='build')
     depends_on("flex", type='build')
     depends_on("binutils@2.24+krellpatch", type='build')
-    # TODO: when using dyninst@9.3.0:, we will need to use elf
-    # depends_on("elf", type="link")
-    depends_on("libelf")
+    depends_on("elf", type="link")
     depends_on("libdwarf")
     depends_on("sqlite")
     depends_on("boost@1.50.0:1.59.0")
-    depends_on("dyninst@9.2.0")
+    depends_on("dyninst@9.3.2")
     depends_on("libxml2+python")
-    depends_on("qt@3.3.8b+krellpatch")
+    depends_on("qt@3.3.8b+krellpatch", when='~noqt3gui')
 
     # Dependencies only for the openspeedshop offline package.
     depends_on("libunwind", when='+offline')
@@ -174,7 +172,7 @@ class Openspeedshop(Package):
         BaseOptions = []
 
         BaseOptions.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
-        BaseOptions.append('-DLIBELF_DIR=%s' % spec['libelf'].prefix)
+        BaseOptions.append('-DLIBELF_DIR=%s' % spec['elf'].prefix)
         BaseOptions.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
         BaseOptions.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
         BaseOptions.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)
@@ -387,23 +385,40 @@ class Openspeedshop(Package):
                     # Appends base options to cmakeOptions
                     self.set_defaultbase_cmakeOptions(spec, cmakeOptions)
 
-                    cmakeOptions.extend(
-                        ['-DCMAKE_INSTALL_PREFIX=%s'
-                            % prefix,
-                         '-DCMAKE_PREFIX_PATH=%s'
-                            % cmake_prefix_path,
-                         '-DINSTRUMENTOR=%s'
-                            % instrumentor_setting,
-                         '-DSQLITE3_DIR=%s'
-                            % spec['sqlite'].prefix,
-                         '-DCBTF_DIR=%s'
-                            % spec['cbtf'].prefix,
-                         '-DCBTF_KRELL_DIR=%s'
-                            % spec['cbtf-krell'].prefix,
-                         '-DQTLIB_DIR=%s'
-                            % spec['qt'].prefix,
-                         '-DMRNET_DIR=%s'
-                            % spec['mrnet'].prefix])
+                    if '+noqt3gui' in self.spec:
+                        cmakeOptions.extend(
+                            ['-DCMAKE_INSTALL_PREFIX=%s'
+                                % prefix,
+                             '-DCMAKE_PREFIX_PATH=%s'
+                                % cmake_prefix_path,
+                             '-DINSTRUMENTOR=%s'
+                                % instrumentor_setting,
+                             '-DSQLITE3_DIR=%s'
+                                % spec['sqlite'].prefix,
+                             '-DCBTF_DIR=%s'
+                                % spec['cbtf'].prefix,
+                             '-DCBTF_KRELL_DIR=%s'
+                                % spec['cbtf-krell'].prefix,
+                             '-DMRNET_DIR=%s'
+                                % spec['mrnet'].prefix])
+                    else:
+                        cmakeOptions.extend(
+                            ['-DCMAKE_INSTALL_PREFIX=%s'
+                                % prefix,
+                             '-DCMAKE_PREFIX_PATH=%s'
+                                % cmake_prefix_path,
+                             '-DINSTRUMENTOR=%s'
+                                % instrumentor_setting,
+                             '-DSQLITE3_DIR=%s'
+                                % spec['sqlite'].prefix,
+                             '-DCBTF_DIR=%s'
+                                % spec['cbtf'].prefix,
+                             '-DCBTF_KRELL_DIR=%s'
+                                % spec['cbtf-krell'].prefix,
+                             '-DQTLIB_DIR=%s'
+                                % spec['qt'].prefix,
+                             '-DMRNET_DIR=%s'
+                                % spec['mrnet'].prefix])
 
                     # Adjust the build options to the favored
                     # ones for this build
