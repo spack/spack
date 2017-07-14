@@ -198,6 +198,7 @@ def build_tarball(spec, outdir, force=False, rel=False, sign=False, key=None):
         tar.add(name='%s.asc' % specfile_path,
                 arcname='%s.asc' % specfile_name)
     os.remove(tarfile_path)
+    os.remove(specfile_path)
     os.remove('%s.asc' % tarfile_path)
     os.remove('%s.asc' % specfile_path)
 
@@ -225,11 +226,13 @@ def download_tarball(spec):
     return None
 
 
-def extract_tarball(spec, filename, verify=False):
+def extract_tarball(spec, filename, verify=False, force=False):
     """
     extract binary tarball for given package into install area
     """
     installpath = install_directory_name(spec)
+    if force:
+        shutil.rmtree(installpath)
     mkdirp(installpath)
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')
@@ -237,13 +240,10 @@ def extract_tarball(spec, filename, verify=False):
     tarfile_name = tarball_name(spec, '.tar.gz')
     tarfile_path = os.path.join(stagepath, tarfile_name)
     specfile_name = tarball_name(spec, '.spec.yaml')
-    specfile_path = os.path.join(stagepath, tarfile_name)
+    specfile_path = os.path.join(stagepath, specfile_name)
 
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
-        tar.extract(specfile_name, stagepath)
-        tar.extract(specfile_name + '.asc', stagepath)
-        tar.extract(tarfile_name, stagepath)
-        tar.extract(tarfile_name + '.asc', stagepath)
+        tar.extractall(stagepath)
 
     if verify:
         Gpg.verify('%s.asc' % specfile_path, specfile_path)

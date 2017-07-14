@@ -124,20 +124,25 @@ def installtarball(args):
 
 def install_tarball(spec, args):
     s = spack.spec.Spec(spec)
+    verify = False
+    force = False
     if args.verify:
         verify = True
+    if args.force:
+        force = True
     for d in s.dependencies():
         tty.msg("Installing buildcache for dependency spec %s" % d)
         install_tarball(d, args)
     package = spack.repo.get(spec)
-    if s.concrete and package.installed and not args.force:
+    if s.concrete and package.installed and not force:
         tty.warn("Package for spec %s already installed." % spec.format())
     else:
         tarball = spack.binary_distribution.download_tarball(spec)
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
             spack.binary_distribution.prepare()
-            spack.binary_distribution.extract_tarball(spec, tarball, verify)
+            spack.binary_distribution.extract_tarball(spec, tarball,
+                                                      verify, force)
             spack.binary_distribution.relocate_package(spec)
             spack.store.db.reindex(spack.store.layout)
         else:
