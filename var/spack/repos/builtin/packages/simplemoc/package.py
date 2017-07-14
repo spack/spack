@@ -45,7 +45,8 @@ class Simplemoc(MakefilePackage):
         elif self.compiler.name == 'intel':
             targets.append('COMPILER=intel')
         else:
-            raise InstallError('{0} is an invalid compiler'.format(self.compiler.name))
+            raise InstallError('{0} is an invalid compiler'
+                .format(self.compiler.name))
 
         return targets
 
