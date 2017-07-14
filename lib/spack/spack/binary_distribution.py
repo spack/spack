@@ -128,7 +128,7 @@ def tarball_path_name(spec, ext):
                         tarball_name(spec, ext))
 
 
-def build_tarball(spec, outdir, force=False, rel=False, key=None):
+def build_tarball(spec, outdir, force=False, rel=False, sign=False, key=None):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
@@ -172,38 +172,34 @@ def build_tarball(spec, outdir, force=False, rel=False, key=None):
                 os.path.basename(spec.prefix))
 
     # Sign the packages.
-    # spack gpg sign [--key key] tarfile_path
-    # spack gpg sign [--key key] tarfile_path + '/spec.yaml'
-    if key == None:
-        keys = Gpg.signing_keys()
-    #    if len(keys) == 1:
-    #        key = keys[0]
-    #    elif not keys:
-    #        raise RuntimeError('no signing keys are available')
-    #    else:
-    #        raise RuntimeError('multiple signing keys are available; '
-    #                           'please choose one')
-    # temporary to test adding and extracting .asc files
-    path1 = '%s.asc' % tarfile_path
-    with open(path1, 'a'):
-        os.utime(path1, None)
-    path2 = '%s.asc' % specfile_path
-    with open(path2, 'a'):
-        os.utime(path2, None)
-    # temporary to test adding and extracting .asc files
-    #Gpg.sign(key, path1, '%s.asc' % path1)
-    #Gpg.sign(key, path2, '%s.asc' % path2)
-
+    if sign:
+        if key == None:
+            keys = Gpg.signing_keys()
+            if len(keys) == 1:
+                key = keys[0]
+            elif not keys:
+                raise RuntimeError('no signing keys are available')
+            else:
+                raise RuntimeError('multiple signing keys are available; '
+                                   'please choose one')
+        Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
+        Gpg.sign(key, tarfile_path, '%s.asc' % tarfile_path)
+    else:
+        path1 = '%s.asc' % tarfile_path
+        with open(path1, 'a'):
+            os.utime(path1, None)
+        path2 = '%s.asc' % specfile_path
+        with open(path2, 'a'):
+            os.utime(path2, None)
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
         tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
         tar.add(name='%s.asc' % tarfile_path, arcname='%s.asc' % tarfile_name)
         tar.add(name='%s.asc' % specfile_path,
                 arcname='%s.asc' % specfile_name)
-        os.remove(tarfile_path)
-
-    os.remove(path1)
-    os.remove(path2)
+    os.remove(tarfile_path)
+    os.remove('%s.asc' % tarfile_path)
+    os.remove('%s.asc' % specfile_path)
 
 
 def download_tarball(spec):
@@ -229,34 +225,38 @@ def download_tarball(spec):
     return None
 
 
-def extract_tarball(spec, filename):
+def extract_tarball(spec, filename, verify=False):
     """
     extract binary tarball for given package into install area
     """
+    if arg.verify:
+        verify = True
     installpath = install_directory_name(spec)
     mkdirp(installpath)
     stagepath = os.path.dirname(filename)
+    spackfile_name = tarball_name(spec, '.spack')
+    spackfile_path = os.path.join(stagepath, spackfile_name)
     tarfile_name = tarball_name(spec, '.tar.gz')
     tarfile_path = os.path.join(stagepath, tarfile_name)
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.join(stagepath, tarfile_name)
-    with closing(tarfile.open(filename, 'r')) as tar:
+
+    with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extract(specfile_name, stagepath)
         tar.extract(specfile_name + '.asc', stagepath)
-
-        # spack gpg verify os.path.join(package.prefix, 'spec.yaml')
-
         tar.extract(tarfile_name, stagepath)
         tar.extract(tarfile_name + '.asc', stagepath)
 
-        # spack gpg verify tarfile_path
+    if verify:
+        Gpg.verify(specfile_path, '%s.asc' % specfile_path)
+        Gpg.verify(tarfile_path, '%s.asc' % tarfile_path)
 
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
         tar.extractall(path=join_path(installpath, '..'))
 
-    #os.remove(tarfile_path)
+    os.remove(tarfile_path)
     os.remove(tarfile_path + '.asc')
-    #os.remove(specfile_path)
+    os.remove(specfile_path)
     os.remove(specfile_path + '.asc')
 
 

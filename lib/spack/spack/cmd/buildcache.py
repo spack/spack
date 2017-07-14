@@ -48,6 +48,11 @@ def setup_parser(subparser):
                              " before creating tarballs.")
     create.add_argument('-f', '--force', action='store_true',
                         help="overwrite tarball if it exists.")
+    create.add_argument('-s', '--sign', action='store_true',
+                        help="sign the tarballs with gpg2")
+    create.add_argument('-k', '--key', metavar='key',
+                        type=str, default=None,
+                        help="gpg2 key for signing.")
     create.add_argument('-d', '--directory', metavar='directory',
                         type=str, default='.',
                         help="directory in which to save the tarballs.")
@@ -59,6 +64,8 @@ def setup_parser(subparser):
     install = subparsers.add_parser('install')
     install.add_argument('-f', '--force', action='store_true',
                          help="overwrite install directory if it exists.")
+    install.add_argument('-v', '--verify', action='store_true',
+                         help="verify buildcache gpg2 signature")
     install.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to install biuldache for")
@@ -94,7 +101,7 @@ def createtarball(args):
     spack.binary_distribution.prepare()
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        build_tarball(spec, outdir, args.force, args.rel)
+        build_tarball(spec, outdir, args.force, args.rel, args.sign, args.key)
 
 
 def installtarball(args):
@@ -128,7 +135,7 @@ def install_tarball(spec, args):
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
             spack.binary_distribution.prepare()
-            spack.binary_distribution.extract_tarball(spec, tarball)
+            spack.binary_distribution.extract_tarball(spec, tarball, args)
             spack.binary_distribution.relocate_package(spec)
             spack.store.db.reindex(spack.store.layout)
         else:
