@@ -40,7 +40,7 @@ class Pathfinder(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('PathFinder_ref/Makefile')
-        makefile.filter('-fopenmp', '{0}'.format(self.compiler.openmp_flag))
+        makefile.filter('-fopenmp', self.compiler.openmp_flag)
 
     def install(self, spec, prefix):
         # Manual installation
