@@ -48,9 +48,7 @@ class Mrbayes(AutotoolsPackage):
     depends_on('libbeagle', when='+beagle')
     depends_on('mpi', when='+mpi')
 
-    @property
-    def configure_directory(self):
-        return join_path(self.stage.source_path, 'src')
+    configure_directory = 'src'
 
     def configure_args(self):
         args = []
@@ -61,11 +59,11 @@ class Mrbayes(AutotoolsPackage):
         if '~sse' in self.spec:
             args.append('--enable-sse=no')
         else:
-            args.append('--disable-sse')
-        if '+mpi' in self.spec:
-            args.append('--enable-mpi=yes')
+            args.append('--enable-sse=yes')
+        if '~mpi' in self.spec:
+            args.append('--enable-mpi=no')
         else:
-            args.appens('--disable-mpi')
+            args.append('--enable-mpi=yes')
         return args
 
     def install(self, spec, prefix):
