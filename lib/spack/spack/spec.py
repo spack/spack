@@ -2625,7 +2625,7 @@ class Spec(object):
         return value
 
     def visible_dependencies(self):
-        build_only = (set(self.dependencies()) - 
+        build_only = (set(self.dependencies()) -
                       set(self.dependencies(
                           deptype=('link', 'run', 'include'))))
         visible = itertools.chain.from_iterable(
