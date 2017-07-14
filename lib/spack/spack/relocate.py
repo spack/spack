@@ -236,9 +236,7 @@ def relocate_text(path_name, old_dir, new_dir):
     """
     Replace old path with new path in text files
     """
-#    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir, path_name)
-    perl = which('perl')
-    perl('-p', '-i', '-e', 's|%s|%s|g' % (old_dir, new_dir), path_name)
+    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir, path_name)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):

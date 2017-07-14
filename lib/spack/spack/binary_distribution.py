@@ -11,7 +11,7 @@ import shutil
 import llnl.util.tty as tty
 from spack.util.gpg import Gpg
 from llnl.util.filesystem import mkdirp, join_path
-from spack.util.web import spider, find_versions_of_archive
+from spack.util.web import spider
 import spack.cmd
 import spack
 from spack.stage import Stage
@@ -173,7 +173,7 @@ def build_tarball(spec, outdir, force=False, rel=False, sign=False, key=None):
 
     # Sign the packages.
     if sign:
-        if key == None:
+        if key is None:
             keys = Gpg.signing_keys()
             if len(keys) == 1:
                 key = keys[0]
