@@ -1,7 +1,7 @@
 packages:
     all:
         compiler: [gcc@6.2.0, intel@17.0.1.132, cce@8.5.4]
-        variants: ~shared
+        #variants: ~shared
         providers:
             mpi: [mpich]
             mkl: [intel-mkl]
@@ -12,23 +12,44 @@ packages:
         modules:
             mpich@7.4.4%gcc@6.2.0 arch=cray-cnl5-ivybridge: cray-mpich
             mpich@7.4.4%intel@17.0.1.132 arch=cray-cnl5-ivybridge: cray-mpich
+            mpich@7.4.4%gcc@6.3.0 arch=cray-cnl6-haswell: cray-mpich
+            mpich@7.4.4%intel@17.0.2.174 arch=cray-cnl6-haswell: cray-mpich
+            mpich@7.4.4%gcc@6.3.0 arch=cray-cnl6-mic_knl: cray-mpich
+            mpich@7.4.4%intel@17.0.2.174 arch=cray-cnl6-mic_knl: cray-mpich
     intel-mkl:
         buildable: false
         paths:
-            intel-mkl@2017.2.174%gcc@6.2.0 arch=cray-cnl5-ivybridge: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
-            intel-mkl@2017.2.174%intel@17.0.1.132 arch=cray-cnl5-ivybridge: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.1.132%gcc@6.2.0 arch=cray-cnl5-ivybridge: /opt/intel/compilers_and_libraries_2017.1.132/linux/mkl
+            intel-mkl@2017.1.132%intel@17.0.1.132 arch=cray-cnl5-ivybridge: /opt/intel/compilers_and_libraries_2017.1.132/linux/mkl
+            intel-mkl@2017.2.174%gcc@6.3.0 arch=cray-cnl6-haswell: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%intel@17.0.2.174 arch=cray-cnl6-haswell: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%gcc@6.3.0 arch=cray-cnl6-mic_knl: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%intel@17.0.2.174 arch=cray-cnl6-mic_knl: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
     fftw:
         buildable: false
         modules:
             fftw@3.3.4.9%gcc@6.2.0 arch=cray-cnl5-ivybridge: fftw
             fftw@3.3.4.9%intel@17.0.1.132 arch=cray-cnl5-ivybridge: fftw
+            fftw@3.3.6.1%gcc@6.3.0 arch=cray-cnl6-haswell: cray-fftw
+            fftw@3.3.6.1%intel@17.0.2.175 arch=cray-cnl6-haswell: cray-fftw
+            fftw@3.3.6.1%gcc@6.3.0 arch=cray-cnl6-mic_knl: cray-fftw
+            fftw@3.3.6.1%intel@17.0.2.175 arch=cray-cnl6-mic_knl: cray-fftw
     hdf5:
         buildable: false
         modules:
             hdf5@1.10.0%gcc@6.2.0 arch=cray-cnl5-ivybridge: cray-hdf5-parallel
             hdf5@1.10.0%intel@17.0.1.132 arch=cray-cnl5-ivybridge: cray-hdf5-parallel
+            hdf5@1.10.0%gcc@6.3.0 arch=cray-cnl6-haswell: cray-hdf5-parallel
+            hdf5@1.10.0%intel@17.0.2.174 arch=cray-cnl6-haswell: cray-hdf5-parallel
+            hdf5@1.10.0%gcc@6.3.0 arch=cray-cnl6-mic_knl: cray-hdf5-parallel
+            hdf5@1.10.0%intel@17.0.2.174 arch=cray-cnl6-mic_knl: cray-hdf5-parallel
     cray-libsci:
         buildable: false
         modules:
             cray-libsci@16.07.1%gcc@6.2.0 arch=cray-cnl5-ivybridge: cray-libsci
             cray-libsci@16.07.1%intel@17.0.1.132 arch=cray-cnl5-ivybridge: cray-libsci
+            cray-libsci@16.07.1%gcc@6.3.0 arch=cray-cnl6-haswell: cray-libsci
+            cray-libsci@16.07.1%intel@17.0.2.174 arch=cray-cnl6-haswell: cray-libsci
+            cray-libsci@16.07.1%gcc@6.3.0 arch=cray-cnl6-mic_knl: cray-libsci
+            cray-libsci@16.07.1%intel@17.0.2.174 arch=cray-cnl6-mic_knl: cray-libsci
+

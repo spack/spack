@@ -137,7 +137,7 @@ compilers:
 - compiler:
     environment: {}
     extra_rpaths: []
-    flags: {}
+    flags: {ldflags: "-static"}
     modules:
     - PrgEnv-gnu
     - !!python/unicode 'gcc/6.2.0'
@@ -1066,7 +1066,7 @@ compilers:
 - compiler:
     environment: {}
     extra_rpaths: []
-    flags: {}
+    flags: {ldflags: "-static"}
     modules:
     - PrgEnv-intel
     - !!python/unicode 'intel/17.0.1.132'
