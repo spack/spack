@@ -29,16 +29,9 @@ class RAda(RPackage):
     """Performs discrete, real, and gentle boost under both exponential
     and logistic loss on a given data set."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://cran.r-project.org/web/packages/ada/index.html"
     url      = "https://cran.r-project.org/src/contrib/ada_2.0-5.tar.gz"
 
     version('2.0-5', '25ac0dc2650fba9e19f3d15c7c6721c1')
 
     depends_on('r-rpart', type=('build', 'run'))
-
-    def configure_args(self, spec, prefix):
-        # FIXME: Add arguments to pass to install via --configure-args
-        # FIXME: If not needed delete this function
-        args = []
-        return args
