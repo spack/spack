@@ -51,8 +51,10 @@ class Nut(CMakePackage):
     conflicts('%xl')
     conflicts('%nag')
 
-    env['RANDOM123_DIR'] = '{0}'.self.spec['random123'].prefix
-    self.build_targets.extend(['VERBOSE=on -j 4 2>&1 | tee -a make.out'])
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('RANDOM123_DIR', self.spec['random123'].prefix)
+    
+    build_targets = ['VERBOSE=on -j 4 2>&1 | tee -a make.out']
 
     def install(self, spec, prefix):
         install('README.md', prefix)
