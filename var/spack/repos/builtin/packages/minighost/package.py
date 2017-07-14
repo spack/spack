@@ -74,7 +74,7 @@ class Minighost(MakefilePackage):
 
     def edit(self, spec, prefix):
         inner_tar = tarfile.open(
-            'miniGhost_ref_{}.tar.gz'.format(self.version.up_to(3)))
+            'miniGhost_ref_{0}.tar.gz'.format(self.version.up_to(3)))
         inner_tar.extractall()
 
     def install(self, spec, prefix):
