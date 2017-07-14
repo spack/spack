@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,26 +22,38 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Bcftools(Package):
-    """BCFtools is a set of utilities that manipulate variant calls in the
-       Variant Call Format (VCF) and its binary counterpart BCF. All
-       commands work transparently with both VCFs and BCFs, both
-       uncompressed and BGZF-compressed."""
+class Xsbench(MakefilePackage):
+    """XSBench is a mini-app representing a key computational
+       kernel of the Monte Carlo neutronics application OpenMC.
+       A full explanation of the theory and purpose of XSBench
+       is provided in docs/XSBench_Theory.pdf."""
 
-    homepage = "http://samtools.github.io/bcftools/"
-    url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
+    homepage = "https://github.com/ANL-CESAR/XSBench/"
+    url = "https://github.com/ANL-CESAR/XSBench/archive/v13.tar.gz"
 
-    version('1.4', '50ccf0a073bd70e99cdb3c8be830416e')
-    version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
+    version('13', '72a92232d2f5777fb52f5ea4082aff37')
 
-    depends_on('zlib')
-    depends_on('bzip2', when="@1.4:")
-    # build fails without xz
-    depends_on('xz', when="@1.4")
+    variant('mpi', default=False, description='Build with MPI support')
+
+    depends_on('mpi', when='+mpi')
+
+    @property
+    def build_targets(self):
+
+        targets = [
+            '--directory=src',
+        ]
+
+        if '+mpi' in self.spec:
+            targets.append('MPI=yes')
+            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+
+        return targets
 
     def install(self, spec, prefix):
-        make("prefix=%s" % prefix, "all")
-        make("prefix=%s" % prefix, "install")
+        mkdir(prefix.bin)
+        install('src/XSBench', prefix.bin)
