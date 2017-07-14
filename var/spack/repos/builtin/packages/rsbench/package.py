@@ -54,12 +54,6 @@ class Rsbench(MakefilePackage):
         if '%intel' in self.spec:
             targets.append('COMPILER=intel')
 
-        if '%pgi' in self.spec:
-            targets.append('COMPILER=pgi')
-            targets.append(
-                'CC={0}'.format(self.spec['pgi'].pgcc)
-            )
-
         return targets
 
     def install(self, spec, prefix):
