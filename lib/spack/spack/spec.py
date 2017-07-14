@@ -981,19 +981,10 @@ class DependencyConstraints(object):
         else:
             resolve = lambda x: x
 
+        context = {}
         if spec:
-            context = {}
-
-            for dep in spec.traverse(
-                    root=False, deptype=('link', 'run', 'include')):
+            for dep in spec.visible_dependencies():
                 context[dep.name] = resolve(dep)
-            for dep in spec.dependencies(deptype='build'):
-                if dep.name not in context:
-                    for trans_dep in dep.traverse(
-                            deptype=('link', 'run', 'include')):
-                        context[trans_dep.name] = resolve(trans_dep)
-        else:
-            context = {}
         self.contexts = [context]
 
     def copy(self):
@@ -2625,6 +2616,11 @@ class Spec(object):
         return value
 
     def visible_dependencies(self):
+        """This collects all transitive link/run/include dependencies and all
+           link/run/include dependencies of direct build dependencies. In other
+           words, this excludes indirect build dependencies (and all
+           dependencies of those packages).
+        """
         visited = set()
         for dep in self.traverse(
                 root=False, deptype=('link', 'run', 'include')):
