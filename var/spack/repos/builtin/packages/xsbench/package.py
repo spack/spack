@@ -30,7 +30,8 @@ class Xsbench(MakefilePackage):
     """XSBench is a mini-app representing a key computational
        kernel of the Monte Carlo neutronics application OpenMC.
        A full explanation of the theory and purpose of XSBench
-       is provided in docs/XSBench_Theory.pdf."""
+       is provided in docs/XSBench_Theory.pdf.
+       tags: proxy-app, proxy application"""
 
     homepage = "https://github.com/ANL-CESAR/XSBench/"
     url = "https://github.com/ANL-CESAR/XSBench/archive/v13.tar.gz"
