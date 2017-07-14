@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,8 +33,8 @@ class SublimeText(Package):
     homepage = "http://www.sublimetext.com/"
     url      = "https://download.sublimetext.com/sublime_text_3_build_3126_x64.tar.bz2"
 
-    version('3126',  'acc34252b0ea7dff1f581c5db1564dcb')
-    version('2.0.2', '699cd26d7fe0bada29eb1b2cd7b50e4b')
+    version('3_build_3126', 'acc34252b0ea7dff1f581c5db1564dcb')
+    version('2.0.2',        '699cd26d7fe0bada29eb1b2cd7b50e4b')
 
     # Sublime text comes as a pre-compiled binary.
     # Since we can't link to Spack packages, we'll just have to

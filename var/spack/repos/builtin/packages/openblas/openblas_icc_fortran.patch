@@ -1,0 +1,12 @@
+diff -Naur a/f_check b/f_check
+--- a/f_check   2017-04-27 23:16:41.496684722 -0700
++++ b/f_check   2017-04-27 23:22:38.330563534 -0700
+@@ -322,7 +322,7 @@
+ }
+ 
+ if ($vendor eq "INTEL"){
+-    $linker_a .= "-lgfortran"
++    $linker_a .= "-lifcore"
+ }
+ 
+ open(MAKEFILE, ">> $makefile") || die "Can't append $makefile";

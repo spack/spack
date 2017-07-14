@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,13 +31,14 @@ class Libiconv(AutotoolsPackage):
     and the iconv program for character set conversion."""
 
     homepage = "https://www.gnu.org/software/libiconv/"
-    url      = "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz"
+    url      = "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.15.tar.gz"
 
+    version('1.15', 'ace8b5f2db42f7b3b3057585e80d9808')
     version('1.14', 'e34509b1623cec449dfeb73d7ce9c6c6')
 
     # We cannot set up a warning for gets(), since gets() is not part
     # of C11 any more and thus might not exist.
-    patch("gets.patch")
+    patch('gets.patch', when='@1.14')
 
     def configure_args(self):
         args = ['--enable-extra-encodings']

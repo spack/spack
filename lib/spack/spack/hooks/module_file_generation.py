@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,15 +23,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack.modules
+from six import iteritems
 
 
-def post_install(pkg):
-    for item, cls in spack.modules.module_types.iteritems():
-        generator = cls(pkg.spec)
+def post_install(spec):
+    for item, cls in iteritems(spack.modules.module_types):
+        generator = cls(spec)
         generator.write()
 
 
-def post_uninstall(pkg):
-    for item, cls in spack.modules.module_types.iteritems():
-        generator = cls(pkg.spec)
+def post_uninstall(spec):
+    for item, cls in iteritems(spack.modules.module_types):
+        generator = cls(spec)
         generator.remove()
