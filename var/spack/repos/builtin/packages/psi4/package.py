@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -115,8 +115,7 @@ class Psi4(Package):
             ' -I'.join([
                 os.path.join(spec['psi4'].prefix.include, 'psi4'),
                 os.path.join(spec['boost'].prefix.include, 'boost'),
-                os.path.join(spec['python'].prefix.include, 'python{0}'.format(
-                    spec['python'].version.up_to(2))),
+                os.path.join(spec['python'].headers.directories[0]),
                 spec['lapack'].prefix.include,
                 spec['blas'].prefix.include,
                 '/usr/include'

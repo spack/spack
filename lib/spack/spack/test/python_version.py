@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -67,9 +67,12 @@ else:
 def pyfiles(search_paths, exclude=()):
     """Generator that yields all the python files in the search paths.
 
-    :param search_paths: list of paths to search for python files
-    :param exclude: file paths to exclude from search
-    :return: python files
+    Args:
+        search_paths (list of str): list of paths to search for python files
+        exclude (list of str): file paths to exclude from search
+
+    Yields:
+        python files in the search path.
     """
     # first file is the spack script.
     yield spack.spack_file

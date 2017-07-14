@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,11 +31,10 @@ class PyBeautifulsoup4(PythonPackage):
     of navigating, searching, and modifying the parse tree."""
 
     homepage = "https://www.crummy.com/software/BeautifulSoup"
-    url = "https://pypi.python.org/packages/source/b/beautifulsoup4/beautifulsoup4-4.4.1.tar.gz"
+    url = "https://pypi.io/packages/source/b/beautifulsoup4/beautifulsoup4-4.5.3.tar.gz"
 
-    version('4.5.1', '994abd90e691beaf7d42c00ffb2f3a67',
-            url='https://www.crummy.com/software/BeautifulSoup/bs4/'
-            'download/4.5/beautifulsoup4-4.5.1.tar.gz')
+    version('4.5.3', '937e0df0d699a1237646f38fd567f0c6')
+    version('4.5.1', '994abd90e691beaf7d42c00ffb2f3a67')
     version('4.4.1', '8fbd9a7cac0704645fa20d1419036815')
 
     depends_on('py-setuptools', type='build')

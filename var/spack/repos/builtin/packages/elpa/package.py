@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -53,8 +53,11 @@ class Elpa(AutotoolsPackage):
     # override default implementation which returns static lib
     @property
     def libs(self):
+
+        libname = 'libelpa_openmp' if '+openmp' in self.spec else 'libelpa'
+
         return find_libraries(
-            ['libelpa'], root=self.prefix, shared=True, recurse=True
+            libname, root=self.prefix, shared=True, recurse=True
         )
 
     build_directory = 'spack-build'

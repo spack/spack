@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,22 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
-import os
-import textwrap
 import fcntl
-import termios
+import os
 import struct
+import sys
+import termios
+import textwrap
 import traceback
 from six import StringIO
 from six.moves import input
 
 from llnl.util.tty.color import *
 
-_debug   = False
+_debug = False
 _verbose = False
 _stacktrace = False
-indent  = "  "
+indent = "  "
 
 
 def is_verbose():
@@ -100,7 +100,7 @@ def msg(message, *args, **kwargs):
 def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
-    wrap   = kwargs.get('wrap', False)
+    wrap = kwargs.get('wrap', False)
     break_long_words = kwargs.get('break_long_words', False)
     st_countback = kwargs.get('countback', 3)
 
@@ -213,11 +213,12 @@ def get_yes_or_no(prompt, **kwargs):
 
 def hline(label=None, **kwargs):
     """Draw a labeled horizontal line.
-       Options:
-       char       Char to draw the line with.  Default '-'
-       max_width  Maximum width of the line.  Default is 64 chars.
+
+    Keyword Arguments:
+        char (str): Char to draw the line with.  Default '-'
+        max_width (int): Maximum width of the line.  Default is 64 chars.
     """
-    char      = kwargs.pop('char', '-')
+    char = kwargs.pop('char', '-')
     max_width = kwargs.pop('max_width', 64)
     if kwargs:
         raise TypeError(

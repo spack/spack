@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -41,6 +41,8 @@ class Gdbm(AutotoolsPackage):
     version('1.10',  '88770493c2559dc80b561293e39d3570')
     version('1.9.1', '59f6e4c4193cb875964ffbe8aa384b58')
     version('1.9',   '1f0e8e6691edd61bdd6b697b8c02528d')
+
+    depends_on("readline")
 
     def configure_args(self):
         return ['--enable-libgdbm-compat']

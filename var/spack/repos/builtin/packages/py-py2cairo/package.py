@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyPy2cairo(Package):
+class PyPy2cairo(WafPackage):
     """Pycairo is a set of Python bindings for the cairo graphics library."""
 
     homepage = "https://www.cairographics.org/pycairo/"
@@ -35,10 +35,15 @@ class PyPy2cairo(Package):
 
     extends('python')
 
-    depends_on('cairo')
+    depends_on('python', type=('build', 'run'))
+    depends_on('cairo@1.10.0:')
     depends_on('pixman')
+    depends_on('pkg-config', type='build')
 
-    def install(self, spec, prefix):
-        python('waf', 'configure', '--prefix={0}'.format(prefix))
-        python('waf', 'build')
-        python('waf', 'install')
+    # TODO: Add a 'test' deptype
+    # depends_on('py-pytest', type='test')
+
+    def installtest(self):
+        with working_dir('test'):
+            pytest = which('py.test')
+            pytest()

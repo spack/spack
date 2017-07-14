@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,7 +38,7 @@ class Metis(Package):
 
     homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
     url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
-    list_url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD"
+    list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
 
     version('5.1.0', '5465e67079419a69e0116de24fce58fe')
     version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
@@ -84,7 +84,7 @@ class Metis(Package):
             filter_file('#define MAX_JBUFS 128', '#define MAX_JBUFS 24',
                         join_path(source_path, 'GKlib', 'error.c'))
 
-    @when('@:4')  # noqa: F811
+    @when('@:4')
     def install(self, spec, prefix):
         # Process library spec and options
         if any('+{0}'.format(v) in spec for v in ['gdb', 'int64', 'real64']):
@@ -135,7 +135,8 @@ class Metis(Package):
 
         # Set up and run tests on installation
         ccompile('-I%s' % prefix.include, '-L%s' % prefix.lib,
-                 '-Wl,-rpath=%s' % (prefix.lib if '+shared' in spec else ''),
+                 self.compiler.cc_rpath_arg +
+                 '%s' % (prefix.lib if '+shared' in spec else ''),
                  join_path('Programs', 'io.o'), join_path('Test', 'mtest.c'),
                  '-o', '%s/mtest' % prefix.bin, '-lmetis', '-lm')
 
@@ -175,7 +176,7 @@ class Metis(Package):
             Executable(test_bin('mesh2dual'))(test_graph('metis.mesh'))
             """
 
-    @when('@5:')  # noqa: F811
+    @when('@5:')
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
         build_directory = join_path(source_directory, 'build')

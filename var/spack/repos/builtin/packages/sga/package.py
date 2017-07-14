@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,7 +27,7 @@ from spack import *
 
 class Sga(AutotoolsPackage):
     """SGA is a de novo genome assembler based on the concept of string graphs.
-       The major goal of SGA is to be very memory efficient, which is achieved 
+       The major goal of SGA is to be very memory efficient, which is achieved
        by using a compressed representation of DNA sequence reads."""
 
     homepage = "https://www.msi.umn.edu/sw/sga"

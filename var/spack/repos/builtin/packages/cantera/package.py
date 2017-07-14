@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -117,15 +117,13 @@ class Cantera(Package):
         if '+python' in spec:
             options.extend([
                 'python_package=full',
-                'python_cmd={0}'.format(
-                    join_path(spec['python'].prefix.bin, 'python')),
+                'python_cmd={0}'.format(spec['python'].command.path),
                 'python_array_home={0}'.format(spec['py-numpy'].prefix)
             ])
             if spec['python'].satisfies('@3'):
                 options.extend([
                     'python3_package=y',
-                    'python3_cmd={0}'.format(
-                        join_path(spec['python'].prefix.bin, 'python')),
+                    'python3_cmd={0}'.format(spec['python'].command.path),
                     'python3_array_home={0}'.format(spec['py-numpy'].prefix)
                 ])
             else:

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -75,7 +75,7 @@ class PythonPackage(PackageBase):
 
     .. code-block:: console
 
-       $ python --no-user-cfg setup.py <phase>
+       $ python setup.py --no-user-cfg <phase>
 
     Each phase also has a <phase_args> function that can pass arguments to
     this call. All of these functions are empty except for the ``install_args``
@@ -137,9 +137,11 @@ class PythonPackage(PackageBase):
     def _setup_command_available(self, command):
         """Determines whether or not a setup.py command exists.
 
-        :param str command: The command to look for
-        :return: True if the command is found, else False
-        :rtype: bool
+        Args:
+            command (str): The command to look for
+
+        Returns:
+            bool: True if the command is found, else False
         """
         kwargs = {
             'output': os.devnull,

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -138,6 +138,12 @@ class TestSpecSyntax(object):
         self.check_parse("^zlib")
         self.check_parse("+foo")
         self.check_parse("arch=test-None-None", "platform=test")
+        self.check_parse('@2.7:')
+
+    def test_anonymous_specs_with_multiple_parts(self):
+        # Parse anonymous spec with multiple tokens
+        self.check_parse('@4.2: languages=go', 'languages=go @4.2:')
+        self.check_parse('@4.2: languages=go')
 
     def test_simple_dependence(self):
         self.check_parse("openmpi^hwloc")
@@ -539,3 +545,18 @@ class TestSpecSyntax(object):
             "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
+
+
+@pytest.mark.parametrize('spec,anon_spec,spec_name', [
+    ('openmpi languages=go', 'languages=go', 'openmpi'),
+    ('openmpi @4.6:', '@4.6:', 'openmpi'),
+    ('openmpi languages=go @4.6:', 'languages=go @4.6:', 'openmpi'),
+    ('openmpi @4.6: languages=go', '@4.6: languages=go', 'openmpi'),
+])
+def test_parse_anonymous_specs(spec, anon_spec, spec_name):
+
+    expected = parse(spec)
+    spec = parse_anonymous_spec(anon_spec, spec_name)
+
+    assert len(expected) == 1
+    assert spec in expected

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,10 @@ class PyLxml(PythonPackage):
     homepage = "http://lxml.de/"
     url      = "https://pypi.io/packages/source/l/lxml/lxml-2.3.tar.gz"
 
+    version('3.7.3', '075692ce442e69bbd604d44e21c02753')
     version('2.3', 'a245a015fd59b63e220005f263e1682a')
 
     depends_on('py-setuptools@0.6c5:', type='build')
+    depends_on('py-cython@0.20:', type='build')
+    depends_on('libxml2', type=('build', 'run'))
+    depends_on('libxslt', type=('build', 'run'))

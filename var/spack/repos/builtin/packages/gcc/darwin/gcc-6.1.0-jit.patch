@@ -1,0 +1,21 @@
+# Fix for libgccjit.so linkage on Darwin
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64089
+# https://github.com/Homebrew/homebrew-core/issues/1872#issuecomment-225625332
+# https://github.com/Homebrew/homebrew-core/issues/1872#issuecomment-225626490
+
+# Stolen from Homebrew:
+# https://raw.githubusercontent.com/Homebrew/formula-patches/e9e0ee09389a54cc4c8fe1c24ebca3cd765ed0ba/gcc/6.1.0-jit.patch
+diff --git a/gcc/jit/Make-lang.in b/gcc/jit/Make-lang.in
+index 44d0750..4df2a9c 100644
+--- a/gcc/jit/Make-lang.in
++++ b/gcc/jit/Make-lang.in
+@@ -85,8 +85,7 @@ $(LIBGCCJIT_FILENAME): $(jit_OBJS) \
+	     $(jit_OBJS) libbackend.a libcommon-target.a libcommon.a \
+	     $(CPPLIB) $(LIBDECNUMBER) $(LIBS) $(BACKENDLIBS) \
+	     $(EXTRA_GCC_OBJS) \
+-	     -Wl,--version-script=$(srcdir)/jit/libgccjit.map \
+-	     -Wl,-soname,$(LIBGCCJIT_SONAME)
++	     -Wl,-install_name,$(LIBGCCJIT_SONAME)
+
+ $(LIBGCCJIT_SONAME_SYMLINK): $(LIBGCCJIT_FILENAME)
+	ln -sf $(LIBGCCJIT_FILENAME) $(LIBGCCJIT_SONAME_SYMLINK)

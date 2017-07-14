@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,20 +28,23 @@ import functools
 
 
 def composite(interface=None, method_list=None, container=list):
-    """Returns a class decorator that patches a class adding all the methods
-    it needs to be a composite for a given interface.
+    """Decorator implementing the GoF composite pattern.
 
-    :param interface: class exposing the interface to which the composite \
-        object must conform. Only non-private and non-special methods will \
-        be taken into account
+    Args:
+        interface (type): class exposing the interface to which the
+            composite object must conform. Only non-private and
+            non-special methods will be taken into account
+        method_list (list of str): names of methods that should be part
+            of the composite
+        container (MutableSequence): container for the composite object
+            (default = list).  Must fulfill the MutableSequence
+            contract. The composite class will expose the container API
+            to manage object composition
 
-    :param method_list: names of methods that should be part of the composite
+    Returns:
+        a class decorator that patches a class adding all the methods
+        it needs to be a composite for a given interface.
 
-    :param container: container for the composite object (default = list). \
-        Must fulfill the MutableSequence contract. The composite class will \
-        expose the container API to manage object composition
-
-    :return: class decorator
     """
     # Check if container fulfills the MutableSequence contract and raise an
     # exception if it doesn't. The patched class returned by the decorator will

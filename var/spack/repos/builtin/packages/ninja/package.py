@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,9 +38,8 @@ class Ninja(Package):
     def install(self, spec, prefix):
         python('configure.py', '--bootstrap')
 
-        cp = which('cp')
-
-        bindir = os.path.join(prefix, 'bin/')
-        mkdir(bindir)
-        cp('-a', 'ninja', bindir)
-        cp('-a', 'misc', prefix)
+        mkdir(prefix.bin)
+        install('ninja', prefix.bin)
+        install_tree('misc', join_path(prefix, 'misc'))
+        with working_dir(prefix.bin):
+            os.symlink('ninja', 'ninja-build')

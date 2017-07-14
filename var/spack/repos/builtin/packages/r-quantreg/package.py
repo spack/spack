@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,7 +35,6 @@ class RQuantreg(RPackage):
 
     homepage = "https://cran.r-project.org/package=quantreg"
     url      = "https://cran.r-project.org/src/contrib/quantreg_5.29.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/quantreg"
 
     version('5.29', '643ca728200d13f8c2e62365204e9907')
     version('5.26', '1d89ed932fb4d67ae2d5da0eb8c2989f')

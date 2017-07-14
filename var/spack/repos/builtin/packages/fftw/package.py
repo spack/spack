@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,6 +35,7 @@ class Fftw(AutotoolsPackage):
 
     homepage = "http://www.fftw.org"
     url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
+    list_url = "http://www.fftw.org/download.html"
 
     version('3.3.6-pl2', '927e481edbb32575397eb3d62535a856')
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
@@ -43,6 +44,7 @@ class Fftw(AutotoolsPackage):
 
     patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
+    patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
 
     variant(
         'float', default=True,

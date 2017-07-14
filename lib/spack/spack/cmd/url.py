@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,6 +34,8 @@ from spack.util.web import find_versions_of_archive
 from spack.util.naming import simplify_name
 
 description = "debugging tool for url parsing"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -244,7 +246,8 @@ def print_name_and_version(url):
     """Prints a URL. Underlines the detected name with dashes and
     the detected version with tildes.
 
-    :param str url: The url to parse
+    Args:
+        url (str): The url to parse
     """
     name, ns, nl, ntup, ver, vs, vl, vtup = substitution_offsets(url)
     underlines = [' '] * max(ns + nl, vs + vl)
@@ -260,13 +263,15 @@ def print_name_and_version(url):
 def url_list_parsing(args, urls, url, pkg):
     """Helper function for :func:`url_list`.
 
-    :param argparse.Namespace args: The arguments given to ``spack url list``
-    :param set urls: List of URLs that have already been added
-    :param url: A URL to potentially add to ``urls`` depending on ``args``
-    :type url: str or None
-    :param spack.package.PackageBase pkg: The Spack package
-    :returns: The updated ``urls`` list
-    :rtype: set
+    Args:
+        args (argparse.Namespace): The arguments given to ``spack url list``
+        urls (set): List of URLs that have already been added
+        url (str or None): A URL to potentially add to ``urls`` depending on
+            ``args``
+        pkg (spack.package.PackageBase): The Spack package
+
+    Returns:
+        set: The updated set of ``urls``
     """
     if url:
         if args.correct_name or args.incorrect_name:
@@ -310,10 +315,12 @@ def url_list_parsing(args, urls, url, pkg):
 def name_parsed_correctly(pkg, name):
     """Determine if the name of a package was correctly parsed.
 
-    :param spack.package.PackageBase pkg: The Spack package
-    :param str name: The name that was extracted from the URL
-    :returns: True if the name was correctly parsed, else False
-    :rtype: bool
+    Args:
+        pkg (spack.package.PackageBase): The Spack package
+        name (str): The name that was extracted from the URL
+
+    Returns:
+        bool: True if the name was correctly parsed, else False
     """
     pkg_name = pkg.name
 
@@ -336,10 +343,12 @@ def name_parsed_correctly(pkg, name):
 def version_parsed_correctly(pkg, version):
     """Determine if the version of a package was correctly parsed.
 
-    :param spack.package.PackageBase pkg: The Spack package
-    :param str version: The version that was extracted from the URL
-    :returns: True if the name was correctly parsed, else False
-    :rtype: bool
+    Args:
+        pkg (spack.package.PackageBase): The Spack package
+        version (str): The version that was extracted from the URL
+
+    Returns:
+        bool: True if the name was correctly parsed, else False
     """
     version = remove_separators(version)
 
@@ -359,10 +368,11 @@ def remove_separators(version):
     Make sure 1.2.3, 1-2-3, 1_2_3, and 123 are considered equal.
     Unfortunately, this also means that 1.23 and 12.3 are equal.
 
-    :param version: A version
-    :type version: str or Version
-    :returns: The version with all separator characters removed
-    :rtype: str
+    Args:
+        version (str or Version): A version
+
+    Returns:
+        str: The version with all separator characters removed
     """
     version = str(version)
 

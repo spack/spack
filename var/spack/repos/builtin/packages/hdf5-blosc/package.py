@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -69,7 +69,7 @@ class Hdf5Blosc(Package):
         # if sys.platform == "darwin":
         #     fix_darwin_install_name(prefix.lib)
 
-        libtool = Executable(join_path(spec["libtool"].prefix.bin, "libtool"))
+        libtool = spec["libtool"].command
 
         # TODO: these vars are not used.
         # if "+mpi" in spec["hdf5"]:
@@ -184,7 +184,7 @@ Done.
                "-L%s" % spec["hdf5"].prefix.lib, "-lhdf5")
             try:
                 check = Executable("./check")
-                output = check(return_output=True)
+                output = check(output=str)
             except:
                 output = ""
             success = output == expected

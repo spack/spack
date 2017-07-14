@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
-Routines for printing columnar output.  See colify() for more information.
+Routines for printing columnar output.  See ``colify()`` for more information.
 """
 from __future__ import division
 
@@ -124,26 +124,22 @@ def colify(elts, **options):
     uniform-width and variable-width (tighter) columns.
 
     If elts is not a list of strings, each element is first conveted
-    using str().
+    using ``str()``.
 
-    Keyword arguments:
-
-    output=<stream>   A file object to write to.  Default is sys.stdout.
-    indent=<int>      Optionally indent all columns by some number of spaces.
-    padding=<int>     Spaces between columns.  Default is 2.
-    width=<int>       Width of the output.  Default is 80 if tty not detected.
-
-    cols=<int>        Force number of columns. Default is to size to terminal,
-                      or single-column if no tty
-
-    tty=<bool>        Whether to attempt to write to a tty.  Default is to
-                      autodetect a tty. Set to False to force
-                      single-column output.
-
-    method=<string>   Method to use to fit columns.  Options are variable or
-                      uniform. Variable-width columns are tighter, uniform
-                      columns are all the same width and fit less data on
-                      the screen.
+    Keyword Arguments:
+        output (stream): A file object to write to. Default is ``sys.stdout``
+        indent (int):    Optionally indent all columns by some number of spaces
+        padding (int):   Spaces between columns. Default is 2
+        width (int):     Width of the output. Default is 80 if tty not detected
+        cols (int):      Force number of columns. Default is to size to
+                         terminal, or single-column if no tty
+        tty (bool):      Whether to attempt to write to a tty. Default is to
+                         autodetect a tty. Set to False to force single-column
+                         output
+        method (str):    Method to use to fit columns. Options are variable or
+                         uniform. Variable-width columns are tighter, uniform
+                         columns are all the same width and fit less data on
+                         the screen
     """
     # Get keyword arguments or set defaults
     cols         = options.pop("cols", 0)
@@ -220,7 +216,7 @@ def colify(elts, **options):
 
 
 def colify_table(table, **options):
-    """Version of colify() for data expressed in rows, (list of lists).
+    """Version of ``colify()`` for data expressed in rows, (list of lists).
 
        Same as regular colify but takes a list of lists, where each
        sub-list must be the same length, and each is interpreted as a
@@ -247,7 +243,7 @@ def colify_table(table, **options):
 
 
 def colified(elts, **options):
-    """Invokes the colify() function but returns the result as a string
+    """Invokes the ``colify()`` function but returns the result as a string
        instead of writing it to an output string."""
     sio = StringIO()
     options['output'] = sio

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,9 +33,9 @@ class Abinit(AutotoolsPackage):
     energy, charge density and electronic structure of systems made of
     electrons and nuclei (molecules and periodic solids) within
     Density Functional Theory (DFT), using pseudopotentials and a planewave
-    or wavelet basis. 
-    
-    ABINIT also includes options to optimize the geometry according to the 
+    or wavelet basis.
+
+    ABINIT also includes options to optimize the geometry according to the
     DFT forces and stresses, or to perform molecular dynamics
     simulations using these forces, or to generate dynamical matrices,
     Born effective charges, and dielectric tensors, based on Density-Functional
@@ -149,7 +149,7 @@ class Abinit(AutotoolsPackage):
         # LibXC library
         libxc = spec['libxc:fortran']
         options.extend([
-            'with_libxc_incs={0}'.format(libxc.cppflags),
+            'with_libxc_incs={0}'.format(libxc.headers.cpp_flags),
             'with_libxc_libs={0}'.format(libxc.libs.ld_flags + ' -lm')
         ])
 
@@ -161,7 +161,7 @@ class Abinit(AutotoolsPackage):
             hdf5 = spec['hdf5:hl']
             netcdff = spec['netcdf-fortran:shared']
             options.extend([
-                '--with-netcdf-incs={0}'.format(netcdff.cppflags),
+                '--with-netcdf-incs={0}'.format(netcdff.headers.cpp_flags),
                 '--with-netcdf-libs={0}'.format(
                     netcdff.libs.ld_flags + ' ' + hdf5.libs.ld_flags
                 ),
@@ -175,7 +175,7 @@ class Abinit(AutotoolsPackage):
 
     def check(self):
         """This method is called after the build phase if tests have been
-        explicitly activated by user. 
+        explicitly activated by user.
         """
         make('check')
         make('tests_in')
