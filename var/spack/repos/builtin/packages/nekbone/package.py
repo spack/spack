@@ -29,7 +29,8 @@ class Nekbone(Package):
     """NEK5000 emulation software called NEKbone. Nekbone captures the basic
        structure and user interface of the extensive Nek5000 software.
        Nek5000 is a high order, incompressible Navier-Stokes solver based on
-       the spectral element method."""
+       the spectral element method.
+       tags: proxy-app, proxy application"""
 
     homepage = "https://github.com/ANL-CESAR/"
     url = "https://github.com/ANL-CESAR/nekbone.git"
