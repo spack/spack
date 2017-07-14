@@ -182,8 +182,8 @@ def build_tarball(spec, outdir, force=False, rel=False, sign=False, key=None):
             else:
                 raise RuntimeError('multiple signing keys are available; '
                                    'please choose one')
-        Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
-        Gpg.sign(key, tarfile_path, '%s.asc' % tarfile_path)
+        Gpg.sign(key, '%s.asc' % specfile_path, specfile_path)
+        Gpg.sign(key, '%s.asc' % tarfile_path, tarfile_path)
     else:
         path1 = '%s.asc' % tarfile_path
         with open(path1, 'a'):
