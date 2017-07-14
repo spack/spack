@@ -2,6 +2,7 @@
 # "Patrick Gartung (FNAL)"
 
 import os
+import re
 import platform
 import tarfile
 import yaml
@@ -17,8 +18,6 @@ from spack.stage import Stage
 import spack.fetch_strategy as fs
 import spack.relocate
 from contextlib import closing
-import platform
-import re
 
 
 def prepare():
@@ -175,8 +174,8 @@ def build_tarball(spec, outdir, force=False, rel=False, key=None):
     # Sign the packages.
     # spack gpg sign [--key key] tarfile_path
     # spack gpg sign [--key key] tarfile_path + '/spec.yaml'
-    # if key == None:
-    #    keys = Gpg.signing_keys()
+    if key == None:
+        keys = Gpg.signing_keys()
     #    if len(keys) == 1:
     #        key = keys[0]
     #    elif not keys:
@@ -255,10 +254,10 @@ def extract_tarball(spec, filename):
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
         tar.extractall(path=join_path(installpath, '..'))
 
-    # os.remove(tarfile_path)
-    #os.remove(tarfile_path + '.asc')
-    # os.remove(specfile_path)
-    #os.remove(specfile_path + '.asc')
+    #os.remove(tarfile_path)
+    os.remove(tarfile_path + '.asc')
+    #os.remove(specfile_path)
+    os.remove(specfile_path + '.asc')
 
 
 def prelocate_package(spec):

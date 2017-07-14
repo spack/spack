@@ -37,6 +37,7 @@ def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
             rel_rpaths.add(rpath)
     return rel_rpaths
 
+
 def modify_macho_object(path_name, old_dir, new_dir, relative):
     """
     Modify MachO binaries by changing rpaths,and id and dependency lib paths.
@@ -96,8 +97,8 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
     if relative:
         id = '@rpath/%s' % os.path.basename(idpath)
         for rpath in rpaths:
-            if re.match(old_dir,rpath):
-                rel=os.path.relpath(rpath,start=os.path.dirname(path_name))
+            if re.match(old_dir, rpath):
+                rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
                 nrpaths.append('@loader_path/%s' % rel)
             else:
                 nrpaths.append(rpath)
@@ -213,6 +214,7 @@ def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
                           patchelf_executable)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
+
 
 def prelocate_binary(path_name, old_dir, patchelf_executable):
     """

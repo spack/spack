@@ -44,7 +44,8 @@ def setup_parser(subparser):
 
     create = subparsers.add_parser('create')
     create.add_argument('-r', '--rel', action='store_true',
-                        help="make all rpaths relative before creating tarballs.")
+                        help="make all rpaths relative" +
+                             " before creating tarballs.")
     create.add_argument('-f', '--force', action='store_true',
                         help="overwrite tarball if it exists.")
     create.add_argument('-d', '--directory', metavar='directory',
@@ -143,8 +144,9 @@ def listspecs(args):
             tty.msg("buildcache spec(s) matching %s \n" % pkg)
             for spec in sorted(specs):
                 if re.search("^" + re.escape(pkg), str(spec)):
-                    tty.msg('run "spack buildcache install /%s" to install  %s\n' %
-                            (spec.dag_hash(7), spec.format()))
+                    tty.msg('run "spack buildcache install /%s"' %
+                            spec.dag_hash(7) + ' to install  %s\n' %
+                            spec.format())
     else:
         tty.msg("buildcache specs ")
         for spec in sorted(specs):
