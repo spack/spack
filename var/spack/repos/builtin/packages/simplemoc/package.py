@@ -30,7 +30,8 @@ class Simplemoc(MakefilePackage):
     """The purpose of this mini-app is to demonstrate the performance
         characterterics and viability of the Method of Characteristics (MOC)
         for 3D neutron transport calculations in the context of full scale
-        light water reactor simulation."""
+        light water reactor simulation.
+        tags: proxy-app, proxy application"""
 
     homepage = "https://github.com/ANL-CESAR/SimpleMOC/"
     url = "https://github.com/ANL-CESAR/SimpleMOC/archive/master.tar.gz"
