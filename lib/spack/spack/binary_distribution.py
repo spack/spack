@@ -128,7 +128,7 @@ def tarball_path_name(spec, ext):
                         tarball_name(spec, ext))
 
 
-def build_tarball(spec, outdir, force=False, rel=False, sign=False, key=None):
+def build_tarball(spec, outdir, force=False, rel=False, sign=True, key=None):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
@@ -226,7 +226,7 @@ def download_tarball(spec):
     return None
 
 
-def extract_tarball(spec, filename, verify=False, force=False):
+def extract_tarball(spec, filename, verify=True, force=False):
     """
     extract binary tarball for given package into install area
     """
