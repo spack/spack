@@ -28,7 +28,8 @@ from spack import *
 
 class Snbone(MakefilePackage):
     """This application targets the primary computational solve burden of a SN,
-       continuous finite element based transport equation solver."""
+       continuous finite element based transport equation solver.
+       tags: proxy-app, proxy application"""
 
     homepage = "https://github.com/ANL-CESAR/"
     url = "https://github.com/ANL-CESAR/SNbone.git"
