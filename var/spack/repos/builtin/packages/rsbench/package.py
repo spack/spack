@@ -36,8 +36,6 @@ class Rsbench(MakefilePackage):
 
     variant('pgi', default=False, description='Build with PGI.')
 
-    depends_on('pgi', when='%pgi')
-
     version('2', '15a3ac5ea72529ac1ed9ed016ee68b4f')
     version('0', '3427634dc5e7cd904d88f9955b371757')
 
