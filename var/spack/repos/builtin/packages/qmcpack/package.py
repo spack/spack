@@ -58,7 +58,8 @@ class Qmcpack(CMakePackage):
     variant('debug', default=False, description='Build debug version')
     variant('cuda', default=False, description='Enable CUDA and GPU acceleration.')
     variant('complex', default=True, description='Build the complex (general twist/k-point) version')
-    variant('mixed', default=False, description='Build the mixed precision (mixing double/float) version for gpu/cpu')
+    variant('mixed', default=False, description='Build the mixed precision (mixture of single and double precision) version for gpu and cpu (experimental)')
+    variant('gui', default=False, description='Install with Py-Matplotlib (long installation time)') 
 
     depends_on('cmake@3.4.3:', type='build')
     depends_on('mpi')
@@ -70,11 +71,14 @@ class Qmcpack(CMakePackage):
     depends_on('fftw')
     depends_on('cuda', when='+cuda')
    
-    # qmcpack needs these optional for data analysis, but it leads to a long complex DAG for dependencies
-    # depends_on('python', type=('build', 'run'))
-    # depends_on('py-numpy', type=('build', 'run'))
-    # depends_on('py-matplotlib', type=('build', 'run'))
+    # qmcpack needs these for data analysis
+    depends_on('python', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
 
+    # GUI is optional and leads to a long complex DAG for dependencies
+    depends_on('py-matplotlib', type=('build', 'run'), when='+gui')
+
+    # B-spline basis calculation require a patched version of Quantum Espresso 5.3.0 (see QMCPACK manual)
     depends_on('espresso@5.3.0+qmcpack~elpa') 
 
     def cmake_args(self):
@@ -131,6 +135,15 @@ class Qmcpack(CMakePackage):
             # to technical difficulties.
             mkdirp(prefix)
 
+            # install binaries
             install_tree(join_path(self.build_directory, 'bin'),
                          prefix.bin)
+
+            # install manual
+            install_tree(join_path(self.stage.source_path, 'manual'), 
+                         join_path(prefix,'manual'))
+
+            # install nexus
+            install_tree(join_path(self.stage.source_path, 'nexus'),
+                         join_path(prefix,'nexus'))
 
