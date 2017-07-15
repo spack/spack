@@ -8,7 +8,10 @@ except ImportError:
     from io import StringIO
 
 import spack.cmd.context
-from spack.cmd.context import Context, prepare_repository, _context_concretize
+import spack.util.spack_yaml as syaml
+from spack.cmd.context import (Context, prepare_repository,
+                               _context_concretize, prepare_config_scope,
+                               _context_create)
 from spack.version import Version
 
 
@@ -86,6 +89,24 @@ class TestContext(unittest.TestCase):
         assert callpath_dependents
         for spec in callpath_dependents:
             assert spec['callpath'].version == Version('1.0')
+
+    @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
+    def test_init_config(self):
+        test_config = """user_specs:
+    - mpileaks
+packages:
+    mpileaks:
+        version: [2.2]
+"""
+        spack.package_prefs.PackagePrefs._packages_config_cache = None
+        spack.package_prefs.PackagePrefs._spec_cache = {}
+
+        _context_create('test', syaml.load(StringIO(test_config)))
+        c = spack.cmd.context.read('test')
+        prepare_config_scope(c)
+        c.concretize()
+        assert any(x.satisfies('mpileaks@2.2')
+                   for x in c._get_environment_specs())
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_to_dict(self):

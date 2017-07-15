@@ -315,13 +315,22 @@ def context_create(args):
     if os.path.exists(context.path()):
         raise tty.die("Context already exists: " + args.context)
 
-    config_paths = None
+    init_config = None
     if args.init_file:
         with open(args.init_file) as F:
-            data = syaml.load(F)
+            init_config = syaml.load(F)
+
+    _context_create(args.context, init_config)
+
+
+def _context_create(name, init_config=None):
+    context = Context(name)
+
+    config_paths = None
+    if init_config:
         user_specs = list()
         config_sections = {}
-        for key, val in data.items():
+        for key, val in init_config.items():
             if key == 'user_specs':
                 user_specs.extend(val)
             else:
