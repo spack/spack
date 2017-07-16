@@ -60,6 +60,10 @@ class Openblas(MakefilePackage):
     patch('openblas_icc_openmp.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
 
+    # Fixes compilation error on POWER8 with GCC 7
+    # https://github.com/xianyi/OpenBLAS/pull/1098
+    patch('power8.patch', when='@0.2.18:0.2.19')
+
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982
     patch('openblas0.2.19.diff', when='@0.2.19')
