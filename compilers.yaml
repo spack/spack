@@ -19,10 +19,10 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-lgerkeg4g5dcmwj73qvqcxh6fjet4vm4/gcc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-lgerkeg4g5dcmwj73qvqcxh6fjet4vm4/g++
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-lgerkeg4g5dcmwj73qvqcxh6fjet4vm4/gfortran
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-lgerkeg4g5dcmwj73qvqcxh6fjet4vm4/gfortran
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-guetrrzi7mvi2mvrucqftwbi353qs774/bin/gcc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-guetrrzi7mvi2mvrucqftwbi353qs774/bin/g++
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-guetrrzi7mvi2mvrucqftwbi353qs774/bin/gfortran
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-4.9.4-guetrrzi7mvi2mvrucqftwbi353qs774/bin/gfortran
     spec: gcc@4.9.4
     target: x86_64
 - compiler:
@@ -32,23 +32,10 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/llvm-3.9.1-y6gvk4ohv2bgvxvlvjnqlhxtgxhewxqb/bin/clang
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/llvm-3.9.1-y6gvk4ohv2bgvxvlvjnqlhxtgxhewxqb/bin/clang++
-      f77: None
-      fc: None
-    spec: clang@3.9.0
-    target: x86_64
-- compiler:
-    environment: {}
-    extra_rpaths: []
-    flags: {}
-    modules: []
-    operating_system: centos7
-    paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/gcc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/g++
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/gfortran
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/gfortran
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-rkzxojtkf3jhis7xssshvz3oi67lobyk 2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/gcc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-rkzxojtkf3jhis7xssshvz3oi67lobyk 2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/g++
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-rkzxojtkf3jhis7xssshvz3oi67lobyk 2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/gfortran
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-5.4.0-rkzxojtkf3jhis7xssshvz3oi67lobyk 2447t7nzbsktl2ohfwc26bn2hqsjdqmf/bin/gfortran
     spec: gcc@5.4.0
     target: x86_64
 - compiler:
@@ -58,10 +45,10 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-aj6mvo377rth26z4lnvcx2zpzvhu4icv/bin/gcc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-aj6mvo377rth26z4lnvcx2zpzvhu4icv/bin/g++
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-aj6mvo377rth26z4lnvcx2zpzvhu4icv/bin/gfortran
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.3.0-aj6mvo377rth26z4lnvcx2zpzvhu4icv/bin/gfortran
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.4.0-7kl57mrtrufjao6sip42yrbuzr6vfq7o/bin/gcc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.4.0-7kl57mrtrufjao6sip42yrbuzr6vfq7o/bin/g++
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.4.0-7kl57mrtrufjao6sip42yrbuzr6vfq7o/bin/gfortran
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.4.0-7kl57mrtrufjao6sip42yrbuzr6vfq7o/bin/gfortran
     spec: gcc@6.3.0
     target: x86_64
 - compiler:
@@ -70,10 +57,10 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o/bin/icc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o/bin/icpc
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o/bin/ifort
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o/bin/ifort
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-hlokmstmpfgdfk3yh72phrflxhqmlaml/bin/icc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-hlokmstmpfgdfk3yh72phrflxhqmlaml/bin/icpc
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-hlokmstmpfgdfk3yh72phrflxhqmlaml/bin/ifort
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-hlokmstmpfgdfk3yh72phrflxhqmlaml/bin/ifort
     flags: {}
     spec: intel@15.0.6
     target: x86_64
@@ -84,10 +71,10 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i/bin/icc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i/bin/icpc
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i/bin/ifort
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i/bin/ifort
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-zd3nbh2zggohn2n7dmhpt4vond26dvjp/bin/icc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-zd3nbh2zggohn2n7dmhpt4vond26dvjp/bin/icpc
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-zd3nbh2zggohn2n7dmhpt4vond26dvjp/bin/ifort
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-zd3nbh2zggohn2n7dmhpt4vond26dvjp/bin/ifort
     spec: intel@16.0.4
     target: x86_64
 - compiler:
@@ -97,11 +84,11 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.2-eeraupfik4tjnz3vzr5sodxswdawfxtz/bin/icc
-      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.2-eeraupfik4tjnz3vzr5sodxswdawfxtz/bin/icpc
-      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.2-eeraupfik4tjnz3vzr5sodxswdawfxtz/bin/ifort
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.2-eeraupfik4tjnz3vzr5sodxswdawfxtz/bin/ifort
-    spec: intel@17.0.2
+      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.4-ykyyqyu77kvmultgpwppju36ecpg3u4v/bin/icc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.4-ykyyqyu77kvmultgpwppju36ecpg3u4v/bin/icpc
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.4-ykyyqyu77kvmultgpwppju36ecpg3u4v/bin/ifort
+      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.4-ykyyqyu77kvmultgpwppju36ecpg3u4v/bin/ifort
+    spec: intel@17.0.4
     target: x86_64
 - compiler:
     environment: {}

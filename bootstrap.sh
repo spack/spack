@@ -35,9 +35,9 @@ else
 	SPACKPREFIX=$SPACK_ROOT/opt
 fi
 
-export SPACKSTAGE=/tmp/`whoami`/spack_stage
-export SPACKCACHE=/tmp/`whoami`/spack_cache
-export SPACKSOURCECACHE=/tmp/`whoami`/spack_source_cache
+export SPACKSTAGE="/tmp/`whoami`/spack_stage"
+export SPACKCACHE="/tmp/`whoami`/spack_cache"
+export SPACKSOURCECACHE="$SPACK_ROOT/var/spack/cache"
 
 #Summarizing
 echo ">>>"
@@ -90,12 +90,12 @@ git co -- config.yaml.template
 
 # Installing packages
 if [[ $2 == "--install" ]]; then
-	echo "Installing packages..."
-	./build_${1}.sh
+    echo "Installing packages..."
+    ./build_${1}.sh
 fi
 
-# Installing packages
+# Sync cached source packages to the HTTP servers
 if [[ $2 == "--sync" ]]; then
-	echo "Sync cached packages to mirror site..."
-	rsync -ar --progress ${SPACKSOURCECACHE}/ ibacct://home/www/spack.pi.sjtu.edu.cn/mirror/
+    echo "Sync cached packages to mirror site..."
+    rsync -ar --progress ${SPACKSOURCECACHE}/ root@lb://var/lib/www/spack.pi.sjtu.edu.cn/mirror/
 fi
