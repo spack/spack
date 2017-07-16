@@ -36,6 +36,7 @@ class Qt(Package):
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
 
+    version('5.9.1',  '77b4af61c49a09833d4df824c806acaf')
     version('5.9.0',  '9c8bc8b828c2b56721980368266df9d9')
     version('5.8.0',  'a9f2494f75f966e2f22358ec367d8f41')
     version('5.7.1',  '031fb3fd0c3cc0f1082644492683f18d')

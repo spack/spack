@@ -92,6 +92,8 @@ function spack {
                 LOC="$(spack location $_sp_arg "$@")"
                 if [[ -d "$LOC" ]] ; then
                     cd "$LOC"
+                else
+                    return 1
                 fi
             fi
             return

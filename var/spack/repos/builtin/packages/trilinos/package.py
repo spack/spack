@@ -123,6 +123,8 @@ class Trilinos(CMakePackage):
             description='Compile with Amesos')
     variant('amesos2',      default=True,
             description='Compile with Amesos2')
+    variant('anasazi',       default=True,
+            description='Compile with Anasazi')
     variant('ifpack',       default=True,
             description='Compile with Ifpack')
     variant('ifpack2',      default=True,
@@ -147,12 +149,33 @@ class Trilinos(CMakePackage):
             description='Compile with explicit instantiation for complex')
     variant('dtk',          default=False,
             description='Enable DataTransferKit')
+    variant('fortrilinos',  default=False,
+            description='Enable ForTrilinos')
+    variant('openmp',       default=False,
+            description='Enable OpenMP')
+
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
              tag='master',
              placement='DataTransferKit',
              when='+dtk')
+    resource(name='fortrilinos',
+             git='https://github.com/trilinos/ForTrilinos',
+             tag='develop',
+             placement='packages/ForTrilinos',
+             when='+fortrilinos')
+
     conflicts('+dtk', when='~tpetra')
+    conflicts('+fortrilinos', when='~fortran')
+    conflicts('+fortrilinos', when='@:99')
+    conflicts('+fortrilinos', when='@master')
+    # Can only use one type of SuperLU
+    conflicts('+superlu-dist', when='+superlu')
+    # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
+    # deprecated SuperLUDist v3.3 together with an Amesos patch is working.
+    conflicts('+superlu-dist', when='@:11.14.3')
+    # PnetCDF was only added after v12.10.1
+    conflicts('+pnetcdf', when='@:12.10.1')
 
     # ###################### Dependencies ##########################
 
@@ -169,9 +192,9 @@ class Trilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi')
-    depends_on('netcdf+mpi')
-    depends_on('parallel-netcdf', when="+pnetcdf@master")
-    depends_on('parallel-netcdf', when="+pnetcdf@12.10.2:")
+    depends_on('netcdf+mpi', when="~pnetcdf")
+    depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master")
+    depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@12.10.2:")
     depends_on('parmetis', when='+metis')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
@@ -197,28 +220,15 @@ class Trilinos(CMakePackage):
     depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
+    patch('xlf_seacas.patch', when='@12.10.1%xl')
+    patch('xlf_seacas.patch', when='@12.10.1%xl_r')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
 
-    # check that the combination of variants makes sense
-    def variants_check(self):
-        if ('+superlu-dist' in self.spec and
-            self.spec.satisfies('@11.14.1:11.14.3')):
-            # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
-            # deprecated SuperLUDist v3.3 together with an Amesos patch is
-            # working.
-            raise RuntimeError('The superlu-dist variant can only be used' +
-                               ' with Trilinos @12.0.1:')
-        if '+superlu-dist' in self.spec and '+superlu' in self.spec:
-            # Only choose one type of superlu
-            raise RuntimeError('The superlu-dist and superlu variant' +
-                               ' cannot be used together')
-
     def cmake_args(self):
         spec = self.spec
-        self.variants_check()
 
         cxx_flags = []
         options = []
@@ -291,6 +301,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+gtest' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Teuchos:BOOL=%s' % (
                 'ON' if '+teuchos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
+                'ON' if '+anasazi' in spec else 'OFF'),
         ])
 
         if '+xsdkflags' in spec:
@@ -328,7 +340,8 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_SEACASEpu:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASExodiff:BOOL=ON',
                 '-DTrilinos_ENABLE_SEACASNemspread:BOOL=ON',
-                '-DTrilinos_ENABLE_SEACASNemslice:BOOL=ON'
+                '-DTrilinos_ENABLE_SEACASNemslice:BOOL=ON',
+                '-DTrilinos_ENABLE_SEACASIoss:BOOL=ON'
             ])
         else:
             options.extend([
@@ -508,6 +521,17 @@ class Trilinos(CMakePackage):
             ])
 
         # ################# Miscellaneous Stuff ######################
+
+        # OpenMP
+        if '+openmp' in spec:
+            options.extend([
+                '-DTrilinos_ENABLE_OpenMP:BOOL=ON',
+                '-DKokkos_ENABLE_OpenMP:BOOL=ON'
+            ])
+            if '+tpetra' in spec:
+                options.extend([
+                    '-DTpetra_INST_OPENMP:BOOL=ON'
+                ])
 
         # Fortran lib
         if '+fortran' in spec:
