@@ -25,15 +25,12 @@
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class SomaticSniper(CMakePackage):
+    """A tool to call somatic single nucleotide variants."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "http://gmt.genome.wustl.edu/packages/somatic-sniper"
+    url      = "https://github.com/genome/somatic-sniper/archive/v1.0.5.0.tar.gz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('1.0.5.0', '64bc2b001c9a8089f2a05900f8a0abfe')
 
-    depends_on('r@2.15.0:')
+    parallel = False

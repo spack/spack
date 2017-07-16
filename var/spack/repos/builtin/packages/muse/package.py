@@ -25,15 +25,14 @@
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Muse(MakefilePackage):
+    """Somatic point mutation caller."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "http://bioinformatics.mdanderson.org/main/MuSE"
+    url      = "https://github.com/danielfan/MuSE/archive/v1.0-rc.tar.gz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('1.0-rc', 'c63fdb48c041f6f9545879f1a7e4da58')
 
-    depends_on('r@2.15.0:')
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        install('MuSE', prefix.bin.MuSE)

@@ -23,17 +23,37 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
+import os
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Hybpiper(Package):
+    """HybPiper was designed for targeted sequence capture, in which DNA
+       sequencing libraries are enriched for gene regions of interest,
+       especially for phylogenetics. HybPiper is a suite of Python scripts
+       that wrap and connect bioinformatics tools in order to extract target
+       sequences from high-throughput DNA sequencing reads"""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://github.com/mossmatters/HybPiper"
+    url      = "https://github.com/mossmatters/HybPiper/archive/v1.2.0.tar.gz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('1.2.0', '0ad78e9ca5e3f23ae0eb6236b07e1780')
 
-    depends_on('r@2.15.0:')
+    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('py-biopython', type=('build', 'run'))
+    depends_on('exonerate')
+    depends_on('blast-plus')
+    depends_on('spades')
+    depends_on('parallel')
+    depends_on('bwa')
+    depends_on('samtools')
+
+    def setup_envionment(self, spack_env, run_env):
+        run_env.set('HYBPIPER_HOME', prefix)
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        files = glob.iglob("*.py")
+        for file in files:
+            if os.path.isfile(file):
+                install(file, prefix.bin)

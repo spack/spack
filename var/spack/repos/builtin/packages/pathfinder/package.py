@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,18 +22,34 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Pathfinder(MakefilePackage):
+    """Proxy Application. Signature search."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://mantevo.org/packages/"
+    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/PathFinder/PathFinder_1.0.0.tgz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    tags = ['proxy-app']
 
-    depends_on('r@2.15.0:')
+    version('1.0.0', '374269e8d42c305eda3e392444e22dde')
+
+    build_targets = ['--directory=PathFinder_ref', 'CC=cc']
+
+    def edit(self, spec, prefix):
+        makefile = FileFilter('PathFinder_ref/Makefile')
+        makefile.filter('-fopenmp', self.compiler.openmp_flag)
+
+    def install(self, spec, prefix):
+        # Manual installation
+        mkdirp(prefix.bin)
+        mkdirp(prefix.doc)
+
+        install('PathFinder_ref/PathFinder.x', prefix.bin)
+        install('PathFinder_ref/MicroTestData.adj_list', prefix.bin)
+        install('README', prefix.doc)
+
+        install_tree('generatedData/', prefix.doc.generatedData)
+        install_tree('scaleData/', prefix.doc.scaleData)

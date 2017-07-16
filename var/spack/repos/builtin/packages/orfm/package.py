@@ -25,15 +25,13 @@
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Orfm(AutotoolsPackage):
+    """A simple and not slow open reading frame (ORF) caller. No bells or
+       whistles like frameshift detection, just a straightforward goal of
+       returning a FASTA file of open reading frames over a certain length
+       from a FASTA/Q file of nucleotide sequences."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://github.com/wwood/OrfM"
+    url      = "https://github.com/wwood/OrfM/releases/download/v0.7.1/orfm-0.7.1.tar.gz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
-
-    depends_on('r@2.15.0:')
+    version('0.7.1', 'fcf18283a028cea2af90663a76a73a2a')

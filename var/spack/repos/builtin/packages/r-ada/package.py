@@ -25,15 +25,13 @@
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class RAda(RPackage):
+    """Performs discrete, real, and gentle boost under both exponential
+    and logistic loss on a given data set."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://cran.r-project.org/web/packages/ada/index.html"
+    url      = "https://cran.r-project.org/src/contrib/ada_2.0-5.tar.gz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('2.0-5', '25ac0dc2650fba9e19f3d15c7c6721c1')
 
-    depends_on('r@2.15.0:')
+    depends_on('r-rpart', type=('build', 'run'))

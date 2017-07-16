@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,17 +23,28 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from distutils.dir_util import copy_tree
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Savanna(MakefilePackage):
+    """CODARcode Savanna runtime framework for high performance,
+    workflow management using Swift/T and ADIOS.
+    """
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://github.com/CODARcode/savanna"
+    url = "https://github.com/CODARcode/savanna/archive/v0.5.tar.gz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('develop', git='https://github.com/CODARcode/savanna.git',
+            branch='master', submodules=True)
+    version('0.5', '3f13adf29ec30f4acb2ba3fa07ed12b2')
 
-    depends_on('r@2.15.0:')
+    variant('tau', default=False, description='Enable TAU profiling support')
+
+    depends_on('mpi')
+    depends_on('stc')
+    depends_on('adios +staging')
+    depends_on('mpix-launch-swift')
+    depends_on('tau', when='+tau')
+
+    def install(self, spec, prefix):
+        copy_tree('.', prefix)

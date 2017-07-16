@@ -25,15 +25,27 @@
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Freebayes(MakefilePackage):
+    """Bayesian haplotype-based genetic polymorphism discovery and
+       genotyping."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://github.com/ekg/freebayes"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('1.1.0', git='https://github.com/ekg/freebayes.git',
+            commit='39e5e4bcb801556141f2da36aba1df5c5c60701f',
+            submodules=True)
 
-    depends_on('r@2.15.0:')
+    depends_on('cmake', type='build')
+    depends_on('zlib')
+
+    parallel = False
+
+    def edit(self, spec, prefix):
+        makefile = FileFilter('Makefile')
+        b = prefix.bin
+        makefile.filter('cp bin/freebayes bin/bamleftalign /usr/local/bin/',
+                        'cp bin/freebayes bin/bamleftalign {0}'.format(b))
+
+    @run_before('install')
+    def make_prefix_dot_bin(self):
+        mkdir(prefix.bin)

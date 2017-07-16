@@ -25,15 +25,21 @@
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Spades(CMakePackage):
+    """SPAdes - St. Petersburg genome assembler - is intended for both
+       standard isolates and single-cell MDA bacteria assemblies."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "http://cab.spbu.ru/software/spades/"
+    url      = "http://cab.spbu.ru/files/release3.10.1/SPAdes-3.10.1.tar.gz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('3.10.1', 'dcab7d145af81b59cc867562f27536c3')
 
-    depends_on('r@2.15.0:')
+    depends_on('python', type=('build', 'run'))
+    depends_on('zlib')
+    depends_on('bzip2')
+
+    conflicts('%gcc@7.1.0:')
+
+    @property
+    def root_cmakelists_dir(self):
+        return join_path(self.stage.source_path, 'src')

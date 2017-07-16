@@ -1,4 +1,4 @@
-##############################################################################
+#############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,18 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Ebms(MakefilePackage):
+    """This is a miniapp for the Energy Banding Monte Carlo (EBMC)
+       neutron transportation simulation code.  It is adapted from a
+       similar miniapp provided by Andrew Siegel, whose algorithm is
+       described in [1], where only one process in a compute node
+       is used, and the compute nodes are divided into memory nodes
+       and tracking nodes.    Memory nodes do not participate in particle
+       tracking. Obviously, there is a lot of resource waste in this design."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://github.com/ANL-CESAR/EBMS"
+    url = "https://github.com/ANL-CESAR/EBMS/archive/master.tar.gz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('develop', git='https://github.com/ANL-CESAR/EBMS.git')
 
-    depends_on('r@2.15.0:')
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        install('ebmc-iallgather', prefix.bin)
+        install('ebmc-rget', prefix.bin)

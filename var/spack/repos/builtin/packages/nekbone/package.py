@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,15 +25,28 @@
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Nekbone(Package):
+    """NEK5000 emulation software called NEKbone. Nekbone captures the basic
+       structure and user interface of the extensive Nek5000 software.
+       Nek5000 is a high order, incompressible Navier-Stokes solver based on
+       the spectral element method."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://github.com/ANL-CESAR/"
+    url = "https://github.com/ANL-CESAR/nekbone.git"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('develop', git='https://github.com/ANL-CESAR/nekbone.git')
 
-    depends_on('r@2.15.0:')
+    def install(self, spec, prefix):
+
+        working_dirs = ['example1', 'example2', 'example3', 'nek_comm',
+                        'nek_delay', 'nek_mgrid']
+        mkdir(prefix.bin)
+
+        for wdir in working_dirs:
+            with working_dir('test/' + wdir):
+                makenek = Executable('./makenek')
+                path = join_path(prefix.bin,  wdir)
+                makenek('ex1', '../../src')
+                mkdir(path)
+                install('nekbone', path)
+                install('nekpmpi', path)

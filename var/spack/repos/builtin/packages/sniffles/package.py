@@ -25,15 +25,18 @@
 from spack import *
 
 
-class RRpart(RPackage):
-    """Recursive partitioning for classification, regression and
-    survival trees."""
+class Sniffles(CMakePackage):
+    """Structural variation caller using third generation sequencing."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://github.com/fritzsedlazeck/Sniffles/wiki"
+    url      = "https://github.com/fritzsedlazeck/Sniffles/archive/v1.0.5.tar.gz"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('1.0.5', 'c2f2350d00418ba4d82c074e7f0b1832')
 
-    depends_on('r@2.15.0:')
+    # the build process doesn't actually install anything, do it by hand
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        src = "bin/sniffles-core-{0}".format(spec.version.dotted)
+        binaries = ['sniffles', 'sniffles-debug']
+        for b in binaries:
+            install(join_path(src, b), join_path(prefix.bin, b))
