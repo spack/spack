@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,6 +36,10 @@ class Tbb(Package):
 
     # Only version-specific URL's work for TBB
     # can also use https://github.com/01org/tbb/releases/
+    version('2017.6', '5b0909fbb1741724f7a0ce83232f50b166788af0',
+            url='https://github.com/01org/tbb/archive/2017_U6.tar.gz')
+    version('2017.5', '26f720729d322913912e99d1e4a36bd10625d3ca',
+            url='https://github.com/01org/tbb/archive/2017_U5.tar.gz')
     version('2017.3', '2c451a5bcf6fc31487b98b4b29651c369874277c',
             url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb2017_20161128oss_src.tgz')
     version('4.4.4', 'd4cee5e4ca75cab5181834877738619c56afeb71',

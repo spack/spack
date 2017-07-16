@@ -1,0 +1,36 @@
+--- a/hpx/configure
++++ b/hpx/configure
+@@ -18002,33 +18002,21 @@
+  case $PE_ENV in #(
+   CRAY*) :
+ 
+- LIBHPX_CPPFLAGS="$LIBHPX_CPPFLAGS ‐h noomp"
+- LIBHPX_CFLAGS="$LIBHPX_CFLAGS -h nomessage=1254"
+- LIBHPX_CCASFLAGS="$LIBHPX_CCASFLAGS -h gnu -h nomessage=1254"
+  ;; #(
+   PGI*) :
+ 
+  ;; #(
+   GNU*) :
+ 
+- hpx_pe_env_cflags_pedantic="-pedantic"
+- hpx_pe_env_cflags_wall="-Wall"
+  ;; #(
+   INTEL*) :
+ 
+  # icc complains about our use of gcc memory model macros, but the complaint
+  # isn't a problem or helpful, so suppress that one warning. The sync headers
+  # aren't included by HPX so external users don't care.
+- LIBHPX_CFLAGS="$LIBHPX_CFLAGS -wd32013"
+- HPX_APPS_CFLAGS="$HPX_APPS_CFLAGS -wd32013"
+- hpx_pe_env_cflags_pedantic="-pedantic"
+- hpx_pe_env_cflags_wall="-Wall"
+  ;; #(
+   CLANG*) :
+ 
+- LIBHPX_CPPFLAGS="$LIBHPX_CPPFLAGS -Wno-gnu-zero-variadic-macro-arguments -Wno-unused-private-field"
+- hpx_pe_env_cflags_pedantic="-pedantic"
+- hpx_pe_env_cflags_wall="-Wall"
+ 
+                  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unknown programming environment" >&5
+ $as_echo "$as_me: WARNING: Unknown programming environment" >&2;} ;; #(

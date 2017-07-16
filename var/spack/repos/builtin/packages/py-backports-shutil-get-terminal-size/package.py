@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,5 +34,7 @@ class PyBackportsShutilGetTerminalSize(PythonPackage):
 
     version('1.0.0', '03267762480bd86b50580dc19dff3c66')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('python@:3.2.999')
+    # newer setuptools version mess with "namespace" packages in an
+    # incompatible way cf. https://github.com/pypa/setuptools/issues/900
+    depends_on('py-setuptools@:30.999.999', type='build')
+    depends_on('python@:3.2')

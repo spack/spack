@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,6 +25,8 @@
 import spack.config
 
 description = "get and set configuration options"
+section = "config"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -55,7 +57,10 @@ def config_get(args):
 
 def config_edit(args):
     if not args.scope:
-        args.scope = 'user'
+        if args.section == 'compilers':
+            args.scope = spack.cmd.default_modify_scope
+        else:
+            args.scope = 'user'
     if not args.section:
         args.section = None
     config_file = spack.config.get_config_filename(args.scope, args.section)

@@ -1,0 +1,75 @@
+diff --git a/lib/kernel/vecmathlib/vec_sse_double1.h b/lib/kernel/vecmathlib/vec_sse_double1.h
+index d727de8..dc582b3 100644
+--- a/lib/kernel/vecmathlib/vec_sse_double1.h
++++ b/lib/kernel/vecmathlib/vec_sse_double1.h
+@@ -397,8 +397,8 @@ public:
+     }
+     return r;
+   }
+-  boolvec_t isfinite() const { return vml_std::isfinite(v); }
+-  boolvec_t isinf() const { return vml_std::isinf(v); }
++  boolvec_t isfinite() const { return bool(vml_std::isfinite(v)); }
++  boolvec_t isinf() const { return bool(vml_std::isinf(v)); }
+   boolvec_t isnan() const {
+     // This is wrong:
+     // return _mm_ucomineq_sd(from_double(v), from_double(v));
+@@ -407,9 +407,9 @@ public:
+     // __asm__("ucomisd %[v],%[v]; setp %[r]": [r]"=q"(r): [v]"x"(v));
+     // return boolvec_t::scalar_t(r);
+     // This works as well:
+-    return vml_std::isnan(v);
++    return bool(vml_std::isnan(v));
+   }
+-  boolvec_t isnormal() const { return vml_std::isnormal(v); }
++  boolvec_t isnormal() const { return bool(vml_std::isnormal(v)); }
+   realvec_t ldexp(int_t n) const { return vml_std::ldexp(v, n); }
+   realvec_t ldexp(intvec_t n) const { return vml_std::ldexp(v, n); }
+   realvec_t log() const { return MF::vml_log(*this); }
+@@ -433,7 +433,7 @@ public:
+   }
+   realvec_t round() const { return MF::vml_round(*this); }
+   realvec_t rsqrt() const { return MF::vml_rsqrt(*this); }
+-  boolvec_t signbit() const { return vml_std::signbit(v); }
++  boolvec_t signbit() const { return bool(vml_std::signbit(v)); }
+   realvec_t sin() const { return MF::vml_sin(*this); }
+   realvec_t sinh() const { return MF::vml_sinh(*this); }
+   realvec_t sqrt() const {
+diff --git a/lib/kernel/vecmathlib/vec_sse_float1.h b/lib/kernel/vecmathlib/vec_sse_float1.h
+index a84a046..4868b2c 100644
+--- a/lib/kernel/vecmathlib/vec_sse_float1.h
++++ b/lib/kernel/vecmathlib/vec_sse_float1.h
+@@ -394,8 +394,8 @@ public:
+     }
+     return r;
+   }
+-  boolvec_t isfinite() const { return vml_std::isfinite(v); }
+-  boolvec_t isinf() const { return vml_std::isinf(v); }
++  boolvec_t isfinite() const { return bool(vml_std::isfinite(v)); }
++  boolvec_t isinf() const { return bool(vml_std::isinf(v)); }
+   boolvec_t isnan() const {
+ #if defined VML_HAVE_NAN
+     // This is wrong:
+@@ -405,12 +405,12 @@ public:
+     // __asm__("ucomiss %[v],%[v]; setp %[r]": [r]"=q"(r): [v]"x"(v));
+     // return boolvec_t::scalar_t(r);
+     // This works as well:
+-    return vml_std::isnan(v);
++    return bool(vml_std::isnan(v));
+ #else
+     return BV(false);
+ #endif
+   }
+-  boolvec_t isnormal() const { return vml_std::isnormal(v); }
++  boolvec_t isnormal() const { return bool(vml_std::isnormal(v)); }
+   realvec_t ldexp(int_t n) const { return vml_std::ldexp(v, n); }
+   realvec_t ldexp(intvec_t n) const { return vml_std::ldexp(v, n); }
+   realvec_t log() const { return MF::vml_log(*this); }
+@@ -434,7 +434,7 @@ public:
+   }
+   realvec_t round() const { return MF::vml_round(*this); }
+   realvec_t rsqrt() const { return MF::vml_rsqrt(*this); }
+-  boolvec_t signbit() const { return vml_std::signbit(v); }
++  boolvec_t signbit() const { return bool(vml_std::signbit(v)); }
+   realvec_t sin() const { return MF::vml_sin(*this); }
+   realvec_t sinh() const { return MF::vml_sinh(*this); }
+   realvec_t sqrt() const { return to_float(_mm_sqrt_ss(from_float(v))); }

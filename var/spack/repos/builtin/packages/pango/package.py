@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,7 @@ class Pango(AutotoolsPackage):
     homepage = "http://www.pango.org"
     url      = "http://ftp.gnome.org/pub/GNOME/sources/pango/1.40/pango-1.40.3.tar.xz"
     list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
-    list_depth = 2
+    list_depth = 1
 
     version('1.40.3', 'abba8b5ce728520c3a0f1535eab19eac3c14aeef7faa5aded90017ceac2711d3')
     version('1.40.1', 'e27af54172c72b3ac6be53c9a4c67053e16c905e02addcf3a603ceb2005c1a40')
@@ -46,7 +46,23 @@ class Pango(AutotoolsPackage):
     depends_on("cairo")
     depends_on("cairo~X", when='~X')
     depends_on("cairo+X", when='+X')
+    depends_on("libxft", when='+X')
     depends_on("glib")
+    depends_on('gobject-introspection')
+
+    def configure_args(self):
+        args = []
+        if self.spec.satisfies('+X'):
+            args.append('--with-xft')
+        else:
+            args.append('--without-xft')
+        return args
 
     def install(self, spec, prefix):
         make("install", parallel=False)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path("XDG_DATA_DIRS",
+                               self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS",
+                             self.prefix.share)

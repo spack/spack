@@ -551,7 +551,7 @@ class Testdir:
     def _possibly_invalidate_import_caches(self):
         # invalidate caches if we can (py33 and above)
         try:
-            import importlib
+            import importlib  # nopyqver
         except ImportError:
             pass
         else:

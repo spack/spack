@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -88,7 +88,7 @@ class Conduit(Package):
     extends("python", when="+python")
     # TODO: blas and lapack are disabled due to build
     # issues Cyrus experienced on OSX 10.11.6
-    depends_on("py-numpy~blas~lapack", when="+python")
+    depends_on("py-numpy~blas~lapack", when="+python", type=('build', 'run'))
 
     #######################
     # I/O Packages
@@ -113,7 +113,7 @@ class Conduit(Package):
     #######################
     # Documentation related
     #######################
-    depends_on("py-sphinx", when="+python+doc")
+    depends_on("py-sphinx", when="+python+doc", type='build')
     depends_on("doxygen", when="+doc")
 
     def install(self, spec, prefix):
@@ -174,13 +174,13 @@ class Conduit(Package):
         ##############################################
 
         if "+cmake" in spec:
-            cmake_exe = join_path(spec['cmake'].prefix.bin, "cmake")
+            cmake_exe = spec['cmake'].command.path
         else:
             cmake_exe = which("cmake")
             if cmake_exe is None:
                 msg = 'failed to find CMake (and cmake variant is off)'
                 raise RuntimeError(msg)
-            cmake_exe = cmake_exe.command
+            cmake_exe = cmake_exe.path
 
         host_cfg_fname = "%s-%s-%s.cmake" % (socket.gethostname(),
                                              sys_type,
@@ -224,21 +224,15 @@ class Conduit(Package):
         cfg.write("# Python Support\n")
 
         if "+python" in spec:
-            python_exe = join_path(spec['python'].prefix.bin, "python")
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", python_exe))
+            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
+                      spec['python'].command.path))
             # install module to standard style site packages dir
             # so we can support spack activate
-            py_ver_short = "python{0}".format(spec["python"].version.up_to(2))
-            pym_prefix = join_path("${CMAKE_INSTALL_PREFIX}",
-                                   "lib",
-                                   py_ver_short,
-                                   "site-packages")
-            # use pym_prefix as the install path
             cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                                        pym_prefix))
+                                        site_packages_dir))
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
@@ -251,7 +245,7 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
 
             cfg.write("# doxygen from uberenv\n")
-            doxygen_exe = join_path(spec['doxygen'].prefix.bin, "doxygen")
+            doxygen_exe = spec['doxygen'].command.path
             cfg.write(cmake_cache_entry("DOXYGEN_EXECUTABLE", doxygen_exe))
         else:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))

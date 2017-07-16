@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -164,19 +164,10 @@ class Clang(Compiler):
 
     @classmethod
     def fc_version(cls, fc):
-        version = get_compiler_version(
-            fc, '-dumpversion',
-            # older gfortran versions don't have simple dumpversion output.
-            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
-        # This is horribly ad hoc, we need to map from gcc/gfortran version
-        # to clang version, but there could be multiple clang
-        # versions that work for a single gcc/gfortran version
+        # We could map from gcc/gfortran version to clang version, but on macOS
+        # we normally mix any version of gfortran with any version of clang.
         if sys.platform == 'darwin':
-            clangversionfromgcc = {'6.2.0': '8.0.0-apple'}
-        else:
-            clangversionfromgcc = {}
-        if version in clangversionfromgcc:
-            return clangversionfromgcc[version]
+            return cls.default_version('clang')
         else:
             return 'unknown'
 

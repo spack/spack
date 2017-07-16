@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,8 +29,9 @@ class Libx11(AutotoolsPackage):
     """libX11 - Core X11 protocol client library."""
 
     homepage = "https://www.x.org/"
-    url      = "https://www.x.org/archive/individual/lib/libX11-1.6.3.tar.gz"
+    url      = "https://www.x.org/archive/individual/lib/libX11-1.6.5.tar.gz"
 
+    version('1.6.5', '300b5831916ffcc375468431d856917e')
     version('1.6.3', '7d16653fe7c36209799175bb3dc1ae46')
 
     depends_on('libxcb@1.1.92:')
