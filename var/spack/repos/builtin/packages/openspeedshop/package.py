@@ -70,8 +70,6 @@ class Openspeedshop(CMakePackage):
     # url = "file:/home/jeg/OpenSpeedShop_ROOT/SOURCES/openspeedshop-2.3.tar.gz"
     # version('2.3', '517a7798507241ad8abd8b0626a4d2cf')
 
-    parallel = False
-
     variant('offline', default=False,
             description="build with offline instrumentor enabled.")
     variant('cbtf', default=True,
@@ -139,6 +137,160 @@ class Openspeedshop(CMakePackage):
     depends_on("cbtf-krell", when='+cbtf')
     depends_on("cbtf-argonavis", when='+cbtf+cuda')
     depends_on("mrnet@5.0.1:+lwthreads", when='+cbtf')
+
+    parallel = False
+
+    build_directory = 'build_openspeedshop'
+
+    # We have converted from Package type to CMakePackage type for all the Krell projects.
+    # Comments from Pull Request (#4765):
+    # CMakePackage is completely different from the old Package class. Previously, you had 
+    # a single install() phase to override. Now you have 3 phases: cmake(), build(), and install(). 
+    # By default, cmake() runs cmake ... with some common arguments, which you can add to by 
+    # overriding cmake_args(). build() runs make, and install() runs make install. 
+    # So you need to add the appropriate flags to cmake_args() and remove the calls to make. 
+    # See any other CMakePackage for examples.
+    # CMakePackage is documented: 
+    # http://spack.readthedocs.io/en/latest/spack.build_systems.html?highlight= \
+    # CMakePackage#module-spack.build_systems.cmake
+
+    def build_type(self):
+        if '+debug' in self.spec:
+            return 'Debug'
+        else:
+            return 'Release'
+
+    def cmake_args(self):
+        spec = self.spec
+
+        if '+offline' in spec:
+            instrumentor_setting = "offline"
+            if '+runtime' in spec:
+
+                cmake_args = []
+                cmake_args.extend([
+                    '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
+                    '-DINSTRUMENTOR=%s'     % instrumentor_setting,
+                    '-DLIBMONITOR_DIR=%s'   % spec['libmonitor'].prefix,
+                    '-DLIBUNWIND_DIR=%s'    % spec['libunwind'].prefix,
+                    '-DPAPI_DIR=%s'         % spec['papi'].prefix])
+
+                # Add any MPI implementations coming from variant settings
+                self.set_mpi_cmakeOptions(spec, cmake_args)
+                cmake_args.extend(std_cmake_args)
+
+                # Adjust the build options to the favored
+                # ones for this build
+                self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
+
+            else:
+                cmake_prefix_path = join_path(spec['dyninst'].prefix)
+                cmake_args = []
+
+                # Appends base options to cmake_args
+                self.set_defaultbase_cmakeOptions(spec, cmake_args)
+
+                cmake_args.extend(
+                    ['-DCMAKE_INSTALL_PREFIX=%s'
+                        % prefix,
+                     '-DCMAKE_PREFIX_PATH=%s'
+                        % cmake_prefix_path,
+                     '-DINSTRUMENTOR=%s'
+                        % instrumentor_setting,
+                     '-DLIBMONITOR_DIR=%s'
+                        % spec['libmonitor'].prefix,
+                     '-DLIBUNWIND_DIR=%s'
+                        % spec['libunwind'].prefix,
+                     '-DPAPI_DIR=%s'
+                        % spec['papi'].prefix,
+                     '-DSQLITE3_DIR=%s'
+                        % spec['sqlite'].prefix,
+                     '-DQTLIB_DIR=%s'
+                        % spec['qt'].prefix])
+
+                # Add any MPI implementations coming from variant settings
+                self.set_mpi_cmakeOptions(spec, cmake_args)
+                cmake_args.extend(std_cmake_args)
+
+                # Adjust the build options to the favored
+                # ones for this build
+                self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
+
+        elif '+cbtf' in spec:
+            instrumentor_setting = "cbtf"
+            # resolve_symbols = "symtabapi"
+            cmake_prefix_path = join_path(spec['cbtf'].prefix) \
+                + ':' + join_path(spec['cbtf-krell'].prefix)\
+                + ':' + join_path(spec['dyninst'].prefix)
+
+            if '+runtime' in spec:
+
+                # Appends base options to cmake_args
+                self.set_defaultbase_cmakeOptions(spec, cmake_args)
+
+                cmake_args.extend(
+                    ['-DCMAKE_INSTALL_PREFIX=%s'
+                        % prefix,
+                     '-DCMAKE_PREFIX_PATH=%s'
+                        % cmake_prefix_path,
+                     '-DINSTRUMENTOR=%s'
+                        % instrumentor_setting,
+                     '-DCBTF_DIR=%s'
+                        % spec['cbtf'].prefix,
+                     '-DCBTF_KRELL_DIR=%s'
+                        % spec['cbtf-krell'].prefix,
+                     '-DMRNET_DIR=%s'
+                        % spec['mrnet'].prefix])
+
+                # Adjust the build options to the
+                # favored ones for this build
+                self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
+
+            else:
+                cmake_args = []
+
+                # Appends base options to cmake_args
+                self.set_defaultbase_cmakeOptions(spec, cmake_args)
+
+                if '+noqt3gui' in self.spec:
+                    cmake_args.extend(
+                        ['-DCMAKE_INSTALL_PREFIX=%s'
+                            % prefix,
+                         '-DCMAKE_PREFIX_PATH=%s'
+                            % cmake_prefix_path,
+                         '-DINSTRUMENTOR=%s'
+                            % instrumentor_setting,
+                         '-DSQLITE3_DIR=%s'
+                            % spec['sqlite'].prefix,
+                         '-DCBTF_DIR=%s'
+                            % spec['cbtf'].prefix,
+                         '-DCBTF_KRELL_DIR=%s'
+                            % spec['cbtf-krell'].prefix,
+                         '-DMRNET_DIR=%s'
+                            % spec['mrnet'].prefix])
+                else:
+                    cmake_args.extend(
+                        ['-DCMAKE_INSTALL_PREFIX=%s'
+                            % prefix,
+                         '-DCMAKE_PREFIX_PATH=%s'
+                            % cmake_prefix_path,
+                         '-DINSTRUMENTOR=%s'
+                            % instrumentor_setting,
+                         '-DSQLITE3_DIR=%s'
+                            % spec['sqlite'].prefix,
+                         '-DCBTF_DIR=%s'
+                            % spec['cbtf'].prefix,
+                         '-DCBTF_KRELL_DIR=%s'
+                            % spec['cbtf-krell'].prefix,
+                         '-DQTLIB_DIR=%s'
+                            % spec['qt'].prefix,
+                         '-DMRNET_DIR=%s'
+                            % spec['mrnet'].prefix])
+
+                # Adjust the build options to the favored
+                # ones for this build
+                self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
+        return(cmake_args)
 
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the
@@ -272,160 +424,3 @@ class Openspeedshop(CMakePackage):
             if '+openmpi' in self.spec:
                 run_env.set('OPENSS_MPI_IMPLEMENTATION', 'openmpi')
 
-    def install(self, spec, prefix):
-
-        if '+offline' in spec:
-            instrumentor_setting = "offline"
-            if '+runtime' in spec:
-                with working_dir('build_runtime', create=True):
-
-                    cmakeOptions = []
-                    cmakeOptions.extend([
-                        '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                        '-DINSTRUMENTOR=%s'     % instrumentor_setting,
-                        '-DLIBMONITOR_DIR=%s'   % spec['libmonitor'].prefix,
-                        '-DLIBUNWIND_DIR=%s'    % spec['libunwind'].prefix,
-                        '-DPAPI_DIR=%s'         % spec['papi'].prefix])
-
-                    # Add any MPI implementations coming from variant settings
-                    self.set_mpi_cmakeOptions(spec, cmakeOptions)
-                    cmakeOptions.extend(std_cmake_args)
-
-                    # Adjust the build options to the favored
-                    # ones for this build
-                    self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
-
-                    cmake('..', *cmakeOptions)
-
-                    make("clean")
-                    make()
-                    make("install")
-            else:
-                cmake_prefix_path = join_path(spec['dyninst'].prefix)
-                with working_dir('build', create=True):
-                    cmakeOptions = []
-
-                    # Appends base options to cmakeOptions
-                    self.set_defaultbase_cmakeOptions(spec, cmakeOptions)
-
-                    cmakeOptions.extend(
-                        ['-DCMAKE_INSTALL_PREFIX=%s'
-                            % prefix,
-                         '-DCMAKE_PREFIX_PATH=%s'
-                            % cmake_prefix_path,
-                         '-DINSTRUMENTOR=%s'
-                            % instrumentor_setting,
-                         '-DLIBMONITOR_DIR=%s'
-                            % spec['libmonitor'].prefix,
-                         '-DLIBUNWIND_DIR=%s'
-                            % spec['libunwind'].prefix,
-                         '-DPAPI_DIR=%s'
-                            % spec['papi'].prefix,
-                         '-DSQLITE3_DIR=%s'
-                            % spec['sqlite'].prefix,
-                         '-DQTLIB_DIR=%s'
-                            % spec['qt'].prefix])
-
-                    # Add any MPI implementations coming from variant settings
-                    self.set_mpi_cmakeOptions(spec, cmakeOptions)
-                    cmakeOptions.extend(std_cmake_args)
-
-                    # Adjust the build options to the favored
-                    # ones for this build
-                    self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
-
-                    cmake('..', *cmakeOptions)
-
-                    make("clean")
-                    make()
-                    make("install")
-
-        elif '+cbtf' in spec:
-            instrumentor_setting = "cbtf"
-            # resolve_symbols = "symtabapi"
-            cmake_prefix_path = join_path(spec['cbtf'].prefix) \
-                + ':' + join_path(spec['cbtf-krell'].prefix)\
-                + ':' + join_path(spec['dyninst'].prefix)
-
-            if '+runtime' in spec:
-                with working_dir('build_cbtf_runtime', create=True):
-                    cmakeOptions = []
-
-                    # Appends base options to cmakeOptions
-                    self.set_defaultbase_cmakeOptions(spec, cmakeOptions)
-
-                    cmakeOptions.extend(
-                        ['-DCMAKE_INSTALL_PREFIX=%s'
-                            % prefix,
-                         '-DCMAKE_PREFIX_PATH=%s'
-                            % cmake_prefix_path,
-                         '-DINSTRUMENTOR=%s'
-                            % instrumentor_setting,
-                         '-DCBTF_DIR=%s'
-                            % spec['cbtf'].prefix,
-                         '-DCBTF_KRELL_DIR=%s'
-                            % spec['cbtf-krell'].prefix,
-                         '-DMRNET_DIR=%s'
-                            % spec['mrnet'].prefix])
-
-                    # Adjust the build options to the
-                    # favored ones for this build
-                    self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
-
-                    cmake('..', *cmakeOptions)
-
-                    make("clean")
-                    make()
-                    make("install")
-
-            else:
-                with working_dir('build_cbtf', create=True):
-                    cmakeOptions = []
-
-                    # Appends base options to cmakeOptions
-                    self.set_defaultbase_cmakeOptions(spec, cmakeOptions)
-
-                    if '+noqt3gui' in self.spec:
-                        cmakeOptions.extend(
-                            ['-DCMAKE_INSTALL_PREFIX=%s'
-                                % prefix,
-                             '-DCMAKE_PREFIX_PATH=%s'
-                                % cmake_prefix_path,
-                             '-DINSTRUMENTOR=%s'
-                                % instrumentor_setting,
-                             '-DSQLITE3_DIR=%s'
-                                % spec['sqlite'].prefix,
-                             '-DCBTF_DIR=%s'
-                                % spec['cbtf'].prefix,
-                             '-DCBTF_KRELL_DIR=%s'
-                                % spec['cbtf-krell'].prefix,
-                             '-DMRNET_DIR=%s'
-                                % spec['mrnet'].prefix])
-                    else:
-                        cmakeOptions.extend(
-                            ['-DCMAKE_INSTALL_PREFIX=%s'
-                                % prefix,
-                             '-DCMAKE_PREFIX_PATH=%s'
-                                % cmake_prefix_path,
-                             '-DINSTRUMENTOR=%s'
-                                % instrumentor_setting,
-                             '-DSQLITE3_DIR=%s'
-                                % spec['sqlite'].prefix,
-                             '-DCBTF_DIR=%s'
-                                % spec['cbtf'].prefix,
-                             '-DCBTF_KRELL_DIR=%s'
-                                % spec['cbtf-krell'].prefix,
-                             '-DQTLIB_DIR=%s'
-                                % spec['qt'].prefix,
-                             '-DMRNET_DIR=%s'
-                                % spec['mrnet'].prefix])
-
-                    # Adjust the build options to the favored
-                    # ones for this build
-                    self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
-
-                    cmake('..', *cmakeOptions)
-
-                    make("clean")
-                    make()
-                    make("install")

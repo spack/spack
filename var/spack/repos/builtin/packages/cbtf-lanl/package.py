@@ -64,6 +64,54 @@ class CbtfLanl(CMakePackage):
 
     parallel = False
 
+    build_directory = 'build_cbtf_lanl'
+
+    # We have converted from Package type to CMakePackage type for all the Krell projects.
+    # Comments from Pull Request (#4765):
+    # CMakePackage is completely different from the old Package class. Previously, you had 
+    # a single install() phase to override. Now you have 3 phases: cmake(), build(), and install(). 
+    # By default, cmake() runs cmake ... with some common arguments, which you can add to by 
+    # overriding cmake_args(). build() runs make, and install() runs make install. 
+    # So you need to add the appropriate flags to cmake_args() and remove the calls to make. 
+    # See any other CMakePackage for examples.
+    # CMakePackage is documented: 
+    # http://spack.readthedocs.io/en/latest/spack.build_systems.html?highlight= \
+    # CMakePackage#module-spack.build_systems.cmake
+
+    def build_type(self):
+        if '+debug' in self.spec:
+            return 'Debug'
+        else:
+            return 'Release'
+
+    def cmake_args(self):
+
+        spec = self.spec
+
+        # Add in paths for finding package config files that tell us where to
+        # find these packages
+        cmake_prefix_path = join_path(
+            spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
+
+        cmake_args = []
+        cmake_args.extend(
+            ['-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
+             '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
+             '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
+             '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
+             '-DXERCESC_DIR=%s'            % spec['xerces-c'].prefix,
+             '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
+             '-DCMAKE_MODULE_PATH=%s'      % join_path(
+                 prefix.share, 'KrellInstitute', 'cmake')])
+
+        # Add in the standard cmake arguments
+        cmake_args.extend(std_cmake_args)
+
+        # Adjust the standard cmake arguments to what we want the build
+        # type, etc to be
+        self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
+        return(cmake_args)
+
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the options that will
         # enable the cbtf-krell built type settings
@@ -90,35 +138,3 @@ class CbtfLanl(CMakePackage):
 
         cmakeOptions.extend(BuildTypeOptions)
 
-    def install(self, spec, prefix):
-
-        # Add in paths for finding package config files that tell us where to
-        # find these packages
-        cmake_prefix_path = join_path(
-            spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
-
-        with working_dir('build', create=True):
-            cmakeOptions = []
-            cmakeOptions.extend(
-                ['-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
-                 '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
-                 '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
-                 '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
-                 '-DXERCESC_DIR=%s'            % spec['xerces-c'].prefix,
-                 '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
-                 '-DCMAKE_MODULE_PATH=%s'      % join_path(
-                     prefix.share, 'KrellInstitute', 'cmake')])
-
-            # Add in the standard cmake arguments
-            cmakeOptions.extend(std_cmake_args)
-
-            # Adjust the standard cmake arguments to what we want the build
-            # type, etc to be
-            self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
-
-            # Invoke cmake
-            cmake('..', *cmakeOptions)
-
-            make("clean")
-            make()
-            make("install")

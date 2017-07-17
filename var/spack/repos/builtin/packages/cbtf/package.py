@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2016 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -72,6 +72,76 @@ class Cbtf(CMakePackage):
 
     parallel = False
 
+    build_directory = 'build_cbtf'
+
+    # We have converted from Package type to CMakePackage type for all the Krell projects.
+    # Comments from Pull Request (#4765):
+    # CMakePackage is completely different from the old Package class. Previously, you had 
+    # a single install() phase to override. Now you have 3 phases: cmake(), build(), and install(). 
+    # By default, cmake() runs cmake ... with some common arguments, which you can add to by 
+    # overriding cmake_args(). build() runs make, and install() runs make install. 
+    # So you need to add the appropriate flags to cmake_args() and remove the calls to make. 
+    # See any other CMakePackage for examples.
+    # CMakePackage is documented: 
+    # http://spack.readthedocs.io/en/latest/spack.build_systems.html?highlight= \
+    # CMakePackage#module-spack.build_systems.cmake
+
+    def build_type(self):
+        if '+debug' in self.spec:
+            return 'Debug'
+        else:
+            return 'Release'
+
+    def cmake_args(self):
+
+        spec = self.spec
+
+        # Boost_NO_SYSTEM_PATHS  Set to TRUE to suppress searching
+        # in system paths (or other locations outside of BOOST_ROOT
+        # or BOOST_INCLUDEDIR).  Useful when specifying BOOST_ROOT.
+        # Defaults to OFF.
+
+        if '+runtime' in spec:
+            # Install message tag include file for use in Intel MIC
+            # cbtf-krell build
+            # FIXME
+            cmake_args = []
+            cmake_args.extend(
+                ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
+                 '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                 '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
+                 '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
+                 '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
+                 '-DCMAKE_MODULE_PATH=%s'   % join_path(
+                     prefix.share, 'KrellInstitute', 'cmake')])
+
+            # Add in the standard cmake arguments
+            cmake_args.extend(std_cmake_args)
+
+            # Adjust the standard cmake arguments to what we want the build
+            # type, etc to be
+            self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
+
+        else:
+            cmake_args = []
+            cmake_args.extend(
+                ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
+                 '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                 '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
+                 '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
+                 '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
+                 '-DCMAKE_MODULE_PATH=%s'   % join_path(
+                     prefix.share, 'KrellInstitute', 'cmake')])
+
+            # Add in the standard cmake arguments
+            cmake_args.extend(std_cmake_args)
+
+            # Adjust the standard cmake arguments to what we want the build
+            # type, etc to be
+            self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
+
+        return(cmake_args)
+
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the options that will
         # enable the cbtf-krell built type settings
@@ -95,59 +165,11 @@ class Cbtf(CMakePackage):
 
         cmakeOptions.extend(BuildTypeOptions)
 
-    def install(self, spec, prefix):
-        with working_dir('build', create=True):
-
-            # Boost_NO_SYSTEM_PATHS  Set to TRUE to suppress searching
-            # in system paths (or other locations outside of BOOST_ROOT
-            # or BOOST_INCLUDEDIR).  Useful when specifying BOOST_ROOT.
-            # Defaults to OFF.
-
-            if '+runtime' in spec:
-                # Install message tag include file for use in Intel MIC
-                # cbtf-krell build
-                # FIXME
-                cmakeOptions = []
-                cmakeOptions.extend(
-                    ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                     '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                     '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
-                     '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
-                     '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
-                     '-DCMAKE_MODULE_PATH=%s'   % join_path(
-                         prefix.share, 'KrellInstitute', 'cmake')])
-
-                # Add in the standard cmake arguments
-                cmakeOptions.extend(std_cmake_args)
-
-                # Adjust the standard cmake arguments to what we want the build
-                # type, etc to be
-                self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
-
-                # Invoke cmake
-                cmake('..', *cmakeOptions)
-
-            else:
-                cmakeOptions = []
-                cmakeOptions.extend(
-                    ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                     '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                     '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
-                     '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
-                     '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
-                     '-DCMAKE_MODULE_PATH=%s'   % join_path(
-                         prefix.share, 'KrellInstitute', 'cmake')])
-
-                # Add in the standard cmake arguments
-                cmakeOptions.extend(std_cmake_args)
-
-                # Adjust the standard cmake arguments to what we want the build
-                # type, etc to be
-                self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
-
-                # Invoke cmake
-                cmake('..', *cmakeOptions)
-
-            make("clean")
-            make()
-            make("install")
+#    def install(self, spec, prefix):
+#
+#                # Invoke cmake
+#                cmake('..', *cmakeOptions)
+#
+#            make("clean")
+#            make()
+#            make("install")
