@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Tig(AutotoolsPackage):
     """Text-mode interface for git"""
 
