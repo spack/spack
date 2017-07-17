@@ -44,12 +44,12 @@ class Nut(CMakePackage):
 
     depends_on('random123')
 
-    # must be built with clang
-    conflicts('%gcc')
-    conflicts('%intel')
-    conflicts('%pgi')
-    conflicts('%xl')
-    conflicts('%nag')
+    # serial must be built with clang
+    conflicts('%gcc', when='@serial')
+    conflicts('%intel', when='@serial')
+    conflicts('%pgi', when='@serial')
+    conflicts('%xl', when='@serial')
+    conflicts('%nag', when='@serial')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('RANDOM123_DIR', self.spec['random123'].prefix)
