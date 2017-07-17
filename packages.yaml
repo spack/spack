@@ -28,12 +28,6 @@ packages:
         version: [system]
         buildable: False
 
-    mvapich2:
-        variants: +debug fabrics=nemesisib process_managers=slurm
-
-    mpich:
-        variants: +pmi +romio +verbs
-
     intel-parallel-studio:
         paths:
             intel-parallel-studio@cluster.2015.6%intel+all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-15.0.6/intel-parallel-studio-cluster.2015.6-v4m6xngrq67y7hopcnxg6qb6onvruevy
@@ -62,12 +56,6 @@ packages:
         paths:
             pgi@16.10%gcc@4.8.5~amd~java~mpi+network+nvidia~single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf
         buildable: False
-
-    r:
-        variants: +external-lapack
-
-    openblas:
-        variants: +openmp
 
     fftw:
         variants: +float +long_double +mpi +openmp
