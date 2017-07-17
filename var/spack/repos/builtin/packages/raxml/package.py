@@ -53,11 +53,10 @@ class Raxml(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        if '%intel' in spec:
-            files = glob.iglob("Makefile.*")
-            for file in files:
-                makefile = FileFilter(file)
-                makefile.filter('gcc', spack_cc)
+        files = glob.iglob("Makefile.*")
+        for file in files:
+            makefile = FileFilter(file)
+            makefile.filter('gcc', spack_cc)
 
         if '+mpi' and '+avx' and '+pthreads' in spec:
             make('-f', 'Makefile.AVX.HYBRID.gcc')
