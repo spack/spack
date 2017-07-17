@@ -57,6 +57,10 @@ class Fenics(CMakePackage):
             description='Enables the build of shared libraries')
     variant('doc',          default=False,
             description='Builds the documentation')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'MinSizeRel', 'Developer'))
 
     # not part of spack list for now
     # variant('petsc4py',     default=True,  description='Uses PETSc4py')

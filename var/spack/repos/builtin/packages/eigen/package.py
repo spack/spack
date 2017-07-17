@@ -47,6 +47,9 @@ class Eigen(CMakePackage):
             description='Enables SuiteSparse support')
     variant('mpfr', default=True,
             description='Enables support for multi-precisions FP via mpfr')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
 
     # TODO : dependency on googlehash, superlu, adolc missing
     depends_on('metis@5:', when='+metis')

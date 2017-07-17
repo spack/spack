@@ -59,6 +59,9 @@ class Elemental(CMakePackage):
             ' Requires local build of BLAS library.')
     variant('scalapack', default=False,
             description='Build with ScaLAPACK library')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('blas', when='~openmp_blas ~int64_blas')

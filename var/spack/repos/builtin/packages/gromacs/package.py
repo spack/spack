@@ -53,6 +53,10 @@ class Gromacs(CMakePackage):
         description='Produces a double precision version of the executables')
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
+                    'Reference', 'RelWithAssert', 'Profile'))
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
