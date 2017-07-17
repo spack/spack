@@ -155,3 +155,9 @@ class Icedtea(AutotoolsPackage):
         args.append('--disable-system-sctp')
         args.append('--disable-system-kerberos')
         return args
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('JAVA_HOME', self.spec.prefix)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('JAVA_HOME', self.spec.prefix)
