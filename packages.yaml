@@ -14,81 +14,60 @@
 #   ~/.spack/packages.yaml
 # -------------------------------------------------------------------------
 packages:
-  all:
-    compiler: [gcc@6, intel@17, pgi@16]
-    providers:
-      mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
-      blas: [openblas, intel-parallel-studio+mkl]
-      lapack: [openblas, intel-parallel-studio+mkl]
-      scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
+    all:
+        compiler: [gcc@5, intel@17, pgi@16]
+        providers:
+            mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
+            blas: [openblas, intel-parallel-studio+mkl]
+            lapack: [openblas, intel-parallel-studio+mkl]
+            scalapack: [netlib-scalapack, intel-parallel-stuido+mkl]
 
-  openssl:
-      paths:
-          openssl@system: /usr
-      version: [system]
-      buildable: False
+    openssl:
+        paths:
+            openssl@system: /usr
+        version: [system]
+        buildable: False
 
-  r:
-    variants: +external-lapack
+    mvapich2:
+        variants: +debug fabrics=nemesisib process_managers=slurm
 
-  openblas:
-    variants: +openmp
+    mpich:
+        variants: +pmi +romio +verbs
 
-  fftw:
-    variants: +float +long_double +mpi +openmp
+    intel-parallel-studio:
+        paths:
+            intel-parallel-studio@cluster.2015.6%intel+all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-15.0.6/intel-parallel-studio-cluster.2015.6-v4m6xngrq67y7hopcnxg6qb6onvruevy
+            intel-parallel-studio@cluster.2016.4%intel+all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-kd3ufpcli3tp4x4nbrduqzm5vvlfnrur
+            intel-parallel-studio@cluster.2017.4%intel+all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.4/intel-parallel-studio-cluster.2017.4-bwdcdc6362g5qrytkjbec3iiskhqmgpw
+        buildable: False
 
-  jdk:
-    paths:
-       jdk@8u92-linux-x64%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u92-linux-x64-3zsegzpewm7rdx4zcfgckqwpao4xz535
-    buildable: False
+    jdk:
+        paths:
+            jdk@8u92-linux-x64%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u92-linux-x64-ssqvhgnvnmeieyssqcregsveivzfh7rg
+        buildable: False
 
-  gradle:
-    paths:
-       gradle@3.4%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gradle-3.4-fzjszdrqb4eq6lblg36wzzcerybvji4t
-    buildable: False
+    gradle:
+        paths:
+            gradle@3.4%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gradle-3.4-lwverrfizet36cxrwp7eajxxj25awk5e
+        buildable: False
 
-  cuda:
-    paths:
-       cuda@6.5.14%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-6.5.14-3avyaldl2uzrhqtgwe7lgw27zzjmwcmt
-       cuda@7.5.18%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-7.5.18-gyoxeh2obvptfuv4n42uwutqcdqcycco
-       cuda@8.0.44%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-8.0.44-qlfv2l4lqkjs55vleyvcnbj6jkfbecqe 
-    buildable: False
+    cuda:
+        paths:
+            cuda@6.5.14%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-6.5.14-3avyaldl2uzrhqtgwe7lgw27zzjmwcmt
+            cuda@7.5.18%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-7.5.18-gyoxeh2obvptfuv4n42uwutqcdqcycco
+            cuda@8.0.61%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-8.0.61-oehfcuf3do4bwagkarjurizvcsrl7y2q
+        buildable: False
 
-  pgi:
-    paths:
-       pgi@16.10%gcc@4.8.5~amd~java~mpi+network+nvidia~single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf
-    buildable: False
+    pgi:
+        paths:
+            pgi@16.10%gcc@4.8.5~amd~java~mpi+network+nvidia~single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf
+        buildable: False
 
-  openmpi:
-    variants: +pmi +slurm +verbs
-    paths:
-       openmpi@2.0.2%gcc@6.3.0~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm~cuda+verbs+vt: /lustre/spack/tools/linux-centos7-x86_64/gcc-6.3.0/openmpi-2.0.2-wo3vh6hf2b64jhmlbvnapkaxlhkaxc2l
-       openmpi@2.0.2%gcc@5.4.0~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm~cuda+verbs+vt: /lustre/spack/tools/linux-centos7-x86_64/gcc-5.4.0/openmpi-2.0.2-sdnvo6to5jle2fufhrne5d57zuppnjzy
-       openmpi@2.0.2%gcc@4.8.5~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm~cuda+verbs+vt: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/openmpi-2.0.2-n5tkfvldpp6v3onps73oymbkmwfu4qsx 
-       openmpi@2.0.2%intel@17.0.2~java~mxm+pmi~psm~psm2+slurm~sqlite3~thread_multiple~tm~cuda+verbs+vt: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.2/openmpi-2.0.2-q6jivijtq2ktnvqqlycldqvcqgjj4if6
-    buildable: False
+    r:
+        variants: +external-lapack
 
-  mvapich2:
-    variants: +slurm +nemesisibtcp
-    paths:
-       mvapich2@2.2%gcc@6.3.0~debug~gforker~hydra~mrail~nemesis~nemesisib+nemesisibtcp~psm~remshell+slurm~sock: /lustre/spack/tools/linux-centos7-x86_64/gcc-6.3.0/mvapich2-2.2-jmd7rbjh26cclar7zlgz5bx3fezja2qk
-       mvapich2@2.2%intel@17.0.2~debug~gforker~hydra~mrail~nemesis~nemesisib+nemesisibtcp~psm~remshell+slurm~sock: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.2/mvapich2-2.2-mijzqmxqtzksjvhv7t5r2c5yrjiyn2fs
-    buildable: False
+    openblas:
+        variants: +openmp
 
-  mpich:
-    variants: +pmi +romio +verbs
-    paths:
-       mpich@3.2%gcc@6.3.0+hydra+pmi+romio+verbs: /lustre/spack/tools/linux-centos7-x86_64/gcc-6.3.0/mpich-3.2-dfpwiywdrjml6ejd3i7r33t4vboitcll
-       mpich@3.2%intel@17.0.2+hydra+pmi+romio+verbs: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.2/mpich-3.2-f6vvjhp2b4qaovyo6na2ojtqhksw7pdw
-       mpich@3.2%pgi@16.10+hydra+pmi+romio+verbs: /lustre/spack/tools/linux-centos7-x86_64/pgi-16.10/mpich-3.2-kfx7vmvpjuszqcxku65fr7qg7fy5fg6r
-    buildable: False
-
-  intel-parallel-studio:
-    paths:
-        intel-parallel-studio@cluster.2017.1%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.2-eeraupfik4tjnz3vzr5sodxswdawfxtz
-        intel-parallel-studio@cluster.2016%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-7scyzvm4fcmcft2digrxmshowbypaz2i
-        intel-parallel-studio@cluster.2015%gcc@4.8.5~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2015.6-gfp2adgaqiwae5cinheh55zcxladuy3o
-        intel-parallel-studio@cluster.2015.6%intel@15.0.6~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-15.0.6/intel-parallel-studio-cluster.2015.6-douqezbg7dfd4qjutws6hmjdqfnop24u
-        intel-parallel-studio@cluster.2016.4%intel@16.0.4~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-ayhi2gur2i2mizebl5bnigdbwnzvyukc
-        intel-parallel-studio@cluster.2017.2%intel@17.0.2~all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.2/intel-parallel-studio-cluster.2017.2-qurh2sgrw5absip335ppgfh6guwuxhwe
-    buildable: False
+    fftw:
+        variants: +float +long_double +mpi +openmp
