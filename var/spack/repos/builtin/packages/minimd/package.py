@@ -49,6 +49,7 @@ class Minimd(MakefilePackage):
             'CCFLAGS={0} -DMPICH_IGNORE_CXX_SEEK -DNOCHUNK'.format(
                 self.compiler.openmp_flag),
             '--directory=miniMD_ref',
+            'EXE=miniMD_mpi',
             'openmpi'
         ]
 
@@ -64,7 +65,7 @@ class Minimd(MakefilePackage):
         mkdirp(prefix.bin)
         mkdirp(prefix.doc)
 
-        install('miniMD_ref/miniMD_openmpi', prefix.bin)
+        install('miniMD_ref/miniMD_mpi', prefix.bin)
         install('miniMD_ref/in.lj.miniMD', prefix.bin)
         install('miniMD_ref/README', prefix.doc)
 
