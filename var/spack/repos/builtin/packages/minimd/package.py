@@ -37,8 +37,6 @@ class Minimd(MakefilePackage):
     homepage = "http://mantevo.org"
     url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniMD/miniMD_1.2.tgz"
 
-    tags = ['proxy-app']
-
     version('1.2', '893ef1ca5062e32b43a8d11bcfe1a056')
 
     depends_on('openmpi')
@@ -57,7 +55,7 @@ class Minimd(MakefilePackage):
         return targets
 
     def edit(self, spec, prefix):
-        inner_tar = tarfile.open(name='miniMD_{}_ref.tgz'.format(
+        inner_tar = tarfile.open(name='miniMD_{0}_ref.tgz'.format(
                                  self.version.up_to(2)))
         inner_tar.extractall()
 
