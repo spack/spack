@@ -47,4 +47,3 @@ class Bsseeker2(Package):
         install('bs_seeker2-align.py', prefix.bin)
         install('bs_seeker2-call_methylation.py', prefix.bin)
         install('FilterReads.py', prefix.bin)
-        install_tree('.idea', join_path(prefix.bin, '.idea'))
