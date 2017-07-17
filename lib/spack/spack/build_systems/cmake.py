@@ -69,7 +69,7 @@ class CMakePackage(PackageBase):
 
     build_time_test_callbacks = ['check']
 
-    # https://cmake.org/cmake/help/v3.0/variable/CMAKE_BUILD_TYPE.html
+    # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
