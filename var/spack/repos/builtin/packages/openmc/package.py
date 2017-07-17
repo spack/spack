@@ -26,7 +26,6 @@
 from spack import *
 import os
 
-
 class Openmc(MakefilePackage):
     """The OpenMC project aims to provide a fully-featured Monte Carlo particle
        transport code based on modern methods. It is a constructive solid
@@ -70,11 +69,11 @@ class Openmc(MakefilePackage):
             pth_openmc = join_path(prefix, 'share/man/man1/openmc.1')
             pth_copyright = join_path(prefix, 'share/doc/openmc/copyright')
             mkdir(prefix.bin)
-            os.makedirs(pth_st_cmp)
-            os.makedirs(pth_st_histogram)
-            os.makedirs(pth_st_meshpoint)
-            os.makedirs(pth_openmc)
-            os.makedirs(pth_copyright)
+            mkdirp(pth_st_cmp)
+            mkdirp(pth_st_histogram)
+            mkdirp(pth_st_meshpoint)
+            mkdirp(pth_openmc)
+            mkdirp(pth_copyright)
 
             install('openmc', prefix.bin)
             install('utils/statepoint_cmp.py', pth_st_cmp)
