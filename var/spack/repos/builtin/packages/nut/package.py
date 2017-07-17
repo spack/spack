@@ -27,19 +27,19 @@ from spack import *
 
 class Nut(CMakePackage):
     """NuT is Monte Carlo code for neutrino transport and
-       is a C++ analog to the Haskell McPhD code.
-       NuT is principally aimed at exploring on-node parallelism
-       and performance issues."""
+    is a C++ analog to the Haskell McPhD code.
+    NuT is principally aimed at exploring on-node parallelism
+    and performance issues."""
 
     homepage = "https://github.com/lanl/NuT"
-    url      = ""
+    url      = "https://github.com/lanl/NuT.git"
     tags     = ['proxy-app']
 
     version(
         'serial', git='https://github.com/lanl/NuT.git',
         branch='master')
     version(
-        'omp', git='https://github.com/lanl/NuT.git',
+        'openmp', git='https://github.com/lanl/NuT.git',
         branch='openmp')
 
     depends_on('random123')
@@ -53,9 +53,10 @@ class Nut(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('RANDOM123_DIR', self.spec['random123'].prefix)
- 
-    build_targets = ['VERBOSE=on -j 4 2>&1 | tee -a make.out']
+
+    build_targets = ['VERBOSE=on']
 
     def install(self, spec, prefix):
         install('README.md', prefix)
-        install_tree('test', prefix.test)
+        mkdirp(prefix.bin)
+        install('test/nut_unittests', prefix.bin)
