@@ -59,4 +59,4 @@ class Nut(CMakePackage):
     def install(self, spec, prefix):
         install('README.md', prefix)
         mkdirp(prefix.bin)
-        install('test/nut_unittests', prefix.bin)
+        install('spack-build/test/nut_unittests', prefix.bin)
