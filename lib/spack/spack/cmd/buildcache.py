@@ -79,6 +79,9 @@ def setup_parser(subparser):
     dlkeys.add_argument(
         '-i', '--install', action='store_true',
         help="install gpg2 keys pulled from mirror")
+    dlkeys.add_argument(
+        '-y', '--yes-to-all', action='store_true',
+        help="answer yes to all trust questions")
     dlkeys.set_defaults(func=getkeys)
 
 
@@ -182,7 +185,10 @@ def getkeys(args):
     install = False
     if args.install:
         install = True
-    spack.binary_distribution.get_keys(install)
+    yes_to_all = False
+    if args.yes_to_all:
+        yes_to_all = True
+    spack.binary_distribution.get_keys(install, yes_to_all)
 
 
 def buildcache(parser, args):

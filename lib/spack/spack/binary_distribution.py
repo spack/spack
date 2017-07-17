@@ -339,7 +339,7 @@ def get_specs():
     return specs, durls
 
 
-def get_keys(install=False):
+def get_keys(install=False, yes_to_all=False):
     """
     Get pgp public keys available on mirror
     """
@@ -358,5 +358,16 @@ def get_keys(install=False):
                         stage.fetch()
                     except fs.FetchError:
                         next
+                tty.msg('Found key %s' % link)
                 if install:
-                    Gpg.trust(stage.save_filename)
+                    if yes_to_all:
+                        Gpg.trust(stage.save_filename)
+                        tty.msg('Added this key to trusted keys.')
+                    else:
+                        answer = tty.get_yes_or_no(
+                            'Add this key to trusted keys?')
+                        if answer:
+                            Gpg.trust(stage.save_filename)
+                            tty.msg('Added this key to trusted keys.')
+                        else:
+                            tty.msg('Will not add this key to trusted keys.')
