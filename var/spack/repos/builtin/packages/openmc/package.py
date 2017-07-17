@@ -41,10 +41,12 @@ class Openmc(MakefilePackage):
 
     version('develop', git='https://github.com/ANL-CESAR/openmc.git')
 
+    build_directory = 'src'
+
     @property
     def build_targets(self):
 
-        targets = ['--directory=src']
+        targets = []
 
         if self.compiler.name == 'gcc':
             targets.append('COMPILER=gnu')
@@ -80,9 +82,9 @@ class Openmc(MakefilePackage):
                     pth_st_histogram)
             install('utils/statepoint_meshplot.py',
                     pth_st_meshpoint)
-            install('../man/man1/openmc.1', pth_openmc)
-            install('../LICENSE', pth_copyright)
-            install_tree('../docs/', prefix.docs)
-            install_tree('../examples/', prefix.examples)
-            install_tree('../data/', prefix.data)
-            install_tree('../tests/', prefix.tests)
+        install('man/man1/openmc.1', pth_openmc)
+        install('LICENSE', pth_copyright)
+        install_tree('docs/', prefix.docs)
+        install_tree('examples/', prefix.examples)
+        install_tree('data/', prefix.data)
+        install_tree('tests/', prefix.tests)
