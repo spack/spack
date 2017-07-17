@@ -43,7 +43,7 @@
 from spack import *
 
 
-class CbtfLanl(Package):
+class CbtfLanl(CMakePackage):
     """CBTF LANL project contains a memory tool and data center type system
        command monitoring tool."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"

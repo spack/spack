@@ -43,7 +43,7 @@
 from spack import *
 
 
-class CbtfArgonavis(Package):
+class CbtfArgonavis(CMakePackage):
     """CBTF Argo Navis project contains the CUDA collector and supporting
        libraries that was done as a result of a DOE SBIR grant.
 

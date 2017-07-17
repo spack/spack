@@ -45,7 +45,7 @@ import os
 import os.path
 
 
-class Openspeedshop(Package):
+class Openspeedshop(CMakePackage):
     """OpenSpeedShop is a community effort by The Krell Institute with
        current direct funding from DOEs NNSA.  It builds on top of a
        broad list of community infrastructures, most notably Dyninst

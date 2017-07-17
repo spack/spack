@@ -43,7 +43,7 @@
 from spack import *
 
 
-class CbtfKrell(Package):
+class CbtfKrell(CMakePackage):
     """CBTF Krell project contains the Krell Institute contributions to the
        CBTF project.  These contributions include many performance data
        collectors and support libraries as well as some example tools
