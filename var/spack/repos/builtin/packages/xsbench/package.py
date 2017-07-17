@@ -36,6 +36,8 @@ class Xsbench(MakefilePackage):
     homepage = "https://github.com/ANL-CESAR/XSBench/"
     url = "https://github.com/ANL-CESAR/XSBench/archive/v13.tar.gz"
 
+    tags = ['proxy-app']
+
     version('13', '72a92232d2f5777fb52f5ea4082aff37')
 
     variant('mpi', default=False, description='Build with MPI support')
@@ -46,8 +48,13 @@ class Xsbench(MakefilePackage):
     def build_targets(self):
 
         targets = [
-            '--directory=src',
+            '--directory=src'
         ]
+
+        if self.compiler.name == 'gcc':
+            targets.append('COMPILER=gnu')
+        if self.compiler.name == 'intel':
+            targets.append('COMPILER=intel')
 
         if '+mpi' in self.spec:
             targets.append('MPI=yes')
