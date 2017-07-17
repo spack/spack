@@ -41,6 +41,8 @@ class Minimd(MakefilePackage):
 
     depends_on('mpi')
 
+    build_directory = 'miniMD_ref'
+
     @property
     def build_targets(self):
         targets = [
@@ -48,7 +50,6 @@ class Minimd(MakefilePackage):
             'CC={0}'.format(self.spec['mpi'].mpicxx),
             'CCFLAGS={0} -DMPICH_IGNORE_CXX_SEEK -DNOCHUNK'.format(
                 self.compiler.openmp_flag),
-            '--directory=miniMD_ref',
             'EXE=miniMD_mpi',
             'openmpi'
         ]
