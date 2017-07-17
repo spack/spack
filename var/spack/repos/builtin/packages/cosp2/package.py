@@ -54,9 +54,9 @@ class Cosp2(MakefilePackage):
         with working_dir('src-mpi'):
             if '+mpi' in spec:
                 filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                                'Makefile.vanilla')
+                            'Makefile.vanilla')
             else:
-                filter_file(r'^CC\s*=.*', 'CC = gcc', 'Makefile.vanilla')
+                filter_file(r'^CC\s*=.*', 'CC = spack_cc', 'Makefile.vanilla')
         if '+double' in spec:
             filter_file('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF',
                         'src-mpi/Makefile.vanilla')
