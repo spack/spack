@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2016 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -48,10 +48,6 @@ class CbtfLanl(CMakePackage):
        command monitoring tool."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    # Mirror access template example
-    # url      = "file:/g/g24/jeg/cbtf-lanl-1.6.tar.gz"
-    # version('1.6', 'c3f78f967b0a42c6734ce4be0e602426')
-
     version('1.8', branch='master',
             git='http://git.code.sf.net/p/cbtf-lanl/cbtf-lanl')
 
@@ -66,23 +62,8 @@ class CbtfLanl(CMakePackage):
 
     build_directory = 'build_cbtf_lanl'
 
-    # We have converted from Package type to CMakePackage type for all the Krell projects.
-    # Comments from Pull Request (#4765):
-    # CMakePackage is completely different from the old Package class. Previously, you had 
-    # a single install() phase to override. Now you have 3 phases: cmake(), build(), and install(). 
-    # By default, cmake() runs cmake ... with some common arguments, which you can add to by 
-    # overriding cmake_args(). build() runs make, and install() runs make install. 
-    # So you need to add the appropriate flags to cmake_args() and remove the calls to make. 
-    # See any other CMakePackage for examples.
-    # CMakePackage is documented: 
-    # http://spack.readthedocs.io/en/latest/spack.build_systems.html?highlight= \
-    # CMakePackage#module-spack.build_systems.cmake
-
     def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
+        return 'None'
 
     def cmake_args(self):
 
@@ -95,8 +76,7 @@ class CbtfLanl(CMakePackage):
 
         cmake_args = []
         cmake_args.extend(
-            ['-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
-             '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
+            ['-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
              '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
              '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
              '-DXERCESC_DIR=%s'            % spec['xerces-c'].prefix,
@@ -104,13 +84,10 @@ class CbtfLanl(CMakePackage):
              '-DCMAKE_MODULE_PATH=%s'      % join_path(
                  prefix.share, 'KrellInstitute', 'cmake')])
 
-        # Add in the standard cmake arguments
-        cmake_args.extend(std_cmake_args)
-
         # Adjust the standard cmake arguments to what we want the build
         # type, etc to be
         self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
-        return(cmake_args)
+        return cmake_args 
 
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the options that will

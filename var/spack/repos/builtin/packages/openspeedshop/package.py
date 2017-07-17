@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##############################################################################
-# Copyright (c) 2015-2016 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -61,14 +61,10 @@ class Openspeedshop(CMakePackage):
 
     homepage = "http://www.openspeedshop.org"
     url = "https://github.com/OpenSpeedShop"
-    version('2.2', '16cb051179c2038de4e8a845edf1d573')
+
     # Use when the git repository is available
     version('2.3', branch='master',
             git='https://github.com/OpenSpeedShop/openspeedshop.git')
-
-    # Optional mirror template
-    # url = "file:/home/jeg/OpenSpeedShop_ROOT/SOURCES/openspeedshop-2.3.tar.gz"
-    # version('2.3', '517a7798507241ad8abd8b0626a4d2cf')
 
     variant('offline', default=False,
             description="build with offline instrumentor enabled.")
@@ -142,23 +138,8 @@ class Openspeedshop(CMakePackage):
 
     build_directory = 'build_openspeedshop'
 
-    # We have converted from Package type to CMakePackage type for all the Krell projects.
-    # Comments from Pull Request (#4765):
-    # CMakePackage is completely different from the old Package class. Previously, you had 
-    # a single install() phase to override. Now you have 3 phases: cmake(), build(), and install(). 
-    # By default, cmake() runs cmake ... with some common arguments, which you can add to by 
-    # overriding cmake_args(). build() runs make, and install() runs make install. 
-    # So you need to add the appropriate flags to cmake_args() and remove the calls to make. 
-    # See any other CMakePackage for examples.
-    # CMakePackage is documented: 
-    # http://spack.readthedocs.io/en/latest/spack.build_systems.html?highlight= \
-    # CMakePackage#module-spack.build_systems.cmake
-
     def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
+        return 'None'
 
     def cmake_args(self):
         spec = self.spec
@@ -169,7 +150,6 @@ class Openspeedshop(CMakePackage):
 
                 cmake_args = []
                 cmake_args.extend([
-                    '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
                     '-DINSTRUMENTOR=%s'     % instrumentor_setting,
                     '-DLIBMONITOR_DIR=%s'   % spec['libmonitor'].prefix,
                     '-DLIBUNWIND_DIR=%s'    % spec['libunwind'].prefix,
@@ -177,7 +157,6 @@ class Openspeedshop(CMakePackage):
 
                 # Add any MPI implementations coming from variant settings
                 self.set_mpi_cmakeOptions(spec, cmake_args)
-                cmake_args.extend(std_cmake_args)
 
                 # Adjust the build options to the favored
                 # ones for this build
@@ -191,9 +170,7 @@ class Openspeedshop(CMakePackage):
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
                 cmake_args.extend(
-                    ['-DCMAKE_INSTALL_PREFIX=%s'
-                        % prefix,
-                     '-DCMAKE_PREFIX_PATH=%s'
+                    ['-DCMAKE_PREFIX_PATH=%s'
                         % cmake_prefix_path,
                      '-DINSTRUMENTOR=%s'
                         % instrumentor_setting,
@@ -210,7 +187,6 @@ class Openspeedshop(CMakePackage):
 
                 # Add any MPI implementations coming from variant settings
                 self.set_mpi_cmakeOptions(spec, cmake_args)
-                cmake_args.extend(std_cmake_args)
 
                 # Adjust the build options to the favored
                 # ones for this build
@@ -218,7 +194,6 @@ class Openspeedshop(CMakePackage):
 
         elif '+cbtf' in spec:
             instrumentor_setting = "cbtf"
-            # resolve_symbols = "symtabapi"
             cmake_prefix_path = join_path(spec['cbtf'].prefix) \
                 + ':' + join_path(spec['cbtf-krell'].prefix)\
                 + ':' + join_path(spec['dyninst'].prefix)
@@ -229,9 +204,7 @@ class Openspeedshop(CMakePackage):
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
                 cmake_args.extend(
-                    ['-DCMAKE_INSTALL_PREFIX=%s'
-                        % prefix,
-                     '-DCMAKE_PREFIX_PATH=%s'
+                    ['-DCMAKE_PREFIX_PATH=%s'
                         % cmake_prefix_path,
                      '-DINSTRUMENTOR=%s'
                         % instrumentor_setting,
@@ -254,9 +227,7 @@ class Openspeedshop(CMakePackage):
 
                 if '+noqt3gui' in self.spec:
                     cmake_args.extend(
-                        ['-DCMAKE_INSTALL_PREFIX=%s'
-                            % prefix,
-                         '-DCMAKE_PREFIX_PATH=%s'
+                        ['-DCMAKE_PREFIX_PATH=%s'
                             % cmake_prefix_path,
                          '-DINSTRUMENTOR=%s'
                             % instrumentor_setting,
@@ -270,9 +241,7 @@ class Openspeedshop(CMakePackage):
                             % spec['mrnet'].prefix])
                 else:
                     cmake_args.extend(
-                        ['-DCMAKE_INSTALL_PREFIX=%s'
-                            % prefix,
-                         '-DCMAKE_PREFIX_PATH=%s'
+                        ['-DCMAKE_PREFIX_PATH=%s'
                             % cmake_prefix_path,
                          '-DINSTRUMENTOR=%s'
                             % instrumentor_setting,
@@ -290,7 +259,8 @@ class Openspeedshop(CMakePackage):
                 # Adjust the build options to the favored
                 # ones for this build
                 self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
-        return(cmake_args)
+
+        return cmake_args 
 
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the

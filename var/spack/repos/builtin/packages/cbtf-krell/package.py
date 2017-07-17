@@ -52,10 +52,6 @@ class CbtfKrell(CMakePackage):
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    # optional mirror access template
-    # url      = "file:/home/jeg/cbtf-krell-1.6.tar.gz"
-    # version('1.6', 'edeb61cd488f16e7b124f77db9ce762d')
-
     version('1.8', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-krell.git')
 
@@ -105,18 +101,6 @@ class CbtfKrell(CMakePackage):
     parallel = False
 
     build_directory = 'build_cbtf_krell'
-
-    # We have converted from Package type to CMakePackage type for all the Krell projects.
-    # Comments from Pull Request (#4765):
-    # CMakePackage is completely different from the old Package class. Previously, you had 
-    # a single install() phase to override. Now you have 3 phases: cmake(), build(), and install(). 
-    # By default, cmake() runs cmake ... with some common arguments, which you can add to by 
-    # overriding cmake_args(). build() runs make, and install() runs make install. 
-    # So you need to add the appropriate flags to cmake_args() and remove the calls to make. 
-    # See any other CMakePackage for examples.
-    # CMakePackage is documented: 
-    # http://spack.readthedocs.io/en/latest/spack.build_systems.html?highlight= \
-    # CMakePackage#module-spack.build_systems.cmake
 
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the options that will
@@ -172,25 +156,16 @@ class CbtfKrell(CMakePackage):
         cmakeOptions.extend(MPIOptions)
 
     def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
+        return 'None'
 
     def cmake_args(self):
         spec = self.spec
 
         # Add in paths for finding package config files that tell us
         # where to find these packages
-        # cmake_prefix_path = \
-        #     join_path(spec['cbtf'].prefix) + ':' + \
-        #     join_path(spec['dyninst'].prefix)
-        # '-DCMAKE_PREFIX_PATH=%s' % cmake_prefix_path
-
         cmake_args = []
         cmake_args.extend(
-            ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-             '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
+            ['-DCBTF_DIR=%s' % spec['cbtf'].prefix,
              '-DBINUTILS_DIR=%s' % spec['binutils'].prefix,
              '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
              '-DLIBUNWIND_DIR=%s' % spec['libunwind'].prefix,
@@ -203,20 +178,8 @@ class CbtfKrell(CMakePackage):
         # Add any MPI implementations coming from variant settings
         self.set_mpi_cmakeOptions(spec, cmake_args)
 
-        # Add in the standard cmake arguments
-        cmake_args.extend(std_cmake_args)
-
         # Adjust the standard cmake arguments to what we want the build
         # type, etc to be
         self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
 
         return cmake_args
-
-#    def cmake(self, spec, prefix):
-#        cmake('..', *cmake_args)
-
-#    def build(self, spec, prefix):
-#        make(parallel=False)
-
-#    def install(self, spec, prefix):
-#        # Install cbtf-krell

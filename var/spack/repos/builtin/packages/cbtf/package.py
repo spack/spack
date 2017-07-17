@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -52,10 +52,6 @@ class Cbtf(CMakePackage):
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
 
-    # Mirror access template example
-    # url      = "file:/home/jeg/cbtf-1.6.tar.gz"
-    # version('1.6', 'c1ef4e5aa4e470dffb042abdba0b9987')
-
     # Use when the git repository is available
     version('1.8', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf.git')
@@ -74,23 +70,8 @@ class Cbtf(CMakePackage):
 
     build_directory = 'build_cbtf'
 
-    # We have converted from Package type to CMakePackage type for all the Krell projects.
-    # Comments from Pull Request (#4765):
-    # CMakePackage is completely different from the old Package class. Previously, you had 
-    # a single install() phase to override. Now you have 3 phases: cmake(), build(), and install(). 
-    # By default, cmake() runs cmake ... with some common arguments, which you can add to by 
-    # overriding cmake_args(). build() runs make, and install() runs make install. 
-    # So you need to add the appropriate flags to cmake_args() and remove the calls to make. 
-    # See any other CMakePackage for examples.
-    # CMakePackage is documented: 
-    # http://spack.readthedocs.io/en/latest/spack.build_systems.html?highlight= \
-    # CMakePackage#module-spack.build_systems.cmake
-
     def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
+        return 'None'
 
     def cmake_args(self):
 
@@ -107,8 +88,7 @@ class Cbtf(CMakePackage):
             # FIXME
             cmake_args = []
             cmake_args.extend(
-                ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                 '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                ['-DBoost_NO_SYSTEM_PATHS=TRUE',
                  '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
                  '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
                  '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
@@ -125,8 +105,7 @@ class Cbtf(CMakePackage):
         else:
             cmake_args = []
             cmake_args.extend(
-                ['-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                 '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                ['-DBoost_NO_SYSTEM_PATHS=TRUE',
                  '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
                  '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
                  '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
@@ -140,7 +119,7 @@ class Cbtf(CMakePackage):
             # type, etc to be
             self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
 
-        return(cmake_args)
+        return cmake_args
 
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the options that will
@@ -165,11 +144,3 @@ class Cbtf(CMakePackage):
 
         cmakeOptions.extend(BuildTypeOptions)
 
-#    def install(self, spec, prefix):
-#
-#                # Invoke cmake
-#                cmake('..', *cmakeOptions)
-#
-#            make("clean")
-#            make()
-#            make("install")
