@@ -57,7 +57,7 @@ class Openmc(MakefilePackage):
             targets.append('COMPILER=pgi')
         if self.compiler.name == 'xl':
             targets.append('COMPILER=ibm')
-        if self.compiler.name == 'ftn':
+        if self.compiler.name == 'cce':
             targets.append('COMPILER=cray')
 
         return targets
