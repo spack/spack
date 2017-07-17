@@ -26,21 +26,69 @@
 import argparse
 
 import spack.cmd
-import spack.store
 import spack.modules
+import spack.store
 from spack.util.pattern import Args
-__all__ = ['add_common_arguments']
+
+__all__ = [
+    'add_common_arguments',
+    'filter_by_tags'
+]
 
 _arguments = {}
 
 
 def add_common_arguments(parser, list_of_arguments):
+    """Extend a parser with extra arguments
+
+    Args:
+        parser: parser to be extended
+        list_of_arguments: arguments to be added to the parser
+    """
     for argument in list_of_arguments:
         if argument not in _arguments:
             message = 'Trying to add non existing argument "{0}" to a command'
             raise KeyError(message.format(argument))
         x = _arguments[argument]
         parser.add_argument(*x.flags, **x.kwargs)
+
+
+def filter_by_tags(specs_or_packages, tags):
+    """Filter the set of specs passed as argument by tags.
+
+    Args:
+        specs_or_packages: list of items to be filtered
+        tags: tags to be used for filtering
+
+    Returns:
+        list of items in specs that have all the tag in tags
+    """
+
+    # If the list is empty, return early
+    if not specs_or_packages:
+        return
+
+    # Else, try to have a uniform access to packages for both list
+    # of specs and list of packages
+    try:
+        # This statement is needed to check if I am dealing
+        # with a list of specs
+        specs_or_packages[0].package
+        package = lambda x: x.package
+    except AttributeError:
+        package = lambda x: x
+
+    # Restrict to elements that have the 'tags' attribute defined
+    has_tags = lambda x: hasattr(package(x), 'tags')
+    specs_or_packages = [x for x in specs_or_packages if has_tags(x)]
+
+    # Filter by required tags
+    for tag in tags:
+        specs_or_packages = [
+            x for x in specs_or_packages if tag in package(x).tags
+        ]
+
+    return specs_or_packages
 
 
 class ConstraintAction(argparse.Action):
@@ -132,3 +180,7 @@ _arguments['long'] = Args(
 _arguments['very_long'] = Args(
     '-L', '--very-long', action='store_true',
     help='show full dependency hashes as well as versions')
+
+_arguments['tags'] = Args(
+    '-t', '--tags', action='append',
+    help='filter a package query by tags')

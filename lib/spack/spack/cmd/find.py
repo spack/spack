@@ -26,7 +26,6 @@ import sys
 
 import llnl.util.tty as tty
 import spack.cmd.common.arguments as arguments
-
 from spack.cmd import display_specs
 
 description = "list and search installed packages"
@@ -54,7 +53,7 @@ def setup_parser(subparser):
         const='deps',
         help='show full dependency DAG of installed packages')
 
-    arguments.add_common_arguments(subparser, ['long', 'very_long'])
+    arguments.add_common_arguments(subparser, ['long', 'very_long', 'tags'])
 
     subparser.add_argument('-f', '--show-flags',
                            action='store_true',
@@ -119,10 +118,14 @@ def find(parser, args):
 
     # Exit early if no package matches the constraint
     if not query_specs and args.constraint:
-        msg = "No package matches the query: {0}".format(
-            ' '.join(args.constraint))
+        msg = "No package matches the query: {0}"
+        msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
         return
+
+    # If tags have been specified on the command line, filter by tags
+    if args.tags:
+        query_specs = arguments.filter_by_tags(query_specs, args.tags)
 
     # Display the result
     if sys.stdout.isatty():

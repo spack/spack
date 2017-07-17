@@ -22,29 +22,53 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+import argparse
+
+import pytest
+import spack.cmd.list
+import spack.cmd.list as list
 
 
-class Mpich(Package):
-    homepage   = "http://www.mpich.org"
-    url        = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
-    list_url   = "http://www.mpich.org/static/downloads/"
-    list_depth = 2
+@pytest.fixture(scope='module')
+def parser():
+    """Returns the parser for the module command"""
+    prs = argparse.ArgumentParser()
+    list.setup_parser(prs)
+    return prs
 
-    tags = ['tag1', 'tag2']
 
-    variant('debug', default=False,
-            description="Compile MPICH with debug flags.")
+@pytest.fixture()
+def pkg_names():
+    pkg_names = []
+    return pkg_names
 
-    version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
-    version('3.0.3', 'foobarbaz')
-    version('3.0.2', 'foobarbaz')
-    version('3.0.1', 'foobarbaz')
-    version('3.0', 'foobarbaz')
-    version('1.0', 'foobarbas')
 
-    provides('mpi@:3', when='@3:')
-    provides('mpi@:1', when='@:1')
+@pytest.fixture()
+def mock_name_only(monkeypatch, pkg_names):
 
-    def install(self, spec, prefix):
-        pass
+    def name_only(x):
+        pkg_names.extend(x)
+
+    monkeypatch.setattr(spack.cmd.list, 'name_only', name_only)
+    monkeypatch.setitem(spack.cmd.list.formatters, 'name_only', name_only)
+
+
+@pytest.mark.usefixtures('mock_name_only')
+class TestListCommand(object):
+
+    def test_list_without_filters(self, parser, pkg_names):
+
+        args = parser.parse_args([])
+        spack.cmd.list.list(parser, args)
+
+        assert pkg_names
+        assert 'cloverleaf3d' in pkg_names
+        assert 'hdf5' in pkg_names
+
+    def test_list_with_filters(self, parser, pkg_names):
+        args = parser.parse_args(['--tags', 'proxy-app'])
+        spack.cmd.list.list(parser, args)
+
+        assert pkg_names
+        assert 'cloverleaf3d' in pkg_names
+        assert 'hdf5' not in pkg_names

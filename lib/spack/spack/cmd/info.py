@@ -26,12 +26,12 @@ from __future__ import print_function
 
 import textwrap
 
+from llnl.util.tty.colify import *
+
 import llnl.util.tty.color as color
 import spack
 import spack.fetch_strategy as fs
 import spack.spec
-
-from llnl.util.tty.colify import *
 
 from six.moves import zip_longest
 
@@ -234,6 +234,16 @@ def print_text_info(pkg):
 
     else:
         print("    None")
+
+    print()
+    print("Tags: ")
+    if hasattr(pkg, 'tags'):
+        tags = sorted(pkg.tags)
+        colify(tags, indent=4)
+    else:
+        print("    None")
+
+    print()
 
 
 def info(parser, args):

@@ -29,11 +29,12 @@ import cgi
 import fnmatch
 import re
 import sys
-from six import StringIO
 
 import llnl.util.tty as tty
 import spack
+import spack.cmd.common.arguments as arguments
 from llnl.util.tty.colify import colify
+from six import StringIO
 
 description = "list and search available packages"
 section = "basic"
@@ -59,6 +60,8 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--format', default='name_only', choices=formatters,
         help='format to be used to print the output [default: name_only]')
+
+    arguments.add_common_arguments(subparser, ['tags'])
 
 
 def filter_by_name(pkgs, args):
@@ -183,5 +186,12 @@ def list(parser, args):
     pkgs = set(spack.repo.all_package_names())
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
+
+    # Filter by tags
+    if args.tags:
+        sorted_packages = [spack.repo.get(x) for x in sorted_packages]
+        sorted_packages = arguments.filter_by_tags(sorted_packages, args.tags)
+        sorted_packages = [x.name for x in sorted_packages]
+
     # Print to stdout
     formatters[args.format](sorted_packages)
