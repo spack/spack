@@ -35,7 +35,7 @@ class Busco(PythonPackage):
     version('3.0.1', git='https://gitlab.com/ezlab/busco.git', commit='078252e00399550d7b0e8941cd4d986c8e868a83')
     version('2.0.1', git='https://gitlab.com/ezlab/busco.git', commit='89aa1ab2527f03a87a214ca90a504ad236582a11')
 
-    depends_on('python')
+    depends_on('python', type=('build', 'run'))
     depends_on('blast-plus')
     depends_on('hmmer')
     depends_on('augustus')
