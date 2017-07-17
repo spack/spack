@@ -43,10 +43,6 @@ class Llvm(CMakePackage):
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005',
             url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz')
 
-    variant('debug', default=False,
-            description="Build a debug version of LLVM, this increases "
-            "binary size by an order of magnitude, make sure you have "
-            "20-30gb of space available to build this")
     variant('clang', default=True,
             description="Build the LLVM C/C++/Objective-C compiler frontend")
     variant('lldb', default=True, description="Build the LLVM debugger")
@@ -326,12 +322,6 @@ class Llvm(CMakePackage):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
-
-    def build_type(self):
-        if '+debug' in self.spec:
-            return 'RelWithDebInfo'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         spec = self.spec

@@ -36,7 +36,6 @@ class Lbann(CMakePackage):
     version('develop', git='https://github.com/LLNL/lbann.git', branch="develop")
     version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')
 
-    variant('debug', default=False, description='Builds a debug version of the libraries')
     variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
     variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
     variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
@@ -47,13 +46,6 @@ class Lbann(CMakePackage):
     depends_on('mpi')
     depends_on('opencv@3.2.0', when='+opencv')
     depends_on('protobuf@3.0.2:')
-
-    def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
-
     def cmake_args(self):
         spec = self.spec
         # Environment variables

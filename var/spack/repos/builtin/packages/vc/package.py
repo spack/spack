@@ -34,12 +34,3 @@ class Vc(CMakePackage):
     version('1.3.0', '77efc1c16691c7925d4b58f9b30cf03b')
     version('1.2.0', 'a5236df286b845d2fee5ef1e4d27549f')
     version('1.1.0', 'e354c1e3ea1d674b6f2af9c6fd230d81')
-
-    variant('debug', default=False)
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
