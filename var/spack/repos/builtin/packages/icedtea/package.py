@@ -27,6 +27,7 @@ import os
 import shutil
 import inspect
 
+
 class Icedtea(AutotoolsPackage):
     """The IcedTea project provides a harness to build the source code from
     http://openjdk.java.net using Free Software build tools and adds a number
@@ -42,10 +43,10 @@ class Icedtea(AutotoolsPackage):
     variant('X', default=False, description="Build with GUI support.")
     variant('shenandoah', default=False, description="Build with the shenandoah gc. Only for version 3+")
 
-    depends_on('pkg-config', type='build')
+    depends_on('pkg-config@0.9.0:', type='build')
     depends_on('gmake', type='build')
     depends_on('cups')
-    #X11 deps required for building even when headless
+    # X11 deps required for building even when headless
     depends_on('libx11', when='~X', type='build')
     depends_on('xproto', when='~X', type='build')
     depends_on('libxext', when='~X', type='build')
@@ -123,7 +124,7 @@ class Icedtea(AutotoolsPackage):
     def configure_args(self):
         os.environ['POTENTIAL_CXX'] = os.environ['CXX']
         os.environ['POTENTIAL_CC'] = os.environ['CC']
-        os.environ['WGET'] = self.spec['wget'].prefix+"/bin/wget"
+        os.environ['WGET'] = self.spec['wget'].command.path
         args = []
         if '~X' in self.spec:
             args.append('--enable-headless')
