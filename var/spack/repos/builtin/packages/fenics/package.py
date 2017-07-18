@@ -146,8 +146,6 @@ class Fenics(CMakePackage):
         return 'ON' if option in self.spec else 'OFF'
 
     def cmake_args(self):
-        spec = self.spec
-
         return [
             '-DDOLFIN_ENABLE_DOCS:BOOL={0}'.format(
                 self.cmake_is_on('+doc')),

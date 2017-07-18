@@ -40,6 +40,7 @@ class Portage(CMakePackage):
 
     depends_on("cmake@3.1:", type='build')
     depends_on('mpi', when='+mpi')
+
     def cmake_args(self):
         options = ['-DENABLE_UNIT_TESTS=ON', '-DENABLE_APP_TESTS=ON']
 
