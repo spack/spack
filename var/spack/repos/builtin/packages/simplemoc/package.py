@@ -38,16 +38,28 @@ class Simplemoc(MakefilePackage):
 
     version('1.0', 'd8827221a4ae76e9766a32e16d143e60')
 
+    variant('mpi', default=False, description='Build with MPI support')
+    variant('openmpi', default=True, description='Build with OpenMP support.')
+
+    depends_on('mpi', when='+mpi')
+    depends_on('openmpi')
+
+    build_directory = 'src'
+
     @property
     def build_targets(self):
-        targets = ['--directory=src']
-        if self.compiler.name == 'gcc':
-            targets.append('COMPILER=gnu')
-        elif self.compiler.name == 'intel':
-            targets.append('COMPILER=intel')
-        else:
-            raise InstallError('{0} is an invalid compiler'.format(
-                self.compiler.name))
+
+        targets = []
+
+        cflags = '-std=gnu99'
+        ldflags = '-lm'
+
+        if '+mpi' in self.spec:
+            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+
+        cflags += ' ' + self.compiler.openmp_flag
+        targets.append('CFLAGS={0}'.format(cflags))
+        targets.append('LDFLAGS={0}'.format(ldflags))
 
         return targets
 
