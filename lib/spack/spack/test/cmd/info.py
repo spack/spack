@@ -26,7 +26,6 @@ import argparse
 
 import pytest
 import spack.cmd.info
-import spack.cmd.info as info
 
 from spack.main import SpackCommand
 
@@ -36,7 +35,7 @@ info = SpackCommand('info')
 def parser():
     """Returns the parser for the module command"""
     prs = argparse.ArgumentParser()
-    info.setup_parser(prs)
+    spack.cmd.info.setup_parser(prs)
     return prs
 
 

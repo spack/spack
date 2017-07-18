@@ -30,11 +30,13 @@ import fnmatch
 import re
 import sys
 
+from six import StringIO
+
 import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
+
 import spack
 import spack.cmd.common.arguments as arguments
-from llnl.util.tty.colify import colify
-from six import StringIO
 
 description = "list and search available packages"
 section = "basic"

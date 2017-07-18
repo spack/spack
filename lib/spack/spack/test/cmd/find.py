@@ -26,7 +26,6 @@ import argparse
 
 import pytest
 import spack.cmd.find
-import spack.cmd.find as find
 from spack.util.pattern import Bunch
 
 
@@ -34,7 +33,7 @@ from spack.util.pattern import Bunch
 def parser():
     """Returns the parser for the module command"""
     prs = argparse.ArgumentParser()
-    find.setup_parser(prs)
+    spack.cmd.find.setup_parser(prs)
     return prs
 
 

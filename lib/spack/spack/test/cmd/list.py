@@ -26,14 +26,13 @@ import argparse
 
 import pytest
 import spack.cmd.list
-import spack.cmd.list as list
 
 
 @pytest.fixture(scope='module')
 def parser():
     """Returns the parser for the module command"""
     prs = argparse.ArgumentParser()
-    list.setup_parser(prs)
+    spack.cmd.list.setup_parser(prs)
     return prs
 
 
