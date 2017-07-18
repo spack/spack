@@ -54,11 +54,11 @@ class Snbone(MakefilePackage):
 
 
     def install(self, spec, prefix):
-        dirs = ['/C', '/Fortran', '/MakeMesh', '/ProcessMesh']
+        dirs = ['C', 'Fortran', 'MakeMesh', 'ProcessMesh']
         files = ['src_c/SNaCFE.x', 'src_fortran/SNaCFE.x',
                  'src_makemesh/makemesh.x',
                  'src_processmesh/processmesh.x']
         mkdir(prefix.bin)
         for idx, dir in enumerate(dirs):
-            mkdir(prefix.bin + dir)
+            mkdir(join_path(prefix.bin + dir))
             install(files[idx], prefix.bin + dir)
