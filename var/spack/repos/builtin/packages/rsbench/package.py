@@ -55,7 +55,7 @@ class Rsbench(MakefilePackage):
             + self.compiler.openmp_flag
         if '+pgi' in self.spec:
             targets.append(
-                'CC={0}'.format(self.spec['pgi'].prefix.bin + '/pgcc')
+                'CC={0}'.format(join_path(self.spec['pgi'].prefix.bin,  'pgcc')
                 )
             cflags += '-mp -fastsse'
 
