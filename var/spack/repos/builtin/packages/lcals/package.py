@@ -24,6 +24,8 @@
 ##############################################################################
 
 from spack import *
+import platform
+import numbers
 
 
 class Lcals(MakefilePackage):
@@ -41,20 +43,84 @@ class Lcals(MakefilePackage):
 
     version('1.0.2', '40c65a88f1df1436a2f72b7d3c986a21')
 
+    def is_integral(x):
+        """Any integer value"""
+        try:
+            return isinstance(int(x), numbers.Integral)
+            and not isinstance(x, bool)
+        except ValueError:
+            return False
+
+    variant(
+        'xlcn',
+        default=9,
+        description='Version number for XLC compiler 9 or 12.',
+        values=is_integral
+    )
+
+    variant(
+        'microarch',
+        default=1,
+        description='Micro arch: 1 - SSE, 2 - AVX.',
+        values=is_integral
+    )
+
     @property
     def build_targets(self):
 
         targets = []
 
+        compiler = ''
+        cxx = ''
+
+        xlcn = self.spec.variants['xlcn'].value
+        microarch = self.spec.variants['microarch'].value
+
+        arch = platform.machine()
+
+        if arch == 'x86_64' or arch == 'x86_32':
+            arch = 'x86'
+        elif arch != 'bgq':
+            raise InstallError('unknown architecture.')
+
+        if microarch != '1' and microarch != '2':
+            raise InstallError('Invalid choice. Micro arch: 1 - SSE, 2 - AVX.')
+        elif microarch == '1':
+            microarch = 'sse'
+        elif microarch == '2':
+            microarch = 'avx'
+
         if self.compiler.name == 'gcc':
-            targets.append('LCALS_ARCH={}'.format('x86_sse_gnu'))
-            targets.append('CXX={}'.format('g++'))
-        if self.compiler.name == 'intel':
-            targets.append('LCALS_ARCH={}'.format('MIC'))
-            targets.append('CXX={}'.format('icc'))
-        if self.compiler.name == 'xl':
-            targets.append('LCALS_ARCH={}'.format('bgp_xlc9'))
-            targets.append('CXX={}'.format('mpixlcxx'))
+            compiler = 'gnu'
+            cxx = 'g++'
+        elif self.compiler.name == 'intel':
+            compiler = 'icc'
+            cxx = 'icpc'
+        elif self.compiler.name == 'xl':
+            compiler = 'xlc' + xlcn
+            if xlcn == '9':
+                cxx = 'mpixlcxx'
+            elif xlcn == '12':
+                cxx = 'mpixlcxx_r'
+            else:
+                InstallError(
+                    'Unsupported XLC version number: {0}'.format(xlcn)
+                    )
+        elif self.compiler.name == 'clang' and arch == 'bgq':
+            compiler = self.compiler.name
+            cxx = 'bg' + self.compiler.name + '++11'
+        else:
+            raise InstallError('unknown compiler.')
+
+        if arch == 'x86':
+            arch = arch + '_' + microarch + '_' + compiler
+        elif arch == 'bgq':
+            arch = arch + '_' + compiler
+        else:
+            raise InstallError('Fatal Error: unknown construct.')
+
+        targets.append('LCALS_ARCH={0}'.format(arch))
+        targets.append('CXX={0}'.format(cxx))
 
         return targets
 
