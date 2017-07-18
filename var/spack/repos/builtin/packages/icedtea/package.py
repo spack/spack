@@ -46,6 +46,7 @@ class Icedtea(AutotoolsPackage):
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('gmake', type='build')
     depends_on('cups')
+    depends_on('jdk')
     # X11 deps required for building even when headless
     depends_on('libx11', when='~X', type='build')
     depends_on('xproto', when='~X', type='build')
@@ -150,9 +151,9 @@ class Icedtea(AutotoolsPackage):
             '--with-openjdk-checksum=no',
             '--with-nashorn-src-zip='+self.stage[8].archive_file,
             '--with-nashorn-checksum=no', '--disable-maintainer-mode'
-            '--disable-downloading', '--disable-bootstrap',
-            '--disable-system-pcsc', '--disable-system-sctp',
-            '--disable-system-kerberos'
+            '--disable-downloading', '--disable-system-pcsc',
+            '--disable-system-sctp', '--disable-system-kerberos',
+            '--with-jdk-home='+self.spec['jdk'].prefix
             ]
         return args
 
