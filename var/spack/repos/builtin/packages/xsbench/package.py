@@ -44,12 +44,11 @@ class Xsbench(MakefilePackage):
 
     depends_on('mpi', when='+mpi')
 
+    build_directory = 'src'
     @property
     def build_targets(self):
 
-        targets = [
-            '--directory=src'
-        ]
+        targets = []
 
         if self.compiler.name == 'gcc':
             targets.append('COMPILER=gnu')
