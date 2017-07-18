@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-import os
+
 
 class Openmc(MakefilePackage):
     """The OpenMC project aims to provide a fully-featured Monte Carlo particle
