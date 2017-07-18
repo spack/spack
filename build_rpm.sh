@@ -22,7 +22,9 @@ mpis=(
 )
 
 mpipkgs=(
-    fftw@3.3.6-pl2+mpi+float+long_double+openmp
+    # fftw@3.3.6-pl2+mpi+float+long_double+openmp
+    # gromacs@5.1.4+debug+mpi+plumed
+    # gromacs@5.1.4+debug+mpi+plumed+cuda
 )
 
 nonmpipkgs=(
@@ -31,13 +33,10 @@ nonmpipkgs=(
     miniconda2@4.3.14
     miniconda3@4.3.14
     openblas@0.2.19+openmp
-    r@3.4.0+external-lapack
-    boost@1.63.0
+    r@3.4.1+external-lapack ^openblas+openmp
     perl@5.24.1
     sga@0.10.15
     boost@1.64.0
-    #gromacs@5.1.4+debug+mpi+plumed
-    #gromacs@5.1.4+debug+mpi+plumed+cuda
 )
 
 # MPI-dependent Libraries

@@ -37,12 +37,14 @@ packages:
 
     jdk:
         paths:
-            jdk@8u92-linux-x64%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u92-linux-x64-ssqvhgnvnmeieyssqcregsveivzfh7rg
+            jdk@8u131-linux-x64%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u131-linux-x64-ssqvhgnvnmeieyssqcregsveivzfh7rg
+        version: [8u131]
         buildable: False
 
     gradle:
         paths:
             gradle@3.4%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gradle-3.4-lwverrfizet36cxrwp7eajxxj25awk5e
+        version: [3.4]
         buildable: False
 
     cuda:
@@ -50,12 +52,11 @@ packages:
             cuda@6.5.14%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-6.5.14-3avyaldl2uzrhqtgwe7lgw27zzjmwcmt
             cuda@7.5.18%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-7.5.18-gyoxeh2obvptfuv4n42uwutqcdqcycco
             cuda@8.0.61%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-8.0.61-oehfcuf3do4bwagkarjurizvcsrl7y2q
+        version: [6.5.14, 7.5.18, 8.0.61]
         buildable: False
 
     pgi:
         paths:
             pgi@16.10%gcc@4.8.5~amd~java~mpi+network+nvidia~single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf
+        version: [16.10]
         buildable: False
-
-    fftw:
-        variants: +float +long_double +mpi +openmp
