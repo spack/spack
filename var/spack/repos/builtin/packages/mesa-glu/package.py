@@ -30,7 +30,7 @@ class MesaGlu(AutotoolsPackage):
     """This package provides the Mesa OpenGL Utility library."""
 
     homepage = "https://www.mesa3d.org"
-    url      = "ftp://ftp.freedesktop.org/pub/mesa/glu/glu-9.0.0.tar.gz"
+    url      = "https://www.mesa3d.org/archive/glu/glu-9.0.0.tar.gz"
 
     version('9.0.0', 'bbc57d4fe3bd3fb095bdbef6fcb977c4')
 
