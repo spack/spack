@@ -77,6 +77,12 @@ class Gcc(AutotoolsPackage):
     variant('strip',
             default=False,
             description='Strip executables to reduce installation size')
+    variant('rpathlibgcc',
+            default=False,
+            description='Apply patch to set libgcc_s.dylib Mach-O ID to' +
+            ' @rpath/libgcc_s.dylib for relocatability ' +
+            'Note: using this variant requires setting [extra_rpaths] ' +
+            'in compilers.yaml to the compiler library path')
 
     # https://gcc.gnu.org/install/prerequisites.html
     depends_on('gmp@4.3.2:')
@@ -146,6 +152,9 @@ class Gcc(AutotoolsPackage):
     # See https://gcc.gnu.org/gcc-5/changes.html
     conflicts('languages=jit', when='@:4')
 
+    # This option only applies when building on Darwin
+    conflicts('+rpathlibgcc', when='platform=linux')
+
     if sys.platform == 'darwin':
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
@@ -190,6 +199,10 @@ class Gcc(AutotoolsPackage):
             filter_file('@zlibinc@',
                         '-I{0}'.format(spec['zlib'].prefix.include),
                         'gcc/Makefile.in')
+        if spec.satisfies('+rpathlibgcc'):
+            # Make libgcc_s relocatable
+            filter_file(r"@shlib_slibdir@", "@rpath",
+                        'libgcc/config/t-slibgcc-darwin', string=True)
 
     def configure_args(self):
         spec = self.spec
