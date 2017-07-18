@@ -30,6 +30,10 @@ class RMass(RPackage):
     Statistics with S" (4th edition, 2002)."""
 
     homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
-    url      = "https://cran.r-project.org/src/contrib/MASS_7.3-45.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/MASS_7.3-47.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/MASS"
 
+    version('7.3-47', '2ef69aa9e25c0a445661a9877e117594')
     version('7.3-45', 'aba3d12fab30f1793bee168a1efea88b')
+
+    depends_on('r@3.1.0:')

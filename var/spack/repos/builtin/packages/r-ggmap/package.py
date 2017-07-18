@@ -33,10 +33,13 @@ class RGgmap(RPackage):
 
     homepage = "https://github.com/dkahle/ggmap"
     url      = "https://cran.r-project.org/src/contrib/ggmap_2.6.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ggmap"
 
     version('2.6.1', '25ad414a3a1c6d59a227a9f22601211a')
 
-    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r@2.14.0:')
+
+    depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))
     depends_on('r-proto', type=('build', 'run'))
     depends_on('r-rgooglemaps', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'))

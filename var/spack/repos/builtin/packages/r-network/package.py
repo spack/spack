@@ -32,5 +32,8 @@ class RNetwork(RPackage):
 
     homepage = "https://statnet.org"
     url      = "https://cran.r-project.org/src/contrib/network_1.13.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/network"
 
     version('1.13.0', 'd0b967d6f1aad43b6479d72f29b705de')
+
+    depends_on('r@2.10:')

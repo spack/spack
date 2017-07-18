@@ -34,8 +34,11 @@ class RRmpfr(RPackage):
 
     homepage = "http://rmpfr.r-forge.r-project.org"
     url      = "https://cran.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpfr"
 
     version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
+
+    depends_on('r@3.0.1:')
 
     depends_on('r-gmp@0.5-8:', type=('build', 'run'))
     depends_on('mpfr@3.0.0:')

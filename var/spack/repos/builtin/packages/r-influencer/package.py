@@ -37,8 +37,11 @@ class RInfluencer(RPackage):
 
     homepage = "https://github.com/rcc-uchicago/influenceR"
     url      = "https://cran.r-project.org/src/contrib/influenceR_0.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/influenceR"
 
     version('0.1.0', '6c8b6decd78c341364b5811fb3050ba5')
 
-    depends_on('r-igraph', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r@3.2.0:')
+
+    depends_on('r-igraph@1.0.1:', type=('build', 'run'))
+    depends_on('r-matrix@1.1-4:', type=('build', 'run'))

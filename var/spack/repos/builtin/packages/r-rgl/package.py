@@ -35,18 +35,21 @@ class RRgl(RPackage):
 
     homepage = "https://r-forge.r-project.org/projects/rgl"
     url      = "https://cloud.r-project.org/src/contrib/rgl_0.98.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rgl"
 
     version('0.98.1', 'bd69e1d33f1590feb4b6dc080b133e5b')
 
-    depends_on('r@3.2:3.9')
+    depends_on('r@3.2:')
+
     depends_on('zlib', type=('link'))
-    depends_on('libpng', type=('link'))
+    depends_on('libpng@1.2.9:', type=('link'))
     depends_on('freetype', type=('link'))
+    depends_on('pandoc@1.13.1:', type=('link'))
     depends_on('mesa', type=('link'))
     depends_on('mesa-glu', type=('link'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-jsonlite@0.9.20:', type=('build', 'run'))
     depends_on('r-shiny', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))

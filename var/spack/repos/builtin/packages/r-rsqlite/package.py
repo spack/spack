@@ -31,8 +31,19 @@ class RRsqlite(RPackage):
     (version 3.8.6) is included."""
 
     homepage = "https://github.com/rstats-db/RSQLite"
-    url      = "https://cran.r-project.org/src/contrib/RSQLite_1.0.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/RSQLite_2.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RSQLite"
 
+    version('2.0', '63842410e78ccdfc52d4ee97992521d5')
     version('1.0.0', 'e6cbe2709612b687c13a10d30c7bad45')
 
-    depends_on('r-dbi', type=('build', 'run'))
+    depends_on('r@3.1.0:')
+
+    depends_on('r-bit64', when='@2.0:', type=('build', 'run'))
+    depends_on('r-blob@1.1:', when='@2.0:', type=('build', 'run'))
+    depends_on('r-dbi@0.4-9:', type=('build', 'run'))
+    depends_on('r-memoise', when='@2.0:', type=('build', 'run'))
+    depends_on('r-pkgconfig', when='@2.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.7:', when='@2.0:', type=('build', 'run'))
+    depends_on('r-bh', when='@2.0:', type=('build', 'run'))
+    depends_on('r-plogr', when='@2.0:', type=('build', 'run'))

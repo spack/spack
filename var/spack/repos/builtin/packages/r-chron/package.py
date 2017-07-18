@@ -29,6 +29,10 @@ class RChron(RPackage):
     """Chronological objects which can handle dates and times."""
 
     homepage = "https://cran.r-project.org/package=chron"
-    url      = "https://cran.r-project.org/src/contrib/chron_2.3-47.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/chron_2.3-50.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/chron"
 
+    version('2.3-50', 'ce73798b1708072d86129038445758dd')
     version('2.3-47', 'b8890cdc5f2337f8fd775b0becdcdd1f')
+
+    depends_on('r@2.12.0:')

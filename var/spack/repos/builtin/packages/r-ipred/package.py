@@ -31,8 +31,10 @@ class RIpred(RPackage):
     based estimators of prediction error."""
 
     homepage = "https://cran.r-project.org/package=ipred"
-    url      = "https://cran.r-project.org/src/contrib/ipred_0.9-5.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/ipred_0.9-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ipred"
 
+    version('0.9-6', '90676d45838b14249eaeba6df2be65cc')
     version('0.9-5', 'ce8768547a7aa9554ad3650b18ea3cbd')
 
     depends_on('r@2.10:')

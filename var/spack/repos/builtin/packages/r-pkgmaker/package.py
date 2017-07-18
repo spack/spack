@@ -36,8 +36,11 @@ class RPkgmaker(RPackage):
 
     homepage = "https://renozao.github.io/pkgmaker"
     url      = "https://cran.r-project.org/src/contrib/pkgmaker_0.22.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pkgmaker"
 
     version('0.22', '73a0c6d3e84c6dadf3de7582ef7e88a4')
+
+    depends_on('r@3.0.0:')
 
     depends_on('r-registry', type=('build', 'run'))
     depends_on('r-codetools', type=('build', 'run'))

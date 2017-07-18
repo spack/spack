@@ -34,9 +34,11 @@ class RGlmnet(RPackage):
     fashion, as described in the paper linked to via the URL below."""
 
     homepage = "http://www.jstatsoft.org/v33/i01/"
-    url      = "https://cran.r-project.org/src/contrib/glmnet_2.0-5.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/glmnet_2.0-10.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/glmnet"
 
+    version('2.0-10', 'b85282e8b4d479f92079132c3004608e')
     version('2.0-5', '049b18caa29529614cd684db3beaec2a')
 
-    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-matrix@1.0-6:', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))

@@ -29,12 +29,22 @@ class RGgpubr(RPackage):
     """ggpubr: 'ggplot2' Based Publication Ready Plots"""
 
     homepage = "http://www.sthda.com/english/rpkgs/ggpubr"
-    url      = "https://cran.r-project.org/src/contrib/ggpubr_0.1.2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/ggpubr_0.1.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ggpubr"
 
+    version('0.1.4', 'ca9b1be34cc8e1434a85102c18f69cc1')
     version('0.1.2', '42a5749ae44121597ef511a7424429d1')
 
     depends_on('r@3.1.0:')
+
     depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'), when='@0.1.4:')
     depends_on('r-ggrepel', type=('build', 'run'))
     depends_on('r-ggsci', type=('build', 'run'))
+    depends_on('r-tidyr', type=('build', 'run'), when='@0.1.4:')
+    depends_on('r-purrr', type=('build', 'run'), when='@0.1.4:')
     depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-cowplot', type=('build', 'run'), when='@0.1.4:')
+    depends_on('r-ggsignif', type=('build', 'run'), when='@0.1.4:')
+    depends_on('r-scales', type=('build', 'run'), when='@0.1.4:')
+    depends_on('r-gridextra', type=('build', 'run'), when='@0.1.4:')

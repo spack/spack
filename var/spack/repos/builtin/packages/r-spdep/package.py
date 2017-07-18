@@ -43,13 +43,19 @@ class RSpdep(RPackage):
 
     homepage = "https://r-forge.r-project.org/projects/spdep"
     url      = "https://cran.r-project.org/src/contrib/spdep_0.6-13.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/spdep"
 
     version('0.6-13', 'bfc68b3016b4894b152ecec4b86f85d1')
 
     depends_on('r@3.0:')
+
     depends_on('r-sp@1.0:', type=('build', 'run'))
+    depends_on('r-matrix@1.0.12:', type=('build', 'run'))
     depends_on('r-learnbayes', type=('build', 'run'))
     depends_on('r-deldir', type=('build', 'run'))
+    depends_on('r-boot@1.3-1:', type=('build', 'run'))
     depends_on('r-coda', type=('build', 'run'))
+    depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
     depends_on('r-gmodels', type=('build', 'run'))
     depends_on('r-expm', type=('build', 'run'))

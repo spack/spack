@@ -34,9 +34,13 @@ class RVcd(RPackage):
     Michael Friendly and David Meyer (2015)."""
 
     homepage = "https://cran.r-project.org/package=vcd"
-    url      = "https://cran.r-project.org/src/contrib/vcd_1.4-1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/vcd_1.4-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/vcd"
 
+    version('1.4-3', '1983eb630de6f364280a39d776def3ff')
     version('1.4-1', '7db150a77f173f85b69a1f86f73f8f02')
+
+    depends_on('r@2.4.0:')
 
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))

@@ -29,8 +29,10 @@ class RXlconnectjars(RPackage):
     """Provides external JAR dependencies for the XLConnect package."""
 
     homepage = "http://miraisolutions.wordpress.com/"
-    url      = "https://cran.r-project.org/src/contrib/XLConnectJars_0.2-9.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/XLConnectJars_0.2-13.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/XLConnectJars"
 
+    version('0.2-13', '263c40974d8e674b6bf139676049409a')
     version('0.2-12', '6984e5140cd1c887c017ef6f88cbba81')
     version('0.2-9', 'e6d6b1acfede26acaa616ee421bd30fb')
 

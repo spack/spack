@@ -32,7 +32,10 @@ class RJpeg(RPackage):
 
     homepage = "http://www.rforge.net/jpeg/"
     url      = "https://cran.r-project.org/src/contrib/jpeg_0.1-8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/jpeg"
 
     version('0.1-8', '696007451d14395b1ed1d0e9af667a57')
+
+    depends_on('r@2.9.0:')
 
     depends_on('jpeg')

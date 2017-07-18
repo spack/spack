@@ -31,7 +31,8 @@ class RMinqa(RPackage):
 
     homepage = "http://optimizer.r-forge.r-project.org/"
     url      = "https://cran.r-project.org/src/contrib/minqa_1.2.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/minqa_1.2.4.tar.gz"
 
     version('1.2.4', 'bcaae4fdba60a33528f2116e2fd51105')
 
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.9.10:', type=('build', 'run'))

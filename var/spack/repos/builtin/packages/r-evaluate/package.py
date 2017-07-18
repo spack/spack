@@ -32,8 +32,10 @@ class REvaluate(RPackage):
     line behaviour of R."""
 
     homepage = "https://github.com/hadley/evaluate"
-    url      = "https://cran.rstudio.com/src/contrib/evaluate_0.9.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/evaluate_0.10.1.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/evaluate"
 
+    version('0.10.1', '1dde5a35e2b9d57f1b1bb16791b35ff5')
     version('0.10', 'c49326babf984a8b36e7e276da370ad2')
     version('0.9',  '877d89ce8a9ef7f403b1089ca1021775')
 

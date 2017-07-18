@@ -30,8 +30,9 @@ class RTtr(RPackage):
 
     homepage = "https://github.com/joshuaulrich/TTR"
     url      = "https://cran.r-project.org/src/contrib/TTR_0.23-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/TTR"
 
     version('0.23-1', '35f693ac0d97e8ec742ebea2da222986')
 
-    depends_on('r-xts', type=('build', 'run'))
+    depends_on('r-xts@0.9-3:', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))

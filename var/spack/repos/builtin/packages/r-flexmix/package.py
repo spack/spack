@@ -30,10 +30,12 @@ class RFlexmix(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=flexmix"
     url      = "https://cran.r-project.org/src/contrib/flexmix_2.3-14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/flexmix"
 
     version('2.3-14', '5be4f7764e6a697f4586e60c2bf6e960')
 
     depends_on('r@2.15.0:')
-    # depends_on('r-lattice', type=('build', 'run'))
+
+    depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-modeltools@0.2-16:', type=('build', 'run'))
-    # depends_on('r-nnet', type=('build', 'run'))
+    depends_on('r-nnet', type=('build', 'run'))

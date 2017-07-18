@@ -31,13 +31,16 @@ class RScales(RPackage):
 
     homepage = "https://github.com/hadley/scales"
     url      = "https://cran.r-project.org/src/contrib/scales_0.4.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/scales"
 
     version('0.4.1', '3fb2218866a7fe4c1f6e66790876f85a')
     version('0.4.0', '7b5602d9c55595901192248bca25c099')
 
+    depends_on('r@2.13:')
+
     depends_on('r-rcolorbrewer', type=('build', 'run'))
     depends_on('r-dichromat', type=('build', 'run'))
     depends_on('r-plyr', type=('build', 'run'))
-    depends_on('r-munsell', type=('build', 'run'))
+    depends_on('r-munsell@0.2:', type=('build', 'run'))
     depends_on('r-labeling', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))

@@ -30,5 +30,6 @@ class RLeaps(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=leaps"
     url      = "https://cran.r-project.org/src/contrib/leaps_3.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/leaps"
 
     version('3.0', '30823138890680e0493d1491c8f43edc')

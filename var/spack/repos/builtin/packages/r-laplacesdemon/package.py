@@ -32,5 +32,8 @@ class RLaplacesdemon(RPackage):
 
     homepage = "https://github.com/LaplacesDemonR/LaplacesDemon"
     url      = "https://cran.r-project.org/src/contrib/LaplacesDemon_16.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/LaplacesDemon"
 
     version('16.0.1', '1e4dab2dd0e27251734d68b0bfdbe911')
+
+    depends_on('r@3.0.0:')

@@ -32,10 +32,12 @@ class RDt(RPackage):
     abbreviation of 'DataTables'."""
 
     homepage = "http://rstudio.github.io/DT"
-    url      = "https://cran.r-project.org/src/contrib/DT_0.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/DT_0.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/DT"
 
+    version('0.2', '1ada2950daac6504fd30a09d944f845e')
     version('0.1', '5c8df984921fa484784ec4b8a4fb6f3c')
 
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
+    depends_on('r-htmlwidgets@0.6:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))

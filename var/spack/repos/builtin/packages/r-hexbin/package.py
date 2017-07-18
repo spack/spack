@@ -32,7 +32,10 @@ class RHexbin(RPackage):
 
     homepage = "http://github.com/edzer/hexbin"
     url      = "https://cran.r-project.org/src/contrib/hexbin_1.27.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/hexbin"
 
-    version('1.27.1', '7f380390c6511e97df10a810a3b3bb7c')
+    version('1.27.1', '7590ed158f8a57a71901bf6ca26f81be')
+
+    depends_on('r@2.10:')
 
     depends_on('r-lattice', type=('build', 'run'))
