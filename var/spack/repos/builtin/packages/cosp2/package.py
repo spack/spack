@@ -51,12 +51,15 @@ class Cosp2(MakefilePackage):
     build_directory = 'src-mpi'
 
     def edit(self, spec, prefix):
-        with working_dir('src-mpi'):
-            if '+mpi' in spec:
-                filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                            'Makefile.vanilla')
-            else:
-                filter_file(r'^CC\s*=.*', 'CC = spack_cc', 'Makefile.vanilla')
+        cc = spack_cc
+
+        if '+mpi' in spec:
+            cc = spec['mpi'].mpicc
+
+        with working_dir(self.build_directory):
+            makefile = FileFilter('Makefile.vanilla')
+            makefile.filter(r'^CC\s*=.*', 'CC = {0}'.format(cc))
+
         if '+double' in spec:
             filter_file('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF',
                         'src-mpi/Makefile.vanilla')
