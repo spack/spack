@@ -73,6 +73,8 @@ class Smc(MakefilePackage):
             makefile.filter('NDEBUG :=', '#')
         if '~k_use_automatic' in spec:
             makefile.filter('K_U.*:= t', '#')
+        if 'comp=Intel' in spec:
+            makefile.filter('COMP := .*', 'COMP := Intel')
 
     def install(self, spec, prefix):
         files = glob.glob(join_path(self.build_directory, '*.exe'))
