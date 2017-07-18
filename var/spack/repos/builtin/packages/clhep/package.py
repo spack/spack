@@ -63,7 +63,7 @@ class Clhep(CMakePackage):
                     '%s/%s/CLHEP/CMakeLists.txt'
                     % (self.stage.path, self.spec.version))
 
-    root_cmakelists_dir = '../CLHEP'
+    root_cmakelists_dir = 'CLHEP'
 
     def build_type(self):
         spec = self.spec
