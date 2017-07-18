@@ -15,7 +15,6 @@ packages:
             mpich@7.4.4%intel@17.0.2.174 arch=cray-cnl6-mic_knl: cray-mpich
             mpich@7.4.4%gcc@6.3.0 arch=cray-cnl6-ivybridge: cray-mpich
             mpich@7.4.4%intel@17.0.2.174 arch=cray-cnl6-ivybridge: cray-mpich
-            mpich@7.4.4%gcc@6.3.0 arch=cray-cnl6-mic_knl: cray-mpich
     intel-mkl:
         buildable: false
         paths:
