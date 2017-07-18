@@ -59,6 +59,9 @@ class Mvapich2(AutotoolsPackage):
     variant('debug', default=False,
             description='Enable debug info and error messages at run-time')
 
+    variant('cuda', default=False,
+            description='Enable CUDA extension')
+
     # Accepted values are:
     #   single      - No threads (MPI_THREAD_SINGLE)
     #   funneled    - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
@@ -100,9 +103,9 @@ class Mvapich2(AutotoolsPackage):
         )
     )
 
-    # FIXME : CUDA support is missing
-    depends_on('bison')
+    depends_on('bison', type='build')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
+    depends_on('cuda', when='+cuda')
 
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"
@@ -216,6 +219,12 @@ class Mvapich2(AutotoolsPackage):
             ])
         else:
             args.append('--enable-fast=all')
+
+        if '+cuda' in self.spec:
+            args.extend([
+                '--enable-cuda',
+                '--with-cuda={0}'.format(spec['cuda'].prefix)
+            ])
 
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
