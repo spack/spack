@@ -53,10 +53,11 @@ class Simplemoc(MakefilePackage):
         cflags = '-std=gnu99'
         ldflags = '-lm'
 
+	if self.compiler.name == 'gcc' or self.compiler.name == 'intel':
+            cflags += ' ' + self.compiler.openmp_flag
         if '+mpi' in self.spec:
             targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
 
-        cflags += ' ' + self.compiler.openmp_flag
         targets.append('CFLAGS={0}'.format(cflags))
         targets.append('LDFLAGS={0}'.format(ldflags))
 
