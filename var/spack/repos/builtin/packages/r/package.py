@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,6 +40,7 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    version('3.4.1', '3a79c01dc0527c62e80ffb1c489297ea')
     version('3.4.0', '75083c23d507b9c16d5c6afbd7a827e7')
     version('3.3.3', '0ac211ec15e813a24f8f4a5a634029a4')
     version('3.3.2', '2437014ef40641cdc9673e89c040b7a8')

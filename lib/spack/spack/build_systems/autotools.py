@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -95,10 +95,15 @@ class AutotoolsPackage(PackageBase):
     #: Options to be passed to autoreconf when using the default implementation
     autoreconf_extra_args = []
 
+    @run_after('autoreconf')
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
         this updated when installed on a newer architecture."""
 
+        if not self.patch_config_guess or not self.spec.satisfies(
+                'arch=linux-rhel7-ppc64le'
+        ):
+            return
         my_config_guess = None
         config_guess = None
         if os.path.exists('config.guess'):
@@ -120,11 +125,11 @@ class AutotoolsPackage(PackageBase):
             try:
                 check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
                 # The package's config.guess already runs OK, so just use it
-                return True
+                return
             except Exception:
                 pass
         else:
-            return True
+            return
 
         # Look for a spack-installed automake package
         if 'automake' in self.spec:
@@ -149,11 +154,11 @@ class AutotoolsPackage(PackageBase):
                 mod = stat(my_config_guess).st_mode & 0o777 | S_IWUSR
                 os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
-                return True
+                return
             except Exception:
                 pass
 
-        return False
+        raise RuntimeError('Failed to find suitable config.guess')
 
     @property
     def configure_directory(self):
@@ -175,20 +180,6 @@ class AutotoolsPackage(PackageBase):
     def build_directory(self):
         """Override to provide another place to build the package"""
         return self.configure_directory
-
-    def patch(self):
-        """Patches config.guess if
-        :py:attr:``~.AutotoolsPackage.patch_config_guess`` is True
-
-        :raise RuntimeError: if something goes wrong when patching
-            ``config.guess``
-        """
-
-        if self.patch_config_guess and self.spec.satisfies(
-                'arch=linux-rhel7-ppc64le'
-        ):
-            if not self._do_patch_config_guess():
-                raise RuntimeError('Failed to find suitable config.guess')
 
     @run_before('autoreconf')
     def delete_configure_to_force_update(self):

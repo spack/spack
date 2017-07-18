@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,6 +40,7 @@ class SuiteSparse(Package):
     variant('tbb',  default=False, description='Build with Intel TBB')
     variant('pic',  default=True,  description='Build position independent code (required to link with shared libraries)')
     variant('cuda', default=False, description='Build with CUDA')
+    variant('openmp', default=False, description='Build with OpenMP')
 
     depends_on('blas')
     depends_on('lapack')
@@ -63,11 +64,12 @@ class SuiteSparse(Package):
         # logic in it. Any kind of customization will need to go through
         # filtering of that file
 
-        make_args = ['INSTALL=%s' % prefix]
+        pic_flag  = self.compiler.pic_flag if '+pic' in spec else ''
 
-        make_args.extend([
+        make_args = [
+            'INSTALL=%s' % prefix,
             # By default, the Makefile uses the Intel compilers if
-            # they are found. This flag disables this behavior,
+            # they are found. The AUTOCC flag disables this behavior,
             # forcing it to use Spack's compiler wrappers.
             'AUTOCC=no',
             # CUDA=no does NOT disable cuda, it only disables internal search
@@ -75,47 +77,44 @@ class SuiteSparse(Package):
             # completely disabled. See
             # [SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk] for more.
             'CUDA=no',
-            'CUDA_PATH={0}'.format(
-                spec['cuda'].prefix if '+cuda' in spec else ''
-            ),
-            'CFOPENMP={0}'.format(self.compiler.openmp_flag)
-        ])
+            'CUDA_PATH=%s' % (spec['cuda'].prefix if '+cuda' in spec else ''),
+            'CFOPENMP=%s' % (self.compiler.openmp_flag
+                             if '+openmp' in spec else ''),
+            'CFLAGS=-O3 %s' % pic_flag,
+            # Both FFLAGS and F77FLAGS are used in SuiteSparse makefiles;
+            # FFLAGS is used in CHOLMOD, F77FLAGS is used in AMD and UMFPACK.
+            'FFLAGS=%s' % pic_flag,
+            'F77FLAGS=%s' % pic_flag,
+            # use Spack's metis in CHOLMOD/Partition module,
+            # otherwise internal Metis will be compiled
+            'MY_METIS_LIB=%s' % spec['metis'].libs.ld_flags,
+            'MY_METIS_INC=%s' % spec['metis'].prefix.include,
+            # Make sure Spack's Blas/Lapack is used. Otherwise System's
+            # Blas/Lapack might be picked up. Need to add -lstdc++, following
+            # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk,
+            # even though this fix is ugly
+            'BLAS=%s' % (spec['blas'].libs.ld_flags + (
+                '-lstdc++' if '@4.5.1' in spec else '')),
+            'LAPACK=%s' % spec['lapack'].libs.ld_flags,
+        ]
 
-        if '+pic' in spec:
-            make_args.extend([
-                'CFLAGS={0}'.format(self.compiler.pic_flag),
-                'FFLAGS={0}'.format(self.compiler.pic_flag)
-            ])
+        # SuiteSparse defaults to using '-fno-common -fexceptions' in
+        # CFLAGS, but not all compilers use the same flags for these
+        # optimizations
+        if any([x in spec
+                for x in ('%clang', '%gcc', '%intel')]):
+            make_args += ['CFLAGS+=-fno-common -fexceptions']
+        elif '%pgi' in spec:
+            make_args += ['CFLAGS+=--exceptions']
 
         if '%xl' in spec or '%xl_r' in spec:
-            make_args.extend(['CFLAGS+=-DBLAS_NO_UNDERSCORE'])
-
-        # use Spack's metis in CHOLMOD/Partition module,
-        # otherwise internal Metis will be compiled
-        make_args.extend([
-            'MY_METIS_LIB=-L%s -lmetis' % spec['metis'].prefix.lib,
-            'MY_METIS_INC=%s' % spec['metis'].prefix.include,
-        ])
+            make_args += ['CFLAGS+=-DBLAS_NO_UNDERSCORE']
 
         # Intel TBB in SuiteSparseQR
         if 'tbb' in spec:
-            make_args.extend([
+            make_args += [
                 'SPQR_CONFIG=-DHAVE_TBB',
                 'TBB=-L%s -ltbb' % spec['tbb'].prefix.lib,
-            ])
-
-        # Make sure Spack's Blas/Lapack is used. Otherwise System's
-        # Blas/Lapack might be picked up.
-        blas = spec['blas'].libs.ld_flags
-        lapack = spec['lapack'].libs.ld_flags
-        if '@4.5.1' in spec:
-            # adding -lstdc++ is clearly an ugly way to do this, but it follows
-            # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk
-            blas += ' -lstdc++'
-
-        make_args.extend([
-            'BLAS=%s' % blas,
-            'LAPACK=%s' % lapack
-        ])
+            ]
 
         make('install', *make_args)

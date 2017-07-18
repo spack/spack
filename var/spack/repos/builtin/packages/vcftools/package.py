@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -45,7 +45,7 @@ class Vcftools(AutotoolsPackage):
     # this needs to be in sync with what setup_environment adds to
     # PERL5LIB below
     def configure_args(self):
-        return ['--with-pmdir=lib']
+        return ['--with-pmdir={0}'.format(self.prefix.lib)]
 
     @run_before('install')
     def filter_sbang(self):
@@ -72,4 +72,4 @@ class Vcftools(AutotoolsPackage):
             filter_file(match, substitute, *files, **kwargs)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', join_path(self.prefix, 'lib'))
+        run_env.prepend_path('PERL5LIB', self.prefix.lib)

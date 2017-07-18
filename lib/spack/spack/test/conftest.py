@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -173,6 +173,7 @@ def config(configuration_dir):
     real_scope = spack.config.config_scopes
     spack.config.config_scopes = ordereddict_backport.OrderedDict()
     spack.config.ConfigScope('site', str(configuration_dir.join('site')))
+    spack.config.ConfigScope('system', str(configuration_dir.join('system')))
     spack.config.ConfigScope('user', str(configuration_dir.join('user')))
     Config = collections.namedtuple('Config', ['real', 'mock'])
 
@@ -474,7 +475,9 @@ def mock_svn_repository():
     url = 'file://' + str(repodir)
     # Initialize the repository
     current = repodir.chdir()
-    svnadmin('create', str(repodir))
+    # NOTE: Adding --pre-1.5-compatible works for NERSC
+    # Unknown if this is also an issue at other sites.
+    svnadmin('create', '--pre-1.5-compatible', str(repodir))
 
     # Import a structure (first commit)
     r0_file = 'r0_file'

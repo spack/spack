@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,7 @@ class MesaGlu(AutotoolsPackage):
     """This package provides the Mesa OpenGL Utility library."""
 
     homepage = "https://www.mesa3d.org"
-    url      = "ftp://ftp.freedesktop.org/pub/mesa/glu/glu-9.0.0.tar.gz"
+    url      = "https://www.mesa3d.org/archive/glu/glu-9.0.0.tar.gz"
 
     version('9.0.0', 'bbc57d4fe3bd3fb095bdbef6fcb977c4')
 

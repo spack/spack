@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,7 @@ class Gdbm(AutotoolsPackage):
     manipulate a hashed database."""
 
     homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
-    url      = "ftp://ftp.gnu.org/gnu/gdbm/gdbm-1.13.tar.gz"
+    url      = "http://ftp.gnu.org/gnu/gdbm/gdbm-1.13.tar.gz"
 
     version('1.13',  '8929dcda2a8de3fd2367bdbf66769376')
     version('1.12',  '9ce96ff4c99e74295ea19040931c8fb9')
