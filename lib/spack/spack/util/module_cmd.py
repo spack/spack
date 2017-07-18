@@ -168,7 +168,7 @@ def get_path_from_module(mod):
     for line in text:
         if line.find('LD_LIBRARY_PATH') >= 0:
             path = get_argument_from_module_line(line)
-            return path[:path.find('/lib')]
+            return path[:re.search('/lib(\s|\Z|/)', path).start()]
 
     # If it lists its package directory, return that
     for line in text:
@@ -179,13 +179,18 @@ def get_path_from_module(mod):
     for line in text:
         rpath = line.find('-rpath/')
         if rpath >= 0:
-            return line[rpath + 6:line.find('/lib')]
+            return line[rpath + 6:re.search('/lib(\s|\Z|/)', line).start()]
 
     # If it lists a -L instruction, use that
     for line in text:
         L = line.find('-L/')
         if L >= 0:
-            return line[L + 2:line.find('/lib')]
+            return line[L + 2:re.search('/lib(\s|\Z|/)', line).start()]
+
+    for line in text:
+        L = line.find("PATH")
+        if L >= 0:
+            return line[L + 4:re.search('/bin(\s|\Z|/)', line).start()]
 
     # Unable to find module path
     return None
