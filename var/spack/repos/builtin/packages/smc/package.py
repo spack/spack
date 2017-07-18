@@ -56,9 +56,6 @@ class Smc(MakefilePackage):
     variant(
         'k_use_automatic', default=True,
         description='Some arrays in kernels.F90 will be automatic')
-    variant(
-        'comp', default='GNU', description='Compiler of choice',
-        values=('GNU', 'Intel'))
 
     depends_on('mpi', when='+mpi')
     depends_on('gmake', type='build')
@@ -73,7 +70,7 @@ class Smc(MakefilePackage):
             makefile.filter('NDEBUG :=', '#')
         if '~k_use_automatic' in spec:
             makefile.filter('K_U.*:= t', '#')
-        if 'comp=Intel' in spec:
+        if self.compiler.name == 'intel':
             makefile.filter('COMP := .*', 'COMP := Intel')
 
     def install(self, spec, prefix):
