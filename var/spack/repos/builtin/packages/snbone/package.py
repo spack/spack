@@ -28,13 +28,14 @@ from spack import *
 
 class Snbone(MakefilePackage):
     """This application targets the primary computational solve burden of a SN,
-       continuous finite element based transport equation solver.
-       tags: proxy-app, proxy application"""
+       continuous finite element based transport equation solver."""
 
     homepage = "https://github.com/ANL-CESAR/"
     url = "https://github.com/ANL-CESAR/SNbone.git"
 
     version('develop', git='https://github.com/ANL-CESAR/SNbone.git')
+
+    tags = ['proxy-app']
 
     depends_on('metis')
 
