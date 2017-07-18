@@ -59,7 +59,7 @@ class Icedtea(AutotoolsPackage):
     depends_on('libxau', when='~X', type='build')
     depends_on('libxdmcp', when='~X', type='build')
     depends_on('gtkplus+X', when='~X', type='build')
-    
+
     depends_on('libx11', when='+X')
     depends_on('xproto', when='+X')
     depends_on('libxext', when='+X')
@@ -84,7 +84,7 @@ class Icedtea(AutotoolsPackage):
 
     force_autoreconf = True
 
-    resource(name='corba', placement='cobra_src', 
+    resource(name='corba', placement='corba_src', 
              sha512='f0579608ab1342df231c4542dab1c40e648cda8e9780ea584fd47679b07c93508cbfa85f0406d8aa8b9d528fc5bd99c9d41469568fbec41a6456a13d914ac71c',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/corba.tar.xz',
              when='@3.4.0')
@@ -135,26 +135,25 @@ class Icedtea(AutotoolsPackage):
         else:
             args.append('--with-hotspot-src-zip='+self.stage[2].archive_file)
             args.append('--with-hotspot-checksum=no')
-        args.append('--with-corba-src-zip='+self.stage[1].archive_file)
-        args.append('--with-corba-checksum=no')
-        args.append('--with-jaxp-src-zip='+self.stage[3].archive_file)
-        args.append('--with-jaxp-checksum=no')
-        args.append('--with-jaxws-src-zip='+self.stage[4].archive_file)
-        args.append('--with-jaxws-checksum=no')
-        args.append('--with-jdk-src-zip='+self.stage[5].archive_file)
-        args.append('--with-jdk-checksum=no')
-        args.append('--with-langtools-src-zip='+self.stage[6].archive_file)
-        args.append('--with-langtools-checksum=no')
-        args.append('--with-openjdk-src-zip='+self.stage[7].archive_file)
-        args.append('--with-openjdk-checksum=no')
-        args.append('--with-nashorn-src-zip='+self.stage[8].archive_file)
-        args.append('--with-nashorn-checksum=no')
-        args.append('--disable-maintainer-mode')
-        args.append('--disable-downloading')
-        args.append('--disable-bootstrap')
-        args.append('--disable-system-pcsc')
-        args.append('--disable-system-sctp')
-        args.append('--disable-system-kerberos')
+        args += [
+            '--with-corba-src-zip='+self.stage[1].archive_file,
+            '--with-cobra-checksum=no',
+            '--with-jaxp-src-zip='+self.stage[3].archive_file,
+            '--with-jaxp-checksum=no',
+            '--with-jaxws-src-zip='+self.stage[4].archive_file,
+            '--with-jaxws-checksum=no',
+            '--with-jdk-src-zip='+self.stage[5].archive_file,
+            '--with-jdk-checksum=no',
+            '--with-langtools-src-zip='+self.stage[6].archive_file,
+            '--with-langtools-checksum=no',
+            '--with-openjdk-src-zip='+self.stage[7].archive_file,
+            '--with-openjdk-checksum=no',
+            '--with-nashorn-src-zip='+self.stage[8].archive_file,
+            '--with-nashorn-checksum=no', '--disable-maintainer-mode'
+            '--disable-downloading', '--disable-bootstrap',
+            '--disable-system-pcsc', '--disable-system-sctp',
+            '--disable-system-kerberos'
+            ]
         return args
 
     def setup_environment(self, spack_env, run_env):
