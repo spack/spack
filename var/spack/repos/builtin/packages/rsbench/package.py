@@ -30,29 +30,37 @@ class Rsbench(MakefilePackage):
     """A mini-app to represent the multipole resonance representation lookup
        cross section algorithm.
        tags: proxy-app, proxy application"""
-    
+
     homepage = "https://github.com/ANL-CESAR/RSBench"
     url = "https://github.com/ANL-CESAR/RSBench/archive/v2.tar.gz"
-
-    variant('pgi', default=False, description='Build with PGI.')
-
-    depends_on('pgi', when='%pgi')
 
     version('2', '15a3ac5ea72529ac1ed9ed016ee68b4f')
     version('0', '3427634dc5e7cd904d88f9955b371757')
 
+    build_directory = 'src'
+
+    depends_on('pgi', when='+pgi')
+
     @property
     def build_targets(self):
+        targets = []
 
-        targets = [
-            '--directory=src'
-        ]
+        cflags = '-std=gnu99'
+        ldflags = '-lm'
 
-        if '%gcc' in self.spec:
-            targets.append('COMPILER=gnu')
+        if self.compiler.name == 'gcc':
+            cflags += ' ' + '-ffast-math' + ' ' + self.compiler.openmp_flag
+        if self.compiler.name == 'intel':
+            cflags += ' ' + '-xhost -ansi-alias -no-prec-div' + ' '
+            + self.compiler.openmp_flag
+        if '+pgi' in self.spec:
+            targets.append(
+                'CC={0}'.format(self.spec['pgi'].prefix.bin + '/pgcc')
+                )
+            cflags += '-mp -fastsse'
 
-        if '%intel' in self.spec:
-            targets.append('COMPILER=intel')
+        targets.append('CFLAGS={0}'.format(cflags))
+        targets.append('LDFLAGS={0}'.format(ldflags))
 
         return targets
 
