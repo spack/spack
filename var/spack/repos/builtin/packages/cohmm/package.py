@@ -30,7 +30,7 @@ class Cohmm(MakefilePackage):
     """An anticipated important use-case for next-generation supercomputing
         is multiscale modeling, in which continuum equations for large-scale
         material deformation are augmented with high-fidelity, fine-scale
-        simulations that provide constitutive data on demand
+        simulations that provide constitutive data on demand.
     """
     tags = ['proxy-app']
 
