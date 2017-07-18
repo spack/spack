@@ -28,14 +28,15 @@ from spack import *
 
 class Rsbench(MakefilePackage):
     """A mini-app to represent the multipole resonance representation lookup
-       cross section algorithm.
-       tags: proxy-app, proxy application"""
+       cross section algorithm."""
 
     homepage = "https://github.com/ANL-CESAR/RSBench"
     url = "https://github.com/ANL-CESAR/RSBench/archive/v2.tar.gz"
 
     version('2', '15a3ac5ea72529ac1ed9ed016ee68b4f')
     version('0', '3427634dc5e7cd904d88f9955b371757')
+
+    tags = ['proxy-app']
 
     build_directory = 'src'
 
@@ -47,10 +48,11 @@ class Rsbench(MakefilePackage):
         ldflags = '-lm'
 
         if self.compiler.name == 'gcc':
-            cflags += ' ' + '-ffast-math' + ' ' + self.compiler.openmp_flag
+            cflags += ' -ffast-math ' + self.compiler.openmp_flag
         if self.compiler.name == 'intel':
             cflags += ' ' + '-xhost -ansi-alias -no-prec-div' + ' '
             + self.compiler.openmp_flag
+
         if self.compiler.name == 'pgi':
             cflags += '-mp -fastsse'
 
