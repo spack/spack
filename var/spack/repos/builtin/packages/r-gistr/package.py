@@ -35,12 +35,14 @@ class RGistr(RPackage):
     requests require authentication and some do not."""
 
     homepage = "https://github.com/ropensci/gistr"
-    url      = "https://cran.r-project.org/src/contrib/gistr_0.3.6.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/gistr_0.4.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/gistr"
 
+    version('0.4.0', 'e0a12dbacefbb2db1d78cef4d53a2b97')
     version('0.3.6', '49d548cb3eca0e66711aece37757a2c0')
 
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-httr', type=('build', 'run'))
+    depends_on('r-jsonlite@1.4:', type=('build', 'run'))
+    depends_on('r-httr@1.2.0:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-assertthat', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))

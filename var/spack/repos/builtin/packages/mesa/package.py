@@ -41,15 +41,15 @@ class Mesa(AutotoolsPackage):
     depends_on('bison@2.4.1:', type='build')
 
     # For DRI and hardware acceleration
-    depends_on('libpthread-stubs')
-    depends_on('libdrm')
-    depends_on('openssl')
-    depends_on('libxcb@1.9.3:')
-    depends_on('libxshmfence@1.1:')
-    depends_on('libx11')
-    depends_on('libxext')
-    depends_on('libxdamage')
-    depends_on('libxfixes')
+    depends_on('libpthread-stubs', type=('build', 'link', 'run'))
+    depends_on('libdrm', type=('build', 'link', 'run'))
+    depends_on('openssl', type=('build', 'link', 'run'))
+    depends_on('libxcb@1.9.3:', type=('build', 'link', 'run'))
+    depends_on('libxshmfence@1.1:', type=('build', 'link', 'run'))
+    depends_on('libx11', type=('build', 'link', 'run'))
+    depends_on('libxext', type=('build', 'link', 'run'))
+    depends_on('libxdamage', type=('build', 'link', 'run'))
+    depends_on('libxfixes', type=('build', 'link', 'run'))
 
     depends_on('glproto@1.4.14:', type='build')
     depends_on('dri2proto@2.6:', type='build')
@@ -59,3 +59,4 @@ class Mesa(AutotoolsPackage):
 
     # TODO: Add package for systemd, provides libudev
     # Using the system package manager to install systemd didn't work for me
+    # depends_on('libudev', type=('build', 'link', 'run'))

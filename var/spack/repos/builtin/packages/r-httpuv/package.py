@@ -36,6 +36,7 @@ class RHttpuv(RPackage):
 
     homepage = "https://github.com/rstudio/httpuv"
     url      = "https://cran.r-project.org/src/contrib/httpuv_1.3.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/httpuv"
 
     version('1.3.3', 'c78ae068cf59e949b9791be987bb4489')
 

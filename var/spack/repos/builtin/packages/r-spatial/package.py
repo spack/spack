@@ -30,6 +30,7 @@ class RSpatial(RPackage):
 
     homepage = "http://www.stats.ox.ac.uk/pub/MASS4"
     url      = "https://cran.r-project.org/src/contrib/spatial_7.3-11.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/spatial"
 
     version('7.3-11', '0a2170d5b153a131e23d480d486ead00')
 

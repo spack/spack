@@ -30,8 +30,10 @@ class RVisnetwork(RPackage):
     allows an interactive visualization of networks."""
 
     homepage = "https://github.com/datastorm-open/visNetwork"
-    url      = "https://cran.r-project.org/src/contrib/visNetwork_1.0.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/visNetwork_2.0.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/visNetwork"
 
+    version('2.0.0', 'a13b733a95f14a4eaa545275dff552fc')
     version('1.0.1', 'dfc9664a5165134d8dbdcd949ad73cf7')
 
     depends_on('r-htmlwidgets', type=('build', 'run'))

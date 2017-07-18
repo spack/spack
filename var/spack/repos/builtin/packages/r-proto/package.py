@@ -30,6 +30,8 @@ class RProto(RPackage):
     prototype-based, rather than class-based object oriented ideas."""
 
     homepage = "http://r-proto.googlecode.com/"
-    url      = "https://cran.r-project.org/src/contrib/proto_0.3-10.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/proto_1.0.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/proto"
 
+    version('1.0.0', 'ba74c21febd5282d73e97ccaf5ebbb84')
     version('0.3-10', 'd5523943a5be6ca2f0ab557c900f8212')

@@ -43,6 +43,8 @@ class RStanheaders(RPackage):
     estimate, and analyze Stan models."""
 
     homepage = "http://mc-stan.org/"
-    url      = "https://cran.r-project.org/src/contrib/StanHeaders_2.10.0-2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/StanHeaders_2.15.0-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/StanHeaders"
 
+    version('2.15.0-1', '7f095f552ba934113250bcef99f85ac1')
     version('2.10.0-2', '9d09b1e9278f08768f7a988ad9082d57')

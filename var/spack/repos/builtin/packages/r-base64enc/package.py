@@ -31,5 +31,8 @@ class RBase64enc(RPackage):
 
     homepage = "http://www.rforge.net/base64enc"
     url      = "https://cran.r-project.org/src/contrib/base64enc_0.1-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/base64enc"
 
     version('0.1-3', '0f476dacdd11a3e0ad56d13f5bc2f190')
+
+    depends_on('r@2.9.0:')

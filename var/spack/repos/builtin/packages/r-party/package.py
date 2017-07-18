@@ -29,14 +29,17 @@ class RParty(RPackage):
     """A computational toolbox for recursive partitioning."""
 
     homepage = "https://cran.r-project.org/web/packages/party/index.html"
-    url      = "https://cran.r-project.org/src/contrib/party_1.1-2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/party_1.2-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/party"
 
+    version('1.2-3', '77b042c6014d0c52b5e6bd9feab26e9e')
     version('1.1-2', '40a00336cf8418042d2ab616675c8ddf')
 
-    depends_on('r@2.14.0:')
+    depends_on('r@2.14.0:', when=('@:1.1-9'))
+    depends_on('r@3.0.0:', when=('@1.2-0:'))
 
     depends_on('r-mvtnorm@1.0-2:', type=('build', 'run'))
-    depends_on('r-modeltools@0.1-21:', type=('build', 'run'))
+    depends_on('r-modeltools@0.2-21:', type=('build', 'run'))
     depends_on('r-strucchange', type=('build', 'run'))
     depends_on('r-survival@2.37-7:', type=('build', 'run'))
     depends_on('r-coin@1.1-0:', type=('build', 'run'))

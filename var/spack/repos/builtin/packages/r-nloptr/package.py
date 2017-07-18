@@ -36,5 +36,6 @@ class RNloptr(RPackage):
 
     homepage = "https://cran.r-project.org/package=nloptr"
     url      = "https://cran.r-project.org/src/contrib/nloptr_1.0.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/nloptr"
 
     version('1.0.4', '9af69a613349b236fd377d0a107f484c')

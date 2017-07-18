@@ -33,10 +33,14 @@ class RMaptools(RPackage):
     maps, RArcInfo, Stata tmap, WinBUGS, Mondrian, and others."""
 
     homepage = "http://r-forge.r-project.org/projects/maptools/"
-    url      = "https://cran.r-project.org/src/contrib/maptools_0.8-39.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/maptools_0.9-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/maptools"
 
+    version('0.9-2', 'a63931cca1c484fc4bb40b69c314de37')
     version('0.8-39', '3690d96afba8ef22c8e27ae540ffb836')
 
-    depends_on('r-sp', type=('build', 'run'))
-    depends_on('r-foreign', type=('build', 'run'))
+    depends_on('r@2.10:')
+
+    depends_on('r-sp@1.0-11:', type=('build', 'run'))
+    depends_on('r-foreign@0.8:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

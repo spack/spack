@@ -30,6 +30,8 @@ class RYaml(RPackage):
     (http://pyyaml.org/wiki/LibYAML) for R."""
 
     homepage = "https://cran.r-project.org/web/packages/yaml/index.html"
-    url      = "https://cran.r-project.org/src/contrib/yaml_2.1.13.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/yaml_2.1.14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/yaml"
 
+    version('2.1.14', '2de63248e6a122c368f8e4537426e35c')
     version('2.1.13', 'f2203ea395adaff6bd09134666191d9a')

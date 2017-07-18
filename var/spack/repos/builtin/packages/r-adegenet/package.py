@@ -38,17 +38,21 @@ class RAdegenet(RPackage):
 
     homepage = "https://github.com/thibautjombart/adegenet/wiki"
     url      = "https://cran.r-project.org/src/contrib/adegenet_2.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/adegenet"
 
     version('2.0.1', 'ecb1220ce7c9affaba2987bc7f38adda')
 
     depends_on('r@2.14:')
+
     depends_on('r-ade4', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))
     depends_on('r-ape', type=('build', 'run'))
     depends_on('r-shiny', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-seqinr', type=('build', 'run'))
     depends_on('r-spdep', type=('build', 'run'))
+    depends_on('r-boot', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
     depends_on('r-dplyr@0.4.1:', type=('build', 'run'))
     depends_on('r-vegan', type=('build', 'run'))

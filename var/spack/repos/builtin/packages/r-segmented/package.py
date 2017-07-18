@@ -31,6 +31,8 @@ class RSegmented(RPackage):
     variables with multiple breakpoints are allowed."""
 
     homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-2.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/segmented"
 
+    version('0.5-2.1', '9983c90c6a39d811f08b521f655cd4b5')
     version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')

@@ -31,14 +31,18 @@ class RGgvis(RPackage):
     and web graphics from 'vega'."""
 
     homepage = "http://ggvis.rstudio.com/"
-    url      = "https://cran.r-project.org/src/contrib/ggvis_0.4.2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/ggvis_0.4.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ggvis"
 
+    version('0.4.3', '30297d464278a7974fb125bcc7d84e77')
     version('0.4.2', '039f45e5c7f1e0652779163d7d99f922')
 
+    depends_on('r@3.0.0:')
+
     depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-shiny', type=('build', 'run'))
+    depends_on('r-jsonlite@0.9.11:', type=('build', 'run'))
+    depends_on('r-shiny@0.11.1:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-dplyr@0.4.0:', type=('build', 'run'))
     depends_on('r-lazyeval', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-htmltools@0.2.4:', type=('build', 'run'))

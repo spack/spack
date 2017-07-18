@@ -31,5 +31,8 @@ class RTrust(RPackage):
 
     homepage = "http://www.stat.umn.edu/geyer/trust"
     url      = "https://cran.r-project.org/src/contrib/trust_0.1-7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/trust"
 
     version('0.1-7', '7e218b3a6b33bd77bd7e86dc6360418d')
+
+    depends_on('r@2.10.0:')

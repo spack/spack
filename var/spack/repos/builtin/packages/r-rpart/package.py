@@ -30,7 +30,11 @@ class RRpart(RPackage):
     survival trees."""
 
     homepage = "https://cran.r-project.org/package=rpart"
+<<<<<<< Updated upstream
     url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
+=======
+    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-11.tar.gz"
+>>>>>>> Stashed changes
     list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
 
     version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')

@@ -29,8 +29,10 @@ class RMapproj(RPackage):
     """Converts latitude/longitude into projected coordinates."""
 
     homepage = "https://cran.r-project.org/package=mapproj"
-    url      = "https://cran.r-project.org/src/contrib/mapproj_1.2-4.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/mapproj_1.2-5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/mapproj"
 
+    version('1.2-5', '90dc27f9edb2af28e13eafdfbb808dfb')
     version('1.2-4', '10e22bde1c790e1540672f15ddcaee71')
 
-    depends_on('r-maps', type=('build', 'run'))
+    depends_on('r-maps@2.3-0:', type=('build', 'run'))

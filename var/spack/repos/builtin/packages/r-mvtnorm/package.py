@@ -30,6 +30,10 @@ class RMvtnorm(RPackage):
     deviates and densities."""
 
     homepage = "http://mvtnorm.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-5.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/mvtnorm"
 
+    version('1.0-6', 'cb69426868fd3e330412b8491901d9d4')
     version('1.0-5', '5894dd3969bbfa26f4862c45f9a48a52')
+
+    depends_on('r@1.9.0:')

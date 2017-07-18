@@ -31,8 +31,11 @@ class RTestthat(RPackage):
 
     homepage = "https://github.com/hadley/testthat"
     url      = "https://cran.r-project.org/src/contrib/testthat_1.0.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/testthat"
 
     version('1.0.2', '6c6a90c8db860292df5784a70e07b8dc')
+
+    depends_on('r@3.1.0:')
 
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-crayon', type=('build', 'run'))

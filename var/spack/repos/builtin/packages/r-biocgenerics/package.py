@@ -29,6 +29,10 @@ class RBiocgenerics(RPackage):
     """S4 generic functions needed by many Bioconductor packages."""
 
     homepage = 'https://bioconductor.org/packages/BiocGenerics/'
+
+    version('3.5',
+            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
+            branch='release-3.5')
     version('3.3',
             git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
             branch='release-3.3')
@@ -36,5 +40,6 @@ class RBiocgenerics(RPackage):
             git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
             branch='release-3.2')
 
+    depends_on('r@3.4.0:', when='@3.5')
     depends_on('r@3.3.0:3.3.9', when='@3.3')
     depends_on('r@3.2.0:3.2.9', when='@3.2')

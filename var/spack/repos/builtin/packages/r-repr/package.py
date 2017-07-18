@@ -31,6 +31,10 @@ class RRepr(RPackage):
     mime types."""
 
     homepage = "https://github.com/IRkernel/repr"
-    url      = "https://cran.r-project.org/src/contrib/repr_0.9.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/repr_0.12.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/repr"
 
+    version('0.12.0', '61b40a925e4eee7933facc54f00560f2')
     version('0.9', 'db5ff74893063b492f684e42283070bd')
+
+    depends_on('r@3.0.1:')

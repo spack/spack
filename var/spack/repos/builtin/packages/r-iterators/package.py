@@ -31,5 +31,8 @@ class RIterators(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/iterators/index.html"
     url      = "https://cran.r-project.org/src/contrib/iterators_1.0.8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/iterators"
 
     version('1.0.8', '2ded7f82cddd8174f1ec98607946c6ee')
+
+    depends_on('r@2.5.0:')

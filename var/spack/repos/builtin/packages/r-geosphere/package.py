@@ -32,7 +32,10 @@ class RGeosphere(RPackage):
 
     homepage = "https://cran.r-project.org/package=geosphere"
     url      = "https://cran.r-project.org/src/contrib/geosphere_1.5-5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/geosphere"
 
     version('1.5-5', '28efb7a8e266c7f076cdbcf642455f3e')
+
+    depends_on('r@3.0.0:')
 
     depends_on('r-sp', type=('build', 'run'))

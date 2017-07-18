@@ -30,10 +30,13 @@ class RGgsci(RPackage):
     'ggplot2'"""
 
     homepage = "https://github.com/road2stat/ggsci"
-    url      = "https://cran.r-project.org/src/contrib/ggsci_2.4.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/ggsci_2.7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ggsci"
 
+    version('2.7', 'a6656304751f013fa41ac33b107e4eb2')
     version('2.4', '8e5dc2fcf84352cacbb91363e26c7175')
 
     depends_on('r@3.0.2:')
+
     depends_on('r-scales', type=('build', 'run'))
     depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))

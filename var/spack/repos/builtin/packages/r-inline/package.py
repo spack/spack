@@ -32,5 +32,8 @@ class RInline(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/inline/index.html"
     url      = "https://cran.r-project.org/src/contrib/inline_0.3.14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/inline"
 
     version('0.3.14', '9fe304a6ebf0e3889c4c6a7ad1c50bca')
+
+    depends_on('r@2.4.0:')

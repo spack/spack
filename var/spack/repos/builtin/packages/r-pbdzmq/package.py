@@ -36,9 +36,13 @@ class RPbdzmq(RPackage):
     functions compatible with 'rzmq' are also provided."""
 
     homepage = "http://r-pbd.org/"
-    url      = "https://cran.r-project.org/src/contrib/pbdZMQ_0.2-4.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/pbdZMQ_0.2-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pbdZMQ"
 
+    version('0.2-6', '03d84c808a53a7b5bf2dac7882733fd3')
     version('0.2-4', 'e5afb70199aa54d737ee7a0e26bde060')
 
+    depends_on('r@3.2.0:')
+
     depends_on('r-r6', type=('build', 'run'))
-    depends_on('zeromq')
+    depends_on('zeromq@4.04:')

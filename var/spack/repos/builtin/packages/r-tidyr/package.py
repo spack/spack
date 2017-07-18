@@ -31,12 +31,14 @@ class RTidyr(RPackage):
     pipelines."""
 
     homepage = "https://github.com/hadley/tidyr"
-    url      = "https://cran.r-project.org/src/contrib/tidyr_0.5.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/tidyr_0.6.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/tidyr"
 
+    version('0.6.3', '48e1bef9b0af15bed3a09c255ab4e4b5')
     version('0.5.1', '3cadc869510c054ed93d374ab44120bd')
 
     depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-dplyr@0.4:', type=('build', 'run'))
     depends_on('r-stringi', type=('build', 'run'))
     depends_on('r-lazyeval', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))

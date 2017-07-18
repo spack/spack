@@ -31,6 +31,7 @@ class RGridextra(RPackage):
 
     homepage = "https://github.com/baptiste/gridextra"
     url      = "https://cran.r-project.org/src/contrib/gridExtra_2.2.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/gridExtra"
 
     version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')
 

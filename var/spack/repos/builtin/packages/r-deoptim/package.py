@@ -31,6 +31,8 @@ class RDeoptim(RPackage):
     of a real-valued function of a real-valued parameter vector."""
 
     homepage = "https://cran.r-project.org/package=DEoptim"
-    url      = "https://cran.r-project.org/src/contrib/DEoptim_2.2-3.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/DEoptim_2.2-4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/DEoptim"
 
+    version('2.2-4', 'f14bb39d2f1c15ede227bfa4e60b3aeb')
     version('2.2-3', 'ed406e6790f8f1568aa9bec159f80326')

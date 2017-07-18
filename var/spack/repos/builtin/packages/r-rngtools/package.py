@@ -34,9 +34,12 @@ class RRngtools(RPackage):
 
     homepage = "https://renozao.github.io/rngtools"
     url      = "https://cran.r-project.org/src/contrib/rngtools_1.2.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rngtools"
 
     version('1.2.4', '715967f8b3af2848a76593a7c718c1cd')
 
-    depends_on('r-pkgmaker', type=('build', 'run'))
+    depends_on('r@3.0.0:')
+
+    depends_on('r-pkgmaker@0.20:', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))

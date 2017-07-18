@@ -30,10 +30,14 @@ class RNetworkd3(RPackage):
     from 'R'."""
 
     homepage = "http://cran.r-project.org/package=networkD3"
-    url      = "https://cran.r-project.org/src/contrib/networkD3_0.2.12.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/networkD3_0.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/networkD3"
 
+    version('0.4', 'dad3befe0a77dd04c72704eb95fb3d45')
     version('0.2.12', '356fe4be59698e6fb052644bd9659d84')
 
-    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r@3.0.0:')
+
+    depends_on('r-htmlwidgets@0.3.2:', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))

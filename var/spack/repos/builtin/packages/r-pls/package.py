@@ -32,6 +32,7 @@ class RPls(RPackage):
 
     homepage = "https://cran.r-project.org/package=pls"
     url      = "https://cran.r-project.org/src/contrib/pls_2.6-0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pls"
 
     version('2.6-0', '04e02e8e46d983c5ed53c1f952b329df')
 

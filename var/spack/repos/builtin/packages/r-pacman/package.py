@@ -32,10 +32,12 @@ class RPacman(RPackage):
     functionality from lower level functions which can speed up workflow."""
 
     homepage = "https://cran.r-project.org/package=pacman"
-    url      = "https://cran.r-project.org/src/contrib/pacman_0.4.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/pacman_0.4.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pacman"
 
+    version('0.4.6', 'bc5f9734fae49fdd6ed854f740babcef')
     version('0.4.1', 'bf18fe6d1407d31e00b337d9b07fb648')
 
     depends_on('r@3.0.2:')
 
-    depends_on('r-devtools', type=('build', 'run'))
+    depends_on('r-devtools@1.13.0:', type=('build', 'run'))

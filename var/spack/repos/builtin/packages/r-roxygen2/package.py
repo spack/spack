@@ -30,12 +30,20 @@ class RRoxygen2(RPackage):
     'NAMESPACE' files."""
 
     homepage = "https://github.com/klutometis/roxygen"
-    url      = "https://cran.r-project.org/src/contrib/roxygen2_5.0.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/roxygen2_6.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/roxygen2"
 
+    version('6.0.1', '53300ac3f27ff0998ebb5fbe3afc8b9f')
     version('5.0.1', 'df5bdbc12fda372e427710ef1cd92ed7')
 
-    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r@3.0.2:')
+
+    depends_on('r-stringr@0.5:', type=('build', 'run'))
     depends_on('r-stringi', type=('build', 'run'))
     depends_on('r-brew', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
+    depends_on('r-r6', when='@6.0.0:', type=('build', 'run'))
+    depends_on('r-desc', when='@6.0.0:', type=('build', 'run'))
+    depends_on('r-commonmark', when='@6.0.0:', type=('build', 'run'))
+    depends_on('r-xml2', when='@6.0.0:', type=('build', 'run'))

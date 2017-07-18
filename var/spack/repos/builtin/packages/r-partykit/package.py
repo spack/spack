@@ -38,8 +38,11 @@ class RPartykit(RPackage):
 
     homepage = "http://partykit.r-forge.r-project.org/partykit"
     url      = "https://cran.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/partykit"
 
     version('1.1-1', '8fcb31d73ec1b8cd3bcd9789639a9277')
 
+    depends_on('r@3.1.0:')
+
     depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-formula', type=('build', 'run'))
+    depends_on('r-formula@1.2-1:', type=('build', 'run'))

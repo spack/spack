@@ -31,6 +31,7 @@ class REllipse(RPackage):
 
     homepage = "https://cran.r-project.org/package=ellipse"
     url      = "https://cran.r-project.org/src/contrib/ellipse_0.3-8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ellipse"
 
     version('0.3-8', '385f5ec5e49bcda4317ca9dffd33f771')
 

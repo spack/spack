@@ -30,10 +30,17 @@ class RXlconnect(RPackage):
     data."""
 
     homepage = "http://miraisolutions.wordpress.com/"
-    url      = "https://cran.r-project.org/src/contrib/XLConnect_0.2-11.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/XLConnect_0.2-13.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/XLConnect"
 
+    version('0.2-13', '9bd60d3e606fbfff0d92863e7886d9bc')
     version('0.2-12', '3340d05d259f0a41262eab4ed32617ad')
     version('0.2-11', '9d1769a103cda05665df399cc335017d')
 
-    depends_on('r-xlconnectjars', type=('build', 'run'))
+    depends_on('r-xlconnectjars@0.2-11', when=('@0.2-11'),
+               type=('build', 'run'))
+    depends_on('r-xlconnectjars@0.2-12', when=('@0.2-12'),
+               type=('build', 'run'))
+    depends_on('r-xlconnectjars@0.2-13', when=('@0.2-13'),
+               type=('build', 'run'))
     depends_on('r-rjava', type=('build', 'run'))

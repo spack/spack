@@ -30,9 +30,13 @@ class RMatrix(RPackage):
     using 'LAPACK' and 'SuiteSparse'."""
 
     homepage = "http://matrix.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/Matrix_1.2-8.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/Matrix_1.2-10.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/Matrix"
 
+    version('1.2-10', '08e4bba646f33b2526f3253e7aafb5b0')
     version('1.2-8', '4a6406666bf97d3ec6b698eea5d9c0f5')
     version('1.2-6', 'f545307fb1284861e9266c4e9712c55e')
+
+    depends_on('r@3.0.1:')
 
     depends_on('r-lattice', type=('build', 'run'))

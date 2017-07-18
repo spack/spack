@@ -30,7 +30,8 @@ class RRstudioapi(RPackage):
     messages when it's not."""
 
     homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
 
     version('0.6', 'fdb13bf46aab02421557e713fceab66b')
     version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')

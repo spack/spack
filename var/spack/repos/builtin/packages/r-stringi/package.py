@@ -37,9 +37,13 @@ class RStringi(RPackage):
     etc."""
 
     homepage = "http://www.gagolewski.com/software/stringi/"
-    url      = "https://cran.r-project.org/src/contrib/stringi_1.1.2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/stringi_1.1.5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/stringi"
 
+    version('1.1.5', '0d5ec30ae368ab1b87a36fee3e228e7b')
     version('1.1.2', '0ec2faa62643e1900734c0eaf5096648')
     version('1.1.1', '32b919ee3fa8474530c4942962a6d8d9')
 
-    depends_on('icu4c')
+    depends_on('r@2.14:')
+
+    depends_on('icu4c@52:')
