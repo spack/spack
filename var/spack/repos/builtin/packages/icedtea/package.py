@@ -31,7 +31,7 @@ class Icedtea(AutotoolsPackage):
     """The IcedTea project provides a harness to build the source code from
     http://openjdk.java.net using Free Software build tools and adds a number
     of key features to the upstream OpenJDK codebase. IcedTea requires an
-    exiting IcedTea or OpenJDK install to build."""
+    existing IcedTea or OpenJDK install to build."""
 
     homepage = "http://icedtea.classpath.org/wiki/Main_Page"
     url      = "http://icedtea.wildebeest.org/download/source/icedtea-3.4.0.tar.gz"
