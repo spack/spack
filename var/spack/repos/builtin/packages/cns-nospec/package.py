@@ -34,14 +34,16 @@ class CnsNospec(MakefilePackage):
 
     homepage = "https://ccse.lbl.gov/ExaCT/index.html"
     url      = "https://ccse.lbl.gov/ExaCT/CNS_Nospec.tgz"
+    tags     = ['proxy-app']
 
     version('master', '14ff5be62539d829b30b17281688ee3f')
 
-    variant('mpi', default=False, description='Build with MPI support')
-    variant('debug', default=True, description='Build with debugging')
-    variant('mkverbose', default=True, description='Build with verbose')
+    variant('mpi', default=True, description='Build with MPI support')
+    variant('debug', default=False, description='Build with debugging')
     variant('omp', default=False, description='Build with OpenMP support')
     variant('prof', default=False, description='Build with profiling')
+
+    depends_on('mpi', when='+mpi')
 
     @property
     def build_directory(self):
@@ -53,8 +55,6 @@ class CnsNospec(MakefilePackage):
             makefile.filter('MPI .*', 'MPI := t')
         if '+debug' not in spec:
             makefile.filter('NDEBUG.*', '#')
-        if '+mkverbose' not in spec:
-            makefile.filter('MKVERBOSE.*', '#')
         if '+omp' in spec:
             makefile.filter('OMP.*', 'OMP := t')
         if '+prof' in spec:
