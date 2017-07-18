@@ -39,7 +39,7 @@ class PyTheano(PythonPackage):
 
     depends_on('python@2.6:2.8,3.3:')
 
-    depends_on('py-setuptools', type='build', 'run')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-scipy@0.11:', type=('build', 'run'))
     depends_on('py-numpy@1.7.1:', type=('build', 'run'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
