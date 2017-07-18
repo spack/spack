@@ -39,10 +39,8 @@ class Simplemoc(MakefilePackage):
     version('1.0', 'd8827221a4ae76e9766a32e16d143e60')
 
     variant('mpi', default=False, description='Build with MPI support')
-    variant('openmpi', default=True, description='Build with OpenMP support.')
 
     depends_on('mpi', when='+mpi')
-    depends_on('openmpi')
 
     build_directory = 'src'
 
