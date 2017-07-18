@@ -45,6 +45,7 @@ class Xsbench(MakefilePackage):
     depends_on('mpi', when='+mpi')
 
     build_directory = 'src'
+
     @property
     def build_targets(self):
 
