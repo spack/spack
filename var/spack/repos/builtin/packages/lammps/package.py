@@ -87,15 +87,16 @@ class Lammps(MakefilePackage):
 
         config.append('LMP_INC = -DLAMMPS_GZIP')
 
-        mpi_path = self.spec['mpi'].prefix.lib
-        mpi_inc = self.spec['mpi'].prefix.include
+        if self.spec.architecture.platform != "cray":
+            mpi_path = self.spec['mpi'].prefix.lib
+            mpi_inc = self.spec['mpi'].prefix.include
 
-        config.append(
-            'MPI_INC = -DMPICH_SKIP_MPICXX -DOMPI_SKIP_MPICXX=1 -I{0}'.format(
-                mpi_inc))
-        config.append('MPI_PATH = -L{0}'.format(mpi_path))
-        config.append('MPI_LIB = {0}'.format(
-            ' '.join(self.spec['mpi'].mpicxx_shared_libs)))
+            config.append(
+                'MPI_INC = -DMPICH_SKIP_MPICXX -DOMPI_SKIP_MPICXX=1 -I{0}'.format(
+                    mpi_inc))
+            config.append('MPI_PATH = -L{0}'.format(mpi_path))
+            config.append('MPI_LIB = {0}'.format(
+                ' '.join(self.spec['mpi'].mpicxx_shared_libs)))
 
         config.append('FFT_INC = -DFFT_FFTW3 -L{0}'.format(
             self.spec['fftw'].prefix.include))
