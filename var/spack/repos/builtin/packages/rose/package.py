@@ -65,7 +65,7 @@ class Rose(AutotoolsPackage):
     variant('z3', default=False, description='Enable z3 theorem prover')
     depends_on('z3', when='+z3')
 
-    build_directory = 'spack-build'
+    build_directory = 'rose-build'
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
@@ -99,11 +99,8 @@ class Rose(AutotoolsPackage):
             '--enable-tutorial-directory={0}'.format('no'),
         ]
 
-    @property
-    def build_directory(self):
-        return 'rose-build'
-
     def install(self, spec, prefix):
-        make('install-core')
-        with working_dir('tools'):
-            make('install')
+        with working_dir(self.build_directory):
+            make('install-core')
+            with working_dir('tools'):
+                make('install')
