@@ -198,7 +198,6 @@ def build_tarball(spec, outdir, force=False, rel=False, sign=True, key=None):
         tar.add(name='%s.asc' % specfile_path,
                 arcname='%s.asc' % specfile_name)
     os.remove(tarfile_path)
-    os.remove(specfile_path)
     os.remove('%s.asc' % tarfile_path)
     os.remove('%s.asc' % specfile_path)
 
