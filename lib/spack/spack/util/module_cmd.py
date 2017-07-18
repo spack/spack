@@ -188,7 +188,7 @@ def get_path_from_module(mod):
             return line[L + 2:line.find('/lib')]
 
     # Unable to find module path
-    return None
+    raise ModuleError("Unable to find path for module " + mod)
 
 
 class ModuleError(Exception):
