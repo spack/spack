@@ -37,8 +37,8 @@ class Poamsa(MakefilePackage):
     version('2.0', '9e2eb270d4867114406f53dab1311b2b')
 
     def url_for_version(self, version):
-        url = "https://downloads.sourceforge.net/project/poamsa/poamsa/{0}/poaV2.tar.gz"
-        return url.format(version.dotted)
+        url = "https://downloads.sourceforge.net/project/poamsa/poamsa/{0}/poaV{1}.tar.gz"
+        return url.format(version.dotted, version.up_to(1))
 
     def build(self, spec, prefix):
         make('poa')
