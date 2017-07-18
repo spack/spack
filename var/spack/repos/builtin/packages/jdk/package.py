@@ -58,6 +58,9 @@ class Jdk(Package):
     # away you go.
     version('7u80-b0', '6152f8a7561acf795ca4701daa10a965')
 
+    provides('java@8', when='@8u66-b17' '@8u73-b02' '@8u92-b14' '@8u131-b11')
+    provides('java@7', when='@7u80-b0')
+
     def url_for_version(self, version):
         url = "http://download.oracle.com/otn-pub/java/jdk/{0}/jdk-{1}-linux-x64.tar.gz"
         version = str(version)

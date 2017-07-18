@@ -31,3 +31,4 @@ packages:
       openfoam: [openfoam-com, openfoam-org, foam-extend]
       pil: [py-pillow]
       scalapack: [netlib-scalapack]
+      java: [jdk]
