@@ -30,7 +30,6 @@ class AlsaLib(AutotoolsPackage):
     functionality to the Linux operating system. alsa-lib contains the user
     space library that developers compile ALSA applications against."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.alsa-project.org"
     url      = "ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.1.4.1.tar.bz2"
 
