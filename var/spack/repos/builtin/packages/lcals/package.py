@@ -28,6 +28,14 @@ import platform
 import numbers
 
 
+def is_integral(x):
+    """Any integer value"""
+    try:
+        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
+    except ValueError:
+        return False
+
+
 class Lcals(MakefilePackage):
     """LCALS ("Livermore Compiler Analysis Loop Suite") is a collection of loop
        kernels based, in part, on historical "Livermore Loops" benchmarks
@@ -43,14 +51,6 @@ class Lcals(MakefilePackage):
 
     version('1.0.2', '40c65a88f1df1436a2f72b7d3c986a21')
 
-    def is_integral(x):
-        """Any integer value"""
-        try:
-            return isinstance(int(x), numbers.Integral)
-            and not isinstance(x, bool)
-        except ValueError:
-            return False
-
     variant(
         'xlcn',
         default=9,
@@ -60,9 +60,10 @@ class Lcals(MakefilePackage):
 
     variant(
         'microarch',
-        default=1,
-        description='Micro arch: 1 - SSE, 2 - AVX.',
-        values=is_integral
+        description='Micro arch: SSE, AVX, MIC.',
+        default='sse',
+        values=('sse', 'avx', 'MIC'),
+        #multi=True,
     )
 
     @property
@@ -78,37 +79,24 @@ class Lcals(MakefilePackage):
 
         arch = platform.machine()
 
-        if arch == 'x86_64' or arch == 'x86_32':
+        if microarch != 'sse' and microarch != 'avx' and microarch != 'MIC':
+            raise InstallError('Invalid choice:-{0}-. Micro arch: 1 - SSE, 2 - AVX.'.format(microarch))
+
+        if microarch == 'MIC':
+            arch = 'MIC'
+        elif arch == 'x86_64' or arch == 'x86_32':
             arch = 'x86'
         elif arch != 'bgq':
             raise InstallError('unknown architecture.')
 
-        if microarch != '1' and microarch != '2':
-            raise InstallError('Invalid choice. Micro arch: 1 - SSE, 2 - AVX.')
-        elif microarch == '1':
-            microarch = 'sse'
-        elif microarch == '2':
-            microarch = 'avx'
-
         if self.compiler.name == 'gcc':
             compiler = 'gnu'
-            cxx = 'g++'
         elif self.compiler.name == 'intel':
             compiler = 'icc'
-            cxx = 'icpc'
         elif self.compiler.name == 'xl':
             compiler = 'xlc' + xlcn
-            if xlcn == '9':
-                cxx = 'mpixlcxx'
-            elif xlcn == '12':
-                cxx = 'mpixlcxx_r'
-            else:
-                InstallError(
-                    'Unsupported XLC version number: {0}'.format(xlcn)
-                    )
         elif self.compiler.name == 'clang' and arch == 'bgq':
             compiler = self.compiler.name
-            cxx = 'bg' + self.compiler.name + '++11'
         else:
             raise InstallError('unknown compiler.')
 
@@ -120,7 +108,7 @@ class Lcals(MakefilePackage):
             raise InstallError('Fatal Error: unknown construct.')
 
         targets.append('LCALS_ARCH={0}'.format(arch))
-        targets.append('CXX={0}'.format(cxx))
+        targets.append('CXX={0}'.format(spack_cxx))
 
         return targets
 
