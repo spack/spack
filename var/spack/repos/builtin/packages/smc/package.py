@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install smc
-#
-# You can edit this file again by typing:
-#
-#     spack edit smc
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 import glob
 
@@ -52,6 +37,7 @@ class Smc(MakefilePackage):
 
     homepage = "https://ccse.lbl.gov/ExaCT/index.html"
     url      = "https://ccse.lbl.gov/ExaCT/SMC.tar.gz"
+    tags     = ['proxy-app']
 
     version('master', '94a4ea94abbc5e61397c2a4d1fb56ed6')
 
