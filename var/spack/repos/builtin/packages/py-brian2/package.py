@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,7 +34,7 @@ class PyBrian2(PythonPackage):
     version('2.0.1', 'df5990e9a71f7344887bc02f54dfd0f0')
     version('2.0rc3', '3100c5e4eb9eb83a06ff0413a7d43152')
 
-    variant('docs', default=False)
+    variant('docs', default=False, description='Build the documentation')
 
     # depends on py-setuptools@6: for windows, if spack targets windows,
     # this will need to be added here
@@ -45,6 +45,6 @@ class PyBrian2(PythonPackage):
     depends_on('py-jinja2@2.7:',    type=('build', 'run'))
     depends_on('py-cpuinfo@0.1.6:', type=('build', 'run'))
 
-    # depends_on('py-nosetests@1.0:',    type=('build', 'run')) # extra test
-    depends_on('py-nosetests@1.0:', type=('build', 'run'), when='+docs')
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nosetests@1.0:', type='test')
     depends_on('py-sphinx@1.4.2:',  type=('build', 'run'), when='+docs')

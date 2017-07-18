@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -42,7 +42,6 @@ class RRcppeigen(RPackage):
 
     homepage = "http://eigen.tuxfamily.org/"
     url      = "https://cran.r-project.org/src/contrib/RcppEigen_0.3.2.9.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RcppEigen"
 
     version('0.3.2.9.0', '14a7786882a5d9862d53c4b2217df318')
     version('0.3.2.8.1', '4146e06e4fdf7f4d08db7839069d479f')

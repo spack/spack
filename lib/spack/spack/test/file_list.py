@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,9 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import pytest
+import fnmatch
+import os
 
+import pytest
+import six
+import spack
 from llnl.util.filesystem import LibraryList, HeaderList
+from llnl.util.filesystem import find_libraries, find_headers
 
 
 @pytest.fixture()
@@ -201,3 +206,70 @@ class TestHeaderList(object):
         # Always produce an instance of HeaderList
         assert type(header_list + pylist) == type(header_list)
         assert type(pylist + header_list) == type(header_list)
+
+
+#: Directory where the data for the test below is stored
+search_dir = os.path.join(spack.test_path, 'data', 'directory_search')
+
+
+@pytest.mark.parametrize('search_fn,search_list,root,kwargs', [
+    (find_libraries, 'liba', search_dir, {'recurse': True}),
+    (find_libraries, ['liba'], search_dir, {'recurse': True}),
+    (find_libraries, 'libb', search_dir, {'recurse': True}),
+    (find_libraries, ['libc'], search_dir, {'recurse': True}),
+    (find_libraries, ['libc', 'liba'], search_dir, {'recurse': True}),
+    (find_libraries, ['liba', 'libc'], search_dir, {'recurse': True}),
+    (find_libraries, ['libc', 'libb', 'liba'], search_dir, {'recurse': True}),
+    (find_libraries, ['liba', 'libc'], search_dir, {'recurse': True}),
+    (find_libraries,
+     ['libc', 'libb', 'liba'],
+     search_dir,
+     {'recurse': True, 'shared': False}
+     ),
+    (find_headers, 'a', search_dir, {'recurse': True}),
+    (find_headers, ['a'], search_dir, {'recurse': True}),
+    (find_headers, 'b', search_dir, {'recurse': True}),
+    (find_headers, ['c'], search_dir, {'recurse': True}),
+    (find_headers, ['c', 'a'], search_dir, {'recurse': True}),
+    (find_headers, ['a', 'c'], search_dir, {'recurse': True}),
+    (find_headers, ['c', 'b', 'a'], search_dir, {'recurse': True}),
+    (find_headers, ['a', 'c'], search_dir, {'recurse': True}),
+    (find_libraries,
+     ['liba', 'libd'],
+     os.path.join(search_dir, 'b'),
+     {'recurse': False}
+     ),
+    (find_headers,
+     ['b', 'd'],
+     os.path.join(search_dir, 'b'),
+     {'recurse': False}
+     ),
+])
+def test_searching_order(search_fn, search_list, root, kwargs):
+
+    # Test search
+    result = search_fn(search_list, root, **kwargs)
+
+    # The tests are set-up so that something is always found
+    assert len(result) != 0
+
+    # Now reverse the result and start discarding things
+    # as soon as you have matches. In the end the list should
+    # be emptied.
+    l = list(reversed(result))
+
+    # At this point make sure the search list is a sequence
+    if isinstance(search_list, six.string_types):
+        search_list = [search_list]
+
+    # Discard entries in the order they appear in search list
+    for x in search_list:
+        try:
+            while fnmatch.fnmatch(l[-1], x) or x in l[-1]:
+                l.pop()
+        except IndexError:
+            # List is empty
+            pass
+
+    # List should be empty here
+    assert len(l) == 0

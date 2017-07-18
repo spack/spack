@@ -336,6 +336,10 @@ your command. If it isn't used very frequently, changes to the rest of
 Spack can cause your command to break without sufficient unit tests to
 prevent this from happening.
 
+Whenever you add/remove/rename a command or flags for an existing command,
+make sure to update Spack's `Bash tab completion script
+<https://github.com/adamjstewart/spack/blob/develop/share/spack/spack-completion.bash>`_.
+
 ----------
 Unit tests
 ----------

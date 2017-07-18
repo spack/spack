@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,8 +36,12 @@ class Emacs(AutotoolsPackage):
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
     variant('X', default=False, description="Enable an X toolkit")
-    variant('toolkit', default='gtk',
-            description="Select an X toolkit (gtk, athena)")
+    variant(
+        'toolkit',
+        default='gtk',
+        values=('gtk', 'athena'),
+        description="Select an X toolkit (gtk, athena)"
+    )
 
     depends_on('pkg-config@0.9.0:', type='build')
 
@@ -53,12 +57,9 @@ class Emacs(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = []
+
         toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
-            if toolkit not in ('gtk', 'athena'):
-                raise InstallError("toolkit must be in (gtk, athena), not %s" %
-                                   toolkit)
             args = [
                 '--with-x',
                 '--with-x-toolkit={0}'.format(toolkit)

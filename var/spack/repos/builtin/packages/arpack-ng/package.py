@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -56,6 +56,7 @@ class ArpackNg(Package):
     homepage = 'https://github.com/opencollab/arpack-ng'
     url = 'https://github.com/opencollab/arpack-ng/archive/3.3.0.tar.gz'
 
+    version('3.5.0', '9762c9ae6d739a9e040f8201b1578874')
     version('3.4.0', 'ae9ca13f2143a7ea280cb0e2fd4bfae4')
     version('3.3.0', 'ed3648a23f0a868a43ef44c97a21bad5')
 

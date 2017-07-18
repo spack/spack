@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -67,8 +67,8 @@ import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
-from spack.util.executable import Executable, which
-
+from spack.util.executable import Executable
+from spack.util.module_cmd import load_module, get_path_from_module
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -118,67 +118,6 @@ class MakeExecutable(Executable):
             args = (jobs,) + args
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
-
-
-def load_module(mod):
-    """Takes a module name and removes modules until it is possible to
-    load that module. It then loads the provided module. Depends on the
-    modulecmd implementation of modules used in cray and lmod.
-    """
-    # Create an executable of the module command that will output python code
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
-
-    # Read the module and remove any conflicting modules
-    # We do this without checking that they are already installed
-    # for ease of programming because unloading a module that is not
-    # loaded does nothing.
-    text = modulecmd('show', mod, output=str, error=str).split()
-    for i, word in enumerate(text):
-        if word == 'conflict':
-            exec(compile(modulecmd('unload', text[i + 1], output=str,
-                                   error=str), '<string>', 'exec'))
-    # Load the module now that there are no conflicts
-    load = modulecmd('load', mod, output=str, error=str)
-    exec(compile(load, '<string>', 'exec'))
-
-
-def get_path_from_module(mod):
-    """Inspects a TCL module for entries that indicate the absolute path
-    at which the library supported by said module can be found.
-    """
-    # Create a modulecmd executable
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
-
-    # Read the module
-    text = modulecmd('show', mod, output=str, error=str).split('\n')
-    # If it lists its package directory, return that
-    for line in text:
-        if line.find(mod.upper() + '_DIR') >= 0:
-            words = line.split()
-            return words[2]
-
-    # If it lists a -rpath instruction, use that
-    for line in text:
-        rpath = line.find('-rpath/')
-        if rpath >= 0:
-            return line[rpath + 6:line.find('/lib')]
-
-    # If it lists a -L instruction, use that
-    for line in text:
-        L = line.find('-L/')
-        if L >= 0:
-            return line[L + 2:line.find('/lib')]
-
-    # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
-    for line in text:
-        if line.find('LD_LIBRARY_PATH') >= 0:
-            words = line.split()
-            path = words[2]
-            return path[:path.find('/lib')]
-    # Unable to find module path
-    return None
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -248,7 +187,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
         dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
-    build_deps      = pkg.spec.traverse(root=False, deptype=('build'))
+    build_deps      = pkg.spec.dependencies(deptype='build')
     link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
     build_link_deps = pkg.spec.traverse(root=False, deptype=('build', 'link'))
     rpath_deps      = get_rpath_deps(pkg)
@@ -257,6 +196,11 @@ def set_build_environment_variables(pkg, env, dirty=False):
     link_prefixes       = [dep.prefix for dep in link_deps]
     build_link_prefixes = [dep.prefix for dep in build_link_deps]
     rpath_prefixes      = [dep.prefix for dep in rpath_deps]
+
+    # add run-time dependencies of direct build-time dependencies:
+    for build_dep in build_deps:
+        for run_dep in build_dep.traverse(deptype='run'):
+            build_prefixes.append(run_dep.prefix)
 
     # Filter out system paths: ['/', '/usr', '/usr/local']
     # These paths can be introduced into the build when an external package

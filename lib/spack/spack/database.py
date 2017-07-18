@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -577,6 +577,8 @@ class Database(object):
         else:
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
+            with WriteTransaction(self.lock, timeout=_db_lock_timeout):
+                self._write(None, None, None)
             self.reindex(spack.store.layout)
 
     def _add(self, spec, directory_layout=None, explicit=False):

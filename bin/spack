@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# flake8: noqa
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -9,7 +8,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,34 +25,32 @@
 ##############################################################################
 from __future__ import print_function
 
+import os
 import sys
+
 if sys.version_info[:2] < (2, 6):
     v_info = sys.version_info[:3]
     sys.exit("Spack requires Python 2.6 or higher."
              "This is Python %d.%d.%d." % v_info)
 
-import os
-import inspect
-
 # Find spack's location and its prefix.
-SPACK_FILE = os.path.realpath(os.path.expanduser(__file__))
-os.environ["SPACK_FILE"] = SPACK_FILE
-SPACK_PREFIX = os.path.dirname(os.path.dirname(SPACK_FILE))
+spack_file = os.path.realpath(os.path.expanduser(__file__))
+spack_prefix = os.path.dirname(os.path.dirname(spack_file))
 
 # Allow spack libs to be imported in our scripts
-SPACK_LIB_PATH = os.path.join(SPACK_PREFIX, "lib", "spack")
-sys.path.insert(0, SPACK_LIB_PATH)
+spack_lib_path = os.path.join(spack_prefix, "lib", "spack")
+sys.path.insert(0, spack_lib_path)
 
 # Add external libs
-SPACK_EXTERNAL_LIBS = os.path.join(SPACK_LIB_PATH, "external")
-sys.path.insert(0, SPACK_EXTERNAL_LIBS)
+spack_external_libs = os.path.join(spack_lib_path, "external")
+sys.path.insert(0, spack_external_libs)
 
 # Handle vendoring of YAML specially, as it has two versions.
 if sys.version_info[0] == 2:
-    SPACK_YAML_LIBS = os.path.join(SPACK_EXTERNAL_LIBS, "yaml/lib")
+    spack_yaml_libs = os.path.join(spack_external_libs, "yaml/lib")
 else:
-    SPACK_YAML_LIBS = os.path.join(SPACK_EXTERNAL_LIBS, "yaml/lib3")
-sys.path.insert(0, SPACK_YAML_LIBS)
+    spack_yaml_libs = os.path.join(spack_external_libs, "yaml/lib3")
+sys.path.insert(0, spack_yaml_libs)
 
 # Quick and dirty check to clean orphaned .pyc files left over from
 # previous revisions.  These files were present in earlier versions of
@@ -61,13 +58,13 @@ sys.path.insert(0, SPACK_YAML_LIBS)
 # imports.  If we leave them, Spack will fail in mysterious ways.
 # TODO: more elegant solution for orphaned pyc files.
 orphaned_pyc_files = [
-    os.path.join(SPACK_EXTERNAL_LIBS, 'functools.pyc'),
-    os.path.join(SPACK_EXTERNAL_LIBS, 'ordereddict.pyc'),
-    os.path.join(SPACK_LIB_PATH, 'spack', 'platforms', 'cray_xc.pyc'),
-    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'package-list.pyc'),
-    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'test-install.pyc'),
-    os.path.join(SPACK_LIB_PATH, 'spack', 'cmd', 'url-parse.pyc'),
-    os.path.join(SPACK_LIB_PATH, 'spack', 'test', 'yaml.pyc')
+    os.path.join(spack_external_libs, 'functools.pyc'),
+    os.path.join(spack_external_libs, 'ordereddict.pyc'),
+    os.path.join(spack_lib_path, 'spack', 'platforms', 'cray_xc.pyc'),
+    os.path.join(spack_lib_path, 'spack', 'cmd', 'package-list.pyc'),
+    os.path.join(spack_lib_path, 'spack', 'cmd', 'test-install.pyc'),
+    os.path.join(spack_lib_path, 'spack', 'cmd', 'url-parse.pyc'),
+    os.path.join(spack_lib_path, 'spack', 'test', 'yaml.pyc')
 ]
 
 for pyc_file in orphaned_pyc_files:
@@ -79,181 +76,6 @@ for pyc_file in orphaned_pyc_files:
         print("WARNING: Spack may fail mysteriously. "
               "Couldn't remove orphaned .pyc file: %s" % pyc_file)
 
-# If there is no working directory, use the spack prefix.
-try:
-    working_dir = os.getcwd()
-except OSError:
-    os.chdir(SPACK_PREFIX)
-    working_dir = SPACK_PREFIX
-
-# clean up the scope and start using spack package instead.
-del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
-import llnl.util.tty as tty
-from llnl.util.tty.color import *
-import spack
-from spack.error import SpackError
-import argparse
-import pstats
-
-# Get the allowed names of statistics for cProfile, and make a list of
-# groups of 7 names to wrap them nicely.
-stat_names = pstats.Stats.sort_arg_dict_default
-stat_lines = list(zip(*(iter(stat_names),)*7))
-
-# Command parsing
-parser = argparse.ArgumentParser(
-    formatter_class=argparse.RawTextHelpFormatter,
-    description="Spack: the Supercomputing PACKage Manager." + colorize("""
-
-spec expressions:
-  PACKAGE [CONSTRAINTS]
-
-    CONSTRAINTS:
-      @c{@version}
-      @g{%compiler  @compiler_version}
-      @B{+variant}
-      @r{-variant} or @r{~variant}
-      @m{=architecture}
-      [^DEPENDENCY [CONSTRAINTS] ...]"""))
-
-parser.add_argument('-d', '--debug', action='store_true',
-                    help="write out debug logs during compile")
-parser.add_argument('-D', '--pdb', action='store_true',
-                    help="run spack under the pdb debugger")
-parser.add_argument('-k', '--insecure', action='store_true',
-                    help="do not check ssl certificates when downloading")
-parser.add_argument('-m', '--mock', action='store_true',
-                    help="use mock packages instead of real ones")
-parser.add_argument('-p', '--profile', action='store_true',
-                    help="profile execution using cProfile")
-parser.add_argument('-P', '--sorted-profile', default=None, metavar="STAT",
-                    help="profile and sort by one or more of:\n[%s]" %
-                    ',\n '.join([', '.join(line) for line in stat_lines]))
-parser.add_argument('--lines', default=20, action='store',
-                    help="lines of profile output: default 20; 'all' for all")
-parser.add_argument('-v', '--verbose', action='store_true',
-                    help="print additional output during builds")
-parser.add_argument('-s', '--stacktrace', action='store_true',
-                    help="add stacktrace info to all printed statements")
-parser.add_argument('-V', '--version', action='version',
-                    version="%s" % spack.spack_version)
-
-# each command module implements a parser() function, to which we pass its
-# subparser for setup.
-subparsers = parser.add_subparsers(metavar='SUBCOMMAND', dest="command")
-
-
-import spack.cmd
-for cmd in spack.cmd.commands:
-    module = spack.cmd.get_module(cmd)
-    cmd_name = cmd.replace('_', '-')
-    subparser = subparsers.add_parser(cmd_name, help=module.description)
-    module.setup_parser(subparser)
-
-
-def _main(args, unknown_args):
-    # Set up environment based on args.
-    tty.set_verbose(args.verbose)
-    tty.set_debug(args.debug)
-    tty.set_stacktrace(args.stacktrace)
-    spack.debug = args.debug
-
-    if spack.debug:
-        import spack.util.debug as debug
-        debug.register_interrupt_handler()
-
-    # Run any available pre-run hooks
-    spack.hooks.pre_run()
-
-    spack.spack_working_dir = working_dir
-    if args.mock:
-        from spack.repository import RepoPath
-        spack.repo.swap(RepoPath(spack.mock_packages_path))
-
-    # If the user asked for it, don't check ssl certs.
-    if args.insecure:
-        tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
-        spack.insecure = True
-
-    # Try to load the particular command asked for and run it
-    command = spack.cmd.get_command(args.command.replace('-', '_'))
-
-    # Allow commands to inject an optional argument and get unknown args
-    # if they want to handle them.
-    info = dict(inspect.getmembers(command))
-    varnames = info['__code__'].co_varnames
-    argcount = info['__code__'].co_argcount
-
-    # Actually execute the command
-    try:
-        if argcount == 3 and varnames[2] == 'unknown_args':
-            return_val = command(parser, args, unknown_args)
-        else:
-            if unknown_args:
-                tty.die('unrecognized arguments: %s' % ' '.join(unknown_args))
-            return_val = command(parser, args)
-    except SpackError as e:
-        e.die()
-    except KeyboardInterrupt:
-        sys.stderr.write('\n')
-        tty.die("Keyboard interrupt.")
-
-    # Allow commands to return values if they want to exit with some other code.
-    if return_val is None:
-        sys.exit(0)
-    elif isinstance(return_val, int):
-        sys.exit(return_val)
-    else:
-        tty.die("Bad return value from command %s: %s"
-                % (args.command, return_val))
-
-
-def main(args):
-    # Just print help and exit if run with no arguments at all
-    if len(args) == 1:
-        parser.print_help()
-        sys.exit(1)
-
-    # actually parse the args.
-    args, unknown = parser.parse_known_args()
-
-    if args.profile or args.sorted_profile:
-        import cProfile
-
-        try:
-            nlines = int(args.lines)
-        except ValueError:
-            if args.lines != 'all':
-                tty.die('Invalid number for --lines: %s' % args.lines)
-            nlines = -1
-
-        # allow comma-separated list of fields
-        sortby = ['time']
-        if args.sorted_profile:
-            sortby = args.sorted_profile.split(',')
-            for stat in sortby:
-                if stat not in stat_names:
-                    tty.die("Invalid sort field: %s" % stat)
-
-        try:
-            # make a profiler and run the code.
-            pr = cProfile.Profile()
-            pr.enable()
-            _main(args, unknown)
-        finally:
-            pr.disable()
-
-            # print out  profile stats.
-            stats = pstats.Stats(pr)
-            stats.sort_stats(*sortby)
-            stats.print_stats(nlines)
-
-    elif args.pdb:
-        import pdb
-        pdb.runctx('_main(args, unknown)', globals(), locals())
-    else:
-        _main(args, unknown)
-
-
-if __name__ == '__main__':
-    main(sys.argv)
+# Once we've set up the system path, run the spack main method
+import spack.main  # noqa
+sys.exit(spack.main.main())

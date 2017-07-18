@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,6 +39,12 @@ class Sqlite(AutotoolsPackage):
             url='https://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
 
     depends_on('readline')
+
+    # On some platforms (e.g., PPC) the include chain includes termios.h which
+    # defines a macro B0. Sqlite has a shell.c source file that declares a
+    # variable named B0 and will fail to compile when the macro is found. The
+    # following patch undefines the macro in shell.c
+    patch('sqlite_b0.patch', when='@3.18.0')
 
     def get_arch(self):
         arch = architecture.Arch()

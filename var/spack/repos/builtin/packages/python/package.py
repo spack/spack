@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -91,6 +91,10 @@ class Python(AutotoolsPackage):
 
     # Patch does not work for Python 3.1
     patch('ncurses.patch', when='@:2.8,3.2:')
+
+    # Ensure that distutils chooses correct compiler option for RPATH on cray:
+    patch('cray-rpath-2.3.patch', when="@2.3:3.0.1 platform=cray")
+    patch('cray-rpath-3.1.patch', when="@3.1:3.99  platform=cray")
 
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
@@ -530,6 +534,8 @@ class Python(AutotoolsPackage):
                                               self.python_include_dir)
         module.site_packages_dir = join_path(dependent_spec.prefix,
                                              self.site_packages_dir)
+
+        self.spec.home = self.home
 
         # Make the site packages directory for extensions
         if dependent_spec.package.is_extension:

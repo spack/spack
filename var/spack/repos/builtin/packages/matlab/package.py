@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -45,8 +45,19 @@ class Matlab(Package):
 
     version('R2016b', 'b0e0b688894282139fa787b5a86a5cf7')
 
-    variant('mode', default='interactive', description='Installation mode (interactive, silent, or automated)')
-    variant('key',  default='',            description='The file installation key to use')
+    variant(
+        'mode',
+        default='interactive',
+        values=('interactive', 'silent', 'automated'),
+        description='Installation mode (interactive, silent, or automated)'
+    )
+
+    variant(
+        'key',
+        default='',
+        values=lambda x: True,  # Anything goes as a key
+        description='The file installation key to use'
+    )
 
     # Licensing
     license_required = True

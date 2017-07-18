@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -43,19 +43,14 @@ class Scalasca(AutotoolsPackage):
     version('2.1',   'bab9c2b021e51e2ba187feec442b96e6')
 
     depends_on("mpi")
-    ##########
-    # Hard-code dependencies for Scalasca according to what stated in the
-    # release page
-    # The OTF2 library path should be detected automatically from SCOREP
-    # SCALASCA 2.2.2
-    depends_on("scorep@1.4:", when='@2.2.2:')
-    # Use same cube as scorep does
-    # -> depends_on("cube@4.3:", when='@2.2.2:')
-    # SCALASCA 2.1
-    depends_on("scorep@1.3", when='@2.1')
-    # Use same cube as scorep does
-    # -> depends_on("cube@4.2:", when='@2.1')
-    ##########
+
+    # version 2.3
+    depends_on('cube@4.3:', when='@2.3:')
+    depends_on('otf2@2:', when='@2.3:')
+
+    # version 2.1+
+    depends_on('cube@4.2', when='@2.1:2.2.999')
+    depends_on('otf2@1.4', when='@2.1:2.2.999')
 
     def url_for_version(self, version):
         return 'http://apps.fz-juelich.de/scalasca/releases/scalasca/{0}/dist/scalasca-{1}.tar.gz'.format(version.up_to(2), version)
@@ -65,7 +60,7 @@ class Scalasca(AutotoolsPackage):
 
         config_args = ["--enable-shared"]
 
-        if 'cube' in spec:  # From scorep dependency
-            config_args.append("--with-cube=%s" % spec['cube'].prefix.bin)
+        config_args.append("--with-cube=%s" % spec['cube'].prefix.bin)
+        config_args.append("--with-otf2=%s" % spec['otf2'].prefix.bin)
 
         return config_args

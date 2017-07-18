@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -54,8 +54,7 @@ class Espressopp(CMakePackage):
     depends_on("fftw")
     depends_on("py-sphinx", when="+ug", type='build')
     depends_on("py-sphinx", when="+pdf", type='build')
-    depends_on('py-numpy', when="+ug", type='build')
-    depends_on('py-numpy', when="+pdf", type='build')
+    depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-matplotlib', when="+ug", type='build')
     depends_on('py-matplotlib', when="+pdf", type='build')
     depends_on("texlive", when="+pdf", type='build')

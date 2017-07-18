@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,9 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.build_environment as build_env
 
-description = "run a command with the install environment for a spec"
+description = "show install environment for a spec, and run commands"
+section = "build"
+level = "long"
 
 
 def setup_parser(subparser):

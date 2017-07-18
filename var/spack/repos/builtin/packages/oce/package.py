@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,8 +32,9 @@ class Oce(Package):
     Open CASCADE library.
     """
     homepage = "https://github.com/tpaviot/oce"
-    url      = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
+    url = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
 
+    version('0.18.1', '2a7597f4243ee1f03245aeeb02d00956')
     version('0.18',   '226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
     version('0.17.2', 'bf2226be4cd192606af677cf178088e5')
     version('0.17.1', '36c67b87093c675698b483454258af91')
@@ -43,6 +44,8 @@ class Oce(Package):
 
     variant('tbb', default=True,
             description='Build with Intel Threading Building Blocks')
+    variant('X11', default=False,
+            description='Build with X11 enabled')
 
     depends_on('cmake@2.8:', type='build')
     depends_on('tbb', when='+tbb')
@@ -59,7 +62,7 @@ class Oce(Package):
     # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643
     if (platform.system() == "Darwin") and (
        '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12'):
-        patch('sierra.patch', when='@0.17.2:0.18')
+        patch('sierra.patch', when='@0.17.2:0.18.0')
 
     def install(self, spec, prefix):
         options = []
@@ -69,7 +72,8 @@ class Oce(Package):
             '-DOCE_BUILD_SHARED_LIB:BOOL=ON',
             '-DCMAKE_BUILD_TYPE:STRING=Release',
             '-DOCE_DATAEXCHANGE:BOOL=ON',
-            '-DOCE_DISABLE_X11:BOOL=ON',
+            '-DOCE_DISABLE_X11:BOOL=%s' % (
+                'OFF' if '+X11' in spec else 'ON'),
             '-DOCE_DRAW:BOOL=OFF',
             '-DOCE_MODEL:BOOL=ON',
             '-DOCE_MULTITHREAD_LIBRARY:STRING=%s' % (

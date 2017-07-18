@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,6 +40,9 @@ from spack.util.naming import *
 from spack.url import *
 
 description = "create a new package file"
+section = "packaging"
+level = "short"
+
 
 package_template = '''\
 ##############################################################################
@@ -51,7 +54,7 @@ package_template = '''\
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -262,7 +265,11 @@ class RPackageTemplate(PackageTemplate):
     # depends_on('r-foo', type=('build', 'run'))"""
 
     body = """\
-    # FIXME: Override install() if necessary."""
+    def configure_args(self, spec, prefix):
+        # FIXME: Add arguments to pass to install via --configure-args
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
     def __init__(self, name, *args):
         # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp

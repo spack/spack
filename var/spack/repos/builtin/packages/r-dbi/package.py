@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,5 @@ class RDbi(RPackage):
 
     homepage = "https://github.com/rstats-db/DBI"
     url      = "https://cran.r-project.org/src/contrib/DBI_0.4-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/DBI"
 
     version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')

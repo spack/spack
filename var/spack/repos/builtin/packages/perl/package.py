@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,6 +31,7 @@
 # Date: September 6, 2015
 #
 from spack import *
+import os
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -50,6 +51,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     # Misc releases that people need
     version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
+    version('5.22.1', '19295bbb775a3c36123161b9bf4892f1')
 
     # End of life releases
     version('5.20.3', 'd647d0ea5a7a8194c34759ab9f2610cd')
@@ -66,6 +68,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # things cleanly.
     variant('cpanm', default=True,
             description='Optionally install cpanm with the core packages.')
+
+    variant('shared', default=True,
+            description='Build a shared libperl.so library')
 
     resource(
         name="cpanm",
@@ -85,13 +90,17 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             '-des',
             '-Dprefix={0}'.format(prefix),
             '-Dlocincpth=' + self.spec['gdbm'].prefix.include,
-            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib
+            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib,
         ]
 
         # Discussion of -fPIC for Intel at:
-        # https://github.com/LLNL/spack/pull/3081
+        # https://github.com/LLNL/spack/pull/3081 and
+        # https://github.com/LLNL/spack/pull/4416
         if spec.satisfies('%intel'):
             config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
+
+        if '+shared' in spec:
+            config_args.append('-Duseshrplib')
 
         return config_args
 
@@ -159,3 +168,33 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # if it does not exist already.
         if dependent_spec.package.is_extension:
             mkdirp(module.perl_lib_dir)
+
+    @run_after('install')
+    def filter_config_dot_pm(self):
+        """Run after install so that Config.pm records the compiler that Spack
+        built the package with.  If this isn't done, $Config{cc} will
+        be set to Spack's cc wrapper script.
+        """
+
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
+
+        # Find the actual path to the installed Config.pm file.
+        perl = Executable(join_path(prefix.bin, 'perl'))
+        config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
+                             'print is_loaded(Config)', output=str)
+
+        match = 'cc *=>.*'
+        substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+        filter_file(match, substitute, config_dot_pm, **kwargs)
+
+        # And the path Config_heavy.pl
+        d = os.path.dirname(config_dot_pm)
+        config_heavy = join_path(d, 'Config_heavy.pl')
+
+        match = '^cc=.*'
+        substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+        filter_file(match, substitute, config_heavy, **kwargs)
+
+        match = '^ld=.*'
+        substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+        filter_file(match, substitute, config_heavy, **kwargs)
