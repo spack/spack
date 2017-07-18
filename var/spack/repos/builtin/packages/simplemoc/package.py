@@ -30,15 +30,16 @@ class Simplemoc(MakefilePackage):
     """The purpose of this mini-app is to demonstrate the performance
         characterterics and viability of the Method of Characteristics (MOC)
         for 3D neutron transport calculations in the context of full scale
-        light water reactor simulation.
-        tags: proxy-app, proxy application"""
+        light water reactor simulation."""
 
     homepage = "https://github.com/ANL-CESAR/SimpleMOC/"
     url = "https://github.com/ANL-CESAR/SimpleMOC/archive/master.tar.gz"
 
     version('1.0', 'd8827221a4ae76e9766a32e16d143e60')
 
-    variant('mpi', default=False, description='Build with MPI support')
+    tags = ['proxy-app']
+
+    variant('mpi', default=True, description='Build with MPI support')
 
     depends_on('mpi', when='+mpi')
 
@@ -63,4 +64,4 @@ class Simplemoc(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        make('src/SimpleMOC', prefix.bin)
+        install('src/SimpleMOC', prefix.bin)
