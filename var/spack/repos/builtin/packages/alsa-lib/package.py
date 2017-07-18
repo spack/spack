@@ -34,4 +34,3 @@ class AlsaLib(AutotoolsPackage):
     url      = "ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.1.4.1.tar.bz2"
 
     version('1.1.4.1', '29fa3e69122d3cf3e8f0e01a0cb1d183')
-
