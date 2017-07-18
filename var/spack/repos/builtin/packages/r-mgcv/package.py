@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,9 +32,9 @@ class RMgcv(RPackage):
     beyond the exponential family."""
 
     homepage = "https://cran.r-project.org/package=mgcv"
-    url      = "https://cran.r-project.org/src/contrib/mgcv_1.8-13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mgcv"
+    url      = "https://cran.r-project.org/src/contrib/mgcv_1.8-16.tar.gz"
 
+    version('1.8-16', '4c1d85e0f80b017bccb4b63395842911')
     version('1.8-13', '30607be3aaf44b13bd8c81fc32e8c984')
 
     depends_on('r-nlme', type=('build', 'run'))

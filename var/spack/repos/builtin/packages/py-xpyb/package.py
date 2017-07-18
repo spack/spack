@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class PyXpyb(Package):
+class PyXpyb(AutotoolsPackage):
     """xpyb provides a Python binding to the X Window System protocol
     via libxcb."""
 
@@ -39,9 +39,3 @@ class PyXpyb(Package):
     depends_on('libxcb@1.5:')
 
     depends_on('xcb-proto@1.7.1:', type='build')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

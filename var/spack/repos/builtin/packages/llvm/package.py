@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,12 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-
 from spack import *
 
 
-class Llvm(Package):
+class Llvm(CMakePackage):
     """The LLVM Project is a collection of modular and reusable compiler and
        toolchain technologies. Despite its name, LLVM has little to do
        with traditional virtual machines, though it does provide helpful
@@ -37,6 +35,7 @@ class Llvm(Package):
 
     homepage = 'http://llvm.org/'
     url = 'http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz'
+    list_url = 'http://releases.llvm.org/download.html'
 
     family = 'compiler'  # Used by lmod
 
@@ -73,10 +72,11 @@ class Llvm(Package):
             "<current arch>,NVPTX,AMDGPU,CppBackend")
 
     # Build dependency
-    depends_on('cmake@2.8.12.2:', type='build')
+    depends_on('cmake@3.4.3:', type='build')
 
     # Universal dependency
     depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
+    depends_on('py-lit', type=('build', 'run'))
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')
@@ -98,46 +98,55 @@ class Llvm(Package):
             'url': base_url % {'pkg': 'compiler-rt'},
             'destination': 'projects',
             'placement': 'compiler-rt',
+            'variant': '+compiler-rt',
         },
         'openmp': {
             'url': base_url % {'pkg': 'openmp'},
             'destination': 'projects',
             'placement': 'openmp',
+            'variant': '+clang',
         },
         'libcxx': {
             'url': base_url % {'pkg': 'libcxx'},
             'destination': 'projects',
             'placement': 'libcxx',
+            'variant': '+libcxx',
         },
         'libcxxabi': {
             'url':  base_url % {'pkg': 'libcxxabi'},
             'destination': 'projects',
             'placement': 'libcxxabi',
+            'variant': '+libcxx',
         },
         'cfe': {
             'url':  base_url % {'pkg': 'cfe'},
             'destination': 'tools',
             'placement': 'clang',
+            'variant': '+clang',
         },
         'clang-tools-extra': {
             'url':  base_url % {'pkg': 'clang-tools-extra'},
             'destination': 'tools/clang/tools',
             'placement': 'extra',
+            'variant': '+clang',
         },
         'lldb': {
             'url':  base_url % {'pkg': 'lldb'},
             'destination': 'tools',
             'placement': 'lldb',
+            'variant': '+lldb',
         },
         'polly': {
             'url':  base_url % {'pkg': 'polly'},
             'destination': 'tools',
             'placement': 'polly',
+            'variant': '+polly',
         },
-        'llvm-libunwind': {
+        'libunwind': {
             'url':  base_url % {'pkg': 'libunwind'},
             'destination': 'projects',
             'placement': 'libunwind',
+            'variant': '+internal_unwind',
         },
     }
     releases = [
@@ -153,9 +162,39 @@ class Llvm(Package):
                 'cfe': 'http://llvm.org/svn/llvm-project/cfe/trunk',
                 'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
-                'llvm-libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+                'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
                 }
             },
+            {
+                'version': '4.0.0',
+                'md5': 'ea9139a604be702454f6acf160b4f3a2',
+                'resources': {
+                    'compiler-rt': '2ec11fb7df827b086341131c5d7f1814',
+                    'openmp': '3d06d2801dd4808f551a1a70068e01f5',
+                    'polly': 'f36e4e7cf872f8b3bbb9cdcddc5fd964',
+                    'libcxx': '4cf7df466e6f803ec4611ee410ff6781',
+                    'libcxxabi': '8b5d7b9bfcf7dec2dc901c8a6746f97c',
+                    'cfe': '756e17349fdc708c62974b883bf72d37',
+                    'clang-tools-extra': '99e711337ec3e9a8bb36e8dd62b2cd6e',
+                    'lldb': 'bd41ba7fcca55d2a554409bbccd34d2d',
+                    'libunwind': '0c3534eaa11c0cae33a1dcf5f36ce287',
+                    }
+                },
+            {
+                'version': '3.9.1',
+                'md5': '3259018a7437e157f3642df80f1983ea',
+                'resources': {
+                    'compiler-rt': 'aadc76e7e180fafb10fb729444e287a3',
+                    'openmp': 'f076916bf2f49229b4df9fa0bb002599',
+                    'polly': '2cc7fe2bd9539775ba140abfd375bec6',
+                    'libcxx': '75a3214224301fc543fa6a38bdf7efe0',
+                    'libcxxabi': '62fd584b38cc502172c2ffab041b5fcc',
+                    'cfe': '45713ec5c417ed9cad614cd283d786a1',
+                    'clang-tools-extra': '1a01d545a064fcbc46a2f05f6880d3d7',
+                    'lldb': '91399402f287d3f637db1207113deecb',
+                    'libunwind': 'f273dd0ed638ad0601b23176a36f187b',
+                    }
+                },
             {
                 'version': '3.9.0',
                 'md5': 'f2093e98060532449eb7d2fcfd0bc6c6',
@@ -168,7 +207,7 @@ class Llvm(Package):
                     'cfe': '29e1d86bee422ab5345f5e9fb808d2dc',
                     'clang-tools-extra': 'f4f663068c77fc742113211841e94d5e',
                     'lldb': '968d053c3c3d7297983589164c6999e9',
-                    'llvm-libunwind': '3e5c87c723a456be599727a444b1c166',
+                    'libunwind': '3e5c87c723a456be599727a444b1c166',
                     }
                 },
             {
@@ -183,7 +222,7 @@ class Llvm(Package):
                     'cfe': '4ff2f8844a786edb0220f490f7896080',
                     'clang-tools-extra': '6e49f285d0b366cc3cab782d8c92d382',
                     'lldb': '9e4787b71be8e432fffd31e13ac87623',
-                    'llvm-libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
+                    'libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
                     }
                 },
             {
@@ -198,7 +237,7 @@ class Llvm(Package):
                     'cfe': 'cc99e7019bb74e6459e80863606250c5',
                     'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
                     'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
-                    'llvm-libunwind': '162ade468607f153cca12be90b5194fa',
+                    'libunwind': '162ade468607f153cca12be90b5194fa',
                     }
                 },
             {
@@ -213,7 +252,7 @@ class Llvm(Package):
                     'cfe': '0acd026b5529164197563d135a8fd83e',
                     'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
                     'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
-                    'llvm-libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
+                    'libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
                     }
                 },
             {
@@ -228,7 +267,7 @@ class Llvm(Package):
                     'cfe': '8f9d27335e7331cf0a4711e952f21f01',
                     'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
                     'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
-                    'llvm-libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
+                    'libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
                     }
                 },
         {
@@ -267,7 +306,8 @@ class Llvm(Package):
                 resource(name=name,
                          svn=repo,
                          destination=resources[name]['destination'],
-                         when='@%(version)s' % release,
+                         when='@%s%s' % (release['version'],
+                             resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
         else:
             version(release['version'], release['md5'], url=llvm_url % release)
@@ -277,33 +317,47 @@ class Llvm(Package):
                          url=resources[name]['url'] % release,
                          md5=md5,
                          destination=resources[name]['destination'],
-                         when='@%(version)s' % release,
+                         when='@%s%s' % (release['version'],
+                             resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
 
-    def install(self, spec, prefix):
-        env['CXXFLAGS'] = self.compiler.cxx11_flag
-        cmake_args = [arg for arg in std_cmake_args if 'BUILD_TYPE' not in arg]
+    conflicts('+clang_extra', when='~clang')
+    conflicts('+lldb',        when='~clang')
 
-        build_type = 'RelWithDebInfo' if '+debug' in spec else 'Release'
-        cmake_args.extend([
-            '..',
-            '-DCMAKE_BUILD_TYPE=' + build_type,
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('CXXFLAGS', self.compiler.cxx11_flag)
+
+    def build_type(self):
+        if '+debug' in self.spec:
+            return 'RelWithDebInfo'
+        else:
+            return 'Release'
+
+    def cmake_args(self):
+        spec = self.spec
+
+        cmake_args = [
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
-            '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix])
+            '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
+        ]
 
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
-                              os.path.join(spec['binutils'].prefix, 'include'))
+                              spec['binutils'].prefix.include)
         if '+polly' in spec:
             cmake_args.append('-DLINK_POLLY_INTO_TOOLS:Bool=ON')
         else:
-            cmake_args.append('-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF')
+            cmake_args.extend(['-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF',
+                               '-DLLVM_TOOL_POLLY_BUILD:Bool=OFF',
+                               '-DLLVM_POLLY_BUILD:Bool=OFF',
+                               '-DLLVM_POLLY_LINK_INTO_TOOLS:Bool=OFF'])
 
         if '+clang' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=OFF')
         if '+lldb' not in spec:
-            cmake_args.append('-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF')
+            cmake_args.extend(['-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF',
+                               '-DLLVM_TOOL_LLDB_BUILD:Bool=OFF'])
         if '+internal_unwind' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=OFF')
         if '+libcxx' not in spec:
@@ -335,17 +389,12 @@ class Llvm(Package):
             cmake_args.append(
                 '-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))
 
-        if '+clang' not in spec:
-            if '+clang_extra' in spec:
-                raise SpackException(
-                    'The clang_extra variant requires the `+clang` variant.')
-            if '+lldb' in spec:
-                raise SpackException(
-                    'The lldb variant requires the `+clang` variant')
+        if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
+            cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
 
-        with working_dir('spack-build', create=True):
-            cmake(*cmake_args)
-            make()
-            make("install")
-            cp = which('cp')
-            cp('-a', 'bin/', prefix)
+        return cmake_args
+
+    @run_after('install')
+    def post_install(self):
+        with working_dir(self.build_directory):
+            install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))

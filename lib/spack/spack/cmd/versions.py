@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,16 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 from llnl.util.tty.colify import colify
 import llnl.util.tty as tty
 import spack
 
-description = "List available versions of a package"
+description = "list available versions of a package"
+section = "packaging"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument('package', metavar='PACKAGE',
-                           help='Package to list versions for')
+                           help='package to list versions for')
 
 
 def versions(parser, args):
@@ -47,10 +51,10 @@ def versions(parser, args):
     tty.msg("Remote versions (not yet checksummed):")
     if not remote_versions:
         if not fetched_versions:
-            print "  Found no versions for %s" % pkg.name
+            print("  Found no versions for %s" % pkg.name)
             tty.debug("Check the list_url and list_depth attribute on the "
                       "package to help Spack find versions.")
         else:
-            print "  Found no unckecksummed versions for %s" % pkg.name
+            print("  Found no unchecksummed versions for %s" % pkg.name)
     else:
         colify(sorted(remote_versions, reverse=True), indent=2)

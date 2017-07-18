@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,16 +25,10 @@
 from spack import *
 
 
-class Libuuid(Package):
+class Libuuid(AutotoolsPackage):
     """Portable uuid C library"""
 
     homepage = "http://sourceforge.net/projects/libuuid/"
     url      = "http://downloads.sourceforge.net/project/libuuid/libuuid-1.0.3.tar.gz?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Flibuuid%2F&ts=1433881396&use_mirror=iweb"
 
     version('1.0.3', 'd44d866d06286c08ba0846aba1086d68')
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")

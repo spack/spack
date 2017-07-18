@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,9 +30,9 @@ class RReshape2(RPackage):
     and dcast (or acast)."""
 
     homepage = "https://github.com/hadley/reshape"
-    url      = "https://cran.r-project.org/src/contrib/reshape2_1.4.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/reshape2"
+    url      = "https://cran.r-project.org/src/contrib/reshape2_1.4.2.tar.gz"
 
+    version('1.4.2', 'c851a0312191b8c5bab956445df7cf5f')
     version('1.4.1', '41e9dffdf5c6fa830321ac9c8ebffe00')
 
     depends_on('r-plyr', type=('build', 'run'))

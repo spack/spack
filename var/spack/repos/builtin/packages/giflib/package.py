@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Giflib(Package):
+class Giflib(AutotoolsPackage):
     """The GIFLIB project maintains the giflib service library, which has
     been pulling images out of GIFs since 1989."""
 
@@ -33,9 +33,3 @@ class Giflib(Package):
     url      = "https://downloads.sourceforge.net/project/giflib/giflib-5.1.4.tar.bz2"
 
     version('5.1.4', '2c171ced93c0e83bb09e6ccad8e3ba2b')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

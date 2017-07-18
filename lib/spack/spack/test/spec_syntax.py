@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -122,7 +122,7 @@ class TestSpecSyntax(object):
     def _check_raises(self, exc_type, items):
         for item in items:
             with pytest.raises(exc_type):
-                self.check_parse(item)
+                Spec(item)
 
     # ========================================================================
     # Parse checks
@@ -131,6 +131,19 @@ class TestSpecSyntax(object):
         self.check_parse("mvapich")
         self.check_parse("mvapich_foo")
         self.check_parse("_mvapich_foo")
+
+    def test_anonymous_specs(self):
+        self.check_parse("%intel")
+        self.check_parse("@2.7")
+        self.check_parse("^zlib")
+        self.check_parse("+foo")
+        self.check_parse("arch=test-None-None", "platform=test")
+        self.check_parse('@2.7:')
+
+    def test_anonymous_specs_with_multiple_parts(self):
+        # Parse anonymous spec with multiple tokens
+        self.check_parse('@4.2: languages=go', 'languages=go @4.2:')
+        self.check_parse('@4.2: languages=go')
 
     def test_simple_dependence(self):
         self.check_parse("openmpi^hwloc")
@@ -217,6 +230,176 @@ class TestSpecSyntax(object):
     def test_parse_errors(self):
         errors = ['x@@1.2', 'x ^y@@1.2', 'x@1.2::', 'x::']
         self._check_raises(SpecParseError, errors)
+
+    def _check_hash_parse(self, spec):
+        """Check several ways to specify a spec by hash."""
+        # full hash
+        self.check_parse(str(spec), '/' + spec.dag_hash())
+
+        # partial hash
+        self.check_parse(str(spec), '/ ' + spec.dag_hash()[:5])
+
+        # name + hash
+        self.check_parse(str(spec), spec.name + '/' + spec.dag_hash())
+
+        # name + version + space + partial hash
+        self.check_parse(
+            str(spec), spec.name + '@' + str(spec.version) +
+            ' /' + spec.dag_hash()[:6])
+
+    def test_spec_by_hash(self, database):
+        specs = database.mock.db.query()
+        assert len(specs)  # make sure something's in the DB
+
+        for spec in specs:
+            self._check_hash_parse(spec)
+
+    def test_dep_spec_by_hash(self, database):
+        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
+        zmpi = database.mock.db.query_one('zmpi')
+        fake = database.mock.db.query_one('fake')
+
+        assert 'fake' in mpileaks_zmpi
+        assert 'zmpi' in mpileaks_zmpi
+
+        mpileaks_hash_fake = sp.Spec('mpileaks ^/' + fake.dag_hash())
+        assert 'fake' in mpileaks_hash_fake
+        assert mpileaks_hash_fake['fake'] == fake
+
+        mpileaks_hash_zmpi = sp.Spec(
+            'mpileaks %' + str(mpileaks_zmpi.compiler) +
+            ' ^ / ' + zmpi.dag_hash())
+        assert 'zmpi' in mpileaks_hash_zmpi
+        assert mpileaks_hash_zmpi['zmpi'] == zmpi
+        assert mpileaks_hash_zmpi.compiler == mpileaks_zmpi.compiler
+
+        mpileaks_hash_fake_and_zmpi = sp.Spec(
+            'mpileaks ^/' + fake.dag_hash()[:4] + '^ / ' + zmpi.dag_hash()[:5])
+        assert 'zmpi' in mpileaks_hash_fake_and_zmpi
+        assert mpileaks_hash_fake_and_zmpi['zmpi'] == zmpi
+
+        assert 'fake' in mpileaks_hash_fake_and_zmpi
+        assert mpileaks_hash_fake_and_zmpi['fake'] == fake
+
+    def test_multiple_specs_with_hash(self, database):
+        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
+        callpath_mpich2 = database.mock.db.query_one('callpath ^mpich2')
+
+        # name + hash + separate hash
+        specs = sp.parse('mpileaks /' + mpileaks_zmpi.dag_hash() +
+                         '/' + callpath_mpich2.dag_hash())
+        assert len(specs) == 2
+
+        # 2 separate hashes
+        specs = sp.parse('/' + mpileaks_zmpi.dag_hash() +
+                         '/' + callpath_mpich2.dag_hash())
+        assert len(specs) == 2
+
+        # 2 separate hashes + name
+        specs = sp.parse('/' + mpileaks_zmpi.dag_hash() +
+                         '/' + callpath_mpich2.dag_hash() +
+                         ' callpath')
+        assert len(specs) == 3
+
+        # hash + 2 names
+        specs = sp.parse('/' + mpileaks_zmpi.dag_hash() +
+                         ' callpath' +
+                         ' callpath')
+        assert len(specs) == 3
+
+        # hash + name + hash
+        specs = sp.parse('/' + mpileaks_zmpi.dag_hash() +
+                         ' callpath' +
+                         ' / ' + callpath_mpich2.dag_hash())
+        assert len(specs) == 2
+
+    def test_ambiguous_hash(self, database):
+        dbspecs = database.mock.db.query()
+
+        def find_ambiguous(specs, keyfun):
+            """Return the first set of specs that's ambiguous under a
+               particular key function."""
+            key_to_spec = {}
+            for spec in specs:
+                key = keyfun(spec)
+                speclist = key_to_spec.setdefault(key, [])
+                speclist.append(spec)
+                if len(speclist) > 1:
+                    return (key, speclist)
+
+            # If we fail here, we may need to guarantee that there are
+            # some ambiguos specs by adding more specs to the test DB
+            # until this succeeds.
+            raise RuntimeError("no ambiguous specs found for keyfun!")
+
+        # ambiguity in first hash character
+        char, specs = find_ambiguous(dbspecs, lambda s: s.dag_hash()[0])
+        self._check_raises(AmbiguousHashError, ['/' + char])
+
+        # ambiguity in first hash character AND spec name
+        t, specs = find_ambiguous(dbspecs,
+                                  lambda s: (s.name, s.dag_hash()[0]))
+        name, char = t
+        self._check_raises(AmbiguousHashError, [name + '/' + char])
+
+    def test_invalid_hash(self, database):
+        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
+        zmpi = database.mock.db.query_one('zmpi')
+
+        mpileaks_mpich = database.mock.db.query_one('mpileaks ^mpich')
+        mpich = database.mock.db.query_one('mpich')
+
+        # name + incompatible hash
+        self._check_raises(InvalidHashError, [
+            'zmpi /' + mpich.dag_hash(),
+            'mpich /' + zmpi.dag_hash()])
+
+        # name + dep + incompatible hash
+        self._check_raises(InvalidHashError, [
+            'mpileaks ^mpich /' + mpileaks_zmpi.dag_hash(),
+            'mpileaks ^zmpi /' + mpileaks_mpich.dag_hash()])
+
+    def test_nonexistent_hash(self, database):
+        """Ensure we get errors for nonexistant hashes."""
+        specs = database.mock.db.query()
+
+        # This hash shouldn't be in the test DB.  What are the odds :)
+        no_such_hash = 'aaaaaaaaaaaaaaa'
+        hashes = [s._hash for s in specs]
+        assert no_such_hash not in [h[:len(no_such_hash)] for h in hashes]
+
+        self._check_raises(NoSuchHashError, [
+            '/' + no_such_hash,
+            'mpileaks /' + no_such_hash])
+
+    def test_redundant_spec(self, database):
+        """Check that redundant spec constraints raise errors.
+
+        TODO (TG): does this need to be an error? Or should concrete
+        specs only raise errors if constraints cause a contradiction?
+
+        """
+        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
+        callpath_zmpi = database.mock.db.query_one('callpath ^zmpi')
+        dyninst = database.mock.db.query_one('dyninst')
+
+        mpileaks_mpich2 = database.mock.db.query_one('mpileaks ^mpich2')
+
+        redundant_specs = [
+            # redudant compiler
+            '/' + mpileaks_zmpi.dag_hash() + '%' + str(mpileaks_zmpi.compiler),
+
+            # redudant version
+            'mpileaks/' + mpileaks_mpich2.dag_hash() +
+            '@' + str(mpileaks_mpich2.version),
+
+            # redundant dependency
+            'callpath /' + callpath_zmpi.dag_hash() + '^ libelf',
+
+            # redundant flags
+            '/' + dyninst.dag_hash() + ' cflags="-O3 -fPIC"']
+
+        self._check_raises(RedundantSpecError, redundant_specs)
 
     def test_duplicate_variant(self):
         duplicates = [
@@ -362,3 +545,18 @@ class TestSpecSyntax(object):
             "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
+
+
+@pytest.mark.parametrize('spec,anon_spec,spec_name', [
+    ('openmpi languages=go', 'languages=go', 'openmpi'),
+    ('openmpi @4.6:', '@4.6:', 'openmpi'),
+    ('openmpi languages=go @4.6:', 'languages=go @4.6:', 'openmpi'),
+    ('openmpi @4.6: languages=go', '@4.6: languages=go', 'openmpi'),
+])
+def test_parse_anonymous_specs(spec, anon_spec, spec_name):
+
+    expected = parse(spec)
+    spec = parse_anonymous_spec(anon_spec, spec_name)
+
+    assert len(expected) == 1
+    assert spec in expected

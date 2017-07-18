@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,9 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
-class IntelGpuTools(Package):
+class IntelGpuTools(AutotoolsPackage):
     """Intel GPU Tools is a collection of tools for development and testing of
     the Intel DRM driver. There are many macro-level test suites that get used
     against the driver, including xtest, rendercheck, piglit, and oglconform,
@@ -41,7 +42,7 @@ class IntelGpuTools(Package):
     version('1.16', '3996f10fc86a28ec59e1cf7b227dad78')
 
     depends_on('libdrm@2.4.64:')
-    depends_on('libpciaccess@0.10:')
+    depends_on('libpciaccess@0.10:', when=(sys.platform != 'darwin'))
     depends_on('cairo@1.12.0:')
     depends_on('glib')
 
@@ -58,10 +59,3 @@ class IntelGpuTools(Package):
     # python-docutils
     # x11proto-dri2-dev
     # xutils-dev
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('check')
-        make('install')

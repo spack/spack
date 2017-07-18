@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,7 @@ class GhostscriptFonts(Package):
     """Ghostscript Fonts"""
 
     homepage = "http://ghostscript.com/"
-    url = "ftp://ftp.imagemagick.org/pub/ImageMagick/delegates/ghostscript-fonts-std-8.11.tar.gz"
+    url = "https://www.imagemagick.org/download/delegates/ghostscript-fonts-std-8.11.tar.gz"
 
     version('8.11', '6865682b095f8c4500c54b285ff05ef6')
 

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,11 +25,11 @@
 from spack import *
 
 
-class Gource(Package):
+class Gource(AutotoolsPackage):
     """Software version control visualization."""
 
     homepage = "http://gource.io"
-    url      = "https://github.com/acaudwell/Gource/releases/download/gource-0.44/gource-0.44.tar.gz"
+    url = "https://github.com/acaudwell/Gource/releases/download/gource-0.44/gource-0.44.tar.gz"
 
     version('0.44', '79cda1bfaad16027d59cce55455bfab88b57c69d')
 
@@ -49,15 +49,13 @@ class Gource(Package):
     depends_on('sdl2')
     depends_on('sdl2-image')
 
-    def install(self, spec, prefix):
-        make_args = ['--prefix=%s' % prefix,
-                     '--disable-dependency-tracking',
-                     '--without-x',
-                     '--with-boost=%s' % spec['boost'].prefix]
+    parallel = False
+    force_autoreconf = True
 
-        autoreconf('-i')
-        configure(*make_args)
-        make()
-
-        make("install",
-             parallel=False)
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '--disable-dependency-tracking',
+            '--without-x',
+            '--with-boost=%s' % spec['boost'].prefix
+        ]

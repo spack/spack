@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,11 +29,10 @@ class Udunits2(AutotoolsPackage):
     """Automated units conversion"""
 
     homepage = "http://www.unidata.ucar.edu/software/udunits"
-    url      = "ftp://ftp.unidata.ucar.edu/pub/udunits/udunits-2.2.21.tar.gz"
+    url      = "ftp://ftp.unidata.ucar.edu/pub/udunits/udunits-2.2.24.tar.gz"
 
-    version('2.2.21', '1f6d3375efc1f124790a4efb7102cdb7')
+    version('2.2.24', '898b90dc1890f172c493406d0f26f531')
+    version('2.2.23', '9f66006accecd621a4c3eda4ba9fa7c9')
+    version('2.2.21', '1585a5efb2c40c00601abab036a81299')
 
     depends_on('expat')
-
-    depends_on('bison', type='build')
-    depends_on('flex',  type='build')

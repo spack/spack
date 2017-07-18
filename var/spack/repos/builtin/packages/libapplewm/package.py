@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libapplewm(Package):
+class Libapplewm(AutotoolsPackage):
     """AppleWM is a simple library designed to interface with the Apple-WM
     extension. This extension allows X window managers to better interact with
     the Mac OS X Aqua user interface when running X11 in a rootless mode."""
@@ -43,12 +43,6 @@ class Libapplewm(Package):
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        # Crashes with this error message on Linux:
-        # HIServices/Processes.h: No such file or directory
-        # May only build properly on macOS?
-
-        make()
-        make('install')
+    # Crashes with this error message on Linux:
+    # HIServices/Processes.h: No such file or directory
+    # May only build properly on macOS?

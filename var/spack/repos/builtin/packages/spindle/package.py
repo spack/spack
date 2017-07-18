@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Spindle(Package):
+class Spindle(AutotoolsPackage):
     """Spindle improves the library-loading performance of dynamically
        linked HPC applications.  Without Spindle large MPI jobs can
        overload on a shared file system when loading dynamically
@@ -33,13 +33,7 @@ class Spindle(Package):
     """
     homepage = "https://computation.llnl.gov/project/spindle/"
     url      = "https://github.com/hpc/Spindle/archive/v0.8.1.tar.gz"
-    list_url = "https://github.com/hpc/Spindle/releases"
 
     version('0.8.1', 'f11793a6b9d8df2cd231fccb2857d912')
 
     depends_on("launchmon")
-
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
-        make()
-        make("install")

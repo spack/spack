@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Sessreg(Package):
+class Sessreg(AutotoolsPackage):
     """Sessreg is a simple program for managing utmp/wtmp entries for X
     sessions. It was originally written for use with xdm, but may also be
     used with other display managers such as gdm or kdm."""
@@ -43,9 +43,3 @@ class Sessreg(Package):
         kwargs = {'string': True}
         filter_file('$(CPP) $(DEFS)', '$(CPP) -P $(DEFS)',
                     'man/Makefile.in', **kwargs)
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

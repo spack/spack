@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,10 +29,11 @@ class Libsigsegv(AutotoolsPackage):
     """GNU libsigsegv is a library for handling page faults in user mode."""
 
     homepage = "https://www.gnu.org/software/libsigsegv/"
-    url      = "ftp://ftp.gnu.org/gnu/libsigsegv/libsigsegv-2.10.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/libsigsegv/libsigsegv-2.11.tar.gz"
 
     patch('patch.new_config_guess', when='@2.10')
 
+    version('2.11', 'a812d9481f6097f705599b218eea349f')
     version('2.10', '7f96fb1f65b3b8cbc1582fb7be774f0f')
 
     def configure_args(self):

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import re
 import os
 import sys
@@ -34,9 +36,11 @@ from llnl.util.filesystem import *
 import spack
 from spack.util.executable import *
 
-description = "Runs source code style checks on Spack. Requires flake8."
-flake8 = None
-include_untracked = True
+
+description = "runs source code style checks on Spack. requires flake8"
+section = "developer"
+level = "long"
+
 
 """List of directories to exclude from checks."""
 exclude_directories = [spack.external_path]
@@ -51,23 +55,34 @@ exemptions = {
     # exemptions applied only to package.py files.
     r'package.py$': {
         # Exempt lines with urls and descriptions from overlong line errors.
-        501: [r'^\s*homepage\s*=',
-              r'^\s*url\s*=',
-              r'^\s*git\s*=',
-              r'^\s*svn\s*=',
-              r'^\s*hg\s*=',
-              r'^\s*version\(.*\)',
-              r'^\s*variant\(.*\)',
-              r'^\s*depends_on\(.*\)',
-              r'^\s*extends\(.*\)'],
+        'E501': [
+            r'^\s*homepage\s*=',
+            r'^\s*url\s*=',
+            r'^\s*git\s*=',
+            r'^\s*svn\s*=',
+            r'^\s*hg\s*=',
+            r'^\s*list_url\s*=',
+            r'^\s*version\(',
+            r'^\s*variant\(',
+            r'^\s*provides\(',
+            r'^\s*extends\(',
+            r'^\s*depends_on\(',
+            r'^\s*conflicts\(',
+            r'^\s*resource\(',
+            r'^\s*patch\(',
+        ],
         # Exempt '@when' decorated functions from redefinition errors.
-        811: [r'^\s*\@when\(.*\)'],
+        'F811': [
+            r'^\s*@when\(.*\)',
+        ],
     },
 
     # exemptions applied to all files.
     r'.py$': {
         # Exempt lines with URLs from overlong line errors.
-        501: [r'(https?|file)\:']
+        'E501': [
+            r'(https?|ftp|file)\:',
+        ]
     },
 }
 
@@ -78,34 +93,41 @@ exemptions = dict((re.compile(file_pattern),
                   for file_pattern, error_dict in exemptions.items())
 
 
-def changed_files():
+def changed_files(args):
     """Get list of changed files in the Spack repository."""
 
     git = which('git', required=True)
 
     git_args = [
         # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', 'develop'],
+        ['diff', '--name-only', '--diff-filter=ACMR', 'develop...'],
         # Add changed files that have been staged but not yet committed
         ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
         # Add changed files that are unstaged
-        ['diff', '--name-only', '--diff-filter=ACMR']]
+        ['diff', '--name-only', '--diff-filter=ACMR'],
+    ]
 
     # Add new files that are untracked
-    if include_untracked:
+    if args.untracked:
         git_args.append(['ls-files', '--exclude-standard', '--other'])
 
     excludes = [os.path.realpath(f) for f in exclude_directories]
     changed = set()
-    for git_arg_list in git_args:
-        arg_list = git_arg_list + ['--', '*.py']
 
-        files = [f for f in git(*arg_list, output=str).split('\n') if f]
+    for arg_list in git_args:
+        files = git(*arg_list, output=str).split('\n')
+
         for f in files:
-            # don't look at files that are in the exclude locations
+            # Ignore non-Python files
+            if not f.endswith('.py'):
+                continue
+
+            # Ignore files in the exclude locations
             if any(os.path.realpath(f).startswith(e) for e in excludes):
                 continue
+
             changed.add(f)
+
     return sorted(changed)
 
 
@@ -117,7 +139,9 @@ def filter_file(source, dest, output=False):
 
         with open(dest, 'w') as outfile:
             for line in infile:
-                line = line.rstrip()
+                # Only strip newline characters
+                # We still want to catch trailing whitespace warnings
+                line = line.rstrip('\n')
 
                 for file_pattern, errors in exemptions.items():
                     if not file_pattern.search(source):
@@ -126,7 +150,13 @@ def filter_file(source, dest, output=False):
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
-                                line += ("  # NOQA: ignore=%d" % code)
+                                if line.endswith('# noqa'):
+                                    # Line is already ignored
+                                    pass
+                                elif '# noqa: ' in line:
+                                    line += ',{0}'.format(code)
+                                else:
+                                    line += '  # noqa: {0}'.format(code)
                                 break
 
                 oline = line + '\n'
@@ -138,26 +168,23 @@ def filter_file(source, dest, output=False):
 def setup_parser(subparser):
     subparser.add_argument(
         '-k', '--keep-temp', action='store_true',
-        help="Do not delete temporary directory where flake8 runs. "
-             "Use for debugging, to see filtered files.")
+        help="do not delete temporary directory where flake8 runs. "
+             "use for debugging, to see filtered files")
     subparser.add_argument(
         '-o', '--output', action='store_true',
-        help="Send filtered files to stdout as well as temp files.")
+        help="send filtered files to stdout as well as temp files")
     subparser.add_argument(
         '-r', '--root-relative', action='store_true', default=False,
         help="print root-relative paths (default is cwd-relative)")
     subparser.add_argument(
         '-U', '--no-untracked', dest='untracked', action='store_false',
-        default=True, help="Exclude untracked files from checks.")
+        default=True, help="exclude untracked files from checks")
     subparser.add_argument(
         'files', nargs=argparse.REMAINDER, help="specific files to check")
 
 
 def flake8(parser, args):
-    # Just use this to check for flake8 -- we actually execute it with Popen.
-    global flake8, include_untracked
     flake8 = which('flake8', required=True)
-    include_untracked = args.untracked
 
     temp = tempfile.mkdtemp()
     try:
@@ -171,15 +198,15 @@ def flake8(parser, args):
 
         with working_dir(spack.prefix):
             if not file_list:
-                file_list = changed_files()
+                file_list = changed_files(args)
             shutil.copy('.flake8', os.path.join(temp, '.flake8'))
 
-        print '======================================================='
-        print 'flake8: running flake8 code checks on spack.'
-        print
-        print 'Modified files:'
+        print('=======================================================')
+        print('flake8: running flake8 code checks on spack.')
+        print()
+        print('Modified files:')
         for filename in file_list:
-            print "  %s" % filename.strip()
+            print('  {0}'.format(filename.strip()))
         print('=======================================================')
 
         # filter files into a temporary directory with exemptions added.
@@ -195,24 +222,24 @@ def flake8(parser, args):
 
         if args.root_relative:
             # print results relative to repo root.
-            print output
+            print(output)
         else:
             # print results relative to current working directory
             def cwd_relative(path):
-                return '%s: [' % os.path.relpath(
-                    os.path.join(spack.prefix, path.group(1)), os.getcwd())
+                return '{0}: ['.format(os.path.relpath(
+                    os.path.join(spack.prefix, path.group(1)), os.getcwd()))
 
             for line in output.split('\n'):
-                print re.sub(r'^(.*): \[', cwd_relative, line)
+                print(re.sub(r'^(.*): \[', cwd_relative, line))
 
         if flake8.returncode != 0:
-            print "Flake8 found errors."
+            print('Flake8 found errors.')
             sys.exit(1)
         else:
-            print "Flake8 checks were clean."
+            print('Flake8 checks were clean.')
 
     finally:
         if args.keep_temp:
-            print "temporary files are in ", temp
+            print('Temporary files are in: ', temp)
         else:
             shutil.rmtree(temp, ignore_errors=True)

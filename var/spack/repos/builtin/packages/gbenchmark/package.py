@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -48,12 +48,3 @@ class Gbenchmark(CMakePackage):
             r'##### add_cxx_compiler_flag(-Werror',
             'CMakeLists.txt'
         )
-
-    def cmake_args(self, spec, prefix):
-        if self.compiler.name == 'intel':
-            return [
-                "-DCMAKE_CXX_FLAGS=-no-ansi-alias -fno-strict-aliasing",
-                "-DCMAKE_C_FLAGS=-no-ansi-alias -fno-strict-aliasing",
-                "-DBENCHMARK_ENABLE_TESTING=OFF"
-            ]
-        return []

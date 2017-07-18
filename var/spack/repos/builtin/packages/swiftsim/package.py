@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -57,13 +57,6 @@ class Swiftsim(AutotoolsPackage):
         tty.warn('Setting "GIT_SSL_NO_VERIFY=1"')
         tty.warn('This is needed to clone SWIFT repository')
         spack_env.set('GIT_SSL_NO_VERIFY', 1)
-
-    def autoreconf(self, spec, prefix):
-        libtoolize()
-        aclocal()
-        autoconf()
-        autogen = Executable('./autogen.sh')
-        autogen()
 
     def configure_args(self):
         return ['--prefix=%s' % self.prefix,

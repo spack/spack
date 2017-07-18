@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,8 +34,9 @@ class NetcdfCxx4(AutotoolsPackage):
     version('4.2.1', 'd019853802092cf686254aaba165fc81')
 
     depends_on('netcdf')
-    depends_on('autoconf', type='build')
 
-    def autoreconf(self, spec, prefix):
-        # Rebuild to prevent problems of inconsistency in git repo
-        which('autoreconf')('-ivf')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
+
+    force_autoreconf = True

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libxml2(Package):
+class Libxml2(AutotoolsPackage):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
        project (but usable outside of the Gnome platform), it is free
        software available under the MIT License."""
@@ -34,6 +34,7 @@ class Libxml2(Package):
 
     version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
     version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
+    version('2.7.8', '8127a65e8c3b08856093099b52599c86')
 
     variant('python', default=False, description='Enable Python support')
 
@@ -45,18 +46,14 @@ class Libxml2(Package):
 
     depends_on('pkg-config@0.9.0:', type='build')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         if '+python' in spec:
             python_args = [
-                '--with-python={0}'.format(spec['python'].prefix),
+                '--with-python={0}'.format(spec['python'].home),
                 '--with-python-install-dir={0}'.format(site_packages_dir)
             ]
         else:
             python_args = ['--without-python']
 
-        configure('--prefix={0}'.format(prefix), *python_args)
-
-        make()
-        if self.run_tests:
-            make('check')
-        make('install')
+        return python_args

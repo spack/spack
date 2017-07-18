@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
+
+from spack import *
 
 
 def check(condition, msg):
@@ -38,6 +39,28 @@ class CmakeClient(CMakePackage):
     url       = 'https://www.example.com/cmake-client-1.0.tar.gz'
 
     version('1.0', '4cb3ff35b2472aae70f542116d616e63')
+
+    callback_counter = 0
+
+    flipped = False
+    run_this = True
+    check_this_is_None = None
+    did_something = False
+
+    @run_after('cmake')
+    @run_before('cmake', 'build', 'install')
+    def increment(self):
+        self.callback_counter += 1
+
+    @run_after('cmake')
+    @on_package_attributes(run_this=True, check_this_is_None=None)
+    def flip(self):
+        self.flipped = True
+
+    @run_after('cmake')
+    @on_package_attributes(does_not_exist=None)
+    def do_not_execute(self):
+        self.did_something = True
 
     def setup_environment(self, spack_env, run_env):
         spack_cc    # Ensure spack module-scope variable is avaiabl
@@ -67,11 +90,15 @@ class CmakeClient(CMakePackage):
               "setup_dependent_package.")
 
     def cmake(self, spec, prefix):
-        pass
+        assert self.callback_counter == 1
 
-    build = cmake
+    def build(self, spec, prefix):
+        assert self.did_something is False
+        assert self.flipped is True
+        assert self.callback_counter == 3
 
     def install(self, spec, prefix):
+        assert self.callback_counter == 4
         # check that cmake is in the global scope.
         global cmake
         check(cmake is not None, "No cmake was in environment!")

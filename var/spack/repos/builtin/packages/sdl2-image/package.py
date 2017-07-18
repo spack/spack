@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Sdl2Image(Package):
+class Sdl2Image(AutotoolsPackage):
     """SDL is designed to provide the bare bones of creating a graphical
     program. """
 
@@ -35,9 +35,3 @@ class Sdl2Image(Package):
     version('2.0.1', 'd94b94555ba022fa249a53a021dc3606')
 
     depends_on('sdl2')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

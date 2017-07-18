@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,11 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import exceptions
 import shutil
 import glob
 import tempfile
 import yaml
+import re
 
 from llnl.util.filesystem import join_path, mkdirp
 
@@ -137,7 +137,7 @@ class DirectoryLayout(object):
         if os.path.exists(path):
             try:
                 shutil.rmtree(path)
-            except exceptions.OSError as e:
+            except OSError as e:
                 raise RemoveFailedError(spec, path, e)
 
         path = os.path.dirname(path)
@@ -150,24 +150,31 @@ class DirectoryLayout(object):
 
 
 class YamlDirectoryLayout(DirectoryLayout):
-    """Lays out installation directories like this::
+    """By default lays out installation directories like this::
            <install root>/
                <platform-os-target>/
                    <compiler>-<compiler version>/
-                       <name>-<version>-<variants>-<hash>
+                       <name>-<version>-<hash>
 
        The hash here is a SHA-1 hash for the full DAG plus the build
        spec.  TODO: implement the build spec.
 
-       To avoid special characters (like ~) in the directory name,
-       only enabled variants are included in the install path.
-       Disabled variants are omitted.
+       The installation directory scheme can be modified with the
+       arguments hash_len and path_scheme.
     """
 
     def __init__(self, root, **kwargs):
         super(YamlDirectoryLayout, self).__init__(root)
         self.metadata_dir   = kwargs.get('metadata_dir', '.spack')
-        self.hash_len       = kwargs.get('hash_len', None)
+        self.hash_len       = kwargs.get('hash_len')
+        self.path_scheme    = kwargs.get('path_scheme') or (
+            "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}")  # NOQA: E501
+        if self.hash_len is not None:
+            if re.search('\${HASH:\d+}', self.path_scheme):
+                raise InvalidDirectoryLayoutParametersError(
+                    "Conflicting options for installation layout hash length")
+            self.path_scheme = self.path_scheme.replace(
+                "${HASH}", "${HASH:%d}" % self.hash_len)
 
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
@@ -186,18 +193,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
 
         if spec.external:
-            return spec.external
+            return spec.external_path
 
-        dir_name = "%s-%s-%s" % (
-            spec.name,
-            spec.version,
-            spec.dag_hash(self.hash_len))
-
-        path = join_path(
-            spec.architecture,
-            "%s-%s" % (spec.compiler.name, spec.compiler.version),
-            dir_name)
-
+        path = spec.format(self.path_scheme)
         return path
 
     def write_spec(self, spec, path):
@@ -285,8 +283,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         if not os.path.isdir(self.root):
             return []
 
-        pattern = join_path(
-            self.root, '*', '*', '*', self.metadata_dir, self.spec_file_name)
+        path_elems = ["*"] * len(self.path_scheme.split(os.sep))
+        path_elems += [self.metadata_dir, self.spec_file_name]
+        pattern = join_path(self.root, *path_elems)
         spec_files = glob.glob(pattern)
         return [self.read_spec(s) for s in spec_files]
 
@@ -445,6 +444,14 @@ class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
 
 class SpecReadError(DirectoryLayoutError):
     """Raised when directory layout can't read a spec."""
+
+
+class InvalidDirectoryLayoutParametersError(DirectoryLayoutError):
+    """Raised when a invalid directory layout parameters are supplied"""
+
+    def __init__(self, message, long_msg=None):
+        super(InvalidDirectoryLayoutParametersError, self).__init__(
+            message, long_msg)
 
 
 class InvalidExtensionSpecError(DirectoryLayoutError):

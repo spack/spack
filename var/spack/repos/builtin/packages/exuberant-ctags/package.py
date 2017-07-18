@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,15 +25,9 @@
 from spack import *
 
 
-class ExuberantCtags(Package):
+class ExuberantCtags(AutotoolsPackage):
     """The canonical ctags generator"""
     homepage = "ctags.sourceforge.net"
     url      = "http://downloads.sourceforge.net/project/ctags/ctags/5.8/ctags-5.8.tar.gz"
 
     version('5.8', 'c00f82ecdcc357434731913e5b48630d')
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -37,10 +37,11 @@ class RCurl(RPackage):
     package with http specific tools and logic."""
 
     homepage = "https://github.com/jeroenooms/curl"
-    url      = "https://cran.r-project.org/src/contrib/curl_0.9.7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/curl"
+    url      = "https://cran.r-project.org/src/contrib/curl_2.3.tar.gz"
 
-    version('1.0', '93d34926d6071e1fba7e728b482f0dd9')
+    version('2.3',   '7250ee8caed98ba76906ab4d32da60f8')
+    version('1.0',   '93d34926d6071e1fba7e728b482f0dd9')
     version('0.9.7', 'a101f7de948cb828fef571c730f39217')
 
+    depends_on('r@3.0.0:')
     depends_on('curl')

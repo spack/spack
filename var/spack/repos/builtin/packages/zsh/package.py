@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Zsh(Package):
+class Zsh(AutotoolsPackage):
     """Zsh is a shell designed for interactive use, although it is also a
     powerful scripting language. Many of the useful features of bash, ksh, and
     tcsh were incorporated into zsh; many original features were added.
@@ -37,9 +37,4 @@ class Zsh(Package):
     version('5.1.1', checksum='8ba28a9ef82e40c3a271602f18343b2f')
 
     depends_on("pcre")
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")
+    depends_on("ncurses")

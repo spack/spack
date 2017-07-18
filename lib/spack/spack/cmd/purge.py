@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,22 +25,24 @@
 import spack
 import spack.stage as stage
 
-description = "Remove temporary build files and/or downloaded archives"
+description = "remove temporary build files and/or downloaded archives"
+section = "admin"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-s', '--stage', action='store_true', default=True,
-        help="Remove all temporary build stages (default).")
+        help="remove all temporary build stages (default)")
     subparser.add_argument(
         '-d', '--downloads', action='store_true',
-        help="Remove cached downloads.")
+        help="remove cached downloads")
     subparser.add_argument(
         '-m', '--misc-cache', action='store_true',
-        help="Remove long-lived caches, like the virtual package index.")
+        help="remove long-lived caches, like the virtual package index")
     subparser.add_argument(
         '-a', '--all', action='store_true',
-        help="Remove all of the above.")
+        help="remove all of the above")
 
 
 def purge(parser, args):

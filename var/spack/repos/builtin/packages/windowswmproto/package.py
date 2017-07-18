@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Windowswmproto(Package):
+class Windowswmproto(AutotoolsPackage):
     """This module provides the definition of the WindowsWM extension to the
     X11 protocol, used for coordination between an X11 server and the
     Microsoft Windows native window manager.
@@ -37,8 +37,3 @@ class Windowswmproto(Package):
     url      = "https://www.x.org/archive/individual/proto/windowswmproto-1.0.4.tar.gz"
 
     version('1.0.4', '558db92a8e4e1b07e9c62eca3f04dd8d')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,36 +22,40 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import sys
 import os
 import re
 import argparse
 import pytest
-from StringIO import StringIO
+from six import StringIO
 
 from llnl.util.filesystem import *
 from llnl.util.tty.colify import colify
 
 import spack
 
-description = "A thin wrapper around the pytest command."
+description = "run spack's unit tests"
+section = "developer"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-H', '--pytest-help', action='store_true', default=False,
-        help="print full pytest help message, showing advanced options.")
+        help="print full pytest help message, showing advanced options")
 
     list_group = subparser.add_mutually_exclusive_group()
     list_group.add_argument(
         '-l', '--list', action='store_true', default=False,
-        help="list basic test names.")
+        help="list basic test names")
     list_group.add_argument(
         '-L', '--long-list', action='store_true', default=False,
-        help="list the entire hierarchy of tests.")
+        help="list the entire hierarchy of tests")
     subparser.add_argument(
         'tests', nargs=argparse.REMAINDER,
-        help="list of tests to run (will be passed to pytest -k).")
+        help="list of tests to run (will be passed to pytest -k)")
 
 
 def do_list(args, unknown_args):
@@ -79,7 +83,7 @@ def do_list(args, unknown_args):
                 output_lines.append(
                     os.path.basename(name).replace('.py', ''))
         else:
-            print indent + name
+            print(indent + name)
 
     if args.list:
         colify(output_lines)

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,6 +40,7 @@ class Cairo(AutotoolsPackage):
     depends_on('libxext', when='+X')
     depends_on('libxrender', when='+X')
     depends_on('libxcb', when='+X')
+    depends_on('python', when='+X', type='build')
     depends_on("libpng")
     depends_on("glib")
     depends_on("pixman")
@@ -50,4 +51,8 @@ class Cairo(AutotoolsPackage):
     def configure_args(self):
         args = ["--disable-trace",  # can cause problems with libiberty
                 "--enable-tee"]
+        if '+X' in self.spec:
+            args.extend(["--enable-xlib", "--enable-xcb"])
+        else:
+            args.extend(["--disable-xlib", "--disable-xcb"])
         return args

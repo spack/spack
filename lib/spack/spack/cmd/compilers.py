@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,12 +25,14 @@
 import spack
 from spack.cmd.compiler import compiler_list
 
-description = "List available compilers. Same as 'spack compiler list'."
+description = "list available compilers"
+section = "system"
+level = "short"
 
 
 def setup_parser(subparser):
     subparser.add_argument('--scope', choices=spack.config.config_scopes,
-                           help="Configuration scope to read/modify.")
+                           help="configuration scope to read/modify")
 
 
 def compilers(parser, args):

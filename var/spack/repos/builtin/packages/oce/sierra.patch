@@ -1,45 +1,12 @@
-diff --git a/adm/cmake/TKernel/CMakeLists.txt b/adm/cmake/TKernel/CMakeLists.txt
-index 54e241e..72873c6 100644
---- a/adm/cmake/TKernel/CMakeLists.txt
-+++ b/adm/cmake/TKernel/CMakeLists.txt
-@@ -29,7 +29,7 @@ if(WIN32)
- 	set(TOOLKIT_LIBS ${TOOLKIT_LIBS} ${CSF_SOCKETLibs_LIB} ${CSF_advapi32_LIB} ${CSF_gdi32_LIB} ${CSF_user32_LIB} ${CSF_kernel32_LIB} ${CSF_psapi_LIB})
- else(WIN32)
- 	#  An implementation for Mac OS X has been added in src/OSD/gettime_osx.h
--	if(NOT APPLE)
-+	if(APPLE)
- 		include( CheckFunctionExists )
- 		check_function_exists( clock_gettime CLOCK_GETTIME_IN_LIBC )
- 		if(NOT CLOCK_GETTIME_IN_LIBC)
-@@ -40,7 +40,7 @@ else(WIN32)
- 			endif(NOT CLOCK_GETTIME_IN_LIBRT)
- 			set(TOOLKIT_LIBS ${TOOLKIT_LIBS} rt)
- 		endif(NOT CLOCK_GETTIME_IN_LIBC)
--	endif(NOT APPLE)
-+	endif(APPLE)
- endif(WIN32)
-
- # Adde-DHAVE_TBB in TKernel in order to benefit from Standard_MMgrTBBalloc
-@@ -70,4 +70,3 @@ if (OCE_BUILD_TKERNEL_WITH_INSTALL_RPATH)
- 	set_target_properties_install_rpath(${TOOLKIT} "${OCE_INSTALL_LIB_DIR_RPATH};${OCE_INSTALL_PACKAGE_LIB_DIR_RPATH}")
- 	set_target_properties(${TOOLKIT} PROPERTIES BUILD_WITH_INSTALL_RPATH ON)
- endif ()
--
 diff --git a/src/OSD/OSD_Chronometer.cxx b/src/OSD/OSD_Chronometer.cxx
-index 444f844..25970d0 100644
---- a/src/OSD/OSD_Chronometer.cxx
+index f7374fb..63ac140 100644
+--- a/src/OSD/OSD_Chronometer.cxx.old
 +++ b/src/OSD/OSD_Chronometer.cxx
 @@ -51,7 +51,7 @@
    #include <mach/mach.h>
  #endif
 
 -#if defined(__APPLE__) && defined(__MACH__)
-+#if defined(__OOOOPPLE__) && defined(__MACH__)
++#if defined(__APPLE__) && !defined(__MAC_10_12)
  #include "gettime_osx.h"
  #endif
-
-@@ -283,4 +283,3 @@ void OSD_Chronometer::Show (Standard_Real& user,
-   system = Cumul_sys;
-   if (!StopSav) Start();
- }
--

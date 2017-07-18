@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,12 +26,17 @@ import spack.cmd.configure as cfg
 
 from spack import *
 
-description = 'Stops at build stage when installing a package, if possible'
+description = 'stops at build stage when installing a package, if possible'
+section = "build"
+level = "long"
+
 
 build_system_to_phase = {
-    CMakePackage: 'build',
     AutotoolsPackage: 'build',
-    PythonPackage: 'build'
+    CMakePackage: 'build',
+    WafPackage: 'build',
+    PythonPackage: 'build',
+    PerlPackage: 'build',
 }
 
 

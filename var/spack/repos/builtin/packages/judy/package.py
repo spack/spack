@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,16 +25,11 @@
 from spack import *
 
 
-class Judy(Package):
+class Judy(AutotoolsPackage):
     """Judy: General-purpose dynamic array, associative array and hash-trie."""
     homepage = "http://judy.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/judy/judy/Judy-1.0.5/Judy-1.0.5.tar.gz"
 
     version('1.0.5', '115a0d26302676e962ae2f70ec484a54')
+
     parallel = False
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")

@@ -1,0 +1,23 @@
+Fix Tcl private header detection on macOS
+
+https://sourceforge.net/p/expect/patches/17/
+
+diff -Naur expect5.45.orig/tclconfig/tcl.m4 expect5.45/tclconfig/tcl.m4
+--- expect5.45.orig/tclconfig/tcl.m4	2010-11-09 11:42:10.000000000 -0800
++++ expect5.45/tclconfig/tcl.m4	2013-09-23 00:10:00.000000000 -0700
+@@ -3389,9 +3389,12 @@
+             # the framework's Headers and PrivateHeaders directories
+             case ${TCL_DEFS} in
+ 	    	*TCL_FRAMEWORK*)
+-		    if test -d "${TCL_BIN_DIR}/Headers" -a \
+-			    -d "${TCL_BIN_DIR}/PrivateHeaders"; then
+-			TCL_INCLUDES="-I\"${TCL_BIN_DIR}/Headers\" -I\"${TCL_BIN_DIR}/PrivateHeaders\" ${TCL_INCLUDES}"
++		    if test -d "${TCL_BIN_DIR}/Headers"; then
++			if test -d "${TCL_BIN_DIR}/PrivateHeaders"; then
++			    TCL_INCLUDES="-I\"${TCL_BIN_DIR}/Headers\" -I\"${TCL_BIN_DIR}/PrivateHeaders\" ${TCL_INCLUDES}"
++			elif test -d "${TCL_BIN_DIR}/Headers/tcl-private"; then
++			    TCL_INCLUDES="-I\"${TCL_BIN_DIR}/Headers\" -I\"${TCL_BIN_DIR}/Headers/tcl-private\" ${TCL_INCLUDES}"
++			fi
+ 		    else
+ 			TCL_INCLUDES="${TCL_INCLUDES} ${TCL_INCLUDE_SPEC} `echo "${TCL_INCLUDE_SPEC}" | sed -e 's/Headers/PrivateHeaders/'`"
+ 		    fi

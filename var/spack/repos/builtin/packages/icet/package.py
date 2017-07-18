@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,17 +30,13 @@ class Icet(CMakePackage):
        sort-last parallel rendering library."""
 
     homepage = "http://icet.sandia.gov"
-    url = "https://example.com/icet-1.2.3.tar.gz"
+    url      = "https://gitlab.kitware.com/icet/icet/repository/archive.tar.bz2?ref=IceT-2.1.1"
 
     version('develop', branch='master',
             git='https://gitlab.kitware.com/icet/icet.git')
     version('2.1.1', '4f971c51105a64937460d482adca2a6c')
 
     depends_on('mpi')
-
-    def url_for_version(self, version):
-        return ("https://gitlab.kitware.com/icet/icet/repository/"
-                "archive.tar.bz2?ref=IceT-{0}".format(version.dotted))
 
     def cmake_args(self):
         return ['-DICET_USE_OPENGL:BOOL=OFF']

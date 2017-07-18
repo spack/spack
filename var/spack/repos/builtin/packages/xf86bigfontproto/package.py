@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,15 +25,10 @@
 from spack import *
 
 
-class Xf86bigfontproto(Package):
+class Xf86bigfontproto(AutotoolsPackage):
     """X.org XF86BigFontProto protocol headers."""
 
     homepage = "https://cgit.freedesktop.org/xorg/proto/xf86bigfontproto"
     url      = "https://www.x.org/archive/individual/proto/xf86bigfontproto-1.2.0.tar.gz"
 
     version('1.2.0', '91b0733ff4cbe55808d96073258aa3d1')
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make('install')

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,9 +30,9 @@ class RMatrix(RPackage):
     using 'LAPACK' and 'SuiteSparse'."""
 
     homepage = "http://matrix.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/Matrix_1.2-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Matrix"
+    url      = "https://cran.r-project.org/src/contrib/Matrix_1.2-8.tar.gz"
 
+    version('1.2-8', '4a6406666bf97d3ec6b698eea5d9c0f5')
     version('1.2-6', 'f545307fb1284861e9266c4e9712c55e')
 
     depends_on('r-lattice', type=('build', 'run'))

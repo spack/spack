@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ class RCodetools(RPackage):
     """Code analysis tools for R."""
 
     homepage = "https://cran.r-project.org/web/packages/codetools/index.html"
-    url      = "https://cran.r-project.org/src/contrib/codetools_0.2-14.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/codetools"
+    url      = "https://cran.r-project.org/src/contrib/codetools_0.2-15.tar.gz"
 
+    version('0.2-15', '37419cbc3de81984cf6d9b207d4f62d4')
     version('0.2-14', '7ec41d4f8bd6ba85facc8c5e6adc1f4d')

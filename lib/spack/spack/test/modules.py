@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,14 +24,14 @@
 ##############################################################################
 import collections
 import contextlib
+from six import StringIO
 
-import cStringIO
 import pytest
 import spack.modules
 import spack.spec
 
 # Our "filesystem" for the tests below
-FILE_REGISTRY = collections.defaultdict(cStringIO.StringIO)
+FILE_REGISTRY = collections.defaultdict(StringIO)
 # Spec strings that will be used throughout the tests
 mpich_spec_string = 'mpich@3.0.4'
 mpileaks_spec_string = 'mpileaks'
@@ -48,7 +48,7 @@ def stringio_open(monkeypatch):
         if not mode == 'w':
             raise RuntimeError('unexpected opening mode for stringio_open')
 
-        FILE_REGISTRY[filename] = cStringIO.StringIO()
+        FILE_REGISTRY[filename] = StringIO()
 
         try:
             yield FILE_REGISTRY[filename]
@@ -63,10 +63,12 @@ def stringio_open(monkeypatch):
 def get_modulefile_content(factory, spec):
     """Writes the module file and returns the content as a string.
 
-    :param factory: module file factory
-    :param spec: spec of the module file to be written
-    :return: content of the module file
-    :rtype: str
+    Args:
+        factory: module file factory
+        spec: spec of the module file to be written
+
+    Returns:
+        str: content of the module file
     """
     spec.concretize()
     generator = factory(spec)
@@ -356,6 +358,21 @@ class TestTcl(object):
         spec.concretize()
         generator = tcl_factory(spec)
         assert 'bar' in generator.use_name
+
+    def test_setup_environment(self, tcl_factory):
+        spec = spack.spec.Spec('mpileaks')
+        spec.concretize()
+        content = get_modulefile_content(tcl_factory, spec)
+        assert len([x for x in content if 'setenv FOOBAR' in x]) == 1
+        assert len(
+            [x for x in content if 'setenv FOOBAR "mpileaks"' in x]
+        ) == 1
+
+        content = get_modulefile_content(tcl_factory, spec['callpath'])
+        assert len([x for x in content if 'setenv FOOBAR' in x]) == 1
+        assert len(
+            [x for x in content if 'setenv FOOBAR "callpath"' in x]
+        ) == 1
 
 
 @pytest.mark.usefixtures('config', 'builtin_mock', 'stringio_open')

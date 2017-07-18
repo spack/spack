@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -92,6 +92,8 @@ function spack {
                 LOC="$(spack location $_sp_arg "$@")"
                 if [[ -d "$LOC" ]] ; then
                     cd "$LOC"
+                else
+                    return 1
                 fi
             fi
             return
@@ -167,6 +169,11 @@ function _spack_pathadd {
     fi
 }
 
+# Export spack function so it is available in subshells (only works with bash)
+if [ -n "${BASH_VERSION:-}" ]; then
+	export -f spack
+fi
+
 #
 # Figure out where this file is.  Below code needs to be portable to
 # bash and zsh.
@@ -193,3 +200,10 @@ _sp_dotkit_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack
 _sp_tcl_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+
+#
+# Add programmable tab completion for Bash
+#
+if [ -n "${BASH_VERSION:-}" ]; then
+    source $_sp_share_dir/spack-completion.bash
+fi
