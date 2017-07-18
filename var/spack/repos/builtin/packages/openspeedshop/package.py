@@ -148,12 +148,11 @@ class Openspeedshop(CMakePackage):
             instrumentor_setting = "offline"
             if '+runtime' in spec:
 
-                cmake_args = []
-                cmake_args.extend([
+                cmake_args = [
                     '-DINSTRUMENTOR=%s'     % instrumentor_setting,
                     '-DLIBMONITOR_DIR=%s'   % spec['libmonitor'].prefix,
                     '-DLIBUNWIND_DIR=%s'    % spec['libunwind'].prefix,
-                    '-DPAPI_DIR=%s'         % spec['papi'].prefix])
+                    '-DPAPI_DIR=%s'         % spec['papi'].prefix]
 
                 # Add any MPI implementations coming from variant settings
                 self.set_mpi_cmakeOptions(spec, cmake_args)
@@ -260,7 +259,7 @@ class Openspeedshop(CMakePackage):
                 # ones for this build
                 self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
 
-        return cmake_args 
+        return cmake_args
 
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the
@@ -393,4 +392,3 @@ class Openspeedshop(CMakePackage):
                 run_env.set('OPENSS_MPI_IMPLEMENTATION', 'mvapich2')
             if '+openmpi' in self.spec:
                 run_env.set('OPENSS_MPI_IMPLEMENTATION', 'openmpi')
-

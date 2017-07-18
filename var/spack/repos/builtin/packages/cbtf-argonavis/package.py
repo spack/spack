@@ -76,14 +76,13 @@ class CbtfArgonavis(CMakePackage):
         cmake_prefix_path = join_path(
             spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
 
-        cmake_args = []
-        cmake_args.extend(
-            ['-DCMAKE_PREFIX_PATH=%s' % cmake_prefix_path,
+        cmake_args = [
+             '-DCMAKE_PREFIX_PATH=%s' % cmake_prefix_path,
              '-DCUDA_DIR=%s' % spec['cuda'].prefix,
              '-DCUDA_INSTALL_PATH=%s' % spec['cuda'].prefix,
              '-DCUDA_TOOLKIT_ROOT_DIR=%s' % spec['cuda'].prefix,
-             '-DCUPTI_DIR=%s' %spec['cuda'].prefix.extras.CUPTI,
-             '-DCUPTI_ROOT=%s' %spec['cuda'].prefix.extras.CUPTI,
+             '-DCUPTI_DIR=%s' % spec['cuda'].prefix.extras.CUPTI,
+             '-DCUPTI_ROOT=%s' % spec['cuda'].prefix.extras.CUPTI,
              '-DPAPI_ROOT=%s' % spec['papi'].prefix,
              '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
              '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
@@ -91,7 +90,7 @@ class CbtfArgonavis(CMakePackage):
              '-DBoost_DIR=%s' % spec['boost'].prefix,
              '-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib,
              '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
-             '-DBoost_NO_SYSTEM_PATHS=ON'])
+             '-DBoost_NO_SYSTEM_PATHS=ON']
 
         # Adjust the standard cmake arguments to what we want the build
         # type, etc to be
@@ -124,4 +123,3 @@ class CbtfArgonavis(CMakePackage):
         ])
 
         cmakeOptions.extend(BuildTypeOptions)
-

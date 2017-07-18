@@ -163,9 +163,8 @@ class CbtfKrell(CMakePackage):
 
         # Add in paths for finding package config files that tell us
         # where to find these packages
-        cmake_args = []
-        cmake_args.extend(
-            ['-DCBTF_DIR=%s' % spec['cbtf'].prefix,
+        cmake_args = [
+             '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
              '-DBINUTILS_DIR=%s' % spec['binutils'].prefix,
              '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
              '-DLIBUNWIND_DIR=%s' % spec['libunwind'].prefix,
@@ -173,7 +172,7 @@ class CbtfKrell(CMakePackage):
              '-DBOOST_DIR=%s' % spec['boost'].prefix,
              '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
              '-DDYNINST_DIR=%s' % spec['dyninst'].prefix,
-             '-DXERCESC_DIR=%s' % spec['xerces-c'].prefix])
+             '-DXERCESC_DIR=%s' % spec['xerces-c'].prefix]
 
         # Add any MPI implementations coming from variant settings
         self.set_mpi_cmakeOptions(spec, cmake_args)

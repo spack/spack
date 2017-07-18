@@ -74,20 +74,19 @@ class CbtfLanl(CMakePackage):
         cmake_prefix_path = join_path(
             spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
 
-        cmake_args = []
-        cmake_args.extend(
-            ['-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
+        cmake_args = [
+             '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
              '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
              '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
              '-DXERCESC_DIR=%s'            % spec['xerces-c'].prefix,
              '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
              '-DCMAKE_MODULE_PATH=%s'      % join_path(
-                 prefix.share, 'KrellInstitute', 'cmake')])
+                 prefix.share, 'KrellInstitute', 'cmake')]
 
         # Adjust the standard cmake arguments to what we want the build
         # type, etc to be
         self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
-        return cmake_args 
+        return cmake_args
 
     def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
         # Sets build type parameters into cmakeOptions the options that will
@@ -114,4 +113,3 @@ class CbtfLanl(CMakePackage):
         ])
 
         cmakeOptions.extend(BuildTypeOptions)
-

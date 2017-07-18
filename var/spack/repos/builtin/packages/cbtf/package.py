@@ -86,14 +86,13 @@ class Cbtf(CMakePackage):
             # Install message tag include file for use in Intel MIC
             # cbtf-krell build
             # FIXME
-            cmake_args = []
-            cmake_args.extend(
-                ['-DBoost_NO_SYSTEM_PATHS=TRUE',
+            cmake_args = [
+                 '-DBoost_NO_SYSTEM_PATHS=TRUE',
                  '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
                  '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
                  '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
                  '-DCMAKE_MODULE_PATH=%s'   % join_path(
-                     prefix.share, 'KrellInstitute', 'cmake')])
+                     prefix.share, 'KrellInstitute', 'cmake')]
 
             # Add in the standard cmake arguments
             cmake_args.extend(std_cmake_args)
@@ -103,14 +102,13 @@ class Cbtf(CMakePackage):
             self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
 
         else:
-            cmake_args = []
-            cmake_args.extend(
-                ['-DBoost_NO_SYSTEM_PATHS=TRUE',
+            cmake_args = [
+                 '-DBoost_NO_SYSTEM_PATHS=TRUE',
                  '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
                  '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
                  '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
                  '-DCMAKE_MODULE_PATH=%s'   % join_path(
-                     prefix.share, 'KrellInstitute', 'cmake')])
+                     prefix.share, 'KrellInstitute', 'cmake')]
 
             # Add in the standard cmake arguments
             cmake_args.extend(std_cmake_args)
@@ -143,4 +141,3 @@ class Cbtf(CMakePackage):
         ])
 
         cmakeOptions.extend(BuildTypeOptions)
-
