@@ -63,7 +63,6 @@ class Lcals(MakefilePackage):
         description='Micro arch: SSE, AVX, MIC.',
         default='sse',
         values=('sse', 'avx', 'MIC'),
-        #multi=True,
     )
 
     @property
@@ -72,15 +71,11 @@ class Lcals(MakefilePackage):
         targets = []
 
         compiler = ''
-        cxx = ''
 
         xlcn = self.spec.variants['xlcn'].value
         microarch = self.spec.variants['microarch'].value
 
         arch = platform.machine()
-
-        if microarch != 'sse' and microarch != 'avx' and microarch != 'MIC':
-            raise InstallError('Invalid choice:-{0}-. Micro arch: 1 - SSE, 2 - AVX.'.format(microarch))
 
         if microarch == 'MIC':
             arch = 'MIC'
