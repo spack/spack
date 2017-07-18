@@ -58,7 +58,7 @@ class Adios(AutotoolsPackage):
     variant('zfp', default=False, description='Enable ZFP transform support')
     # transports and serial file converters
     variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
-
+    variant("netcdf", default=False, description="Enable netCDF")
     # Lots of setting up here for this package
     # module swap PrgEnv-intel PrgEnv-$COMP
     # module load cray-hdf5/1.8.14
@@ -78,6 +78,7 @@ class Adios(AutotoolsPackage):
     depends_on('zfp@:0.5.0', when='+zfp')
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
+    depends_on("netcdf", when="+netcdf")
 
     build_directory = 'spack-build'
 
@@ -136,5 +137,6 @@ class Adios(AutotoolsPackage):
             extra_args.append('--with-zfp=%s' % spec['zfp'].prefix)
         if '+hdf5' in spec:
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
-
+        if "+netcdf" in spec:
+            extra_args.append("--with-netcdf=%s" % spec['netcdf'].prefix)
         return extra_args
