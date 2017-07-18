@@ -39,8 +39,6 @@ class Rsbench(MakefilePackage):
 
     build_directory = 'src'
 
-    depends_on('pgi', when='+pgi')
-
     @property
     def build_targets(self):
         targets = []
@@ -53,10 +51,7 @@ class Rsbench(MakefilePackage):
         if self.compiler.name == 'intel':
             cflags += ' ' + '-xhost -ansi-alias -no-prec-div' + ' '
             + self.compiler.openmp_flag
-        if '+pgi' in self.spec:
-            targets.append(
-                'CC={0}'.format(join_path(self.spec['pgi'].prefix.bin,  'pgcc')
-                )
+        if self.compiler.name == 'pgi':
             cflags += '-mp -fastsse'
 
         targets.append('CFLAGS={0}'.format(cflags))
