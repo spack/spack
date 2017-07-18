@@ -147,3 +147,10 @@ class Qmcpack(CMakePackage):
             install_tree(join_path(self.stage.source_path, 'nexus'),
                          join_path(prefix,'nexus'))
 
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        """Run ctest after building binary. Use 'spack install --run-tests qmcpack'.
+        It can take 24 hours to run all the regression tests and unit tests. """
+        self.ctest
+        pass
