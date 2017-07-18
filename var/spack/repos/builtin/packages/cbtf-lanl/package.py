@@ -75,12 +75,12 @@ class CbtfLanl(CMakePackage):
             spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
 
         cmake_args = [
-             '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
-             '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
-             '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
-             '-DXERCESC_DIR=%s'            % spec['xerces-c'].prefix,
-             '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
-             '-DCMAKE_MODULE_PATH=%s'      % join_path(
+            '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
+            '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
+            '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
+            '-DXERCESC_DIR=%s'            % spec['xerces-c'].prefix,
+            '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
+            '-DCMAKE_MODULE_PATH=%s'      % join_path(
                  prefix.share, 'KrellInstitute', 'cmake')]
 
         # Adjust the standard cmake arguments to what we want the build
