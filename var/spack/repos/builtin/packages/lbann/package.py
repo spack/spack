@@ -41,11 +41,11 @@ class Lbann(CMakePackage):
     variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
 
     depends_on('elemental +openmp_blas +scalapack +shared +int64')
-    depends_on('elemental +openmp_blas +scalapack +shared +int64 +debug', when='+debug')
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
     depends_on('opencv@3.2.0', when='+opencv')
     depends_on('protobuf@3.0.2:')
+
     def cmake_args(self):
         spec = self.spec
         # Environment variables
