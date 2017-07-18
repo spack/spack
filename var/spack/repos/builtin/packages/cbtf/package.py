@@ -92,7 +92,7 @@ class Cbtf(CMakePackage):
                 '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
                 '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
                 '-DCMAKE_MODULE_PATH=%s'   % join_path(
-                     prefix.share, 'KrellInstitute', 'cmake')]
+                    prefix.share, 'KrellInstitute', 'cmake')]
 
             # Add in the standard cmake arguments
             cmake_args.extend(std_cmake_args)
@@ -108,7 +108,7 @@ class Cbtf(CMakePackage):
                 '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
                 '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
                 '-DCMAKE_MODULE_PATH=%s'   % join_path(
-                     prefix.share, 'KrellInstitute', 'cmake')]
+                    prefix.share, 'KrellInstitute', 'cmake')]
 
             # Add in the standard cmake arguments
             cmake_args.extend(std_cmake_args)
