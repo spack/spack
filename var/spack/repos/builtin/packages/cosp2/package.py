@@ -60,10 +60,10 @@ class Cosp2(MakefilePackage):
             makefile = FileFilter('Makefile.vanilla')
             makefile.filter(r'^CC\s*=.*', 'CC = {0}'.format(cc))
 
-        if '+double' in spec:
-            filter_file('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF',
-                        'src-mpi/Makefile.vanilla')
-        shutil.copy('src-mpi/Makefile.vanilla', 'src-mpi/Makefile')
+            if '+double' in spec:
+                filter_file('DOUBLE_PRECISION = O.*', 'DOUBLE_PRECISION = OFF',
+                            'Makefile.vanilla')
+            shutil.copy('Makefile.vanilla', 'Makefile')
 
     def install(self, spec, prefix):
         install_tree('bin/', prefix.bin)
