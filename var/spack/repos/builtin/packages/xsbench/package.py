@@ -30,8 +30,7 @@ class Xsbench(MakefilePackage):
     """XSBench is a mini-app representing a key computational
        kernel of the Monte Carlo neutronics application OpenMC.
        A full explanation of the theory and purpose of XSBench
-       is provided in docs/XSBench_Theory.pdf.
-       tags: proxy-app, proxy application"""
+       is provided in docs/XSBench_Theory.pdf."""
 
     homepage = "https://github.com/ANL-CESAR/XSBench/"
     url = "https://github.com/ANL-CESAR/XSBench/archive/v13.tar.gz"
@@ -51,14 +50,16 @@ class Xsbench(MakefilePackage):
 
         targets = []
 
-        if self.compiler.name == 'gcc':
-            targets.append('COMPILER=gnu')
-        if self.compiler.name == 'intel':
-            targets.append('COMPILER=intel')
+        cflags = '-std=gnu99'
+        ldflags = '-lm'
 
+        if self.compiler.name == 'gcc' or self.compiler.name == 'intel'
+            cflags += ' ' + self.compiler.openmp_flag
         if '+mpi' in self.spec:
-            targets.append('MPI=yes')
             targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+
+        targets.append('CFLAGS={0}'.format(cflags))
+        targets.append('LDFLAGS={0}'.format(ldflags))
 
         return targets
 
