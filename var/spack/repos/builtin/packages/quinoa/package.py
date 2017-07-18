@@ -55,7 +55,7 @@ class Quinoa(CMakePackage):
     depends_on("pstreams")
     depends_on("pegtl")
 
-    root_cmakelists_dir = '../src'
+    root_cmakelists_dir = 'src'
 
     def build_type(self):
         spec = self.spec
