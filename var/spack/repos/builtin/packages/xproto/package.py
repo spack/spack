@@ -43,3 +43,8 @@ class Xproto(AutotoolsPackage):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
+
+    def install(self, spec, prefix):
+        # Installation fails in parallel
+        # See https://github.com/LLNL/spack/issues/4805
+        make('install', parallel=False)
