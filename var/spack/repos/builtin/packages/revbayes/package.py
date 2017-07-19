@@ -33,7 +33,7 @@ class Revbayes(Package):
     homepage = "https://revbayes.github.io"
     url      = "https://github.com/revbayes/revbayes/archive/v1.0.4-release.tar.gz"
 
-    version('1.0.4-release', '5d6de96bcb3b2686b270856de3555a58')
+    version('1.0.4', '5d6de96bcb3b2686b270856de3555a58')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
 
