@@ -26,14 +26,14 @@ from __future__ import print_function
 
 import textwrap
 
+from six.moves import zip_longest
+
 from llnl.util.tty.colify import *
 
 import llnl.util.tty.color as color
 import spack
 import spack.fetch_strategy as fs
 import spack.spec
-
-from six.moves import zip_longest
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -162,6 +162,14 @@ def print_text_info(pkg):
 
     color.cprint(section_title('Homepage: ') + pkg.homepage)
 
+    print()
+    print("Tags: ")
+    if hasattr(pkg, 'tags'):
+        tags = sorted(pkg.tags)
+        colify(tags, indent=4)
+    else:
+        print("    None")
+
     color.cprint('')
     color.cprint(section_title('Preferred version:  '))
 
@@ -232,14 +240,6 @@ def print_text_info(pkg):
             )
             print(line)
 
-    else:
-        print("    None")
-
-    print()
-    print("Tags: ")
-    if hasattr(pkg, 'tags'):
-        tags = sorted(pkg.tags)
-        colify(tags, indent=4)
     else:
         print("    None")
 

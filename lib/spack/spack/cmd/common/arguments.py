@@ -27,6 +27,7 @@ import argparse
 
 import spack.cmd
 import spack.modules
+import spack.spec
 import spack.store
 from spack.util.pattern import Args
 
@@ -66,16 +67,14 @@ def filter_by_tags(specs_or_packages, tags):
 
     # If the list is empty, return early
     if not specs_or_packages:
-        return
+        return []
 
     # Else, try to have a uniform access to packages for both list
     # of specs and list of packages
-    try:
-        # This statement is needed to check if I am dealing
-        # with a list of specs
-        specs_or_packages[0].package
+    item = specs_or_packages[0]
+    if isinstance(item, spack.spec.Spec):
         package = lambda x: x.package
-    except AttributeError:
+    else:
         package = lambda x: x
 
     # Restrict to elements that have the 'tags' attribute defined
@@ -83,10 +82,10 @@ def filter_by_tags(specs_or_packages, tags):
     specs_or_packages = [x for x in specs_or_packages if has_tags(x)]
 
     # Filter by required tags
-    for tag in tags:
-        specs_or_packages = [
-            x for x in specs_or_packages if tag in package(x).tags
-        ]
+    specs_or_packages = [
+        x for x in specs_or_packages
+        if all(t in package(x).tags for t in tags)
+    ]
 
     return specs_or_packages
 
