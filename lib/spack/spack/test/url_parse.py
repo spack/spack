@@ -57,6 +57,8 @@ from spack.url import *
     ('gromacs-4.6.1-tar', 'gromacs-4.6.1'),
     # Download type - sh
     ('Miniconda2-4.3.11-Linux-x86_64.sh', 'Miniconda2-4.3.11'),
+    # Download version - release
+    ('v1.0.4-release', 'v1.0.4'),
     # Download version - stable
     ('libevent-2.0.21-stable', 'libevent-2.0.21'),
     # Download version - final

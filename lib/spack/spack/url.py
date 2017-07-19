@@ -183,6 +183,7 @@ def strip_version_suffixes(path):
         'sh',
 
         # Download version
+        'release',
         'stable',
         '[Ff]inal',
         'rel',
