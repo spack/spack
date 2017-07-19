@@ -56,19 +56,22 @@ class Qmcpack(CMakePackage):
 
     # These defaults match those in the QMCPACK manual
     variant('debug', default=False, description='Build debug version')
+    variant('mpi', default=True, description='Build with MPI support')
     variant('cuda', default=False, description='Enable CUDA and GPU acceleration.')
     variant('complex', default=True, description='Build the complex (general twist/k-point) version')
     variant('mixed', default=False, description='Build the mixed precision (mixture of single and double precision) version for gpu and cpu (experimental)')
     variant('gui', default=False, description='Install with Py-Matplotlib (long installation time)') 
 
     depends_on('cmake@3.4.3:', type='build')
-    depends_on('mpi')
+    depends_on('mpi', when='+mpi')
     depends_on('libxml2')
-    depends_on('hdf5+mpi')
+    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5~mpi', when='~mpi')
     depends_on('boost')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('fftw')
+    depends_on('fftw+mpi', when='+mpi')
+    depends_on('fftw~mpi', when='~mpi')
     depends_on('cuda', when='+cuda')
    
     # qmcpack needs these for data analysis
@@ -79,7 +82,8 @@ class Qmcpack(CMakePackage):
     depends_on('py-matplotlib', type=('build', 'run'), when='+gui')
 
     # B-spline basis calculation require a patched version of Quantum Espresso 5.3.0 (see QMCPACK manual)
-    depends_on('espresso@5.3.0+qmcpack~elpa') 
+    depends_on('espresso@5.3.0+qmcpackconv~elpa', when='+mpi')
+    depends_on('espresso@5.3.0+qmcpackconv~elpa~scalapack~mpi', when='~mpi')
 
     def cmake_args(self):
         args = []
@@ -111,6 +115,9 @@ class Qmcpack(CMakePackage):
         args.append('-DFFTW_INCLUDE_DIRS={0}'.format(self.spec['fftw'].prefix.include))
         args.append('-DFFTW_LIBRARY_DIRS={0}'.format(self.spec['fftw'].prefix.lib))
         
+        # Default is MPI, serial version is convenient for cases, e.g. MacOS X laptop
+        if '~mpi' in self.spec:
+            args.append('-D QMC_MPI=0')
 
         # when '-D QMC_CUDA=1', CMake automatically sets '-D QMC_MIXED_PRECISION=1'
         # there is a double-precision CUDA path, but it is deprecated
