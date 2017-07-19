@@ -62,7 +62,7 @@ class Openblas(MakefilePackage):
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
-    patch('power8.patch', when='@0.2.18:0.2.19')
+    patch('power8.patch', when='@0.2.18:0.2.19 %gcc@7.1.0: target=ppc64')
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982
