@@ -24,8 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import shutil
-import inspect
 
 
 class Icedtea(AutotoolsPackage):
@@ -41,7 +39,8 @@ class Icedtea(AutotoolsPackage):
 
     provides('java@8', when='@3.4.0:3.99.99')
     variant('X', default=False, description="Build with GUI support.")
-    variant('shenandoah', default=False, description="Build with the shenandoah gc. Only for version 3+")
+    variant('shenandoah', default=False,
+            description="Build with the shenandoah gc. Only for version 3+")
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('gmake', type='build')
@@ -85,31 +84,31 @@ class Icedtea(AutotoolsPackage):
 
     force_autoreconf = True
 
-    resource(name='corba', placement='corba_src', 
+    resource(name='corba', placement='corba_src',
              sha512='f0579608ab1342df231c4542dab1c40e648cda8e9780ea584fd47679b07c93508cbfa85f0406d8aa8b9d528fc5bd99c9d41469568fbec41a6456a13d914ac71c',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/corba.tar.xz',
              when='@3.4.0')
-    resource(name='hotspot', placement='hotspot_src', 
+    resource(name='hotspot', placement='hotspot_src',
              sha512='29bc953d283f0a0a464fa150e2c4d71b0adaa29da67246843d230f370b5a20227fb40ef6a7e3b93f10b0cdec18b0cd2bbbceeaea3c9db4d64c158cc23babbad2',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/hotspot.tar.xz',
              when='@3.4.0')
-    resource(name='jaxp', placement='jaxp_src', 
+    resource(name='jaxp', placement='jaxp_src',
              sha512='ef3ed47815e6d15f40c5947fee1058c252ac673f70b6bf7c30505faa12fa5cbab8168d816abe7791dc88acec457744883db4c0af23fb2166bbb709e870685bcd',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jaxp.tar.xz',
              when='@3.4.0')
-    resource(name='jaxws', placement='jaxws_src', 
+    resource(name='jaxws', placement='jaxws_src',
              sha512='867cac2919e715190596ae4f73fa42c6cba839ba48ae940adcef20abfb23ffeeaa2501c4aedc214b3595bc4e2a4eea9fa7e7cac62a3420a11fb30a1f7edc9254',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jaxws.tar.xz',
              when='@3.4.0')
-    resource(name='jdk', placement='jdk_src', 
+    resource(name='jdk', placement='jdk_src',
              sha512='180d7b4435e465d68ed0b420b42dddc598c872075e225b8885ae1833fa4ab5034ce5083c4dfba516a21b2d472321b37a01ba92793e17c78e9fddb1e254f12065',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jdk.tar.xz',
              when='@3.4.0')
-    resource(name='langtools', placement='langtools_src', 
+    resource(name='langtools', placement='langtools_src',
              sha512='0663f40b07de88cd7939557bf7fdb92077d7ca2132e369caefa82db887261ea02102864d33ec0fef3b2c80dd366d25dbc1a95144139498be581dfabe913e4312',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/langtools.tar.xz',
              when='@3.4.0')
-    resource(name='openjdk', placement='openjdk_src', 
+    resource(name='openjdk', placement='openjdk_src',
              sha512='f3cca223bd39c0202dd1a65a38ca17024b6cb5c82d833946ec1b7d28d205833b4dd2dadde505a1c2384e3b28ff0d21a4f175e064b8ac82aa8a07508e53cdc722',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/openjdk.tar.xz',
              when='@3.4.0')
@@ -117,7 +116,7 @@ class Icedtea(AutotoolsPackage):
              sha512='79b5095bab447d1911696bc1e328fb72c08764c0139cab14a28c0f6c2e49a2d96bb06fbbb85523b2586672cb0f13709c3158823d5ac3f3fe3f0f88402d3cb246',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/nashorn.tar.xz',
              when='@3.4.0')
-    resource(name='shenandoah', placement='shenandoah_src', 
+    resource(name='shenandoah', placement='shenandoah_src',
              sha512='0f085e87c63679314ef322b3f4b854792d46539d5530dd75a7fd45b8b6d663f58469be2808ea5fb4bf31f6c5369cb78f28e1599f748e1931ba7040136306eb20',
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/shenandoah.tar.xz',
              when='@3.4.0')
@@ -131,30 +130,30 @@ class Icedtea(AutotoolsPackage):
             args.append('--enable-headless')
         if '+shenandoah' in self.spec:
             args.append('--with-hotspot-build=shenandoah')
-            args.append('--with-hotspot-src-zip='+self.stage[9].archive_file)
+            args.append('--with-hotspot-src-zip=' + self.stage[9].archive_file)
             args.append('--with-hotspot-checksum=no')
         else:
-            args.append('--with-hotspot-src-zip='+self.stage[2].archive_file)
+            args.append('--with-hotspot-src-zip=' + self.stage[2].archive_file)
             args.append('--with-hotspot-checksum=no')
         args += [
-            '--with-corba-src-zip='+self.stage[1].archive_file,
+            '--with-corba-src-zip=' + self.stage[1].archive_file,
             '--with-cobra-checksum=no',
-            '--with-jaxp-src-zip='+self.stage[3].archive_file,
+            '--with-jaxp-src-zip=' + self.stage[3].archive_file,
             '--with-jaxp-checksum=no',
-            '--with-jaxws-src-zip='+self.stage[4].archive_file,
+            '--with-jaxws-src-zip=' + self.stage[4].archive_file,
             '--with-jaxws-checksum=no',
-            '--with-jdk-src-zip='+self.stage[5].archive_file,
+            '--with-jdk-src-zip=' + self.stage[5].archive_file,
             '--with-jdk-checksum=no',
-            '--with-langtools-src-zip='+self.stage[6].archive_file,
+            '--with-langtools-src-zip=' + self.stage[6].archive_file,
             '--with-langtools-checksum=no',
-            '--with-openjdk-src-zip='+self.stage[7].archive_file,
+            '--with-openjdk-src-zip=' + self.stage[7].archive_file,
             '--with-openjdk-checksum=no',
-            '--with-nashorn-src-zip='+self.stage[8].archive_file,
+            '--with-nashorn-src-zip=' + self.stage[8].archive_file,
             '--with-nashorn-checksum=no', '--disable-maintainer-mode'
             '--disable-downloading', '--disable-system-pcsc',
             '--disable-system-sctp', '--disable-system-kerberos',
-            '--with-jdk-home='+self.spec['jdk'].prefix
-            ]
+            '--with-jdk-home=' + self.spec['jdk'].prefix
+        ]
         return args
 
     def setup_environment(self, spack_env, run_env):
