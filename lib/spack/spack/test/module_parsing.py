@@ -62,10 +62,13 @@ def test_get_path_from_module(save_env):
 
         assert path == '/path/to'
 
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
-    path = get_path_from_module('mod')
-
-    assert path is None
+    try:
+        os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
+        path = get_path_from_module('mod')
+    except ModuleError:
+        pass
+    else:
+        assert False
 
 
 def test_get_argument_from_module_line():
