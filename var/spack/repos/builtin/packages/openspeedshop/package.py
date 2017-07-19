@@ -77,8 +77,8 @@ class Openspeedshop(CMakePackage):
                          to point to target build.")
     variant('cuda', default=False,
             description="build with cuda packages included.")
-    variant('noqt3gui', default=False,
-            description="build without the build Qt3 gui package enabled.")
+    variant('useqt4gui', default=False,
+            description="build with Qt4/Qt5 based gui package enabled. Do not build older Qt3 gui")
     variant('rtfe', default=False,
             description="build for clusters heterogeneous processors \
                          on fe/be nodes.")
@@ -115,7 +115,7 @@ class Openspeedshop(CMakePackage):
     depends_on("boost@1.50.0:1.59.0")
     depends_on("dyninst@9.3.2")
     depends_on("libxml2+python")
-    depends_on("qt@3.3.8b+krellpatch", when='~noqt3gui')
+    depends_on("qt@3.3.8b+krellpatch", when='~useqt4gui')
 
     # Dependencies only for the openspeedshop offline package.
     depends_on("libunwind", when='+offline')
@@ -169,9 +169,7 @@ class Openspeedshop(CMakePackage):
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
                 cmake_args.extend(
-                    ['-DCMAKE_PREFIX_PATH=%s'
-                        % cmake_prefix_path,
-                     '-DINSTRUMENTOR=%s'
+                    ['-DINSTRUMENTOR=%s'
                         % instrumentor_setting,
                      '-DLIBMONITOR_DIR=%s'
                         % spec['libmonitor'].prefix,
@@ -203,9 +201,7 @@ class Openspeedshop(CMakePackage):
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
                 cmake_args.extend(
-                    ['-DCMAKE_PREFIX_PATH=%s'
-                        % cmake_prefix_path,
-                     '-DINSTRUMENTOR=%s'
+                    ['-DINSTRUMENTOR=%s'
                         % instrumentor_setting,
                      '-DCBTF_DIR=%s'
                         % spec['cbtf'].prefix,
@@ -224,11 +220,9 @@ class Openspeedshop(CMakePackage):
                 # Appends base options to cmake_args
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
-                if '+noqt3gui' in self.spec:
+                if '+useqt4gui' in self.spec:
                     cmake_args.extend(
-                        ['-DCMAKE_PREFIX_PATH=%s'
-                            % cmake_prefix_path,
-                         '-DINSTRUMENTOR=%s'
+                        ['-DINSTRUMENTOR=%s'
                             % instrumentor_setting,
                          '-DSQLITE3_DIR=%s'
                             % spec['sqlite'].prefix,
@@ -240,9 +234,7 @@ class Openspeedshop(CMakePackage):
                             % spec['mrnet'].prefix])
                 else:
                     cmake_args.extend(
-                        ['-DCMAKE_PREFIX_PATH=%s'
-                            % cmake_prefix_path,
-                         '-DINSTRUMENTOR=%s'
+                        ['-DINSTRUMENTOR=%s'
                             % instrumentor_setting,
                          '-DSQLITE3_DIR=%s'
                             % spec['sqlite'].prefix,
