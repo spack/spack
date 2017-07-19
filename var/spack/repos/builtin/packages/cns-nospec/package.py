@@ -53,7 +53,7 @@ class CnsNospec(MakefilePackage):
             makefile = FileFilter('GNUmakefile')
             if '+mpi' in spec:
                 makefile.filter('MPI .*', 'MPI := t')
-            if '+debug' not in spec:
+            if '+debug' in spec:
                 makefile.filter('NDEBUG.*', '#')
             if '+omp' in spec:
                 makefile.filter('OMP.*', 'OMP := t')
