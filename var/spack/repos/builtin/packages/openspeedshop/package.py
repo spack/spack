@@ -131,7 +131,12 @@ class Openspeedshop(CMakePackage):
 
     # Dependencies only for the openspeedshop cbtf package.
     depends_on("cbtf", when='+cbtf')
-    depends_on("cbtf-krell", when='+cbtf')
+    depends_on('cbtf-krell+mpich', when='+cbtf+mpich')
+    depends_on('cbtf-krell+mpich2', when='+cbtf+mpich2')
+    depends_on('cbtf-krell+mpt', when='+cbtf+mpt')
+    depends_on('cbtf-krell+mvapich', when='+cbtf+mvapich')
+    depends_on('cbtf-krell+mvapich2', when='+cbtf+mvapich2')
+    depends_on('cbtf-krell+openmpi', when='+cbtf+openmpi')
     depends_on("cbtf-argonavis", when='+cbtf+cuda')
     depends_on("mrnet@5.0.1:+lwthreads", when='+cbtf')
 
