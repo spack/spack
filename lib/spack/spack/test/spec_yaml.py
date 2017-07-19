@@ -41,17 +41,6 @@ def check_yaml_round_trip(spec):
     assert spec.eq_dag(spec_from_yaml)
 
 
-def test_simple_spec():
-    spec = Spec('mpileaks')
-    check_yaml_round_trip(spec)
-
-
-def test_normal_spec(builtin_mock):
-    spec = Spec('mpileaks+debug~opt')
-    spec.normalize()
-    check_yaml_round_trip(spec)
-
-
 def test_external_spec(config, builtin_mock):
     spec = Spec('externaltool')
     spec.concretize()
@@ -62,9 +51,9 @@ def test_external_spec(config, builtin_mock):
     check_yaml_round_trip(spec)
 
 
-def test_ambiguous_version_spec(builtin_mock):
+def test_ambiguous_version_spec(config, builtin_mock):
     spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
-    spec.normalize()
+    spec.concretize()
     check_yaml_round_trip(spec)
 
 
@@ -89,7 +78,7 @@ def test_yaml_subdag(config, builtin_mock):
         assert spec[dep].eq_dag(yaml_spec[dep])
 
 
-def test_using_ordered_dict(builtin_mock):
+def test_using_ordered_dict(config, builtin_mock):
     """ Checks that dicts are ordered
 
     Necessary to make sure that dag_hash is stable across python
@@ -110,7 +99,7 @@ def test_using_ordered_dict(builtin_mock):
     specs = ['mpileaks ^zmpi', 'dttop', 'dtuse']
     for spec in specs:
         dag = Spec(spec)
-        dag.normalize()
+        dag.concretize()
         from pprint import pprint
         pprint(dag.to_node_dict())
         break

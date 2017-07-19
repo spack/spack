@@ -84,16 +84,18 @@ def test_dynamic_dot_graph_mpileaks(builtin_mock):
 
     dot = stream.getvalue()
 
-    mpileaks_hash, mpileaks_lbl = s.dag_hash(), s.format('$_$/')
-    mpi_hash, mpi_lbl = s['mpi'].dag_hash(), s['mpi'].format('$_$/')
+    mpileaks_hash, mpileaks_lbl = hash(s._cmp_key()), s.name
+    mpi_hash, mpi_lbl = hash(s['mpi']._cmp_key()), s['mpi'].name
     callpath_hash, callpath_lbl = (
-        s['callpath'].dag_hash(), s['callpath'].format('$_$/'))
+        hash(s['callpath']._cmp_key()), s['callpath'].name)
     dyninst_hash, dyninst_lbl = (
-        s['dyninst'].dag_hash(), s['dyninst'].format('$_$/'))
+        hash(s['dyninst']._cmp_key()), s['dyninst'].name)
     libdwarf_hash, libdwarf_lbl = (
-        s['libdwarf'].dag_hash(), s['libdwarf'].format('$_$/'))
+        hash(s['libdwarf']._cmp_key()), s['libdwarf'].name)
     libelf_hash, libelf_lbl = (
-        s['libelf'].dag_hash(), s['libelf'].format('$_$/'))
+        hash(s['libelf']._cmp_key()), s['libelf'].name)
+
+    print dot
 
     assert '  "%s" [label="%s"]\n' % (mpileaks_hash, mpileaks_lbl) in dot
     assert '  "%s" [label="%s"]\n' % (callpath_hash, callpath_lbl) in dot

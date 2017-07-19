@@ -1369,10 +1369,12 @@ class Spec(object):
 
     @property
     def prefix(self):
+        assert self.concrete
         return Prefix(spack.store.layout.path_for_spec(self))
 
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
+        assert self.concrete
         if self._hash:
             return self._hash[:length]
         else:
@@ -1384,8 +1386,7 @@ class Spec(object):
             if sys.version_info[0] >= 3:
                 b32_hash = b32_hash.decode('utf-8')
 
-            if self.concrete:
-                self._hash = b32_hash
+            self._hash = b32_hash
             return b32_hash[:length]
 
     def dag_hash_bit_prefix(self, bits):
@@ -1437,6 +1438,7 @@ class Spec(object):
         return syaml_dict([(self.name, d)])
 
     def to_dict(self):
+        assert self.concrete
         node_list = []
         for s in self.traverse(order='pre', deptype=('link', 'run')):
             node = s.to_node_dict()

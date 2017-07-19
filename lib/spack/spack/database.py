@@ -649,13 +649,16 @@ class Database(object):
 
     def _get_matching_spec_key(self, spec, **kwargs):
         """Get the exact spec OR get a single spec that matches."""
-        key = spec.dag_hash()
-        if key not in self._data:
+        key = ''
+        if spec.concrete:
+            key = spec.dag_hash()
+        if key in self._data:
+            return key
+        else:
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
-            raise KeyError("No such spec in database! %s" % spec)
-        return key
+            raise KeyError("No such spec in database! %s" %spec)
 
     @_autospec
     def get_record(self, spec, **kwargs):
