@@ -41,7 +41,7 @@ class Ebms(MakefilePackage):
 
     version('develop', git='https://github.com/ANL-CESAR/EBMS.git')
 
-    variant('mpi', default=False, description='Build with MPI support')
+    variant('mpi', default=True, description='Build with MPI support')
 
     depends_on('mpi', when='+mpi')
 
