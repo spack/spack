@@ -37,4 +37,11 @@ class Libgcrypt(AutotoolsPackage):
     version('1.7.6', '54e180679a7ae4d090f8689ca32b654c')
     version('1.6.2', 'b54395a93cb1e57619943c082da09d5f')
 
+    variant("shared", default=True, description="Enable shared libs")
+
     depends_on("libgpg-error")
+
+    def configure_args(self):
+        if "+shared" in self.spec:
+            return ["--enable-shared"]
+        return ["--disable-shared"]
