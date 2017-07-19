@@ -42,6 +42,8 @@ class Libxslt(AutotoolsPackage):
 
     variant('crypto',  default=True,
             description='Build libexslt with crypto support')
+    variant("shared", default=True,
+            description="Enable shared libs")
 
     depends_on("libxml2")
     depends_on("xz")
@@ -54,4 +56,8 @@ class Libxslt(AutotoolsPackage):
             args.append('--without-crypto')
         else:
             args.append('--with-crypto')
+        if "+shared" in self.spec:
+            args.append("--enable-shared")
+        else:
+            args.append("--disable-shared")
         return args
