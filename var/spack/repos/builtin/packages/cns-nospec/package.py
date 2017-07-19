@@ -44,21 +44,21 @@ class CnsNospec(MakefilePackage):
     variant('prof', default=False, description='Build with profiling')
 
     depends_on('mpi', when='+mpi')
+    depends_on('gmake', type='build')
 
-    @property
-    def build_directory(self):
-        return join_path(self.stage.source_path, 'MiniApps', 'CNS_NoSpec')
+    build_directory = 'MiniApps/CNS_NoSpec'
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('GNUmakefile')
-        if '+mpi' in spec:
-            makefile.filter('MPI .*', 'MPI := t')
-        if '+debug' not in spec:
-            makefile.filter('NDEBUG.*', '#')
-        if '+omp' in spec:
-            makefile.filter('OMP.*', 'OMP := t')
-        if '+prof' in spec:
-            makefile.filter('PROF.*', 'PROF := t')
+        with working_dir(self.build_directory):
+            makefile = FileFilter('GNUmakefile')
+            if '+mpi' in spec:
+                makefile.filter('MPI .*', 'MPI := t')
+            if '+debug' not in spec:
+                makefile.filter('NDEBUG.*', '#')
+            if '+omp' in spec:
+                makefile.filter('OMP.*', 'OMP := t')
+            if '+prof' in spec:
+                makefile.filter('PROF.*', 'PROF := t')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
