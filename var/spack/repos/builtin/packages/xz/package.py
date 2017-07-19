@@ -37,3 +37,10 @@ class Xz(AutotoolsPackage):
     version('5.2.3', '1592e7ca3eece099b03b35f4d9179e7c')
     version('5.2.2', 'f90c9a0c8b259aee2234c4e0d7fd70af')
     version('5.2.0', '867cc8611760240ebf3440bd6e170bb9')
+
+    variant("shared", default=True, description="Enable shared libs")
+    
+    def configure_args(self):
+        if "~shared" in self.spec:
+            return ["--disable-shared"]
+        return []
