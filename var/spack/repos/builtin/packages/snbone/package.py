@@ -48,7 +48,7 @@ class Snbone(MakefilePackage):
                     make('COMPILER=gfortran', 'METISLIB={0}'
                          .format(spec['metis'].prefix + '/lib/libmetis.so'))
                 elif self.compiler.name == 'intel':
-                    make('COMPILER=intel', 'LDFLAGS={0}'.format('-lm'))
+                    make('COMPILER=intel', 'LDFLAGS=-lm')
                 else:
                     make('COMPILER=gfortran', 'LDFLAGS=-lm')
 
