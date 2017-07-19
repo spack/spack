@@ -78,7 +78,8 @@ class Openspeedshop(CMakePackage):
     variant('cuda', default=False,
             description="build with cuda packages included.")
     variant('useqt4gui', default=False,
-            description="build with Qt4/Qt5 based gui package enabled. Do not build older Qt3 gui")
+            description="build with Qt4/Qt5 based gui package enabled. \
+                         Do not build older Qt3 gui")
     variant('rtfe', default=False,
             description="build for clusters heterogeneous processors \
                          on fe/be nodes.")
@@ -162,7 +163,6 @@ class Openspeedshop(CMakePackage):
                 self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
 
             else:
-                cmake_prefix_path = join_path(spec['dyninst'].prefix)
                 cmake_args = []
 
                 # Appends base options to cmake_args
@@ -191,9 +191,6 @@ class Openspeedshop(CMakePackage):
 
         elif '+cbtf' in spec:
             instrumentor_setting = "cbtf"
-            cmake_prefix_path = join_path(spec['cbtf'].prefix) \
-                + ':' + join_path(spec['cbtf-krell'].prefix)\
-                + ':' + join_path(spec['dyninst'].prefix)
 
             if '+runtime' in spec:
 

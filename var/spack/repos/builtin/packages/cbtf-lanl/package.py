@@ -69,11 +69,6 @@ class CbtfLanl(CMakePackage):
 
         spec = self.spec
 
-        # Add in paths for finding package config files that tell us where to
-        # find these packages
-        cmake_prefix_path = join_path(
-            spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
-
         cmake_args = [
             '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
             '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
