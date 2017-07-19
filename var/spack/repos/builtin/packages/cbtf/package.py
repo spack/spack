@@ -94,9 +94,6 @@ class Cbtf(CMakePackage):
                 '-DCMAKE_MODULE_PATH=%s'   % join_path(
                     prefix.share, 'KrellInstitute', 'cmake')]
 
-            # Add in the standard cmake arguments
-            cmake_args.extend(std_cmake_args)
-
             # Adjust the standard cmake arguments to what we want the build
             # type, etc to be
             self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
@@ -109,9 +106,6 @@ class Cbtf(CMakePackage):
                 '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
                 '-DCMAKE_MODULE_PATH=%s'   % join_path(
                     prefix.share, 'KrellInstitute', 'cmake')]
-
-            # Add in the standard cmake arguments
-            cmake_args.extend(std_cmake_args)
 
             # Adjust the standard cmake arguments to what we want the build
             # type, etc to be

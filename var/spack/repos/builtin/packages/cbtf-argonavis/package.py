@@ -71,13 +71,7 @@ class CbtfArgonavis(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        # Look for package installation information in the cbtf and cbtf-krell
-        # prefixes
-        cmake_prefix_path = join_path(
-            spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
-
         cmake_args = [
-            '-DCMAKE_PREFIX_PATH=%s' % cmake_prefix_path,
             '-DCUDA_DIR=%s' % spec['cuda'].prefix,
             '-DCUDA_INSTALL_PATH=%s' % spec['cuda'].prefix,
             '-DCUDA_TOOLKIT_ROOT_DIR=%s' % spec['cuda'].prefix,
