@@ -103,9 +103,14 @@ class Qmcpack(CMakePackage):
             c_flags = ' '.join(self.compiler.flags['cflags'])
             args.append('-DCMAKE_C_FLAGS={0}'.format(c_flags))
 
-        args.append('-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc ))
-        args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx ))
-        args.append('-DMPI_BASE_DIR:PATH={0}'.format(self.spec['mpi'].prefix ))
+        if '+mpi' in self.spec:
+            args.append('-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc))
+            args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx))
+            args.append('-DMPI_BASE_DIR:PATH={0}'.format(self.spec['mpi'].prefix))
+        else:
+            args.append('-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc))
+            args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx))
+
         args.append('-DLIBXML2_HOME={0}'.format(self.spec['libxml2'].prefix))
         args.append('-DLibxml2_INCLUDE_DIRS={0}'.format(self.spec['libxml2'].prefix.include))
         args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(self.spec['libxml2'].prefix.lib))
