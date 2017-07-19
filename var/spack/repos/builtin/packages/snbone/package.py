@@ -50,15 +50,15 @@ class Snbone(MakefilePackage):
                 elif self.compiler.name == 'intel':
                     make('COMPILER=intel', 'LDFLAGS={0}'.format('-lm'))
                 else:
-                    make('COMPILER=gfortran', 'LDFLAGS={0}'.format('-lm'))
-
+                    make('COMPILER=gfortran', 'LDFLAGS=-lm')
 
     def install(self, spec, prefix):
-        dirs = ['C', 'Fortran', 'MakeMesh', 'ProcessMesh']
-        files = ['src_c/SNaCFE.x', 'src_fortran/SNaCFE.x',
-                 'src_makemesh/makemesh.x',
-                 'src_processmesh/processmesh.x']
-        mkdir(prefix.bin)
-        for idx, dir in enumerate(dirs):
-            mkdir(join_path(prefix.bin + dir))
-            install(files[idx], prefix.bin + dir)
+        mkdirp(prefix.bin.C)
+        mkdirp(prefix.bin.Fortran)
+        mkdirp(prefix.bin.MakeMesh)
+        mkdirp(prefix.bin.ProcessMesh)
+
+        install('src_c/SNaCFE.x',                prefix.bin.C)
+        install('src_fortran/SNaCFE.x',          prefix.bin.Fortran)
+        install('src_makemesh/makemesh.x',       prefix.bin.MakeMesh)
+        install('src_processmesh/processmesh.x', prefix.bin.ProcessMesh)
