@@ -52,13 +52,6 @@ class Lcals(MakefilePackage):
     version('1.0.2', '40c65a88f1df1436a2f72b7d3c986a21')
 
     variant(
-        'xlcn',
-        default=9,
-        description='Version number for XLC compiler 9 or 12.',
-        values=is_integral
-    )
-
-    variant(
         'microarch',
         description='Micro arch: SSE, AVX, MIC.',
         default='sse',
@@ -70,9 +63,9 @@ class Lcals(MakefilePackage):
 
         targets = []
 
-        compiler = ''
+        cxxflags = '-std=c++0x '
+        cxx_compile = ''
 
-        xlcn = self.spec.variants['xlcn'].value
         microarch = self.spec.variants['microarch'].value
 
         arch = platform.machine()
@@ -84,26 +77,54 @@ class Lcals(MakefilePackage):
         elif arch != 'bgq':
             raise InstallError('unknown architecture.')
 
-        if self.compiler.name == 'gcc':
-            compiler = 'gnu'
-        elif self.compiler.name == 'intel':
-            compiler = 'icc'
-        elif self.compiler.name == 'xl':
-            compiler = 'xlc' + xlcn
-        elif self.compiler.name == 'clang' and arch == 'bgq':
-            compiler = self.compiler.name
-        else:
-            raise InstallError('unknown compiler.')
+        if self.compiler.name == 'intel':
+            if arch == 'MIC':
+                cxxflags += '-DLCALS_PLATFORM_X86_SSE -DLCALS_COMPILER_ICC '
+                cxx_compile += '-g -O3 -mmic -vec-report3 '
+                ' -inline-max-total-size=10000 -inline-forceinline -ansi-alias'
+            elif microarch == 'sse' and arch == 'x86':
+                cxxflags += '-DLCALS_PLATFORM_X86_SSE -DLCALS_COMPILER_ICC '
+                cxx_compile += '-O3 -msse4.1 -inline-max-total-size=10000'
+                ' -inline-forceinline -ansi-alias -std=c++0x '
+            elif microarch == 'avx' and arch == 'x86':
+                cxxflags += '-DLCALS_PLATFORM_X86_AVX -DLCALS_COMPILER_ICC '
+                cxx_compile += '-O3 -mavx -inline-max-total-size=10000'
+                ' -inline-forceinline -ansi-alias -std=c++0x'
+            cxxflags += self.compiler.openmp_flag
+        elif self.compiler.name == 'gcc':
+            if arch == 'MIC' or (microarch == 'sse' and arch == 'x86'):
+                cxxflags += '-DLCALS_PLATFORM_X86_SSE -DLCALS_COMPILER_GNU '
+                cxx_compile += '-Ofast -msse4.1 -finline-functions'
+                ' -finline-limit=10000 -std=c++11 '
+                print('Im here!!!!')
+            elif microarch == 'avx' and arch == 'x86':
+                cxxflags += '-DLCALS_PLATFORM_X86_AVX -DLCALS_COMPILER_GNU '
+                cxx_compile += '-Ofast -mavx -finline-functions'
+                ' -finline-limit=10000 -std=c++11'
+            elif arch == 'bgq':
+                cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_GNU '
+                cxx_compile += '-O3 -finline-functions -finline-limit=10000'
+                ' -std=c++0x'
+            cxxflags += self.compiler.openmp_flag
+        elif self.compiler.name == 'xl' and arch == 'bgp':
+            if self.compiler.version == 9 and arch == 'bgp':
+                cxxflags += '-DLCALS_PLATFORM_BGP -DLCALS_COMPILER_XLC9'
+                ' -I/usr/gapps/bdiv/sles_10_ppc64/opt/platform/include '
+                cxx_compile += 'O3 -qarch=450d -qtune=450 -qalias=allp -qhot' 
+                ' -qsmp=omp '
+                ldpath += '-L/usr/local/tools/lib'
+            elif self.compiler.version == 12 and arch == 'bgq':
+                cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_XLC12 '
+                cxx_compile += '-O3 -qarch=qp -qhot=novector -qsimd=auto'
+                ' -qlanglvl=extended0x -qnostrict -qinline=10000 -qsmp=omp '
+        elif self.compiler.name == 'clang':
+            if arch == 'bgq':
+                cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_CLANG '
+                cxx_compile += '-O3 -finline-functions  -ffast-math -std=c++0x'
 
-        if arch == 'x86':
-            arch = arch + '_' + microarch + '_' + compiler
-        elif arch == 'bgq':
-            arch = arch + '_' + compiler
-        else:
-            raise InstallError('Fatal Error: unknown construct.')
-
-        targets.append('LCALS_ARCH={0}'.format(arch))
-        targets.append('CXX={0}'.format(spack_cxx))
+        targets.append('LCALS_ARCH=')
+        cxx_compile += ' ' + cxxflags
+        targets.append('CXX_COMPILE={0} {1}'.format(spack_cxx, cxx_compile))
 
         return targets
 
