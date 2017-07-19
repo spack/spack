@@ -1,6 +1,6 @@
 packages:
     all:
-        compiler: [gcc@6.3.0, intel@17.0.2.174, cce@8.5.4]
+        compiler: [intel@17.0.2.174, gcc@6.3.0, cce@8.5.4]
         providers:
             mpi: [mpich]
             mkl: [intel-mkl]
