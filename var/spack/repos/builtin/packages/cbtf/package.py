@@ -42,7 +42,6 @@
 
 from spack import *
 
-
 class Cbtf(CMakePackage):
     """CBTF project contains the base code for CBTF that supports creating
        components, component networks and the support to connect these
@@ -82,24 +81,26 @@ class Cbtf(CMakePackage):
         # or BOOST_INCLUDEDIR).  Useful when specifying BOOST_ROOT.
         # Defaults to OFF.
 
+        compile_flags = "-O2 -g"
+
         if '+runtime' in spec:
             # Install message tag include file for use in Intel MIC
             # cbtf-krell build
             # FIXME
             cmake_args = [
+                '-DCMAKE_CXX_FLAGS=%s'     % compile_flags,
+                '-DCMAKE_C_FLAGS=%s'       % compile_flags,
+                '-DRUNTIME_ONLY=TRUE',
                 '-DBoost_NO_SYSTEM_PATHS=TRUE',
                 '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
                 '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
                 '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
                 '-DCMAKE_MODULE_PATH=%s'   % join_path(
                     prefix.share, 'KrellInstitute', 'cmake')]
-
-            # Adjust the standard cmake arguments to what we want the build
-            # type, etc to be
-            self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
-
         else:
             cmake_args = [
+                '-DCMAKE_CXX_FLAGS=%s'     % compile_flags,
+                '-DCMAKE_C_FLAGS=%s'       % compile_flags,
                 '-DBoost_NO_SYSTEM_PATHS=TRUE',
                 '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
                 '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
@@ -107,31 +108,4 @@ class Cbtf(CMakePackage):
                 '-DCMAKE_MODULE_PATH=%s'   % join_path(
                     prefix.share, 'KrellInstitute', 'cmake')]
 
-            # Adjust the standard cmake arguments to what we want the build
-            # type, etc to be
-            self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
-
         return cmake_args
-
-    def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
-        # Sets build type parameters into cmakeOptions the options that will
-        # enable the cbtf-krell built type settings
-
-        compile_flags = "-O2 -g"
-        BuildTypeOptions = []
-        # Set CMAKE_BUILD_TYPE to what cbtf-krell wants it to be, not the
-        # stdcmakeargs
-        for word in cmakeOptions[:]:
-            if word.startswith('-DCMAKE_BUILD_TYPE'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_CXX_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_C_FLAGS'):
-                cmakeOptions.remove(word)
-        BuildTypeOptions.extend([
-            '-DCMAKE_BUILD_TYPE=None',
-            '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
-            '-DCMAKE_C_FLAGS=%s'           % compile_flags
-        ])
-
-        cmakeOptions.extend(BuildTypeOptions)

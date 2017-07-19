@@ -70,8 +70,11 @@ class CbtfArgonavis(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        compile_flags = "-O2 -g"
 
         cmake_args = [
+            '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
+            '-DCMAKE_C_FLAGS=%s'           % compile_flags,
             '-DCUDA_DIR=%s' % spec['cuda'].prefix,
             '-DCUDA_INSTALL_PATH=%s' % spec['cuda'].prefix,
             '-DCUDA_TOOLKIT_ROOT_DIR=%s' % spec['cuda'].prefix,
@@ -86,34 +89,4 @@ class CbtfArgonavis(CMakePackage):
             '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
             '-DBoost_NO_SYSTEM_PATHS=ON']
 
-        # Adjust the standard cmake arguments to what we want the build
-        # type, etc to be
-        self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
         return cmake_args
-
-    def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
-        # Sets build type parameters into cmakeOptions the options that will
-        # enable the cbtf-krell built type settings
-
-        compile_flags = "-O2 -g"
-        BuildTypeOptions = []
-
-        # Set CMAKE_BUILD_TYPE to what cbtf-krell wants it to be, not the
-        # stdcmakeargs
-        for word in cmakeOptions[:]:
-            if word.startswith('-DCMAKE_BUILD_TYPE'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_CXX_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_C_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_VERBOSE_MAKEFILE'):
-                cmakeOptions.remove(word)
-        BuildTypeOptions.extend([
-            '-DCMAKE_VERBOSE_MAKEFILE=ON',
-            '-DCMAKE_BUILD_TYPE=None',
-            '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
-            '-DCMAKE_C_FLAGS=%s'           % compile_flags
-        ])
-
-        cmakeOptions.extend(BuildTypeOptions)

@@ -149,12 +149,15 @@ class Openspeedshop(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        compile_flags = "-O2 -g"
 
         if '+offline' in spec:
             instrumentor_setting = "offline"
             if '+runtime' in spec:
 
                 cmake_args = [
+                    '-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
+                    '-DCMAKE_C_FLAGS=%s'    % compile_flags,
                     '-DINSTRUMENTOR=%s'     % instrumentor_setting,
                     '-DLIBMONITOR_DIR=%s'   % spec['libmonitor'].prefix,
                     '-DLIBUNWIND_DIR=%s'    % spec['libunwind'].prefix,
@@ -163,10 +166,6 @@ class Openspeedshop(CMakePackage):
                 # Add any MPI implementations coming from variant settings
                 self.set_mpi_cmakeOptions(spec, cmake_args)
 
-                # Adjust the build options to the favored
-                # ones for this build
-                self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
-
             else:
                 cmake_args = []
 
@@ -174,7 +173,9 @@ class Openspeedshop(CMakePackage):
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
                 cmake_args.extend(
-                    ['-DINSTRUMENTOR=%s'
+                   ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
+                    '-DCMAKE_C_FLAGS=%s'    % compile_flags,
+                    '-DINSTRUMENTOR=%s'
                         % instrumentor_setting,
                      '-DLIBMONITOR_DIR=%s'
                         % spec['libmonitor'].prefix,
@@ -190,10 +191,6 @@ class Openspeedshop(CMakePackage):
                 # Add any MPI implementations coming from variant settings
                 self.set_mpi_cmakeOptions(spec, cmake_args)
 
-                # Adjust the build options to the favored
-                # ones for this build
-                self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
-
         elif '+cbtf' in spec:
             instrumentor_setting = "cbtf"
 
@@ -203,7 +200,9 @@ class Openspeedshop(CMakePackage):
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
                 cmake_args.extend(
-                    ['-DINSTRUMENTOR=%s'
+                    ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
+                     '-DCMAKE_C_FLAGS=%s'    % compile_flags,
+                     '-DINSTRUMENTOR=%s'
                         % instrumentor_setting,
                      '-DCBTF_DIR=%s'
                         % spec['cbtf'].prefix,
@@ -211,10 +210,6 @@ class Openspeedshop(CMakePackage):
                         % spec['cbtf-krell'].prefix,
                      '-DMRNET_DIR=%s'
                         % spec['mrnet'].prefix])
-
-                # Adjust the build options to the
-                # favored ones for this build
-                self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
 
             else:
                 cmake_args = []
@@ -224,7 +219,9 @@ class Openspeedshop(CMakePackage):
 
                 if '+useqt4gui' in self.spec:
                     cmake_args.extend(
-                        ['-DINSTRUMENTOR=%s'
+                        ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
+                         '-DCMAKE_C_FLAGS=%s'    % compile_flags,
+                         '-DINSTRUMENTOR=%s'
                             % instrumentor_setting,
                          '-DSQLITE3_DIR=%s'
                             % spec['sqlite'].prefix,
@@ -236,7 +233,9 @@ class Openspeedshop(CMakePackage):
                             % spec['mrnet'].prefix])
                 else:
                     cmake_args.extend(
-                        ['-DINSTRUMENTOR=%s'
+                        ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
+                         '-DCMAKE_C_FLAGS=%s'    % compile_flags,
+                         '-DINSTRUMENTOR=%s'
                             % instrumentor_setting,
                          '-DSQLITE3_DIR=%s'
                             % spec['sqlite'].prefix,
@@ -249,32 +248,7 @@ class Openspeedshop(CMakePackage):
                          '-DMRNET_DIR=%s'
                             % spec['mrnet'].prefix])
 
-                # Adjust the build options to the favored
-                # ones for this build
-                self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
-
         return cmake_args
-
-    def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
-        # Sets build type parameters into cmakeOptions the
-        # options that will enable the cbtf-krell built type settings
-
-        compile_flags = "-O2 -g"
-        BuildTypeOptions = []
-        # Set CMAKE_BUILD_TYPE to what cbtf-krell wants it
-        # to be, not the stdcmakeargs
-        for word in cmakeOptions[:]:
-            if word.startswith('-DCMAKE_BUILD_TYPE'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_CXX_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_C_FLAGS'):
-                cmakeOptions.remove(word)
-        BuildTypeOptions.extend(['-DCMAKE_BUILD_TYPE=None',
-                                 '-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
-                                 '-DCMAKE_C_FLAGS=%s'    % compile_flags])
-
-        cmakeOptions.extend(BuildTypeOptions)
 
     def set_defaultbase_cmakeOptions(self, spec, cmakeOptions):
         # Appends to cmakeOptions the options that will enable

@@ -102,32 +102,6 @@ class CbtfKrell(CMakePackage):
 
     build_directory = 'build_cbtf_krell'
 
-    def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
-        # Sets build type parameters into cmakeOptions the options that will
-        # enable the cbtf-krell built type settings
-
-        compile_flags = "-O2 -g"
-        BuildTypeOptions = []
-        # Set CMAKE_BUILD_TYPE to what cbtf-krell wants it to be, not the
-        # stdcmakeargs
-        for word in cmakeOptions[:]:
-            if word.startswith('-DCMAKE_BUILD_TYPE'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_CXX_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_C_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_VERBOSE_MAKEFILE'):
-                cmakeOptions.remove(word)
-        BuildTypeOptions.extend([
-            '-DCMAKE_VERBOSE_MAKEFILE=ON',
-            '-DCMAKE_BUILD_TYPE=None',
-            '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
-            '-DCMAKE_C_FLAGS=%s'           % compile_flags
-        ])
-
-        cmakeOptions.extend(BuildTypeOptions)
-
     def set_mpi_cmakeOptions(self, spec, cmakeOptions):
         # Appends to cmakeOptions the options that will enable the appropriate
         # MPI implementations
@@ -161,9 +135,13 @@ class CbtfKrell(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
+        compile_flags = "-O2 -g"
+
         # Add in paths for finding package config files that tell us
         # where to find these packages
         cmake_args = [
+            '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
+            '-DCMAKE_C_FLAGS=%s'           % compile_flags,
             '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
             '-DBINUTILS_DIR=%s' % spec['binutils'].prefix,
             '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
@@ -176,9 +154,5 @@ class CbtfKrell(CMakePackage):
 
         # Add any MPI implementations coming from variant settings
         self.set_mpi_cmakeOptions(spec, cmake_args)
-
-        # Adjust the standard cmake arguments to what we want the build
-        # type, etc to be
-        self.adjustBuildTypeParams_cmakeOptions(spec, cmake_args)
 
         return cmake_args
