@@ -107,8 +107,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # [1] https://metacpan.org/pod/ExtUtils::MakeMaker#INSTALL_BASE
         # [2] via the activate method in the PackageBase class
         # [3] https://metacpan.org/pod/distribution/perl/INSTALL#APPLLIB_EXP
-        config_args.append('-Accflags=-DAPPLLIB_EXP=\\"' + join_path(
-                           self.prefix.lib, 'perl5') + '\\"')
+        config_args.append('-Accflags=-DAPPLLIB_EXP=\\"'
+                           + self.prefix.lib.perl5 + '\\"')
 
         # Discussion of -fPIC for Intel at:
         # https://github.com/LLNL/spack/pull/3081 and
@@ -156,7 +156,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         for d in dependent_spec.traverse(
                 deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
-                perl_lib_dirs.append(join_path(d.prefix.lib, 'perl5'))
+                perl_lib_dirs.append(d.prefix.lib.perl5)
                 perl_bin_dirs.append(d.prefix.bin)
         perl_bin_path = ':'.join(perl_bin_dirs)
         perl_lib_path = ':'.join(perl_lib_dirs)
@@ -175,7 +175,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         module.perl = Executable(join_path(self.prefix.bin, 'perl'))
 
         # Add variables for library directory
-        module.perl_lib_dir = join_path(dependent_spec.prefix.lib, 'perl5')
+        module.perl_lib_dir = dependent_spec.prefix.lib.perl5
 
         # Make the site packages directory for extensions,
         # if it does not exist already.
