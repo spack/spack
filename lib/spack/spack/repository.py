@@ -31,11 +31,17 @@ import inspect
 import imp
 import re
 import traceback
-from bisect import bisect_left
+
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
+
 from types import ModuleType
 
 import yaml
 
+import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
@@ -91,6 +97,141 @@ class SpackNamespace(ModuleType):
         submodule = self.__package__ + '.' + name
         setattr(self, name, __import__(submodule))
         return getattr(self, name)
+
+
+class FastPackageChecker(Mapping):
+    """Cache that maps package names to the stats obtained on the
+    'package.py' files associated with them.
+
+    For each repository a cache is maintained at class level, and shared among
+    all instances referring to it. Update of the global cache is done lazily
+    during instance initialization.
+    """
+    #: Global cache, reused by every instance
+    _paths_cache = {}
+
+    def __init__(self, packages_path):
+
+        #: The path of the repository managed by this instance
+        self.packages_path = packages_path
+
+        # If the cache we need is not there yet, then build it appropriately
+        if packages_path not in self._paths_cache:
+            self._paths_cache[packages_path] = self._create_new_cache()
+
+        #: Reference to the appropriate entry in the global cache
+        self._packages_to_stats = self._paths_cache[packages_path]
+
+    def _create_new_cache(self):
+        """Create a new cache for packages in a repo.
+
+        The implementation here should try to minimize filesystem
+        calls.  At the moment, it is O(number of packages) and makes
+        about one stat call per package.  This is reasonably fast, and
+        avoids actually importing packages in Spack, which is slow.
+        """
+        # Create a dictionary that will store the mapping between a
+        # package name and its stat info
+        cache = {}
+        for pkg_name in os.listdir(self.packages_path):
+            # Skip non-directories in the package root.
+            pkg_dir = join_path(self.packages_path, pkg_name)
+
+            # Warn about invalid names that look like packages.
+            if not valid_module_name(pkg_name):
+                msg = 'Skipping package at {0}. '
+                msg += '"{1]" is not a valid Spack module name.'
+                tty.warn(msg.format(pkg_dir, pkg_name))
+                continue
+
+            # Construct the file name from the directory
+            pkg_file = os.path.join(
+                self.packages_path, pkg_name, package_file_name
+            )
+
+            # Use stat here to avoid lots of calls to the filesystem.
+            try:
+                sinfo = os.stat(pkg_file)
+            except OSError as e:
+                if e.errno == errno.ENOENT:
+                    # No package.py file here.
+                    continue
+                elif e.errno == errno.EACCES:
+                    tty.warn("Can't read package file %s." % pkg_file)
+                    continue
+                raise e
+
+            # If it's not a file, skip it.
+            if stat.S_ISDIR(sinfo.st_mode):
+                continue
+
+            # If it is a file, then save the stats under the
+            # appropriate key
+            cache[pkg_name] = sinfo
+
+        return cache
+
+    def __getitem__(self, item):
+        return self._packages_to_stats[item]
+
+    def __iter__(self):
+        return iter(self._packages_to_stats)
+
+    def __len__(self):
+        return len(self._packages_to_stats)
+
+
+@llnl.util.lang.memoized
+def make_provider_index_cache(packages_path, namespace):
+    """Lazily updates the provider index cache associated with a repository,
+    if need be, then returns it. Caches results for later look-ups.
+
+    Args:
+        packages_path: path of the repository
+        namespace: namespace of the repository
+
+    Returns:
+        instance of ProviderIndex
+    """
+    # Map that goes from package names to stat info
+    fast_package_checker = FastPackageChecker(packages_path)
+
+    # Filename of the provider index cache
+    cache_filename = 'providers/{0}-index.yaml'.format(namespace)
+
+    # Compute which packages needs to be updated in the cache
+    index_mtime = spack.misc_cache.mtime(cache_filename)
+
+    needs_update = [
+        x for x, sinfo in fast_package_checker.items()
+        if sinfo.st_mtime > index_mtime
+    ]
+
+    # Read the old ProviderIndex, or make a new one.
+    index_existed = spack.misc_cache.init_entry(cache_filename)
+
+    if index_existed and not needs_update:
+
+        # If the provider index exists and doesn't need an update
+        # just read from it
+        with spack.misc_cache.read_transaction(cache_filename) as f:
+            index = ProviderIndex.from_yaml(f)
+
+    else:
+
+        # Otherwise we need a write transaction to update it
+        with spack.misc_cache.write_transaction(cache_filename) as (old, new):
+
+            index = ProviderIndex.from_yaml(old) if old else ProviderIndex()
+
+            for pkg_name in needs_update:
+                namespaced_name = '{0}.{1}'.format(namespace, pkg_name)
+                index.remove_provider(namespaced_name)
+                index.update(namespaced_name)
+
+            index.to_yaml(new)
+
+    return index
 
 
 class RepoPath(object):
@@ -422,20 +563,14 @@ class Repo(object):
         self._classes = {}
         self._instances = {}
 
-        # list of packages that are newer than the index.
-        self._needs_update = []
+        # Maps that goes from package name to corresponding file stat
+        self._fast_package_checker = FastPackageChecker(self.packages_path)
 
-        # Index of virtual dependencies
+        # Index of virtual dependencies, computed lazily
         self._provider_index = None
-
-        # Cached list of package names.
-        self._all_package_names = None
 
         # make sure the namespace for packages in this repo exists.
         self._create_namespace()
-
-        # Unique filename for cache of virtual dependency providers
-        self._providers_cache_file = 'providers/%s-index.yaml' % self.namespace
 
     def _create_namespace(self):
         """Create this repo's namespace module and insert it into sys.modules.
@@ -617,39 +752,15 @@ class Repo(object):
         """Clear entire package instance cache."""
         self._instances.clear()
 
-    def _update_provider_index(self):
-        # Check modification dates of all packages
-        self._fast_package_check()
-
-        def read():
-            with open(self.index_file) as f:
-                self._provider_index = ProviderIndex.from_yaml(f)
-
-        # Read the old ProviderIndex, or make a new one.
-        key = self._providers_cache_file
-        index_existed = spack.misc_cache.init_entry(key)
-        if index_existed and not self._needs_update:
-            with spack.misc_cache.read_transaction(key) as f:
-                self._provider_index = ProviderIndex.from_yaml(f)
-        else:
-            with spack.misc_cache.write_transaction(key) as (old, new):
-                if old:
-                    self._provider_index = ProviderIndex.from_yaml(old)
-                else:
-                    self._provider_index = ProviderIndex()
-
-                for pkg_name in self._needs_update:
-                    namespaced_name = '%s.%s' % (self.namespace, pkg_name)
-                    self._provider_index.remove_provider(namespaced_name)
-                    self._provider_index.update(namespaced_name)
-
-                self._provider_index.to_yaml(new)
-
     @property
     def provider_index(self):
         """A provider index with names *specific* to this repo."""
+
         if self._provider_index is None:
-            self._update_provider_index()
+            self._provider_index = make_provider_index_cache(
+                self.packages_path, self.namespace
+            )
+
         return self._provider_index
 
     @_autospec
@@ -689,71 +800,9 @@ class Repo(object):
         pkg_dir = self.dirname_for_package_name(spec.name)
         return join_path(pkg_dir, package_file_name)
 
-    def _fast_package_check(self):
-        """List packages in the repo and check whether index is up to date.
-
-        Both of these operations require checking all `package.py`
-        files so we do them at the same time.  We list the repo
-        directory and look at package.py files, and we compare the
-        index modification date with the ost recently modified package
-        file, storing the result.
-
-        The implementation here should try to minimize filesystem
-        calls.  At the moment, it is O(number of packages) and makes
-        about one stat call per package.  This is reasonably fast, and
-        avoids actually importing packages in Spack, which is slow.
-        """
-        if self._all_package_names is None:
-            self._all_package_names = []
-
-            # Get index modification time.
-            index_mtime = spack.misc_cache.mtime(self._providers_cache_file)
-
-            for pkg_name in os.listdir(self.packages_path):
-                # Skip non-directories in the package root.
-                pkg_dir = join_path(self.packages_path, pkg_name)
-
-                # Warn about invalid names that look like packages.
-                if not valid_module_name(pkg_name):
-                    msg = ("Skipping package at %s. "
-                           "'%s' is not a valid Spack module name.")
-                    tty.warn(msg % (pkg_dir, pkg_name))
-                    continue
-
-                # construct the file name from the directory
-                pkg_file = join_path(
-                    self.packages_path, pkg_name, package_file_name)
-
-                # Use stat here to avoid lots of calls to the filesystem.
-                try:
-                    sinfo = os.stat(pkg_file)
-                except OSError as e:
-                    if e.errno == errno.ENOENT:
-                        # No package.py file here.
-                        continue
-                    elif e.errno == errno.EACCES:
-                        tty.warn("Can't read package file %s." % pkg_file)
-                        continue
-                    raise e
-
-                # if it's not a file, skip it.
-                if stat.S_ISDIR(sinfo.st_mode):
-                    continue
-
-                # All checks passed.  Add it to the list.
-                self._all_package_names.append(pkg_name)
-
-                # record the package if it is newer than the index.
-                if sinfo.st_mtime > index_mtime:
-                    self._needs_update.append(pkg_name)
-
-            self._all_package_names.sort()
-
-        return self._all_package_names
-
     def all_package_names(self):
         """Returns a sorted list of all package names in the Repo."""
-        return self._fast_package_check()
+        return sorted(self._fast_package_checker.keys())
 
     def all_packages(self):
         """Iterator over all packages in the repository.
@@ -766,16 +815,7 @@ class Repo(object):
 
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""
-        if self._all_package_names:
-            # This does a binary search in the sorted list.
-            idx = bisect_left(self.all_package_names(), pkg_name)
-            return (idx < len(self._all_package_names) and
-                    self._all_package_names[idx] == pkg_name)
-
-        # If we haven't generated the full package list, don't.
-        # Just check whether the file exists.
-        filename = self.filename_for_package_name(pkg_name)
-        return os.path.exists(filename)
+        return pkg_name in self._fast_package_checker
 
     def is_virtual(self, pkg_name):
         """True if the package with this name is virtual, False otherwise."""
