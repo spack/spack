@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,6 +40,7 @@ class Petsc(Package):
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.7.6', '977aa84b85aa3146c695592cd0a11057')
     version('3.7.5', 'f00f6e6a3bac39052350dd47194b58a3')
     version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')
     version('3.7.2', '50da49867ce7a49e7a0c1b37f4ec7b34')
@@ -99,8 +100,10 @@ class Petsc(Package):
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')
-    depends_on('metis@5:~int64', when='+metis~int64')
-    depends_on('metis@5:+int64', when='+metis+int64')
+    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
+    depends_on('metis@5:+int64', when='+metis+int64~double')
+    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
+    depends_on('metis@5:+int64', when='+metis+int64~double')
 
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('parmetis', when='+metis+mpi')
@@ -198,7 +201,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'scalapack', 'trilinos'):
+                        'mumps', 'trilinos'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))

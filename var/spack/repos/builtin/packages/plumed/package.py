@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -113,6 +113,8 @@ class Plumed(AutotoolsPackage):
 
     force_autoreconf = True
 
+    parallel = False
+
     def apply_patch(self, other):
         plumed = subprocess.Popen(
             [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
@@ -126,7 +128,7 @@ class Plumed(AutotoolsPackage):
 
     def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
-        module.plumed = self.spec['plumed'].command
+        module.plumed = dependent_spec['plumed'].command
 
     @run_before('autoreconf')
     def filter_gslcblas(self):
@@ -161,6 +163,14 @@ class Plumed(AutotoolsPackage):
                 configure_opts.extend([
                     'STATIC_LIBS=-mt_mpi'
                 ])
+
+        # Set flags to help find gsl
+        if '+gsl' in self.spec:
+            gsl_libs = self.spec['gsl'].libs
+            blas_libs = self.spec['blas'].libs
+            configure_opts.append('LDFLAGS={0}'.format(
+                (gsl_libs + blas_libs).ld_flags
+            ))
 
         # Additional arguments
         configure_opts.extend([

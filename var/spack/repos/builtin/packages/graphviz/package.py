@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,9 +36,6 @@ class Graphviz(AutotoolsPackage):
 
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
-    variant('swig', default=False,
-            description='Enable for optional swig language bindings'
-            ' (not yet functional)')
     variant('sharp', default=False,
             description='Enable for optional sharp language bindings'
             ' (not yet functional)')
@@ -77,9 +74,30 @@ class Graphviz(AutotoolsPackage):
             description='Enable for optional tcl language bindings'
             ' (not yet functional)')
 
+    variant('pangocairo', default=False,
+            description='Build with pango+cairo support (more output formats)')
+    variant('libgd', default=False,
+            description='Build with libgd support (more output formats)')
+
     parallel = False
 
-    depends_on('swig', when='+swig')
+    # These language bindings have been tested, we know they work.
+    tested_bindings = ('+java', )
+
+    # These language bindings have not yet been tested.  They
+    # likely need additional dependencies to get working.
+    untested_bindings = (
+        '+perl',
+        '+sharp', '+go', '+guile', '+io',
+        '+lua', '+ocaml', '+php',
+        '+python', '+r', '+ruby', '+tcl')
+
+    for b in tested_bindings + untested_bindings:
+        depends_on('swig', when=b)
+
+    depends_on('cairo', when='+pangocairo')
+    depends_on('pango', when='+pangocairo')
+    depends_on('libgd', when='+libgd')
     depends_on('ghostscript')
     depends_on('freetype')
     depends_on('expat')
@@ -89,23 +107,23 @@ class Graphviz(AutotoolsPackage):
     depends_on('jdk', when='+java')
     depends_on('python@2:2.8', when='+python')
 
+    def patch(self):
+        # Fix a few variable names, gs after 9.18 renamed them
+        # See http://lists.linuxfromscratch.org/pipermail/blfs-book/2015-October/056960.html
+        if self.spec.satisfies('^ghostscript@9.18:'):
+            kwargs = {'ignore_absent': False, 'backup': True, 'string': True}
+            filter_file(' e_', ' gs_error_', 'plugin/gs/gvloadimage_gs.c',
+                        **kwargs)
+
     def configure_args(self):
         spec = self.spec
         options = []
 
-        # These language bindings have been tested, we know they work.
-        tested_bindings = ('+java', '+perl')
+        need_swig = False
 
-        # These language bindings have not yet been tested.  They
-        # likely need additional dependencies to get working.
-        untested_bindings = (
-            '+swig', '+sharp', '+go', '+guile', '+io',
-            '+lua', '+ocaml', '+php',
-            '+python', '+r', '+ruby', '+tcl')
-
-        for var in untested_bindings:
+        for var in self.untested_bindings:
             if var in spec:
-                raise SpackException(
+                raise InstallError(
                     "The variant {0} for language bindings has not been "
                     "tested.  It might or might not work.  To try it "
                     "out, run `spack edit graphviz`, and then move '{0}' "
@@ -113,11 +131,26 @@ class Graphviz(AutotoolsPackage):
                     "`tested_bindings` list.  Be prepared to add "
                     "required dependencies.  "
                     "Please then submit a pull request to "
-                    "http://github.com/llnl/spack")
+                    "http://github.com/llnl/spack".format(var))
+            options.append('--disable-%s' % var[1:])
 
-        for var in tested_bindings:
-            enable = 'enable' if (var in spec) else 'disable'
-            options.append('--%s-%s' % (enable, var[1:]))
+        for var in self.tested_bindings:
+            if var in spec:
+                need_swig = True
+                options.append('--enable-{0}'.format(var[1:]))
+            else:
+                options.append('--disable-{0}'.format(var[1:]))
+
+        if need_swig:
+            options.append('--enable-swig=yes')
+        else:
+            options.append('--enable-swig=no')
+
+        for var in ('+pangocairo', '+libgd'):
+            if var in spec:
+                options.append('--with-{0}'.format(var[1:]))
+            else:
+                options.append('--without-{0}'.format(var[1:]))
 
         # On OSX fix the compiler error:
         # In file included from tkStubLib.c:15:

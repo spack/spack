@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,7 +38,6 @@ class RStringi(RPackage):
 
     homepage = "http://www.gagolewski.com/software/stringi/"
     url      = "https://cran.r-project.org/src/contrib/stringi_1.1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/stringi"
 
     version('1.1.2', '0ec2faa62643e1900734c0eaf5096648')
     version('1.1.1', '32b919ee3fa8474530c4942962a6d8d9')

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,9 +35,20 @@ class Meme(AutotoolsPackage):
 
     version('4.11.4', '371f513f82fa0888205748e333003897')
 
+    variant('mpi', default=True, description='Enable MPI support')
+
     depends_on('zlib', type=('link'))
     depends_on('libxml2', type=('link'))
     depends_on('libxslt', type=('link'))
     depends_on('libgcrypt', type=('link'))
     depends_on('perl', type=('build', 'run'))
     depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('mpi', when='+mpi')
+
+    # disable mpi support
+    def configure_args(self):
+        spec = self.spec
+        args = []
+        if '~mpi' in spec:
+            args += ['--enable-serial']
+        return args

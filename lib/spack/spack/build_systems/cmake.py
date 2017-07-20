@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,6 +24,7 @@
 ##############################################################################
 
 import inspect
+import os
 import platform
 
 import spack.build_environment
@@ -84,9 +85,12 @@ class CMakePackage(PackageBase):
 
     @property
     def root_cmakelists_dir(self):
-        """Returns the location of the root CMakeLists.txt
+        """The relative path to the directory containing CMakeLists.txt
 
-        :return: directory containing the root CMakeLists.txt
+        This path is relative to the root of the extracted tarball,
+        not to the ``build_directory``. Defaults to the current directory.
+
+        :return: directory containing CMakeLists.txt
         """
         return self.stage.source_path
 
@@ -152,8 +156,9 @@ class CMakePackage(PackageBase):
 
     def cmake(self, spec, prefix):
         """Runs ``cmake`` in the build directory"""
-        options = [self.root_cmakelists_dir] + self.std_cmake_args + \
-            self.cmake_args()
+        options = [os.path.abspath(self.root_cmakelists_dir)]
+        options += self.std_cmake_args
+        options += self.cmake_args()
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).cmake(*options)
 

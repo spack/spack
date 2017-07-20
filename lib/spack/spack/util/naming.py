@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -57,7 +57,7 @@ def mod_to_class(mod_name):
           * Class names use the CapWords convention.
 
        Regular source code follows these convetions.  Spack is a bit
-       more liberal with its Package names nad Compiler names:
+       more liberal with its Package names and Compiler names:
 
           * They can contain '-' as well as '_', but cannot start with '-'.
           * They can start with numbers, e.g. "3proxy".
