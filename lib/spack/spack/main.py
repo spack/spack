@@ -34,6 +34,7 @@ import os
 import inspect
 import pstats
 import argparse
+from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import *
@@ -236,10 +237,14 @@ class SpackArgumentParser(argparse.ArgumentParser):
 
     def add_command(self, name):
         """Add one subcommand to this parser."""
+        # convert CLI command name to python module name
+        name = spack.cmd.get_python_name(name)
+
         # lazily initialize any subparsers
         if not hasattr(self, 'subparsers'):
             # remove the dummy "command" argument.
-            self._remove_action(self._actions[-1])
+            if self._actions[-1].dest == 'command':
+                self._remove_action(self._actions[-1])
             self.subparsers = self.add_subparsers(metavar='COMMAND',
                                                   dest="command")
 
@@ -322,7 +327,7 @@ def setup_main_options(args):
 
 
 def allows_unknown_args(command):
-    """This is a basic argument injection test.
+    """Implements really simple argument injection for unknown arguments.
 
     Commands may add an optional argument called "unknown args" to
     indicate they can handle unknonwn args, and we'll pass the unknown
@@ -334,16 +339,8 @@ def allows_unknown_args(command):
     return (argcount == 3 and varnames[2] == 'unknown_args')
 
 
-def _main(command, parser, args, unknown_args):
-    # many operations will fail without a working directory.
-    set_working_dir()
-
-    # only setup main options in here, after the real parse (we'll get it
-    # wrong if we do it after the initial, partial parse)
-    setup_main_options(args)
-    spack.hooks.pre_run()
-
-    # Now actually execute the command
+def _invoke_spack_command(command, parser, args, unknown_args):
+    """Run a spack command *without* setting spack global options."""
     try:
         if allows_unknown_args(command):
             return_val = command(parser, args, unknown_args)
@@ -363,6 +360,70 @@ def _main(command, parser, args, unknown_args):
 
     # Allow commands to return and error code if they want
     return 0 if return_val is None else return_val
+
+
+class SpackCommand(object):
+    """Callable object that invokes a spack command (for testing).
+
+    Example usage::
+
+        install = SpackCommand('install')
+        install('-v', 'mpich')
+
+    Use this to invoke Spack commands directly from Python and check
+    their stdout and stderr.
+    """
+    def __init__(self, command):
+        """Create a new SpackCommand that invokes ``command`` when called."""
+        self.parser = make_argument_parser()
+        self.parser.add_command(command)
+        self.command_name = command
+        self.command = spack.cmd.get_command(command)
+
+    def __call__(self, *args):
+        """Invoke this SpackCommand.
+
+        Args:
+            args (list of str): command line arguments.
+
+        Returns:
+            (str, str): output and error as a strings
+
+        On return, return value of comman is set in ``returncode``
+        property.
+        """
+        args = [self.command_name] + list(args)
+        args, unknown = self.parser.parse_known_args(args)
+
+        out, err = sys.stdout, sys.stderr
+        try:
+            sys.stdout, sys.stderr = StringIO(), StringIO()
+            self.returncode = _invoke_spack_command(
+                self.command, self.parser, args, unknown)
+
+        except SystemExit as e:
+            self.returncode = e.code
+
+        finally:
+            return_out = sys.stdout.getvalue()
+            return_err = sys.stderr.getvalue()
+            sys.stdout, sys.stderr = out, err
+
+        return return_out, return_err
+
+
+def _main(command, parser, args, unknown_args):
+    """Run a spack command *and* set spack globaloptions."""
+    # many operations will fail without a working directory.
+    set_working_dir()
+
+    # only setup main options in here, after the real parse (we'll get it
+    # wrong if we do it after the initial, partial parse)
+    setup_main_options(args)
+    spack.hooks.pre_run()
+
+    # Now actually execute the command
+    return _invoke_spack_command(command, parser, args, unknown_args)
 
 
 def _profile_wrapper(command, parser, args, unknown_args):
@@ -431,7 +492,7 @@ def main(argv=None):
 
     # Try to load the particular command the caller asked for.  If there
     # is no module for it, just die.
-    command_name = args.command[0].replace('-', '_')
+    command_name = spack.cmd.get_python_name(args.command[0])
     try:
         parser.add_command(command_name)
     except ImportError:
