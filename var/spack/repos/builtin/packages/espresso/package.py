@@ -106,7 +106,9 @@ class Espresso(Package):
         options = ['-prefix={0}'.format(prefix_path)]
 
         if '+mpi' in spec:
-            options.append('--enable-parallel')
+            options.append('--enable-parallel=yes')
+        else:
+            options.append('--enable-parallel=no')
 
         if '+openmp' in spec:
             options.append('--enable-openmp')
