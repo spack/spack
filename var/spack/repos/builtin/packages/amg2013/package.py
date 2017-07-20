@@ -26,7 +26,7 @@ from spack import *
 
 
 class Amg2013(MakefilePackage):
-    """ AMG2013 is a parallel algebraic multigrid solver for linear
+    """AMG2013 is a parallel algebraic multigrid solver for linear
     systems arising from problems on unstructured grids.
     It has been derived directly from the BoomerAMG solver in the
     hypre library, a large linear solver library that is being developed
@@ -36,7 +36,8 @@ class Amg2013(MakefilePackage):
     homepage = "https://codesign.llnl.gov/amg2013.php"
     url      = "https://codesign.llnl.gov/amg2013/amg2013.tgz"
 
-    version('2013', '9d918d2a69528b83e6e0aba6ba601fef')
+    version('master', '9d918d2a69528b83e6e0aba6ba601fef',
+            url='https://codesign.llnl.gov/amg2013/amg2013.tgz')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
