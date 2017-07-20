@@ -53,7 +53,7 @@ class Viennarna(AutotoolsPackage):
         if '~python' in self.spec:
             args.append('--without-python')
         else:
-            args.append('--with-python)'
+            args.append('--with-python')
         if '~perl' in self.spec:
             args.append('--without-perl')
         else:
