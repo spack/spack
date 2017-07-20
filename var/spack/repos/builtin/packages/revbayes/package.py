@@ -26,7 +26,7 @@ from spack import *
 import subprocess
 
 
-class Revbayes(Package):
+class Revbayes(CMakePackage):
     """Bayesian phylogenetic inference using probabilistic graphical models
        and an interpreted language."""
 
@@ -43,12 +43,27 @@ class Revbayes(Package):
 
     conflicts('%gcc@7.1.0:')
 
+    @property
+    def root_cmakelists_dir(self):
+        return join_path(self.stage.source_path, 'projects', 'cmake', 'build')
+
+    @run_before('cmake')
+    def regenerate(self):
+        with working_dir(join_path('projects', 'cmake')):
+            mkdirp('build')
+            edit = FileFilter('regenerate.sh')
+            edit.filter('boost=*', 'boost="false"')
+            if '+mpi' in self.spec:
+                subprocess.call(['./regenerate.sh'])
+                edit.filter('mpi=*', 'mpi="true"')
+            else:
+                subprocess.call(['./regenerate.sh'])
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
+        make()
         with working_dir(join_path('projects', 'cmake')):
             if '+mpi' in spec:
-                subprocess.call(['./build.sh', '-mpi true', '-boost false'])
                 install('rb-mpi', prefix.bin)
             else:
-                subprocess.call(['./build.sh', '-boost false'])
                 install('rb', prefix.bin)
