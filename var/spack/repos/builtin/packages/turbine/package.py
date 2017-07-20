@@ -49,11 +49,6 @@ class Turbine(AutotoolsPackage):
                 '--with-tcl='     + self.spec['tcl'].prefix,
                 '--with-mpi='     + self.spec['mpi'].prefix]
         if '+python' in self.spec:
-            if self.spec['python'].satisfies('@3'):
-                # newer python3.X does not create python link by default
-                pythonex = 'python3'
-            else:
-                pythonex = 'python'
-            args += ['--with-python-exe='
-                     + join_path(self.spec['python'].prefix.bin, pythonex)]
+            args.append('--with-python-exe={0}'.format(
+                                            self.spec['python'].command.path))
         return args
