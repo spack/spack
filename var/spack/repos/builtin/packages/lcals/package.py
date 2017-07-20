@@ -25,7 +25,6 @@
 
 from spack import *
 import platform
-import numbers
 
 
 def is_integral(x):
@@ -110,7 +109,7 @@ class Lcals(MakefilePackage):
             if self.compiler.version == 9 and arch == 'bgp':
                 cxxflags += '-DLCALS_PLATFORM_BGP -DLCALS_COMPILER_XLC9'
                 ' -I/usr/gapps/bdiv/sles_10_ppc64/opt/platform/include '
-                cxx_compile += 'O3 -qarch=450d -qtune=450 -qalias=allp -qhot' 
+                cxx_compile += 'O3 -qarch=450d -qtune=450 -qalias=allp -qhot'
                 ' -qsmp=omp '
                 ldpath += '-L/usr/local/tools/lib'
             elif self.compiler.version == 12 and arch == 'bgq':
