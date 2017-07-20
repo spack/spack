@@ -341,22 +341,12 @@ def allows_unknown_args(command):
 
 def _invoke_spack_command(command, parser, args, unknown_args):
     """Run a spack command *without* setting spack global options."""
-    try:
-        if allows_unknown_args(command):
-            return_val = command(parser, args, unknown_args)
-        else:
-            if unknown_args:
-                tty.die('unrecognized arguments: %s' % ' '.join(unknown_args))
-            return_val = command(parser, args)
-    except SpackError as e:
-        e.die()  # gracefully die on any SpackErrors
-    except Exception as e:
-        if spack.debug:
-            raise
-        tty.die(str(e))
-    except KeyboardInterrupt:
-        sys.stderr.write('\n')
-        tty.die("Keyboard interrupt.")
+    if allows_unknown_args(command):
+        return_val = command(parser, args, unknown_args)
+    else:
+        if unknown_args:
+            tty.die('unrecognized arguments: %s' % ' '.join(unknown_args))
+        return_val = command(parser, args)
 
     # Allow commands to return and error code if they want
     return 0 if return_val is None else return_val
@@ -423,7 +413,18 @@ def _main(command, parser, args, unknown_args):
     spack.hooks.pre_run()
 
     # Now actually execute the command
-    return _invoke_spack_command(command, parser, args, unknown_args)
+    try:
+        return _invoke_spack_command(command, parser, args, unknown_args)
+    except SpackError as e:
+        e.die()  # gracefully die on any SpackErrors
+    except Exception as e:
+        if spack.debug:
+            raise
+        tty.die(str(e))
+    except KeyboardInterrupt:
+        sys.stderr.write('\n')
+        tty.die("Keyboard interrupt.")
+
 
 
 def _profile_wrapper(command, parser, args, unknown_args):

@@ -287,6 +287,26 @@ def refresh_db_on_exit(database):
     yield
     database.refresh()
 
+
+@pytest.fixture()
+def install_mockery(tmpdir, config, builtin_mock):
+    """Hooks a fake install directory and a fake db into Spack."""
+    layout = spack.store.layout
+    db = spack.store.db
+    # Use a fake install directory to avoid conflicts bt/w
+    # installed pkgs and mock packages.
+    spack.store.layout = YamlDirectoryLayout(str(tmpdir))
+    spack.store.db = Database(str(tmpdir))
+    # We use a fake package, so skip the checksum.
+    spack.do_checksum = False
+    yield
+    # Turn checksumming back on
+    spack.do_checksum = True
+    # Restore Spack's layout.
+    spack.store.layout = layout
+    spack.store.db = db
+
+
 ##########
 # Fake archives and repositories
 ##########
