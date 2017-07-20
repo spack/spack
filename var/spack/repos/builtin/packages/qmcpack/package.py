@@ -111,6 +111,7 @@ class Qmcpack(CMakePackage):
             args.append('-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc))
             args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx))
 
+        # Currently FFTW_HOME and LIBXML2_HOME are used. CMake Warning is benign.
         args.append('-DLIBXML2_HOME={0}'.format(self.spec['libxml2'].prefix))
         args.append('-DLibxml2_INCLUDE_DIRS={0}'.format(self.spec['libxml2'].prefix.include))
         args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(self.spec['libxml2'].prefix.lib))
@@ -120,18 +121,18 @@ class Qmcpack(CMakePackage):
         args.append('-DFFTW_INCLUDE_DIRS={0}'.format(self.spec['fftw'].prefix.include))
         args.append('-DFFTW_LIBRARY_DIRS={0}'.format(self.spec['fftw'].prefix.lib))
         
-        # Default is MPI, serial version is convenient for cases, e.g. MacOS X laptop
+        # Default is MPI, serial version is convenient for cases, e.g. laptops
         if '~mpi' in self.spec:
-            args.append('-D QMC_MPI=0')
+            args.append('-DQMC_MPI=0')
 
-        # when '-D QMC_CUDA=1', CMake automatically sets '-D QMC_MIXED_PRECISION=1'
+        # when '-DQMC_CUDA=1', CMake automatically sets '-DQMC_MIXED_PRECISION=1'
         # there is a double-precision CUDA path, but it is deprecated
         if '+cuda' in self.spec:
-            args.append('-D QMC_CUDA=1')
+            args.append('-DQMC_CUDA=1')
 
         # this is for the experimental mixed-prescision CPU code 
         if '+mixed' in self.spec:
-            args.append('-D QMC_MIXED_PRECISION=1')
+            args.append('-DQMC_MIXED_PRECISION=1')
 
         return args
 
