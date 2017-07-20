@@ -34,3 +34,10 @@ class Pdsh(AutotoolsPackage):
     url      = "https://github.com/grondo/pdsh/archive/pdsh-2.31.tar.gz"
 
     version('2.31', 'cab34b0ca78f3cf596fd648b265223ed')
+
+    variant('ssh', default=True, description="Build with ssh module")
+
+    def configure_args(self):
+        if '+ssh' in self.spec:
+            return ['--with-ssh']
+        return []

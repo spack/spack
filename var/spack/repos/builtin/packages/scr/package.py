@@ -41,7 +41,7 @@ class Scr(CMakePackage):
 
     version('master', git='https://github.com/llnl/scr.git', branch='master')
 
-    depends_on('pdsh', type=('build', 'run'))
+    depends_on('pdsh+ssh', type=('build', 'run'))
     depends_on('zlib')
     depends_on('mpi')
 
