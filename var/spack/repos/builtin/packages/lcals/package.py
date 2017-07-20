@@ -27,14 +27,6 @@ from spack import *
 import platform
 
 
-def is_integral(x):
-    """Any integer value"""
-    try:
-        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
-    except ValueError:
-        return False
-
-
 class Lcals(MakefilePackage):
     """LCALS ("Livermore Compiler Analysis Loop Suite") is a collection of loop
        kernels based, in part, on historical "Livermore Loops" benchmarks
@@ -95,7 +87,6 @@ class Lcals(MakefilePackage):
                 cxxflags += '-DLCALS_PLATFORM_X86_SSE -DLCALS_COMPILER_GNU '
                 cxx_compile += '-Ofast -msse4.1 -finline-functions'
                 ' -finline-limit=10000 -std=c++11 '
-                print('Im here!!!!')
             elif microarch == 'avx' and arch == 'x86':
                 cxxflags += '-DLCALS_PLATFORM_X86_AVX -DLCALS_COMPILER_GNU '
                 cxx_compile += '-Ofast -mavx -finline-functions'
@@ -106,13 +97,11 @@ class Lcals(MakefilePackage):
                 ' -std=c++0x'
             cxxflags += self.compiler.openmp_flag
         elif self.compiler.name == 'xl' and arch == 'bgp':
-            if self.compiler.version == 9 and arch == 'bgp':
-                cxxflags += '-DLCALS_PLATFORM_BGP -DLCALS_COMPILER_XLC9'
-                ' -I/usr/gapps/bdiv/sles_10_ppc64/opt/platform/include '
+            if self.compiler.version == Version('9') and arch == 'bgp':
+                cxxflags += '-DLCALS_PLATFORM_BGP -DLCALS_COMPILER_XLC9 '
                 cxx_compile += 'O3 -qarch=450d -qtune=450 -qalias=allp -qhot'
                 ' -qsmp=omp '
-                ldpath += '-L/usr/local/tools/lib'
-            elif self.compiler.version == 12 and arch == 'bgq':
+            elif self.compiler.version == Version('12') and arch == 'bgq':
                 cxxflags += '-DLCALS_PLATFORM_BGQ -DLCALS_COMPILER_XLC12 '
                 cxx_compile += '-O3 -qarch=qp -qhot=novector -qsimd=auto'
                 ' -qlanglvl=extended0x -qnostrict -qinline=10000 -qsmp=omp '
