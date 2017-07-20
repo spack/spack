@@ -36,13 +36,17 @@ class Viennarna(AutotoolsPackage):
     version('2.3.5', '4542120adae9b7abb605e2304c2a1326')
 
     variant('sse', default=True, description='Enable SSE in order to substantially speed up execution')
-    variant('perl', default=True, description='Build ViennaRNA without Perl interface')
-    variant('python', default=True, description='Build ViennaRNA without Python interface')
+    variant('perl', default=True, description='Build ViennaRNA with Perl interface')
+    variant('python', default=True, description='Build ViennaRNA with Python interface')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
     depends_on('libsvm')
     depends_on('gsl')
+
+    def url_for_version(self, version):
+        url = "https://www.tbi.univie.ac.at/RNA/download/sourcecode/{0}_x/ViennaRNA-{1}.tar.gz"
+        return url.format(version.up_to(2), version)
 
     def configure_args(self):
         args = []
