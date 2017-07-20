@@ -435,7 +435,7 @@ class Repo(object):
         self._create_namespace()
 
         # Unique filename for cache of virtual dependency providers
-        self._cache_file = 'providers/%s-index.yaml' % self.namespace
+        self._providers_cache_file = 'providers/%s-index.yaml' % self.namespace
 
     def _create_namespace(self):
         """Create this repo's namespace module and insert it into sys.modules.
@@ -626,7 +626,7 @@ class Repo(object):
                 self._provider_index = ProviderIndex.from_yaml(f)
 
         # Read the old ProviderIndex, or make a new one.
-        key = self._cache_file
+        key = self._providers_cache_file
         index_existed = spack.misc_cache.init_entry(key)
         if index_existed and not self._needs_update:
             with spack.misc_cache.read_transaction(key) as f:
@@ -692,7 +692,7 @@ class Repo(object):
     def _fast_package_check(self):
         """List packages in the repo and check whether index is up to date.
 
-        Both of these opreations require checking all `package.py`
+        Both of these operations require checking all `package.py`
         files so we do them at the same time.  We list the repo
         directory and look at package.py files, and we compare the
         index modification date with the ost recently modified package
@@ -700,15 +700,14 @@ class Repo(object):
 
         The implementation here should try to minimize filesystem
         calls.  At the moment, it is O(number of packages) and makes
-        about one stat call per package.  This is resonably fast, and
+        about one stat call per package.  This is reasonably fast, and
         avoids actually importing packages in Spack, which is slow.
-
         """
         if self._all_package_names is None:
             self._all_package_names = []
 
             # Get index modification time.
-            index_mtime = spack.misc_cache.mtime(self._cache_file)
+            index_mtime = spack.misc_cache.mtime(self._providers_cache_file)
 
             for pkg_name in os.listdir(self.packages_path):
                 # Skip non-directories in the package root.
@@ -754,8 +753,7 @@ class Repo(object):
 
     def all_package_names(self):
         """Returns a sorted list of all package names in the Repo."""
-        self._fast_package_check()
-        return self._all_package_names
+        return self._fast_package_check()
 
     def all_packages(self):
         """Iterator over all packages in the repository.
