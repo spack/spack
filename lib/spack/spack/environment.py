@@ -63,6 +63,15 @@ class SetEnv(NameValueModifier):
         os.environ[self.name] = str(self.value)
 
 
+class AppendFlagsEnv(NameValueModifier):
+
+    def execute(self):
+        if self.name in os.environ and os.environ[self.name]:
+            os.environ[self.name] += self.separator + str(self.value)
+        else:
+            os.environ[self.name] = str(self.value)
+
+
 class UnsetEnv(NameModifier):
 
     def execute(self):
@@ -169,6 +178,20 @@ class EnvironmentModifications(object):
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = SetEnv(name, value, **kwargs)
+        self.env_modifications.append(item)
+
+    def append_flags(self, name, value, sep=' ', **kwargs):
+        """
+        Stores in the current object a request to append to an env variable
+
+        Args:
+            name: name of the environment variable to be appended to
+            value: value to append to the environment variable
+        Appends with spaces separating different additions to the variable
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        kwargs.update({'separator': sep})
+        item = AppendFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
 
     def unset(self, name, **kwargs):

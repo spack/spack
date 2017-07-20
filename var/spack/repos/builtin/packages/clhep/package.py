@@ -78,12 +78,18 @@ class Clhep(CMakePackage):
         cmake_args = []
 
         if '+cxx11' in spec:
-            env['CXXFLAGS'] = self.compiler.cxx11_flag
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx11_flag
             cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
                               self.compiler.cxx11_flag)
 
         if '+cxx14' in spec:
-            env['CXXFLAGS'] = self.compiler.cxx14_flag
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx14_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx14_flag
             cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
                               self.compiler.cxx14_flag)
 
