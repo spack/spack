@@ -31,10 +31,7 @@ import spack.spec
 import spack.store
 from spack.util.pattern import Args
 
-__all__ = [
-    'add_common_arguments',
-    'filter_by_tags'
-]
+__all__ = ['add_common_arguments']
 
 _arguments = {}
 
@@ -52,42 +49,6 @@ def add_common_arguments(parser, list_of_arguments):
             raise KeyError(message.format(argument))
         x = _arguments[argument]
         parser.add_argument(*x.flags, **x.kwargs)
-
-
-def filter_by_tags(specs_or_packages, tags):
-    """Filter the set of specs passed as argument by tags.
-
-    Args:
-        specs_or_packages: list of items to be filtered
-        tags: tags to be used for filtering
-
-    Returns:
-        list of items in specs that have all the tag in tags
-    """
-
-    # If the list is empty, return early
-    if not specs_or_packages:
-        return []
-
-    # Else, try to have a uniform access to packages for both list
-    # of specs and list of packages
-    item = specs_or_packages[0]
-    if isinstance(item, spack.spec.Spec):
-        package = lambda x: x.package
-    else:
-        package = lambda x: x
-
-    # Restrict to elements that have the 'tags' attribute defined
-    has_tags = lambda x: hasattr(package(x), 'tags')
-    specs_or_packages = [x for x in specs_or_packages if has_tags(x)]
-
-    # Filter by required tags
-    specs_or_packages = [
-        x for x in specs_or_packages
-        if all(t in package(x).tags for t in tags)
-    ]
-
-    return specs_or_packages
 
 
 class ConstraintAction(argparse.Action):

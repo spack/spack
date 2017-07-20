@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import collections
 import os
 import stat
 import shutil
@@ -31,6 +32,7 @@ import inspect
 import imp
 import re
 import traceback
+import json
 
 try:
     from collections.abc import Mapping
@@ -181,6 +183,55 @@ class FastPackageChecker(Mapping):
         return len(self._packages_to_stats)
 
 
+class TagIndex(Mapping):
+    """Maps tags to list of packages."""
+
+    def __init__(self):
+        self._tag_dict = collections.defaultdict(list)
+
+    def to_json(self, stream):
+        json.dump({'tags': self._tag_dict}, stream)
+
+    @staticmethod
+    def from_json(stream):
+        d = json.load(stream)
+
+        r = TagIndex()
+
+        for tag, list in d['tags'].items():
+            r[tag].extend(list)
+
+        return r
+
+    def __getitem__(self, item):
+        return self._tag_dict[item]
+
+    def __iter__(self):
+        return iter(self._tag_dict)
+
+    def __len__(self):
+        return len(self._tag_dict)
+
+    def update_package(self, pkg_name):
+        """Updates a package in the tag index.
+
+        Args:
+            pkg_name (str): name of the package to be removed from the index
+
+        """
+
+        package = spack.repo.get(pkg_name)
+
+        # Remove the package from the list of packages, if present
+        for pkg_list in self._tag_dict.values():
+            if pkg_name in pkg_list:
+                pkg_list.remove(pkg_name)
+
+        # Add it again under the appropriate tags
+        for tag in getattr(package, 'tags', []):
+            self._tag_dict[tag].append(package.name)
+
+
 @llnl.util.lang.memoized
 def make_provider_index_cache(packages_path, namespace):
     """Lazily updates the provider index cache associated with a repository,
@@ -230,6 +281,58 @@ def make_provider_index_cache(packages_path, namespace):
                 index.update(namespaced_name)
 
             index.to_yaml(new)
+
+    return index
+
+
+@llnl.util.lang.memoized
+def make_tag_index_cache(packages_path, namespace):
+    """Lazily updates the tag index cache associated with a repository,
+    if need be, then returns it. Caches results for later look-ups.
+
+    Args:
+        packages_path: path of the repository
+        namespace: namespace of the repository
+
+    Returns:
+        instance of TagIndex
+    """
+    # Map that goes from package names to stat info
+    fast_package_checker = FastPackageChecker(packages_path)
+
+    # Filename of the provider index cache
+    cache_filename = 'tags/{0}-index.json'.format(namespace)
+
+    # Compute which packages needs to be updated in the cache
+    index_mtime = spack.misc_cache.mtime(cache_filename)
+
+    needs_update = [
+        x for x, sinfo in fast_package_checker.items()
+        if sinfo.st_mtime > index_mtime
+    ]
+
+    # Read the old ProviderIndex, or make a new one.
+    index_existed = spack.misc_cache.init_entry(cache_filename)
+
+    if index_existed and not needs_update:
+
+        # If the provider index exists and doesn't need an update
+        # just read from it
+        with spack.misc_cache.read_transaction(cache_filename) as f:
+            index = TagIndex.from_json(f)
+
+    else:
+
+        # Otherwise we need a write transaction to update it
+        with spack.misc_cache.write_transaction(cache_filename) as (old, new):
+
+            index = TagIndex.from_json(old) if old else TagIndex()
+
+            for pkg_name in needs_update:
+                namespaced_name = '{0}.{1}'.format(namespace, pkg_name)
+                index.update_package(namespaced_name)
+
+            index.to_json(new)
 
     return index
 
@@ -360,6 +463,12 @@ class RepoPath(object):
                     all_pkgs.add(name)
             self._all_package_names = sorted(all_pkgs, key=lambda n: n.lower())
         return self._all_package_names
+
+    def packages_with_tags(self, *tags):
+        r = set()
+        for repo in self.repos:
+            r |= set(repo.packages_with_tags(*tags))
+        return sorted(r)
 
     def all_packages(self):
         for name in self.all_package_names():
@@ -569,6 +678,9 @@ class Repo(object):
         # Index of virtual dependencies, computed lazily
         self._provider_index = None
 
+        # Index of tags, computed lazily
+        self._tag_index = None
+
         # make sure the namespace for packages in this repo exists.
         self._create_namespace()
 
@@ -763,6 +875,17 @@ class Repo(object):
 
         return self._provider_index
 
+    @property
+    def tag_index(self):
+        """A provider index with names *specific* to this repo."""
+
+        if self._tag_index is None:
+            self._tag_index = make_tag_index_cache(
+                self.packages_path, self.namespace
+            )
+
+        return self._tag_index
+
     @_autospec
     def providers_for(self, vpkg_spec):
         providers = self.provider_index.providers_for(vpkg_spec)
@@ -803,6 +926,15 @@ class Repo(object):
     def all_package_names(self):
         """Returns a sorted list of all package names in the Repo."""
         return sorted(self._fast_package_checker.keys())
+
+    def packages_with_tags(self, *tags):
+        v = set(self.all_package_names())
+        index = self.tag_index
+
+        for t in tags:
+            v &= set(index[t])
+
+        return sorted(v)
 
     def all_packages(self):
         """Iterator over all packages in the repository.

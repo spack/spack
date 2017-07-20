@@ -25,6 +25,7 @@
 import sys
 
 import llnl.util.tty as tty
+import spack
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 
@@ -125,7 +126,8 @@ def find(parser, args):
 
     # If tags have been specified on the command line, filter by tags
     if args.tags:
-        query_specs = arguments.filter_by_tags(query_specs, args.tags)
+        packages_with_tags = spack.repo.packages_with_tags(*args.tags)
+        query_specs = [x for x in query_specs if x.name in packages_with_tags]
 
     # Display the result
     if sys.stdout.isatty():

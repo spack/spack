@@ -191,9 +191,9 @@ def list(parser, args):
 
     # Filter by tags
     if args.tags:
-        sorted_packages = [spack.repo.get(x) for x in sorted_packages]
-        sorted_packages = arguments.filter_by_tags(sorted_packages, args.tags)
-        sorted_packages = [x.name for x in sorted_packages]
+        packages_with_tags = set(spack.repo.packages_with_tags(*args.tags))
+        sorted_packages = set(sorted_packages) & packages_with_tags
+        sorted_packages = sorted(sorted_packages)
 
     # Print to stdout
     formatters[args.format](sorted_packages)
