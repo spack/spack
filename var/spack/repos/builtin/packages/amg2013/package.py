@@ -36,13 +36,13 @@ class Amg2013(MakefilePackage):
     homepage = "https://codesign.llnl.gov/amg2013.php"
     url      = "https://codesign.llnl.gov/amg2013/amg2013.tgz"
 
-    version('master', '9d918d2a69528b83e6e0aba6ba601fef')
+    version('2013', '9d918d2a69528b83e6e0aba6ba601fef')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('assumepartition', default=False, description='Assumed partition (for thousands of processors)')
 
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi')
 
     conflicts('+openmp', when='~mpi')
     conflicts('+assumepartition', when='~mpi')
@@ -56,19 +56,15 @@ class Amg2013(MakefilePackage):
 
         if self.compiler.name == 'intel':
             include_lflags += '-qsmp '
-
-        if '+mpi' in self.spec:
-            if '+openmp' in self.spec:
-                include_cflags += '-DHYPRE_USING_OPENMP' + ' '
-            if '+assumepartition' in self.spec:
-                include_cflags += '-DHYPRE_NO_GLOBAL_PARTITION' + ' '
-
-            include_cflags += '-DTIMER_USE_MPI ' + self.compiler.openmp_flag
-
-            include_lflags += ' ' + self.compiler.openmp_flag
-            targets.append('INCLUDE_CFLAGS={0}'.format(include_cflags))
-            targets.append('INCLUDE_LFLAGS={0}'.format(include_lflags))
-            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+        if '+openmp' in self.spec:
+            include_cflags += '-DHYPRE_USING_OPENMP' + ' '
+        if '+assumepartition' in self.spec:
+            include_cflags += '-DHYPRE_NO_GLOBAL_PARTITION' + ' '
+        include_cflags += '-DTIMER_USE_MPI ' + self.compiler.openmp_flag
+        include_lflags += ' ' + self.compiler.openmp_flag
+        targets.append('INCLUDE_CFLAGS={0}'.format(include_cflags))
+        targets.append('INCLUDE_LFLAGS={0}'.format(include_lflags))
+        targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
 
         return targets
 
