@@ -435,6 +435,24 @@ def test_formatted_strings():
         assert v.joined == '123'
 
 
+def test_up_to():
+    version = Version('1.23.4')
+
+    assert version.up_to(1) == Version('1')
+    assert version.up_to(2) == Version('1.23')
+    assert version.up_to(3) == Version('1.23.4')
+
+    assert version.up_to(-1) == Version('1.23')
+    assert version.up_to(-2) == Version('1')
+
+    assert version.up_to(2).dotted == '1.23'
+    assert version.up_to(2).dashed == '1-23'
+    assert version.up_to(2).underscored == '1_23'
+    assert version.up_to(2).joined == '123'
+
+    assert version.up_to(2).up_to(1) == Version('1')
+
+
 def test_repr_and_str():
 
     def check_repr_and_str(vrs):

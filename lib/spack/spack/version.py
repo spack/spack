@@ -200,6 +200,10 @@ class Version(object):
         Version('1.23')
         >>> version.up_to(3)
         Version('1.23.4')
+        >>> version.up_to(-1)
+        Version('1.23')
+        >>> version.up_to(-2)
+        Version('1')
 
         Returns:
             Version: The first index components of the version
