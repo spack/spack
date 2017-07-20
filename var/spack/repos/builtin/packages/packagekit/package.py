@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,35 +25,40 @@
 from spack import *
 
 
-class Mesa(AutotoolsPackage):
-    """Mesa is an open-source implementation of the OpenGL
-    specification - a system for rendering interactive 3D graphics."""
+class Packagekit(AutotoolsPackage):
+    """PackageKit is a system designed to make installing and updating
+    software on your computer easier."""
 
-    homepage = "http://www.mesa3d.org"
-    url      = "http://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/12.0.3/mesa-12.0.3.tar.gz"
+    homepage = "https://www.freedesktop.org/software/PackageKit/"
+    url      = "https://www.freedesktop.org/software/PackageKit/releases/PackageKit-1.1.4.tar.xz"
 
-    version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
+    version('1.1.4', 'd1a000a33c7c935522af7a01dea012bf')
 
-    # General dependencies
-    depends_on('python@2.6.4:')
-    depends_on('py-mako@0.3.4:', type=('build', 'run'))
-    depends_on('flex@2.5.35:', type='build')
-    depends_on('bison@2.4.1:', type='build')
+    variant('gtk', default=False, description='Build GTK+-3 module functionality')
 
-    # For DRI and hardware acceleration
-    depends_on('libpthread-stubs')
-    depends_on('libdrm')
-    depends_on('openssl')
-    depends_on('libxcb@1.9.3:')
-    depends_on('libxshmfence@1.1:')
-    depends_on('libx11')
-    depends_on('libxext')
-    depends_on('libxdamage')
-    depends_on('libxfixes')
+    depends_on('glib@2.46.0:')
+    depends_on('sqlite')
+    depends_on('polkit@0.98:')
     depends_on('systemd')
+    depends_on('gobject-introspection')
+    depends_on('bash-completion@2.0:')
+    depends_on('gtkplus', when='+gtk')
 
-    depends_on('glproto@1.4.14:', type='build')
-    depends_on('dri2proto@2.6:', type='build')
-    depends_on('dri3proto@1.0:', type='build')
-    depends_on('presentproto@1.0:', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('intltool@0.35.0:', type='build')
+    depends_on('gettext', type='build')
+    depends_on('msgpack-c', type='build')
+    depends_on('python@2.7:', type='build')
+
+    # requires XML::Parser perl module
+    # depends_on('perl@5.8.1:', type='build')
+
+    def configure_args(self):
+        args = []
+
+        if '+gtk' in self.spec:
+            args.append('--enable-gtk-module')
+        else:
+            args.append('--disable-gtk-module')
+
+        return args

@@ -92,8 +92,6 @@ class AutotoolsPackage(PackageBase):
 
     #: Set to true to force the autoreconf step even if configure is present
     force_autoreconf = False
-    #: Options to be passed to autoreconf when using the default implementation
-    autoreconf_extra_args = []
 
     @run_after('autoreconf')
     def _do_patch_config_guess(self):
@@ -220,27 +218,31 @@ class AutotoolsPackage(PackageBase):
         if missing:
             msg = 'Cannot generate configure: missing dependencies {0}'
             raise RuntimeError(msg.format(missing))
+
         tty.msg('Configure script not found: trying to generate it')
         tty.warn('*********************************************************')
         tty.warn('* If the default procedure fails, consider implementing *')
         tty.warn('*        a custom AUTORECONF phase in the package       *')
         tty.warn('*********************************************************')
+
         with working_dir(self.configure_directory):
-            m = inspect.getmodule(self)
-            # This part should be redundant in principle, but
-            # won't hurt
-            m.libtoolize()
-            m.aclocal()
-            # This line is what is needed most of the time
-            # --install, --verbose, --force
-            autoreconf_args = ['-ivf']
+            m4_includes = []
             if 'pkg-config' in spec:
-                autoreconf_args += [
+                m4_includes += [
                     '-I',
                     join_path(spec['pkg-config'].prefix, 'share', 'aclocal'),
                 ]
-            autoreconf_args += self.autoreconf_extra_args
-            m.autoreconf(*autoreconf_args)
+            if 'gettext' in spec:
+                m4_includes += [
+                    '-I',
+                    join_path(spec['gettext'].prefix, 'share', 'aclocal'),
+                ]
+
+            m = inspect.getmodule(self)
+
+            m.libtoolize()
+            m.aclocal(*m4_includes)
+            m.autoreconf('--install', '--verbose', '--force', *m4_includes)
 
     @run_after('autoreconf')
     def set_configure_or_die(self):

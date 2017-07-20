@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,35 +25,19 @@
 from spack import *
 
 
-class Mesa(AutotoolsPackage):
-    """Mesa is an open-source implementation of the OpenGL
-    specification - a system for rendering interactive 3D graphics."""
+class Polkit(AutotoolsPackage):
+    """polkit is a toolkit for defining and handling authorizations. It is used
+    for allowing unprivileged processes to speak to privileged processes."""
 
-    homepage = "http://www.mesa3d.org"
-    url      = "http://ftp.iij.ad.jp/pub/X11/x.org/pub/mesa/12.0.3/mesa-12.0.3.tar.gz"
+    homepage = "https://www.freedesktop.org/wiki/Software/polkit/"
+    url      = "https://www.freedesktop.org/software/polkit/releases/polkit-0.113.tar.gz"
 
-    version('12.0.3', '60c5f9897ddc38b46f8144c7366e84ad')
+    version('master', git='git://anongit.freedesktop.org/git/polkit')
+    version('0.113', '4b77776c9e4f897dcfe03b2c34198edf')
 
-    # General dependencies
-    depends_on('python@2.6.4:')
-    depends_on('py-mako@0.3.4:', type=('build', 'run'))
-    depends_on('flex@2.5.35:', type='build')
-    depends_on('bison@2.4.1:', type='build')
-
-    # For DRI and hardware acceleration
-    depends_on('libpthread-stubs')
-    depends_on('libdrm')
-    depends_on('openssl')
-    depends_on('libxcb@1.9.3:')
-    depends_on('libxshmfence@1.1:')
-    depends_on('libx11')
-    depends_on('libxext')
-    depends_on('libxdamage')
-    depends_on('libxfixes')
-    depends_on('systemd')
-
-    depends_on('glproto@1.4.14:', type='build')
-    depends_on('dri2proto@2.6:', type='build')
-    depends_on('dri3proto@1.0:', type='build')
-    depends_on('presentproto@1.0:', type='build')
+    depends_on('expat')
+    depends_on('mozjs@24.2.0', when='@master')
+    depends_on('mozjs@1.8.5,17.0.0', when='@0.113')
     depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('glib@2.30.0:', type='build')
+    depends_on('systemd')
