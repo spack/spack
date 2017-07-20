@@ -48,12 +48,13 @@ class Rsbench(MakefilePackage):
         ldflags = '-lm'
 
         if self.compiler.name == 'gcc':
-            cflags += ' -ffast-math ' + self.compiler.openmp_flag
-        if self.compiler.name == 'intel':
-            cflags += ' ' + '-xhost -ansi-alias -no-prec-div' + ' '
-            + self.compiler.openmp_flag
-        if self.compiler.name == 'pgi':
-            cflags += ' -mp -fastsse'
+            cflags += ' -ffast-math '
+        elif self.compiler.name == 'intel':
+            cflags += ' -xhost -ansi-alias -no-prec-div '
+        elif self.compiler.name == 'pgi':
+            cflags += ' -fastsse '
+
+        cflags += self.compiler.openmp_flag
 
         targets.append('CFLAGS={0}'.format(cflags))
         targets.append('LDFLAGS={0}'.format(ldflags))
