@@ -45,7 +45,7 @@ class Cnl(OperatingSystem):
         super(Cnl, self).__init__(name, version)
 
     def __str__(self):
-        return self.name + self.version
+        return self.name
 
     def find_compilers(self, *paths):
         types = spack.compilers.all_compiler_types()
