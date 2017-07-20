@@ -42,6 +42,7 @@
 
 from spack import *
 
+
 class Cbtf(CMakePackage):
     """CBTF project contains the base code for CBTF that supports creating
        components, component networks and the support to connect these
