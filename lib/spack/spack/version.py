@@ -135,25 +135,76 @@ class Version(object):
 
     @property
     def dotted(self):
+        """The dotted representation of the version.
+
+        Example:
+        >>> version = Version('1-2-3')
+        >>> version.dotted
+        '1.2.3'
+
+        Returns:
+            str: The elements of the version, separated by dots
+        """
         return '.'.join(str(x) for x in self.version)
 
     @property
     def underscored(self):
+        """The underscored representation of the version.
+
+        Example:
+        >>> version = Version('1.2.3')
+        >>> version.underscored
+        '1_2_3'
+
+        Returns:
+            str: The elements of the version, separated by underscores
+        """
         return '_'.join(str(x) for x in self.version)
 
     @property
     def dashed(self):
+        """The dashed representation of the version.
+
+        Example:
+        >>> version = Version('1.2.3')
+        >>> version.dashed
+        '1-2-3'
+
+        Returns:
+            str: The elements of the version, separated by dashes
+        """
         return '-'.join(str(x) for x in self.version)
 
     @property
     def joined(self):
+        """The joined representation of the version.
+
+        Example:
+        >>> version = Version('1.2.3')
+        >>> version.joined
+        '123'
+
+        Returns:
+            str: The version with no separator characters
+        """
         return ''.join(str(x) for x in self.version)
 
     def up_to(self, index):
-        """Return a version string up to the specified component, exclusive.
-           e.g., if this is 10.8.2, self.up_to(2) will return '10.8'.
+        """The version up to the specified component.
+
+        Examples:
+        >>> version = Version('1.23.4')
+        >>> version.up_to(1)
+        Version('1')
+        >>> version.up_to(2)
+        Version('1.23')
+        >>> version.up_to(3)
+        Version('1.23.4')
+
+        Returns:
+            Version: The first index components of the version
         """
-        return '.'.join(str(x) for x in self[:index])
+        return Version('.'.join(str(x) for x in self[:index]))
 
     def lowest(self):
         return self
