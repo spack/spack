@@ -130,85 +130,88 @@ class Version(object):
         self.version = tuple(int_if_int(seg) for seg in segments)
 
         # Store the separators from the original version string as well.
-        # last element of separators is ''
-        self.separators = tuple(re.split(segment_regex, string)[1:-1])
+        self.separators = tuple(re.split(segment_regex, string)[1:])
 
     @property
     def dotted(self):
         """The dotted representation of the version.
 
         Example:
-        >>> version = Version('1-2-3')
+        >>> version = Version('1-2-3b')
         >>> version.dotted
-        '1.2.3'
+        '1.2.3b'
 
         Returns:
             str: The elements of the version, separated by dots
         """
-        return '.'.join(str(x) for x in self.version)
+        return self.string.replace('-', '.').replace('_', '.')
 
     @property
     def underscored(self):
         """The underscored representation of the version.
 
         Example:
-        >>> version = Version('1.2.3')
+        >>> version = Version('1.2.3b')
         >>> version.underscored
-        '1_2_3'
+        '1_2_3b'
 
         Returns:
             str: The elements of the version, separated by underscores
         """
-        return '_'.join(str(x) for x in self.version)
+        return self.string.replace('.', '_').replace('-', '_')
 
     @property
     def dashed(self):
         """The dashed representation of the version.
 
         Example:
-        >>> version = Version('1.2.3')
+        >>> version = Version('1.2.3b')
         >>> version.dashed
-        '1-2-3'
+        '1-2-3b'
 
         Returns:
             str: The elements of the version, separated by dashes
         """
-        return '-'.join(str(x) for x in self.version)
+        return self.string.replace('.', '-').replace('_', '-')
 
     @property
     def joined(self):
         """The joined representation of the version.
 
         Example:
-        >>> version = Version('1.2.3')
+        >>> version = Version('1.2.3b')
         >>> version.joined
-        '123'
+        '123b'
 
         Returns:
             str: The version with no separator characters
         """
-        return ''.join(str(x) for x in self.version)
+        return self.string.replace('.', '').replace('-', '').replace('_', '')
 
     def up_to(self, index):
         """The version up to the specified component.
 
         Examples:
-        >>> version = Version('1.23.4')
+        >>> version = Version('1.23-4b')
         >>> version.up_to(1)
         Version('1')
         >>> version.up_to(2)
         Version('1.23')
         >>> version.up_to(3)
-        Version('1.23.4')
+        Version('1.23-4')
+        >>> version.up_to(4)
+        Version('1.23-4b')
         >>> version.up_to(-1)
-        Version('1.23')
+        Version('1.23-4')
         >>> version.up_to(-2)
+        Version('1.23')
+        >>> version.up_to(-3)
         Version('1')
 
         Returns:
             Version: The first index components of the version
         """
-        return Version('.'.join(str(x) for x in self[:index]))
+        return self[:index]
 
     def lowest(self):
         return self
@@ -259,11 +262,9 @@ class Version(object):
             return self.version[idx]
 
         elif isinstance(idx, slice):
-            # Currently len(self.separators) == len(self.version) - 1
-            extendend_separators = self.separators + ('',)
             string_arg = []
 
-            pairs = zip(self.version[idx], extendend_separators[idx])
+            pairs = zip(self.version[idx], self.separators[idx])
             for token, sep in pairs:
                 string_arg.append(str(token))
                 string_arg.append(str(sep))

@@ -426,24 +426,28 @@ def test_satisfaction_with_lists():
 
 
 def test_formatted_strings():
-    versions = '1.2.3', '1_2_3', '1-2-3'
+    versions = '1.2.3b', '1_2_3b', '1-2-3b'
     for item in versions:
         v = Version(item)
-        assert v.dotted == '1.2.3'
-        assert v.dashed == '1-2-3'
-        assert v.underscored == '1_2_3'
-        assert v.joined == '123'
+        assert v.dotted == '1.2.3b'
+        assert v.dashed == '1-2-3b'
+        assert v.underscored == '1_2_3b'
+        assert v.joined == '123b'
 
 
 def test_up_to():
-    version = Version('1.23.4')
+    version = Version('1.23-4_5b')
 
     assert version.up_to(1) == Version('1')
     assert version.up_to(2) == Version('1.23')
-    assert version.up_to(3) == Version('1.23.4')
+    assert version.up_to(3) == Version('1.23-4')
+    assert version.up_to(4) == Version('1.23-4_5')
+    assert version.up_to(5) == Version('1.23-4_5b')
 
-    assert version.up_to(-1) == Version('1.23')
-    assert version.up_to(-2) == Version('1')
+    assert version.up_to(-1) == Version('1.23-4_5')
+    assert version.up_to(-2) == Version('1.23-4')
+    assert version.up_to(-3) == Version('1.23')
+    assert version.up_to(-4) == Version('1')
 
     assert version.up_to(2).dotted == '1.23'
     assert version.up_to(2).dashed == '1-23'
