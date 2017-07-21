@@ -201,8 +201,7 @@ class AutotoolsPackage(PackageBase):
         if self.patch_config_guess and self.spec.satisfies(
                 'arch=linux-rhel7-ppc64le'
         ):
-            if not self._do_patch_config_guess():
-                raise RuntimeError('Failed to find suitable config.guess')
+            self._do_patch_config_guess()
 
     @run_before('autoreconf')
     def delete_configure_to_force_update(self):
