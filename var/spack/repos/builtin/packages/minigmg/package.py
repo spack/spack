@@ -45,10 +45,8 @@ class Minigmg(Package):
     url      = "http://crd.lbl.gov/assets/Uploads/FTG/Projects/miniGMG/miniGMG.tar.gz"
 
     version('master', '975a2a118403fc0024b5e04cef280e95')
-    version('cuda', url='http://crd.lbl.gov/assets/Uploads/FTG/Projects/miniGMG/miniGMG.cuda.tar.gz')
 
     depends_on('mpi')
-    depends_on('cuda', when='@cuda')
 
     phases = ['build', 'install']
 
