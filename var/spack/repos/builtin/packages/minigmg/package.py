@@ -54,7 +54,7 @@ class Minigmg(Package):
 
     def build(self, spec, prefix):
         cc = Executable(spec['mpi'].mpicc)
-        cc('-O3', '{0}'.format(self.compiler.openmp_flag), 'miniGMG.c',
+        cc('-O3', self.compiler.openmp_flag, 'miniGMG.c',
             'mg.c', 'box.c', 'solver.c', 'operators.ompif.c', 'timer.x86.c',
             '-D__MPI', '-D__COLLABORATIVE_THREADING=6',
             '-D__TEST_MG_CONVERGENCE', '-D__PRINT_NORM', '-D__USE_BICGSTAB',
@@ -64,6 +64,6 @@ class Minigmg(Package):
         mkdir(prefix.bin)
         install('run.miniGMG', prefix.bin)
         mkdir(prefix.jobs)
-        files = glob.glob(join_path('./', 'job*'))
+        files = glob.glob('job*')
         for f in files:
             install(f, prefix.jobs)
