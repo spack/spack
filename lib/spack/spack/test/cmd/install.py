@@ -22,48 +22,42 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import codecs
-import collections
-import contextlib
-import pytest
-from six import StringIO
-
-import llnl.util.filesystem
-import spack
-import spack.cmd
 from spack.main import SpackCommand
 
 
 install = SpackCommand('install')
 
 
-@pytest.mark.usefixutres('install_mockery', 'builtin_mock', 'config', 'builtin_mock')
-def test_install_package_and_dependency(tmpdir):
+def _install_package_and_dependency(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery):
+
     tmpdir.chdir()
-    install('--log-format=junit', 'libdwarf')
+    install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
-    files = os.listdir()
-    assert len(files) == 1
-    assert files[0].endswith('xml')
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
 
-    content = open(files[0]).read()
+    content = filename.open().read()
     assert 'tests="2"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content
 
 
-@pytest.mark.usefixutres('install_mockery', 'builtin_mock', 'config', 'builtin_mock')
-def _install_package_and_dependency(tmpdir):
+def test_install_package_already_installed(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery):
+
     tmpdir.chdir()
-    install('libelf')
-    install('--log-format=junit', 'libdwarf')
+    install('libdwarf')
+    install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
-    files = os.listdir()
-    assert len(files) == 1
-    assert files[0].endswith('xml')
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
 
-    content = open(files[0]).read()
+    content = filename.open().read()
     assert 'tests="2"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content

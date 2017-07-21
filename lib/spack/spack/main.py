@@ -363,27 +363,28 @@ class SpackCommand(object):
     Use this to invoke Spack commands directly from Python and check
     their stdout and stderr.
     """
-    def __init__(self, command):
+    def __init__(self, command, fail_on_error=True):
         """Create a new SpackCommand that invokes ``command`` when called."""
         self.parser = make_argument_parser()
         self.parser.add_command(command)
         self.command_name = command
         self.command = spack.cmd.get_command(command)
+        self.fail_on_error = fail_on_error
 
-    def __call__(self, *args):
+    def __call__(self, *argv):
         """Invoke this SpackCommand.
 
         Args:
-            args (list of str): command line arguments.
+            argv (list of str): command line arguments.
 
         Returns:
             (str, str): output and error as a strings
 
-        On return, return value of comman is set in ``returncode``
-        property.
+        On return, if ``fail_on_error`` is False, return value of comman
+        is set in ``returncode`` property.  Otherwise, raise an error.
         """
-        args = [self.command_name] + list(args)
-        args, unknown = self.parser.parse_known_args(args)
+        args, unknown = self.parser.parse_known_args(
+            [self.command_name] + list(argv))
 
         out, err = sys.stdout, sys.stderr
         try:
@@ -398,6 +399,12 @@ class SpackCommand(object):
             return_out = sys.stdout.getvalue()
             return_err = sys.stderr.getvalue()
             sys.stdout, sys.stderr = out, err
+
+        if self.fail_on_error and self.returncode != 0:
+            raise SpackCommandError(
+                "Command exited with code %d: %s(%s)" % (
+                    self.returncode, self.command_name,
+                    ', '.join("'%s'" % a for a in argv)))
 
         return return_out, return_err
 
@@ -424,7 +431,6 @@ def _main(command, parser, args, unknown_args):
     except KeyboardInterrupt:
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")
-
 
 
 def _profile_wrapper(command, parser, args, unknown_args):
@@ -527,3 +533,7 @@ def main(argv=None):
 
     except SystemExit as e:
         return e.code
+
+
+class SpackCommandError(Exception):
+    """Raised when SpackCommand execution fails."""

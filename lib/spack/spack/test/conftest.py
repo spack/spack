@@ -35,16 +35,18 @@ import ordereddict_backport
 
 import py
 import pytest
+
 import spack
 import spack.architecture
 import spack.database
 import spack.directory_layout
-import spack.fetch_strategy
 import spack.platforms.test
 import spack.repository
 import spack.stage
 import spack.util.executable
 import spack.util.pattern
+from spack.package import PackageBase
+from spack.fetch_strategy import *
 
 
 ##########
@@ -78,12 +80,10 @@ def mock_fetch_cache(monkeypatch):
             pass
 
         def fetch(self):
-            raise spack.fetch_strategy.FetchError(
-                'Mock cache always fails for tests'
-            )
+            raise FetchError('Mock cache always fails for tests')
 
         def __str__(self):
-            return "[mock fetcher]"
+            return "[mock fetch cache]"
 
     monkeypatch.setattr(spack, 'fetch_cache', MockCache())
 
@@ -295,8 +295,9 @@ def install_mockery(tmpdir, config, builtin_mock):
     db = spack.store.db
     # Use a fake install directory to avoid conflicts bt/w
     # installed pkgs and mock packages.
-    spack.store.layout = YamlDirectoryLayout(str(tmpdir))
-    spack.store.db = Database(str(tmpdir))
+    spack.store.layout = spack.directory_layout.YamlDirectoryLayout(
+        str(tmpdir))
+    spack.store.db = spack.database.Database(str(tmpdir))
     # We use a fake package, so skip the checksum.
     spack.do_checksum = False
     yield
@@ -305,6 +306,22 @@ def install_mockery(tmpdir, config, builtin_mock):
     # Restore Spack's layout.
     spack.store.layout = layout
     spack.store.db = db
+
+
+@pytest.fixture()
+def mock_fetch(mock_archive):
+    """Fake the URL for a package so it downloads from a file."""
+    fetcher = FetchStrategyComposite()
+    fetcher.append(URLFetchStrategy(mock_archive.url))
+
+    @property
+    def fake_fn(self):
+        return fetcher
+
+    orig_fn = PackageBase.fetcher
+    PackageBase.fetcher = fake_fn
+    yield
+    PackageBase.fetcher = orig_fn
 
 
 ##########
