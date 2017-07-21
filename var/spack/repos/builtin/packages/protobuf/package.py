@@ -42,6 +42,8 @@ class Protobuf(CMakePackage):
 
     conflicts('%gcc@:4.6')  # Requires c++11
 
+    patch('pkgconfig.patch', when='@:3.2.0')
+
     def cmake_args(self):
         args = [
             '-Dprotobuf_BUILD_TESTS:BOOL=OFF'
