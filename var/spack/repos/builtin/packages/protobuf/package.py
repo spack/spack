@@ -25,31 +25,25 @@
 from spack import *
 
 
-class Protobuf(AutotoolsPackage):
+class Protobuf(CMakePackage):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
     url      = "https://github.com/google/protobuf/archive/v3.2.0.tar.gz"
+    root_cmakelists_dir = "cmake"
 
     version('3.2.0', '61d899b8369781f6dd1e62370813392d')
     version('3.1.0', '14a532a7538551d5def317bfca41dace')
     version('3.0.2', '845b39e4b7681a2ddfd8c7f528299fbb')
-    version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
+    # version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
 
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
+    depends_on('zlib')
+    # depends_on('benchmark@develop')
 
     conflicts('%gcc@:4.6')  # Requires c++11
 
-    variant('shared', default=True, description='Build shared libraries.')
-
-    def configure_args(self):
-        if '+shared' in self.spec:
-            return ['--enable-shared=yes',
-                    '--enable-static=no']
-        else:
-            return ['--enable-shared=no',
-                    '--enable-static=yes',
-                    '--with-pic=yes']
+    def cmake_args(self):
+        args = [
+            '-Dprotobuf_BUILD_TESTS:BOOL=OFF'
+        ]
+        return args
