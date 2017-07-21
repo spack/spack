@@ -336,6 +336,10 @@ your command. If it isn't used very frequently, changes to the rest of
 Spack can cause your command to break without sufficient unit tests to
 prevent this from happening.
 
+Whenever you add/remove/rename a command or flags for an existing command,
+make sure to update Spack's `Bash tab completion script
+<https://github.com/adamjstewart/spack/blob/develop/share/spack/spack-completion.bash>`_.
+
 ----------
 Unit tests
 ----------
@@ -359,6 +363,47 @@ Developer commands
 ^^^^^^^^^^^^^^
 ``spack test``
 ^^^^^^^^^^^^^^
+
+.. _cmd-spack-python:
+
+^^^^^^^^^^^^^^^^
+``spack python``
+^^^^^^^^^^^^^^^^
+
+``spack python`` is a command that lets you import and debug things as if
+you were in a Spack interactive shell. Without any arguments, it is similar
+to a normal interactive Python shell, except you can import spack and any
+other Spack modules:
+
+.. code-block:: console
+
+   $ spack python
+   Spack version 0.10.0
+   Python 2.7.13, Linux x86_64
+   >>> from spack.version import Version
+   >>> a = Version('1.2.3')
+   >>> b = Version('1_2_3')
+   >>> a == b
+   True
+   >>> c = Version('1.2.3b')
+   >>> c > a
+   True
+   >>>
+
+You can also run a single command:
+
+.. code-block:: console
+
+   $ spack python -c 'import distro; distro.linux_distribution()'
+   ('Fedora', '25', 'Workstation Edition')
+
+or a file:
+
+.. code-block:: console
+
+   $ spack python ~/test_fetching.py
+
+just like you would with the normal ``python`` command.
 
 .. _cmd-spack-url:
 
@@ -406,16 +451,16 @@ the string that it detected to be the name and version. The
 ``--incorrect-name`` and ``--incorrect-version`` flags can be used to
 print URLs that were not being parsed correctly.
 
-""""""""""""""""""
-``spack url test``
-""""""""""""""""""
+"""""""""""""""""""""
+``spack url summary``
+"""""""""""""""""""""
 
 This command attempts to parse every URL for every package in Spack
 and prints a summary of how many of them are being correctly parsed.
 It also prints a histogram showing which regular expressions are being
 matched and how frequently:
 
-.. command-output:: spack url test
+.. command-output:: spack url summary
 
 This command is essential for anyone adding or changing the regular
 expressions that parse names and versions. By running this command

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,7 +35,7 @@ class Callpath(Package):
     version('1.0.2', 'b1994d5ee7c7db9d27586fc2dcf8f373')
     version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
 
-    depends_on("libelf")
+    depends_on("elf", type="link")
     depends_on("libdwarf")
     depends_on("dyninst")
     depends_on("adept-utils")
@@ -44,6 +44,9 @@ class Callpath(Package):
 
     def install(self, spec, prefix):
         # TODO: offer options for the walker used.
-        cmake('.', "-DCALLPATH_WALKER=dyninst", *std_cmake_args)
+        cmake_args = std_cmake_args
+        if spec.satisfies("^dyninst@9.3.0:"):
+            cmake_args.append("-DCMAKE_CXX_FLAGS='-std=c++11 -fpermissive'")
+        cmake('.', "-DCALLPATH_WALKER=dyninst", *cmake_args)
         make()
         make("install")

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -46,6 +46,8 @@ import os.path
 import re
 import string
 import textwrap
+from six import iteritems
+from six import with_metaclass
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
@@ -213,7 +215,7 @@ def parse_config_options(module_generator):
             for x in arglist:
                 yield (x, )
         else:
-            for x in arglist.iteritems():
+            for x in iteritems(arglist):
                 yield x
 
     for method, arglist in environment_actions.items():
@@ -246,17 +248,17 @@ def format_env_var_name(name):
     return name.replace('-', '_').upper()
 
 
-class EnvModule(object):
+class ModuleMeta(type):
+    """Metaclass registers modules in themodule_types dict."""
+    def __init__(cls, name, bases, dict):
+        type.__init__(cls, name, bases, dict)
+        if cls.name != 'env_module' and cls.name in _module_config['enable']:
+            module_types[cls.name] = cls
+
+
+class EnvModule(with_metaclass(ModuleMeta, object)):
     name = 'env_module'
     formats = {}
-
-    class __metaclass__(type):
-
-        def __init__(cls, name, bases, dict):
-            type.__init__(cls, name, bases, dict)
-            if cls.name != 'env_module' and cls.name in _module_config[
-                    'enable']:
-                module_types[cls.name] = cls
 
     def __init__(self, spec=None):
         self.spec = spec

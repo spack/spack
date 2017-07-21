@@ -1,0 +1,11 @@
+--- a/ncurses/tty/MKexpanded.sh	2017-02-12 09:09:33.828954282 -0600
++++ b/ncurses/tty/MKexpanded.sh	2017-02-12 09:11:03.430673306 -0600
+@@ -125,7 +125,7 @@
+ EOF
+ 
+ $preprocessor $TMP 2>/dev/null | \
+-	sed -e '1,/^IGNORE$/d' -e 's/^@/#/' -e 's/^#if_/#if /'
++	sed -e '1,/^IGNORE$/d' -e 's/^@/#/' -e 's/^#[    ]*if_/#if /'
+ 
+ cat <<EOF
+ #else /* ! NCURSES_EXPANDED */

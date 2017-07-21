@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -46,7 +46,7 @@ class MakeExecutableTest(unittest.TestCase):
         with open(make_exe, 'w') as f:
             f.write('#!/bin/sh\n')
             f.write('echo "$@"')
-        os.chmod(make_exe, 0700)
+        os.chmod(make_exe, 0o700)
 
         path_put_first('PATH', [self.tmpdir])
 

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,8 +24,9 @@
 ##############################################################################
 
 
-def pre_uninstall(pkg):
-    assert(pkg.spec.concrete)
+def pre_uninstall(spec):
+    pkg = spec.package
+    assert spec.concrete
 
     if pkg.is_extension:
         if pkg.activated:

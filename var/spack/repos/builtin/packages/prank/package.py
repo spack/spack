@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ class Prank(Package):
     """A powerful multiple sequence alignment browser."""
 
     homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.140603.tgz"
+    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
 
     version('150803', '71ac2659e91c385c96473712c0a23e8a')
 

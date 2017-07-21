@@ -1,0 +1,10 @@
+diff --git a/utils/gpp/gpp.py.in b/utils/gpp/gpp.py.in
+index cbb0d88..6977a55 100755
+--- a/utils/gpp/gpp.py.in
++++ b/utils/gpp/gpp.py.in
+@@ -1,4 +1,4 @@
+-#!@PYTHON_EXECUTABLE@
++#!/usr/bin/env python
+ 
+ import sys
+ import os

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -44,10 +44,10 @@ class Flux(AutotoolsPackage):
     depends_on("hwloc")
     depends_on("lua@5.1:5.1.99")
     depends_on("munge")
-    depends_on("libjson-c")
+    depends_on("json-c")
     depends_on("libxslt")
     depends_on("python")
-    depends_on("py-cffi")
+    depends_on("py-cffi", type=('build', 'run'))
     depends_on("jansson")
 
     depends_on("asciidoc", type='build', when="+docs")

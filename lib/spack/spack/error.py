@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,8 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import os
 import sys
+
 import llnl.util.tty as tty
 import spack
 import inspect
@@ -97,3 +100,18 @@ class NoNetworkConnectionError(SpackError):
             "No network connection: " + str(message),
             "URL was: " + str(url))
         self.url = url
+
+
+class SpecError(SpackError):
+    """Superclass for all errors that occur while constructing specs."""
+
+
+class UnsatisfiableSpecError(SpecError):
+    """Raised when a spec conflicts with package constraints.
+       Provide the requirement that was violated when raising."""
+    def __init__(self, provided, required, constraint_type):
+        super(UnsatisfiableSpecError, self).__init__(
+            "%s does not satisfy %s" % (provided, required))
+        self.provided = provided
+        self.required = required
+        self.constraint_type = constraint_type

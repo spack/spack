@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -45,26 +45,30 @@ class Veclibfort(Package):
     provides('lapack')
 
     @property
-    def blas_libs(self):
+    def libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libvecLibFort'], root=self.prefix, shared=shared, recurse=True
+            'libvecLibFort', root=self.prefix, shared=shared, recurse=True
         )
-
-    @property
-    def lapack_libs(self):
-        return self.blas_libs
 
     def install(self, spec, prefix):
         if sys.platform != 'darwin':
             raise InstallError('vecLibFort can be installed on macOS only')
 
-        make('all')
-        make('PREFIX=%s' % prefix, 'install')
+        filter_file(r'^PREFIX=.*', '', 'Makefile')
+
+        make_args = []
+
+        if spec.satisfies('%gcc@6:'):
+            make_args += ['CFLAGS=-flax-vector-conversions']
+
+        make_args += ['PREFIX=%s' % prefix, 'install']
+
+        make(*make_args)
 
         # test
         fc = which('fc')
         flags = ['-o', 'tester', '-O', 'tester.f90']
-        flags.extend(self.lapack_libs.ld_flags.split())
+        flags.extend(spec['veclibfort'].libs.ld_flags.split())
         fc(*flags)
         Executable('./tester')()
