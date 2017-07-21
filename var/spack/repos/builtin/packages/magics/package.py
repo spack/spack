@@ -109,7 +109,7 @@ class Magics(Package):
         if '+metview' in spec:
             if '+qt' in spec:
                 options.append('-DENABLE_METVIEW=ON')
-                if int(spec['qt'].version.up_to(1)) == 5:
+                if spec['qt'].version[0] == 5:
                     options.append('-DENABLE_QT5=ON')
             else:
                 options.append('-DENABLE_METVIEW_NO_QT=ON')
