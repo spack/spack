@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -34,7 +33,7 @@ class Adios(AutotoolsPackage):
     """
 
     homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
-    url      = "https://github.com/ornladios/ADIOS/archive/v1.11.1.tar.gz"
+    url = "https://github.com/ornladios/ADIOS/archive/v1.11.1.tar.gz"
 
     version('develop', git='https://github.com/ornladios/ADIOS.git',
             branch='master')
