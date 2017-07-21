@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2016 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -43,14 +43,10 @@
 from spack import *
 
 
-class CbtfLanl(Package):
+class CbtfLanl(CMakePackage):
     """CBTF LANL project contains a memory tool and data center type system
        command monitoring tool."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
-
-    # Mirror access template example
-    # url      = "file:/g/g24/jeg/cbtf-lanl-1.6.tar.gz"
-    # version('1.6', 'c3f78f967b0a42c6734ce4be0e602426')
 
     version('1.8', branch='master',
             git='http://git.code.sf.net/p/cbtf-lanl/cbtf-lanl')
@@ -64,61 +60,24 @@ class CbtfLanl(Package):
 
     parallel = False
 
-    def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
-        # Sets build type parameters into cmakeOptions the options that will
-        # enable the cbtf-krell built type settings
+    build_directory = 'build_cbtf_lanl'
 
+    def build_type(self):
+        return 'None'
+
+    def cmake_args(self):
+
+        spec = self.spec
         compile_flags = "-O2 -g"
-        BuildTypeOptions = []
-        # Set CMAKE_BUILD_TYPE to what cbtf-krell wants it to be, not the
-        # stdcmakeargs
-        for word in cmakeOptions[:]:
-            if word.startswith('-DCMAKE_BUILD_TYPE'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_CXX_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_C_FLAGS'):
-                cmakeOptions.remove(word)
-            if word.startswith('-DCMAKE_VERBOSE_MAKEFILE'):
-                cmakeOptions.remove(word)
-        BuildTypeOptions.extend([
-            '-DCMAKE_VERBOSE_MAKEFILE=ON',
-            '-DCMAKE_BUILD_TYPE=None',
-            '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
-            '-DCMAKE_C_FLAGS=%s'           % compile_flags
-        ])
 
-        cmakeOptions.extend(BuildTypeOptions)
+        cmake_args = [
+            '-DCMAKE_CXX_FLAGS=%s'        % compile_flags,
+            '-DCMAKE_C_FLAGS=%s'          % compile_flags,
+            '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
+            '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
+            '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
+            '-DXERCESC_DIR=%s'            % spec['xerces-c'].prefix,
+            '-DCMAKE_MODULE_PATH=%s'      % join_path(
+                prefix.share, 'KrellInstitute', 'cmake')]
 
-    def install(self, spec, prefix):
-
-        # Add in paths for finding package config files that tell us where to
-        # find these packages
-        cmake_prefix_path = join_path(
-            spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
-
-        with working_dir('build', create=True):
-            cmakeOptions = []
-            cmakeOptions.extend(
-                ['-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
-                 '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
-                 '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
-                 '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
-                 '-DXERCESC_DIR=%s'            % spec['xerces-c'].prefix,
-                 '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
-                 '-DCMAKE_MODULE_PATH=%s'      % join_path(
-                     prefix.share, 'KrellInstitute', 'cmake')])
-
-            # Add in the standard cmake arguments
-            cmakeOptions.extend(std_cmake_args)
-
-            # Adjust the standard cmake arguments to what we want the build
-            # type, etc to be
-            self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
-
-            # Invoke cmake
-            cmake('..', *cmakeOptions)
-
-            make("clean")
-            make()
-            make("install")
+        return cmake_args

@@ -39,6 +39,8 @@ class Bcftools(Package):
 
     depends_on('zlib')
     depends_on('bzip2', when="@1.4:")
+    # build fails without xz
+    depends_on('xz', when="@1.4")
 
     def install(self, spec, prefix):
         make("prefix=%s" % prefix, "all")
