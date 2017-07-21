@@ -46,6 +46,7 @@ class Protobuf(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-Dprotobuf_BUILD_TESTS:BOOL=OFF'
+            '-Dprotobuf_BUILD_TESTS:BOOL=OFF',
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON'
         ]
         return args
