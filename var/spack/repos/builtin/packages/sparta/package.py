@@ -30,7 +30,7 @@ class Sparta(Package):
        high-throughput sequencing to profile genome-wide cleavage
        products."""
 
-    homepage = "https://github.com/atulkakrana/sPARTA.github/releases"
+    homepage = "https://github.com/atulkakrana/sPARTA.github"
     url      = "https://github.com/atulkakrana/sPARTA/archive/1.25.tar.gz"
 
     version('1.25', '50fda66bf860f63ae8aef5e8fb997a75')
