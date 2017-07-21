@@ -33,7 +33,8 @@ class AllineaReports(Package):
 
     homepage = "http://www.allinea.com/products/allinea-performance-reports"
 
-    version('6.0.4', '3f13b08a32682737bc05246fbb2fcc77')
+    version('7.0.5', '555d0d7d1b904a57d87352b5f5e1415b')
+    #version('6.0.4', '3f13b08a32682737bc05246fbb2fcc77')
 
     # Licensing
     license_required = True
@@ -45,8 +46,11 @@ class AllineaReports(Package):
     def url_for_version(self, version):
         # TODO: add support for other architectures/distributions
         url = "http://content.allinea.com/downloads/"
-        return url + "allinea-reports-%s-Redhat-6.0-x86_64.tar" % version
+        #return url + "allinea-reports-%s-Redhat-6.0-x86_64.tar" % version
+        return url + "allinea-reports-%s-Suse-12-x86_64.tar" % version
 
     def install(self, spec, prefix):
-        textinstall = which('textinstall.sh')
-        textinstall('--accept-licence', prefix)
+        #textinstall = which('textinstall.sh')
+        #textinstall('--accept-licence', prefix)
+        textinstall = which('sh')
+        textinstall('textinstall.sh', '--accept-licence', prefix)

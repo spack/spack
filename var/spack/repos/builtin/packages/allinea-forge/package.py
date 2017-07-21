@@ -33,7 +33,8 @@ class AllineaForge(Package):
 
     homepage = "http://www.allinea.com/products/develop-allinea-forge"
 
-    version('6.0.4', 'df7f769975048477a36f208d0cd57d7e')
+    version('7.0.5', '146c62c114c4ed27d5dfe73e1342f71a')
+    #version('6.0.4', 'df7f769975048477a36f208d0cd57d7e')
 
     # Licensing
     license_required = True
@@ -45,8 +46,11 @@ class AllineaForge(Package):
     def url_for_version(self, version):
         # TODO: add support for other architectures/distributions
         url = "http://content.allinea.com/downloads/"
-        return url + "allinea-forge-%s-Redhat-6.0-x86_64.tar" % version
+        #return url + "allinea-forge-%s-Redhat-6.0-x86_64.tar" % version
+        return url + "allinea-forge-%s-Suse-12-x86_64.tar" % version
 
     def install(self, spec, prefix):
-        textinstall = which('textinstall.sh')
-        textinstall('--accept-licence', prefix)
+        #textinstall = which('textinstall.sh')
+        #textinstall('--accept-licence', prefix)
+        textinstall = which('sh')
+        textinstall('./textinstall.sh', '--accept-licence', prefix)
