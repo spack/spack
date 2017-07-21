@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -37,3 +36,15 @@ class Benchmark(CMakePackage):
 
     version('1.1.0', '66b2a23076cf70739525be0092fc3ae3')
     version('1.0.0', '1474ff826f8cd68067258db75a0835b8')
+
+    def patch(self):
+        filter_file(
+            r'add_cxx_compiler_flag..fstrict.aliasing.',
+            r'##### add_cxx_compiler_flag(-fstrict-aliasing)',
+            'CMakeLists.txt'
+        )
+        filter_file(
+            r'add_cxx_compiler_flag..Werror',
+            r'##### add_cxx_compiler_flag(-Werror',
+            'CMakeLists.txt'
+        )
