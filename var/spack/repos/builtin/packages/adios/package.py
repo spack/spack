@@ -52,6 +52,7 @@ class Adios(AutotoolsPackage):
     variant('mpi', default=True, description='Enable MPI support')
     variant('no_mpi', default=False, description='Disable MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
+    variant('mxml', default=False, description='Build with external mxml')
 
     # transforms
     variant('zlib', default=True, description='Enable zlib transform support')
@@ -72,7 +73,7 @@ class Adios(AutotoolsPackage):
     depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
-    depends_on('mxml@2.9:')
+    depends_on('mxml@2.9:', when='+mxml')
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
@@ -110,8 +111,8 @@ class Adios(AutotoolsPackage):
         # required, otherwise building its python bindings on ADIOS will fail
         extra_args.append("CFLAGS=-fPIC")
 
-        # always build external MXML, even in ADIOS 1.10.0+
-        extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
+        if '+mxml' in spec:
+            extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
 
         if '+shared' in spec:
             extra_args.append('--enable-shared')
