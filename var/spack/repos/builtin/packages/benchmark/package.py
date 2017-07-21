@@ -32,5 +32,8 @@ class Benchmark(CMakePackage):
     homepage = "https://github.com/google/benchmark"
     url      = "https://github.com/google/benchmark/archive/v1.1.0.tar.gz"
 
+    version('develop', branch='master',
+            git='https://github.com/google/benchmark.git')
+
     version('1.1.0', '66b2a23076cf70739525be0092fc3ae3')
     version('1.0.0', '1474ff826f8cd68067258db75a0835b8')
