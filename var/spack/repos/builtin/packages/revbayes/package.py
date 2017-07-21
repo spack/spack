@@ -52,18 +52,14 @@ class Revbayes(CMakePackage):
         with working_dir(join_path('projects', 'cmake')):
             mkdirp('build')
             edit = FileFilter('regenerate.sh')
-            edit.filter('boost=*', 'boost="false"')
+            edit.filter('boost="true"', 'boost="false"')
             if '+mpi' in self.spec:
-                subprocess.call(['./regenerate.sh'])
-                edit.filter('mpi=*', 'mpi="true"')
-            else:
-                subprocess.call(['./regenerate.sh'])
+                edit.filter('mpi="false"', 'mpi="true"')
+            subprocess.call(['./regenerate.sh'])
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        make()
-        with working_dir(join_path('projects', 'cmake')):
-            if '+mpi' in spec:
-                install('rb-mpi', prefix.bin)
-            else:
-                install('rb', prefix.bin)
+        if '+mpi' in spec:
+            install('rb-mpi', prefix.bin)
+        else:
+            install('rb', prefix.bin)
