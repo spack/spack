@@ -62,6 +62,9 @@ class Adios(AutotoolsPackage):
     variant('sz', default=True, description='Enable SZ transform support')
     # transports and serial file converters
     variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
+    variant('flexpath', default=False, description='Enable flexpath transport')
+    variant('dataspaces', default=False, description='Enable dataspaces transport')
+    variant('staging', default=False, description='Enable dataspaces and flexpath staging transports')
 
     # Lots of setting up here for this package
     # module swap PrgEnv-intel PrgEnv-$COMP
@@ -83,6 +86,10 @@ class Adios(AutotoolsPackage):
     depends_on('zfp@:0.5.0', when='+zfp')
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
+    depends_on('libevpath', when='+flexpath')
+    depends_on('libevpath', when='+staging')
+    depends_on('dataspaces+mpi', when='+dataspaces')
+    depends_on('dataspaces+mpi', when='+staging')
 
     build_directory = 'spack-build'
 
@@ -145,5 +152,9 @@ class Adios(AutotoolsPackage):
             extra_args.append('--with-sz=%s' % spec['sz'].prefix)
         if '+hdf5' in spec:
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
+        if ('+flexpath' in spec) or ('+staging' in spec):
+            extra_args.append('--with-flexpath=%s' % spec['libevpath'].prefix)
+        if ('+dataspaces' in spec) or ('+staging' in spec):
+            extra_args.append('--with-dataspaces=%s' % spec['dataspaces'].prefix)
 
         return extra_args
