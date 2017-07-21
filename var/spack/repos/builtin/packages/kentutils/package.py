@@ -25,28 +25,28 @@
 from spack import *
 
 
-class LlvmLld(Package):
-    """lld - The LLVM Linker
-       lld is a new set of modular code for creating linker tools."""
-    homepage = "http://lld.llvm.org"
-    url      = "http://llvm.org/releases/3.4/lld-3.4.src.tar.gz"
+class Kentutils(MakefilePackage):
+    """Jim Kent command line bioinformatic utilities"""
 
-    depends_on('llvm')
+    homepage = "https://github.com/ENCODE-DCC/kentUtils"
+    url      = "https://github.com/ENCODE-DCC/kentUtils"
 
-    version('3.4', '3b6a17e58c8416c869c14dd37682f78e')
+    version('302.1', git='https://github.com/ENCODE-DCC/kentUtils.git', commit='d8376c5d52a161f2267346ed3dc94b5dce74c2f9')
 
-    depends_on('cmake', type='build')
+    depends_on('libpng')
+    depends_on('openssl')
+
+    # Actually depends on mysql, but mariadb works for now until mysql is
+    # available
+    depends_on('mariadb')
+
+    conflicts('%cce')
+    conflicts('%clang')
+    conflicts('%intel')
+    conflicts('%nag')
+    conflicts('%pgi')
+    conflicts('%xl')
+    conflicts('%xl_r')
 
     def install(self, spec, prefix):
-        if 'CXXFLAGS' in env and env['CXXFLAGS']:
-            env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
-        else:
-            env['CXXFLAGS'] = self.compiler.cxx11_flag
-
-        with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DLLD_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
-                  '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
-                  *std_cmake_args)
-            make()
-            make("install")
+        install_tree('bin', prefix.bin)

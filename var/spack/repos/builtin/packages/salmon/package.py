@@ -25,28 +25,17 @@
 from spack import *
 
 
-class LlvmLld(Package):
-    """lld - The LLVM Linker
-       lld is a new set of modular code for creating linker tools."""
-    homepage = "http://lld.llvm.org"
-    url      = "http://llvm.org/releases/3.4/lld-3.4.src.tar.gz"
+class Salmon(CMakePackage):
+    """Salmon is a tool for quantifying the expression of transcripts using
+       RNA-seq data."""
 
-    depends_on('llvm')
+    homepage = "http://combine-lab.github.io/salmon/"
+    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
 
-    version('3.4', '3b6a17e58c8416c869c14dd37682f78e')
+    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
 
-    depends_on('cmake', type='build')
+    depends_on('boost')
 
-    def install(self, spec, prefix):
-        if 'CXXFLAGS' in env and env['CXXFLAGS']:
-            env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
-        else:
-            env['CXXFLAGS'] = self.compiler.cxx11_flag
-
-        with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DLLD_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
-                  '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
-                  *std_cmake_args)
-            make()
-            make("install")
+    def cmake_args(self):
+        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
+        return args

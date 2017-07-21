@@ -25,28 +25,17 @@
 from spack import *
 
 
-class LlvmLld(Package):
-    """lld - The LLVM Linker
-       lld is a new set of modular code for creating linker tools."""
-    homepage = "http://lld.llvm.org"
-    url      = "http://llvm.org/releases/3.4/lld-3.4.src.tar.gz"
+class Satsuma2(CMakePackage):
+    """Satsuma2 is an optimsed version of Satsuma, a tool to reliably align
+       large and complex DNA sequences providing maximum sensitivity (to find
+       all there is to find), specificity (to only find real homology) and
+       speed (to accomodate the billions of base pairs in vertebrate genomes).
+    """
 
-    depends_on('llvm')
+    homepage = "https://github.com/bioinfologics/satsuma2"
+    url      = "https://github.com/bioinfologics/satsuma2"
 
-    version('3.4', '3b6a17e58c8416c869c14dd37682f78e')
-
-    depends_on('cmake', type='build')
+    version('2016-11-22', git='https://github.com/bioinfologics/satsuma2.git', commit='da694aeecf352e344b790bea4a7aaa529f5b69e6')
 
     def install(self, spec, prefix):
-        if 'CXXFLAGS' in env and env['CXXFLAGS']:
-            env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
-        else:
-            env['CXXFLAGS'] = self.compiler.cxx11_flag
-
-        with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DLLD_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
-                  '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
-                  *std_cmake_args)
-            make()
-            make("install")
+        install_tree(join_path('spack-build', 'bin'), prefix.bin)

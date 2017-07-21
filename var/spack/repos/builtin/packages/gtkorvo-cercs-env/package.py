@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,28 +25,17 @@
 from spack import *
 
 
-class LlvmLld(Package):
-    """lld - The LLVM Linker
-       lld is a new set of modular code for creating linker tools."""
-    homepage = "http://lld.llvm.org"
-    url      = "http://llvm.org/releases/3.4/lld-3.4.src.tar.gz"
+class GtkorvoCercsEnv(CMakePackage):
+    """A utility library used by some GTkorvo packages.
+    """
 
-    depends_on('llvm')
+    homepage = "https://github.com/GTkorvo/cercs_env"
+    url = "https://github.com/GTkorvo/cercs_env/archive/v1.0.tar.gz"
 
-    version('3.4', '3b6a17e58c8416c869c14dd37682f78e')
+    version('develop', git='https://github.com/GTkorvo/cercs_env.git',
+            branch='master')
+    version('1.0', '08f0532d0c2f7bc9b53dfa7a1c40ea4d')
 
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        if 'CXXFLAGS' in env and env['CXXFLAGS']:
-            env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
-        else:
-            env['CXXFLAGS'] = self.compiler.cxx11_flag
-
-        with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DLLD_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
-                  '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
-                  *std_cmake_args)
-            make()
-            make("install")
+    def cmake_args(self):
+        args = ["-DENABLE_TESTING=0", "-DENABLE_SHARED_STATIC=STATIC"]
+        return args

@@ -22,44 +22,41 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Xsbench(MakefilePackage):
-    """XSBench is a mini-app representing a key computational
-       kernel of the Monte Carlo neutronics application OpenMC.
-       A full explanation of the theory and purpose of XSBench
-       is provided in docs/XSBench_Theory.pdf."""
+class Snap(MakefilePackage):
+    """SNAP serves as a proxy application to model
+    the performance of a modern discrete ordinates
+    neutral particle transport application.
+    SNAP may be considered an update to Sweep3D,
+    intended for hybrid computing architectures.
+    It is modeled off the Los Alamos National Laboratory code PARTISN."""
 
-    homepage = "https://github.com/ANL-CESAR/XSBench/"
-    url = "https://github.com/ANL-CESAR/XSBench/archive/v13.tar.gz"
+    homepage = "https://github.com/lanl/SNAP"
+    url      = ""
+    tags     = ['proxy-app']
 
-    tags = ['proxy-app']
+    version('master', git='https://github.com/lanl/SNAP.git')
 
-    version('13', '72a92232d2f5777fb52f5ea4082aff37')
-
-    variant('mpi', default=False, description='Build with MPI support')
+    variant('openmp', default=False, description='Build with OpenMP support')
+    variant('opt', default=True, description='Build with debugging')
+    variant('mpi', default=True, description='Build with MPI support')
 
     depends_on('mpi', when='+mpi')
 
     build_directory = 'src'
 
-    @property
-    def build_targets(self):
-
-        targets = []
-
-        cflags = '-std=gnu99'
-        if '+mpi' in self.spec:
-            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
-
-        cflags += ' ' + self.compiler.openmp_flag
-        targets.append('CFLAGS={0}'.format(cflags))
-        targets.append('LDFLAGS=-lm')
-
-        return targets
+    def edit(self, spec, prefix):
+        with working_dir(self.build_directory):
+            makefile = FileFilter('Makefile')
+            if '~opt' in spec:
+                makefile.filter('OPT = yes', 'OPT = no')
+            if '~mpi' in spec:
+                makefile.filter('MPI = yes', 'MPI = no')
+            if '~openmp' in spec:
+                makefile.filter('OPENMP = yes', 'OPENMP = no')
 
     def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install('src/XSBench', prefix.bin)
+        install('README.md', prefix)
+        install_tree('qasnap', prefix.qasnap)
