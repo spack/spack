@@ -1,0 +1,10 @@
+--- a/chlorop	2006-03-20 06:24:22.000000000 -0600
++++ b/chlorop	2017-07-21 12:43:14.571075868 -0500
+@@ -10,7 +10,6 @@
+ 
+ ### GENERAL SETTINGS, CUSTOMIZE +++++++++++++++++++++++++++++++++++++++++++++++
+ # Substitute your chosen location for ChloroP software:
+-CHLOROP=/usr/cbs/packages/chlorop/currdist/chlorop-1.1
+ 
+ # Substitute paste:
+ PASTE=paste
