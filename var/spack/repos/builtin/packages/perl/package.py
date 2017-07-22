@@ -107,8 +107,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # [1] https://metacpan.org/pod/ExtUtils::MakeMaker#INSTALL_BASE
         # [2] via the activate method in the PackageBase class
         # [3] https://metacpan.org/pod/distribution/perl/INSTALL#APPLLIB_EXP
-        config_args.append('-Accflags=-DAPPLLIB_EXP=\\"'
-                           + self.prefix.lib.perl5 + '\\"')
+        config_args.append('-Accflags=-DAPPLLIB_EXP=\\"' +
+                           self.prefix.lib.perl5 + '\\"')
 
         # Discussion of -fPIC for Intel at:
         # https://github.com/LLNL/spack/pull/3081 and
