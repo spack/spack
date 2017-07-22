@@ -33,6 +33,6 @@ class Libxdmcp(AutotoolsPackage):
 
     version('1.1.2', 'ab0d6a38f0344a05d698ec7d48cfa5a8')
 
-    depends_on('xproto', type='link')
+    depends_on('xproto', type='include')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')

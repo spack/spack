@@ -63,7 +63,7 @@ class Opencv(Package):
             description='Activates support for Java')
 
     depends_on('cmake', type='build')
-    depends_on('eigen', when='+eigen', type='link')
+    depends_on('eigen', when='+eigen', type='include')
 
     depends_on('zlib')
     depends_on('libpng')
