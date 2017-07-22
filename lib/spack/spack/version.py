@@ -139,12 +139,12 @@ class Version(object):
         Example:
         >>> version = Version('1-2-3b')
         >>> version.dotted
-        '1.2.3b'
+        Version('1.2.3b')
 
         Returns:
-            str: The elements of the version, separated by dots
+            Version: The version with separator characters replaced by dots
         """
-        return self.string.replace('-', '.').replace('_', '.')
+        return Version(self.string.replace('-', '.').replace('_', '.'))
 
     @property
     def underscored(self):
@@ -153,12 +153,13 @@ class Version(object):
         Example:
         >>> version = Version('1.2.3b')
         >>> version.underscored
-        '1_2_3b'
+        Version('1_2_3b')
 
         Returns:
-            str: The elements of the version, separated by underscores
+            Version: The version with separator characters replaced by
+                underscores
         """
-        return self.string.replace('.', '_').replace('-', '_')
+        return Version(self.string.replace('.', '_').replace('-', '_'))
 
     @property
     def dashed(self):
@@ -167,12 +168,12 @@ class Version(object):
         Example:
         >>> version = Version('1.2.3b')
         >>> version.dashed
-        '1-2-3b'
+        Version('1-2-3b')
 
         Returns:
-            str: The elements of the version, separated by dashes
+            Version: The version with separator characters replaced by dashes
         """
-        return self.string.replace('.', '-').replace('_', '-')
+        return Version(self.string.replace('.', '-').replace('_', '-'))
 
     @property
     def joined(self):
@@ -181,12 +182,13 @@ class Version(object):
         Example:
         >>> version = Version('1.2.3b')
         >>> version.joined
-        '123b'
+        Version('123b')
 
         Returns:
-            str: The version with no separator characters
+            Version: The version with separator characters removed
         """
-        return self.string.replace('.', '').replace('-', '').replace('_', '')
+        return Version(
+            self.string.replace('.', '').replace('-', '').replace('_', ''))
 
     def up_to(self, index):
         """The version up to the specified component.

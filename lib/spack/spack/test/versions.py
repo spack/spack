@@ -426,35 +426,47 @@ def test_satisfaction_with_lists():
 
 
 def test_formatted_strings():
-    versions = '1.2.3b', '1_2_3b', '1-2-3b'
+    versions = (
+        '1.2.3b', '1_2_3b', '1-2-3b',
+        '1.2-3b', '1.2_3b', '1-2.3b',
+        '1-2_3b', '1_2.3b', '1_2-3b'
+    )
     for item in versions:
         v = Version(item)
-        assert v.dotted == '1.2.3b'
-        assert v.dashed == '1-2-3b'
-        assert v.underscored == '1_2_3b'
-        assert v.joined == '123b'
+        assert v.dotted == Version('1.2.3b')
+        assert v.dashed == Version('1-2-3b')
+        assert v.underscored == Version('1_2_3b')
+        assert v.joined == Version('123b')
+
+        assert v.dotted.dashed == Version('1-2-3b')
+        assert v.dotted.underscored == Version('1_2_3b')
+        assert v.dotted.dotted == Version('1.2.3b')
 
 
 def test_up_to():
-    version = Version('1.23-4_5b')
+    v = Version('1.23-4_5b')
 
-    assert version.up_to(1) == Version('1')
-    assert version.up_to(2) == Version('1.23')
-    assert version.up_to(3) == Version('1.23-4')
-    assert version.up_to(4) == Version('1.23-4_5')
-    assert version.up_to(5) == Version('1.23-4_5b')
+    assert v.up_to(1) == Version('1')
+    assert v.up_to(2) == Version('1.23')
+    assert v.up_to(3) == Version('1.23-4')
+    assert v.up_to(4) == Version('1.23-4_5')
+    assert v.up_to(5) == Version('1.23-4_5b')
 
-    assert version.up_to(-1) == Version('1.23-4_5')
-    assert version.up_to(-2) == Version('1.23-4')
-    assert version.up_to(-3) == Version('1.23')
-    assert version.up_to(-4) == Version('1')
+    assert v.up_to(-1) == Version('1.23-4_5')
+    assert v.up_to(-2) == Version('1.23-4')
+    assert v.up_to(-3) == Version('1.23')
+    assert v.up_to(-4) == Version('1')
 
-    assert version.up_to(2).dotted == '1.23'
-    assert version.up_to(2).dashed == '1-23'
-    assert version.up_to(2).underscored == '1_23'
-    assert version.up_to(2).joined == '123'
+    assert v.up_to(2).dotted == Version('1.23')
+    assert v.up_to(2).dashed == Version('1-23')
+    assert v.up_to(2).underscored == Version('1_23')
+    assert v.up_to(2).joined == Version('123')
 
-    assert version.up_to(2).up_to(1) == Version('1')
+    assert v.dotted.up_to(2) == Version('1.23') == v.up_to(2).dotted
+    assert v.dashed.up_to(2) == Version('1-23') == v.up_to(2).dashed
+    assert v.underscored.up_to(2) == Version('1_23') == v.up_to(2).underscored
+
+    assert v.up_to(2).up_to(1) == Version('1')
 
 
 def test_repr_and_str():
