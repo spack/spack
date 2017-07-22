@@ -34,7 +34,7 @@ import os
 import inspect
 import pstats
 import argparse
-from six import StringIO
+import tempfile
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import *
@@ -387,8 +387,12 @@ class SpackCommand(object):
             [self.command_name] + list(argv))
 
         out, err = sys.stdout, sys.stderr
+        ofd, ofn = tempfile.mkstemp()
+        efd, efn = tempfile.mkstemp()
+
         try:
-            sys.stdout, sys.stderr = StringIO(), StringIO()
+            sys.stdout = open(ofn, 'w')
+            sys.stderr = open(efn, 'w')
             self.returncode = _invoke_spack_command(
                 self.command, self.parser, args, unknown)
 
@@ -396,9 +400,16 @@ class SpackCommand(object):
             self.returncode = e.code
 
         finally:
-            return_out = sys.stdout.getvalue()
-            return_err = sys.stderr.getvalue()
+            sys.stdout.flush()
+            sys.stdout.close()
+            sys.stderr.flush()
+            sys.stderr.close()
             sys.stdout, sys.stderr = out, err
+
+            return_out = open(ofn).read()
+            return_err = open(efn).read()
+            os.unlink(ofn)
+            os.unlink(efn)
 
         if self.fail_on_error and self.returncode != 0:
             raise SpackCommandError(
