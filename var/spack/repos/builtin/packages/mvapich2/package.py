@@ -225,6 +225,8 @@ class Mvapich2(AutotoolsPackage):
                 '--enable-cuda',
                 '--with-cuda={0}'.format(spec['cuda'].prefix)
             ])
+        else:
+            args.append('--disable-cuda')
 
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
