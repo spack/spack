@@ -41,19 +41,18 @@ class Groff(AutotoolsPackage):
     # Seems troublesome...netpbm requires groff?
     variant('pdf', default=True, description='Build the `gropdf` executable.')
 
-    depends_on('binutils')
-    depends_on('coreutils')
-    depends_on('gawk')
-    depends_on('gmake')
-    depends_on('sed')
+    depends_on('gawk',  type='build')
+    depends_on('gmake', type='build')
+    depends_on('sed',   type='build')
     depends_on('ghostscript', when='+pdf')
 
     version('1.22.3', 'cc825fa64bc7306a885f2fb2268d3ec5')
 
     # https://savannah.gnu.org/bugs/index.php?43581
-    # NOTE: always patch, even if not +pdf
-    def patch(self):
-        patch('gropdf.patch')
+    # TODO: figure out why this patch does not actually work for parallel
+    # builds reliably.
+    # patch('gropdf.patch')
+    parallel = False
 
     def configure_args(self):
         args = [
