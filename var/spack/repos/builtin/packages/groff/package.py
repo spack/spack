@@ -34,4 +34,29 @@ class Groff(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/groff/"
     url      = "http://ftp.gnu.org/gnu/groff/groff-1.22.3.tar.gz"
 
+    # TODO: add html variant, spack doesn't have netpbm and its too
+    # complicated for me to find out at this point in time.
+    # See brew scripts for groff for guidance:
+    # https://github.com/Homebrew/homebrew-core/blob/master/Formula/groff.rb
+    # Seems troublesome...netpbm requires groff?
+    variant('pdf', default=True, description='Build the `gropdf` executable.')
+
+    depends_on('binutils')
+    depends_on('coreutils')
+    depends_on('gawk')
+    depends_on('gmake')
+    depends_on('sed')
+    depends_on('ghostscript', when='+pdf')
+
     version('1.22.3', 'cc825fa64bc7306a885f2fb2268d3ec5')
+
+    # https://savannah.gnu.org/bugs/index.php?43581
+    # NOTE: always patch, even if not +pdf
+    def patch(self):
+        patch('gropdf.patch')
+
+    def configure_args(self):
+        args = [
+            "--without-x"
+        ]
+        return args

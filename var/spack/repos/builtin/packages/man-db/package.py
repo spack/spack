@@ -41,15 +41,16 @@ class ManDb(AutotoolsPackage):
     depends_on('gettext')
     depends_on('libpipeline')
     depends_on('flex')
-    depends_on('groff')
+    depends_on('groff', type=('build', 'link', 'run'))
 
-    #???
-    depends_on('bzip2')
-    depends_on('lzma')
-    depends_on('xz')
+    # TODO: add gzip support via a new package.
+    # man pages are typically compressed, include all available
+    # compression libraries
+    depends_on('bzip2', type=('build', 'link', 'run'))
+    depends_on('lzma',  type=('build', 'link', 'run'))
+    depends_on('xz',    type=('build', 'link', 'run'))
 
     def configure_args(self):
-        spec = self.spec
         args = [
             '--disable-setuid',
             # defaults to a location that needs root privs to write in
