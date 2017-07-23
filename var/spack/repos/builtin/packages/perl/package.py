@@ -172,7 +172,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         """
 
         # perl extension builds can have a global perl executable function
-        module.perl = Executable(join_path(self.prefix.bin, 'perl'))
+        module.perl = self.spec['perl'].command
 
         # Add variables for library directory
         module.perl_lib_dir = dependent_spec.prefix.lib.perl5
@@ -192,7 +192,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
 
         # Find the actual path to the installed Config.pm file.
-        perl = Executable(join_path(prefix.bin, 'perl'))
+        perl = self.spec['perl'].command
         config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
                              'print is_loaded(Config)', output=str)
 
