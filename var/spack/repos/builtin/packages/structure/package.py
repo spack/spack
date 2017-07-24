@@ -43,5 +43,5 @@ class Structure(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('structure', prefix.bin)
-        install('mainparams', prefix)
-        install('extraparams', prefix)
+        install('mainparams', prefix.bin)
+        install('extraparams', prefix.bin)
