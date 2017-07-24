@@ -26,7 +26,7 @@ from spack import *
 import inspect
 
 
-class Hpgmg(AutotoolsPackage):
+class Hpgmg(Package):
     """HPGMG implements full multigrid (FMG) algorithms using
     finite-volume and finite-element methods.
     Different algorithmic variants adjust the arithmetic intensity
@@ -56,32 +56,35 @@ class Hpgmg(AutotoolsPackage):
     depends_on('cuda', when='+cuda')
     depends_on('python', type='build')
 
+    phases = ['configure', 'build', 'install']
+
+    @property
     def configure_args(self):
         args = []
         if 'fe_fv=fv' in self.spec:
-            args.append(['--no-fe'])
+            args.append('--no-fe')
         else:
-            args.append(['--fe'])
+            args.append('--fe')
 
         if 'fe_fv=fe' in self.spec:
             if '+mpi' in self.spec:
-                args.append(['--no-fv-mpi'])
+                args.append('--no-fv-mpi')
             else:
-                args.append(['--no-fv'])
+                args.append('--no-fv')
 
         if 'fe_fv=fv' or 'fe_fv=both' in self.spec:
-            args.append(['--CFLAGS=' + self.compiler.openmp_flag])
+            args.append('--CFLAGS=' + self.compiler.openmp_flag)
 
         if '+mpi' in self.spec:
-            args.append(['--CC={0}'.format(self.spec['mpi'].mpicc)])
+            args.append('--CC={0}'.format(self.spec['mpi'].mpicc))
 
         return args
 
     def configure(self, spec, prefix):
-        options = self.configure_args()
+        configure(*self.configure_args)
 
-        with working_dir(self.build_directory, create=True):
-            inspect.getmodule(self).configure(*options)
+    def build(self, spec, prefix):
+            make()
 
     def install(self, spec, prefix):
         install_tree('build/bin', prefix.bin)
