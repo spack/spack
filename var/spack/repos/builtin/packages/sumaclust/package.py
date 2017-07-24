@@ -30,13 +30,12 @@ class Sumaclust(MakefilePackage):
        the same time."""
 
     homepage = "https://git.metabarcoding.org/obitools/sumaclust"
-    url      = "https://git.metabarcoding.org/obitools/sumaclust/uploads/69f757c42f2cd45212c587e87c75a00f/sumaclust_v1.0.20.tar.gz"
 
-    version('1.0.20', '31c7583fbe2e3345d5fe3e9431d9b30c')
+    version('1.0.20', '31c7583fbe2e3345d5fe3e9431d9b30c',
+            url="https://git.metabarcoding.org/obitools/sumaclust/uploads/69f757c42f2cd45212c587e87c75a00f/sumaclust_v1.0.20.tar.gz")
 
-    def edit(self, spec, prefix):
-        if '%clang'in spec:
-            make('CC=clang')
+    def build(self, spec, prefix):
+        make('CC={0}'.format(spack_cc))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
