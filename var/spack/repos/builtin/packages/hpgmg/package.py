@@ -59,21 +59,21 @@ class Hpgmg(AutotoolsPackage):
     def configure_args(self):
         args = []
         if 'fe_fv=fv' in self.spec:
-            args.extend(['--no-fe'])
+            args.append(['--no-fe'])
         else:
-            args.extend(['--fe'])
+            args.append(['--fe'])
 
         if 'fe_fv=fe' in self.spec:
             if '+mpi' in self.spec:
-                args.extend(['--no-fv-mpi'])
+                args.append(['--no-fv-mpi'])
             else:
-                args.extend(['--no-fv'])
+                args.append(['--no-fv'])
 
         if 'fe_fv=fv' or 'fe_fv=both' in self.spec:
-            args.extend(['--CFLAGS=' + self.compiler.openmp_flag])
+            args.append(['--CFLAGS=' + self.compiler.openmp_flag])
 
         if '+mpi' in self.spec:
-            args.extend(['--CC={0}'.format(self.spec['mpi'].mpicc)])
+            args.append(['--CC={0}'.format(self.spec['mpi'].mpicc)])
 
         return args
 
@@ -82,10 +82,6 @@ class Hpgmg(AutotoolsPackage):
 
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
-
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            make()
 
     def install(self, spec, prefix):
         install_tree('build/bin', prefix.bin)
