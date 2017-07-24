@@ -98,7 +98,9 @@ class AutotoolsPackage(PackageBase):
     @run_after('autoreconf')
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
-        this updated when installed on a newer architecture."""
+        this updated when installed on a newer architecture. In particular,
+        config.guess fails for PPC64LE for version prior to a 2013-06-10
+        build date (automake 1.13.4)."""
 
         if not self.patch_config_guess or not self.spec.satisfies(
                 'arch=linux-rhel7-ppc64le'
@@ -189,19 +191,6 @@ class AutotoolsPackage(PackageBase):
         spack_env.set(flag_val[0].upper(),
                       ' '.join(flag_val[1]))
         return []
-
-    def patch(self):
-        """Patches config.guess if
-        :py:attr:``~.AutotoolsPackage.patch_config_guess`` is True
-
-        :raise RuntimeError: if something goes wrong when patching
-            ``config.guess``
-        """
-
-        if self.patch_config_guess and self.spec.satisfies(
-                'arch=linux-rhel7-ppc64le'
-        ):
-            self._do_patch_config_guess()
 
     @run_before('autoreconf')
     def delete_configure_to_force_update(self):
