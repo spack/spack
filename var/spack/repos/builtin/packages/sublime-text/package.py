@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -49,7 +49,7 @@ class SublimeText(Package):
     depends_on('libxau', type='run')
 
     def url_for_version(self, version):
-        if version.up_to(1) == '2':
+        if version[0] == 2:
             return "https://download.sublimetext.com/Sublime%20Text%20{0}%20x64.tar.bz2".format(version)
         else:
             return "https://download.sublimetext.com/sublime_text_3_build_{0}_x64.tar.bz2".format(version)

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,6 +31,7 @@
 # Date: September 6, 2015
 #
 from spack import *
+import os
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -68,6 +69,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     variant('cpanm', default=True,
             description='Optionally install cpanm with the core packages.')
 
+    variant('shared', default=True,
+            description='Build a shared libperl.so library')
+
     resource(
         name="cpanm",
         url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
@@ -86,13 +90,34 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             '-des',
             '-Dprefix={0}'.format(prefix),
             '-Dlocincpth=' + self.spec['gdbm'].prefix.include,
-            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib
+            '-Dloclibpth=' + self.spec['gdbm'].prefix.lib,
         ]
 
+        # Extensions are installed into their private tree via
+        # `INSTALL_BASE`/`--install_base` (see [1]) which results in a
+        # "predictable" installation tree that sadly does not match the
+        # Perl core's @INC structure.  This means that when activation
+        # merges the extension into the extendee[2], the directory tree
+        # containing the extensions is not on @INC and the extensions can
+        # not be found.
+        #
+        # This bit prepends @INC with the directory that is used when
+        # extensions are activated [3].
+        #
+        # [1] https://metacpan.org/pod/ExtUtils::MakeMaker#INSTALL_BASE
+        # [2] via the activate method in the PackageBase class
+        # [3] https://metacpan.org/pod/distribution/perl/INSTALL#APPLLIB_EXP
+        config_args.append('-Accflags=-DAPPLLIB_EXP=\\"' +
+                           self.prefix.lib.perl5 + '\\"')
+
         # Discussion of -fPIC for Intel at:
-        # https://github.com/LLNL/spack/pull/3081
+        # https://github.com/LLNL/spack/pull/3081 and
+        # https://github.com/LLNL/spack/pull/4416
         if spec.satisfies('%intel'):
             config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
+
+        if '+shared' in spec:
+            config_args.append('-Duseshrplib')
 
         return config_args
 
@@ -122,10 +147,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 make()
                 make('install')
 
-    def setup_environment(self, spack_env, run_env):
-        """Set PERL5LIB to support activation of Perl packages"""
-        run_env.set('PERL5LIB', join_path(self.prefix, 'lib', 'perl5'))
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
            any other perl extensions it depends on,
@@ -135,8 +156,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         for d in dependent_spec.traverse(
                 deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
-                perl_lib_dirs.append(join_path(d.prefix, 'lib', 'perl5'))
-                perl_bin_dirs.append(join_path(d.prefix, 'bin'))
+                perl_lib_dirs.append(d.prefix.lib.perl5)
+                perl_bin_dirs.append(d.prefix.bin)
         perl_bin_path = ':'.join(perl_bin_dirs)
         perl_lib_path = ':'.join(perl_lib_dirs)
         spack_env.prepend_path('PATH', perl_bin_path)
@@ -151,12 +172,42 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         """
 
         # perl extension builds can have a global perl executable function
-        module.perl = Executable(join_path(self.spec.prefix.bin, 'perl'))
+        module.perl = self.spec['perl'].command
 
         # Add variables for library directory
-        module.perl_lib_dir = join_path(dependent_spec.prefix, 'lib', 'perl5')
+        module.perl_lib_dir = dependent_spec.prefix.lib.perl5
 
         # Make the site packages directory for extensions,
         # if it does not exist already.
         if dependent_spec.package.is_extension:
             mkdirp(module.perl_lib_dir)
+
+    @run_after('install')
+    def filter_config_dot_pm(self):
+        """Run after install so that Config.pm records the compiler that Spack
+        built the package with.  If this isn't done, $Config{cc} will
+        be set to Spack's cc wrapper script.
+        """
+
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
+
+        # Find the actual path to the installed Config.pm file.
+        perl = self.spec['perl'].command
+        config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
+                             'print is_loaded(Config)', output=str)
+
+        match = 'cc *=>.*'
+        substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+        filter_file(match, substitute, config_dot_pm, **kwargs)
+
+        # And the path Config_heavy.pl
+        d = os.path.dirname(config_dot_pm)
+        config_heavy = join_path(d, 'Config_heavy.pl')
+
+        match = '^cc=.*'
+        substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+        filter_file(match, substitute, config_heavy, **kwargs)
+
+        match = '^ld=.*'
+        substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+        filter_file(match, substitute, config_heavy, **kwargs)

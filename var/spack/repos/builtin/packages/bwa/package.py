@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,10 @@ class Bwa(Package):
     homepage = "http://github.com/lh3/bwa"
     url      = "https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2"
 
-    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554')
+    version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554',
+            url="https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2")
+    version('0.7.12', 'e24a587baaad411d5da89516ad7a261a',
+            url='https://github.com/lh3/bwa/archive/0.7.12.tar.gz')
 
     depends_on('zlib')
 
@@ -48,5 +51,5 @@ class Bwa(Package):
         mkdirp(prefix.doc)
         install('README.md', prefix.doc)
         install('NEWS.md', prefix.doc)
-        mkdirp(prefix.man1)
-        install('bwa.1', prefix.man1)
+        mkdirp(prefix.man.man1)
+        install('bwa.1', prefix.man.man1)

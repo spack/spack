@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,3 +40,14 @@ class PyCdatLite(PythonPackage):
     depends_on("python@2.5:2.8", type=('build', 'run'))
     depends_on("py-numpy", type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+
+    phases = ['install']
+
+    def install(self, spec, prefix):
+        """Install everything from build directory."""
+        install_args = self.install_args(spec, prefix)
+        # Combine all phases into a single setup.py command,
+        # otherwise extensions are rebuilt without rpath by install phase:
+        self.setup_py('build_ext', '--rpath=%s' % ":".join(self.rpath),
+                      'build_py', 'build_scripts',
+                      'install', *install_args)

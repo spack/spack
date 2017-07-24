@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,8 +31,7 @@ class RClass(RPackage):
 
     homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
     url      = "https://cran.r-project.org/src/contrib/class_7.3-14.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/class"
 
     version('7.3-14', '6a21dd206fe4ea29c55faeb65fb2b71e')
 
-    depends_on('r-mass', type=('build','run'))
+    depends_on('r-mass', type=('build', 'run'))

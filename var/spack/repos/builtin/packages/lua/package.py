@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -145,11 +145,11 @@ class Lua(Package):
 
     @property
     def lua_lib_dir(self):
-        return os.path.join('lib', 'lua', self.version.up_to(2))
+        return os.path.join('lib', 'lua', str(self.version.up_to(2)))
 
     @property
     def lua_share_dir(self):
-        return os.path.join('share', 'lua', self.version.up_to(2))
+        return os.path.join('share', 'lua', str(self.version.up_to(2)))
 
     def setup_dependent_package(self, module, dependent_spec):
         """

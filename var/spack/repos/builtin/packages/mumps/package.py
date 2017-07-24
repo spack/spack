@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -61,7 +61,7 @@ class Mumps(Package):
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
-    depends_on('scotch + esmumps + mpi', when='+ptscotch')
+    depends_on('scotch + esmumps ~ metis + mpi', when='+ptscotch')
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
@@ -69,8 +69,10 @@ class Mumps(Package):
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
 
-    patch('spectrum-mpi-xl.patch', when='%xl^spectrum-mpi')
-    patch('spectrum-mpi-xl.patch', when='%xl_r^spectrum-mpi')
+    patch('mumps-5.0.2-spectrum-mpi-xl.patch', when='@5.0.2%xl^spectrum-mpi')
+    patch('mumps-5.0.2-spectrum-mpi-xl.patch', when='@5.0.2%xl_r^spectrum-mpi')
+    patch('mumps-5.1.1-spectrum-mpi-xl.patch', when='@5.1.1%xl^spectrum-mpi')
+    patch('mumps-5.1.1-spectrum-mpi-xl.patch', when='@5.1.1%xl_r^spectrum-mpi')
 
     # this function is not a patch function because in case scalapack
     # is needed it uses self.spec['scalapack'].fc_link set by the
@@ -90,14 +92,9 @@ class Mumps(Package):
         orderings = ['-Dpord']
 
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
-            join_lib = ' -l%s' % ('pt' if '+ptscotch' in self.spec else '')
             makefile_conf.extend([
                 "ISCOTCH = -I%s" % self.spec['scotch'].prefix.include,
-                "LSCOTCH = -L%s %s%s" % (self.spec['scotch'].prefix.lib,
-                                         join_lib,
-                                         join_lib.join(['esmumps',
-                                                        'scotch',
-                                                        'scotcherr']))
+                "LSCOTCH = {0}".format(self.spec['scotch'].libs.ld_flags)
             ])
 
             orderings.append('-Dscotch')
@@ -147,7 +144,7 @@ class Mumps(Package):
         else:
             if self.compiler.name == "xl" or self.compiler.name == "xl_r":
                 makefile_conf.extend(
-                    ['OPTF    = -O3',
+                    ['OPTF    = -O3 -qfixed',
                      'OPTL    = %s -O3' % fpic,
                      'OPTC    = %s -O3' % fpic])
             else:
@@ -163,7 +160,7 @@ class Mumps(Package):
                  'FC = {0}'.format(self.spec['mpi'].mpifc),
                  "SCALAP = %s" % scalapack.ld_flags,
                  "MUMPS_TYPE = par"])
-            if (self.spec.satisfies('%xl_r' or '%xl')) and self.spec.satisfies('^spectrum-mpi'): # noqa
+            if (self.spec.satisfies('%xl_r' or '%xl')) and self.spec.satisfies('^spectrum-mpi'):  # noqa
                 makefile_conf.extend(
                     ['FL = {0}'.format(self.spec['mpi'].mpicc)])
             else:
@@ -178,8 +175,8 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        if self.compiler.name == 'intel':
-            # Intel Fortran compiler provides the main() function so
+        if self.compiler.name == 'intel' or self.compiler.name == 'pgi':
+            # Intel & PGI Fortran compiler provides the main() function so
             # C examples linked with the Fortran compiler require a
             # hack defined by _DMAIN_COMP (see examples/c_example.c)
             makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")

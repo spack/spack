@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,6 +31,5 @@ class RBase64enc(RPackage):
 
     homepage = "http://www.rforge.net/base64enc"
     url      = "https://cran.r-project.org/src/contrib/base64enc_0.1-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/base64enc"
 
     version('0.1-3', '0f476dacdd11a3e0ad56d13f5bc2f190')

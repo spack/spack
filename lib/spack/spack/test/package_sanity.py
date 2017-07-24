@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -47,16 +47,6 @@ def test_get_all_mock_packages():
     spack.repo.swap(db)
     check_db()
     spack.repo.swap(db)
-
-
-def test_url_versions():
-    """Check URLs for regular packages, if they are explicitly defined."""
-    for pkg in spack.repo.all_packages():
-        for v, vattrs in pkg.versions.items():
-            if 'url' in vattrs:
-                # If there is a url for the version check it.
-                v_url = pkg.url_for_version(v)
-                assert vattrs['url'] == v_url
 
 
 def test_all_versions_are_lowercase():

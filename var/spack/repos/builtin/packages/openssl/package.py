@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,6 +25,7 @@
 import llnl.util.tty as tty
 
 from spack import *
+import spack.architecture
 
 
 class Openssl(Package):
@@ -85,6 +86,10 @@ class Openssl(Package):
         options = ['zlib', 'shared']
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
+        # clang does not support the .arch directive in assembly files.
+        if 'clang' in self.compiler.cc and \
+           'aarch64' in spack.architecture.sys_type():
+            options.append('no-asm')
 
         if self.install_context.destdir:
             options.append(

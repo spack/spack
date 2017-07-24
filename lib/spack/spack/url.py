@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -63,16 +63,49 @@ from spack.version import Version
 # "path" seemed like the most generic term.
 #
 def find_list_url(url):
-    """Finds a good list URL for the supplied URL.  This depends on
-       the site.  By default, just assumes that a good list URL is the
-       dirname of an archive path.  For github URLs, this returns the
-       URL of the project's releases page.
+    """Finds a good list URL for the supplied URL.
+
+    By default, returns the dirname of the archive path.
+
+    Provides special treatment for the following websites, which have a
+    unique list URL different from the dirname of the download URL:
+
+    =========  =======================================================
+    GitHub     https://github.com/<repo>/<name>/releases
+    GitLab     https://gitlab.\*/<repo>/<name>/tags
+    BitBucket  https://bitbucket.org/<repo>/<name>/downloads/?tab=tags
+    CRAN       https://\*.r-project.org/src/contrib/Archive/<name>
+    =========  =======================================================
+
+    Parameters:
+        url (str): The download URL for the package
+
+    Returns:
+        str: The list URL for the package
     """
 
     url_types = [
+        # GitHub
         # e.g. https://github.com/llnl/callpath/archive/v1.0.1.tar.gz
         (r'(.*github\.com/[^/]+/[^/]+)',
-         lambda m: m.group(1) + '/releases')]
+         lambda m: m.group(1) + '/releases'),
+
+        # GitLab
+        # e.g. https://gitlab.dkrz.de/k202009/libaec/uploads/631e85bcf877c2dcaca9b2e6d6526339/libaec-1.0.0.tar.gz
+        (r'(.*gitlab[^/]+/[^/]+/[^/]+)',
+         lambda m: m.group(1) + '/tags'),
+
+        # BitBucket
+        # e.g. https://bitbucket.org/eigen/eigen/get/3.3.3.tar.bz2
+        (r'(.*bitbucket.org/[^/]+/[^/]+)',
+         lambda m: m.group(1) + '/downloads/?tab=tags'),
+
+        # CRAN
+        # e.g. https://cran.r-project.org/src/contrib/Rcpp_0.12.9.tar.gz
+        # e.g. https://cloud.r-project.org/src/contrib/rgl_0.98.1.tar.gz
+        (r'(.*\.r-project\.org/src/contrib)/([^_]+)',
+         lambda m: m.group(1) + '/Archive/' + m.group(2)),
+    ]
 
     for pattern, fun in url_types:
         match = re.search(pattern, url)
@@ -150,6 +183,7 @@ def strip_version_suffixes(path):
         'sh',
 
         # Download version
+        'release',
         'stable',
         '[Ff]inal',
         'rel',
@@ -301,7 +335,8 @@ def split_url_extension(path):
     prefix, ext, suffix = path, '', ''
 
     # Strip off sourceforge download suffix.
-    match = re.search(r'((?:sourceforge\.net|sf\.net)/.*)(/download)$', path)
+    # e.g. https://sourceforge.net/projects/glew/files/glew/2.0.0/glew-2.0.0.tgz/download
+    match = re.search(r'(.*(?:sourceforge\.net|sf\.net)/.*)(/download)$', path)
     if match:
         prefix, suffix = match.groups()
 

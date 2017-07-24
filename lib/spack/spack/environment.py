@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -61,6 +61,15 @@ class SetEnv(NameValueModifier):
 
     def execute(self):
         os.environ[self.name] = str(self.value)
+
+
+class AppendFlagsEnv(NameValueModifier):
+
+    def execute(self):
+        if self.name in os.environ and os.environ[self.name]:
+            os.environ[self.name] += self.separator + str(self.value)
+        else:
+            os.environ[self.name] = str(self.value)
 
 
 class UnsetEnv(NameModifier):
@@ -169,6 +178,20 @@ class EnvironmentModifications(object):
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = SetEnv(name, value, **kwargs)
+        self.env_modifications.append(item)
+
+    def append_flags(self, name, value, sep=' ', **kwargs):
+        """
+        Stores in the current object a request to append to an env variable
+
+        Args:
+            name: name of the environment variable to be appended to
+            value: value to append to the environment variable
+        Appends with spaces separating different additions to the variable
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        kwargs.update({'separator': sep})
+        item = AppendFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
 
     def unset(self, name, **kwargs):

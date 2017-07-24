@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,7 +36,7 @@ class Hypre(Package):
     url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
 
     version('develop', git='https://github.com/LLNL/hypre', tag='master')
-    version('xsdk-0.2.0', git='https://github.com/LLNL/hypre', tag='xsdk-0.2.0')        
+    version('xsdk-0.2.0', git='https://github.com/LLNL/hypre', tag='xsdk-0.2.0')
     version('2.11.2', 'd507943a1a3ce5681c3308e2f3a6dd34')
     version('2.11.1', '3f02ef8fd679239a6723f60b7f796519')
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
