@@ -77,12 +77,9 @@ class Openspeedshop(CMakePackage):
                          to point to target build.")
     variant('cuda', default=False,
             description="build with cuda packages included.")
-    variant('useqt4gui', default=False,
-            description="build with Qt4/Qt5 based gui package enabled. \
-                         Do not build older Qt3 gui")
-    variant('rtfe', default=False,
-            description="build for clusters heterogeneous processors \
-                         on fe/be nodes.")
+    variant('gui', default='qt3', values=('none', 'qt3', 'qt4'), 
+            description='Build or not build a GUI of choice'
+    )
 
     # MPI variants
     variant('openmpi', default=False,
@@ -116,7 +113,9 @@ class Openspeedshop(CMakePackage):
     depends_on("boost@1.50.0:1.59.0")
     depends_on("dyninst@9.3.2")
     depends_on("libxml2+python")
-    depends_on("qt@3.3.8b+krellpatch", when='~useqt4gui')
+    depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
+    # Actively working on adding this gui package
+    # depends_on("cbtf-argonavis-gui", when='gui=qt4')
 
     # Dependencies only for the openspeedshop offline package.
     depends_on("libunwind", when='+offline')
@@ -131,6 +130,7 @@ class Openspeedshop(CMakePackage):
 
     # Dependencies only for the openspeedshop cbtf package.
     depends_on("cbtf", when='+cbtf')
+    depends_on('cbtf-krell', when='+cbtf')
     depends_on('cbtf-krell+mpich', when='+cbtf+mpich')
     depends_on('cbtf-krell+mpich2', when='+cbtf+mpich2')
     depends_on('cbtf-krell+mpt', when='+cbtf+mpt')
@@ -152,9 +152,9 @@ class Openspeedshop(CMakePackage):
         compile_flags = "-O2 -g"
 
         if '+offline' in spec:
+            # Indicate building offline vers (writes rawdata files)
             instrumentor_setting = "offline"
             if '+runtime' in spec:
-
                 cmake_args = [
                     '-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
                     '-DCMAKE_C_FLAGS=%s'    % compile_flags,
@@ -175,78 +175,54 @@ class Openspeedshop(CMakePackage):
                 cmake_args.extend(
                     ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
                      '-DCMAKE_C_FLAGS=%s'    % compile_flags,
-                     '-DINSTRUMENTOR=%s'
-                        % instrumentor_setting,
-                     '-DLIBMONITOR_DIR=%s'
-                        % spec['libmonitor'].prefix,
-                     '-DLIBUNWIND_DIR=%s'
-                        % spec['libunwind'].prefix,
-                     '-DPAPI_DIR=%s'
-                        % spec['papi'].prefix,
-                     '-DSQLITE3_DIR=%s'
-                        % spec['sqlite'].prefix,
-                     '-DQTLIB_DIR=%s'
-                        % spec['qt'].prefix])
+                     '-DINSTRUMENTOR=%s' % instrumentor_setting,
+                     '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
+                     '-DLIBUNWIND_DIR=%s' % spec['libunwind'].prefix,
+                     '-DPAPI_DIR=%s' % spec['papi'].prefix,
+                     '-DSQLITE3_DIR=%s' % spec['sqlite'].prefix,
+                     '-DQTLIB_DIR=%s' % spec['qt'].prefix])
 
                 # Add any MPI implementations coming from variant settings
                 self.set_mpi_cmakeOptions(spec, cmake_args)
 
         elif '+cbtf' in spec:
+            # Indicate building cbtf vers (transfer rawdata files)
             instrumentor_setting = "cbtf"
 
             if '+runtime' in spec:
-
                 # Appends base options to cmake_args
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
 
                 cmake_args.extend(
                     ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
                      '-DCMAKE_C_FLAGS=%s'    % compile_flags,
-                     '-DINSTRUMENTOR=%s'
-                        % instrumentor_setting,
-                     '-DCBTF_DIR=%s'
-                        % spec['cbtf'].prefix,
-                     '-DCBTF_KRELL_DIR=%s'
-                        % spec['cbtf-krell'].prefix,
-                     '-DMRNET_DIR=%s'
-                        % spec['mrnet'].prefix])
+                     '-DINSTRUMENTOR=%s' % instrumentor_setting,
+                     '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
+                     '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
+                     '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
 
             else:
                 cmake_args = []
 
                 # Appends base options to cmake_args
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
+                guitype = self.spec.variants['gui'].value
+                cmake_args.extend(
+                    ['-DCMAKE_CXX_FLAGS=%s' % compile_flags,
+                     '-DCMAKE_C_FLAGS=%s' % compile_flags,
+                     '-DINSTRUMENTOR=%s' % instrumentor_setting,
+                     '-DSQLITE3_DIR=%s' % spec['sqlite'].prefix,
+                     '-DCBTF_DIR=%s' % spec['cbtf'].prefix,
+                     '-DCBTF_KRELL_DIR=%s' % spec['cbtf-krell'].prefix,
+                     '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
 
-                if '+useqt4gui' in self.spec:
+                if guitype == 'none':
                     cmake_args.extend(
-                        ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
-                         '-DCMAKE_C_FLAGS=%s'    % compile_flags,
-                         '-DINSTRUMENTOR=%s'
-                            % instrumentor_setting,
-                         '-DSQLITE3_DIR=%s'
-                            % spec['sqlite'].prefix,
-                         '-DCBTF_DIR=%s'
-                            % spec['cbtf'].prefix,
-                         '-DCBTF_KRELL_DIR=%s'
-                            % spec['cbtf-krell'].prefix,
-                         '-DMRNET_DIR=%s'
-                            % spec['mrnet'].prefix])
-                else:
+                        ['-DBUILD_QT3_GUI=FALSE'])
+                elif guitype == 'qt3':
                     cmake_args.extend(
-                        ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
-                         '-DCMAKE_C_FLAGS=%s'    % compile_flags,
-                         '-DINSTRUMENTOR=%s'
-                            % instrumentor_setting,
-                         '-DSQLITE3_DIR=%s'
-                            % spec['sqlite'].prefix,
-                         '-DCBTF_DIR=%s'
-                            % spec['cbtf'].prefix,
-                         '-DCBTF_KRELL_DIR=%s'
-                            % spec['cbtf-krell'].prefix,
-                         '-DQTLIB_DIR=%s'
-                            % spec['qt'].prefix,
-                         '-DMRNET_DIR=%s'
-                            % spec['mrnet'].prefix])
+                        ['-DQTLIB_DIR=%s'
+                            % spec['qt'].prefix])
 
         return cmake_args
 
