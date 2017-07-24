@@ -49,6 +49,9 @@ class Rose(AutotoolsPackage):
     depends_on("libtool@2.4", type='build')
     depends_on("boost@1.47.0:")
 
+    variant('debug', default=False, description='Enable compiler debugging symbols')
+    variant('optimized', default=False, description='Enable compiler optimizations')
+
     variant('tests', default=False, description='Build the tests directory')
 
     variant('binanalysis', default=False, description='Enable binary analysis tooling')
@@ -104,7 +107,10 @@ class Rose(AutotoolsPackage):
             "--with-z3={0}".format(spec['z3'].prefix) if '+z3' in spec else '',
             '--disable-tests-directory' if '+tests' not in spec else '',
             '--enable-tutorial-directory={0}'.format('no'),
-            '--without-java' if '+java' not in spec else ''
+            '--without-java' if '+java' not in spec else '',
+            '--with-CXX_DEBUG=-g' if '+debug' in spec else '',
+            '--with-C_OPTIMIZE=-O0' if '+optimized' in spec else '',
+            '--with-CXX_OPTIMIZE=-O0' if '+optimized' in spec else '',
         ]
 
     def install(self, spec, prefix):
