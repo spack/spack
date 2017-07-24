@@ -9,7 +9,8 @@ from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 from spack.stage import Stage
-from spack.binary_distribution import build_tarball, read_buildinfo_file
+from spack.binary_distribution import *
+from spack.relocate import *
 from llnl.util.filesystem import *
 import os 
 
@@ -67,25 +68,25 @@ def test_packaging(mock_archive):
     with open(filename, "w") as script:
         script.write(spec.prefix)
 
-    # Create the tarball and
+    # Create the build cache  and
     # put it directly into the mirror
-    with Stage('spack-mirror-test') as stage:
+    mirrors = {}
+    with Stage('spack-mirror-test',keep=True) as stage:
         mirror_root = join_path(stage.path, 'test-mirror')
         os.chdir(stage.path)
         specs=[spec]
         spack.mirror.create(
             mirror_root, specs, no_checksum=True
         )
-        build_tarball(spec, mirror_root, sign=False)
+        build_tarball(spec, mirror_root+'/build_cache/', sign=False)
 
         # register mirror with spack config
-        mirrors = {'spack-mirror-test': 'file://' + mirror_root}
-        spack.config.update_config('mirrors', mirrors)
+        mirrors['spack-mirror-test'] = 'file://' + mirror_root
 
 
-    # Validate the relocation information
-    buildinfo = read_buildinfo_file(spec)
-    assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
+        # Validate the relocation information
+        buildinfo = read_buildinfo_file(spec)
+        assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
 
-    # Uninstall the package
-    pkg.do_uninstall(force=True)
+        # Uninstall the package
+        pkg.do_uninstall(force=True) 

@@ -51,7 +51,7 @@ def setup_parser(subparser):
     create.add_argument('-ns', '--nosign', action='store_true')
     create.add_argument('-k', '--key', metavar='key',
                         type=str, default=None,
-                        help="gpg2 key for signing.")
+                        help="Key for signing.")
     create.add_argument('-d', '--directory', metavar='directory',
                         type=str, default='.',
                         help="directory in which to save the tarballs.")
@@ -78,7 +78,7 @@ def setup_parser(subparser):
     dlkeys = subparsers.add_parser('keys')
     dlkeys.add_argument(
         '-i', '--install', action='store_true',
-        help="install gpg2 keys pulled from mirror")
+        help="install Keys pulled from mirror")
     dlkeys.add_argument(
         '-y', '--yes-to-all', action='store_true',
         help="answer yes to all trust questions")

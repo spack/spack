@@ -1,7 +1,7 @@
 .. _binary_caches:
 
 Build caches
-============================
+============
 
 Some sites may encourage users to set up their own test environments
 before carrying out central installations, or some users prefer to set
@@ -14,14 +14,11 @@ your spack mirror and then downloaded and installed by others.
 Creating build cache files
 --------------------------
 
-A compressed tarball of an installed package is created.
-Tarballs are created for all of its link and run 
-dependency packages as well.
-Compressed tarballs are signed with gpg and 
-signature and tarball and put in a ".spack" tarfile. 
-Optionally the rpaths ( and ids and deps on macOS )
-can be changed to paths relative to the spack install tree 
-before the tarball is created.
+A compressed tarball of an installed package is created. Tarballs are created
+for all of its link and run dependency packages as well. Compressed tarballs are
+signed with gpg and signature and tarball and put in a ".spack" file. Optionally
+, the rpaths ( and ids and deps on macOS ) can be changed to paths relative to 
+the spack install tree before the tarball is created.
 
 Build caches are created via:
 
@@ -30,10 +27,11 @@ Build caches are created via:
    $ spack buildcache create 
 
 
-Finding and installing build cache files
-------------------------------------
+Finding or installing build cache files
+---------------------------------------
 
-To find install build caches a spack mirror must be configured with
+To find build caches or install build caches, a spack mirror must be configured
+with
  
 ``spack mirror add <name> <url>``. 
 
@@ -51,37 +49,41 @@ Build caches are installed via:
    
 
 Relocation
--------------------------------
+----------
 
-Initial build and later installation do not necessarily happen at the same
-location. Spack provides a very relocation capability and corrects for
-RPATHs and non-relocatable scripts. However, many packages compile paths into
-binary artificats directly. In such cases, the build instructions of this
-package would need to be adjusted for better re-locatability.
+Initial build and later installation do not necessarily happen at the same 
+location. Spack provides a relocation capability and corrects for RPATHs and 
+non-relocatable scripts. However, many packages compile paths into binary 
+artificats directly. In such cases, the build instructions of this package would
+need to be adjusted for better re-locatability.
 
 
 Usage 
--------------------------------
+-----
+.. code-block:: sh
 spack buildcache create <>
 
 options:
 
--d : directory to create build_cache direcory in, 
+-d : directory in which "build_cache" direcory is created, 
      defaults to "."
--f : overwrite ".spack" in build_cache if it exists
--r : make paths in binaries relative before creating tarball
--key : the kep to sign package with, 
+-f : overwrite ".spack" file in "build_cache" directory if it exists
+-r : make rpaths in binaries relative before creating tarball
+-k : the key to sign package with, 
        defaults to first key in spack gpg directory
--ns : don't sign the package with gpg
+-ns : don't sign the package
 <> : list of package specs or package hashes with leading /
 
+.. code-block:: sh
 spack buildcache list <>
 
 options:
 
-<> string to be matched to matched to begining of listed concretized short specs,
-eg. "spack buildcache list gcc" with print only commands to install gcc package(s)
+<> string to be matched to matched to begining of listed concretized short 
+specs, eg. "spack buildcache list gcc" with print only commands to install gcc
+package(s)
 
+.. code-block:: sh
 spack buildcache install <>
 
 options:
@@ -90,10 +92,9 @@ options:
 -nv : don't verify package with gpg
 <> : list of package specs or package hashes with leading /
 
+.. code-block:: sh
 spack buildcache keys
 options:
 
 -i : trust the keys downloaded with prompt for each
 -y : answer yes to all
-
-
