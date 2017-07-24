@@ -139,16 +139,29 @@ class Adios(AutotoolsPackage):
         else:
             extra_args.append('--disable-fortran')
 
+        # Transforms
         if '+zlib' in spec:
             extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
+        else:
+            extra_args.append('--without-zlib')
         if '+bzip2' in spec:
             extra_args.append('--with-bzip2=%s' % spec['bzip2'].prefix)
+        else:
+            extra_args.append('--without-bzip2')
         if '+szip' in spec:
             extra_args.append('--with-szip=%s' % spec['szip'].prefix)
+        else:
+            extra_args.append('--without-szip')
         if '+zfp' in spec:
             extra_args.append('--with-zfp=%s' % spec['zfp'].prefix)
+        else:
+            extra_args.append('--without-zfp')
         if '+sz' in spec:
             extra_args.append('--with-sz=%s' % spec['sz'].prefix)
+        else:
+            extra_args.append('--without-sz')
+
+        # External I/O libraries
         if '+hdf5' in spec:
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
         else:
@@ -158,11 +171,12 @@ class Adios(AutotoolsPackage):
         else:
             extra_args.append('--without-netcdf')
 
-        if ('+flexpath' in spec) or ('+staging' in spec):
+        # Staging transports
+        if '+flexpath' in spec or '+staging' in spec:
             extra_args.append('--with-flexpath=%s' % spec['libevpath'].prefix)
         else:
             extra_args.append('--without-flexpath')
-        if ('+dataspaces' in spec) or ('+staging' in spec):
+        if '+dataspaces' in spec or '+staging' in spec:
             extra_args.append('--with-dataspaces=%s' % spec['dataspaces'].prefix)
         else:
             extra_args.append('--without-dataspaces')
