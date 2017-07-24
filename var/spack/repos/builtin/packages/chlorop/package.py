@@ -46,12 +46,13 @@ class Chlorop(Package):
 
     # get tarball from current directory
     def url_for_version(self, version):
-        return "file://{0}/chlorop-{1}.Linux.tar.gz".format(os.getcwd(), version)
+        return "file://{0}/chlorop-{1}.Linux.tar.gz".format(os.getcwd(),
+                                                            version)
 
     def install(self, spec, prefix):
-        os.rename('chlorop','bin/chlorop')
+        os.rename('chlorop', 'bin/chlorop')
         distutils.dir_util.copy_tree(".", prefix)
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('CHLOROP', self.spec.prefix)
-        run_env.set('CHLOROTMP', tempfile.gettempdir()+'/chlorop')
+        run_env.set('CHLOROTMP', tempfile.gettempdir() + '/chlorop')
