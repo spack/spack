@@ -1,80 +1,91 @@
 """
 This test checks the binary packaging infrastructure
 """
-
+import pytest
 import spack
-from spack.binary_distribution import build_tarball, read_buildinfo_file
-from llnl.util.filesystem import *
+import spack.store
+from spack.database import Database
 from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.test.mock_packages_test import *
-from spack.test.mock_repo import MockArchive
+from spack.spec import Spec
+from spack.stage import Stage
+from spack.binary_distribution import build_tarball, read_buildinfo_file
+from llnl.util.filesystem import *
+import os 
+
+@pytest.fixture(scope='function')
+def mock_gpg_config():
+    orig_gpg_keys_path = spack.gpg_keys_path
+    spack.gpg_keys_path = spack.mock_gpg_keys_path
+    yield
+    spack.gpg_keys_path = orig_gpg_keys_path
 
 
-class PackagingTest(MockPackagesTest):
-    """"Installs, packages, deletes, and installs a package"""
+@pytest.fixture()
+def install_mockery(tmpdir, config, builtin_mock):
+    """Hooks a fake install directory and a fake db into Spack."""
+    layout = spack.store.layout
+    db = spack.store.db
+    # Use a fake install directory to avoid conflicts bt/w
+    # installed pkgs and mock packages.
+    spack.store.layout = YamlDirectoryLayout(str(tmpdir))
+    spack.store.db = Database(str(tmpdir))
+    # We use a fake package, so skip the checksum.
+    spack.do_checksum = False
+    yield
+    # Turn checksumming back on
+    spack.do_checksum = True
+    # Restore Spack's layout.
+    spack.store.layout = layout
+    spack.store.db = db
 
-    def setUp(self):
-        super(PackagingTest, self).setUp()
 
-        # create a simple installable package directory and tarball
-        self.repo = MockArchive()
+def fake_fetchify(url, pkg):
+    """Fake the URL for a package so it downloads from a file."""
+    fetcher = FetchStrategyComposite()
+    fetcher.append(URLFetchStrategy(url))
+    pkg.fetcher = fetcher
 
-        # We use a fake package, so skip the checksum.
-        spack.do_checksum = False
-        self.tmpdir = tempfile.mkdtemp()
-        self.orig_layout = spack.store.layout
-        spack.store.layout = YamlDirectoryLayout(self.tmpdir)
+@pytest.mark.usefixtures('install_mockery', 'mock_gpg_config')
+def test_packaging(mock_archive):
+    # tweak patchelf to only do a download
+    spec = Spec("patchelf")
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    fake_fetchify(pkg.fetcher, pkg)
 
-    def tearDown(self):
-        super(PackagingTest, self).tearDown()
-        self.repo.destroy()
+    # Install the test package
+    spec = Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    pkg = spack.repo.get(spec)
+    fake_fetchify(mock_archive.url, pkg)
+    pkg.do_install()
 
-        # Turn checksumming back on
-        spack.do_checksum = True
+    # Put some non-relocatable file in there
+    filename = join_path(spec.prefix, "dummy.txt")
+    with open(filename, "w") as script:
+        script.write(spec.prefix)
 
-        # restore spack's layout.
-        spack.store.layout = self.orig_layout
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
+    # Create the tarball and
+    # put it directly into the mirror
+    with Stage('spack-mirror-test') as stage:
+        mirror_root = join_path(stage.path, 'test-mirror')
+        os.chdir(stage.path)
+        specs=[spec]
+        spack.mirror.create(
+            mirror_root, specs, no_checksum=True
+        )
+        build_tarball(spec, mirror_root, sign=False)
 
-    def set_up_mirror(self):
-        self.mirror_root = join_path(self.tmpdir, "binary-mirror")
-        mkdirp(self.mirror_root)
         # register mirror with spack config
-        mirrors = {'spack-mirror-test': 'file://' + self.mirror_root}
+        mirrors = {'spack-mirror-test': 'file://' + mirror_root}
         spack.config.update_config('mirrors', mirrors)
 
-    def fake_fetchify(self, pkg):
-        """Fake the URL for a package so it downloads from a file."""
-        fetcher = FetchStrategyComposite()
-        fetcher.append(URLFetchStrategy(self.repo.url))
-        pkg.fetcher = fetcher
 
-    def test_packaging(self):
-        # tweak patchelf to only do a download
-        spec = Spec("patchelf")
-        spec.concretize()
-        pkg = spack.repo.get(spec)
-        self.fake_fetchify(pkg)
+    # Validate the relocation information
+    buildinfo = read_buildinfo_file(spec)
+    assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
 
-        # Install the test package
-        spec = Spec("trivial_install_test_package").concretized()
-        pkg = spack.repo.get(spec)
-        self.fake_fetchify(pkg)
-
-        # Put some non-relocatable file in there
-        filename = join_path(spec.prefix, "dummy.txt")
-        with open(filename, "w") as script:
-            script.write(spec.prefix)
-
-        # Create the tarball and
-        # put it directly into the mirror
-        self.set_up_mirror()
-        build_tarball(spec, self.mirror_root)
-
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
-
-        # Validate the relocation information
-        buildinfo = read_buildinfo_file(spec)
-        assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
+    # Uninstall the package
+    pkg.do_uninstall(force=True)
