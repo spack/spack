@@ -60,40 +60,35 @@ need to be adjusted for better re-locatability.
 
 Usage 
 -----
-.. code-block:: sh
 spack buildcache create <>
-
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 options:
 
--d : directory in which "build_cache" direcory is created, 
-     defaults to "."
+-d : directory in which "build_cache" direcory is created, defaults to "."
 -f : overwrite ".spack" file in "build_cache" directory if it exists
 -r : make rpaths in binaries relative before creating tarball
--k : the key to sign package with, 
-       defaults to first key in spack gpg directory
+-k : the key to sign package with, defaults to first key in spack gpg directory
 -ns : don't sign the package
 <> : list of package specs or package hashes with leading /
 
-.. code-block:: sh
 spack buildcache list <>
-
+^^^^^^^^^^^^^^^^^^^^^^^^
 options:
 
 <> string to be matched to matched to begining of listed concretized short 
 specs, eg. "spack buildcache list gcc" with print only commands to install gcc
 package(s)
 
-.. code-block:: sh
 spack buildcache install <>
-
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 options:
 
 -f : remove install directory if it exists before unpacking tarball
 -nv : don't verify package with gpg
 <> : list of package specs or package hashes with leading /
 
-.. code-block:: sh
 spack buildcache keys
+^^^^^^^^^^^^^^^^^^^^^
 options:
 
 -i : trust the keys downloaded with prompt for each

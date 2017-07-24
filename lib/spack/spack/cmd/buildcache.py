@@ -94,6 +94,8 @@ def createtarball(args):
     outdir = os.getcwd()
     if args.directory:
         outdir = args.directory
+    if args.key:
+        skey = args.key
     sign = True
     force = False
     if args.nosign:
@@ -114,7 +116,7 @@ def createtarball(args):
     spack.binary_distribution.prepare()
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        build_tarball(spec, outdir, force, sign, args.rel, args.key)
+        build_tarball(spec, outdir, force, sign, args.rel, skey)
 
 
 def installtarball(args):
