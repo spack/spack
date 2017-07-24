@@ -151,11 +151,20 @@ class Adios(AutotoolsPackage):
             extra_args.append('--with-sz=%s' % spec['sz'].prefix)
         if '+hdf5' in spec:
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
+        else:
+            extra_args.append('--without-phdf5')
         if '+netcdf' in spec:
             extra_args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
+        else:
+            extra_args.append('--without-netcdf')
+
         if ('+flexpath' in spec) or ('+staging' in spec):
             extra_args.append('--with-flexpath=%s' % spec['libevpath'].prefix)
+        else:
+            extra_args.append('--without-flexpath')
         if ('+dataspaces' in spec) or ('+staging' in spec):
             extra_args.append('--with-dataspaces=%s' % spec['dataspaces'].prefix)
+        else:
+            extra_args.append('--without-dataspaces')
 
         return extra_args
