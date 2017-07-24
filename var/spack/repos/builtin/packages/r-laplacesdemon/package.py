@@ -36,4 +36,4 @@ class RLaplacesdemon(RPackage):
 
     version('16.0.1', '1e4dab2dd0e27251734d68b0bfdbe911')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

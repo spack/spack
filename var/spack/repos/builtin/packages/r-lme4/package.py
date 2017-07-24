@@ -38,7 +38,7 @@ class RLme4(RPackage):
     version('1.1-13', '32633db64b2c8042a12ae590e5fcd4f3')
     version('1.1-12', 'da8aaebb67477ecb5631851c46207804')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))
 
     depends_on('r-matrix@1.1.1:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

@@ -35,7 +35,7 @@ class RGgpubr(RPackage):
     version('0.1.4', 'ca9b1be34cc8e1434a85102c18f69cc1')
     version('0.1.2', '42a5749ae44121597ef511a7424429d1')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))
 
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'), when='@0.1.4:')

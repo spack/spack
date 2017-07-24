@@ -36,4 +36,4 @@ class RPls(RPackage):
 
     version('2.6-0', '04e02e8e46d983c5ed53c1f952b329df')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))

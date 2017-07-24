@@ -36,6 +36,6 @@ class RRook(RPackage):
 
     version('1.1-1', 'a2816dc6b4730a94e3148fcc92b595df')
 
-    depends_on('r@2.13.0:')
+    depends_on('r@2.13.0:', type=('build', 'run'))
 
     depends_on('r-brew', type=('build', 'run'))

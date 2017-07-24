@@ -35,8 +35,8 @@ class RParty(RPackage):
     version('1.2-3', '77b042c6014d0c52b5e6bd9feab26e9e')
     version('1.1-2', '40a00336cf8418042d2ab616675c8ddf')
 
-    depends_on('r@2.14.0:', when=('@:1.1-9'))
-    depends_on('r@3.0.0:', when=('@1.2-0:'))
+    depends_on('r@2.14.0:', when=('@:1.1-9'), type=('build', 'run'))
+    depends_on('r@3.0.0:', when=('@1.2-0:'), type=('build', 'run'))
 
     depends_on('r-mvtnorm@1.0-2:', type=('build', 'run'))
     depends_on('r-modeltools@0.2-21:', type=('build', 'run'))

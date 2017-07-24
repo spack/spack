@@ -43,4 +43,4 @@ class RFilehash(RPackage):
     version('2.4-1', '1f7f55ce99b33a137b192f1b1ba58ec6')
     version('2.3', '01fffafe09b148ccadc9814c103bdc2f')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

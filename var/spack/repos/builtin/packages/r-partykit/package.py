@@ -42,7 +42,7 @@ class RPartykit(RPackage):
 
     version('1.1-1', '8fcb31d73ec1b8cd3bcd9789639a9277')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))
 
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-formula@1.2-1:', type=('build', 'run'))

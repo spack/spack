@@ -38,4 +38,4 @@ class RDeldir(RPackage):
 
     version('0.1-14', '6a22b13d962615cd9d51b6eae403409f')
 
-    depends_on('r@0.99:')
+    depends_on('r@0.99:', type=('build', 'run'))

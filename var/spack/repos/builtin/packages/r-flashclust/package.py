@@ -34,4 +34,4 @@ class RFlashclust(RPackage):
 
     version('1.01-2', '23409aeeef98bf35d0b3d5dd755fdeff')
 
-    depends_on('r@2.3.0:')
+    depends_on('r@2.3.0:', type=('build', 'run'))

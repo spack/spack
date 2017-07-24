@@ -35,7 +35,7 @@ class RThreejs(RPackage):
 
     version('0.2.2', '35c179b10813c5e4bd3e7827fae6627b')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-htmlwidgets@0.3.2:', type=('build', 'run'))
     depends_on('r-base64enc', type=('build', 'run'))

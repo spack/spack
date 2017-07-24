@@ -37,4 +37,4 @@ class RRepr(RPackage):
     version('0.12.0', '61b40a925e4eee7933facc54f00560f2')
     version('0.9', 'db5ff74893063b492f684e42283070bd')
 
-    depends_on('r@3.0.1:')
+    depends_on('r@3.0.1:', type=('build', 'run'))

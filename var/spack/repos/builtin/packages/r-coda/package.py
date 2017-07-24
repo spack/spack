@@ -37,6 +37,6 @@ class RCoda(RPackage):
 
     version('0.19-1', '0d2aca6a5a3bdae9542708817c1ec001')
 
-    depends_on('r@2.14.0:')
+    depends_on('r@2.14.0:', type=('build', 'run'))
 
     depends_on('r-lattice', type=('build', 'run'))

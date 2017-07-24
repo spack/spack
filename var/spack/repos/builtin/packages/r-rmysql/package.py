@@ -35,7 +35,7 @@ class RRmysql(RPackage):
     version('0.10.11', '617177e0621b898a8a16b6fef15a5a3c')
     version('0.10.9', '3628200a1864ac3005cfd55cc7cde17a')
 
-    depends_on('r@2.8.0:')
+    depends_on('r@2.8.0:', type=('build', 'run'))
 
     depends_on('r-dbi@0.4:', type=('build', 'run'))
     depends_on('mariadb')

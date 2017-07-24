@@ -34,7 +34,7 @@ class RViridis(RPackage):
 
     version('0.4.0', 'f874384cbedf459f6c309ddb40b354ea')
 
-    depends_on('r@2.1.0:')
+    depends_on('r@2.1.0:', type=('build', 'run'))
 
     depends_on('r-viridislite@0.2.0:', type=('build', 'run'))
     depends_on('r-ggplot2@1.0.1:', type=('build', 'run'))

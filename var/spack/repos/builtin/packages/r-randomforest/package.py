@@ -35,4 +35,4 @@ class RRandomforest(RPackage):
 
     version('4.6-12', '071c03af974198e861f1475c5bab9e7a')
 
-    depends_on('r@2.5.0:')
+    depends_on('r@2.5.0:', type=('build', 'run'))

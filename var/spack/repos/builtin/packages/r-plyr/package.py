@@ -40,6 +40,6 @@ class RPlyr(RPackage):
 
     version('1.8.4', 'ef455cf7fc06e34837692156b7b2587b')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))
 
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

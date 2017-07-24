@@ -39,7 +39,7 @@ class RNmf(RPackage):
 
     version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-pkgmaker@0.20:', type=('build', 'run'))
     depends_on('r-registry', type=('build', 'run'))

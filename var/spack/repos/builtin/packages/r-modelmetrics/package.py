@@ -35,6 +35,6 @@ class RModelmetrics(RPackage):
 
     version('1.1.0', 'd43175001f0531b8810d2802d76b7b44')
 
-    depends_on('r@3.2.2:')
+    depends_on('r@3.2.2:', type=('build', 'run'))
 
     depends_on('r-rcpp', type=('build', 'run'))

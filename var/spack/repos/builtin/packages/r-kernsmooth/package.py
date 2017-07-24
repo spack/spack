@@ -34,4 +34,4 @@ class RKernsmooth(RPackage):
 
     version('2.23-15', '746cdf26dec72004cf19978e87dcc982')
 
-    depends_on('r@2.5.0:')
+    depends_on('r@2.5.0:', type=('build', 'run'))

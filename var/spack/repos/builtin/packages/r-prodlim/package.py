@@ -37,7 +37,7 @@ class RProdlim(RPackage):
     version('1.6.1', 'c206cc9ad15953adf67834bf4ee3551d')
     version('1.5.9', 'e0843053c9270e41b657a733d6675dc9')
 
-    depends_on('r@2.9.0:')
+    depends_on('r@2.9.0:', type=('build', 'run'))
 
     depends_on('r-rcpp@0.11.5:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))

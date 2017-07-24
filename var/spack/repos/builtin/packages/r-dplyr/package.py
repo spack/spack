@@ -36,7 +36,7 @@ class RDplyr(RPackage):
     version('0.7.1', '97fc9b8a8f0dd3a3746260ad885a56c9')
     version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
 
-    depends_on('r@3.1.2:')
+    depends_on('r@3.1.2:', type=('build', 'run'))
 
     depends_on('r-assertthat', type=('build', 'run'))
     depends_on('r-bindrcpp@0.2:', type=('build', 'run'), when=('@0.7.1:'))

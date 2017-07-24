@@ -35,7 +35,7 @@ class RDesc(RPackage):
 
     version('1.1.0', 'ea669ad8bcd5006c776428c18c169a0e')
 
-    depends_on('r@3.2.0:')
+    depends_on('r@3.2.0:', type=('build', 'run'))
 
     depends_on('r-assertthat', type=('build', 'run'))
     depends_on('r-r6', type=('build', 'run'))

@@ -36,6 +36,6 @@ class RHexbin(RPackage):
 
     version('1.27.1', '7590ed158f8a57a71901bf6ca26f81be')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))
 
     depends_on('r-lattice', type=('build', 'run'))

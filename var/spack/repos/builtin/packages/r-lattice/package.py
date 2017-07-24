@@ -38,4 +38,4 @@ class RLattice(RPackage):
     version('0.20-35', '07f1814623b3da6278ca61554ff7bfe6')
     version('0.20-34', 'c2a648b22d4206ae7526fb70b8e90fed')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

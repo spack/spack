@@ -39,6 +39,6 @@ class RMarkdown(RPackage):
     version('0.8', '5dde829a865ad65bab37a2b9d243b071')
     version('0.7.7', '72deca9c675c7cc9343048edbc29f7ff')
 
-    depends_on('r@2.11.1:')
+    depends_on('r@2.11.1:', type=('build', 'run'))
 
     depends_on('r-mime@0.3:', type=('build', 'run'))

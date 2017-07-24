@@ -37,4 +37,4 @@ class RForeign(RPackage):
     version('0.8-69', 'dfa310786eb31df7e2d53f0544f587db')
     version('0.8-66', 'ff12190f4631dca31e30ca786c2c8f62')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

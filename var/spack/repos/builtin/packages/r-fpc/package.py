@@ -34,7 +34,7 @@ class RFpc(RPackage):
 
     version('2.1-10', '75e5340e416cd13d7751e06f1c07866b')
 
-    depends_on('r@2.0.0:')
+    depends_on('r@2.0.0:', type=('build', 'run'))
 
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))

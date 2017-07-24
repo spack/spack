@@ -35,6 +35,6 @@ class RRodbc(RPackage):
     version('1.3-15', '53bdb64579f3b70030f5585335c3e215')
     version('1.3-13', 'c52ef9139c2ed85adc53ad6effa7d68e')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('unixodbc')

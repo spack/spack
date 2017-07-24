@@ -43,7 +43,7 @@ class RRpostgresql(RPackage):
     version('0.6-2', '7bd7786bc720a325b9f1f7ef17a658ff')
     version('0.4-1', 'e7b22e212afbb2cbb88bab937f93e55a')
 
-    depends_on('r@2.9.0:')
+    depends_on('r@2.9.0:', type=('build', 'run'))
 
     depends_on('r-dbi@0.3:', type=('build', 'run'))
     depends_on('postgresql')

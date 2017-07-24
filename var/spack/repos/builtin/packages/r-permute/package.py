@@ -40,4 +40,4 @@ class RPermute(RPackage):
 
     version('0.9-4', '569fc2442d72a1e3b7e2d456019674c9')
 
-    depends_on('r@2.14:')
+    depends_on('r@2.14:', type=('build', 'run'))

@@ -36,7 +36,7 @@ class RRmarkdown(RPackage):
     version('1.6', '8273346f8a362d6ecbf5da075e066fe1')
     version('1.0', '264aa6a59e9680109e38df8270e14c58')
 
-    depends_on('r@3.0:')
+    depends_on('r@3.0:', type=('build', 'run'))
 
     depends_on('r-knitr@1.14:', type=('build', 'run'))
     depends_on('r-yaml@2.1.5:', type=('build', 'run'))

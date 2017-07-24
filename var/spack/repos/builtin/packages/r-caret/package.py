@@ -37,7 +37,7 @@ class RCaret(RPackage):
     version('6.0-73', 'ca869e3357b5358f028fb926eb62eb70')
     version('6.0-70', '202d7abb6a679af716ea69fb2573f108')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))
 
     depends_on('r-lattice@0.20:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))

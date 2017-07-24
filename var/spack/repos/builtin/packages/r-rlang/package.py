@@ -35,4 +35,4 @@ class RRlang(RPackage):
 
     version('0.1.1', '38a51a0b8f8487eb52b4f3d986313682')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))

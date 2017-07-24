@@ -35,4 +35,4 @@ class RQuadprog(RPackage):
 
     version('1.5-5', '8442f37afd8d0b19b12e77d63e6515ad')
 
-    depends_on('r@2.15.0:')
+    depends_on('r@2.15.0:', type=('build', 'run'))

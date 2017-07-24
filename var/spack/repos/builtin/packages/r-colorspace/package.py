@@ -38,4 +38,4 @@ class RColorspace(RPackage):
     version('1.3-2', '63000bab81d995ff167df76fb97b2984')
     version('1.2-6', 'a30191e9caf66f77ff4e99c062e9dce1')
 
-    depends_on('r@2.13.0:')
+    depends_on('r@2.13.0:', type=('build', 'run'))

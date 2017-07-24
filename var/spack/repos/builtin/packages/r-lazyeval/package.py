@@ -36,4 +36,4 @@ class RLazyeval(RPackage):
 
     version('0.2.0', 'df1daac908dcf02ae7e12f4335b1b13b')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))

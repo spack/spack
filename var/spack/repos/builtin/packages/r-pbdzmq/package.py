@@ -42,7 +42,7 @@ class RPbdzmq(RPackage):
     version('0.2-6', '03d84c808a53a7b5bf2dac7882733fd3')
     version('0.2-4', 'e5afb70199aa54d737ee7a0e26bde060')
 
-    depends_on('r@3.2.0:')
+    depends_on('r@3.2.0:', type=('build', 'run'))
 
     depends_on('r-r6', type=('build', 'run'))
     depends_on('zeromq@4.04:')

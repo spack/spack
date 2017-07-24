@@ -38,4 +38,4 @@ class RGlue(RPackage):
 
     version('1.1.1', '4ab1ba202703f187f8bd2499f55c73df')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

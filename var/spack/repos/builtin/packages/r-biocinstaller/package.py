@@ -36,4 +36,4 @@ class RBiocinstaller(RPackage):
     version('1.25.3', '6214770455a5122dca5544861f52c91d',
             url='http://bioconductor.org/packages/devel/bioc/src/contrib/BiocInstaller_1.25.3.tar.gz')
 
-    depends_on('r@3.4.0:')
+    depends_on('r@3.4.0:', type=('build', 'run'))

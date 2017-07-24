@@ -34,4 +34,4 @@ class RScatterplot3d(RPackage):
 
     version('0.3-40', '67b9ab6131d244d7fc1db39dcc911dfe')
 
-    depends_on('r@2.7.0:')
+    depends_on('r@2.7.0:', type=('build', 'run'))

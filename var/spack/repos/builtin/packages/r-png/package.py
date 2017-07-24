@@ -36,6 +36,6 @@ class RPng(RPackage):
 
     version('0.1-7', '1ebc8b8aa5979b12c5ec2384b30d649f')
 
-    depends_on('r@2.9.0:')
+    depends_on('r@2.9.0:', type=('build', 'run'))
 
     depends_on('libpng')

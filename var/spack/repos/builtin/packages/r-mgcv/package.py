@@ -39,7 +39,7 @@ class RMgcv(RPackage):
     version('1.8-16', '4c1d85e0f80b017bccb4b63395842911')
     version('1.8-13', '30607be3aaf44b13bd8c81fc32e8c984')
 
-    depends_on('r@2.14.0:')
+    depends_on('r@2.14.0:', type=('build', 'run'))
 
     depends_on('r-nlme@3.1-64:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))

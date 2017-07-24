@@ -34,4 +34,4 @@ class RSpatial(RPackage):
 
     version('7.3-11', '0a2170d5b153a131e23d480d486ead00')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

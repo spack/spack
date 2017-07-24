@@ -36,4 +36,4 @@ class RFormula(RPackage):
 
     version('1.2-1', '2afb31e637cecd0c1106317aca1e4849')
 
-    depends_on('r@2.0.0:')
+    depends_on('r@2.0.0:', type=('build', 'run'))

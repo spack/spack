@@ -43,7 +43,7 @@ class RRstan(RPackage):
     version('2.15.1', 'f4bf5d98ed6e32e532aec28dcb464e82')
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))
 
     depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))
     depends_on('r-stanheaders@2.15.0:', type=('build', 'run'))

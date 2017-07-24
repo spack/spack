@@ -36,7 +36,7 @@ class RDevtools(RPackage):
     version('1.12.0', '73b46c446273566e5b21c9f5f72aeca3')
     version('1.11.1', '242672ee27d24dddcbdaac88c586b6c2')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))
 
     depends_on('r-httr@0.4:', type=('build', 'run'))
     depends_on('r-memoise@1.0.0:', type=('build', 'run'))

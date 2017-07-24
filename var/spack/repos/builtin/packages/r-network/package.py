@@ -36,4 +36,4 @@ class RNetwork(RPackage):
 
     version('1.13.0', 'd0b967d6f1aad43b6479d72f29b705de')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))

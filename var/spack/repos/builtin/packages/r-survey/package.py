@@ -41,7 +41,7 @@ class RSurvey(RPackage):
     version('3.32-1', '0cb92429b38788b448bf661118b6861c')
     version('3.30-3', 'c70cdae9cb43d35abddd11173d64cad0')
 
-    depends_on('r@2.16.0:')
+    depends_on('r@2.16.0:', type=('build', 'run'))
 
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))

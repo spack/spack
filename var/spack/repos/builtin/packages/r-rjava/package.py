@@ -35,6 +35,6 @@ class RRjava(RPackage):
 
     version('0.9-8', '51ae0d690ceed056ebe7c4be71fc6c7a')
 
-    depends_on('r@2.5.0:')
+    depends_on('r@2.5.0:', type=('build', 'run'))
 
     depends_on('jdk')

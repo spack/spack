@@ -35,4 +35,4 @@ class RTrust(RPackage):
 
     version('0.1-7', '7e218b3a6b33bd77bd7e86dc6360418d')
 
-    depends_on('r@2.10.0:')
+    depends_on('r@2.10.0:', type=('build', 'run'))

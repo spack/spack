@@ -35,4 +35,4 @@ class RAde4(RPackage):
 
     version('1.7-6', '63401ca369677538c96c3d7b75b3f4a1')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))

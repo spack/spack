@@ -36,7 +36,7 @@ class RSeqinr(RPackage):
 
     version('3.3-6', '73023d627e72021b723245665e1ad055')
 
-    depends_on('r@2.10.0:')
+    depends_on('r@2.10.0:', type=('build', 'run'))
 
     depends_on('r-ade4', type=('build', 'run'))
     depends_on('r-segmented', type=('build', 'run'))

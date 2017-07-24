@@ -36,6 +36,6 @@ class RGeosphere(RPackage):
 
     version('1.5-5', '28efb7a8e266c7f076cdbcf642455f3e')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-sp', type=('build', 'run'))

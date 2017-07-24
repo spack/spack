@@ -35,4 +35,4 @@ class RChron(RPackage):
     version('2.3-50', 'ce73798b1708072d86129038445758dd')
     version('2.3-47', 'b8890cdc5f2337f8fd775b0becdcdd1f')
 
-    depends_on('r@2.12.0:')
+    depends_on('r@2.12.0:', type=('build', 'run'))

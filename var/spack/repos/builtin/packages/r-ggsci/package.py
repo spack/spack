@@ -36,7 +36,7 @@ class RGgsci(RPackage):
     version('2.7', 'a6656304751f013fa41ac33b107e4eb2')
     version('2.4', '8e5dc2fcf84352cacbb91363e26c7175')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))
 
     depends_on('r-scales', type=('build', 'run'))
     depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))

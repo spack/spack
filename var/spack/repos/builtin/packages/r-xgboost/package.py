@@ -42,7 +42,7 @@ class RXgboost(RPackage):
     version('0.6-4', '86e517e3ce39f8a01de796920f6b425e')
     version('0.4-4', 'c24d3076058101a71de4b8af8806697c')
 
-    depends_on('r@3.3.0:')
+    depends_on('r@3.3.0:', type=('build', 'run'))
 
     depends_on('r-matrix@1.1-0:', type=('build', 'run'))
     depends_on('r-data-table@1.9.6:', type=('build', 'run'))

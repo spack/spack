@@ -35,4 +35,4 @@ class RMlbench(RPackage):
 
     version('2.1-1', '9f06848b8e137b8a37417c92d8e57f3b')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))

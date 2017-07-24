@@ -40,7 +40,7 @@ class RVcd(RPackage):
     version('1.4-3', '1983eb630de6f364280a39d776def3ff')
     version('1.4-1', '7db150a77f173f85b69a1f86f73f8f02')
 
-    depends_on('r@2.4.0:')
+    depends_on('r@2.4.0:', type=('build', 'run'))
 
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))

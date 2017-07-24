@@ -41,6 +41,6 @@ class RRsnns(RPackage):
     version('0.4-9', 'b51a8034ae7dae4a32dea30d33c70e12')
     version('0.4-7', 'ade7736611c456effb5f72e0ce0a1e6f')
 
-    depends_on('r@2.10.0:')
+    depends_on('r@2.10.0:', type=('build', 'run'))
 
     depends_on('r-rcpp@0.8.5:', type=('build', 'run'))

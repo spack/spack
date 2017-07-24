@@ -37,6 +37,6 @@ class RMagic(RPackage):
 
     version('1.5-6', 'a68e5ced253b2196af842e1fc84fd029')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))
 
     depends_on('r-abind', type=('build', 'run'))

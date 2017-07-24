@@ -35,4 +35,4 @@ class RDichromat(RPackage):
 
     version('2.0-0', '84e194ac95a69763d740947a7ee346a6')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))

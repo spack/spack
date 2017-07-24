@@ -34,4 +34,4 @@ class RXtable(RPackage):
 
     version('1.8-2', '239e4825cd046156a67efae3aac01d86')
 
-    depends_on('r@2.10.0:')
+    depends_on('r@2.10.0:', type=('build', 'run'))

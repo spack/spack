@@ -36,4 +36,4 @@ class RUuid(RPackage):
 
     version('0.1-2', 'f97d000c0b16bca455fb5bf2cd668ddf')
 
-    depends_on('r@2.9.0:')
+    depends_on('r@2.9.0:', type=('build', 'run'))

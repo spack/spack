@@ -34,4 +34,4 @@ class RGtable(RPackage):
 
     version('0.2.0', '124090ae40b2dd3170ae11180e0d4cab')
 
-    depends_on('r@2.14:')
+    depends_on('r@2.14:', type=('build', 'run'))

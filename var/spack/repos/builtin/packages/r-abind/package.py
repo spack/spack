@@ -38,4 +38,4 @@ class RAbind(RPackage):
     version('1.4-5', '136f981e1c4f618b64a87faaa7797c97')
     version('1.4-3', '10fcf80c677b991bf263d38be35a1fc5')
 
-    depends_on('r@1.5.0:')
+    depends_on('r@1.5.0:', type=('build', 'run'))

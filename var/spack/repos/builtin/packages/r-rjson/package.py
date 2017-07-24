@@ -34,4 +34,4 @@ class RRjson(RPackage):
 
     version('0.2.15', '87d0e29bc179c6aeaf312b138089f8e9')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))

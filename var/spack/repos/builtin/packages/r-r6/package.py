@@ -41,4 +41,4 @@ class RR6(RPackage):
     version('2.2.0', '659d83b2d3f7a308a48332b4cfbdab49')
     version('2.1.2', 'b6afb9430e48707be87638675390e457')
 
-    depends_on('r@3.0:')
+    depends_on('r@3.0:', type=('build', 'run'))

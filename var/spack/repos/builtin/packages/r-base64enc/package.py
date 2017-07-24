@@ -35,4 +35,4 @@ class RBase64enc(RPackage):
 
     version('0.1-3', '0f476dacdd11a3e0ad56d13f5bc2f190')
 
-    depends_on('r@2.9.0:')
+    depends_on('r@2.9.0:', type=('build', 'run'))

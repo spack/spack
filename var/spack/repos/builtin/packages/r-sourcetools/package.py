@@ -37,4 +37,4 @@ class RSourcetools(RPackage):
 
     version('0.1.6', 'c78a816384b168d04af41bd7ff4d909d')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))

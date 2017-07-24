@@ -37,7 +37,7 @@ class RLeaflet(RPackage):
     version('1.1.0', '8197904c567459b07489194adb590790')
     version('1.0.1', '7f3d8b17092604d87d4eeb579f73d5df')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))
 
     depends_on('r-base64enc', type=('build', 'run'))
     depends_on('r-crosstalk', when=('@1.1.0:'), type=('build', 'run'))

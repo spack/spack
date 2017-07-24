@@ -38,7 +38,7 @@ class RShiny(RPackage):
     version('1.0.3', '69f14b7a91949e8aef4503a0a7c54cf7')
     version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-httpuv@1.3.3:', type=('build', 'run'))
     depends_on('r-mime@0.3:', type=('build', 'run'))

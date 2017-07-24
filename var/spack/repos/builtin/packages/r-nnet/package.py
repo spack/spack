@@ -35,4 +35,4 @@ class RNnet(RPackage):
 
     version('7.3-12', 'dc7c6f0d0de53d8fc72b44554400a74e')
 
-    depends_on('r@2.14.0:')
+    depends_on('r@2.14.0:', type=('build', 'run'))

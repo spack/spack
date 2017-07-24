@@ -35,7 +35,7 @@ class RRmpi(RPackage):
 
     version('0.6-6', '59ae8ce62ff0ff99342d53942c745779')
 
-    depends_on('r@2.15.1:')
+    depends_on('r@2.15.1:', type=('build', 'run'))
 
     depends_on('mpi')
 

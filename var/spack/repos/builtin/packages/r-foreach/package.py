@@ -40,7 +40,7 @@ class RForeach(RPackage):
 
     version('1.4.3', 'ef45768126661b259f9b8994462c49a0')
 
-    depends_on('r@2.5.0:')
+    depends_on('r@2.5.0:', type=('build', 'run'))
 
     depends_on('r-codetools', type=('build', 'run'))
     depends_on('r-iterators', type=('build', 'run'))

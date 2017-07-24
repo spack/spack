@@ -34,7 +34,7 @@ class RGmodels(RPackage):
 
     version('2.16.2', 'f13e5feb2a8b9f0cd47fdf25ddc74228')
 
-    depends_on('r@1.9:')
+    depends_on('r@1.9:', type=('build', 'run'))
 
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-gdata', type=('build', 'run'))

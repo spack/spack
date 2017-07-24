@@ -37,4 +37,4 @@ class RHighr(RPackage):
 
     version('0.6', 'bf47388c5f57dc61962362fb7e1d8b16')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))

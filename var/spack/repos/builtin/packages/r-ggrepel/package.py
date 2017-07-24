@@ -34,7 +34,7 @@ class RGgrepel(RPackage):
 
     version('0.6.5', '7e2732cd4840efe2dc9e4bc689cf1ee5')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))

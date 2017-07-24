@@ -42,7 +42,7 @@ class RAdegenet(RPackage):
 
     version('2.0.1', 'ecb1220ce7c9affaba2987bc7f38adda')
 
-    depends_on('r@2.14:')
+    depends_on('r@2.14:', type=('build', 'run'))
 
     depends_on('r-ade4', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

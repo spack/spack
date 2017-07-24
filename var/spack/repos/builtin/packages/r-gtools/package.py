@@ -53,4 +53,4 @@ class RGtools(RPackage):
 
     version('3.5.0', '45f8800c0336d35046641fbacc56bdbb')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))

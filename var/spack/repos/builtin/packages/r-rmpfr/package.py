@@ -38,7 +38,7 @@ class RRmpfr(RPackage):
 
     version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
 
-    depends_on('r@3.0.1:')
+    depends_on('r@3.0.1:', type=('build', 'run'))
 
     depends_on('r-gmp@0.5-8:', type=('build', 'run'))
     depends_on('mpfr@3.0.0:')

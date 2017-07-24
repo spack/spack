@@ -39,7 +39,7 @@ class RCowplot(RPackage):
 
     version('0.7.0', '31c395c190e8da646a53ce5593ea64ab')
 
-    depends_on('r@3.3.0:')
+    depends_on('r@3.3.0:', type=('build', 'run'))
 
     depends_on('r-ggplot2@2.1.0:', type=('build', 'run'))
     depends_on('r-gtable@0.1.2:', type=('build', 'run'))

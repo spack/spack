@@ -36,7 +36,7 @@ class RRoxygen2(RPackage):
     version('6.0.1', '53300ac3f27ff0998ebb5fbe3afc8b9f')
     version('5.0.1', 'df5bdbc12fda372e427710ef1cd92ed7')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))
 
     depends_on('r-stringr@0.5:', type=('build', 'run'))
     depends_on('r-stringi', type=('build', 'run'))

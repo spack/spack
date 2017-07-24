@@ -40,7 +40,7 @@ class RFormatr(RPackage):
     version('1.5', 'ac735515b8e4c32097154f1b68c5ecc7')
     version('1.4', '98b9b64b2785b35f9df403e1aab6c73c')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))
 
     depends_on('r-codetools', type=('build', 'run'))
     depends_on('r-shiny', type=('build', 'run'))

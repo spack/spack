@@ -36,4 +36,4 @@ class RMvtnorm(RPackage):
     version('1.0-6', 'cb69426868fd3e330412b8491901d9d4')
     version('1.0-5', '5894dd3969bbfa26f4862c45f9a48a52')
 
-    depends_on('r@1.9.0:')
+    depends_on('r@1.9.0:', type=('build', 'run'))

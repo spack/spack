@@ -36,7 +36,7 @@ class RPryr(RPackage):
 
     version('0.1.2', '66b597a762aa15a3b7037779522983b6')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))
 
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-codetools', type=('build', 'run'))

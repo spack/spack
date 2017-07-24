@@ -35,4 +35,4 @@ class RRcolorbrewer(RPackage):
 
     version('1.1-2', '66054d83eade4dff8a43ad4732691182')
 
-    depends_on('r@2.0.0:')
+    depends_on('r@2.0.0:', type=('build', 'run'))

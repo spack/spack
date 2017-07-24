@@ -34,7 +34,7 @@ class RFlexmix(RPackage):
 
     version('2.3-14', '5be4f7764e6a697f4586e60c2bf6e960')
 
-    depends_on('r@2.15.0:')
+    depends_on('r@2.15.0:', type=('build', 'run'))
 
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-modeltools@0.2-16:', type=('build', 'run'))

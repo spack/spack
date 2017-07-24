@@ -38,4 +38,4 @@ class RSparsem(RPackage):
     version('1.74', 'a16c9b7db172dfd2b7b6508c48e81a5d')
     version('1.7',  '7b5b0ab166a0929ef6dcfe1d97643601')
 
-    depends_on('r@2.15:')
+    depends_on('r@2.15:', type=('build', 'run'))

@@ -38,6 +38,6 @@ class RCatools(RPackage):
 
     version('1.17.1', '5c872bbc78b177b306f36709deb44498')
 
-    depends_on('r@2.2.0:')
+    depends_on('r@2.2.0:', type=('build', 'run'))
 
     depends_on('r-bitops', type=('build', 'run'))

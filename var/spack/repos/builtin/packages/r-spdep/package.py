@@ -47,7 +47,7 @@ class RSpdep(RPackage):
 
     version('0.6-13', 'bfc68b3016b4894b152ecec4b86f85d1')
 
-    depends_on('r@3.0:')
+    depends_on('r@3.0:', type=('build', 'run'))
 
     depends_on('r-sp@1.0:', type=('build', 'run'))
     depends_on('r-matrix@1.0.12:', type=('build', 'run'))

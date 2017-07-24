@@ -36,4 +36,4 @@ class RBackports(RPackage):
 
     version('1.1.0', 'b97a71b026fd7ede0e449be93d160c17')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

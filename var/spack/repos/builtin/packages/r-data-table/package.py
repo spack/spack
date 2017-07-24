@@ -39,4 +39,4 @@ class RDataTable(RPackage):
     version('1.10.0', 'f0e08dd5ba1b3f46c59dd1574fe497c1')
     version('1.9.6',  'b1c0c7cce490bdf42ab288541cc55372')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

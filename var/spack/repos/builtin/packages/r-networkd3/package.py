@@ -36,7 +36,7 @@ class RNetworkd3(RPackage):
     version('0.4', 'dad3befe0a77dd04c72704eb95fb3d45')
     version('0.2.12', '356fe4be59698e6fb052644bd9659d84')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-htmlwidgets@0.3.2:', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))

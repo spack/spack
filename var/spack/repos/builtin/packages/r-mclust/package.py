@@ -35,4 +35,4 @@ class RMclust(RPackage):
 
     version('5.3', '74aac9fccdfc78373ce733c1a09176ef')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

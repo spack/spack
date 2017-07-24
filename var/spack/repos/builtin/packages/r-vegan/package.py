@@ -35,7 +35,7 @@ class RVegan(RPackage):
 
     version('2.4-3', 'db17d4c4b9a4d421246abd5b36b00fec')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-permute@0.9-0:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

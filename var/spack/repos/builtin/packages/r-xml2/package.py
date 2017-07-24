@@ -34,7 +34,7 @@ class RXml2(RPackage):
 
     version('1.1.1', '768f7edc39c4baab6b6b9e7c7ec79fee')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))
 
     depends_on('r-rcpp@0.11.4.6:', type=('build', 'run'))
     depends_on('r-bh')

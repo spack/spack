@@ -36,7 +36,7 @@ class RScales(RPackage):
     version('0.4.1', '3fb2218866a7fe4c1f6e66790876f85a')
     version('0.4.0', '7b5602d9c55595901192248bca25c099')
 
-    depends_on('r@2.13:')
+    depends_on('r@2.13:', type=('build', 'run'))
 
     depends_on('r-rcolorbrewer', type=('build', 'run'))
     depends_on('r-dichromat', type=('build', 'run'))

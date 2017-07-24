@@ -49,6 +49,6 @@ class RRinside(RPackage):
     version('0.2.14', 'fc72761e22b1f597433eb53d6eb122ff')
     version('0.2.13', '2e3c35a7bd648e9bef98d0afcc02cf88')
 
-    depends_on('r@2.10.0:')
+    depends_on('r@2.10.0:', type=('build', 'run'))
 
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

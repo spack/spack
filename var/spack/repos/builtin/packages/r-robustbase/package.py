@@ -38,6 +38,6 @@ class RRobustbase(RPackage):
 
     version('0.92-7', 'db3c8d12f9729b35bad17abf09e80b72')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))
 
     depends_on('r-deoptimr', type=('build', 'run'))

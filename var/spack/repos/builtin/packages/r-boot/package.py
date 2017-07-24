@@ -37,4 +37,4 @@ class RBoot(RPackage):
     version('1.3-19', '503ae1b4bdc7b50b44d02bbd3fdcd964')
     version('1.3-18', '711dd58af14e1027eb8377d9202e9b6f')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

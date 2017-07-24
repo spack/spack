@@ -35,7 +35,7 @@ class RFactominer(RPackage):
     version('1.36', '4cf0d46f6005c2b3a7c97371f5042c38')
     version('1.35', 'bef076181ce942016114dd7a6f5c2348')
 
-    depends_on('r@3.3.0:')
+    depends_on('r@3.3.0:', type=('build', 'run'))
 
     depends_on('r-car', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))

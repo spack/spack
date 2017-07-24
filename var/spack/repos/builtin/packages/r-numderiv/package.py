@@ -35,4 +35,4 @@ class RNumderiv(RPackage):
 
     version('2016.8-1', '30e486298d5126d86560095be8e8aac1')
 
-    depends_on('r@2.11.1:')
+    depends_on('r@2.11.1:', type=('build', 'run'))
