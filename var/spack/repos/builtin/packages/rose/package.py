@@ -114,7 +114,16 @@ class Rose(AutotoolsPackage):
         ]
 
     def install(self, spec, prefix):
+        srun = which('srun')
+
         with working_dir(self.build_directory):
-            make('install-core')
-            with working_dir('tools'):
-                make('install')
+            if not srun:
+                # standard installation on dev machine
+                make('install-core')
+                with working_dir('tools'):
+                    make('install')
+            else:
+                # parallel installation on LC
+                srun('-ppdebug', 'make', '-j16', 'install-core')
+                with working_dir('tools'):
+                    srun('-ppdebug', 'make', '-j16', 'install')
