@@ -34,6 +34,7 @@ class Zstd(Package):
     url      = "https://github.com/facebook/zstd/archive/v1.1.2.tar.gz"
 
     version('1.1.2', '4c57a080d194bdaac83f2d3251fc7ffc')
+    version('1.3.0', '888660a850e33c2dcc7c4f9d0b04d347')
 
     def install(self, spec, prefix):
         make()
