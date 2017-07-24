@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,6 @@ class RGridextra(RPackage):
 
     homepage = "https://github.com/baptiste/gridextra"
     url      = "https://cran.r-project.org/src/contrib/gridExtra_2.2.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gridExtra"
 
     version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')
 

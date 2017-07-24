@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -50,6 +50,10 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
+    version('3.3',
+            'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
+            url='http://goo.gl/Vrpsns', extension='.tar.gz')
+
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
             url='http://goo.gl/Y9T75B', extension='.tar.gz')
@@ -91,6 +95,8 @@ class Mfem(Package):
     depends_on('netcdf', when='@3.2: +netcdf')
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
+
+    patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
 
     def check_variants(self, spec):
         if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):
@@ -173,9 +179,7 @@ class Mfem(Package):
             ss_lib += (' -lumfpack -lcholmod -lcolamd' +
                        ' -lamd -lcamd -lccolamd -lsuitesparseconfig')
 
-            no_librt_archs = ['darwin-i686', 'darwin-x86_64']
-            no_rt = any(map(lambda a: spec.satisfies('=' + a),
-                            no_librt_archs))
+            no_rt = spec.satisfies('platform=darwin')
             if not no_rt:
                 ss_lib += ' -lrt'
             ss_lib += (' ' + metis_lib + ' ' + lapack_lib)

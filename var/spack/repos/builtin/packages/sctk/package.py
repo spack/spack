@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,10 +27,10 @@ from distutils.dir_util import copy_tree
 
 
 class Sctk(Package):
-    """The NIST Scoring Toolkit (SCTK) is a collection of software tools 
-        designed to score benchmark test evaluations of Automatic Speech 
-        Recognition (ASR) Systems. The toolkit is currently used by NIST, 
-        benchmark test participants, and reserchers worldwide to as a 
+    """The NIST Scoring Toolkit (SCTK) is a collection of software tools
+        designed to score benchmark test evaluations of Automatic Speech
+        Recognition (ASR) Systems. The toolkit is currently used by NIST,
+        benchmark test participants, and reserchers worldwide to as a
         common scoring engine."""
 
     homepage = "https://www.nist.gov/itl/iad/mig/tools"

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -148,6 +148,12 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
+    patch('call_once_variadic.patch', when='@:1.56.0%gcc@5:')
+
+    # Patch fix for PGI compiler
+    patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
+    patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
+
     def url_for_version(self, version):
         url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
         return url.format(version.dotted, version.underscored)
@@ -160,7 +166,8 @@ class Boost(Package):
                     'icpc': 'intel',
                     'clang++': 'clang',
                     'xlc++': 'xlcpp',
-                    'xlc++_r': 'xlcpp'}
+                    'xlc++_r': 'xlcpp',
+                    'pgc++': 'pgi'}
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'

@@ -8,7 +8,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -109,13 +109,20 @@ while read line && ((lines < 2)) ; do
     fi
     lines=$((lines+1))
 done < "$script"
+# this is ineeded for scripts with sbang parameter
+# like ones in intltool
+# #!/<spack-long-path>/perl -w
+# this is the interpreter line with all the parameters as a vector
+interpreter_v=(${interpreter})
+# this is the single interpreter path 
+interpreter_f="${interpreter_v[0]}"
 
 # Invoke any interpreter found, or raise an error if none was found.
-if [[ -n "$interpreter" ]]; then
-    if [[ "${interpreter##*/}" = "perl" ]]; then
-        exec $interpreter -x "$@"
+if [[ -n "$interpreter_f" ]]; then
+    if [[ "${interpreter_f##*/}" = "perl" ]]; then
+        exec $interpreter_v -x "$@"
     else
-        exec $interpreter "$@"
+        exec $interpreter_v "$@"
     fi
 else
     echo "error: sbang found no interpreter in $script"

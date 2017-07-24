@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,7 +38,6 @@ class RRcpp(RPackage):
 
     homepage = "http://dirk.eddelbuettel.com/code/rcpp.html"
     url      = "https://cran.r-project.org/src/contrib/Rcpp_0.12.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rcpp"
 
     version('0.12.9', '691c49b12794507288b728ede03668a5')
     version('0.12.6', 'db4280fb0a79cd19be73a662c33b0a8b')

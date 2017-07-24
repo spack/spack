@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -70,15 +70,20 @@ def test_remove_and_add_tcl(database, parser):
     # Remove existing modules [tcl]
     args = parser.parse_args(['rm', '-y', 'mpileaks'])
     module_files = _get_module_files(args)
+
     for item in module_files:
         assert os.path.exists(item)
+
     module.module(parser, args)
+
     for item in module_files:
         assert not os.path.exists(item)
 
     # Add them back [tcl]
     args = parser.parse_args(['refresh', '-y', 'mpileaks'])
+
     module.module(parser, args)
+
     for item in module_files:
         assert os.path.exists(item)
 

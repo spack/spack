@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -108,6 +108,19 @@ def test_set(env):
 
     assert 'dummy value' == os.environ['A']
     assert str(3) == os.environ['B']
+
+
+def test_append_flags(env):
+    """Tests appending to a value in the environment."""
+
+    # Store a couple of commands
+    env.append_flags('APPEND_TO_ME', 'flag1')
+    env.append_flags('APPEND_TO_ME', 'flag2')
+
+    # ... execute the commands
+    env.apply_modifications()
+
+    assert 'flag1 flag2' == os.environ['APPEND_TO_ME']
 
 
 def test_unset(env):
