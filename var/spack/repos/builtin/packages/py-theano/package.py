@@ -33,6 +33,7 @@ class PyTheano(PythonPackage):
     url = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
 
     version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
+    version('master', git='https://github.com/Theano/Theano.git', branch='master')
 
     variant('gpu', default=False,
             description='Builds with support for GPUs via CUDA and cuDNN')
