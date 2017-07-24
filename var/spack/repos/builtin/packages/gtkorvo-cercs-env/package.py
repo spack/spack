@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,26 +25,17 @@
 from spack import *
 
 
-class Gbenchmark(CMakePackage):
-    """A microbenchmark support library"""
+class GtkorvoCercsEnv(CMakePackage):
+    """A utility library used by some GTkorvo packages.
+    """
 
-    homepage = "https://github.com/google/benchmark"
-    url = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
+    homepage = "https://github.com/GTkorvo/cercs_env"
+    url = "https://github.com/GTkorvo/cercs_env/archive/v1.0.tar.gz"
 
-    version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae')
-    version('1.0.0', '4f778985dce02d2e63262e6f388a24b595254a93')
+    version('develop', git='https://github.com/GTkorvo/cercs_env.git',
+            branch='master')
+    version('1.0', '08f0532d0c2f7bc9b53dfa7a1c40ea4d')
 
-    def build_type(self):
-        return "Release"
-
-    def patch(self):
-        filter_file(
-            r'add_cxx_compiler_flag..fstrict.aliasing.',
-            r'##### add_cxx_compiler_flag(-fstrict-aliasing)',
-            'CMakeLists.txt'
-        )
-        filter_file(
-            r'add_cxx_compiler_flag..Werror',
-            r'##### add_cxx_compiler_flag(-Werror',
-            'CMakeLists.txt'
-        )
+    def cmake_args(self):
+        args = ["-DENABLE_TESTING=0", "-DENABLE_SHARED_STATIC=STATIC"]
+        return args
