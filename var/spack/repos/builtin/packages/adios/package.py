@@ -49,7 +49,7 @@ class Adios(AutotoolsPackage):
     variant('fortran', default=False,
             description='Enable Fortran bindings support')
 
-    variant('serial', default=False, description='Build serial version by fully disabling MPI support')
+    variant('mpi', default=True, description='Enable MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
 
     # transforms
@@ -75,7 +75,7 @@ class Adios(AutotoolsPackage):
     depends_on('libtool@:2.4.2', type='build')
     depends_on('python', type='build')
 
-    depends_on('mpi', when='~serial')
+    depends_on('mpi', when='+mpi')
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
@@ -91,7 +91,7 @@ class Adios(AutotoolsPackage):
     depends_on('dataspaces+mpi', when='+staging')
 
     for p in ['+hdf5','+netcdf','+flexpath','+dataspaces','+staging']:
-        conflicts(p, when='+serial')
+        conflicts(p, when='~mpi')
 
     build_directory = 'spack-build'
 
@@ -125,10 +125,10 @@ class Adios(AutotoolsPackage):
         if '+shared' in spec:
             extra_args.append('--enable-shared')
 
-        if '+serial' in spec:
-            extra_args.append('--without-mpi')
-        else:
+        if '+mpi' in spec:
             extra_args.append('--with-mpi=%s' % spec['mpi'].prefix)
+        else:
+            extra_args.append('--without-mpi')
         if '+infiniband' in spec:
             extra_args.append('--with-infiniband')
         else:
