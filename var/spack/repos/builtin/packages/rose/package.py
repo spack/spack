@@ -43,11 +43,13 @@ class Rose(AutotoolsPackage):
             git='https://github.com/rose-compiler/rose.git')
     version('develop', branch='master',
             git='https://github.com/rose-compiler/rose-develop.git')
+    version('__ROSE_VERSION__', commit='__ROSE_COMMIT__', git='rose-dev@rosecompiler1.llnl.gov:rose/scratch/rose.git')
+ 
 
     depends_on("autoconf@2.69", type='build')
     depends_on("automake@1.14", type='build')
     depends_on("libtool@2.4", type='build')
-    depends_on("boost@1.47.0:")
+    depends_on("__BOOST_VERSION__")
 
     variant('debug', default=False, description='Enable compiler debugging symbols')
     variant('optimized', default=False, description='Enable compiler optimizations')
