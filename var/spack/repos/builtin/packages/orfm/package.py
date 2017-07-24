@@ -25,26 +25,13 @@
 from spack import *
 
 
-class Gbenchmark(CMakePackage):
-    """A microbenchmark support library"""
+class Orfm(AutotoolsPackage):
+    """A simple and not slow open reading frame (ORF) caller. No bells or
+       whistles like frameshift detection, just a straightforward goal of
+       returning a FASTA file of open reading frames over a certain length
+       from a FASTA/Q file of nucleotide sequences."""
 
-    homepage = "https://github.com/google/benchmark"
-    url = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
+    homepage = "https://github.com/wwood/OrfM"
+    url      = "https://github.com/wwood/OrfM/releases/download/v0.7.1/orfm-0.7.1.tar.gz"
 
-    version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae')
-    version('1.0.0', '4f778985dce02d2e63262e6f388a24b595254a93')
-
-    def build_type(self):
-        return "Release"
-
-    def patch(self):
-        filter_file(
-            r'add_cxx_compiler_flag..fstrict.aliasing.',
-            r'##### add_cxx_compiler_flag(-fstrict-aliasing)',
-            'CMakeLists.txt'
-        )
-        filter_file(
-            r'add_cxx_compiler_flag..Werror',
-            r'##### add_cxx_compiler_flag(-Werror',
-            'CMakeLists.txt'
-        )
+    version('0.7.1', 'fcf18283a028cea2af90663a76a73a2a')
