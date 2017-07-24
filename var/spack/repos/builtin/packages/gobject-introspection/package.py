@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 from spack import spack_root
-import sys
 
 
 class GobjectIntrospection(Package):
@@ -48,7 +47,7 @@ class GobjectIntrospection(Package):
     depends_on("pkg-config@0.9.0:", type="build")
 
     # GobjectIntrospection does not build with sed from darwin:
-    depends_on('sed', when=sys.platform == 'darwin', type='build')
+    depends_on('sed', when='platform=darwin', type='build')
 
     # This package creates several scripts from
     # toosl/g-ir-tool-template.in.  In their original form these
