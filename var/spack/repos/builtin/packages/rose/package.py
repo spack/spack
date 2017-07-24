@@ -37,10 +37,11 @@ class Rose(AutotoolsPackage):
     homepage = "http://rosecompiler.org/"
     #url = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
 
-    version('0.9.7', 'e14ce5250078df4b09f4f40559d46c75')
+    version('0.9.7.0', commit='992c21ad06893bc1e9e7688afe0562eee0fda021',
+            git='https://github.com/rose-compiler/rose.git')
     version('0.9.9.0', commit='14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff',
             git='https://github.com/rose-compiler/rose.git')
-    version('dev', branch='master',
+    version('develop', branch='master',
             git='https://github.com/rose-compiler/rose-develop.git')
 
     depends_on("autoconf@2.69", type='build')
@@ -87,9 +88,15 @@ class Rose(AutotoolsPackage):
         spec = self.spec
         cc = self.compiler.cc
         cxx = self.compiler.cxx
+
+        if spec.satisfies('@0.9.8:'):
+            edg = "4.12"
+        else:
+            edg = "4.9"
+
         return [
             '--disable-boost-version-check',
-            "--enable-edg_version=4.12",
+            '--enable-edg_version={0}'.format(edg),
             "--with-alternate_backend_C_compiler={0}".format(cc),
             "--with-alternate_backend_Cxx_compiler={0}".format(cxx),
             "--with-boost={0}".format(spec['boost'].prefix),
@@ -97,6 +104,7 @@ class Rose(AutotoolsPackage):
             "--with-z3={0}".format(spec['z3'].prefix) if '+z3' in spec else '',
             '--disable-tests-directory' if '+tests' not in spec else '',
             '--enable-tutorial-directory={0}'.format('no'),
+            '--without-java' if '+java' not in spec else ''
         ]
 
     def install(self, spec, prefix):
