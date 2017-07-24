@@ -50,7 +50,7 @@ class Adios(AutotoolsPackage):
             description='Enable Fortran bindings support')
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('no_mpi', default=False, description='Disable MPI support to build serial version')
+    variant('serial', default=False, description='Build serial version by fully disabling MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
     variant('mxml', default=False, description='Build with external mxml')
 
@@ -130,7 +130,7 @@ class Adios(AutotoolsPackage):
 
         if '+mpi' in spec:
             extra_args.append('--with-mpi')
-        if '+no_mpi' in spec:
+        if '+serial' in spec:
             extra_args.append('--without-mpi')
         if '+infiniband' in spec:
             extra_args.append('--with-infiniband')
