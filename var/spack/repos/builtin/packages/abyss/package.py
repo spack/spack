@@ -37,7 +37,7 @@ class Abyss(AutotoolsPackage):
     version('1.5.2.', '10d6d72d1a915e618d41a5cbbcf2364c', url='https://github.com/bcgsc/abyss/releases/download/1.5.2/abyss-1.5.2.tar.gz')
 
     depends_on('mpi')
-    depends_on('boost@:1.50.0,1.53.0:', when='@2.0.2')
+    depends_on('boost@:1.50.0,1.53.0:', when='@2.0.2:')
     depends_on('boost@:1.50.0,1.53.0:1.59.0', when='@:1.5.2')
     depends_on('sparsehash')
     depends_on('sqlite')

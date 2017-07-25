@@ -33,8 +33,4 @@ class Igraph(AutotoolsPackage):
 
     version('0.7.1', '4f6e7c16b45fce8ed423516a9786e4e8')
 
-    depends_on('m4', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
     depends_on('libxml2')
