@@ -49,7 +49,7 @@ class SublimeText(Package):
     depends_on('libxau', type='run')
 
     def url_for_version(self, version):
-        if version.up_to(1) == '2':
+        if version[0] == 2:
             return "https://download.sublimetext.com/Sublime%20Text%20{0}%20x64.tar.bz2".format(version)
         else:
             return "https://download.sublimetext.com/sublime_text_3_build_{0}_x64.tar.bz2".format(version)

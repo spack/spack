@@ -181,6 +181,29 @@ class AutotoolsPackage(PackageBase):
         """Override to provide another place to build the package"""
         return self.configure_directory
 
+    def default_flag_handler(self, spack_env, flag_val):
+        # Relies on being the first thing that can affect the spack_env
+        # EnvironmentModification after it is instantiated or no other
+        # method trying to affect these variables. Currently both are true
+        # flag_val is a tuple (flag, value_list).
+        spack_env.set(flag_val[0].upper(),
+                      ' '.join(flag_val[1]))
+        return []
+
+    def patch(self):
+        """Patches config.guess if
+        :py:attr:``~.AutotoolsPackage.patch_config_guess`` is True
+
+        :raise RuntimeError: if something goes wrong when patching
+            ``config.guess``
+        """
+
+        if self.patch_config_guess and self.spec.satisfies(
+                'arch=linux-rhel7-ppc64le'
+        ):
+            if not self._do_patch_config_guess():
+                raise RuntimeError('Failed to find suitable config.guess')
+
     @run_before('autoreconf')
     def delete_configure_to_force_update(self):
         if self.force_autoreconf:
