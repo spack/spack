@@ -40,10 +40,11 @@ class Transdecoder(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('TransDecoder.LongOrfs', prefix.bin)
-        install('TransDecoder.Predict', prefix.bin)
-        install_tree('PerlLib', prefix.bin.PerlLib)
-        install_tree('util', prefix.bin.util)
+        install('TransDecoder.LongOrfs', prefix)
+        install('TransDecoder.Predict', prefix)
+        install_tree('PerlLib', prefix.PerlLib)
+        install_tree('util', prefix.util)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', prefix.bin.util.bin)
+        run_env.prepend_path('PATH', prefix.util.bin)
+        run_env.prepend_path('PATH', prefix)
