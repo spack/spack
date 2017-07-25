@@ -33,6 +33,7 @@ class Elemental(CMakePackage):
     homepage = "http://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.6.tar.gz"
 
+    version('master', git='https://github.com/elemental/Elemental.git', branch='master')
     version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
@@ -52,6 +53,8 @@ class Elemental(CMakePackage):
             description='Enable quad precision')
     variant('int64', default=False,
             description='Use 64bit integers')
+    variant('cublas', default=False,
+            description='Enable cuBLAS for local BLAS operations')
     # When this variant is set remove the normal dependencies since
     # Elemental has to build BLAS and ScaLAPACK internally
     variant('int64_blas', default=False,
@@ -78,6 +81,8 @@ class Elemental(CMakePackage):
     depends_on('scalapack', when='+scalapack ~int64_blas')
     extends('python', when='+python')
     depends_on('python@:2.8', when='+python')
+
+    patch('elemental_cublas.patch', when='+cublas')
 
     @property
     def libs(self):
