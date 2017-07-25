@@ -23,33 +23,59 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Lulesh(Package):
-    """Livermore Unstructured Lagrangian Explicit Shock Hydrodynamics (LULESH)
+class Lulesh(MakefilePackage):
+    """LULESH is a highly simplified application, hard-coded to only
+    style typical in scientific C or C++ based applications. Hard
+    code to only solve a Sedov blast problem with analytic answer 
     """
-
+    tags = ['proxy-app']
     homepage = "https://codesign.llnl.gov/lulesh.php"
     url      = "https://codesign.llnl.gov/lulesh/lulesh2.0.3.tgz"
 
-    version("2.0.3", "336644a8750f71c7c6b9d2960976e7aa")
+    version('2.0.3', '336644a8750f71c7c6b9d2960976e7aa')
+    variant('mpi', default=True, description='Build with MPI support')
+    variant('openmp', default=True, description='Build with OpenMP support')
+    variant('visual', default=False,
+        description='Build with Visualization support (Silo, hdf5)')
 
-    patch("remove_defaults.patch")
+    depends_on('mpi', when='+mpi')
+    depends_on('silo', when='+visual')
+    depends_on('hdf5', when='+visual')
 
-    variant('mpip', default=False)
+    @property
+    def build_targets(self):
+        targets = []
+        cxxflag = ' -g -O3 -I. -Wall '
+        ldflags = ' -g -O3 '
 
-    depends_on("mpi", type="build")
-    depends_on("mpip", when="+mpip")
+        targets.append('CXX = {0}'.format(spack_cxx, ' -DUSE_MPI=0 '))
+        targets.append('MPI_INC = {0}'.format(self.spec['mpi'].prefix.include))
+        targets.append('MPI_LIB = {0}'.format(self.spec['mpi'].prefix.lib))
+        if '+visual' in self.spec:
+            targets.append(
+                'SILO_INCDIR = {0}'.format(self.spec['silo'].prefix.include))
+            targets.append(
+                'SILO_LIBDIR = {0}'.format(self.spec['silo'].prefix.lib))
+            cxxflag = ' -g -DVIZ_MESH -I${SILO_INCDIR} -Wall -Wno-pragmas '
+            ldflags = ' -g -L${SILO_LIBDIR} -Wl,-rpath -Wl,'
+            ldflags += '${SILO_LIBDIR} -lsiloh5 -lhdf5 '
+
+        if '+mpi' in self.spec:
+            cxxflag += self.compiler.openmp_flag
+            ldflags += self.compiler.openmp_flag
+            targets.append(
+                'CXX = {0} {1}'.format(self.spec['mpi'].mpicxx,
+                                       ' -DUSE_MPI=1'))
+
+        targets.append('CXXFLAGS = {0}'.format(cxxflag))
+        targets.append('LDFLAGS = {0}'.format(ldflags))
+        return targets
 
     def install(self, spec, prefix):
-        if '+mpip' in spec:
-            os.environ["LDFLAGS"] = " -lmpiP -ldwarf -lelf"
-
-            if os.uname()[4] == "x86_64":
-                os.environ["LDFLAGS"] += " -lunwind"
-
-        os.environ["CXX"] = spec['mpi'].mpicxx + " -DUSE_MPI=1"
-        os.environ["PREFIX"] = prefix
-        make()
-        make("install")
+        mkdirp(prefix.bin)
+        install('lulesh2.0', prefix.bin)
+        mkdirp(prefix.doc)
+        install('README', prefix.doc)
+        install('TODO', prefix.doc)
