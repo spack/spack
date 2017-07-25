@@ -39,8 +39,7 @@ class Transabyss(Package):
     depends_on('blat')
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install('transabyss', prefix.bin)
-        install('transabyss-merge', prefix.bin)
-        install_tree('bin', prefix.bin.bin)
-        install_tree('utilities', prefix.bin.utilities)
+        install('transabyss', prefix)
+        install('transabyss-merge', prefix)
+        install_tree('bin', prefix.bin)
+        install_tree('utilities', prefix.utilities)
