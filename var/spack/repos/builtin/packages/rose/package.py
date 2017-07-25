@@ -56,6 +56,8 @@ class Rose(AutotoolsPackage):
 
     variant('tests', default=False, description='Build the tests directory')
 
+    variant('intel_backend', default=False, description='Enable Intel backend compiler')
+
     variant('binanalysis', default=False, description='Enable binary analysis tooling')
     depends_on('libgcrypt', when='+binanalysis', type='build')
     depends_on('py-binwalk', when='+binanalysis', type='run')
@@ -91,8 +93,13 @@ class Rose(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        cc = self.compiler.cc
-        cxx = self.compiler.cxx
+
+        if '+intel_backend' in spec:
+            cc = which('mpicc')
+            cxx = which('mpic++')
+        else
+            cc = self.compiler.cc
+            cxx = self.compiler.cxx
 
         if spec.satisfies('@0.9.8:'):
             edg = "4.12"
