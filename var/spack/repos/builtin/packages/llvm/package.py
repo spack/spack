@@ -43,6 +43,10 @@ class Llvm(CMakePackage):
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005',
             url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz')
 
+    # NOTE: The debug version of LLVM is an order of magnitude larger than
+    # the release version, and may take up 20-30 GB of space. If you want
+    # to save space, build with `build_type=Release`.
+
     variant('clang', default=True,
             description="Build the LLVM C/C++/Objective-C compiler frontend")
     variant('lldb', default=True, description="Build the LLVM debugger")
