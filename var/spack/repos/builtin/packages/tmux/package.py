@@ -46,14 +46,8 @@ class Tmux(Package):
     depends_on('ncurses')
 
     def install(self, spec, prefix):
-        pkg_config_path = ':'.join([
-            spec['libevent'].prefix,
-            spec['ncurses'].prefix
-        ])
 
-        configure(
-            "--prefix=%s" % prefix,
-            "PKG_CONFIG_PATH=%s" % pkg_config_path)
+        configure("--prefix=%s" % prefix)
 
         make()
         make("install")
