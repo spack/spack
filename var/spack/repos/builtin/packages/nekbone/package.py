@@ -52,7 +52,7 @@ class Nekbone(Package):
                 makenec = FileFilter('makenek')
                 makenec.filter('CC.*', 'CC='+self.spec['mpi'].mpicc)
                 makenec.filter('FF77.*', 'FF77='+self.spec['mpi'].mpif77)
-                makenek = Executable('./makenek~')
+                makenek = Executable('./makenek')
                 path = join_path(prefix.bin,  wdir)
                 makenek('ex1', '../../src')
                 mkdir(path)
