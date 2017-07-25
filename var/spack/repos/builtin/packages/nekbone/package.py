@@ -39,9 +39,7 @@ class Nekbone(Package):
 
     version('develop', git='https://github.com/ANL-CESAR/nekbone.git')
 
-    variant('mpi', default=True, description='Enable MPI Support')
-
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi')
 
     def install(self, spec, prefix):
 
