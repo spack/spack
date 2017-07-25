@@ -173,7 +173,7 @@ class Trilinos(CMakePackage):
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
     # deprecated SuperLUDist v3.3 together with an Amesos patch is working.
-    conflicts('+superlu-dist', when='@:11.14.3')
+#    conflicts('+superlu-dist', when='@:11.14.3')
     # PnetCDF was only added after v12.10.1
     conflicts('+pnetcdf', when='@:12.10.1')
 
