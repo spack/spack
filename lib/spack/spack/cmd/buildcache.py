@@ -33,7 +33,7 @@ import spack.cmd
 from spack.binary_distribution import build_tarball
 
 
-description = "Create, download and unpack build cache files."
+description = "Create, download and install build cache files."
 section = "caching"
 level = "long"
 
@@ -48,7 +48,9 @@ def setup_parser(subparser):
                              " before creating tarballs.")
     create.add_argument('-f', '--force', action='store_true',
                         help="overwrite tarball if it exists.")
-    create.add_argument('-ns', '--nosign', action='store_true')
+    create.add_argument('-y', '--yes-to-all', action='store_true',
+                        help="answer yes to all create unsigned " +
+                             "buildcache questions")
     create.add_argument('-k', '--key', metavar='key',
                         type=str, default=None,
                         help="Key for signing.")
@@ -63,7 +65,9 @@ def setup_parser(subparser):
     install = subparsers.add_parser('install')
     install.add_argument('-f', '--force', action='store_true',
                          help="overwrite install directory if it exists.")
-    install.add_argument('-nv', '--noverify', action='store_true')
+    install.add_argument('-y', '--yes-to-all', action='store_true',
+                         help="answer yes to all install unsigned " +
+                              "buildcache questions")
     install.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to install biuldache for")
@@ -94,14 +98,18 @@ def createtarball(args):
     outdir = os.getcwd()
     if args.directory:
         outdir = args.directory
+    signkey = None
     if args.key:
-        skey = args.key
-    sign = True
+        signkey = args.key
+    yes_to_all = False
     force = False
-    if args.nosign:
-        sign = False
+    relative = False
+    if args.yes_to_all:
+        yes_to_all = True
     if args.force:
         force = True
+    if args.rel:
+        relative = True
     for pkg in pkgs:
         for spec in spack.cmd.parse_specs(pkg, concretize=True):
             specs.add(spec)
@@ -113,10 +121,9 @@ def createtarball(args):
                 if not node.external:
                     tty.msg('adding dependency %s' % node.format())
                     specs.add(node)
-    spack.binary_distribution.prepare()
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        build_tarball(spec, outdir, force, args.rel, sign, skey)
+        build_tarball(spec, outdir, force, relative, yes_to_all, signkey)
 
 
 def installtarball(args):
@@ -139,10 +146,10 @@ def installtarball(args):
 
 def install_tarball(spec, args):
     s = spack.spec.Spec(spec)
-    verify = True
+    yes_to_all = False
     force = False
-    if args.noverify:
-        verify = False
+    if args.yes_to_all:
+        yes_to_all = True
     if args.force:
         force = True
     for d in s.dependencies():
@@ -155,9 +162,8 @@ def install_tarball(spec, args):
         tarball = spack.binary_distribution.download_tarball(spec)
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
-            spack.binary_distribution.prepare()
             spack.binary_distribution.extract_tarball(spec, tarball,
-                                                      verify, force)
+                                                      yes_to_all, force)
             spack.binary_distribution.relocate_package(spec)
             spack.store.db.reindex(spack.store.layout)
         else:

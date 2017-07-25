@@ -27,7 +27,6 @@
 
 import os
 import re
-import platform
 import tarfile
 import yaml
 import shutil
@@ -42,21 +41,6 @@ from spack.stage import Stage
 import spack.fetch_strategy as fs
 import spack.relocate
 from contextlib import closing
-
-
-def prepare():
-    """
-    Install patchelf as pre-requisite to the
-    required relocation of binary packages
-    """
-    if platform.system() == 'Darwin':
-        return
-    dir = os.getcwd()
-    patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
-    if not spack.store.layout.check_installed(patchelf_spec):
-        patchelf = spack.repo.get(patchelf_spec)
-        patchelf.do_install()
-    os.chdir(dir)
 
 
 def buildinfo_file_name(spec):
@@ -152,7 +136,8 @@ def tarball_path_name(spec, ext):
                         tarball_name(spec, ext))
 
 
-def build_tarball(spec, outdir, force=False, rel=False, sign=True, key=None):
+def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
+                  key=None):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
@@ -178,6 +163,7 @@ def build_tarball(spec, outdir, force=False, rel=False, sign=True, key=None):
     spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = join_path(outdir, "build_cache", specfile_name)
+    indexfile_path = join_path(outdir, "build_cache", "index.html")
     if os.path.exists(specfile_path):
         if force:
             os.remove(specfile_path)
@@ -195,35 +181,55 @@ def build_tarball(spec, outdir, force=False, rel=False, sign=True, key=None):
         tar.add(name='%s' % spec.prefix, arcname='%s' %
                 os.path.basename(spec.prefix))
 
-    # Sign the packages.
-    if sign:
-        if key is None:
-            keys = Gpg.signing_keys()
-            if len(keys) == 1:
-                key = keys[0]
-            elif not keys:
-                raise RuntimeError('no signing keys are available')
+    # Sign the packages if keys available
+    sign = True
+    if key is None:
+        keys = Gpg.signing_keys()
+        if len(keys) == 1:
+            key = keys[0]
+        if len(keys) > 1:
+            tty.warn(
+                'multiple signing keys are available;' +
+                ' please choose one with -k option')
+            Gpg.list(False, True)
+            sign = False
+        if len(keys) == 0:
+            tty.warn('No signing keys are available')
+            if yes_to_all:
+                sign = False
             else:
-                raise RuntimeError('multiple signing keys are available; '
-                                   'please choose one')
+                raise RuntimeError('not creating unsigned build cache;' +
+                                   'use spack buildcache create -y ' +
+                                   'option to override')
+    if sign:
         Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
         Gpg.sign(key, tarfile_path, '%s.asc' % tarfile_path)
-    else:
-        path1 = '%s.asc' % tarfile_path
-        with open(path1, 'a'):
-            os.utime(path1, None)
-        path2 = '%s.asc' % specfile_path
-        with open(path2, 'a'):
-            os.utime(path2, None)
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
         tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
-        tar.add(name='%s.asc' % tarfile_path, arcname='%s.asc' % tarfile_name)
-        tar.add(name='%s.asc' % specfile_path,
-                arcname='%s.asc' % specfile_name)
+        if sign:
+            tar.add(name='%s.asc' % tarfile_path, arcname='%s.asc' %
+                    tarfile_name)
+            tar.add(name='%s.asc' % specfile_path,
+                    arcname='%s.asc' % specfile_name)
     os.remove(tarfile_path)
-    os.remove('%s.asc' % tarfile_path)
-    os.remove('%s.asc' % specfile_path)
+    if sign:
+        os.remove('%s.asc' % tarfile_path)
+        os.remove('%s.asc' % specfile_path)
+    if os.path.exists(indexfile_path):
+        os.remove(indexfile_path)
+    f = open(indexfile_path, 'w')
+    header = """<html>
+<head></head>
+<list>"""
+    footer = "</list></html>"
+    paths = os.listdir(outdir + '/build_cache')
+    f.write(header)
+    for path in paths:
+        rel = os.path.basename(path)
+        f.write('<li><a href="%s" %s</a>' % (rel, rel))
+    f.write(footer)
+    f.close()
 
 
 def download_tarball(spec):
@@ -241,6 +247,7 @@ def download_tarball(spec):
         # print url
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
+        stage.create()
         try:
             stage.fetch()
             return stage.save_filename
@@ -249,12 +256,12 @@ def download_tarball(spec):
     return None
 
 
-def extract_tarball(spec, filename, verify=True, force=False):
+def extract_tarball(spec, filename, yes_to_all=False, force=False):
     """
     extract binary tarball for given package into install area
     """
     installpath = install_directory_name(spec)
-    if force:
+    if os.path.exists(installpath) and force:
         shutil.rmtree(installpath)
     mkdirp(installpath)
     stagepath = os.path.dirname(filename)
@@ -268,17 +275,33 @@ def extract_tarball(spec, filename, verify=True, force=False):
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extractall(stagepath)
 
-    if verify:
-        Gpg.verify('%s.asc' % specfile_path, specfile_path)
-        Gpg.verify('%s.asc' % tarfile_path, tarfile_path)
-
-    with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=join_path(installpath, '..'))
-
-    os.remove(tarfile_path)
-    os.remove(tarfile_path + '.asc')
-    os.remove(specfile_path)
-    os.remove(specfile_path + '.asc')
+    install = False
+#   signed
+    if os.path.exists('%s.asc' % specfile_path) and os.path.exists(
+            '%s.asc' % tarfile_path):
+        if Gpg.verify('%s.asc' % specfile_path, specfile_path) and Gpg.verify(
+                '%s.asc' % tarfile_path, tarfile_path):
+            install = True
+        # unverified
+        else:
+            if yes_to_all:
+                install = True
+        os.remove(tarfile_path + '.asc')
+        os.remove(specfile_path + '.asc')
+#   unsigned
+    else:
+        if yes_to_all:
+            install = True
+    if install:
+        with closing(tarfile.open(tarfile_path, 'r')) as tar:
+            tar.extractall(path=join_path(installpath, '..'))
+        os.remove(tarfile_path)
+        os.remove(specfile_path)
+    else:
+        os.remove(tarfile_path)
+        os.remove(specfile_path)
+        tty.warn('not installing unsigned or unverified build cache '
+                 'use spack buildcache create -y option to override')
 
 
 def prelocate_package(spec):
@@ -287,18 +310,10 @@ def prelocate_package(spec):
     """
     buildinfo = read_buildinfo_file(spec)
     old_path = buildinfo['buildpath']
-    # as we may need patchelf, find out where it is
-    patchelf_executable = ''
-    if platform.system() != 'Darwin':
-        patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
-        patchelf = spack.repo.get(patchelf_spec)
-        patchelf_executable = os.path.join(patchelf.prefix, "bin", "patchelf")
-
     for filename in buildinfo['relocate_binaries']:
         path_name = os.path.join(spec.prefix, filename)
         spack.relocate.prelocate_binary(path_name,
-                                        old_path,
-                                        patchelf_executable)
+                                        old_path)
 
 
 def relocate_package(spec):
@@ -313,19 +328,11 @@ def relocate_package(spec):
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
     installpath = install_directory_name(spec)
-    # as we may need patchelf, find out where it is
-    patchelf_executable = ''
-    if platform.system() != 'Darwin':
-        patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
-        patchelf = spack.repo.get(patchelf_spec)
-        patchelf_executable = os.path.join(patchelf.prefix, "bin", "patchelf")
-
     for filename in buildinfo['relocate_binaries']:
         path_name = os.path.join(installpath, filename)
         spack.relocate.relocate_binary(path_name,
                                        old_path,
-                                       new_path,
-                                       patchelf_executable)
+                                       new_path)
 
     for filename in buildinfo['relocate_textfiles']:
         path_name = os.path.join(installpath, filename)
@@ -373,7 +380,7 @@ def get_keys(install=False, yes_to_all=False):
     for key in mirrors:
         url = mirrors[key]
         tty.msg("Finding public keys on %s" % url)
-        p, links = spider(url + "/build_cache")
+        p, links = spider(url + "/build_cache", depth=1)
         for link in links:
             if re.search("\.key", link):
                 with Stage(link, name="build_cache", keep=True) as stage:

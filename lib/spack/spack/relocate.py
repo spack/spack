@@ -5,17 +5,33 @@ import os
 import stat
 import platform
 import re
+import spack
+import spack.cmd
 from spack.util.executable import which
 from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
 
 
-def get_existing_elf_rpaths(path_name, patchelf_executable):
+def get_patchelf():
+    # as we may need patchelf, find out where it is
+    if platform.system() == 'Darwin':
+        return None
+    dir = os.getcwd()
+    patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
+    patchelf = spack.repo.get(patchelf_spec)
+    if not patchelf.installed:
+        patchelf.do_install()
+    os.chdir(dir)
+    patchelf_executable = os.path.join(patchelf.prefix, "bin", "patchelf")
+    return patchelf_executable
+
+
+def get_existing_elf_rpaths(path_name):
     """
     Return the RPATHS in given elf file as a list of strings.
     """
     if platform.system() == 'Linux':
-        command = which(patchelf_executable)
+        command = which(get_patchelf())
         output = command('--print-rpath', '%s' %
                          path_name, output=str, err=str)
         if command.returncode != 0:
@@ -157,7 +173,7 @@ def get_filetype(path_name):
     return output.strip()
 
 
-def modify_elf_object(path_name, orig_rpath, new_rpath, patchelf_executable):
+def modify_elf_object(path_name, orig_rpath, new_rpath):
     """
     Replace RPATH's in given elf object
     """
@@ -167,7 +183,7 @@ def modify_elf_object(path_name, orig_rpath, new_rpath, patchelf_executable):
         os.chmod(path_name, st.st_mode | stat.S_IWUSR)
     if platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
-        command = which(patchelf_executable)
+        command = which(get_patchelf())
         output = command('--force-rpath', '--set-rpath', '%s' % new_joined,
                          '%s' % path_name, output=str, cmd=str)
         if command.returncode != 0:
@@ -201,22 +217,21 @@ def needs_text_relocation(filetype):
     return ("text" in filetype)
 
 
-def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
+def relocate_binary(path_name, old_dir, new_dir):
     """
     Change RPATHs in given elf or mach-o file
     """
     if platform.system() == 'Darwin':
         modify_macho_object(path_name, old_dir, new_dir, relative=False)
     elif platform.system() == 'Linux':
-        orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
+        orig_rpaths = get_existing_elf_rpaths(path_name)
         new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
-        modify_elf_object(path_name, orig_rpaths, new_rpaths,
-                          patchelf_executable)
+        modify_elf_object(path_name, orig_rpaths, new_rpaths)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
 
-def prelocate_binary(path_name, old_dir, patchelf_executable):
+def prelocate_binary(path_name, old_dir):
     """
     Change RPATHs in given elf or mach-o file to relative
     """
@@ -224,10 +239,9 @@ def prelocate_binary(path_name, old_dir, patchelf_executable):
         new_dir = ''
         modify_macho_object(path_name, old_dir, new_dir, relative=True)
     elif platform.system() == 'Linux':
-        orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
+        orig_rpaths = get_existing_elf_rpaths(path_name)
         new_rpaths = get_relative_rpaths(path_name, old_dir, orig_rpaths)
-        modify_elf_object(path_name, orig_rpaths, new_rpaths,
-                          patchelf_executable)
+        modify_elf_object(path_name, orig_rpaths, new_rpaths)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
