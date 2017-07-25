@@ -28,7 +28,7 @@ from spack import *
 class Lulesh(MakefilePackage):
     """LULESH is a highly simplified application, hard-coded to only
     style typical in scientific C or C++ based applications. Hard
-    code to only solve a Sedov blast problem with analytic answer 
+    code to only solve a Sedov blast problem with analytic answer
     """
     tags = ['proxy-app']
     homepage = "https://codesign.llnl.gov/lulesh.php"
