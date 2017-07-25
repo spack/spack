@@ -34,7 +34,7 @@ class Transabyss(Package):
     version('1.5.5', '9ebe0394243006f167135cac4df9bee6')
 
     depends_on('abyss@1.5.2')
-    depends_on('python@2.7.6:', type=('build', 'run'))
+    depends_on('python@2.7.6:', type='run')
     depends_on('py-igraph@0.7.0:')
     depends_on('blat')
 
