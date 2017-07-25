@@ -36,14 +36,5 @@ class Bml(CMakePackage):
     version('develop', git='https://github.com/qmmd/bml', branch='master')
     version('1.1.0', git='https://github.com/qmmd/bml', tag='v1.1.0')
 
-    variant('debug', default=False, description='Build debug version')
-
     depends_on("blas")
     depends_on("lapack")
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'

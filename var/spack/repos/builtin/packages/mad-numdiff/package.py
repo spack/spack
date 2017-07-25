@@ -34,12 +34,3 @@ class MadNumdiff(CMakePackage):
 
     version('develop', git='https://github.com/quinoacomputing/ndiff', branch='master')
     version('20150724', '7723c0f2499aea8fd960377c5bed28d8')
-
-    variant('debug', default=False, description='Build debug version')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
