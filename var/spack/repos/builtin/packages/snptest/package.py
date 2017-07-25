@@ -30,10 +30,9 @@ class Snptest(Package):
        genome-wide studies."""
 
     homepage = "https://mathgen.stats.ox.ac.uk/genetics_software/snptest/snptest.html"
+    url = "http://www.well.ox.ac.uk/~gav/resources/snptest_v2.5.2_linux_x86_64_dynamic.tgz"
 
-    version('2.5.2', '', url='http://www.well.ox.ac.uk/~gav/resources/snptest_v2.5.2_linux_x86_64_dynamic.tgz', 
-            when='platform=linux', preferred=True)
-    version('2.5.2', '', url='http://www.well.ox.ac.uk/~gav/resources/snptest_v2.5.2_MacOSX_x86_64.tgz', when='platform=darwin')
+    version('2.5.2', 'e3f2cc0351f260cf29369dc4f79a660a')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
