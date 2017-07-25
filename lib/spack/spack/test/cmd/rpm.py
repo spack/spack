@@ -16,7 +16,7 @@ class MockSpec(object):
         return self.__str__()
 
     def traverse(self, visited=None, cover=None, key=None):
-        specs = set(dep.spec for dep in self.deps.itervalues())
+        specs = set(dep.spec for dep in self.deps.values())
         return set(
             itertools.chain(
                 [self],
