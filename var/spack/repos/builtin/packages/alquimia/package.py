@@ -36,8 +36,6 @@ class Alquimia(CMakePackage):
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('debug',  default=False,
-            description='Builds a debug version of the libraries')
 
     depends_on('mpi')
     depends_on('hdf5')
@@ -52,10 +50,6 @@ class Alquimia(CMakePackage):
         options = ['-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
                    '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
                    '-DUSE_XSDK_DEFAULTS=YES',
-                   '-DCMAKE_BUILD_TYPE:STRING=%s' % (
-                       'DEBUG' if '+debug' in spec else 'RELEASE'),
-                   '-DXSDK_ENABLE_DEBUG:STRING=%s' % (
-                       'YES' if '+debug' in spec else 'NO'),
                    '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                        'ON' if '+shared' in spec else 'OFF'),
                    '-DTPL_ENABLE_MPI:BOOL=ON',

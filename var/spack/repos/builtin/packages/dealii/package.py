@@ -71,6 +71,9 @@ class Dealii(CMakePackage):
             description='Compile with 64 bit indices support')
     variant('optflags', default=False,
             description='Compile using additional optimization flags')
+    variant('build_type', default='DebugRelease',
+            description='The build type to build',
+            values=('Debug', 'Release', 'DebugRelease'))
 
     # required dependencies, light version
     depends_on("blas")
@@ -135,10 +138,6 @@ class Dealii(CMakePackage):
     for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
               '+slepc', '+trilinos']:
         conflicts(p, when='~mpi')
-
-    def build_type(self):
-        # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
-        return 'DebugRelease'
 
     def cmake_args(self):
         spec = self.spec

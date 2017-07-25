@@ -36,18 +36,10 @@ class Portage(CMakePackage):
 
     version('develop', git='https://github.com/laristra/portage', branch='master', submodules=True)
 
-    variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True, description='Support MPI')
 
     depends_on("cmake@3.1:", type='build')
     depends_on('mpi', when='+mpi')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         options = ['-DENABLE_UNIT_TESTS=ON', '-DENABLE_APP_TESTS=ON']

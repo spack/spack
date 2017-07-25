@@ -42,25 +42,12 @@ class Clamr(CMakePackage):
         values=('opengl', 'mpe', 'none'),
         description='Build with specified graphics support')
     variant(
-        'build', default='relwithdebinfo',
-        values=('debug', 'release', 'relwithdebinfo'),
-        description='Build type')
-    variant(
         'precision', default='mixed',
         values=('single', 'mixed', 'full'),
         description='single, mixed, or full double precision values')
 
     depends_on('mpi')
     depends_on('mpe', when='graphics=mpe')
-
-    def build_type(self):
-        spec = self.spec
-        if 'build=debug' in spec:
-            return 'Debug'
-        elif 'build=release' in spec:
-            return 'Release'
-        else:
-            return 'RelWithDebInfo'
 
     def cmake_args(self):
         spec = self.spec

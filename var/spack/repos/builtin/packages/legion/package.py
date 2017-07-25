@@ -46,7 +46,6 @@ class Legion(CMakePackage):
     version('develop', git='https://github.com/StanfordLegion/legion', branch='master')
     version('17.02.0', '31ac3004e2fb0996764362d2b6f6844a')
 
-    variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
     variant('shared', default=True, description='Build shared libraries')
@@ -54,13 +53,6 @@ class Legion(CMakePackage):
     depends_on("cmake@3.1:", type='build')
     depends_on("gasnet", when='~mpi')
     depends_on("gasnet+mpi", when='+mpi')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         options = [

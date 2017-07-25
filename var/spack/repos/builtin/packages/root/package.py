@@ -99,12 +99,6 @@ class Root(CMakePackage):
     # See https://sft.its.cern.ch/jira/browse/ROOT-7517
     conflicts('%intel')
 
-    def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
-
     def cmake_args(self):
         args = [
             '-Dcocoa=OFF',

@@ -40,6 +40,10 @@ class Relion(CMakePackage):
     variant('cuda', default=False, description="enable compute on gpu")
     variant('double', default=False, description="double precision (cpu) code")
     variant('double-gpu', default=False, description="double precision (gpu) code")
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'Profiling', 'Benchmarking'))
 
     depends_on('mpi')
     depends_on('fftw+float+double')

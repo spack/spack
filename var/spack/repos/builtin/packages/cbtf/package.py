@@ -58,6 +58,8 @@ class Cbtf(CMakePackage):
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
+    variant('build_type', default='None', values=('None'),
+            description='CMake build type')
 
     depends_on("cmake@3.0.2:", type='build')
     depends_on("boost@1.50.0:1.59.0")
@@ -69,9 +71,6 @@ class Cbtf(CMakePackage):
     parallel = False
 
     build_directory = 'build_cbtf'
-
-    def build_type(self):
-        return 'None'
 
     def cmake_args(self):
 

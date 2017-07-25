@@ -40,17 +40,8 @@ class Vpic(CMakePackage):
 
     version('develop', git='https://github.com/lanl/vpic', branch='master', submodules=True)
 
-    variant('debug', default=False, description='Build debug version')
-
     depends_on("cmake@3.1:", type='build')
     depends_on('mpi')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         options = ['-DENABLE_INTEGRATED_TESTS=ON', '-DENABLE_UNIT_TESTS=ON']

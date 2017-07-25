@@ -55,10 +55,12 @@ class Fenics(CMakePackage):
             description='Enables the shared memory support')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
-    variant('debug',        default=False,
-            description='Builds a debug version of the libraries')
     variant('doc',          default=False,
             description='Builds the documentation')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'MinSizeRel', 'Developer'))
 
     # not part of spack list for now
     # variant('petsc4py',     default=True,  description='Uses PETSc4py')
@@ -144,11 +146,7 @@ class Fenics(CMakePackage):
         return 'ON' if option in self.spec else 'OFF'
 
     def cmake_args(self):
-        spec = self.spec
-
         return [
-            '-DCMAKE_BUILD_TYPE:STRING={0}'.format(
-                'Debug' if '+debug' in spec else 'RelWithDebInfo'),
             '-DDOLFIN_ENABLE_DOCS:BOOL={0}'.format(
                 self.cmake_is_on('+doc')),
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(

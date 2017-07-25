@@ -36,8 +36,6 @@ class Elemental(CMakePackage):
     version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
-    variant('debug', default=False,
-            description='Builds a debug version of the libraries')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
     variant('hybrid', default=True,
@@ -61,6 +59,9 @@ class Elemental(CMakePackage):
             ' Requires local build of BLAS library.')
     variant('scalapack', default=False,
             description='Build with ScaLAPACK library')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('blas', when='~openmp_blas ~int64_blas')
@@ -84,15 +85,6 @@ class Elemental(CMakePackage):
         return find_libraries(
             'libEl', root=self.prefix, shared=shared, recurse=True
         )
-
-    def build_type(self):
-        """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
-        :return: value for ``CMAKE_BUILD_TYPE``
-        """
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         spec = self.spec

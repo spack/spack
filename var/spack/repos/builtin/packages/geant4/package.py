@@ -41,7 +41,6 @@ class Geant4(CMakePackage):
     version('10.01.p03', '4fb4175cc0dabcd517443fbdccd97439')
 
     variant('qt', default=True, description='Enable Qt support')
-    variant('debug', default=False, description='Build debug version')
 
     depends_on('cmake@3.5:', type='build')
 
@@ -53,13 +52,6 @@ class Geant4(CMakePackage):
     depends_on("vecgeom")
     depends_on("xerces-c")
     depends_on("qt@4.8:", when="+qt")
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         spec = self.spec
