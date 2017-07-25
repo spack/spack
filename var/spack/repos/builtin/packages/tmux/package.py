@@ -44,3 +44,6 @@ class Tmux(AutotoolsPackage):
 
     depends_on('libevent')
     depends_on('ncurses')
+
+    def configure_args(self):
+        return ['LIBTINFO_LIBS=-lncurses']
