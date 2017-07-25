@@ -33,7 +33,6 @@ class Cnpy(CMakePackage):
 
     version('master', git='https://github.com/rogersce/cnpy.git', branch="master")
 
-
     def build_type(self):
         if '+debug' in self.spec:
             return 'Debug'
