@@ -166,7 +166,7 @@ class RpmTemplateVars(Properties):
     def from_json(string):
         json_data = json.loads(string)
         for prop, initializer in (
-                RpmTemplateVars.DEFAULT_PROPERTIES.iteritems()):
+                RpmTemplateVars.DEFAULT_PROPERTIES.items()):
             if prop not in json_data:
                 json_data[prop] = initializer()
         return RpmTemplateVars(**json_data)
@@ -381,7 +381,7 @@ class SpackRpmProperties(Properties):
     @staticmethod
     def convert_old_names(properties):
         new = dict()
-        for k, v in properties.iteritems():
+        for k, v in properties.items():
             new_k = SpackRpmProperties.CONVERSION.get(k, k)
             new[new_k] = v
         return new
@@ -405,7 +405,7 @@ class SpackRpmProperties(Properties):
     def from_json(string):
         json_data = SpackRpmProperties.convert_old_names(json.loads(string))
         for prop, initializer in (
-                SpackRpmProperties.DEFAULT_PROPERTIES.iteritems()):
+                SpackRpmProperties.DEFAULT_PROPERTIES.items()):
             if prop not in json_data:
                 json_data[prop] = initializer()
         return SpackRpmProperties(**json_data)
@@ -475,7 +475,7 @@ class Rpm(object):
     def path_config(self):
         pkg_to_path = self._transitive_paths()
         formatPaths = {}
-        for (pkg_name, spec), path in pkg_to_path.iteritems():
+        for (pkg_name, spec), path in pkg_to_path.items():
             formatPaths[pkg_name] = {'paths': {spec: path}, 'buildable': False}
         # Undo path config for root
         del formatPaths[self.pkg_name]
@@ -665,19 +665,19 @@ class DependencyConfig(object):
 
     def nobuild_from_pkgs_cfg(self):
         packages = spack.config.get_config('packages')
-        return set(pkg_name for pkg_name, info in packages.iteritems()
+        return set(pkg_name for pkg_name, info in packages.items()
                    if not info.get('buildable', True))
 
     def external_pkg_cfg(self, pkg_spec, ignore_deps):
         packages = spack.config.get_config('packages')
         externals = {}
         replace = {}
-        for pkg_name, info in packages.iteritems():
+        for pkg_name, info in packages.items():
             if pkg_name in ignore_deps:
                 dep = pkg_spec[pkg_name]
                 path_entries = info.get('paths', {})
                 replace_entries = info.get('rpms', {})
-                for spec_str, path in path_entries.iteritems():
+                for spec_str, path in path_entries.items():
                     if dep.satisfies(spack.spec.Spec(spec_str)):
                         externals[str(pkg_name)] = {
                             'paths': {str(spec_str): str(path)},
@@ -693,12 +693,12 @@ class DependencyConfig(object):
         build_deps = set(x.name for x in build_deps)
         build_rpms = set()
         full_rpms = set()
-        for pkg_name, rpms in replace.iteritems():
+        for pkg_name, rpms in replace.items():
             if pkg_name in build_deps:
                 build_rpms.update(rpms)
             else:
                 full_rpms.update(rpms)
-        for pkg_name, rpm in spack_rpms.iteritems():
+        for pkg_name, rpm in spack_rpms.items():
             if pkg_name in build_deps:
                 build_rpms.add(rpm)
             else:
@@ -726,7 +726,7 @@ class DependencyConfig(object):
         if self.infer_build_norpm_deps:
             dependencies = pkg_spec.dependencies_dict()
             collected.update(
-                dep_name for dep_name, dep in dependencies.iteritems()
+                dep_name for dep_name, dep in dependencies.items()
                 if set(dep.deptypes) == set(['build']))
         return collected
 
@@ -759,7 +759,7 @@ def resolve_autoname(
     omit_deps = ignore_deps | build_norpm_deps
 
     rpm_deps = set()
-    for dep_name, dep in pkg_spec.dependencies_dict().iteritems():
+    for dep_name, dep in pkg_spec.dependencies_dict().items():
         if dep_name in omit_deps:
             pass
         else:
@@ -782,7 +782,7 @@ def resolve_autoname(
         x for x in rpm_deps
         if x.pkg_name in direct_deps)
     spec_to_rpm_name = dict((x.pkg_name, x.name) for x in direct_rpm_deps)
-    replace = dict((x, y) for x, y in replace.iteritems()
+    replace = dict((x, y) for x, y in replace.items()
                    if x in direct_deps)
     build_rpms, full_rpms = dependency_cfg.split_by_rpm_deptype(
         pkg_spec, replace, spec_to_rpm_name)
@@ -1137,7 +1137,7 @@ class SubspaceConfig(object):
 def resolve_pkg_to_namespace(pkg_to_subspace):
     packages = spack.config.get_config('rpms')
     pkg_to_namespace = {}
-    for pkg_name, info in packages.iteritems():
+    for pkg_name, info in packages.items():
         subspace = pkg_to_subspace.get(pkg_name, {})
         if not all(p in subspace for p in ['name', 'prefix']):
             continue
@@ -1152,7 +1152,7 @@ def resolve_pkg_to_namespace(pkg_to_subspace):
 def resolve_pkg_to_subspace(universal_subspace=None):
     pkg_to_subspace = {}
     packages = spack.config.get_config('rpms')
-    for pkg_name, info in packages.iteritems():
+    for pkg_name, info in packages.items():
         subspaces = info.get('subspaces', {})
         pkg_to_subspace[pkg_name] = subspaces.get(universal_subspace, info)
     return pkg_to_subspace
