@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Tmux(Package):
+class Tmux(AutotoolsPackage):
     """Tmux is a terminal multiplexer.
 
     What is a terminal multiplexer? It lets you switch easily between several
@@ -44,10 +44,3 @@ class Tmux(Package):
 
     depends_on('libevent')
     depends_on('ncurses')
-
-    def install(self, spec, prefix):
-
-        configure("--prefix=%s" % prefix)
-
-        make()
-        make("install")
