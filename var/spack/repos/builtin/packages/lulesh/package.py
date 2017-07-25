@@ -43,7 +43,7 @@ class Lulesh(MakefilePackage):
     depends_on('mpi', when='+mpi')
     depends_on('silo', when='+visual')
     depends_on('hdf5', when='+visual')
-
+    
     @property
     def build_targets(self):
         targets = []
@@ -62,9 +62,11 @@ class Lulesh(MakefilePackage):
             ldflags = ' -g -L${SILO_LIBDIR} -Wl,-rpath -Wl,'
             ldflags += '${SILO_LIBDIR} -lsiloh5 -lhdf5 '
 
-        if '+mpi' in self.spec:
+        if '+openmp' in self.spec:
             cxxflag += self.compiler.openmp_flag
             ldflags += self.compiler.openmp_flag
+        
+        if '+mpi' in self.spec:
             targets.append(
                 'CXX = {0} {1}'.format(self.spec['mpi'].mpicxx,
                                        ' -DUSE_MPI=1'))
