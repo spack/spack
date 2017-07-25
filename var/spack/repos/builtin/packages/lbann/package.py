@@ -39,9 +39,12 @@ class Lbann(CMakePackage):
     variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
     variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
     variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
+    variant('el_cublas', default=False, description='Builds with support for cuBLAS offload in Elemental')
 
-    depends_on('elemental +cublas +openmp_blas +scalapack +shared +int64')
-    depends_on('elemental +cublas +openmp_blas +scalapack +shared +int64 +debug', when='+debug')
+    depends_on('elemental +openmp_blas +scalapack +shared +int64')
+    depends_on('elemental +openmp_blas +scalapack +shared +int64 +debug', when='+debug')
+    depends_on('elemental +cublas +openmp_blas +scalapack +shared +int64', when='+el_cublas')
+    depends_on('elemental +cublas +openmp_blas +scalapack +shared +int64 +debug', when='+debug +el_cublas')
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
     depends_on('opencv@3.2.0', when='+opencv')
@@ -60,6 +63,7 @@ class Lbann(CMakePackage):
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
             '-DWITH_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DWITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
+            '-DELEMENTAL_USE_CUBLAS:BOOL=%s' % ('+el_cublas' in spec),
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(self.spec['elemental'].prefix),
