@@ -48,7 +48,7 @@ class Callpath(Package):
         if spec.satisfies("^dyninst@9.3.0:"):
             std_flag = self.compiler.cxx11_flag
             cmake_args.append("-DCMAKE_CXX_FLAGS='{0} -fpermissive'".format(
-                    std_flag))
+                std_flag))
         cmake('.', "-DCALLPATH_WALKER=dyninst", *cmake_args)
         make()
         make("install")
