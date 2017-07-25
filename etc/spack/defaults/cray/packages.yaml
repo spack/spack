@@ -14,8 +14,8 @@ packages:
             mpich@7.4.4%intel@17.0.2.174 arch=cray-cnl6-haswell: cray-mpich
             mpich@7.4.4%gcc@6.3.0 arch=cray-cnl6-mic_knl: cray-mpich
             mpich@7.4.4%intel@17.0.2.174 arch=cray-cnl6-mic_knl: cray-mpich
-            mpich@7.4.4%gcc@6.3.0 arch=cray-cnl6-ivybridge: cray-mpich
-            mpich@7.4.4%intel@17.0.2.174 arch=cray-cnl6-ivybridge: cray-mpich
+            mpich@7.6.0%gcc@6.3.0 arch=cray-cnl6-ivybridge: cray-mpich
+            mpich@7.6.0%intel@17.0.2.174 arch=cray-cnl6-ivybridge: cray-mpich
     intel-mkl:
         buildable: false
         paths:
@@ -32,19 +32,15 @@ packages:
             fftw@3.3.6.1%intel@17.0.2.174 arch=cray-cnl6-haswell: cray-fftw
             fftw@3.3.6.1%gcc@6.3.0 arch=cray-cnl6-mic_knl: cray-fftw
             fftw@3.3.6.1%intel@17.0.2.174 arch=cray-cnl6-mic_knl: cray-fftw
-            fftw@3.3.6.1%gcc@6.3.0 arch=cray-cnl6-ivybridge: cray-fftw
-            fftw@3.3.6.1%intel@17.0.2.174 arch=cray-cnl6-ivybridge: cray-fftw
+            fftw@3.3.6.2%gcc@6.3.0 arch=cray-cnl6-ivybridge: cray-fftw
+            fftw@3.3.6.2%intel@17.0.2.174 arch=cray-cnl6-ivybridge: cray-fftw
     hdf5:
         buildable: false
         modules:
-            hdf5@1.10.0%gcc@6.2.0 arch=cray-cnl6-ivybridge: cray-hdf5-parallel
-            hdf5@1.10.0%intel@17.0.1.132 arch=cray-cnl6-ivybridge: cray-hdf5-parallel
-            hdf5@1.10.0%gcc@6.3.0 arch=cray-cnl6-haswell: cray-hdf5-parallel
-            hdf5@1.10.0%intel@17.0.2.174 arch=cray-cnl6-haswell: cray-hdf5-parallel
-            hdf5@1.10.0%gcc@6.3.0 arch=cray-cnl6-mic_knl: cray-hdf5-parallel
-            hdf5@1.10.0%intel@17.0.2.174 arch=cray-cnl6-mic_knl: cray-hdf5-parallel
-            hdf5@1.10.0%gcc@6.3.0 arch=cray-cnl6-ivybridge: cray-hdf5-parallel
-            hdf5@1.10.0%intel@17.0.2.174 arch=cray-cnl6-ivybridge: cray-hdf5-parallel
+            hdf5@1.10.0.3%gcc@6.3.0~mpi arch=cray-cnl6-ivybridge: cray-hdf5
+            hdf5@1.10.0.3%intel@17.0.2.174~mpi arch=cray-cnl6-ivybridge: cray-hdf5
+            hdf5@1.10.0.3%gcc@6.3.0+mpi arch=cray-cnl6-ivybridge: cray-hdf5-parallel
+            hdf5@1.10.0.3%intel@17.0.2.174+mpi arch=cray-cnl6-ivybridge: cray-hdf5-parallel
     cray-libsci:
         buildable: false
         modules:
@@ -52,15 +48,17 @@ packages:
             cray-libsci@16.07.1%intel@17.0.2.174 arch=cray-cnl6-haswell: cray-libsci
             cray-libsci@16.07.1%gcc@6.3.0 arch=cray-cnl6-mic_knl: cray-libsci
             cray-libsci@16.07.1%intel@17.0.2.174 arch=cray-cnl6-mic_knl: cray-libsci
-            cray-libsci@16.07.1%gcc@6.3.0 arch=cray-cnl6-ivybridge: cray-libsci
-            cray-libsci@16.07.1%intel@17.0.2.174 arch=cray-cnl6-ivybridge: cray-libsci
+            cray-libsci@17.06.1%gcc@6.3.0 arch=cray-cnl6-ivybridge: cray-libsci
+            cray-libsci@17.06.1%intel@17.0.2.174 arch=cray-cnl6-ivybridge: cray-libsci
     netcdf:
         buildable: false
         modules:
-            netcdf@4.4.1%gcc@6.3.0 arch=cray-cnl6-ivybridge: cray-netcdf-hdf5parallel
-            netcdf@4.4.1%intel@17.0.2.174 arch=cray-cnl6-ivybridge: cray-netcdf-hdf5parallel
+            netcdf@4.4.1.1.3%gcc@6.3.0+parallel-netcdf arch=cray-cnl6-ivybridge: cray-netcdf-hdf5parallel
+            netcdf@4.4.1.1.3%intel@17.0.2.174+parallel-netcdf arch=cray-cnl6-ivybridge: cray-netcdf-hdf5parallel
+            netcdf@4.4.1.1.3%gcc@6.3.0~parallel-netcdf arch=cray-cnl6-ivybridge: cray-netcdf
+            netcdf@4.4.1.1.3%intel@17.0.2.174~parallel-netcdf arch=cray-cnl6-ivybridge: cray-netcdf
     python:
         buildable: false
-        paths:
-            python@2.7.13%gcc@6.3.0 arch=cray-cnl6-ivybridge: /global/common/cori/software/python/2.7-anaconda
-            python@2.7.13%intel@17.0.2.174 arch=cray-cnl6-ivybridge: /global/common/cori/software/python/2.7-anaconda
+        modules:
+            python@2.7.13%gcc@6.3.0 arch=cray-cnl6-ivybridge: python
+            python@2.7.13%intel@17.0.2.174 arch=cray-cnl6-ivybridge: python
