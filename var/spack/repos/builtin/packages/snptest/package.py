@@ -36,4 +36,4 @@ class Snptest(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('snptest_v2.5.2', prefix.bin)
+        install('snptest_v{0}'.format(self.version), prefix.bin)
