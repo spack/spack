@@ -25,26 +25,17 @@
 from spack import *
 
 
-class Gbenchmark(CMakePackage):
-    """A microbenchmark support library"""
+class Cares(CMakePackage):
+    """c-ares: A C library for asynchronous DNS requests"""
 
-    homepage = "https://github.com/google/benchmark"
-    url = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
+    homepage = "https://c-ares.haxx.se"
+    url      = "https://github.com/c-ares/c-ares/archive/cares-1_13_0.tar.gz"
 
-    version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae')
-    version('1.0.0', '4f778985dce02d2e63262e6f388a24b595254a93')
+    version('develop', branch='master',
+            git='https://github.com/c-ares/c-ares.git')
 
-    def build_type(self):
-        return "Release"
+    version('1.13.0', 'cdb21052a7eb85261da22f83c0654cfd')
 
-    def patch(self):
-        filter_file(
-            r'add_cxx_compiler_flag..fstrict.aliasing.',
-            r'##### add_cxx_compiler_flag(-fstrict-aliasing)',
-            'CMakeLists.txt'
-        )
-        filter_file(
-            r'add_cxx_compiler_flag..Werror',
-            r'##### add_cxx_compiler_flag(-Werror',
-            'CMakeLists.txt'
-        )
+    def url_for_version(self, version):
+        url = "https://github.com/c-ares/c-ares/archive/cares-{0}.tar.gz"
+        return url.format(version.underscored)

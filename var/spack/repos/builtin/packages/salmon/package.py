@@ -25,13 +25,17 @@
 from spack import *
 
 
-class Libelf(Package):
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+class Salmon(CMakePackage):
+    """Salmon is a tool for quantifying the expression of transcripts using
+       RNA-seq data."""
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-    version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+    homepage = "http://combine-lab.github.io/salmon/"
+    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
 
-    def install(self, spec, prefix):
-        touch(prefix.libelf)
+    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+
+    depends_on('boost')
+
+    def cmake_args(self):
+        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
+        return args

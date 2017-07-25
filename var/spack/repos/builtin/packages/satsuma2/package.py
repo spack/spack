@@ -25,13 +25,17 @@
 from spack import *
 
 
-class Libelf(Package):
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+class Satsuma2(CMakePackage):
+    """Satsuma2 is an optimsed version of Satsuma, a tool to reliably align
+       large and complex DNA sequences providing maximum sensitivity (to find
+       all there is to find), specificity (to only find real homology) and
+       speed (to accomodate the billions of base pairs in vertebrate genomes).
+    """
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-    version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+    homepage = "https://github.com/bioinfologics/satsuma2"
+    url      = "https://github.com/bioinfologics/satsuma2"
+
+    version('2016-11-22', git='https://github.com/bioinfologics/satsuma2.git', commit='da694aeecf352e344b790bea4a7aaa529f5b69e6')
 
     def install(self, spec, prefix):
-        touch(prefix.libelf)
+        install_tree(join_path('spack-build', 'bin'), prefix.bin)

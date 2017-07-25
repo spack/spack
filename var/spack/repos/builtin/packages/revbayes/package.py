@@ -25,13 +25,38 @@
 from spack import *
 
 
-class Libelf(Package):
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+class Revbayes(CMakePackage):
+    """Bayesian phylogenetic inference using probabilistic graphical models
+       and an interpreted language."""
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-    version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+    homepage = "https://revbayes.github.io"
+    url      = "https://github.com/revbayes/revbayes/archive/v1.0.4-release.tar.gz"
+
+    version('1.0.4', '5d6de96bcb3b2686b270856de3555a58')
+
+    variant('mpi', default=True, description='Enable MPI parallel support')
+
+    depends_on('boost')
+    depends_on('mpi', when='+mpi')
+
+    conflicts('%gcc@7.1.0:')
+
+    root_cmakelists_dir = 'projects/cmake/build'
+
+    @run_before('cmake')
+    def regenerate(self):
+        with working_dir(join_path('projects', 'cmake')):
+            mkdirp('build')
+            edit = FileFilter('regenerate.sh')
+            edit.filter('boost="true"', 'boost="false"')
+            if '+mpi' in self.spec:
+                edit.filter('mpi="false"', 'mpi="true"')
+            regenerate = Executable('./regenerate.sh')
+            regenerate()
 
     def install(self, spec, prefix):
-        touch(prefix.libelf)
+        mkdirp(prefix.bin)
+        if '+mpi' in spec:
+            install('rb-mpi', prefix.bin)
+        else:
+            install('rb', prefix.bin)

@@ -25,13 +25,24 @@
 from spack import *
 
 
-class Libelf(Package):
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+class Stacks(AutotoolsPackage):
+    """Stacks is a software pipeline for building loci from short-read
+       sequences, such as those generated on the Illumina platform."""
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-    version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+    homepage = "http://catchenlab.life.illinois.edu/stacks/"
+    url      = "http://catchenlab.life.illinois.edu/stacks/source/stacks-1.46.tar.gz"
 
-    def install(self, spec, prefix):
-        touch(prefix.libelf)
+    version('1.46', '18b0568a4bba44fb4e5be0eb7ee2c08d')
+
+    variant('sparsehash', default=True, description='Improve Stacks memory usage with SparseHash')
+
+    depends_on('perl', type=('build', 'run'))
+    depends_on('sparsehash', when='+sparsehash')
+
+    def configure_args(self):
+        args = []
+        if '+sparsehash' in self.spec:
+            args.append('--enable-sparsehash')
+        else:
+            args.append('--disable-sparsehash')
+        return args

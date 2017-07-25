@@ -25,13 +25,23 @@
 from spack import *
 
 
-class Libelf(Package):
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+class Structure(MakefilePackage):
+    """Structure is a free software package for using multi-locus genotype
+       data to investigate population structure."""
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-    version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+    homepage = "http://web.stanford.edu/group/pritchardlab/structure.html"
+    url      = "http://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/structure_kernel_source.tar.gz"
+
+    version('2.3.4', '4e0591678cdbfe79347d272b5dceeda1')
+
+    depends_on('jdk', type=('build', 'run'))
+
+    def url_for_version(self, version):
+        url = "http://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v{0}/structure_kernel_source.tar.gz"
+        return url.format(version)
 
     def install(self, spec, prefix):
-        touch(prefix.libelf)
+        mkdirp(prefix.bin)
+        install('structure', prefix.bin)
+        install('mainparams', prefix.bin)
+        install('extraparams', prefix.bin)

@@ -23,15 +23,30 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
-class Libelf(Package):
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+class Subread(MakefilePackage):
+    """The Subread software package is a tool kit for processing next-gen
+       sequencing data."""
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-    version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+    homepage = "http://subread.sourceforge.net/"
+    url      = "https://downloads.sourceforge.net/project/subread/subread-1.5.2/subread-1.5.2-source.tar.gz"
+
+    version('1.5.2', '817d2a46d87fcef885c8832475b8b247')
+
+    depends_on('zlib')
+
+    def build(self, spec, prefix):
+        plat = sys.platform
+        with working_dir('src'):
+            if plat.startswith('linux'):
+                make('-f', 'Makefile.Linux')
+            elif plat.startswith('darwin'):
+                make('-f', 'Makefile.MacOS')
+            else:
+                raise InstallError("The communication mechanism %s is not"
+                                   "supported" % plat)
 
     def install(self, spec, prefix):
-        touch(prefix.libelf)
+        install_tree('bin', prefix.bin)
