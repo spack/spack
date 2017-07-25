@@ -468,6 +468,9 @@ class Rpm(object):
         other_deps = sorted(other.rpm_deps, key=lambda x: x.name)
         return deps == other_deps
 
+    def __hash__(self):
+        return hash((self.name, self.pkg_spec))
+
     @property
     def dep_name(self):
         return self.provides_name if self.provides_name else self.name
