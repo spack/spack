@@ -83,7 +83,7 @@ schema = {
                                 r'\w[\w-]*': {
                                     'type': 'array',
                                     'default': [],
-                                    'items': {'type': 'string'}, 
+                                    'items': {'type': 'string'},
                                 },
                             },
                         },

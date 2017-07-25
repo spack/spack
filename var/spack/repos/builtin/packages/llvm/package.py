@@ -29,7 +29,7 @@ class PackageReference(object):
     def __init__(self, option, path):
         self.option = option
         self.path = path
-    
+
     def appendIfExists(self, settings):
         if os.path.exists(self.path):
             settings.append(self.option.format(self.path))
@@ -353,12 +353,12 @@ class Llvm(CMakePackage):
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp']
 
         PackageReference(
-            '-DPYTHON_EXECUTABLE:PATH={0}', 
+            '-DPYTHON_EXECUTABLE:PATH={0}',
             spec['python'].command.path).appendIfExists(cmake_args)
 
         if '+gold' in spec:
             PackageReference(
-                '-DLLVM_BINUTILS_INCDIR={0}', 
+                '-DLLVM_BINUTILS_INCDIR={0}',
                 spec['binutils'].prefix.include).appendIfExists(cmake_args)
 
         if '+polly' in spec:
