@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -95,6 +95,8 @@ class Mfem(Package):
     depends_on('netcdf', when='@3.2: +netcdf')
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
+
+    patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
 
     def check_variants(self, spec):
         if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -93,8 +93,9 @@ class PyMatplotlib(PythonPackage):
     depends_on('texlive', when='+latex', type='run')
 
     # Testing dependencies
-    depends_on('py-nose')  # type='test'
-    depends_on('py-mock')  # type='test'
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose', type='test')
+    # depends_on('py-mock', type='test')
 
     # Required libraries that ship with matplotlib
     # depends_on('agg@2.4:')

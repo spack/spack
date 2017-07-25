@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,7 +24,9 @@
 ##############################################################################
 import pytest
 import spack.store
-import spack.cmd.uninstall
+from spack.main import SpackCommand, SpackCommandError
+
+uninstall = SpackCommand('uninstall')
 
 
 class MockArgs(object):
@@ -37,20 +39,21 @@ class MockArgs(object):
         self.yes_to_all = True
 
 
-def test_uninstall(database):
-    parser = None
-    uninstall = spack.cmd.uninstall.uninstall
-    # Multiple matches
-    args = MockArgs(['mpileaks'])
-    with pytest.raises(SystemExit):
-        uninstall(parser, args)
-    # Installed dependents
-    args = MockArgs(['libelf'])
-    with pytest.raises(SystemExit):
-        uninstall(parser, args)
-    # Recursive uninstall
-    args = MockArgs(['callpath'], all=True, dependents=True)
-    uninstall(parser, args)
+def test_multiple_matches(database):
+    """Test unable to uninstall when multiple matches."""
+    with pytest.raises(SpackCommandError):
+        uninstall('-y', 'mpileaks')
+
+
+def test_installed_dependents(database):
+    """Test can't uninstall when ther are installed dependents."""
+    with pytest.raises(SpackCommandError):
+        uninstall('-y', 'libelf')
+
+
+def test_recursive_uninstall(database):
+    """Test recursive uninstall."""
+    uninstall('-y', '-a', '--dependents', 'callpath')
 
     all_specs = spack.store.layout.all_specs()
     assert len(all_specs) == 8

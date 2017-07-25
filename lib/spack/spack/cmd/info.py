@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -131,6 +131,14 @@ def print_text_info(pkg):
     header = "{0}:   ".format(pkg.build_system_class)
 
     print(header, pkg.name)
+
+    print()
+    print("Description:")
+    if pkg.__doc__:
+        print(pkg.format_doc(indent=4))
+    else:
+        print("    None")
+
     whitespaces = ''.join([' '] * (len(header) - len("Homepage: ")))
     print("Homepage:", whitespaces, pkg.homepage)
 
@@ -180,13 +188,6 @@ def print_text_info(pkg):
         for when, specs in reversed(sorted(inverse_map.items())):
             print("    %s provides %s" % (
                 when, ', '.join(str(s) for s in specs)))
-    else:
-        print("    None")
-
-    print()
-    print("Description:")
-    if pkg.__doc__:
-        print(pkg.format_doc(indent=4))
     else:
         print("    None")
 

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,6 +33,5 @@ class RHighr(RPackage):
 
     homepage = "https://github.com/yihui/highr"
     url      = "https://cran.r-project.org/src/contrib/highr_0.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/highr"
 
     version('0.6', 'bf47388c5f57dc61962362fb7e1d8b16')

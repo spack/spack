@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,6 +33,7 @@ class Paraview(CMakePackage):
     url      = "http://www.paraview.org/files/v5.3/ParaView-v5.3.0.tar.gz"
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
 
+    version('5.4.0', 'b92847605bac9036414b644f33cb7163')
     version('5.3.0', '68fbbbe733aa607ec13d1db1ab5eba71')
     version('5.2.0', '4570d1a2a183026adb65b73c7125b8b0')
     version('5.1.2', '44fb32fc8988fcdfbc216c9e40c3e925')
@@ -51,9 +52,8 @@ class Paraview(CMakePackage):
     depends_on('py-numpy', when='+python', type='run')
     depends_on('py-matplotlib', when='+python', type='run')
     depends_on('mpi', when='+mpi')
-    depends_on('qt@:4', when='+qt')
-    # TODO# depends_on('qt@:4', when='@:5.2.0+qt')
-    # TODO# depends_on('qt@5',  when='@5.3.0:+qt')
+    depends_on('qt', when='@5.3.0:+qt')
+    depends_on('qt@:4', when='@:5.2.0+qt')
 
     depends_on('bzip2')
     depends_on('freetype')
@@ -116,6 +116,13 @@ class Paraview(CMakePackage):
             '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
             '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
         ]
+
+        # The assumed qt version changed to QT5 (as of paraview 5.2.1),
+        # so explicitly specify which QT major version is actually being used
+        if '+qt' in spec:
+            cmake_args.extend([
+                '-DPARAVIEW_QT_VERSION=%s' % spec['qt'].version[0],
+            ])
 
         if '+python' in spec:
             cmake_args.extend([

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -52,11 +52,15 @@ class Mvapich2(AutotoolsPackage):
 
     patch('ad_lustre_rwcontig_open_source.patch', when='@1.9')
 
+    provides('mpi')
     provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
     provides('mpi@:3.0', when='@2.0:')  # MVAPICH2-2.0 supports MPI 3.0
 
     variant('debug', default=False,
             description='Enable debug info and error messages at run-time')
+
+    variant('cuda', default=False,
+            description='Enable CUDA extension')
 
     # Accepted values are:
     #   single      - No threads (MPI_THREAD_SINGLE)
@@ -99,9 +103,9 @@ class Mvapich2(AutotoolsPackage):
         )
     )
 
-    # FIXME : CUDA support is missing
-    depends_on('bison')
+    depends_on('bison', type='build')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
+    depends_on('cuda', when='+cuda')
 
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"
@@ -216,6 +220,14 @@ class Mvapich2(AutotoolsPackage):
         else:
             args.append('--enable-fast=all')
 
+        if '+cuda' in self.spec:
+            args.extend([
+                '--enable-cuda',
+                '--with-cuda={0}'.format(spec['cuda'].prefix)
+            ])
+        else:
+            args.append('--disable-cuda')
+
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
         return args
@@ -234,6 +246,7 @@ class Mvapich2(AutotoolsPackage):
         mpicxx = join_path(bin, 'mpicxx')
         mpif77 = join_path(bin, 'mpif77')
         mpif90 = join_path(bin, 'mpif90')
+        mpifort = join_path(bin, 'mpifort')
 
         # Substitute Spack compile wrappers for the real
         # underlying compiler
@@ -242,8 +255,9 @@ class Mvapich2(AutotoolsPackage):
         filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
         filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
         filter_file(env['FC'], self.compiler.fc, mpif90, **kwargs)
+        filter_file(env['FC'], self.compiler.fc, mpifort, **kwargs)
 
         # Remove this linking flag if present
         # (it turns RPATH into RUNPATH)
-        for wrapper in (mpicc, mpicxx, mpif77, mpif90):
+        for wrapper in (mpicc, mpicxx, mpif77, mpif90, mpifort):
             filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)

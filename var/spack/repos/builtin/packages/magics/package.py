@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -109,7 +109,7 @@ class Magics(Package):
         if '+metview' in spec:
             if '+qt' in spec:
                 options.append('-DENABLE_METVIEW=ON')
-                if spec['qt'].version.up_to(1) == '5':
+                if spec['qt'].version[0] == 5:
                     options.append('-DENABLE_QT5=ON')
             else:
                 options.append('-DENABLE_METVIEW_NO_QT=ON')

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,6 @@ class RKnitr(RPackage):
 
     homepage = "http://yihui.name/knitr/"
     url      = "https://cran.rstudio.com/src/contrib/knitr_1.14.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/knitr"
 
     version('1.14', 'ef0fbeaa9372f99ffbc57212a7781511')
     version('0.6',  'c67d6db84cd55594a9e870c90651a3db')

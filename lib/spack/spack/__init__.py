@@ -8,7 +8,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -64,9 +64,9 @@ mock_packages_path = join_path(repos_path, "builtin.mock")
 user_config_path = os.path.expanduser('~/.spack')
 
 prefix = spack_root
-opt_path       = join_path(prefix, "opt")
-etc_path       = join_path(prefix, "etc")
-
+opt_path        = join_path(prefix, "opt")
+etc_path        = join_path(prefix, "etc")
+system_etc_path = '/etc'
 
 # GPG paths.
 gpg_keys_path      = join_path(var_path, "gpg")
@@ -212,8 +212,24 @@ import spack.util.executable
 from spack.util.executable import *
 __all__ += spack.util.executable.__all__
 
-# User's editor from the environment
-editor = Executable(os.environ.get("EDITOR", "vi"))
+
+# Set up the user's editor
+# $EDITOR environment variable has the highest precedence
+editor = os.environ.get('EDITOR')
+
+# if editor is not set, use some sensible defaults
+if editor is not None:
+    editor = Executable(editor)
+else:
+    editor = which('vim', 'vi', 'emacs', 'nano')
+
+# If there is no editor, only raise an error if we actually try to use it.
+if not editor:
+    def editor_not_found(*args, **kwargs):
+        raise EnvironmentError(
+            'No text editor found! Please set the EDITOR environment variable '
+            'to your preferred text editor.')
+    editor = editor_not_found
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \

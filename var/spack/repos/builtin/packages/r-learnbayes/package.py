@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,6 +36,5 @@ class RLearnbayes(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=LearnBayes"
     url      = "https://cran.r-project.org/src/contrib/LearnBayes_2.15.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/LearnBayes"
 
     version('2.15', '213713664707bc79fd6d3a109555ef76')

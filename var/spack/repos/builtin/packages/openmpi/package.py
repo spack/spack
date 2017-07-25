@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -52,6 +52,18 @@ def _verbs_dir():
         return None
 
 
+def _mxm_dir():
+    """Look for default directory where the Mellanox package is
+    installed. Return None if not found.
+    """
+    # Only using default directory; make this more flexible in the future
+    path = "/opt/mellanox/mxm"
+    if os.path.isdir(path):
+        return path
+    else:
+        return None
+
+
 class Openmpi(AutotoolsPackage):
     """The Open MPI Project is an open source Message Passing Interface
        implementation that is developed and maintained by a consortium
@@ -72,6 +84,7 @@ class Openmpi(AutotoolsPackage):
     version('2.1.0', '4838a5973115c44e14442c01d3f21d52')  # libmpi.so.20.10.0
 
     # Still supported
+    version('2.0.3', '6c09e56ac2230c4f9abd8ba029f03edd')  # libmpi.so.20.0.3
     version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')  # libmpi.so.20.0.2
     version('2.0.1', '6f78155bd7203039d2448390f3b51c96')  # libmpi.so.20.0.1
     version('2.0.0', 'cdacc800cb4ce690c1f1273cb6366674')  # libmpi.so.20.0.0
@@ -181,6 +194,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
 
+    provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
@@ -190,13 +204,14 @@ class Openmpi(AutotoolsPackage):
     depends_on('jdk', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
 
+    conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
 
     def url_for_version(self, version):
-        return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (
-            version.up_to(2), version)
+        url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
+        return url.format(version.up_to(2), version)
 
     @property
     def libs(self):
@@ -245,6 +260,17 @@ class Openmpi(AutotoolsPackage):
         line = '--with-{0}'.format(opt)
         path = _verbs_dir()
         if (path is not None) and (path not in ('/usr', '/usr/local')):
+            line += '={0}'.format(path)
+        return line
+
+    def with_or_without_mxm(self, activated):
+        opt = 'mxm'
+        # If the option has not been activated return --without-mxm
+        if not activated:
+            return '--without-{0}'.format(opt)
+        line = '--with-{0}'.format(opt)
+        path = _mxm_dir()
+        if (path is not None):
             line += '={0}'.format(path)
         return line
 
@@ -310,12 +336,29 @@ class Openmpi(AutotoolsPackage):
                 config_args.append('--disable-mpi-thread-multiple')
 
         # CUDA support
+        # See https://www.open-mpi.org/faq/?category=buildcuda
         if spec.satisfies('@1.7:'):
             if '+cuda' in spec:
+                # OpenMPI dynamically loads libcuda.so, requires dlopen
+                config_args.append('--enable-dlopen')
+                # Searches for header files in DIR/include
                 config_args.append('--with-cuda={0}'.format(
                     spec['cuda'].prefix))
-                config_args.append('--with-cuda-libdir={0}'.format(
-                    spec['cuda'].libs.directories))
+                if spec.satisfies('@1.7:1.7.2'):
+                    # This option was removed from later versions
+                    config_args.append('--with-cuda-libdir={0}'.format(
+                        spec['cuda'].libs.directories[0]))
+                if spec.satisfies('@1.7.2'):
+                    # There was a bug in 1.7.2 when --enable-static is used
+                    config_args.append('--enable-mca-no-build=pml-bfo')
+                if spec.satisfies('%pgi^cuda@7.0:7.999'):
+                    # OpenMPI has problems with CUDA 7 and PGI
+                    config_args.append(
+                        '--with-wrapper-cflags=-D__LP64__ -ta:tesla')
+                    if spec.satisfies('%pgi@:15.8'):
+                        # With PGI 15.9 and later compilers, the
+                        # CFLAGS=-D__LP64__ is no longer needed.
+                        config_args.append('CFLAGS=-D__LP64__')
             else:
                 config_args.append('--without-cuda')
 
