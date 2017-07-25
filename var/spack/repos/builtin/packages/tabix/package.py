@@ -38,11 +38,12 @@ class Tabix(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
+        mkdirp(prefix.share.man.man1)
         install('tabix', prefix.bin)
         install('bgzip', prefix.bin)
         install('tabix.py', prefix.bin)
-        install('tabix.1', prefix.bin)
-        install('tabix.tex', prefix.bin)
+        install('tabix.1', prefix.share.man.man1)
+        install('tabix.tex', prefix.share)
         install('TabixReader.java', prefix.bin)
         install('libtabix.a', prefix.lib)
         install_tree('perl', prefix.perl)
