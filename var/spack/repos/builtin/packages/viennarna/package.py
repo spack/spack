@@ -45,8 +45,8 @@ class Viennarna(AutotoolsPackage):
     depends_on('gsl')
 
     def url_for_version(self, version):
-        url = 'https://www.tbi.univie.ac.at/RNA/download/sourcecode/{0}/ViennaRNA-2.3.5.tar.gz'
-        url = url.format(version.up_to(2).underscored, version)
+        url = 'https://www.tbi.univie.ac.at/RNA/download/sourcecode/{0}_x/ViennaRNA-{1}.tar.gz'
+        return url.format(version.up_to(2).underscored, version)
 
     def configure_args(self):
         args = []
