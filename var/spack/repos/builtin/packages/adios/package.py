@@ -90,7 +90,7 @@ class Adios(AutotoolsPackage):
     depends_on('dataspaces+mpi', when='+dataspaces')
     depends_on('dataspaces+mpi', when='+staging')
 
-    for p in ['+hdf5','+netcdf','+flexpath','+dataspaces','+staging']:
+    for p in ['+hdf5', '+netcdf', '+flexpath', '+dataspaces', '+staging']:
         conflicts(p, when='~mpi')
 
     build_directory = 'spack-build'
@@ -177,7 +177,8 @@ class Adios(AutotoolsPackage):
         else:
             extra_args.append('--without-flexpath')
         if '+dataspaces' in spec or '+staging' in spec:
-            extra_args.append('--with-dataspaces=%s' % spec['dataspaces'].prefix)
+            extra_args.append('--with-dataspaces=%s'
+                              % spec['dataspaces'].prefix)
         else:
             extra_args.append('--without-dataspaces')
 
