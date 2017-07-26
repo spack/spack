@@ -39,6 +39,8 @@ class Nekbone(Package):
 
     version('develop', git='https://github.com/ANL-CESAR/nekbone.git')
 
+    depends_on('mpi')
+
     def install(self, spec, prefix):
 
         working_dirs = ['example1', 'example2', 'example3', 'nek_comm',
@@ -47,6 +49,9 @@ class Nekbone(Package):
 
         for wdir in working_dirs:
             with working_dir('test/' + wdir):
+                makenec = FileFilter('makenek')
+                makenec.filter('CC.*', 'CC=' + self.spec['mpi'].mpicc)
+                makenec.filter('FF77.*', 'FF77=' + self.spec['mpi'].mpif77)
                 makenek = Executable('./makenek')
                 path = join_path(prefix.bin,  wdir)
                 makenek('ex1', '../../src')
