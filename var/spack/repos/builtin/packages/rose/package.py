@@ -97,7 +97,7 @@ class Rose(AutotoolsPackage):
         if '+intel_backend' in spec:
             cc = which('mpicc')
             cxx = which('mpic++')
-        else
+        else:
             cc = self.compiler.cc
             cxx = self.compiler.cxx
 
