@@ -96,8 +96,8 @@ class Rose(AutotoolsPackage):
         spec = self.spec
 
         if '+intel_backend' in spec:
-            cc = spec['mpi'].mpicc
-            cxx = spec['mpi'].mpicxx
+            cc = spec['intel'].mpicc
+            cxx = spec['intel'].mpicxx
         else:
             cc = spack_cc
             cxx = spack_cxx
