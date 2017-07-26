@@ -35,7 +35,6 @@ class Rose(AutotoolsPackage):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    #url = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
 
     version('0.9.7.0', commit='992c21ad06893bc1e9e7688afe0562eee0fda021',
             git='https://github.com/rose-compiler/rose.git')
@@ -43,20 +42,22 @@ class Rose(AutotoolsPackage):
             git='https://github.com/rose-compiler/rose.git')
     version('develop', branch='master',
             git='https://github.com/rose-compiler/rose-develop.git')
-    version('__ROSE_VERSION__', commit='__ROSE_COMMIT__', git='rose-dev@rosecompiler1.llnl.gov:rose/scratch/rose.git')
+    version('0.9.9.83', commit='1742d1773da7525378f15e40dfa391a3a7ac67df',
+            git='rose-dev@rosecompiler1.llnl.gov:rose/scratch/rose.git')
  
-
     depends_on("autoconf@2.69", type='build')
     depends_on("automake@1.14", type='build')
     depends_on("libtool@2.4", type='build')
-    depends_on("__BOOST_VERSION__")
+    depends_on("boost@1.56.0")
 
     variant('debug', default=False, description='Enable compiler debugging symbols')
     variant('optimized', default=False, description='Enable compiler optimizations')
 
     variant('tests', default=False, description='Build the tests directory')
+    variant('tutorial', default=False, description='Build the tutorial directory')
 
     variant('intel_backend', default=False, description='Enable Intel backend compiler')
+    depends_on("intel@16.0.3", when='+intel_backend')
 
     variant('binanalysis', default=False, description='Enable binary analysis tooling')
     depends_on('libgcrypt', when='+binanalysis', type='build')
@@ -95,32 +96,59 @@ class Rose(AutotoolsPackage):
         spec = self.spec
 
         if '+intel_backend' in spec:
-            cc = which('mpicc')
-            cxx = which('mpic++')
+            cc = spec['mpi'].mpicc
+            cxx = spec['mpi'].mpicxx
         else:
-            cc = self.compiler.cc
-            cxx = self.compiler.cxx
+            cc = spack_cc
+            cxx = spack_cxx
 
         if spec.satisfies('@0.9.8:'):
             edg = "4.12"
         else:
             edg = "4.9"
 
-        return [
+        args = [
             '--disable-boost-version-check',
             '--enable-edg_version={0}'.format(edg),
             "--with-alternate_backend_C_compiler={0}".format(cc),
             "--with-alternate_backend_Cxx_compiler={0}".format(cxx),
             "--with-boost={0}".format(spec['boost'].prefix),
             "--enable-languages={0}".format(",".join(self.languages)),
-            "--with-z3={0}".format(spec['z3'].prefix) if '+z3' in spec else '',
-            '--disable-tests-directory' if '+tests' not in spec else '',
-            '--enable-tutorial-directory={0}'.format('no'),
-            '--without-java' if '+java' not in spec else '',
-            '--with-CXX_DEBUG=-g' if '+debug' in spec else '',
-            '--with-C_OPTIMIZE=-O0' if '+optimized' in spec else '',
-            '--with-CXX_OPTIMIZE=-O0' if '+optimized' in spec else '',
         ]
+
+        if '+z3' in spec:
+            args.append("--with-z3={0}".format(spec['z3'].prefix))
+        else:
+            args.append("--without-z3")
+
+        if '+tests' in spec:
+            args.append("--enable-tests-directory")
+        else:
+            args.append("--disable-tests-directory")
+
+        if '+tutorial' in spec:
+            args.append("--enable-tutorial-directory")
+        else:
+            args.append("--disable-tutorial-directory")
+
+        if '+java' in spec:
+            args.append("--with-java={0}".format(spec['java'].prefix))
+        else:
+            args.append("--without-java")
+
+        if '+debug' in spec:
+            args.append("--with-CXX_DEBUG=-g")
+        else:
+            args.append("--without-CXX_DEBUG")
+
+        if '+optimized' in spec:
+            args.append("--with-C_OPTIMIZE=-O0")
+            args.append("--with-CXX_OPTIMIZE=-O0")
+        else:
+            args.append("--without-C_OPTIMIZE")
+            args.append("--without-CXX_OPTIMIZE")
+
+        return args
 
     def install(self, spec, prefix):
         srun = which('srun')
@@ -136,3 +164,4 @@ class Rose(AutotoolsPackage):
                 srun('-ppdebug', 'make', '-j16', 'install-core')
                 with working_dir('tools'):
                     srun('-ppdebug', 'make', '-j16', 'install')
+
