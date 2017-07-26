@@ -25,7 +25,6 @@
 from spack import *
 import distutils.dir_util
 import os
-import tempfile
 
 
 class Chlorop(Package):
