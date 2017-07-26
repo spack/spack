@@ -34,9 +34,6 @@ from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 import spack.binary_distribution as bindist
 from llnl.util.filesystem import join_path
-import shutil
-import glob
-import os
 import argparse
 import spack.cmd.buildcache as buildcache
 
@@ -131,7 +128,7 @@ def test_packaging(mock_archive, tmpdir):
     spack.store.db.reindex(spack.store.layout)
 
     args = parser.parse_args(['install', '-f', '-y', str(spec)])
-    buildcache.install_tarball(spec,args)
+    buildcache.install_tarball(spec, args)
 
     args = parser.parse_args(['list'])
     buildcache.listspecs(args)
@@ -141,4 +138,3 @@ def test_packaging(mock_archive, tmpdir):
 
     args = parser.parse_args(['keys'])
     buildcache.getkeys(args)
-
