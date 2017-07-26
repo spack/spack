@@ -25,31 +25,20 @@
 from spack import *
 
 
-class Nalu(CMakePackage):
-    """Nalu: a generalized unstructured massively parallel low Mach flow code
-       designed to support a variety of energy applications of interest (most
-       notably Wind ECP) built on the Sierra Toolkit and Trilinos solver
-       Tpetra/Epetra stack
-    """
+class Trimgalore(Package):
+    """Trim Galore! is a wrapper around Cutadapt and FastQC to consistently
+       apply adapter and quality trimming to FastQ files, with extra
+       functionality for RRBS data."""
 
-    homepage = "https://github.com/NaluCFD/Nalu"
-    url      = "https://github.com/NaluCFD/Nalu.git"
+    homepage = "https://github.com/FelixKrueger/TrimGalore"
+    url      = "https://github.com/FelixKrueger/TrimGalore/archive/0.4.4.tar.gz"
 
-    version('master',
-            git='https://github.com/NaluCFD/Nalu.git', branch='master')
+    version('0.4.4', 'aae1b807b48e38bae7074470203997bb')
 
-    # Currently Nalu only builds static libraries; To be fixed soon
-    depends_on('yaml-cpp+fpic~shared')
-    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf@master')
+    depends_on('perl', type=('build', 'run'))
+    depends_on('py-cutadapt', type=('build', 'run'))
+    depends_on('fastqc')
 
-    def cmake_args(self):
-        spec = self.spec
-        options = []
-
-        options.extend([
-            '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON'
-        ])
-
-        return options
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('trim_galore', prefix.bin)

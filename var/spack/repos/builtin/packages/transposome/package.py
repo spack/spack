@@ -25,31 +25,13 @@
 from spack import *
 
 
-class Nalu(CMakePackage):
-    """Nalu: a generalized unstructured massively parallel low Mach flow code
-       designed to support a variety of energy applications of interest (most
-       notably Wind ECP) built on the Sierra Toolkit and Trilinos solver
-       Tpetra/Epetra stack
-    """
+class Transposome(PerlPackage):
+    """A toolkit for annotation of transposable element families from
+       unassembled sequence reads."""
 
-    homepage = "https://github.com/NaluCFD/Nalu"
-    url      = "https://github.com/NaluCFD/Nalu.git"
+    homepage = "https://sestaton.github.io/Transposome/"
+    url      = "https://github.com/sestaton/Transposome/archive/v0.11.2.tar.gz"
 
-    version('master',
-            git='https://github.com/NaluCFD/Nalu.git', branch='master')
+    version('0.11.2', '157c1fc090b0aa30050d03df885dcde0')
 
-    # Currently Nalu only builds static libraries; To be fixed soon
-    depends_on('yaml-cpp+fpic~shared')
-    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf@master')
-
-    def cmake_args(self):
-        spec = self.spec
-        options = []
-
-        options.extend([
-            '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON'
-        ])
-
-        return options
+    depends_on('blast-plus')

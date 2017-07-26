@@ -25,31 +25,26 @@
 from spack import *
 
 
-class Nalu(CMakePackage):
-    """Nalu: a generalized unstructured massively parallel low Mach flow code
-       designed to support a variety of energy applications of interest (most
-       notably Wind ECP) built on the Sierra Toolkit and Trilinos solver
-       Tpetra/Epetra stack
-    """
+class Tabix(MakefilePackage):
+    """Generic indexer for TAB-delimited genome position files"""
 
-    homepage = "https://github.com/NaluCFD/Nalu"
-    url      = "https://github.com/NaluCFD/Nalu.git"
+    homepage = "https://github.com/samtools/tabix"
+    url      = "https://github.com/samtools/tabix"
 
-    version('master',
-            git='https://github.com/NaluCFD/Nalu.git', branch='master')
+    version('2013-12-16', git='https://github.com/samtools/tabix.git', commit='1ae158ac79b459f5feeed7490c67519b14ce9f35')
 
-    # Currently Nalu only builds static libraries; To be fixed soon
-    depends_on('yaml-cpp+fpic~shared')
-    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf@master')
+    depends_on('perl', type=('build', 'run'))
+    depends_on('python', type=('build', 'run'))
 
-    def cmake_args(self):
-        spec = self.spec
-        options = []
-
-        options.extend([
-            '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON'
-        ])
-
-        return options
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        mkdirp(prefix.share.man.man1)
+        install('tabix', prefix.bin)
+        install('bgzip', prefix.bin)
+        install('tabix.py', prefix.bin)
+        install('tabix.1', prefix.share.man.man1)
+        install('tabix.tex', prefix.share)
+        install('TabixReader.java', prefix.bin)
+        install('libtabix.a', prefix.lib)
+        install_tree('perl', prefix.perl)
+        install_tree('python', prefix.python)

@@ -25,31 +25,24 @@
 from spack import *
 
 
-class Nalu(CMakePackage):
-    """Nalu: a generalized unstructured massively parallel low Mach flow code
-       designed to support a variety of energy applications of interest (most
-       notably Wind ECP) built on the Sierra Toolkit and Trilinos solver
-       Tpetra/Epetra stack
-    """
+class Cleaveland4(Package):
+    """CleaveLand4: Analysis of degradome data to find sliced miRNA and siRNA
+       targets"""
 
-    homepage = "https://github.com/NaluCFD/Nalu"
-    url      = "https://github.com/NaluCFD/Nalu.git"
+    homepage = "https://github.com/MikeAxtell/CleaveLand4"
+    url      = "https://github.com/MikeAxtell/CleaveLand4/archive/v4.4.tar.gz"
 
-    version('master',
-            git='https://github.com/NaluCFD/Nalu.git', branch='master')
+    version('4.4', 'cf62a1de715a612fc8bd5a62364e69db')
 
-    # Currently Nalu only builds static libraries; To be fixed soon
-    depends_on('yaml-cpp+fpic~shared')
-    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf@master')
+    depends_on('perl', type=('build', 'run'))
+    depends_on('perl-math-cdf', type=('build', 'run'))
+    depends_on('bowtie')
+    depends_on('viennarna')
+    depends_on('r', type=('build', 'run'))
+    depends_on('samtools')
 
-    def cmake_args(self):
-        spec = self.spec
-        options = []
-
-        options.extend([
-            '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON'
-        ])
-
-        return options
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('CleaveLand4.pl', prefix.bin)
+        with working_dir('GSTAr_v1-0'):
+            install('GSTAr.pl', prefix.bin)

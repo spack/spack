@@ -83,6 +83,8 @@ class Openspeedshop(CMakePackage):
     variant('rtfe', default=False,
             description="build for clusters heterogeneous processors \
                          on fe/be nodes.")
+    variant('build_type', default='None', values=('None'),
+            description='CMake build type')
 
     # MPI variants
     variant('openmpi', default=False,
@@ -143,9 +145,6 @@ class Openspeedshop(CMakePackage):
     parallel = False
 
     build_directory = 'build_openspeedshop'
-
-    def build_type(self):
-        return 'None'
 
     def cmake_args(self):
         spec = self.spec

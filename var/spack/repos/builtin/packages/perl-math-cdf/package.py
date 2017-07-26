@@ -25,31 +25,11 @@
 from spack import *
 
 
-class Nalu(CMakePackage):
-    """Nalu: a generalized unstructured massively parallel low Mach flow code
-       designed to support a variety of energy applications of interest (most
-       notably Wind ECP) built on the Sierra Toolkit and Trilinos solver
-       Tpetra/Epetra stack
-    """
+class PerlMathCdf(PerlPackage):
+    """Generate probabilities and quantiles from several statistical
+       probability functions"""
 
-    homepage = "https://github.com/NaluCFD/Nalu"
-    url      = "https://github.com/NaluCFD/Nalu.git"
+    homepage = "http://search.cpan.org/~callahan/Math-CDF-0.1/CDF.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/C/CA/CALLAHAN/Math-CDF-0.1.tar.gz"
 
-    version('master',
-            git='https://github.com/NaluCFD/Nalu.git', branch='master')
-
-    # Currently Nalu only builds static libraries; To be fixed soon
-    depends_on('yaml-cpp+fpic~shared')
-    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf@master')
-
-    def cmake_args(self):
-        spec = self.spec
-        options = []
-
-        options.extend([
-            '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON'
-        ])
-
-        return options
+    version('0.1', '7866c7b6b9d27f0ce4b7637334478ab7')
