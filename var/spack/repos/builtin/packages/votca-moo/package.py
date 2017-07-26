@@ -39,14 +39,5 @@ class VotcaMoo(CMakePackage):
 
     version('develop', git='https://github.com/votca/moo', branch='master')
 
-    variant('debug', default=False, description='Build debug version')
-
     depends_on("cmake@2.8:", type='build')
     depends_on("votca-tools@develop", when='@develop')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
