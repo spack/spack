@@ -25,13 +25,20 @@
 from spack import *
 
 
-class Libelf(Package):
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+class Sortmerna(CMakePackage):
+    """SortMeRNA is a program tool for filtering, mapping and OTU-picking NGS
+       reads in metatranscriptomic and metagenomic data"""
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-    version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+    homepage = "https://github.com/biocore/sortmerna"
+    url      = "https://github.com/biocore/sortmerna"
+
+    version('2017-07-13', git='https://github.com/biocore/sortmerna.git', commit='8bde6fa113a5d99a23ae81b48eeea6760e966094')
+
+    depends_on('zlib')
 
     def install(self, spec, prefix):
-        touch(prefix.libelf)
+        mkdirp(prefix.bin)
+        with working_dir(join_path('spack-build', 'src', 'indexdb')):
+            install('indexdb', prefix.bin)
+        with working_dir(join_path('spack-build', 'src', 'sortmerna')):
+            install('sortmerna', prefix.bin)

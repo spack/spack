@@ -25,13 +25,19 @@
 from spack import *
 
 
-class Libelf(Package):
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+class Sickle(MakefilePackage):
+    """Sickle is a tool that uses sliding windows along with quality and
+       length thresholds to determine when quality is sufficiently low to trim
+       the 3'-end of reads and also determines when the quality is
+       sufficiently high enough to trim the 5'-end of reads."""
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-    version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
+    homepage = "https://github.com/najoshi/sickle"
+    url      = "https://github.com/najoshi/sickle/archive/v1.33.tar.gz"
+
+    version('1.33', '9e2ba812183e1515198c9e15c4cd2cd7')
+
+    depends_on('zlib')
 
     def install(self, spec, prefix):
-        touch(prefix.libelf)
+        mkdirp(prefix.bin)
+        install('sickle', prefix.bin)
