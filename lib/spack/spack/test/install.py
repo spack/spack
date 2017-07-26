@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,45 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 import pytest
+
 import spack
 import spack.store
-from spack.database import Database
-from spack.directory_layout import YamlDirectoryLayout
-from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 
-import os
 
-
-@pytest.fixture()
-def install_mockery(tmpdir, config, builtin_mock):
-    """Hooks a fake install directory and a fake db into Spack."""
-    layout = spack.store.layout
-    db = spack.store.db
-    # Use a fake install directory to avoid conflicts bt/w
-    # installed pkgs and mock packages.
-    spack.store.layout = YamlDirectoryLayout(str(tmpdir))
-    spack.store.db = Database(str(tmpdir))
-    # We use a fake package, so skip the checksum.
-    spack.do_checksum = False
-    yield
-    # Turn checksumming back on
-    spack.do_checksum = True
-    # Restore Spack's layout.
-    spack.store.layout = layout
-    spack.store.db = db
-
-
-def fake_fetchify(url, pkg):
-    """Fake the URL for a package so it downloads from a file."""
-    fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(url))
-    pkg.fetcher = fetcher
-
-
-@pytest.mark.usefixtures('install_mockery')
-def test_install_and_uninstall(mock_archive):
+def test_install_and_uninstall(install_mockery, mock_fetch):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
     spec.concretize()
@@ -68,8 +38,6 @@ def test_install_and_uninstall(mock_archive):
 
     # Get the package
     pkg = spack.repo.get(spec)
-
-    fake_fetchify(mock_archive.url, pkg)
 
     try:
         pkg.do_install()
@@ -114,12 +82,10 @@ class MockStage(object):
         return getattr(self.wrapped_stage, attr)
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_partial_install_delete_prefix_and_stage(mock_archive):
+def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
     spec = Spec('canfail')
     spec.concretize()
     pkg = spack.repo.get(spec)
-    fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
     instance_rm_prefix = pkg.remove_prefix
 
@@ -145,14 +111,12 @@ def test_partial_install_delete_prefix_and_stage(mock_archive):
             pass
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_partial_install_keep_prefix(mock_archive):
+def test_partial_install_keep_prefix(install_mockery, mock_fetch):
     spec = Spec('canfail')
     spec.concretize()
     pkg = spack.repo.get(spec)
     # Normally the stage should start unset, but other tests set it
     pkg._stage = None
-    fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
     try:
         # If remove_prefix is called at any point in this test, that is an
@@ -175,12 +139,10 @@ def test_partial_install_keep_prefix(mock_archive):
             pass
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_second_install_no_overwrite_first(mock_archive):
+def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
     spec = Spec('canfail')
     spec.concretize()
     pkg = spack.repo.get(spec)
-    fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
     try:
         spack.package.Package.remove_prefix = mock_remove_prefix
@@ -198,28 +160,14 @@ def test_second_install_no_overwrite_first(mock_archive):
             pass
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_store(mock_archive):
+def test_store(install_mockery, mock_fetch):
     spec = Spec('cmake-client').concretized()
-
-    for s in spec.traverse():
-        fake_fetchify(mock_archive.url, s.package)
-
     pkg = spec.package
-    try:
-        pkg.do_install()
-    except Exception:
-        pkg.remove_prefix()
-        raise
+    pkg.do_install()
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_failing_build(mock_archive):
+def test_failing_build(install_mockery, mock_fetch):
     spec = Spec('failing-build').concretized()
-
-    for s in spec.traverse():
-        fake_fetchify(mock_archive.url, s.package)
-
     pkg = spec.package
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install()

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,7 +40,7 @@ class LlvmOpenmpOmpt(Package):
     # align-to-tr-rebased branch
     version('3.9.2b',
             git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
-            commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3') 
+            commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3')
 
     depends_on('cmake', type='build')
     depends_on('llvm')

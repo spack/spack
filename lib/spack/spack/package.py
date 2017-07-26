@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -58,6 +58,7 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
+import spack.multimethod
 
 from llnl.util.filesystem import *
 from llnl.util.lang import *
@@ -939,10 +940,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.expand_archive()
         self.stage.chdir_to_source()
 
-    def patch(self):
-        """Default patch implementation is a no-op."""
-        pass
-
     def do_patch(self):
         """Calls do_stage(), then applied patches to the expanded tarball if they
            haven't been applied already."""
@@ -1003,6 +1000,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 self.patch()
                 tty.msg("Ran patch() for %s" % self.name)
                 patched = True
+            except spack.multimethod.NoSuchMethodError:
+                # We are running a multimethod without a default case.
+                # If there's no default it means we don't need to patch.
+                tty.msg("No patches needed for %s" % self.name)
             except:
                 tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
@@ -1045,7 +1046,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         touch(join_path(self.prefix.lib, library_name + dso_suffix))
         touch(join_path(self.prefix.lib, library_name + '.a'))
 
-        mkdirp(self.prefix.man1)
+        mkdirp(self.prefix.man.man1)
 
         packages_dir = spack.store.layout.build_packages_path(self.spec)
         dump_packages(self.spec, packages_dir)

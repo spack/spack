@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -98,12 +98,6 @@ class Root(CMakePackage):
     # I was unable to build root with any Intel compiler
     # See https://sft.its.cern.ch/jira/browse/ROOT-7517
     conflicts('%intel')
-
-    def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         args = [

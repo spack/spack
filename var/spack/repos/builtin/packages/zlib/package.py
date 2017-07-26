@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -57,7 +57,7 @@ class Zlib(Package):
 
     def setup_environment(self, spack_env, run_env):
         if '+pic' in self.spec:
-            spack_env.set('CFLAGS', self.compiler.pic_flag)
+            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
 
     def install(self, spec, prefix):
         config_args = []

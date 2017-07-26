@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -372,7 +372,7 @@ def variant(
         name,
         default=None,
         description='',
-        values=(True, False),
+        values=None,
         multi=False,
         validator=None
 ):
@@ -394,6 +394,12 @@ def variant(
             logic. It receives a tuple of values and should raise an instance
             of SpackError if the group doesn't meet the additional constraints
     """
+    if values is None:
+        if default in (True, False) or (type(default) is str and
+                                        default.upper() in ('TRUE', 'FALSE')):
+            values = (True, False)
+        else:
+            values = lambda x: True
 
     if default is None:
         default = False if values == (True, False) else ''

@@ -8,7 +8,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -223,12 +223,13 @@ if editor is not None:
 else:
     editor = which('vim', 'vi', 'emacs', 'nano')
 
+# If there is no editor, only raise an error if we actually try to use it.
 if not editor:
-    default = default_editors[0]
-    msg  = 'Default text editor, {0}, not found.\n'.format(default)
-    msg += 'Please set the EDITOR environment variable to your preferred '
-    msg += 'text editor, or install {0}.'.format(default)
-    raise EnvironmentError(msg)
+    def editor_not_found(*args, **kwargs):
+        raise EnvironmentError(
+            'No text editor found! Please set the EDITOR environment variable '
+            'to your preferred text editor.')
+    editor = editor_not_found
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \

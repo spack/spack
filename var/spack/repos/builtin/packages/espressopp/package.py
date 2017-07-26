@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,7 +39,6 @@ class Espressopp(CMakePackage):
     version('1.9.4.1', '0da74a6d4e1bfa6a2a24fca354245a4f')
     version('1.9.4', 'f2a27993a83547ad014335006eea74ea')
 
-    variant('debug', default=False, description='Build debug version')
     variant('ug', default=False, description='Build user guide')
     variant('pdf', default=False, description='Build user guide in pdf format')
     variant('dg', default=False, description='Build developer guide')
@@ -59,13 +58,6 @@ class Espressopp(CMakePackage):
     depends_on('py-matplotlib', when="+pdf", type='build')
     depends_on("texlive", when="+pdf", type='build')
     depends_on("doxygen", when="+dg", type='build')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         return ['-DEXTERNAL_MPI4PY=ON', '-DEXTERNAL_BOOST=ON']

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -93,13 +93,22 @@ class TestMultiValuedVariant(object):
         assert not a.satisfies(c)
         assert not c.satisfies(a)
 
-        # Cannot satisfy the constraint with an object of
-        # another type
+        # Implicit type conversion for variants of other types
+
         b_sv = SingleValuedVariant('foo', 'bar')
-        assert not b.satisfies(b_sv)
+        assert b.satisfies(b_sv)
+        d_sv = SingleValuedVariant('foo', 'True')
+        assert d.satisfies(d_sv)
+        almost_d_bv = SingleValuedVariant('foo', 'true')
+        assert not d.satisfies(almost_d_bv)
 
         d_bv = BoolValuedVariant('foo', 'True')
-        assert not d.satisfies(d_bv)
+        assert d.satisfies(d_bv)
+        # This case is 'peculiar': the two BV instances are
+        # equivalent, but if converted to MV they are not
+        # as MV is case sensitive with respect to 'True' and 'False'
+        almost_d_bv = BoolValuedVariant('foo', 'true')
+        assert not d.satisfies(almost_d_bv)
 
     def test_compatible(self):
 
@@ -126,12 +135,15 @@ class TestMultiValuedVariant(object):
         assert d.compatible(b)
         assert not d.compatible(c)
 
-        # Can't be compatible with other types
-        b_bv = BoolValuedVariant('foo', 'True')
-        assert not b.compatible(b_bv)
+        # Implicit type conversion for other types
 
         b_sv = SingleValuedVariant('foo', 'True')
-        assert not b.compatible(b_sv)
+        assert b.compatible(b_sv)
+        assert not c.compatible(b_sv)
+
+        b_bv = BoolValuedVariant('foo', 'True')
+        assert b.compatible(b_bv)
+        assert not c.compatible(b_bv)
 
     def test_constrain(self):
 
@@ -169,13 +181,19 @@ class TestMultiValuedVariant(object):
         with pytest.raises(ValueError):
             a.constrain(b)
 
-        # Try to constrain on other types
+        # Implicit type conversion for variants of other types
+
         a = MultiValuedVariant('foo', 'bar,baz')
-        sv = SingleValuedVariant('foo', 'bar')
-        bv = BoolValuedVariant('foo', 'True')
-        for v in (sv, bv):
-            with pytest.raises(TypeError):
-                a.constrain(v)
+        b_sv = SingleValuedVariant('foo', 'bar')
+        c_sv = SingleValuedVariant('foo', 'barbaz')
+
+        assert not a.constrain(b_sv)
+        assert a.constrain(c_sv)
+
+        d_bv = BoolValuedVariant('foo', 'True')
+
+        assert a.constrain(d_bv)
+        assert not a.constrain(d_bv)
 
     def test_yaml_entry(self):
 
@@ -239,13 +257,17 @@ class TestSingleValuedVariant(object):
         assert not c.satisfies(b)
         assert not c.satisfies(d)
 
-        # Cannot satisfy the constraint with an object of
-        # another type
+        # Implicit type conversion for variants of other types
+
         a_mv = MultiValuedVariant('foo', 'bar')
-        assert not a.satisfies(a_mv)
+        assert a.satisfies(a_mv)
+        multiple_values = MultiValuedVariant('foo', 'bar,baz')
+        assert not a.satisfies(multiple_values)
 
         e_bv = BoolValuedVariant('foo', 'True')
-        assert not e.satisfies(e_bv)
+        assert e.satisfies(e_bv)
+        almost_e_bv = BoolValuedVariant('foo', 'true')
+        assert not e.satisfies(almost_e_bv)
 
     def test_compatible(self):
 
@@ -272,13 +294,35 @@ class TestSingleValuedVariant(object):
         assert not d.compatible(b)
         assert not d.compatible(c)
 
-        # Can't be compatible with other types
+        # Implicit type conversion for variants of other types
+
         a_mv = MultiValuedVariant('foo', 'bar')
-        assert not a.compatible(a_mv)
+        b_mv = MultiValuedVariant('fee', 'bar')
+        c_mv = MultiValuedVariant('foo', 'baz')
+        d_mv = MultiValuedVariant('foo', 'bar')
+
+        assert not a.compatible(b_mv)
+        assert not a.compatible(c_mv)
+        assert a.compatible(d_mv)
+
+        assert not b.compatible(a_mv)
+        assert not b.compatible(c_mv)
+        assert not b.compatible(d_mv)
+
+        assert not c.compatible(a_mv)
+        assert not c.compatible(b_mv)
+        assert not c.compatible(d_mv)
+
+        assert d.compatible(a_mv)
+        assert not d.compatible(b_mv)
+        assert not d.compatible(c_mv)
 
         e = SingleValuedVariant('foo', 'True')
         e_bv = BoolValuedVariant('foo', 'True')
-        assert not e.compatible(e_bv)
+        almost_e_bv = BoolValuedVariant('foo', 'true')
+
+        assert e.compatible(e_bv)
+        assert not e.compatible(almost_e_bv)
 
     def test_constrain(self):
 
@@ -314,13 +358,12 @@ class TestSingleValuedVariant(object):
         t = SingleValuedVariant('foo', 'bar')
         assert a == t
 
-        # Try to constrain on other values
+        # Implicit type conversion for variants of other types
         a = SingleValuedVariant('foo', 'True')
         mv = MultiValuedVariant('foo', 'True')
         bv = BoolValuedVariant('foo', 'True')
         for v in (mv, bv):
-            with pytest.raises(TypeError):
-                a.constrain(v)
+            assert not a.constrain(v)
 
     def test_yaml_entry(self):
         a = SingleValuedVariant('foo', 'bar')
@@ -398,13 +441,21 @@ class TestBoolValuedVariant(object):
         assert not d.satisfies(b)
         assert not d.satisfies(c)
 
-        # Cannot satisfy the constraint with an object of
-        # another type
+        # BV variants are case insensitive to 'True' or 'False'
         d_mv = MultiValuedVariant('foo', 'True')
+        assert d.satisfies(d_mv)
+        assert not b.satisfies(d_mv)
+
+        d_mv = MultiValuedVariant('foo', 'FaLsE')
         assert not d.satisfies(d_mv)
+        assert b.satisfies(d_mv)
+
+        d_mv = MultiValuedVariant('foo', 'bar')
+        assert not d.satisfies(d_mv)
+        assert not b.satisfies(d_mv)
 
         d_sv = SingleValuedVariant('foo', 'True')
-        assert not d.satisfies(d_sv)
+        assert d.satisfies(d_sv)
 
     def test_compatible(self):
 
@@ -431,12 +482,14 @@ class TestBoolValuedVariant(object):
         assert not d.compatible(b)
         assert not d.compatible(c)
 
-        # Can't be compatible with other types
-        d_mv = MultiValuedVariant('foo', 'True')
-        assert not d.compatible(d_mv)
+        for value in ('True', 'TrUe', 'TRUE'):
+            d_mv = MultiValuedVariant('foo', value)
+            assert d.compatible(d_mv)
+            assert not c.compatible(d_mv)
 
-        d_sv = SingleValuedVariant('foo', 'True')
-        assert not d.compatible(d_sv)
+            d_sv = SingleValuedVariant('foo', value)
+            assert d.compatible(d_sv)
+            assert not c.compatible(d_sv)
 
     def test_constrain(self):
         # Try to constrain on a value equal to self
@@ -476,8 +529,7 @@ class TestBoolValuedVariant(object):
         sv = SingleValuedVariant('foo', 'True')
         mv = MultiValuedVariant('foo', 'True')
         for v in (sv, mv):
-            with pytest.raises(TypeError):
-                a.constrain(v)
+            assert not a.constrain(v)
 
     def test_yaml_entry(self):
 

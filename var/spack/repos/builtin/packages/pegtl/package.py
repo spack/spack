@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,7 +27,7 @@ from spack import *
 
 
 # package has a Makefile, but only to build examples
-class Pegtl(Package):
+class Pegtl(CMakePackage):
     """The Parsing Expression Grammar Template Library (PEGTL) is a
         zero-dependency C++11 header-only library for creating parsers
         according to a Parsing Expression Grammar (PEG).
@@ -36,9 +36,6 @@ class Pegtl(Package):
     homepage = "https://github.com/taocpp/PEGTL"
     url      = "https://github.com/taocpp/PEGTL/tarball/1.3.1"
 
-    version('1.3.1', '11efc4beac8f4f5153466d56074e9f0c')
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.include)
-        install_tree('pegtl', join_path(prefix.include, 'pegtl'))
-        install('pegtl.hh', prefix.include)
+    version('develop', git='https://github.com/taocpp/PEGTL', branch='master')
+    version('2.1.4', 'e5288b6968e6e910287fce93dc5557bf')
+    version('2.0.0', 'c772828e7188459338a920c21f9896db')

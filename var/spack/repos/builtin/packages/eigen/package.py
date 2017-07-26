@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,9 +40,6 @@ class Eigen(CMakePackage):
     version('3.2.8', '64f4aef8012a424c7e079eaf0be71793ab9bc6e0')
     version('3.2.7', 'cc1bacbad97558b97da6b77c9644f184')
 
-    variant('debug', default=False,
-            description='Builds the library in debug mode')
-
     variant('metis', default=True, description='Enables metis backend')
     variant('scotch', default=True, description='Enables scotch backend')
     variant('fftw', default=True, description='Enables FFTW backend')
@@ -50,6 +47,9 @@ class Eigen(CMakePackage):
             description='Enables SuiteSparse support')
     variant('mpfr', default=True,
             description='Enables support for multi-precisions FP via mpfr')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
 
     # TODO : dependency on googlehash, superlu, adolc missing
     depends_on('metis@5:', when='+metis')
@@ -58,9 +58,3 @@ class Eigen(CMakePackage):
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('mpfr@2.3.0:', when='+mpfr')
     depends_on('gmp', when='+mpfr')
-
-    def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'

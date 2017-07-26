@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,6 +30,8 @@ class PyPybtexDocutils(PythonPackage):
 
     homepage = "https://pypi.python.org/pypi/pybtex-docutils/"
     url      = "https://pypi.io/packages/source/p/pybtex-docutils/pybtex-docutils-0.2.1.tar.gz"
+
+    import_modules = ['pybtex_docutils']
 
     version('0.2.1', '7ae4b00562bd8881f582edf95009cc62')
 

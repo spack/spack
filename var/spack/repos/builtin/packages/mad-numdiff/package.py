@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,12 +34,3 @@ class MadNumdiff(CMakePackage):
 
     version('develop', git='https://github.com/quinoacomputing/ndiff', branch='master')
     version('20150724', '7723c0f2499aea8fd960377c5bed28d8')
-
-    variant('debug', default=False, description='Build debug version')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'

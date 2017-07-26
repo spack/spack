@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Tmux(Package):
+class Tmux(AutotoolsPackage):
     """Tmux is a terminal multiplexer.
 
     What is a terminal multiplexer? It lets you switch easily between several
@@ -45,15 +45,5 @@ class Tmux(Package):
     depends_on('libevent')
     depends_on('ncurses')
 
-    def install(self, spec, prefix):
-        pkg_config_path = ':'.join([
-            spec['libevent'].prefix,
-            spec['ncurses'].prefix
-        ])
-
-        configure(
-            "--prefix=%s" % prefix,
-            "PKG_CONFIG_PATH=%s" % pkg_config_path)
-
-        make()
-        make("install")
+    def configure_args(self):
+        return ['LIBTINFO_LIBS=-lncurses']

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -71,8 +71,8 @@ class Elpa(AutotoolsPackage):
         spack_env.set('FC', spec['mpi'].mpifc)
         spack_env.set('CXX', spec['mpi'].mpicxx)
 
-        spack_env.set('LDFLAGS', spec['lapack'].libs.search_flags)
-        spack_env.set('LIBS', spec['lapack'].libs.link_flags)
+        spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
+        spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
         spack_env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
 
     def configure_args(self):

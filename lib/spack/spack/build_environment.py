@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -466,6 +466,19 @@ def setup_package(pkg, dirty=False):
     # TODO: Think about how to avoid this fix and do something cleaner.
     for s in pkg.spec.traverse():
         s.package.spec = s
+
+    # Trap spack-tracked compiler flags as appropriate.
+    # Must be before set_compiler_environment_variables
+    # Current implementation of default flag handler relies on this being
+    # the first thing to affect the spack_env (so there is no appending), or
+    # on no other build_environment methods trying to affect these variables
+    # (CFLAGS, CXXFLAGS, etc). Currently both are true, either is sufficient.
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
+        trap_func = getattr(pkg, flag + '_handler',
+                            getattr(pkg, 'default_flag_handler',
+                                    lambda x, y: y[1]))
+        flag_val = pkg.spec.compiler_flags[flag]
+        pkg.spec.compiler_flags[flag] = trap_func(spack_env, (flag, flag_val))
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)

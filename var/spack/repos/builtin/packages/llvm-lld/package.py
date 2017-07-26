@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,7 +38,10 @@ class LlvmLld(Package):
     depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
-        env['CXXFLAGS'] = self.compiler.cxx11_flag
+        if 'CXXFLAGS' in env and env['CXXFLAGS']:
+            env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
+        else:
+            env['CXXFLAGS'] = self.compiler.cxx11_flag
 
         with working_dir('spack-build', create=True):
             cmake('..',
