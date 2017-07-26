@@ -64,7 +64,7 @@ def get_existing_elf_rpaths(path_name):
         return output.rstrip('\n').split(':')
     else:
         tty.die('relocation not supported for this platform')
-    return retval
+    return
 
 
 def get_relative_rpaths(path_name, orig_dir, orig_rpaths):

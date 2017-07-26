@@ -33,14 +33,15 @@ from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 import spack.binary_distribution as bindist
-from llnl.util.filesystem import *
+from llnl.util.filesystem import join_path
 import shutil
 import glob
-
+import os
 import argparse
 import spack.cmd.gpg as gpg
 import spack.util.gpg as gpg_util
 import spack.cmd.buildcache as buildcache
+
 
 @pytest.fixture(scope='function')
 def install_mockery(tmpdir, config, builtin_mock):
@@ -119,8 +120,7 @@ def test_packaging(mock_archive, tmpdir):
     buildcache.setup_parser(parser)
 
     # Create a build cache without signing
-    args = parser.parse_args(['create','-d',mirror_path,'-y',str(spec)])
-    print args
+    args = parser.parse_args(['create', '-d', mirror_path, '-y', str(spec)])
     buildcache.createtarball(args)
 
     # Validate the relocation information
@@ -129,8 +129,8 @@ def test_packaging(mock_archive, tmpdir):
 
     # Create a build cache without signing, making rpaths relative first
     # overwriting previous build cache
-    args = parser.parse_args(['create','-d',mirror_path,'-f','-r','-y',str(spec)])
-    print args
+    args = parser.parse_args(
+        ['create', '-d', mirror_path, '-f', '-r', '-y', str(spec)])
     buildcache.createtarball(args)
 
     # register mirror with spack config
@@ -144,35 +144,30 @@ def test_packaging(mock_archive, tmpdir):
     file = bindist.download_tarball(spec)
     bindist.extract_tarball(spec, file, True, True)
 
-    args = parser.parse_args(['install','-y',str(spec)])
-    print args
+    args = parser.parse_args(['install', '-y', str(spec)])
     buildcache.installtarball(args)
-    
-    args = parser.parse_args(['install','-f','-y',str(spec)])
-    print args
+
+    args = parser.parse_args(['install', '-f', '-y', str(spec)])
     buildcache.installtarball(args)
 
     args = parser.parse_args(['list'])
-    print args
     buildcache.listspecs(args)
 
-    args = parser.parse_args(['list','trivial'])
-    print args
+    args = parser.parse_args(['list', 'trivial'])
     buildcache.listspecs(args)
 
-    for f in glob.glob(spack.mock_gpg_keys_path+'*.key'):
-        shutil.copy(f,mirror_path+'/build_cache')
+    for f in glob.glob(spack.mock_gpg_keys_path + '*.key'):
+        shutil.copy(f, mirror_path + '/build_cache')
 
-    args = parser.parse_args(['create','-d',mirror_path,'-f','-y',str(spec)])
-    print args
+    args = parser.parse_args(
+        ['create', '-d', mirror_path, '-f', '-y', str(spec)])
     buildcache.createtarball(args)
 
     args = parser.parse_args(['keys'])
-    print args
     buildcache.getkeys(args)
 
     if has_gnupg2():
-    #  Import the default key.
+        #  Import the default key.
         gpgparser = argparse.ArgumentParser()
         gpg.setup_parser(gpgparser)
         args = gpgparser.parse_args(['init'])
@@ -187,11 +182,12 @@ def test_packaging(mock_archive, tmpdir):
                                      'spack@googlegroups.com'])
         gpg.gpg(gpgparser, args)
         keyfp = gpg_util.Gpg.signing_keys()[0]
-        shutil.copyfile(keypath,mirror_path+'/build_cache')
+        shutil.copyfile(keypath, mirror_path + '/build_cache')
 
-        args = parser.parse_args(['create','-d',mirror_path,'-f',str(spec)])
+        args = parser.parse_args(
+            ['create', '-d', mirror_path, '-f', str(spec)])
         buildcache.createtarball(args)
-    
+
         keypath = tmpdir.join('testing-2.key')
         args = gpgparser.parse_args(['create',
                                      '--comment', 'Spack testing key 2',
@@ -199,12 +195,14 @@ def test_packaging(mock_archive, tmpdir):
                                      'Spack testing 2',
                                      'spack@googlegroups.com'])
         gpg.gpg(gpgparser, args)
-        shutil.copyfile(keypath,mirror_path+'/build_cache')
-    
-        args = parser.parse_args(['create','-d',mirror_path,'-f',str(spec)])
+        shutil.copyfile(keypath, mirror_path + '/build_cache')
+
+        args = parser.parse_args(
+            ['create', '-d', mirror_path, '-f', str(spec)])
         buildcache.createtarball(args)
 
-        args = parser.parse_args(['create','-d',mirror_path,'-f','-k',keyfp,str(spec)])
+        args = parser.parse_args(
+            ['create', '-d', mirror_path, '-f', '-k', keyfp, str(spec)])
         buildcache.createtarball(args)
 
         args = parser.parse_args(['keys'])
