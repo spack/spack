@@ -85,39 +85,57 @@ class Icedtea(AutotoolsPackage):
     force_autoreconf = True
 
     resource(name='corba', placement='corba_src',
-             sha512='f0579608ab1342df231c4542dab1c40e648cda8e9780ea584fd47679b07c93508cbfa85f0406d8aa8b9d528fc5bd99c9d41469568fbec41a6456a13d914ac71c',
+             sha512=('f0579608ab1342df231c4542dab1c40e648cda8e9780ea584fd476'
+                     '79b07c93508cbfa85f0406d8aa8b9d528fc5bd99c9d41469568fbec'
+                     '41a6456a13d914ac71c'),
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/corba.tar.xz',
              when='@3.4.0')
     resource(name='hotspot', placement='hotspot_src',
-             sha512='29bc953d283f0a0a464fa150e2c4d71b0adaa29da67246843d230f370b5a20227fb40ef6a7e3b93f10b0cdec18b0cd2bbbceeaea3c9db4d64c158cc23babbad2',
+             sha512=('29bc953d283f0a0a464fa150e2c4d71b0adaa29da67246843d230f3'
+                     '70b5a20227fb40ef6a7e3b93f10b0cdec18b0cd2bbbceeaea3c9db4'
+                     'd64c158cc23babbad2'),
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/hotspot.tar.xz',
              when='@3.4.0')
     resource(name='jaxp', placement='jaxp_src',
-             sha512='ef3ed47815e6d15f40c5947fee1058c252ac673f70b6bf7c30505faa12fa5cbab8168d816abe7791dc88acec457744883db4c0af23fb2166bbb709e870685bcd',
+             sha512=('ef3ed47815e6d15f40c5947fee1058c252ac673f70b6bf7c30505fa'
+                     'a12fa5cbab8168d816abe7791dc88acec457744883db4c0af23fb21'
+                     '66bbb709e870685bcd'),
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jaxp.tar.xz',
              when='@3.4.0')
     resource(name='jaxws', placement='jaxws_src',
-             sha512='867cac2919e715190596ae4f73fa42c6cba839ba48ae940adcef20abfb23ffeeaa2501c4aedc214b3595bc4e2a4eea9fa7e7cac62a3420a11fb30a1f7edc9254',
+             sha512=('867cac2919e715190596ae4f73fa42c6cba839ba48ae940adcef20a'
+                     'bfb23ffeeaa2501c4aedc214b3595bc4e2a4eea9fa7e7cac62a3420'
+                     'a11fb30a1f7edc9254'),
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jaxws.tar.xz',
              when='@3.4.0')
     resource(name='jdk', placement='jdk_src',
-             sha512='180d7b4435e465d68ed0b420b42dddc598c872075e225b8885ae1833fa4ab5034ce5083c4dfba516a21b2d472321b37a01ba92793e17c78e9fddb1e254f12065',
+             sha512=('180d7b4435e465d68ed0b420b42dddc598c872075e225b8885ae183'
+                     '3fa4ab5034ce5083c4dfba516a21b2d472321b37a01ba92793e17c7'
+                     '8e9fddb1e254f12065'),
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/jdk.tar.xz',
              when='@3.4.0')
     resource(name='langtools', placement='langtools_src',
-             sha512='0663f40b07de88cd7939557bf7fdb92077d7ca2132e369caefa82db887261ea02102864d33ec0fef3b2c80dd366d25dbc1a95144139498be581dfabe913e4312',
+             sha512=('0663f40b07de88cd7939557bf7fdb92077d7ca2132e369caefa82db'
+                     '887261ea02102864d33ec0fef3b2c80dd366d25dbc1a95144139498'
+                     'be581dfabe913e4312'),
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/langtools.tar.xz',
              when='@3.4.0')
     resource(name='openjdk', placement='openjdk_src',
-             sha512='f3cca223bd39c0202dd1a65a38ca17024b6cb5c82d833946ec1b7d28d205833b4dd2dadde505a1c2384e3b28ff0d21a4f175e064b8ac82aa8a07508e53cdc722',
+             sha512=('f3cca223bd39c0202dd1a65a38ca17024b6cb5c82d833946ec1b7d2'
+                     '8d205833b4dd2dadde505a1c2384e3b28ff0d21a4f175e064b8ac82'
+                     'aa8a07508e53cdc722'),
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/openjdk.tar.xz',
              when='@3.4.0')
     resource(name='nashorn', placement='nashorn_src',
-             sha512='79b5095bab447d1911696bc1e328fb72c08764c0139cab14a28c0f6c2e49a2d96bb06fbbb85523b2586672cb0f13709c3158823d5ac3f3fe3f0f88402d3cb246',
+             sha512=('79b5095bab447d1911696bc1e328fb72c08764c0139cab14a28c0f6'
+                     'c2e49a2d96bb06fbbb85523b2586672cb0f13709c3158823d5ac3f3'
+                     'fe3f0f88402d3cb246'),
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/nashorn.tar.xz',
              when='@3.4.0')
     resource(name='shenandoah', placement='shenandoah_src',
-             sha512='0f085e87c63679314ef322b3f4b854792d46539d5530dd75a7fd45b8b6d663f58469be2808ea5fb4bf31f6c5369cb78f28e1599f748e1931ba7040136306eb20',
+             sha512=('0f085e87c63679314ef322b3f4b854792d46539d5530dd75a7fd45b'
+                     '8b6d663f58469be2808ea5fb4bf31f6c5369cb78f28e1599f748e19'
+                     '31ba7040136306eb20'),
              url='http://icedtea.wildebeest.org/download/drops/icedtea8/3.4.0/shenandoah.tar.xz',
              when='@3.4.0')
 
@@ -160,4 +178,4 @@ class Icedtea(AutotoolsPackage):
         run_env.set('JAVA_HOME', self.spec.prefix)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('JAVA_HOME', self.spec.prefix)
+        spack_env.set('JAVA_HOME', self.prefix)
