@@ -23,15 +23,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import fileinput
 
 
 class Qwt(Package):
     """The Qwt library contains GUI Components and utility classes which are
-primarily useful for programs with a technical background. Beside a framework
-for 2D plots it provides scales, sliders, dials, compasses, thermometers,
-wheels and knobs to control or display values, arrays, or ranges of type
-double."""
+    primarily useful for programs with a technical background. Beside a framework
+    for 2D plots it provides scales, sliders, dials, compasses, thermometers,
+    wheels and knobs to control or display values, arrays, or ranges of type
+    double.
+    """
     homepage = "http://qwt.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/qwt/qwt/5.2.2/qwt-5.2.2.tar.bz2"
 
@@ -41,10 +41,8 @@ double."""
 
     def install(self, spec, prefix):
 
-        # QWT tries really hard to install to /usr/local
-        # This is the only way I could find to subvert the install prefix
-        for line in fileinput.input("qwtconfig.pri", inplace=1):
-            print line.replace("/usr/local/qwt-$$VERSION", self.prefix)
+        # Subvert hardcoded prefix
+        filter_file(r'/usr/local/qwt-\$\$VERSION', prefix, 'qwtconfig.pri')
 
         qmake = which('qmake')
         qmake()
