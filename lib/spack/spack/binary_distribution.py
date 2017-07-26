@@ -41,6 +41,15 @@ from spack.stage import Stage
 import spack.fetch_strategy as fs
 import spack.relocate
 from contextlib import closing
+import spack.util.gpg as gpg_util
+
+
+def has_gnupg2():
+    try:
+        gpg_util.Gpg.gpg()('--version', output=os.devnull)
+        return True
+    except Exception:
+        return False
 
 
 def buildinfo_file_name(spec):
@@ -183,27 +192,32 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
 
     # Sign the packages if keys available
     sign = True
-    if key is None:
-        keys = Gpg.signing_keys()
-        if len(keys) == 1:
-            key = keys[0]
-        if len(keys) > 1:
-            tty.warn(
-                'multiple signing keys are available;' +
-                ' please choose one with -k option')
-            Gpg.list(False, True)
-            sign = False
-        if len(keys) == 0:
-            tty.warn('No signing keys are available')
-            if yes_to_all:
+    if not has_gnupg2():
+        tty.warn('gpg2 is not available for signing.')
+        sign = False
+    else:
+        if key is None:
+            keys = Gpg.signing_keys()
+            if len(keys) == 1:
+                key = keys[0]
+            if len(keys) > 1:
+                tty.warn(
+                    'Multiple signing keys are available.' +
+                    ' please choose one with -k option.')
+                Gpg.list(False, True)
                 sign = False
-            else:
-                raise RuntimeError('not creating unsigned build cache;' +
-                                   'use spack buildcache create -y ' +
-                                   'option to override')
+            if len(keys) == 0:
+                tty.warn('No signing keys are available.')
+                sign = False
     if sign:
         Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
         Gpg.sign(key, tarfile_path, '%s.asc' % tarfile_path)
+    else:
+        if not yes_to_all:
+            raise RuntimeError('Not creating unsigned build cache.' +
+                               'Use spack buildcache create -y ' +
+                               'option to override.')
+
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
         tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
