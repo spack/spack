@@ -22,13 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import re
+import argparse
 import pytest
-from spack.url import UndetectableVersionError
-from spack.main import SpackCommand
+
 from spack.cmd.url import *
 
-url = SpackCommand('url')
+
+@pytest.fixture(scope='module')
+def parser():
+    """Returns the parser for the ``url`` command"""
+    parser = argparse.ArgumentParser()
+    setup_parser(parser)
+    return parser
 
 
 class MyPackage:
@@ -72,64 +77,51 @@ def test_version_parsed_correctly():
     assert not version_parsed_correctly(MyPackage('', ['0.18.0']), 'oce-0.18.0')   # noqa
 
 
-def test_url_parse():
-    url('parse', 'http://zlib.net/fossils/zlib-1.2.10.tar.gz')
+def test_url_parse(parser):
+    args = parser.parse_args(['parse', 'http://zlib.net/fossils/zlib-1.2.10.tar.gz'])
+    url(parser, args)
 
 
-def test_url_with_no_version_fails():
+@pytest.mark.xfail
+def test_url_parse_xfail(parser):
     # No version in URL
-    with pytest.raises(UndetectableVersionError):
-        url('parse', 'http://www.netlib.org/voronoi/triangle.zip')
+    args = parser.parse_args(['parse', 'http://www.netlib.org/voronoi/triangle.zip'])
+    url(parser, args)
 
 
-def test_url_list():
-    out, err = url('list')
-    total_urls = len(out.split('\n'))
+def test_url_list(parser):
+    args = parser.parse_args(['list'])
+    total_urls = url_list(args)
 
     # The following two options should not change the number of URLs printed.
-    out, err = url('list', '--color', '--extrapolation')
-    colored_urls = len(out.split('\n'))
+    args = parser.parse_args(['list', '--color', '--extrapolation'])
+    colored_urls = url_list(args)
     assert colored_urls == total_urls
 
     # The following options should print fewer URLs than the default.
     # If they print the same number of URLs, something is horribly broken.
     # If they say we missed 0 URLs, something is probably broken too.
-    out, err = url('list', '--incorrect-name')
-    incorrect_name_urls = len(out.split('\n'))
+    args = parser.parse_args(['list', '--incorrect-name'])
+    incorrect_name_urls = url_list(args)
     assert 0 < incorrect_name_urls < total_urls
 
-    out, err = url('list', '--incorrect-version')
-    incorrect_version_urls = len(out.split('\n'))
+    args = parser.parse_args(['list', '--incorrect-version'])
+    incorrect_version_urls = url_list(args)
     assert 0 < incorrect_version_urls < total_urls
 
-    out, err = url('list', '--correct-name')
-    correct_name_urls = len(out.split('\n'))
+    args = parser.parse_args(['list', '--correct-name'])
+    correct_name_urls = url_list(args)
     assert 0 < correct_name_urls < total_urls
 
-    out, err = url('list', '--correct-version')
-    correct_version_urls = len(out.split('\n'))
+    args = parser.parse_args(['list', '--correct-version'])
+    correct_version_urls = url_list(args)
     assert 0 < correct_version_urls < total_urls
 
 
-def test_url_summary():
-    """Test the URL summary command."""
-    # test url_summary, the internal function that does the work
+def test_url_summary(parser):
+    args = parser.parse_args(['summary'])
     (total_urls, correct_names, correct_versions,
-     name_count_dict, version_count_dict) = url_summary(None)
+     name_count_dict, version_count_dict) = url_summary(args)
 
     assert 0 < correct_names    <= sum(name_count_dict.values())    <= total_urls  # noqa
     assert 0 < correct_versions <= sum(version_count_dict.values()) <= total_urls  # noqa
-
-    # make sure it agrees with the actual command.
-    out, err = url('summary')
-    out_total_urls = int(
-        re.search(r'Total URLs found:\s*(\d+)', out).group(1))
-    assert out_total_urls == total_urls
-
-    out_correct_names = int(
-        re.search(r'Names correctly parsed:\s*(\d+)', out).group(1))
-    assert out_correct_names == correct_names
-
-    out_correct_versions = int(
-        re.search(r'Versions correctly parsed:\s*(\d+)', out).group(1))
-    assert out_correct_versions == correct_versions

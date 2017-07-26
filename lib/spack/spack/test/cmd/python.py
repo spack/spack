@@ -22,12 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-from spack.main import SpackCommand
+import argparse
+import pytest
 
-python = SpackCommand('python')
+from spack.cmd.python import *
 
 
-def test_python():
-    out, err = python('-c', 'import spack; print(spack.spack_version)')
-    assert out.strip() == str(spack.spack_version)
+@pytest.fixture(scope='module')
+def parser():
+    """Returns the parser for the ``python`` command"""
+    parser = argparse.ArgumentParser()
+    setup_parser(parser)
+    return parser
+
+
+def test_python(parser):
+    args = parser.parse_args([
+        '-c', 'import spack; print(spack.spack_version)'
+    ])
+    python(parser, args)

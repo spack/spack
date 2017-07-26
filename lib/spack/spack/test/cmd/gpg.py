@@ -22,12 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import argparse
 import os
 
 import pytest
 import spack
+import spack.cmd.gpg as gpg
 import spack.util.gpg as gpg_util
-from spack.main import SpackCommand
 from spack.util.executable import ProcessError
 
 
@@ -39,19 +40,6 @@ def testing_gpg_directory(tmpdir):
     gpg_util.GNUPGHOME = old_gpg_path
 
 
-@pytest.fixture(scope='function')
-def mock_gpg_config():
-    orig_gpg_keys_path = spack.gpg_keys_path
-    spack.gpg_keys_path = spack.mock_gpg_keys_path
-    yield
-    spack.gpg_keys_path = orig_gpg_keys_path
-
-
-@pytest.fixture(scope='function')
-def gpg():
-    return SpackCommand('gpg')
-
-
 def has_gnupg2():
     try:
         gpg_util.Gpg.gpg()('--version', output=os.devnull)
@@ -60,31 +48,45 @@ def has_gnupg2():
         return False
 
 
-@pytest.mark.xfail  # TODO: fix failing tests.
+@pytest.mark.usefixtures('testing_gpg_directory')
 @pytest.mark.skipif(not has_gnupg2(),
                     reason='These tests require gnupg2')
-def test_gpg(gpg, tmpdir, testing_gpg_directory, mock_gpg_config):
+def test_gpg(tmpdir):
+    parser = argparse.ArgumentParser()
+    gpg.setup_parser(parser)
+
     # Verify a file with an empty keyring.
+    args = parser.parse_args(['verify', os.path.join(
+        spack.mock_gpg_data_path, 'content.txt')])
     with pytest.raises(ProcessError):
-        gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
+        gpg.gpg(parser, args)
 
     # Import the default key.
-    gpg('init')
+    args = parser.parse_args(['init'])
+    args.import_dir = spack.mock_gpg_keys_path
+    gpg.gpg(parser, args)
 
     # List the keys.
     # TODO: Test the output here.
-    gpg('list', '--trusted')
-    gpg('list', '--signing')
+    args = parser.parse_args(['list', '--trusted'])
+    gpg.gpg(parser, args)
+    args = parser.parse_args(['list', '--signing'])
+    gpg.gpg(parser, args)
 
     # Verify the file now that the key has been trusted.
-    gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
+    args = parser.parse_args(['verify', os.path.join(
+        spack.mock_gpg_data_path, 'content.txt')])
+    gpg.gpg(parser, args)
 
     # Untrust the default key.
-    gpg('untrust', 'Spack testing')
+    args = parser.parse_args(['untrust', 'Spack testing'])
+    gpg.gpg(parser, args)
 
     # Now that the key is untrusted, verification should fail.
+    args = parser.parse_args(['verify', os.path.join(
+        spack.mock_gpg_data_path, 'content.txt')])
     with pytest.raises(ProcessError):
-        gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
+        gpg.gpg(parser, args)
 
     # Create a file to test signing.
     test_path = tmpdir.join('to-sign.txt')
@@ -92,71 +94,88 @@ def test_gpg(gpg, tmpdir, testing_gpg_directory, mock_gpg_config):
         fout.write('Test content for signing.\n')
 
     # Signing without a private key should fail.
+    args = parser.parse_args(['sign', str(test_path)])
     with pytest.raises(RuntimeError) as exc_info:
-        gpg('sign', str(test_path))
+        gpg.gpg(parser, args)
     assert exc_info.value.args[0] == 'no signing keys are available'
 
     # Create a key for use in the tests.
     keypath = tmpdir.join('testing-1.key')
-    gpg('create',
-        '--comment', 'Spack testing key',
-        '--export', str(keypath),
-        'Spack testing 1',
-        'spack@googlegroups.com')
+    args = parser.parse_args(['create',
+                              '--comment', 'Spack testing key',
+                              '--export', str(keypath),
+                              'Spack testing 1',
+                              'spack@googlegroups.com'])
+    gpg.gpg(parser, args)
     keyfp = gpg_util.Gpg.signing_keys()[0]
 
     # List the keys.
     # TODO: Test the output here.
-    gpg('list', '--trusted')
-    gpg('list', '--signing')
+    args = parser.parse_args(['list', '--trusted'])
+    gpg.gpg(parser, args)
+    args = parser.parse_args(['list', '--signing'])
+    gpg.gpg(parser, args)
 
     # Signing with the default (only) key.
-    gpg('sign', str(test_path))
+    args = parser.parse_args(['sign', str(test_path)])
+    gpg.gpg(parser, args)
 
     # Verify the file we just verified.
-    gpg('verify', str(test_path))
+    args = parser.parse_args(['verify', str(test_path)])
+    gpg.gpg(parser, args)
 
     # Export the key for future use.
     export_path = tmpdir.join('export.testing.key')
-    gpg('export', str(export_path))
+    args = parser.parse_args(['export', str(export_path)])
+    gpg.gpg(parser, args)
 
     # Create a second key for use in the tests.
-    gpg('create',
-        '--comment', 'Spack testing key',
-        'Spack testing 2',
-        'spack@googlegroups.com')
+    args = parser.parse_args(['create',
+                              '--comment', 'Spack testing key',
+                              'Spack testing 2',
+                              'spack@googlegroups.com'])
+    gpg.gpg(parser, args)
 
     # List the keys.
     # TODO: Test the output here.
-    gpg('list', '--trusted')
-    gpg('list', '--signing')
+    args = parser.parse_args(['list', '--trusted'])
+    gpg.gpg(parser, args)
+    args = parser.parse_args(['list', '--signing'])
+    gpg.gpg(parser, args)
 
     test_path = tmpdir.join('to-sign-2.txt')
     with open(str(test_path), 'w+') as fout:
         fout.write('Test content for signing.\n')
 
     # Signing with multiple signing keys is ambiguous.
+    args = parser.parse_args(['sign', str(test_path)])
     with pytest.raises(RuntimeError) as exc_info:
-        gpg('sign', str(test_path))
+        gpg.gpg(parser, args)
     assert exc_info.value.args[0] == \
         'multiple signing keys are available; please choose one'
 
     # Signing with a specified key.
-    gpg('sign', '--key', keyfp, str(test_path))
+    args = parser.parse_args(['sign', '--key', keyfp, str(test_path)])
+    gpg.gpg(parser, args)
 
     # Untrusting signing keys needs a flag.
+    args = parser.parse_args(['untrust', 'Spack testing 1'])
     with pytest.raises(ProcessError):
-        gpg('untrust', 'Spack testing 1')
+        gpg.gpg(parser, args)
 
     # Untrust the key we created.
-    gpg('untrust', '--signing', keyfp)
+    args = parser.parse_args(['untrust', '--signing', keyfp])
+    gpg.gpg(parser, args)
 
     # Verification should now fail.
+    args = parser.parse_args(['verify', str(test_path)])
     with pytest.raises(ProcessError):
-        gpg('verify', str(test_path))
+        gpg.gpg(parser, args)
 
     # Trust the exported key.
-    gpg('trust', str(export_path))
+    args = parser.parse_args(['trust', str(export_path)])
+    gpg.gpg(parser, args)
 
     # Verification should now succeed again.
-    gpg('verify', str(test_path))
+    args = parser.parse_args(['verify', str(test_path)])
+    gpg.gpg(parser, args)

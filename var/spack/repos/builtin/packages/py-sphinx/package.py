@@ -40,7 +40,6 @@ class PySphinx(PythonPackage):
         'sphinx.environment.collectors', 'sphinx.environment.adapters'
     ]
 
-    version('1.6.3', 'c5ad61f4e0974375ca2c2b58ef8d5411')
     version('1.6.1', '26cb1cdca7aa4afc8c925d926b6268e7')
     version('1.5.5', 'f9581b3556df9722143c47290273bcf8')
     version('1.4.5', '5c2cd2dac45dfa6123d067e32a89e89a')
@@ -64,19 +63,9 @@ class PySphinx(PythonPackage):
     depends_on('py-alabaster@0.7.0:0.7.999',  type=('build', 'run'))
     depends_on('py-imagesize', when='@1.4:',  type=('build', 'run'))
     depends_on('py-requests@2.0.0:',          type=('build', 'run'))
+    depends_on('py-typing',                   type=('build', 'run'))
+    depends_on('py-sphinxcontrib-websupport', type=('build', 'run'))
     depends_on('py-sphinx-rtd-theme@0.1:',    type=('build', 'run'))  # optional as of 1.4
-
-    # Sphinx v1.6+ no longer includes websupport by default:
-    # http://www.sphinx-doc.org/en/stable/changes.html
-    depends_on('py-sphinxcontrib-websupport', when='@1.6:',
-               type=('build', 'run'))
-    # TODO: incorporate the proper dependencies when concretizer is capable
-    # Build dep for 1.6.1 all python (bug), see:
-    # https://github.com/sphinx-doc/sphinx/pull/3789
-    # depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
-    # depends_on('py-typing', when='@1.6.2:^python@2.7:3.4',
-    #            type=('build', 'run'))
-    depends_on('py-typing', when='@1.6:', type=('build', 'run'))
 
     # TODO: Add a 'test' deptype
     # depends_on('py-pytest',     type='test')

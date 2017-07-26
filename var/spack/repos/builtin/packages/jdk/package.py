@@ -48,8 +48,6 @@ class Jdk(Package):
     # For instructions on how to find the magic URL, see:
     # https://gist.github.com/P7h/9741922
     # https://linuxconfig.org/how-to-install-java-se-development-kit-on-debian-linux
-    version('8u141-b15', '8cf4c4e00744bfafc023d770cb65328c', curl_options=curl_options,
-            url='http://download.oracle.com/otn-pub/java/jdk/8u141-b15/336fa29ff2bb4ef291e347e091f7f4a7/jdk-8u141-linux-x64.tar.gz')
     version('8u131-b11', '75b2cb2249710d822a60f83e28860053', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz')
     version('8u92-b14',  '65a1cc17ea362453a6e0eb4f13be76e4', curl_options=curl_options)

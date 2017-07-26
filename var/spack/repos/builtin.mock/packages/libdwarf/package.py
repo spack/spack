@@ -41,4 +41,4 @@ class Libdwarf(Package):
     depends_on("libelf")
 
     def install(self, spec, prefix):
-        touch(prefix.libdwarf)
+        pass

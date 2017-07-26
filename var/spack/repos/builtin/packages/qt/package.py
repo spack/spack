@@ -131,9 +131,9 @@ class Qt(Package):
         url = self.list_url
 
         if version >= Version('4.0'):
-            url += str(version.up_to(2)) + '/'
+            url += version.up_to(2) + '/'
         else:
-            url += str(version.up_to(1)) + '/'
+            url += version.up_to(1) + '/'
 
         if version >= Version('4.8'):
             url += str(version) + '/'
