@@ -1,4 +1,4 @@
-##############################################################################
+#############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,17 +25,22 @@
 from spack import *
 
 
-class Kripke(Package):
-    """Kripke is a simple, scalable, 3D Sn deterministic particle
-       transport proxy/mini app.
-    """
+class Kripke(CMakePackage):
+    """Kripke is a simple, scalable, 3D Sn deterministic particle transport
+    code. Its primary purpose is to research how data layout, programming
+    paradigms and architectures effect the implementation and performance
+    of Sn transport. A main goal of Kripke is investigating how different
+    data-layouts effect instruction, thread and task level parallelism,
+    and what the implications are on overall solver performance."""
+
     homepage = "https://codesign.llnl.gov/kripke.php"
     url      = "https://codesign.llnl.gov/downloads/kripke-openmp-1.1.tar.gz"
 
+    tags = ['proxy-app']
     version('1.1', '7fe6f2b26ed983a6ce5495ab701f85bf')
 
-    variant('mpi',    default=True, description='Build with MPI.')
-    variant('openmp', default=True, description='Build with OpenMP enabled.')
+    variant('mpi', default=True, description='Build with MPI')
+    variant('openmp', default=True, description='Build with with OpenMP')
 
     depends_on('mpi', when="+mpi")
 
