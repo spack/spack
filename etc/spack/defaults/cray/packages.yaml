@@ -76,7 +76,14 @@ packages:
             petsc@3.7.6.0%intel@17.0.2.174~complex+int64 : cray-petsc-complex
             petsc@3.7.6.0%intel@17.0.2.174+complex+int64 : cray-petsc-complex-64
     papi:
-       buildable: false
+        buildable: false
         modules:
             papi@5.5.1.2%gcc@6.3.0: papi
             papi@5.5.1.2%intel@17.0.2.174: papi
+    trilinos:
+        buildable: false
+        modules:
+            trilinos@12.10.1.1%gcc@6.3.0: cray-trilinos
+            trilinos@12.10.1.1%intel@17.0.2.174: cray-trilinos
+            trilinos@12.10.1.1%gcc@6.3.0+shared: cray-trilinos
+            trilinos@12.10.1.1%intel@17.0.2.174+shared: cray-trilinos
