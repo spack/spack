@@ -56,8 +56,8 @@ class Rose(AutotoolsPackage):
     variant('tests', default=False, description='Build the tests directory')
     variant('tutorial', default=False, description='Build the tutorial directory')
 
-    variant('intel_backend', default=False, description='Enable Intel backend compiler')
-    depends_on("intel@16.0.3", when='+intel_backend')
+    variant('mvapich2_backend', default=False, description='Enable mvapich2 backend compiler')
+    depends_on("mvapich2", when='+mvapich2_backend')
 
     variant('binanalysis', default=False, description='Enable binary analysis tooling')
     depends_on('libgcrypt', when='+binanalysis', type='build')
@@ -95,9 +95,9 @@ class Rose(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        if '+intel_backend' in spec:
-            cc = spec['intel'].mpicc
-            cxx = spec['intel'].mpicxx
+        if '+mvapich2_backend' in spec:
+            cc = spec['mvapich2'].mpicc
+            cxx = spec['mvapich2'].mpicxx
         else:
             cc = spack_cc
             cxx = spack_cxx
