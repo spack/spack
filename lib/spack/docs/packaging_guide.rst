@@ -490,6 +490,21 @@ version.joined       123
    Python properties don't need parentheses. ``version.dashed`` is correct.
    ``version.dashed()`` is incorrect.
 
+In addition, these version properties can be combined with ``up_to()``.
+For example:
+
+.. code-block:: python
+
+   >>> version = Version('1.2.3')
+   >>> version.up_to(2).dashed
+   Version('1-2')
+   >>> version.underscored.up_to(2)
+   Version('1_2')
+
+
+As you can see, order is not important. Just keep in mind that ``up_to()`` and
+the other version properties return ``Version`` objects, not strings.
+
 If a URL cannot be derived systematically, or there is a special URL for one
 of its versions, you can add an explicit URL for a particular version:
 

@@ -51,6 +51,9 @@ class CbtfLanl(CMakePackage):
     version('1.8', branch='master',
             git='http://git.code.sf.net/p/cbtf-lanl/cbtf-lanl')
 
+    variant('build_type', default='None', values=('None'),
+            description='CMake build type')
+
     depends_on("cmake@3.0.2:", type='build')
     # Dependencies for cbtf-krell
     depends_on("mrnet@5.0.1:+lwthreads")
@@ -61,9 +64,6 @@ class CbtfLanl(CMakePackage):
     parallel = False
 
     build_directory = 'build_cbtf_lanl'
-
-    def build_type(self):
-        return 'None'
 
     def cmake_args(self):
 

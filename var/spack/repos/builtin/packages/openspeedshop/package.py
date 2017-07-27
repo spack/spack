@@ -149,9 +149,6 @@ class Openspeedshop(CMakePackage):
 
     build_directory = 'build_openspeedshop'
 
-    def build_type(self):
-        return 'None'
-
     def cmake_args(self):
         spec = self.spec
         compile_flags = "-O2 -g"

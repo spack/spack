@@ -37,6 +37,11 @@ class Benchmark(CMakePackage):
     version('1.1.0', '66b2a23076cf70739525be0092fc3ae3')
     version('1.0.0', '1474ff826f8cd68067258db75a0835b8')
 
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'MinSizeRel', 'Coverage'))
+
     def patch(self):
         filter_file(
             r'add_cxx_compiler_flag..fstrict.aliasing.',
