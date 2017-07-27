@@ -30,7 +30,7 @@ class Bml(CMakePackage):
     formats (in dense and sparse) and their associated algorithms for basic
     matrix operations."""
 
-    homepage = "https://github.com/lanl/bml"
+    homepage = "http://lanl.github.io/bml/"
     url      = "https://github.com/lanl/bml"
 
     version('develop', git='https://github.com/lanl/bml', branch='master')
