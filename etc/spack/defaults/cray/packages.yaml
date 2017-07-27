@@ -75,3 +75,8 @@ packages:
             petsc@3.7.6.0%gcc@6.3.0+complex+int64 : cray-petsc-complex-64
             petsc@3.7.6.0%intel@17.0.2.174~complex+int64 : cray-petsc-complex
             petsc@3.7.6.0%intel@17.0.2.174+complex+int64 : cray-petsc-complex-64
+    papi:
+       buildable: false
+        modules:
+            papi@5.5.1.2%gcc@6.3.0: papi
+            papi@5.5.1.2%intel@17.0.2.174: papi
