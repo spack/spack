@@ -33,9 +33,13 @@ from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 import spack.binary_distribution as bindist
-from llnl.util.filesystem import join_path
+from llnl.util.filesystem import *
 import argparse
 import spack.cmd.buildcache as buildcache
+import spack.relocate as relocate
+import platform
+import os
+import stat
 
 
 @pytest.fixture(scope='function')
@@ -74,6 +78,15 @@ def test_packaging(mock_archive, tmpdir):
     spec.concretize()
     pkg = spack.repo.get(spec)
     fake_fetchify(pkg.fetcher, pkg)
+    mkdirp(join_path(pkg.prefix, "bin"))
+    patchelfscr = join_path(pkg.prefix, "bin", "patchelf")
+    f = open(patchelfscr, 'w')
+    body = """#!/bin/bash
+echo $PATH"""
+    f.write(body)
+    f.close()
+    st = os.stat(patchelfscr)
+    os.chmod(patchelfscr, st.st_mode | stat.S_IEXEC)
 
     # Install the test package
     spec = Spec('trivial-install-test-package')
@@ -138,3 +151,16 @@ def test_packaging(mock_archive, tmpdir):
 
     args = parser.parse_args(['keys'])
     buildcache.getkeys(args)
+
+    relocate.needs_binary_relocation('relocatable')
+    if platform.system() == 'Darwin':
+        relocate.needs_binary_relocation('Mach-O')
+    if platform.system() == 'Linux':
+        relocate.needs_binary_relocation('ELF')
+        relocate.get_relative_rpaths(
+            '/usr/bin/test', '/usr',
+            ('/usr/lib', '/usr/lib64', '/opt/local/lib'))
+        relocate.substitute_rpath(
+            ('/usr/lib', '/usr/lib64', '/opt/local/lib'), '/usr', '/opt')
+        relocate.prelocate_binary(patchelfscr, '/opt/rh')
+        relocate.relocate_binary(patchelfscr, '/usr', '/opt/rh/root/usr')
