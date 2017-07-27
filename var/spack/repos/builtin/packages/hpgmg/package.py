@@ -49,8 +49,8 @@ class Hpgmg(Package):
     variant('mpi', default=True, description='Build with MPI support')
     variant('cuda', default=False, description='Build with CUDA')
 
-    depends_on('petsc', when='fe_fv=fe')
     depends_on('petsc', when='fe_fv=both')
+    depends_on('petsc', when='fe_fv=fe')
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
     depends_on('python', type='build')
