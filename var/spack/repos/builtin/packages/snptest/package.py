@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,16 +25,15 @@
 from spack import *
 
 
-class Bml(CMakePackage):
-    """The basic matrix library (bml) is a collection of various matrix data
-    formats (in dense and sparse) and their associated algorithms for basic
-    matrix operations."""
+class Snptest(Package):
+    """SNPTEST is a program for the analysis of single SNP association in
+       genome-wide studies."""
 
-    homepage = "https://github.com/lanl/bml"
-    url      = "https://github.com/lanl/bml"
+    homepage = "https://mathgen.stats.ox.ac.uk/genetics_software/snptest/snptest.html"
+    url = "http://www.well.ox.ac.uk/~gav/resources/snptest_v2.5.2_linux_x86_64_dynamic.tgz"
 
-    version('develop', git='https://github.com/lanl/bml', branch='master')
-    version('1.1.0', git='https://github.com/lanl/bml', tag='v1.1.0')
+    version('2.5.2', 'e3f2cc0351f260cf29369dc4f79a660a')
 
-    depends_on("blas")
-    depends_on("lapack")
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('snptest_v{0}'.format(self.version), prefix.bin)

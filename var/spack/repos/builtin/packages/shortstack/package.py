@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,16 +25,21 @@
 from spack import *
 
 
-class Bml(CMakePackage):
-    """The basic matrix library (bml) is a collection of various matrix data
-    formats (in dense and sparse) and their associated algorithms for basic
-    matrix operations."""
+class Shortstack(Package):
+    """ShortStack is a tool developed to process and analyze smallRNA-seq data
+       with respect to a reference genome, and output a comprehensive and
+       informative annotation of all discovered small RNA genes."""
 
-    homepage = "https://github.com/lanl/bml"
-    url      = "https://github.com/lanl/bml"
+    homepage = "http://sites.psu.edu/axtell/software/shortstack/"
+    url      = "https://github.com/MikeAxtell/ShortStack/archive/v3.8.3.tar.gz"
 
-    version('develop', git='https://github.com/lanl/bml', branch='master')
-    version('1.1.0', git='https://github.com/lanl/bml', tag='v1.1.0')
+    version('3.8.3', '3f21f494f799039f3fa88ea343f2d20d')
 
-    depends_on("blas")
-    depends_on("lapack")
+    depends_on('perl', type=('build', 'run'))
+    depends_on('samtools')
+    depends_on('viennarna')
+    depends_on('bowtie')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('ShortStack', prefix.bin)
