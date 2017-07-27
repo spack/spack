@@ -153,8 +153,43 @@ echo $PATH"""
     buildcache.getkeys(args)
 
     relocate.needs_binary_relocation('relocatable')
+    relocate.macho_make_paths_rel('/Users/Shared/spack',
+                                  ('/Users/Shared/spack/pkgA/lib',
+                                   '/Users/Shared/spack/pkgB/lib',
+                                   '/usr/local/lib'),
+                                  ('/Users/Shared/spack/pkgA/libA.dylib',
+                                   '/Users/Shared/spack/pkgB/libB.dylib',
+                                   '/usr/local/lib/libloco.dylib'),
+                                  '/Users/Shared/spack/pkgC/lib/libC.dylib')
+    relocate.macho_make_paths_rel('/Users/Shared/spack',
+                                  ('/Users/Shared/spack/pkgA/lib',
+                                   '/Users/Shared/spack/pkgB/lib',
+                                   '/usr/local/lib'),
+                                  ('/Users/Shared/spack/pkgA/libA.dylib',
+                                   '/Users/Shared/spack/pkgB/libB.dylib',
+                                   '/usr/local/lib/libloco.dylib'),
+                                  None)
+    relocate.macho_replace_paths('/Users/Shared/spack',
+                                 '/Applications/spack',
+                                 ('/Users/Shared/spack/pkgA/lib',
+                                  '/Users/Shared/spack/pkgB/lib',
+                                  '/usr/local/lib'),
+                                 ('/Users/Shared/spack/pkgA/libA.dylib',
+                                  '/Users/Shared/spack/pkgB/libB.dylib',
+                                  '/usr/local/lib/libloco.dylib'),
+                                 '/Users/Shared/spack/pkgC/lib/libC.dylib')
+    relocate.macho_replace_paths('/Users/Shared/spack',
+                                 '/Applications/spack',
+                                 ('/Users/Shared/spack/pkgA/lib',
+                                  '/Users/Shared/spack/pkgB/lib',
+                                  '/usr/local/lib'),
+                                 ('/Users/Shared/spack/pkgA/libA.dylib',
+                                  '/Users/Shared/spack/pkgB/libB.dylib',
+                                  '/usr/local/lib/libloco.dylib'),
+                                 None)
     if platform.system() == 'Darwin':
         relocate.needs_binary_relocation('Mach-O')
+
     if platform.system() == 'Linux':
         relocate.needs_binary_relocation('ELF')
         relocate.get_relative_rpaths(

@@ -78,6 +78,71 @@ def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
     return rel_rpaths
 
 
+def macho_get_paths(path_name):
+    otool = which('otool')
+    output = otool("-l", path_name, output=str, err=str)
+    if otool.returncode != 0:
+        tty.warn('failed reading rpath for %s.' % path_name)
+        return False
+    last_cmd = None
+    idpath = ''
+    rpaths = []
+    deps = []
+    for line in output.split('\n'):
+        match = re.search('( *[a-zA-Z]+ )(.*)', line)
+        if match:
+            lhs = match.group(1).lstrip().rstrip()
+            rhs = match.group(2)
+            match2 = re.search('(.*) \(.*\)', rhs)
+            if match2:
+                rhs = match2.group(1)
+            if lhs == 'cmd':
+                last_cmd = rhs
+            if lhs == 'path' and last_cmd == 'LC_RPATH':
+                rpaths.append(rhs)
+            if lhs == 'name' and last_cmd == 'LC_ID_DYLIB':
+                idpath = rhs
+            if lhs == 'name' and last_cmd == 'LC_LOAD_DYLIB':
+                deps.append(rhs)
+    return rpaths, deps, idpath
+
+
+def macho_make_paths_rel(old_path, rpaths, deps, idpath):
+    id = None
+    nrpaths = []
+    ndeps = []
+    if idpath:
+        id = '@rpath/%s' % os.path.basename(idpath)
+    for rpath in rpaths:
+        if re.match(old_dir, rpath):
+            rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
+            nrpaths.append('@loader_path/%s' % rel)
+        else:
+            nrpaths.append(rpath)
+    for dep in deps:
+        if re.match(old_dir, dep):
+            rel = os.path.relpath(dep, start=os.path.dirname(path_name))
+            ndeps.append('@loader_path/%s' % rel)
+        else:
+            ndeps.append(dep)
+    return nrpaths, ndeps, id
+
+
+def macho_replace_path(old_path, new_path, rpaths, deps, idpath):
+    id = None
+    nrpaths = []
+    ndeps = []
+    if idpath:
+        id = idpath.replace(old_dir, new_dir)
+    for rpath in rpaths:
+        nrpath = rpath.replace(old_dir, new_dir)
+        nrpaths.append(nrpath)
+    for dep in deps:
+        ndep = dep.replace(old_dir, new_dir)
+        ndeps.append(ndep)
+    return nrpaths, ndeps, id
+
+
 def modify_macho_object(path_name, old_dir, new_dir, relative):
     """
     Modify MachO binaries by changing rpaths,and id and dependency lib paths.
@@ -106,57 +171,16 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
     """
     if 'libgcc_' in path_name:
         return
-    otool = which('otool')
-    output = otool("-l", path_name, output=str, err=str)
-    if otool.returncode != 0:
-        tty.warn('failed reading rpath for %s.' % path_name)
-        return False
-    last_cmd = None
-    idpath = ''
-    rpaths = []
-    deps = []
-    for line in output.split('\n'):
-        match = re.search('( *[a-zA-Z]+ )(.*)', line)
-        if match:
-            lhs = match.group(1).lstrip().rstrip()
-            rhs = match.group(2)
-            match2 = re.search('(.*) \(.*\)', rhs)
-            if match2:
-                rhs = match2.group(1)
-            if lhs == 'cmd':
-                last_cmd = rhs
-            if lhs == 'path' and last_cmd == 'LC_RPATH':
-                rpaths.append(rhs)
-            if lhs == 'name' and last_cmd == 'LC_ID_DYLIB':
-                idpath = rhs
-            if lhs == 'name' and last_cmd == 'LC_LOAD_DYLIB':
-                deps.append(rhs)
+    rpaths, deps, idpath = macho_get_paths(path_name)
     id = None
     nrpaths = []
     ndeps = []
     if relative:
-        id = '@rpath/%s' % os.path.basename(idpath)
-        for rpath in rpaths:
-            if re.match(old_dir, rpath):
-                rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
-                nrpaths.append('@loader_path/%s' % rel)
-            else:
-                nrpaths.append(rpath)
-        for dep in deps:
-            if re.match(old_dir, dep):
-                rel = os.path.relpath(dep, start=os.path.dirname(path_name))
-                ndeps.append('@loader_path/%s' % rel)
-            else:
-                ndeps.append(dep)
+        nrpaths, ndeps, id = macho_make_paths_rel(
+            old_path, rpaths, deps, idpath)
     else:
-        id = idpath.replace(old_dir, new_dir)
-        for rpath in rpaths:
-            nrpath = rpath.replace(old_dir, new_dir)
-            nrpaths.append(nrpath)
-        for dep in deps:
-            ndep = dep.replace(old_dir, new_dir)
-            ndeps.append(ndep)
-
+        nrpaths, ndeps, id = macho_replace_paths(old_path, new_path, rpaths,
+                                                 deps, idpath)
     st = os.stat(path_name)
     wmode = os.access(path_name, os.W_OK)
     if not wmode:
