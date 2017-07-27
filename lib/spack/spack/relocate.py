@@ -32,6 +32,7 @@ import re
 import spack
 import spack.cmd
 from spack.util.executable import which
+from spack.util.executable import ProcessError
 from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
 
@@ -176,36 +177,41 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
     nrpaths = []
     ndeps = []
     if relative:
-        nrpaths, ndeps, id = macho_make_paths_rel(paths_name,
-                                                  old_path, rpaths,
+        nrpaths, ndeps, id = macho_make_paths_rel(path_name,
+                                                  old_dir, rpaths,
                                                   deps, idpath)
     else:
-        nrpaths, ndeps, id = macho_replace_paths(old_path, new_path, rpaths,
+        nrpaths, ndeps, id = macho_replace_paths(old_dir, new_dir, rpaths,
                                                  deps, idpath)
     st = os.stat(path_name)
     wmode = os.access(path_name, os.W_OK)
     if not wmode:
-        os.chmod(path_name, st.st_mode | stat.S_IWUSR)
-
+        try:
+            os.chmod(path_name, st.st_mode | stat.S_IWUSR)
+        except OSError as e:
+            tty.warn(e)
     install_name_tool = which('install_name_tool')
     if id:
-        output = install_name_tool('-id', id, path_name, output=str, err=str)
-        if install_name_tool.returncode != 0:
-            tty.warn('failed writing id for %s.' % path_name)
-            tty.warn(output)
+        try:
+            install_name_tool('-id', id, path_name, output=str, err=str)
+        except ProcessError as e:
+            tty.warn(e)
 
     for orig, new in zip(deps, ndeps):
-        output = install_name_tool('-change', orig, new, path_name)
-        if install_name_tool.returncode != 0:
-            tty.warn('failed writing dep for %s.' % path_name)
-            tty.warn(output)
+        try:
+            install_name_tool('-change', orig, new, path_name)
+        except ProcessError as e:
+            tty.warn(e)
 
     for orig, new in zip(rpaths, nrpaths):
-        output = install_name_tool('-rpath', orig, new, path_name)
-        if install_name_tool.returncode != 0:
-            tty.warn('failed writing id for %s.' % path_name)
-            tty.warn(output)
-    os.chmod(path_name, st.st_mode)
+        try:
+            install_name_tool('-rpath', orig, new, path_name)
+        except ProcessError as e:
+            tty.warn(e)
+    try:
+        os.chmod(path_name, st.st_mode)
+    except OSError as e:
+        tty.warn(e)
     return
 
 

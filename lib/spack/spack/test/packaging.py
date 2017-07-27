@@ -115,7 +115,7 @@ echo $PATH"""
 
     # Create a build cache without signing
     args = parser.parse_args(['create', '-d', mirror_path, '-y', str(spec)])
-    buildcache.createtarball(args)
+    buildcache.buildcache(parser, args)
 
     # Validate the relocation information
     buildinfo = bindist.read_buildinfo_file(spec)
@@ -125,10 +125,11 @@ echo $PATH"""
     # overwriting previous build cache
     args = parser.parse_args(
         ['create', '-d', mirror_path, '-f', '-r', '-y', str(spec)])
-    buildcache.createtarball(args)
+    buildcache.buildcache(parser, args)
 
     # register mirror with spack config
     mirrors = {'spack-mirror-test': 'file://' + mirror_path}
+    mirrors['scisoft'] = 'http://scisoft.fnal.gov/scisoft/spack-mirror'
     spack.config.update_config('mirrors', mirrors)
 
     # Uninstall the package
@@ -142,17 +143,19 @@ echo $PATH"""
 
     args = parser.parse_args(['install', '-f', '-y', str(spec)])
     buildcache.install_tarball(spec, args)
+    buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['list'])
-    buildcache.listspecs(args)
+    buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['list', 'trivial'])
-    buildcache.listspecs(args)
+    buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['keys'])
-    buildcache.getkeys(args)
+    buildcache.buildcache(parser, args)
 
     relocate.needs_binary_relocation('relocatable')
+
     relocate.macho_make_paths_rel('/Users/Shares/spack/pkgC/lib/libC.dylib',
                                   '/Users/Shared/spack',
                                   ('/Users/Shared/spack/pkgA/lib',
@@ -162,6 +165,7 @@ echo $PATH"""
                                    '/Users/Shared/spack/pkgB/libB.dylib',
                                    '/usr/local/lib/libloco.dylib'),
                                   '/Users/Shared/spack/pkgC/lib/libC.dylib')
+
     relocate.macho_make_paths_rel('/Users/Shared/spack/pkgC/bin/exeC',
                                   '/Users/Shared/spack',
                                   ('/Users/Shared/spack/pkgA/lib',
@@ -171,6 +175,7 @@ echo $PATH"""
                                    '/Users/Shared/spack/pkgB/libB.dylib',
                                    '/usr/local/lib/libloco.dylib'),
                                   None)
+
     relocate.macho_replace_paths('/Users/Shared/spack',
                                  '/Applications/spack',
                                  ('/Users/Shared/spack/pkgA/lib',
@@ -180,6 +185,7 @@ echo $PATH"""
                                   '/Users/Shared/spack/pkgB/libB.dylib',
                                   '/usr/local/lib/libloco.dylib'),
                                  '/Users/Shared/spack/pkgC/lib/libC.dylib')
+
     relocate.macho_replace_paths('/Users/Shared/spack',
                                  '/Applications/spack',
                                  ('/Users/Shared/spack/pkgA/lib',
@@ -189,8 +195,12 @@ echo $PATH"""
                                   '/Users/Shared/spack/pkgB/libB.dylib',
                                   '/usr/local/lib/libloco.dylib'),
                                  None)
+
     if platform.system() == 'Darwin':
         relocate.needs_binary_relocation('Mach-O')
+        relocate.macho_get_paths('/bin/bash')
+        relocate.modify_macho_object('/bin/bash', '/usr', '/usr', False)
+        relocate.modify_macho_object('/bin/bash', '/usr', '', True)
 
     if platform.system() == 'Linux':
         relocate.needs_binary_relocation('ELF')
