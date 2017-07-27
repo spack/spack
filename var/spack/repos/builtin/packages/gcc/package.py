@@ -86,6 +86,7 @@ class Gcc(AutotoolsPackage):
     depends_on('isl@0.15:', when='@6:')
     depends_on('zlib', when='@6:')
     depends_on('gnat', when='languages=ada')
+    depends_on('gnat', when='languages=all')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
     depends_on('zip', type='build', when='@:6 languages=all')
