@@ -48,7 +48,7 @@ class Lulesh(MakefilePackage):
     @property
     def build_targets(self):
         targets = []
-        cxxflag = ' -g -O3 -I. -Wall '
+        cxxflag = ' -g -O3 -I. '
         ldflags = ' -g -O3 '
 
         targets.append('CXX = {0} {1}'.format(spack_cxx, ' -DUSE_MPI=0 '))
@@ -62,7 +62,7 @@ class Lulesh(MakefilePackage):
             targets.append(
                 'SILO_LIBDIR = {0}'.format(self.spec['silo'].prefix.lib))
             cxxflag = ' -g -DVIZ_MESH -I${SILO_INCDIR} '
-            if '+mpi' not in self.spec and  '+openmp' not in self.spec :
+            if '+mpi' not in self.spec and '+openmp' not in self.spec:
                 cxxflag += ' -Wall -Wno-pragmas '
             ldflags = ' -g -L${SILO_LIBDIR} -Wl,-rpath -Wl,'
             ldflags += '${SILO_LIBDIR} -lsiloh5 -lhdf5 '
