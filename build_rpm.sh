@@ -10,6 +10,17 @@ function s {
     fi
 }
 
+externpkgs=(
+    bazel@0.4.5%gcc@4.8.5
+    gradle@3.4%gcc@4.8.5
+    jdk@8u131-b11%gcc@4.8.5
+    gradle@3.4%gcc@4.8.5
+    cuda@6.5.14%gcc@4.8.5
+    cuda@7.5.18%gcc@4.8.5
+    cuda@8.0.61%gcc@4.8.5
+    cmake@3.8.1%gcc@4.8.5
+)
+
 compilers=(
     gcc@5.4.0
     intel@17.0.4
@@ -39,6 +50,24 @@ nonmpipkgs=(
     boost@1.64.0
 )
 
+trandeps=(
+    autoconf
+    automake
+    bison
+    gperf
+    flex
+    m4
+    inputproto
+    help2man
+    pkg-config
+)
+
+# Register external packages
+for pkg in "${externpkgs[@]}"
+do
+    spack install $pkg
+done
+
 # MPI-dependent Libraries
 for mpi in "${mpipkgs[@]}"
 do
@@ -59,4 +88,10 @@ do
     do
         s $pkg %$compiler
     done
+done
+
+# Remove transit dependency
+for pkg in "${trandeps[@]}"
+do
+    spack uninstall -y --all $pkg
 done

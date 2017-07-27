@@ -77,12 +77,11 @@ fi
 MIRRORS_YAML=mirrors.yaml
 
 # Deploying
-rm -f ~/.spack/linux/compilers.yaml
 cp -f ${CONFIG_YAML} ~/.spack/config.yaml
-cp -f ${PACKAGE_YAML} ${SPACK_ROOT}/etc/spack/packages.yaml
-cp -f ${COMPILERS_YAML} ${SPACK_ROOT}/etc/spack/compilers.yaml
+cp -f ${PACKAGE_YAML} ~/.spack/packages.yaml
 mkdir -p ~/.spack/linux
-cp -f ${MIRRORS_YAML} ~/.spack/linux
+cp -f ${COMPILERS_YAML} ~/.spack/linux/
+cp -f ${MIRRORS_YAML} ~/.spack/linux/
 source ${SPACK_ROOT}/share/spack/setup-env.sh
 
 # Reset config.yaml.template

@@ -37,8 +37,8 @@ packages:
 
     jdk:
         paths:
-            jdk@8u131-linux-x64%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u131-linux-x64-ssqvhgnvnmeieyssqcregsveivzfh7rg
-        version: [8u131]
+            jdk@8u131-b11%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u131-b11-ssqvhgnvnmeieyssqcregsveivzfh7rg 
+        version: [8u131-b11]
         buildable: False
 
     gradle:
