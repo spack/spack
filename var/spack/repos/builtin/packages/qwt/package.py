@@ -27,10 +27,10 @@ from spack import *
 
 class Qwt(Package):
     """The Qwt library contains GUI Components and utility classes which are
-    primarily useful for programs with a technical background. Beside a framework
-    for 2D plots it provides scales, sliders, dials, compasses, thermometers,
-    wheels and knobs to control or display values, arrays, or ranges of type
-    double.
+    primarily useful for programs with a technical background. Beside a
+    framework for 2D plots it provides scales, sliders, dials, compasses,
+    thermometers, wheels and knobs to control or display values, arrays, or
+    ranges of type double.
     """
     homepage = "http://qwt.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/qwt/qwt/5.2.2/qwt-5.2.2.tar.bz2"
