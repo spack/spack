@@ -60,3 +60,15 @@ packages:
             pgi@16.10%gcc@4.8.5~amd~java~mpi+network+nvidia~single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf
         version: [16.10]
         buildable: False
+
+    cmake:
+        paths:
+            cmake@3.8.1%gcc@4.8.5~doc+ncurses+openssl+ownlibs~qt arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cmake-3.8.1-gxy3e7idb3na7wynpn55u3esttis67xw
+        version: [3.8.1]
+        buildable: False
+
+    bazel:
+        paths:
+            bazel@0.4.5%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/bazel-0.4.5-77xoftl7y43ru4sntgijkw4omn6furgc
+        version: [0.4.5]
+        buildable: False
