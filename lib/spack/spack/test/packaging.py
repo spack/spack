@@ -153,7 +153,8 @@ echo $PATH"""
     buildcache.getkeys(args)
 
     relocate.needs_binary_relocation('relocatable')
-    relocate.macho_make_paths_rel('/Users/Shared/spack',
+    relocate.macho_make_paths_rel('/Users/Shares/spack/pkgC/lib/libC.dylib',
+                                  '/Users/Shared/spack',
                                   ('/Users/Shared/spack/pkgA/lib',
                                    '/Users/Shared/spack/pkgB/lib',
                                    '/usr/local/lib'),
@@ -161,7 +162,8 @@ echo $PATH"""
                                    '/Users/Shared/spack/pkgB/libB.dylib',
                                    '/usr/local/lib/libloco.dylib'),
                                   '/Users/Shared/spack/pkgC/lib/libC.dylib')
-    relocate.macho_make_paths_rel('/Users/Shared/spack',
+    relocate.macho_make_paths_rel('/Users/Shared/spack/pkgC/bin/exeC',
+                                  '/Users/Shared/spack',
                                   ('/Users/Shared/spack/pkgA/lib',
                                    '/Users/Shared/spack/pkgB/lib',
                                    '/usr/local/lib'),

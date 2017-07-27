@@ -107,7 +107,7 @@ def macho_get_paths(path_name):
     return rpaths, deps, idpath
 
 
-def macho_make_paths_rel(old_path, rpaths, deps, idpath):
+def macho_make_paths_rel(path_name, old_dir, rpaths, deps, idpath):
     id = None
     nrpaths = []
     ndeps = []
@@ -128,7 +128,7 @@ def macho_make_paths_rel(old_path, rpaths, deps, idpath):
     return nrpaths, ndeps, id
 
 
-def macho_replace_path(old_path, new_path, rpaths, deps, idpath):
+def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
     id = None
     nrpaths = []
     ndeps = []
@@ -176,8 +176,9 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
     nrpaths = []
     ndeps = []
     if relative:
-        nrpaths, ndeps, id = macho_make_paths_rel(
-            old_path, rpaths, deps, idpath)
+        nrpaths, ndeps, id = macho_make_paths_rel(paths_name,
+                                                  old_path, rpaths,
+                                                  deps, idpath)
     else:
         nrpaths, ndeps, id = macho_replace_paths(old_path, new_path, rpaths,
                                                  deps, idpath)
