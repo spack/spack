@@ -34,12 +34,3 @@ packages:
   intel-parallel-studio:
     variants: +ipp +mkl +mpi +openmp
     version: [cluster]
-
-  openmpi:
-    variants: +pmi +slurm +verbs
-
-  mvapich2:
-    variants: +slurm +nemesisibtcp
-
-  mpich:
-    variants: +pmi +romio +verbs
