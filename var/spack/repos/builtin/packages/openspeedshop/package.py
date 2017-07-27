@@ -77,9 +77,13 @@ class Openspeedshop(CMakePackage):
                          to point to target build.")
     variant('cuda', default=False,
             description="build with cuda packages included.")
+
     variant('gui', default='qt3', values=('none', 'qt3', 'qt4'), 
             description='Build or not build a GUI of choice'
     )
+
+    variant('build_type', default='None', values=('None'),
+            description='CMake build type')
 
     # MPI variants
     variant('openmpi', default=False,
@@ -218,6 +222,9 @@ class Openspeedshop(CMakePackage):
                      '-DMRNET_DIR=%s' % spec['mrnet'].prefix])
 
                 if guitype == 'none':
+                    cmake_args.extend(
+                        ['-DBUILD_QT3_GUI=FALSE'])
+                elif guitype == 'qt4':
                     cmake_args.extend(
                         ['-DBUILD_QT3_GUI=FALSE'])
                 elif guitype == 'qt3':
