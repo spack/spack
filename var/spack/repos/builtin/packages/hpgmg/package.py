@@ -57,7 +57,6 @@ class Hpgmg(Package):
 
     phases = ['configure', 'build', 'install']
 
-    @property
     def configure_args(self):
         args = []
         if 'fe_fv=fv' in self.spec:
@@ -80,10 +79,10 @@ class Hpgmg(Package):
         return args
 
     def configure(self, spec, prefix):
-        configure(*self.configure_args)
+        configure(*self.configure_args())
 
     def build(self, spec, prefix):
-            make()
+        make()
 
     def install(self, spec, prefix):
         install_tree('build/bin', prefix.bin)
