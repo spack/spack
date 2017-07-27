@@ -290,32 +290,24 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
         tar.extractall(stagepath)
 
     install = False
-#   signed
-    if os.path.exists('%s.asc' % specfile_path) and os.path.exists(
-            '%s.asc' % tarfile_path):
-        if Gpg.verify('%s.asc' % specfile_path, specfile_path) and Gpg.verify(
-                '%s.asc' % tarfile_path, tarfile_path):
-            install = True
-        # unverified
-        else:
-            if yes_to_all:
-                install = True
-        os.remove(tarfile_path + '.asc')
-        os.remove(specfile_path + '.asc')
-#   unsigned
+    if yes_to_all:
+        install = True
     else:
-        if yes_to_all:
+        if os.path.exists('%s.asc' % specfile_path) and os.path.exists(
+                '%s.asc' % tarfile_path):
+            Gpg.verify('%s.asc' % specfile_path, specfile_path)
+            Gpg.verify('%s.asc' % tarfile_path, tarfile_path)
             install = True
+            os.remove(tarfile_path + '.asc')
+            os.remove(specfile_path + '.asc')
     if install:
         with closing(tarfile.open(tarfile_path, 'r')) as tar:
             tar.extractall(path=join_path(installpath, '..'))
-        os.remove(tarfile_path)
-        os.remove(specfile_path)
     else:
-        os.remove(tarfile_path)
-        os.remove(specfile_path)
         tty.warn('not installing unsigned or unverified build cache '
                  'use spack buildcache create -y option to override')
+    os.remove(tarfile_path)
+    os.remove(specfile_path)
 
 
 def prelocate_package(spec):

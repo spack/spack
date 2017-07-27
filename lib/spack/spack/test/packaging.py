@@ -33,7 +33,7 @@ from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 import spack.binary_distribution as bindist
-from llnl.util.filesystem import *
+from llnl.util.filesystem import join_path, mkdirp
 import argparse
 import spack.cmd.buildcache as buildcache
 import spack.relocate as relocate
@@ -197,9 +197,12 @@ echo $PATH"""
                                  None)
 
     if platform.system() == 'Darwin':
+        relocate.get_patchelf()
         relocate.needs_binary_relocation('Mach-O')
         relocate.macho_get_paths('/bin/bash')
-        relocate.modify_macho_object('/bin/bash', '/usr', '/usr', False)
+        relocate.modify_macho_object('/bin/bash', '/usr', '/opt', False)
+        relocate.modify_macho_object('/usr/lib/libncurses.5.4.dylib',
+                                     '/usr', '/opt', False)
         relocate.modify_macho_object('/bin/bash', '/usr', '', True)
 
     if platform.system() == 'Linux':
