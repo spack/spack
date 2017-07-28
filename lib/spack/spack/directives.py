@@ -304,7 +304,7 @@ def depends_on(spec, when=None, type=None):
         spec (str): A spec describing the dependency
         when (str or bool): An optional descriptor describing when the
             dependency is required
-        type (str or list): The dependency type. One or more of:
+        type (str or :func:`list`): The dependency type. One or more of:
             ``('build', 'link', 'run')``
     """
     def _execute(pkg):
@@ -330,7 +330,7 @@ def extends(spec, **kwargs):
         when (str or bool): An optional descriptor describing when the
             dependency is required. By default, the dependency is always
             required.
-        type (str or list): The dependency type. One or more of:
+        type (str or :func:`list`): The dependency type. One or more of:
             ``('build', 'link', 'run')``. By default, ``extends`` implies
             ``type=('build', 'run')``
     """
