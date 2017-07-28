@@ -48,7 +48,7 @@ class M4(AutotoolsPackage):
         spec = self.spec
         args = ['--enable-c++']
 
-        if spec.satisfies('%clang'):
+        if spec.satisfies('%clang') and not spec.satisfies('platform=darwin'):
             args.append('CFLAGS=-rtlib=compiler-rt')
 
         if '+sigsegv' in spec:
