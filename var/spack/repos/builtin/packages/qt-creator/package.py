@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class QtCreator(Package):
+class QtCreator(QMakePackage):
     """The Qt Creator IDE."""
     homepage = 'https://www.qt.io/ide/'
     url      = 'http://download.qt.io/official_releases/qtcreator/4.1/4.1.0/qt-creator-opensource-src-4.1.0.tar.gz'
@@ -36,11 +35,10 @@ class QtCreator(Package):
 
     version('4.1.0',  '657727e4209befa4bf5889dff62d9e0a')
 
-    depends_on("qt")
+    depends_on("qt@5.5.0:", type='build')
 
-    def install(self, spec, prefix):
-        os.environ['INSTALL_ROOT'] = self.prefix
-        qmake = which('qmake')
-        qmake('-r')
-        make()
-        make("install")
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('INSTALL_ROOT', self.prefix)
+
+    def qmake_args(self):
+        return ['-r']

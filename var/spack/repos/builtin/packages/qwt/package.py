@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Qwt(Package):
+class Qwt(QMakePackage):
     """The Qwt library contains GUI Components and utility classes which are
     primarily useful for programs with a technical background. Beside a
     framework for 2D plots it provides scales, sliders, dials, compasses,
@@ -37,14 +37,7 @@ class Qwt(Package):
 
     version('5.2.2', '70d77e4008a6cc86763737f0f24726ca')
 
-    depends_on("qt")
-
-    def install(self, spec, prefix):
-
+    def patch(self):
         # Subvert hardcoded prefix
-        filter_file(r'/usr/local/qwt-\$\$VERSION', prefix, 'qwtconfig.pri')
-
-        qmake = which('qmake')
-        qmake()
-        make()
-        make("install")
+        filter_file('/usr/local/qwt-$$VERSION', self.prefix, 'qwtconfig.pri',
+                    string=True)
