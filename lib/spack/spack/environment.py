@@ -354,7 +354,7 @@ class EnvironmentModifications(object):
         # like json gives us.  We can't put unicode in os.environ anyway.
         if sys.version_info[0] < 3:
             env_after = dict((k.encode('utf-8'), v.encode('utf-8'))
-                                    for k, v in env_after.items())
+                             for k, v in env_after.items())
 
         # Filter variables that are not related to sourcing a file
         to_be_filtered = 'SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'
