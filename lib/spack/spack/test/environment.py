@@ -25,7 +25,8 @@
 import os
 
 import pytest
-from spack import spack_root
+import spack
+from spack.platforms.cray import Cray
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv
@@ -41,6 +42,7 @@ def prepare_environment_for_tests():
     os.environ['EMPTY_PATH_LIST'] = ''
     os.environ['PATH_LIST'] = '/path/second:/path/third'
     os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'  # NOQA: ignore=E501
+    os.environ["CRAYPE_LINK_TYPE"] = ""
     yield
     for x in ('UNSET_ME', 'EMPTY_PATH_LIST', 'PATH_LIST', 'REMOVE_PATH_LIST'):
         if x in os.environ:
@@ -83,7 +85,7 @@ def miscellaneous_paths():
 def files_to_be_sourced():
     """Returns a list of files to be sourced"""
     datadir = os.path.join(
-        spack_root, 'lib', 'spack', 'spack', 'test', 'data'
+        spack.spack_root, 'lib', 'spack', 'spack', 'test', 'data'
     )
 
     files = [
@@ -94,6 +96,13 @@ def files_to_be_sourced():
     ]
 
     return files
+
+
+def test_changing_link_type_on_cray(env):
+    pkg = spack.repo.get("mpich")
+    Cray().setup_platform_environment(pkg, env)
+    env.apply_modifications()
+    assert "static" == os.environ.get("CRAYPE_LINK_TYPE", "")
 
 
 def test_set(env):
@@ -108,6 +117,19 @@ def test_set(env):
 
     assert 'dummy value' == os.environ['A']
     assert str(3) == os.environ['B']
+
+
+def test_append_flags(env):
+    """Tests appending to a value in the environment."""
+
+    # Store a couple of commands
+    env.append_flags('APPEND_TO_ME', 'flag1')
+    env.append_flags('APPEND_TO_ME', 'flag2')
+
+    # ... execute the commands
+    env.apply_modifications()
+
+    assert 'flag1 flag2' == os.environ['APPEND_TO_ME']
 
 
 def test_unset(env):
