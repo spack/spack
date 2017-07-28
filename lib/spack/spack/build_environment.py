@@ -68,7 +68,8 @@ import spack.store
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable
-from spack.util.module_cmd import load_module, get_path_from_module
+from spack.util.module_cmd import (load_module, get_path_from_module,
+                                   unload_module)
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -239,6 +240,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.unset('CPATH')
         env.unset('LD_RUN_PATH')
         env.unset('DYLD_LIBRARY_PATH')
+        env.unset("CRAY_LD_LIBRARY_PATH")
 
         # Remove any macports installs from the PATH.  The macports ld can
         # cause conflicts with the built-in linker on el capitan.  Solves
@@ -310,7 +312,10 @@ def set_build_environment_variables(pkg, env, dirty=False):
 
     if pkg.architecture.target.module_name:
         load_module(pkg.architecture.target.module_name)
-
+    if "cray" in pkg.architecture.platform.name:
+        # unload the cray-libsci module to prevently silently linking
+        # with module.
+        unload_module("cray-libsci")
     return env
 
 

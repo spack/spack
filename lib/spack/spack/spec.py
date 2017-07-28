@@ -187,7 +187,7 @@ color_formats = {'%': compiler_color,
                  '+': enabled_variant_color,
                  '~': disabled_variant_color,
                  '^': dependency_color,
-                 '#': hash_color}
+                 '/': hash_color}
 
 """Regex used for splitting by spec field separators."""
 _separators = '[%s]' % ''.join(color_formats.keys())
@@ -2715,7 +2715,7 @@ class Spec(object):
         *Example:*  ``$_$@$+`` translates to the name, version, and options
         of the package, but no dependencies, arch, or compiler.
 
-        TODO: allow, e.g., ``$6#`` to customize short hash length
+        TODO: allow, e.g., ``$6/`` to customize short hash length
         TODO: allow, e.g., ``$//`` for full hash.
         """
         color = kwargs.get('color', False)
@@ -2764,7 +2764,7 @@ class Spec(object):
                         a_str = ' arch' + c + str(self.architecture) + ' '
                         write(fmt % (a_str), c)
                 elif c == '/':
-                    out.write('/' + fmt % (self.dag_hash(7)))
+                    write('/' + fmt % (self.dag_hash(7)), '/')
                 elif c == '$':
                     if fmt != '%s':
                         raise ValueError("Can't use format width with $$.")
@@ -2821,7 +2821,27 @@ class Spec(object):
                         write(fmt % str(self.variants), '+')
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture), ' arch=')
+                        #sleak ' arch=' is not a valid key for color_formats,
+                        #        I think it should be '=' for arch
+                        #        Also, trailing space seems to cause path trouble
+                        #write(fmt % str(self.architecture),' arch=')
+                        write(fmt % str(self.architecture), '=')
+                elif named_str == "PLATFORM":
+                    if self.architecture and str(self.architecture):
+                        #sleak: same for platform= as arch=
+                        write(fmt % str(self.architecture.platform), '=')
+                        #write(fmt % str(self.architecture.platform),
+                        #      'platform=')
+                elif named_str == "TARGET":
+                    if self.architecture and str(self.architecture):
+                        #sleak: same for target= as arch=
+                        write(fmt % str(self.architecture.target), '=')
+                        #write(fmt % str(self.architecture.target), 'target=')
+                elif named_str == "OS":
+                    if self.architecture and str(self.architecture):
+                        #sleak: same for target= as arch=
+                        write(fmt % str(self.architecture.platform_os), '=')
+                        #write(fmt % str(self.architecture.platform_os), 'os=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dag_hash(7)))
@@ -2837,6 +2857,8 @@ class Spec(object):
                         hashlen = int(hashlen)
                     else:
                         hashlen = None
+                    #sleak: other spec components aren't prefixed when called
+                    #       by name, so don't prefix it here either
                     out.write(fmt % (self.dag_hash(hashlen)))
 
                 named = False

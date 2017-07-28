@@ -81,6 +81,11 @@ class Cray(Platform):
                 safe_name = _target.replace('-', '_')
                 setattr(self, name, safe_name)
                 self.add_target(name, self.targets[safe_name])
+            if _target is None and name == 'front_end':
+                setattr(self, name, 'x86_64')
+                x86_64 = Target('x86_64')
+                self.add_target(name, x86_64)
+                self.add_target('x86_64', x86_64)
 
         if self.back_end is not None:
             self.default = self.back_end
@@ -103,6 +108,12 @@ class Cray(Platform):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
+        # unload cray-libsci to avoid silently linking if another blas/lapack
+        # is used.
+        modulecmd = which("modulecmd")
+        modulecmd.add_default_arg("python")
+        exec(compile(modulecmd("unload", "cray-libsci", output=str, error=str),
+            "<string>", "exec"))
         env.set('CRAYPE_LINK_TYPE', 'dynamic')
         cray_wrapper_names = join_path(build_env_path, 'cray')
         if os.path.isdir(cray_wrapper_names):

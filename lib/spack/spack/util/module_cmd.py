@@ -115,6 +115,14 @@ def get_module_cmd_from_bash(bashopts=''):
     return module_cmd
 
 
+def unload_module(mod):
+    """Takes a module name and unloads the module from the environment. It does
+    not check whether conflicts arise from the unloaded module"""
+    modulecmd = get_module_cmd()
+    exec(compile(modulecmd('unload', mod, output=str, error=str), '<string>',
+        'exec'))
+
+
 def load_module(mod):
     """Takes a module name and removes modules until it is possible to
     load that module. It then loads the provided module. Depends on the
@@ -130,8 +138,7 @@ def load_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-            exec(compile(modulecmd('unload', text[i + 1], output=str,
-                                   error=str), '<string>', 'exec'))
+            unload_module(text[i + 1])
     # Load the module now that there are no conflicts
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
@@ -168,7 +175,7 @@ def get_path_from_module(mod):
     for line in text:
         if line.find('LD_LIBRARY_PATH') >= 0:
             path = get_argument_from_module_line(line)
-            return path[:path.find('/lib')]
+            return path[:path.rfind('/lib')]
 
     # If it lists its package directory, return that
     for line in text:
