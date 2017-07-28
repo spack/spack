@@ -27,7 +27,7 @@ from spack import *
 
 class QmdProgress(CMakePackage):
     """PROGRESS: Parallel, Rapid O(N) and Graph-based Recursive Electronic
-    Structure Solver. LA-CC-16-068
+    Structure Solver.
     This library is focused on the development of general solvers that are
     commonly used in quantum chemistry packages."""
 
