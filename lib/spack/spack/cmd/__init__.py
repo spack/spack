@@ -75,7 +75,8 @@ def remove_options(parser, *options):
                 break
 
 
-def get_cmd_function_name(name):
+def get_python_name(name):
+    """Commands can have '-' in their names, unlike Python identifiers."""
     return name.replace("-", "_")
 
 
@@ -89,7 +90,7 @@ def get_module(name):
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
 
-    fn_name = get_cmd_function_name(name)
+    fn_name = get_python_name(name)
     if not hasattr(module, fn_name):
         tty.die("Command module %s (%s) must define function '%s'." %
                 (module.__name__, module.__file__, fn_name))
@@ -99,7 +100,8 @@ def get_module(name):
 
 def get_command(name):
     """Imports the command's function from a module and returns it."""
-    return getattr(get_module(name), get_cmd_function_name(name))
+    python_name = get_python_name(name)
+    return getattr(get_module(python_name), python_name)
 
 
 def parse_specs(args, **kwargs):

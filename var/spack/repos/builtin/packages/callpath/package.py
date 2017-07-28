@@ -46,7 +46,9 @@ class Callpath(Package):
         # TODO: offer options for the walker used.
         cmake_args = std_cmake_args
         if spec.satisfies("^dyninst@9.3.0:"):
-            cmake_args.append("-DCMAKE_CXX_FLAGS='-std=c++11 -fpermissive'")
+            std_flag = self.compiler.cxx11_flag
+            cmake_args.append("-DCMAKE_CXX_FLAGS='{0} -fpermissive'".format(
+                std_flag))
         cmake('.', "-DCALLPATH_WALKER=dyninst", *cmake_args)
         make()
         make("install")
