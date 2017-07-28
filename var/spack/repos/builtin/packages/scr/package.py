@@ -74,7 +74,7 @@ class Scr(CMakePackage):
             description="Resource manager for which to configure SCR.")
 
     variant('async_api', default='NONE',
-            values=('NONE', 'CRAY_DW', 'INTEL_CPPR'),
+            values=('NONE', 'CRAY_DW', 'IBM_BBAPI', 'INTEL_CPPR'),
             multi=False,
             description="Asynchronous data transfer API to use with SCR.")
 
