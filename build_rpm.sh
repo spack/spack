@@ -4,7 +4,7 @@ function s {
     spack find $@ | grep 'No package'
     if [ $? -eq 0 ]
     then
-        spack install $@
+        spack install --restage $@
     else
         echo "$@ has been installed."
     fi
@@ -27,13 +27,15 @@ compilers=(
 )
 
 mpis=(
-    openmpi@2.1.1~cuda fabrics=pmi,verbs ~java schedulers=slurm
-    openmpi@2.1.1+cuda fabrics=pmi,verbs ~java schedulers=slurm
-    mpich@3.2+hydra+pmi+romio+verbs
+    'openmpi@2.1.1~cuda fabrics=pmi,verbs ~java schedulers=slurm'
+    'openmpi@2.1.1+cuda fabrics=pmi,verbs ~java schedulers=slurm'
+    'mvapich2@2.2+debug~cuda fabrics=mrail process_managers=slurm'
+    'mvapich2@2.2+debug+cuda fabrics=mrail process_managers=slurm'
+    'mpich@3.2+hydra+pmi+romio+verbs'
 )
 
 mpipkgs=(
-    # fftw@3.3.6-pl2+mpi+float+long_double+openmp
+    fftw@3.3.6-pl2+mpi+float+long_double+openmp
     # gromacs@5.1.4+debug+mpi+plumed
     # gromacs@5.1.4+debug+mpi+plumed+cuda
 )
@@ -44,7 +46,7 @@ nonmpipkgs=(
     miniconda2@4.3.14
     miniconda3@4.3.14
     openblas@0.2.19+openmp
-    r@3.4.1+external-lapack ^openblas+openmp
+    'r@3.4.1+external-lapack ^openblas+openmp'
     perl@5.24.1
     sga@0.10.15
     boost@1.64.0
@@ -69,7 +71,7 @@ do
 done
 
 # MPI-dependent Libraries
-for mpi in "${mpipkgs[@]}"
+for mpi in "${mpis[@]}"
 do
     for compiler in "${compilers[@]}"
     do
