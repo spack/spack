@@ -61,10 +61,11 @@ class Sundials(Package):
     depends_on('superlu-mt+openmp',  when='+superlu+openmp')
     depends_on('superlu-mt+pthread', when='+superlu+pthread')
 
-    def on_off(self, varstr):
-        return 'ON' if varstr in self.spec else 'OFF'
-
     def install(self, spec, prefix):
+
+        def on_off(self, varstr):
+            return 'ON' if varstr in self.spec else 'OFF'
+
         cmake_args = std_cmake_args[:]
         cmake_args.extend([
             '-DBUILD_SHARED_LIBS=ON',
