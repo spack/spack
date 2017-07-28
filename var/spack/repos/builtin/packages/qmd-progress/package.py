@@ -40,11 +40,9 @@ class QmdProgress(CMakePackage):
     variant('graphlib', default=False, description='Build with Metis Suppport')
     variant('mpi', default=True, description='Build with MPI Support')
 
-    depends_on('cmake', type='build')
-
-    depends_on("bml")
-    depends_on('mpi', when="+mpi")
-    depends_on('metis', when="+graphlib")
+    depends_on('bml')
+    depends_on('mpi', when='+mpi')
+    depends_on('metis', when='+graphlib')
 
     def cmake_args(self):
         spec = self.spec
@@ -54,7 +52,11 @@ class QmdProgress(CMakePackage):
             args.append('-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc)
             args.append('-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx)
             args.append('-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc)
+        else:
+            args.append('-DPROGRESS_MPI=no')
         if '+graphlib' in spec:
             args.append('-DPROGRESS_GRAPHLIB=yes')
+        else:
+            args.append('-DPROGRESS_GRAPHLIB=no')
 
         return args
