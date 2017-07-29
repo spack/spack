@@ -40,20 +40,24 @@ buiddeps=(
     zlib
 )
 
+
+jdk='jdk@8u141-b15'
+
 # Compilers
 s gcc@4.9.4~binutils    $cc
 s gcc@5.4.0~binutils    $cc
 s gcc@6.4.0~binutils    $cc
-s jdk@8u131-b11 $cc
-s gradle        $cc
-s ant           $cc
-s bazel         $cc
-s maven         $cc
 s cmake         $cc
 s cuda@8.0.61   $cc
 s cuda@7.5.18   $cc
 s cuda@6.5.14   $cc
 s pgi@16.10     $cc
+s $jdk $cc
+s maven@3.3.9   ^$jdk $cc
+s gradle@3.4    ^$jdk $cc
+s ant@1.9.9     ^$jdk $cc
+s bazel@0.4.5   ^$jdk $cc
+s sbt@0.13.12   ^$jdk $cc
 
 for ((i=0; i<${#intelsuites[@]}; ++i))
 do

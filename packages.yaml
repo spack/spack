@@ -37,14 +37,32 @@ packages:
 
     jdk:
         paths:
-            jdk@8u131-b11%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u131-b11-ssqvhgnvnmeieyssqcregsveivzfh7rg 
-        version: [8u131-b11]
+            jdk@8u141-b15%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/jdk-8u141-b15-y6l4xaepdukhuxn3vxb7mo26pqmcb6ln
+        version: [8u141-b15]
+        buildable: False
+
+    maven:
+        paths:
+            maven@3.3.9%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/maven-3.3.9-bnsvietjqet55lo52rzer7r7hjwro2zv
+        version: [3.3.9]
+        buildable: False
+
+    ant:
+        paths:
+            ant@1.9.9%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/ant-1.9.9-4sr2gcd2byuvsvbobrafl2y5luua7ad7
+        version: [1.9.9]
         buildable: False
 
     gradle:
         paths:
-            gradle@3.4%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gradle-3.4-lwverrfizet36cxrwp7eajxxj25awk5e
+            gradle@3.4%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gradle-3.4-cibdctzmfq3q22xu4zvx652c2ilhpyxv 
         version: [3.4]
+        buildable: False
+
+    sbt:
+        paths:
+            sbt@0.13.12%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/sbt-0.13.12-3ozdx3y5iwcrpxktjaj3ml7rqays2hjg
+        version: [0.13.12]
         buildable: False
 
     cuda:
