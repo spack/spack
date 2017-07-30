@@ -128,10 +128,4 @@ def find(parser, args):
     if sys.stdout.isatty():
         tty.msg("%d installed packages." % len(query_specs))
 
-    display_specs(query_specs,
-                  mode=args.mode,
-                  long=args.long,
-                  very_long=args.very_long,
-                  show_flags=args.show_flags,
-                  namespace=args.namespace,
-                  variants=args.variants)
+    display_specs(query_specs, args)
