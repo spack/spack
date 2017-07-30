@@ -488,6 +488,10 @@ class Python(AutotoolsPackage):
     def site_packages_dir(self):
         return join_path(self.python_lib_dir, 'site-packages')
 
+    @property
+    def easy_install_file(self):
+        return join_path(self.site_packages_dir, "easy-install.pth")
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on."""
@@ -569,11 +573,15 @@ class Python(AutotoolsPackage):
 
         return match_predicate(ignore_arg, patterns)
 
-    def write_easy_install_pth(self, exts):
+    def write_easy_install_pth(self, exts, prefix=None):
+        if not prefix:
+            prefix = self.prefix
+
         paths = []
+        unique_paths = set()
+
         for ext in sorted(exts.values()):
-            ext_site_packages = join_path(ext.prefix, self.site_packages_dir)
-            easy_pth = join_path(ext_site_packages, "easy-install.pth")
+            easy_pth = join_path(ext.prefix, self.easy_install_file)
 
             if not os.path.isfile(easy_pth):
                 continue
@@ -591,10 +599,11 @@ class Python(AutotoolsPackage):
                             re.search(r'setuptools.*egg$', line)):
                         continue
 
-                    paths.append(line)
+                    if line not in unique_paths:
+                        unique_paths.add(line)
+                        paths.append(line)
 
-        site_packages = join_path(self.home, self.site_packages_dir)
-        main_pth = join_path(site_packages, "easy-install.pth")
+        main_pth = join_path(prefix, self.easy_install_file)
 
         if not paths:
             if os.path.isfile(main_pth):
@@ -615,18 +624,29 @@ class Python(AutotoolsPackage):
         ignore = self.python_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
+        extensions_layout = args.get("extensions_layout",
+                                     spack.store.extensions)
+
         super(Python, self).activate(ext_pkg, **args)
 
-        exts = spack.store.layout.extension_map(self.spec)
+        exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
-        self.write_easy_install_pth(exts)
+
+        self.write_easy_install_pth(
+            exts,
+            prefix=extensions_layout.extendee_target_directory(self))
 
     def deactivate(self, ext_pkg, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).deactivate(ext_pkg, **args)
 
-        exts = spack.store.layout.extension_map(self.spec)
+        extensions_layout = args.get("extensions_layout",
+                                     spack.store.extensions)
+
+        exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
-            self.write_easy_install_pth(exts)
+            self.write_easy_install_pth(
+                exts,
+                prefix=extensions_layout.extendee_target_directory(self))

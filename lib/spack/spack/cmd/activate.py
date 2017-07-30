@@ -50,7 +50,7 @@ def activate(parser, args):
     if not spec.package.is_extension:
         tty.die("%s is not an extension." % spec.name)
 
-    if spec.package.activated:
+    if spec.package.is_activated():
         tty.die("Package %s is already activated." % specs[0].short_spec)
 
     spec.package.do_activate()

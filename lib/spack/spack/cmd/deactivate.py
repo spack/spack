@@ -59,15 +59,15 @@ def deactivate(parser, args):
     if args.all:
         if pkg.extendable:
             tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
-            ext_pkgs = spack.store.db.installed_extensions_for(spec)
+            ext_pkgs = spack.store.db.activated_extensions_for(spec)
 
             for ext_pkg in ext_pkgs:
                 ext_pkg.spec.normalize()
-                if ext_pkg.activated:
+                if ext_pkg.is_activated():
                     ext_pkg.do_deactivate(force=True)
 
         elif pkg.is_extension:
-            if not args.force and not spec.package.activated:
+            if not args.force and not spec.package.is_activated():
                 tty.die("%s is not activated." % pkg.spec.short_spec)
 
             tty.msg("Deactivating %s and all dependencies." %
@@ -80,7 +80,7 @@ def deactivate(parser, args):
                 espec = index[name]
                 epkg = espec.package
                 if epkg.extends(pkg.extendee_spec):
-                    if epkg.activated or args.force:
+                    if epkg.is_activated() or args.force:
 
                         epkg.do_deactivate(force=args.force)
 
@@ -94,7 +94,7 @@ def deactivate(parser, args):
             tty.die("spack deactivate requires an extension.",
                     "Did you mean 'spack deactivate --all'?")
 
-        if not args.force and not spec.package.activated:
+        if not args.force and not spec.package.is_activated():
             tty.die("Package %s is not activated." % specs[0].short_spec)
 
         spec.package.do_deactivate(force=args.force)
