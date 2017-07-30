@@ -166,15 +166,55 @@ def gray_hash(spec, length):
     return colorize('@K{%s}' % spec.dag_hash(length))
 
 
-def display_specs(specs, **kwargs):
-    mode = kwargs.get('mode', 'short')
-    hashes = kwargs.get('long', False)
-    namespace = kwargs.get('namespace', False)
-    flags = kwargs.get('show_flags', False)
-    variants = kwargs.get('variants', False)
+def display_specs(specs, args=None, **kwargs):
+    """Display human readable specs with customizable formatting.
+
+    Prints the supplied specs to the screen, formatted according to the
+    arguments provided.
+
+    Specs are grouped by architecture and compiler, and columnized if
+    possible.  There are three possible "modes":
+
+      * ``short`` (default): short specs with name and version, columnized
+      * ``paths``: Two columns: one for specs, one for paths
+      * ``deps``: Dependency-tree style, like ``spack spec``; can get long
+
+    Options can add more information to the default display. Options can
+    be provided either as keyword arguments or as an argparse namespace.
+    Keyword arguments take precedence over settings in the argparse
+    namespace.
+
+    Args:
+        specs (list of spack.spec.Spec): the specs to display
+        args (optional argparse.Namespace): namespace containing
+            formatting arguments
+
+    Keyword Args:
+        mode (str): Either 'short', 'paths', or 'deps'
+        long (bool): Display short hashes with specs
+        very_long (bool): Display full hashes with specs (supersedes ``long``)
+        namespace (bool): Print namespaces along with names
+        show_flags (bool): Show compiler flags with specs
+        variants (bool): Show variants with specs
+
+    """
+    def get_arg(name, default=None):
+        """Prefer kwargs, then args, then default."""
+        if name in kwargs:
+            return kwargs.get(name)
+        elif args is not None:
+            return getattr(args, name, default)
+        else:
+            return default
+
+    mode      = get_arg('mode', 'short')
+    hashes    = get_arg('long', False)
+    namespace = get_arg('namespace', False)
+    flags     = get_arg('show_flags', False)
+    variants  = get_arg('variants', False)
 
     hlen = 7
-    if kwargs.get('very_long', False):
+    if get_arg('very_long', False):
         hashes = True
         hlen = None
 
