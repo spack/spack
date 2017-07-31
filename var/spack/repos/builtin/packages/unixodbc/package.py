@@ -34,3 +34,6 @@ class Unixodbc(AutotoolsPackage):
     url      = "http://www.unixodbc.org/unixODBC-2.3.4.tar.gz"
 
     version('2.3.4', 'bd25d261ca1808c947cb687e2034be81')
+
+    depends_on('libiconv')
+    depends_on('libtool')
