@@ -42,6 +42,7 @@ import spack.fetch_strategy as fs
 import spack.relocate
 from contextlib import closing
 import spack.util.gpg as gpg_util
+import hashlib
 
 
 def has_gnupg2():
@@ -145,12 +146,72 @@ def tarball_path_name(spec, ext):
                         tarball_name(spec, ext))
 
 
+def checksum_tarball(file):
+    # calculate sha256 hash of tar file
+    BLOCKSIZE = 65536
+    hasher = hashlib.sha256()
+    with open(file, 'rb') as tfile:
+        buf = tfile.read(BLOCKSIZE)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = tfile.read(BLOCKSIZE)
+    return hasher.hexdigest()
+
+
+def sign_tarball(spec, outdir, yes_to_all, key,
+                 tarfile_path, specfile_path):
+    # Sign the packages if keys available
+    sign = True
+    if not has_gnupg2():
+        tty.warn('gpg2 is not available for signing.')
+        sign = False
+    else:
+        if key is None:
+            keys = Gpg.signing_keys()
+            if len(keys) == 1:
+                key = keys[0]
+            if len(keys) > 1:
+                tty.warn(
+                    'Multiple signing keys are available.' +
+                    ' please choose one with -k option.')
+                Gpg.list(False, True)
+                sign = False
+            if len(keys) == 0:
+                tty.warn('No signing keys are available.')
+                sign = False
+    if sign:
+        Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
+        Gpg.sign(key, tarfile_path, '%s.asc' % tarfile_path)
+    else:
+        if not yes_to_all:
+            raise RuntimeError('Not creating unsigned build cache.' +
+                               'Use spack buildcache create -y ' +
+                               'option to override.')
+    return sign
+
+
+def generate_index(outdir, indexfile_path):
+    f = open(indexfile_path, 'w')
+    header = """<html>
+<head></head>
+<list>"""
+    footer = "</list></html>"
+    paths = os.listdir(outdir + '/build_cache')
+    f.write(header)
+    for path in paths:
+        rel = os.path.basename(path)
+        f.write('<li><a href="%s" %s</a>' % (rel, rel))
+    f.write(footer)
+    f.close()
+
+
 def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
                   key=None):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
     """
+    # set up some paths
     tarfile_name = tarball_name(spec, '.tar.gz')
     tarfile_dir = join_path(outdir, "build_cache",
                             tarball_directory_name(spec))
@@ -180,70 +241,60 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
             tty.warn("file exists, use -f to force overwrite: %s" %
                      specfile_path)
             return
-    shutil.copyfile(spec_file, specfile_path)
+
+
+#    shutil.copyfile(spec_file, specfile_path)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec)
+
+    # optinally make the paths in the binaries relative to each other
+    # in the spack install tree before creating tarball
     if rel:
         prelocate_package(spec)
+    # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % spec.prefix, arcname='%s' %
                 os.path.basename(spec.prefix))
+    # get the sha256 checksum of the tarball
+    checksum = checksum_tarball(tarfile_path)
 
-    # Sign the packages if keys available
-    sign = True
-    if not has_gnupg2():
-        tty.warn('gpg2 is not available for signing.')
-        sign = False
-    else:
-        if key is None:
-            keys = Gpg.signing_keys()
-            if len(keys) == 1:
-                key = keys[0]
-            if len(keys) > 1:
-                tty.warn(
-                    'Multiple signing keys are available.' +
-                    ' please choose one with -k option.')
-                Gpg.list(False, True)
-                sign = False
-            if len(keys) == 0:
-                tty.warn('No signing keys are available.')
-                sign = False
-    if sign:
-        Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
-        Gpg.sign(key, tarfile_path, '%s.asc' % tarfile_path)
-    else:
-        if not yes_to_all:
-            raise RuntimeError('Not creating unsigned build cache.' +
-                               'Use spack buildcache create -y ' +
-                               'option to override.')
+    # add sha256 checksum to spec.yaml
+    spec_dict = {}
+    with open(spec_file, 'r') as inputfile:
+        content = inputfile.read()
+        spec_dict = yaml.load(content)
+    bchecksum = {}
+    bchecksum['algo'] = 'sha256'
+    bchecksum['hash'] = checksum
+    spec_dict['binary_cache_checksum'] = bchecksum
+    with open(specfile_path, 'w') as outfile:
+        outfile.write(yaml.dump(spec_dict))
 
+    # sign the tarball and spec file with gpg
+    signed = sign_tarball(spec, outdir, yes_to_all, key,
+                          tarfile_path, specfile_path)
+
+    # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
         tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
-        if sign:
+        if signed:
             tar.add(name='%s.asc' % tarfile_path, arcname='%s.asc' %
                     tarfile_name)
             tar.add(name='%s.asc' % specfile_path,
                     arcname='%s.asc' % specfile_name)
+
+    # cleanup file moved to archive
     os.remove(tarfile_path)
-    if sign:
+    if signed:
         os.remove('%s.asc' % tarfile_path)
         os.remove('%s.asc' % specfile_path)
     if os.path.exists(indexfile_path):
         os.remove(indexfile_path)
-    f = open(indexfile_path, 'w')
-    header = """<html>
-<head></head>
-<list>"""
-    footer = "</list></html>"
-    paths = os.listdir(outdir + '/build_cache')
-    f.write(header)
-    for path in paths:
-        rel = os.path.basename(path)
-        f.write('<li><a href="%s" %s</a>' % (rel, rel))
-    f.write(footer)
-    f.close()
+
+    # create an index.html for the build_cache directory so specs can be found
+    generate_index(outdir, indexfile_path)
 
 
 def download_tarball(spec):
@@ -258,7 +309,6 @@ def download_tarball(spec):
     tarball = tarball_path_name(spec, '.spack')
     for key in mirrors:
         url = mirrors[key] + "/build_cache/" + tarball
-        # print url
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
         stage.create()
@@ -300,6 +350,22 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
             install = True
             os.remove(tarfile_path + '.asc')
             os.remove(specfile_path + '.asc')
+
+    # get the sha256 checksum of the tarball
+    checksum = checksum_tarball(tarfile_path)
+
+    # get the sha256 checksum recorded at creation
+    spec_dict = {}
+    with open(specfile_path, 'r') as inputfile:
+        content = inputfile.read()
+        spec_dict = yaml.load(content)
+    bchecksum = spec_dict['binary_cache_checksum']
+
+    # if the checksums don't match don't install
+    if bchecksum['hash'] != checksum:
+        install = False
+        tty.warn('binary tarball checksum does not match')
+
     if install:
         with closing(tarfile.open(tarfile_path, 'r')) as tar:
             tar.extractall(path=join_path(installpath, '..'))
