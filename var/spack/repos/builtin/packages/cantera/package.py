@@ -26,15 +26,22 @@ from spack import *
 import os
 
 
-class Cantera(Package):
+class Cantera(SConsPackage):
     """Cantera is a suite of object-oriented software tools for problems
     involving chemical kinetics, thermodynamics, and/or transport processes."""
 
     homepage = "http://www.cantera.org/docs/sphinx/html/index.html"
-    url      = "https://github.com/Cantera/cantera/archive/v2.2.1.tar.gz"
+    url      = "https://github.com/Cantera/cantera/archive/v2.3.0.tar.gz"
 
+    version('2.3.0', 'aebbd8d891cb1623604245398502b72e')
     version('2.2.1', '9d1919bdef39ddec54485fc8a741a3aa')
 
+    variant('eigen',      default=True,
+            description='Build with external Eigen')
+    variant('fmt',        default=True,
+            description='Build with external fmt')
+    variant('googletest', default=True,
+            description='Build with external gtest')
     variant('lapack',     default=True,
             description='Build with external BLAS/LAPACK libraries')
     variant('threadsafe', default=True,
@@ -46,112 +53,150 @@ class Cantera(Package):
     variant('matlab',     default=False,
             description='Build the Cantera Matlab toolbox')
 
-    # Required dependencies
-    depends_on('scons', type='build')
-
     # Recommended dependencies
+    depends_on('eigen', when='@2.3.0:+eigen', type='build')
+    depends_on('fmt',   when='@2.3.0:+fmt')
+    depends_on('googletest', when='@2.3.0:+googletest')
     depends_on('blas',      when='+lapack')
     depends_on('lapack',    when='+lapack')
-    depends_on('boost',     when='+threadsafe')
+    depends_on('boost',     when='+threadsafe', type='build')
+    depends_on('boost',     when='@2.3.0:', type='build')
     depends_on('sundials',  when='+sundials')  # must be compiled with -fPIC
 
     # Python module dependencies
     extends('python', when='+python')
+    depends_on('py-cython', when='+python', type='build')
     depends_on('py-numpy',  when='+python', type=('build', 'run'))
     depends_on('py-scipy',  when='+python', type=('build', 'run'))
-    depends_on('py-cython', when='+python', type=('build', 'run'))
     depends_on('py-3to2',   when='+python', type=('build', 'run'))
     # TODO: these "when" specs don't actually work
     # depends_on('py-unittest2',     when='+python^python@2.6', type=('build', 'run'))  # noqa
     # depends_on('py-unittest2py3k', when='+python^python@3.1', type=('build', 'run'))  # noqa
 
     # Matlab toolbox dependencies
-    # TODO: add Matlab package
-    # TODO: allow packages to extend multiple other packages
-    # extends('matlab',   when='+matlab')
+    extends('matlab', when='+matlab')
 
-    def install(self, spec, prefix):
-        # Required options
-        options = [
+    def build_args(self, spec, prefix):
+        # Valid args can be found by running `scons help`
+
+        # Required args
+        args = [
+            'build',
             'prefix={0}'.format(prefix),
-            'CC={0}'.format(os.environ['CC']),
-            'CXX={0}'.format(os.environ['CXX']),
-            'F77={0}'.format(os.environ['F77']),
-            'FORTRAN={0}'.format(os.environ['FC']),
+            'CC={0}'.format(spack_cc),
+            'CXX={0}'.format(spack_cxx),
+            'FORTRAN={0}'.format(spack_fc),
             'cc_flags={0}'.format(self.compiler.pic_flag),
             # Allow Spack environment variables to propagate through to SCons
             'env_vars=all'
         ]
 
+        if spec.satisfies('@:2.2.1'):
+            args.append('F77={0}'.format(spack_f77))
+
+        # Eigen support
+        if spec.satisfies('@2.3.0:'):
+            if '+eigen' in spec:
+                args.extend([
+                    'system_eigen=y',
+                    'extra_inc_dirs={0}'.format(
+                        spec['eigen'].prefix.include.eigen3),
+                ])
+            else:
+                args.append('system_eigen=n')
+
+        # fmt support
+        if spec.satisfies('@2.3.0:'):
+            if '+fmt' in spec:
+                args.append('system_fmt=y')
+            else:
+                args.append('system_fmt=n')
+
+        # Googletest support
+        if spec.satisfies('@2.3.0:'):
+            if '+googletest' in spec:
+                args.append('system_googletest=y')
+            else:
+                args.append('system_googletest=n')
+
         # BLAS/LAPACK support
         if '+lapack' in spec:
             lapack_blas = spec['lapack'].libs + spec['blas'].libs
-            options.extend([
+            args.extend([
                 'blas_lapack_libs={0}'.format(','.join(lapack_blas.names)),
                 'blas_lapack_dir={0}'.format(spec['lapack'].prefix.lib)
             ])
 
-        # Threadsafe build, requires Boost
-        if '+threadsafe' in spec:
-            options.extend([
-                'build_thread_safe=yes',
-                'boost_inc_dir={0}'.format(spec['boost'].prefix.include),
-                'boost_lib_dir={0}'.format(spec['boost'].prefix.lib)
-            ])
+        # Boost support
+        if spec.satisfies('@2.3.0:'):
+            args.append('boost_inc_dir={0}'.format(
+                spec['boost'].prefix.include))
         else:
-            options.append('build_thread_safe=no')
+            if '+threadsafe' in spec:
+                args.extend([
+                    'build_thread_safe=yes',
+                    'boost_inc_dir={0}'.format(spec['boost'].prefix.include),
+                    'boost_lib_dir={0}'.format(spec['boost'].prefix.lib)
+                ])
+            else:
+                args.append('build_thread_safe=no')
 
         # Sundials support
         if '+sundials' in spec:
-            options.extend([
-                'use_sundials=y',
+            if spec.satisfies('@2.3.0:'):
+                args.append('system_sundials=y')
+            else:
+                args.extend([
+                    'use_sundials=y',
+                    'sundials_license={0}'.format(
+                        spec['sundials'].prefix.LICENSE)
+                ])
+
+            args.extend([
                 'sundials_include={0}'.format(spec['sundials'].prefix.include),
                 'sundials_libdir={0}'.format(spec['sundials'].prefix.lib),
-                'sundials_license={0}'.format(
-                    join_path(spec['sundials'].prefix, 'LICENSE'))
             ])
         else:
-            options.append('use_sundials=n')
+            if spec.satisfies('@2.3.0:'):
+                args.append('system_sundials=n')
+            else:
+                args.append('use_sundials=n')
 
         # Python module
         if '+python' in spec:
-            options.extend([
+            args.extend([
                 'python_package=full',
                 'python_cmd={0}'.format(spec['python'].command.path),
-                'python_array_home={0}'.format(spec['py-numpy'].prefix)
             ])
-            if spec['python'].satisfies('@3'):
-                options.extend([
+            if spec['python'].satisfies('@3:'):
+                args.extend([
                     'python3_package=y',
                     'python3_cmd={0}'.format(spec['python'].command.path),
-                    'python3_array_home={0}'.format(spec['py-numpy'].prefix)
                 ])
             else:
-                options.append('python3_package=n')
+                args.append('python3_package=n')
         else:
-            options.append('python_package=none')
-            options.append('python3_package=n')
+            args.append('python_package=none')
+            args.append('python3_package=n')
 
         # Matlab toolbox
         if '+matlab' in spec:
-            options.extend([
+            args.extend([
                 'matlab_toolbox=y',
                 'matlab_path={0}'.format(spec['matlab'].prefix)
             ])
         else:
-            options.append('matlab_toolbox=n')
+            args.append('matlab_toolbox=n')
 
-        scons('build', *options)
+        return args
 
-        if '+python' in spec:
+    def test(self):
+        if '+python' in self.spec:
             # Tests will always fail if Python dependencies aren't built
             # In addition, 3 of the tests fail when run in parallel
             scons('test', parallel=False)
 
-        scons('install')
-
-        self.filter_compilers()
-
+    @run_after('install')
     def filter_compilers(self):
         """Run after install to tell the Makefile and SConstruct files to use
         the compilers that Spack built the package with.
