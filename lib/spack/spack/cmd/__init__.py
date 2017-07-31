@@ -155,7 +155,7 @@ def disambiguate_spec(spec):
         args = ["%s matches multiple packages." % spec,
                 "Matching packages:"]
         args += [colorize("  @K{%s} " % s.dag_hash(7)) +
-                 s.format('$_$@$%@$=') for s in matching_specs]
+                 s.cformat('$_$@$%@$=') for s in matching_specs]
         args += ["Use a more specific spec."]
         tty.die(*args)
 
@@ -199,7 +199,7 @@ def display_specs(specs, **kwargs):
         specs = index[(architecture, compiler)]
         specs.sort()
 
-        abbreviated = [s.format(format_string) for s in specs]
+        abbreviated = [s.cformat(format_string) for s in specs]
         if mode == 'paths':
             # Print one spec per line along with prefix path
             width = max(len(s) for s in abbreviated)
@@ -225,7 +225,7 @@ def display_specs(specs, **kwargs):
                     string = ""
                     if hashes:
                         string += gray_hash(s, hlen) + ' '
-                    string += s.format('$-%s$@%s' % (nfmt, vfmt))
+                    string += s.cformat('$-%s$@%s' % (nfmt, vfmt))
 
                     return string
 
@@ -235,7 +235,7 @@ def display_specs(specs, **kwargs):
                 for spec in specs:
                     # Print the hash if necessary
                     hsh = gray_hash(spec, hlen) + ' ' if hashes else ''
-                    print(hsh + spec.format(format_string) + '\n')
+                    print(hsh + spec.cformat(format_string) + '\n')
 
         else:
             raise ValueError(

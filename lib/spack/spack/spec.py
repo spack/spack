@@ -1364,9 +1364,8 @@ class Spec(object):
 
     @property
     def cshort_spec(self):
-        """Returns a version of the spec with the dependencies hashed
-           instead of completely enumerated."""
-        return self.format('$_$@$%@$+$=$/', color=True)
+        """Returns an auto-colorized version of ``self.short_spec``."""
+        return self.cformat('$_$@$%@$+$=$/')
 
     @property
     def prefix(self):
@@ -2719,9 +2718,7 @@ class Spec(object):
         TODO: allow, e.g., ``$6#`` to customize short hash length
         TODO: allow, e.g., ``$//`` for full hash.
         """
-        color = kwargs.get('color', None)
-        if color is None:
-            color = get_color_when()
+        color = kwargs.get('color', False)
         length = len(format_string)
         out = StringIO()
         named = escape = compiler = False
@@ -2855,6 +2852,12 @@ class Spec(object):
         result = out.getvalue()
         return result
 
+    def cformat(self, *args, **kwargs):
+        """Same as format, but color defaults to auto instead of False."""
+        kwargs = kwargs.copy()
+        kwargs.setdefault('color', None)
+        return self.format(*args, **kwargs)
+
     def dep_string(self):
         return ''.join("^" + dep.format() for dep in self.sorted_deps())
 
@@ -2885,9 +2888,7 @@ class Spec(object):
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
-        color = kwargs.pop('color', None)
-        if color is None:
-            color = get_color_when()
+        color = kwargs.pop('color', get_color_when())
         depth = kwargs.pop('depth', False)
         hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)

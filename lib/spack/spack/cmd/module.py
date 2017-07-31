@@ -270,7 +270,7 @@ def module(parser, args):
                    "and this is not allowed in this context")
         tty.error(message.format(query=constraint))
         for s in specs:
-            sys.stderr.write(s.format() + '\n')
+            sys.stderr.write(s.cformat() + '\n')
         raise SystemExit(1)
     except NoMatch:
         message = ("the constraint '{query}' matches no package, "
