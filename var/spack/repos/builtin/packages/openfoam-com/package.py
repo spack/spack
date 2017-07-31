@@ -236,15 +236,19 @@ def mplib_content(spec, pre=None):
     else:
         pre = mpi_spec.prefix
 
+    libname = 'mpi'
+    if mpi_spec.name == 'mpich':
+        libname = 'mpich'
+
     info = {
         'name':   '{0}-{1}'.format(mpi_spec.name, mpi_spec.version),
         'prefix':  pre,
         'include': inc,
         'bindir':  bin,
         'libdir':  lib,
-        'FLAGS':  '-DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK',
+        'FLAGS':  '-DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX',
         'PINC':   '-I{0}'.format(inc),
-        'PLIBS':  '-L{0} -lmpi'.format(lib),
+        'PLIBS':  '-L{0} -l{1}'.format(lib, libname),
     }
     return info
 
@@ -669,15 +673,17 @@ class OpenfoamArch(object):
                 platform += 'ia64'
             elif target == 'armv7l':
                 platform += 'ARM7'
-            elif target == ppc64:
+            elif target == 'ppc64':
                 platform += 'PPC64'
-            elif target == ppc64le:
+            elif target == 'ppc64le':
                 platform += 'PPC64le'
         elif platform == 'darwin':
             if target == 'x86_64':
                 platform += 'Intel'
                 if self.arch_option == '64':
                     platform += '64'
+        elif platform == 'cray':
+            platform = 'linux64'
         # ... and others?
 
         self.arch = platform
