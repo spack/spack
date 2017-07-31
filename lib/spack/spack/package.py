@@ -905,7 +905,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         start_time = time.time()
         if spack.do_checksum and self.version not in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely." %
-                     self.spec.format('$_$@'))
+                     self.spec.cformat('$_$@'))
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
@@ -1649,8 +1649,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.store.layout.add_extension(self.extendee_spec, self.spec)
-        tty.msg("Activated extension %s for %s" %
-                (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+        tty.msg(
+            "Activated extension %s for %s" %
+            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -1708,8 +1709,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.store.layout.remove_extension(
                 self.extendee_spec, self.spec)
 
-        tty.msg("Deactivated extension %s for %s" %
-                (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+        tty.msg(
+            "Deactivated extension %s for %s" %
+            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
 
     def deactivate(self, extension, **kwargs):
         """Unlinks all files from extension out of this package's install dir.
