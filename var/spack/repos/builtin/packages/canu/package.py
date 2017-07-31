@@ -34,15 +34,15 @@ class Canu(MakefilePackage):
 
     version('1.5', '65df275baa28ecf11b15dfd7343361e3')
 
-    depends_on('gnuplot')
-    depends_on('jdk')
-    depends_on('perl')
+    depends_on('gnuplot', type='run')
+    depends_on('jdk', type='run')
+    depends_on('perl', type='run')
 
     build_directory = 'src'
 
     def patch(self):
         # Use our perl, not whatever is in the environment
-        perl=self.spec['perl'].prefix.bin.perl
+        perl = self.spec['perl'].prefix.bin.perl
         filter_file(r'^#!/usr/bin/env perl',
                     '#!{0}'.format(perl),
                     'src/pipelines/canu.pl')
