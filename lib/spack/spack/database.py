@@ -288,7 +288,7 @@ class Database(object):
                 if dhash not in data:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
-                                 spec.format('$_$/'), dname, dhash[:7]))
+                                 spec.cformat('$_$/'), dname, dhash[:7]))
                     continue
 
                 child = data[dhash].spec
@@ -440,8 +440,7 @@ class Database(object):
                     # just to be conservative in case a command like
                     # "autoremove" is run by the user after a reindex.
                     tty.debug(
-                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec)
-                    )
+                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
                     explicit = True
                     if old_data is not None:
                         old_info = old_data.get(spec.dag_hash())
@@ -467,8 +466,7 @@ class Database(object):
                     # installed compilers or externally installed
                     # applications.
                     tty.debug(
-                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec)
-                    )
+                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
                     try:
                         layout = spack.store.layout
                         if entry.spec.external:

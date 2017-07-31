@@ -60,8 +60,7 @@ def setup_parser(subparser):
 
 def spec(parser, args):
     name_fmt = '$.' if args.namespaces else '$_'
-    kwargs = {'color': True,
-              'cover': args.cover,
+    kwargs = {'cover': args.cover,
               'format': name_fmt + '$@$%@+$+$=',
               'hashes': args.long or args.very_long,
               'hashlen': None if args.very_long else 7,
