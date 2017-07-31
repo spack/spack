@@ -80,6 +80,7 @@ To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
 import re
 import sys
+from contextlib import contextmanager
 
 
 class ColorParseError(Exception):
@@ -107,27 +108,62 @@ colors = {'k': 30, 'K': 90,  # black
 # Regex to be used for color formatting
 color_re = r'@(?:@|\.|([*_])?([a-zA-Z])?(?:{((?:[^}]|}})*)})?)'
 
+# Mapping from color arguments to values for tty.set_color
+color_when_values = {
+    'always': True,
+    'auto': None,
+    'never': False
+}
 
 # Force color; None: Only color if stdout is a tty
 # True: Always colorize output, False: Never colorize output
 _force_color = None
 
 
-def get_color():
-    if _force_color in [True, False]:
+def _color_when_value(when):
+    """Raise a ValueError for an invalid color setting.
+
+    Valid values are 'always', 'never', and 'auto', or equivalently,
+    True, False, and None.
+    """
+    if when in color_when_values:
+        return color_when_values[when]
+    elif when not in color_when_values.values():
+        raise ValueError('Invalid color setting: %s' % when)
+    return when
+
+
+def get_color_when():
+    """Return whether commands should print color or not."""
+    if _force_color is not None:
         return _force_color
     return sys.stdout.isatty()
 
 
-def set_color(flag):
+def set_color_when(when):
+    """Set when color should be applied.  Options are:
+
+    * True or 'always': always print color
+    * False or 'never': never print color
+    * None or 'auto': only print color if sys.stdout is a tty.
+    """
     global _force_color
-    _force_color = flag
+    _force_color = _color_when_value(when)
+
+
+@contextmanager
+def color_when(value):
+    """Context manager to temporarily use a particular color setting."""
+    old_value = value
+    set_color(value)
+    yield
+    set_color(old_value)
 
 
 class match_to_ansi(object):
 
     def __init__(self, color=True):
-        self.color = color
+        self.color = _color_when_value(color)
 
     def escape(self, s):
         """Returns a TTY escape sequence for a color"""
@@ -178,9 +214,7 @@ def colorize(string, **kwargs):
         color (bool): If False, output will be plain text without control
             codes, for output to non-console devices.
     """
-    color = kwargs.get('color', None)
-    if color is None:
-        color = get_color()
+    color = _color_when_value(kwargs.get('color', get_color_when()))
     return re.sub(color_re, match_to_ansi(color), string)
 
 
@@ -202,7 +236,7 @@ def cwrite(string, stream=sys.stdout, color=None):
        then it will be set based on stream.isatty().
     """
     if color is None:
-        color = get_color()
+        color = get_color_when()
     stream.write(colorize(string, color=color))
 
 
@@ -231,7 +265,7 @@ class ColorStream(object):
             if raw:
                 color = True
             else:
-                color = get_color()
+                color = get_color_when()
         raw_write(colorize(string, color=color))
 
     def writelines(self, sequence, **kwargs):

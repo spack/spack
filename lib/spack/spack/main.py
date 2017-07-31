@@ -87,13 +87,6 @@ section_order = {
 # Properties that commands are required to set.
 required_command_properties = ['level', 'section', 'description']
 
-# Mapping from color arguments to values for tty.set_color
-color_type = {
-    'always': True,
-    'auto': None,
-    'never': False
-}
-
 
 def set_working_dir():
     """Change the working directory to getcwd, or spack prefix if no cwd."""
@@ -335,8 +328,8 @@ def setup_main_options(args):
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
         spack.insecure = True
 
-    # when to use color
-    tty.set_color(color_type[args.color])
+    # when to use color (takes always, auto, or never)
+    tty.color.set_color_when(args.color)
 
 
 def allows_unknown_args(command):
