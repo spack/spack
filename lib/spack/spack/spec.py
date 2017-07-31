@@ -669,8 +669,8 @@ class FlagMap(HashableMap):
         sorted_keys = [k for k in sorted(self.keys()) if self[k] != []]
         cond_symbol = ' ' if len(sorted_keys) > 0 else ''
         return cond_symbol + ' '.join(
-            str(key) + '=\"' + ' '.join(
-                str(f) for f in self[key]) + '\"'
+            str(key) + '="' + ' '.join(
+                str(f) for f in self[key]) + '"'
             for key in sorted_keys) + cond_symbol
 
 

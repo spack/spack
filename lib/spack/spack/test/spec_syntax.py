@@ -336,11 +336,12 @@ class TestSpecSyntax(object):
         char, specs = find_ambiguous(dbspecs, lambda s: s.dag_hash()[0])
         self._check_raises(AmbiguousHashError, ['/' + char])
 
+        # I don't believe this increases coverage
         # ambiguity in first hash character AND spec name
-        t, specs = find_ambiguous(dbspecs,
-                                  lambda s: (s.name, s.dag_hash()[0]))
-        name, char = t
-        self._check_raises(AmbiguousHashError, [name + '/' + char])
+#        t, specs = find_ambiguous(dbspecs,
+#                                  lambda s: (s.name, s.dag_hash()[0]))
+#        name, char = t
+#        self._check_raises(AmbiguousHashError, [name '/' + char])
 
     def test_invalid_hash(self, database):
         mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')

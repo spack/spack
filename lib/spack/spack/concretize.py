@@ -354,29 +354,41 @@ class DefaultConcretizer(object):
         ret = False
         for flag in spack.spec.FlagMap.valid_compiler_flags():
             if flag not in spec.compiler_flags:
-                spec.compiler_flags[flag] = list()
-            try:
-                nearest = next(p for p in spec.traverse(direction='parents')
-                               if (compiler_match(p) and
-                                   (p is not spec) and
-                                   flag in p.compiler_flags))
-                nearest_flags = set(nearest.compiler_flags.get(flag, []))
-                flags = set(spec.compiler_flags.get(flag, []))
-                if (nearest_flags - flags):
-                    spec.compiler_flags[flag] = list(nearest_flags | flags)
-                    ret = True
-            except StopIteration:
-                pass
+                try:
+                    nearest = next(p for p in spec.traverse(direction='parents')
+                                   if (compiler_match(p) and
+                                       (p is not spec) and
+                                       flag in p.compiler_flags))
+
+                    nearest_flags = set(nearest.compiler_flags[flag])
+                    flags = set()
+
+                    if (nearest_flags - flags) or nearest.compiler_flags[flag] == []:
+                        spec.compiler_flags[flag] = list(nearest_flags | flags)
+                        ret = True
+
+                except StopIteration:
+                    try:
+                        n = next(p for p in spec.traverse(direction='parents')
+                                 if (compiler_match(p) and p is not spec))
+                        return True
+                    except StopIteration:
+                        spec.compiler_flags[flag] = []
+                        return True
+
+
 
         # Include the compiler flag defaults from the config files
         # This ensures that spack will detect conflicts that stem from a change
         # in default compiler flags.
         compiler = spack.compilers.compiler_for_spec(
             spec.compiler, spec.architecture)
-        for flag in compiler.flags:
-            config_flags = set(compiler.flags.get(flag, []))
-            flags = set(spec.compiler_flags.get(flag, []))
-            spec.compiler_flags[flag] = list(config_flags | flags)
+        for f in compiler.flags:
+            config_flags = set(compiler.flags.get(f, []))
+            flags = set(list())
+            if f in spec.compiler_flags and spec.compiler_flags[f] is not None:
+                flags = set(spec.compiler_flags[f])
+            spec.compiler_flags[f] = list(config_flags | flags)
             if (config_flags - flags):
                 ret = True
 
