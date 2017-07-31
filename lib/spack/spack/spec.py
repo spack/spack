@@ -1602,6 +1602,10 @@ class Spec(object):
 
         if self.name in visited:
             return False
+        visited.add(self.name)
+
+        if self.external:
+            return False
 
         changed = False
 
@@ -1626,7 +1630,6 @@ class Spec(object):
                      spack.concretizer.concretize_variants(self)))
             presets[self.name] = self
 
-        visited.add(self.name)
         return changed
 
     def _replace_with(self, concrete):
@@ -1713,7 +1716,6 @@ class Spec(object):
                         changed = True
                         spec._dependencies = DependencyMap(spec)
                     replacement._dependencies = DependencyMap(replacement)
-                    replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
                 def feq(cfield, sfield):
