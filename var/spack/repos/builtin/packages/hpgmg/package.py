@@ -58,9 +58,10 @@ class Hpgmg(Package):
 
     def configure_args(self):
         args = []
-        if '+fv' in self.spec and if '~fe' in self.spec:
+        if '+fv' in self.spec and '~fe' in self.spec:
                 args.append('--no-fe')
-        else if '+fe' in self.spec and if '~fv' in self.spec:
+        else:
+            if '+fe' in self.spec and '~fv' in self.spec:
                 args.append('--fe')
 
         if '+fe' in self.spec:
