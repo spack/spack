@@ -43,14 +43,13 @@ class Hpgmg(Package):
     version('master', '4a2b139e1764c84ed7fe06334d3f8d8a')
 
     variant(
-        'fe_fv', default='both',
-        values=('both', 'fe', 'fv'),
-        description='Build finite element, finite volume, or both solvers')
+        'fe', default=True, description='Build finite element solver')
+    variant(
+        'fv', default=True, description='Build finite volume solver')
     variant('mpi', default=True, description='Build with MPI support')
     variant('cuda', default=False, description='Build with CUDA')
 
-    depends_on('petsc', when='fe_fv=both')
-    depends_on('petsc', when='fe_fv=fe')
+    depends_on('petsc', when='+fe')
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
     depends_on('python', type='build')
@@ -59,18 +58,18 @@ class Hpgmg(Package):
 
     def configure_args(self):
         args = []
-        if 'fe_fv=fv' in self.spec:
-            args.append('--no-fe')
-        else:
-            args.append('--fe')
+        if '+fv' in self.spec and if '~fe' in self.spec:
+                args.append('--no-fe')
+        else if '+fe' in self.spec and if '~fv' in self.spec:
+                args.append('--fe')
 
-        if 'fe_fv=fe' in self.spec:
+        if '+fe' in self.spec:
             if '+mpi' in self.spec:
                 args.append('--no-fv-mpi')
             else:
                 args.append('--no-fv')
 
-        if 'fe_fv=fv' or 'fe_fv=both' in self.spec:
+        if '+fv' in self.spec:
             args.append('--CFLAGS=' + self.compiler.openmp_flag)
 
         if '+mpi' in self.spec:
