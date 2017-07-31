@@ -102,6 +102,11 @@ class TestConcretizePreferences(object):
         spec = concretize('mpileaks')
         assert spec.version == spack.spec.Version('2.2')
 
+    def test_preferred_versions_mixed_version_types(self):
+        update_packages('mixedversions', 'version', ['2.0'])
+        spec = concretize('mixedversions')
+        assert spec.version == spack.spec.Version('2.0')
+
     def test_preferred_providers(self):
         """Test preferred providers of virtual packages are
         applied correctly
