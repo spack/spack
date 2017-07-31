@@ -44,7 +44,7 @@ new file mode 100644
 index 0000000..2e30763
 --- /dev/null
 +++ b/cmake/protobuf.pc.cmake
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,11 @@
 +prefix=@CMAKE_INSTALL_PREFIX@
 +exec_prefix=@CMAKE_INSTALL_PREFIX@
 +libdir=@CMAKE_INSTALL_FULL_LIBDIR@
@@ -54,6 +54,5 @@ index 0000000..2e30763
 +Description: Google's Data Interchange Format
 +Version: @protobuf_VERSION@
 +Libs: -L${libdir} -lprotobuf @CMAKE_THREAD_LIBS_INIT@
-+Libs.private: @LIBS@
 +Cflags: -I${includedir} @CMAKE_THREAD_LIBS_INIT@
 +Conflicts: protobuf-lite

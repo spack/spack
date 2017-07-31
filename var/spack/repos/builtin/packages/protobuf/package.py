@@ -35,14 +35,15 @@ class Protobuf(CMakePackage):
     version('3.2.0', '61d899b8369781f6dd1e62370813392d')
     version('3.1.0', '14a532a7538551d5def317bfca41dace')
     version('3.0.2', '845b39e4b7681a2ddfd8c7f528299fbb')
+    # does not build with CMake:
     # version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
 
     depends_on('zlib')
-    # depends_on('benchmark@develop')
 
     conflicts('%gcc@:4.6')  # Requires c++11
 
-    patch('pkgconfig.patch', when='@:3.2.0')
+    # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
+    patch('pkgconfig.patch', when='@:3.3.2')
 
     def cmake_args(self):
         args = [
