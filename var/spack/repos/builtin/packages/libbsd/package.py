@@ -25,22 +25,14 @@
 from spack import *
 
 
-class Expat(AutotoolsPackage):
-    """Expat is an XML parser library written in C."""
+class Libbsd(AutotoolsPackage):
+    """This library provides useful functions commonly found on BSD
+    systems, and lacking on others like GNU systems, thus making it easier
+    to port projects with strong BSD origins, without needing to embed the
+    same code over and over again on each project.
+    """
 
-    homepage = "http://expat.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/expat/files/expat/2.2.2/expat-2.2.2.tar.bz2"
+    homepage = "https://libbsd.freedesktop.org/wiki/"
+    url      = "https://libbsd.freedesktop.org/releases/libbsd-0.8.6.tar.xz"
 
-    variant('libbsd', default=False,
-            description="Use libbsd (for high quality randomness)")
-
-    depends_on('libbsd', when="+libbsd")
-
-    version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
-    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
-
-    def configure_args(self):
-        args = []
-        if '+libbsd' in spec:
-            args = ['--with-libbsd']
-        return args
+    version('0.8.6', '4ab7bec639af17d0aacb50222b479110')
