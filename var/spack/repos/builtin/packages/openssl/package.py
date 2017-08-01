@@ -59,6 +59,8 @@ class Openssl(Package):
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
 
     variant("shared", default=True, description="Enable shared libs")
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
     depends_on('zlib')
 
@@ -73,6 +75,13 @@ class Openssl(Package):
         tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL has "
                  "been updated, and the version in your instance of Spack is "
                  "insecure. Consider updating to the latest OpenSSL version.")
+
+    def setup_environment(self, spack_env, run_env):
+        # it seems that with some versions, setting -fPIC in the ./config options
+        # doesn't work, but setting it in CFLAGS environment var does. And in 
+        # other versions, the opposite is true. So we'll do both:
+        if "+pic" in self.spec:
+            spack_env.set("CFLAGS","-fPIC")
 
     def install(self, spec, prefix):
         # OpenSSL uses a variable APPS in its Makefile. If it happens to be set
@@ -89,6 +98,11 @@ class Openssl(Package):
 
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
+        # it seems that with some versions, setting -fPIC in the ./config options
+        # doesn't work, but setting it in CFLAGS environment var does. And in 
+        # other versions, the opposite is true. So we'll do both:
+        if spec.satisfies('+pic'):
+            options.append('-fPIC')
         # clang does not support the .arch directive in assembly files.
         if 'clang' in self.compiler.cc and \
            'aarch64' in spack.architecture.sys_type():
