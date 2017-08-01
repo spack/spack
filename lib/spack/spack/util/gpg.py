@@ -31,15 +31,16 @@ from spack.util.executable import Executable
 
 GNUPGHOME = spack.gpg_path
 
+
 def get_gpg2():
-	 dir = os.getcwd()
-	 gnupg_spec = spack.cmd.parse_specs("gnupg", concretize=True)[0]
-	 gnupg = spack.repo.get(gnupg_spec)
-	 if not gnupg.installed:
-		  gnupg.do_install()
-	 os.chdir(dir)
-	 gnupg_executable = os.path.join(gnupg.prefix, "bin", "gpg2")
-	 return gnupg_executable
+    dir = os.getcwd()
+    gnupg_spec = spack.cmd.parse_specs("gnupg", concretize=True)[0]
+    gnupg = spack.repo.get(gnupg_spec)
+    if not gnupg.installed:
+        gnupg.do_install()
+    os.chdir(dir)
+    gnupg_executable = os.path.join(gnupg.prefix, "bin", "gpg2")
+    return gnupg_executable
 
 
 class Gpg(object):
@@ -52,7 +53,6 @@ class Gpg(object):
             os.chmod(GNUPGHOME, 0o700)
         gpg.add_default_env('GNUPGHOME', GNUPGHOME)
         return gpg
-
 
     @classmethod
     def create(cls, **kwargs):
