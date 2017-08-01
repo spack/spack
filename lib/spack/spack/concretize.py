@@ -393,12 +393,10 @@ class DefaultConcretizer(object):
         # in default compiler flags.
         compiler = spack.compilers.compiler_for_spec(
             spec.compiler, spec.architecture)
-        for f in compiler.flags:
-            config_flags = set(compiler.flags.get(f, []))
-            flags = set(list())
-            if f in spec.compiler_flags and spec.compiler_flags[f] is not None:
-                flags = set(spec.compiler_flags[f])
-            spec.compiler_flags[f] = list(config_flags | flags)
+        for flag in compiler.flags:
+            config_flags = set(compiler.flags.get(flag, []))
+            flags = set(spec.compiler_flags.get(flag, []))
+            spec.compiler_flags[flag] = list(config_flags | flags)
             if (config_flags - flags):
                 ret = True
 
