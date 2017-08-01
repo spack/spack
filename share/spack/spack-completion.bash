@@ -115,7 +115,8 @@ function _spack {
     if $list_options
     then
         compgen -W "-h --help -d --debug -D --pdb -k --insecure -m --mock -p
-                    --profile -v --verbose -s --stacktrace -V --version" -- "$cur"
+                    --profile -v --verbose -s --stacktrace -V --version
+                    --color --color=always --color=auto --color=never" -- "$cur"
     else
         compgen -W "$(_subcommands)" -- "$cur"
     fi

@@ -53,6 +53,9 @@ class CbtfArgonavis(CMakePackage):
     version('1.8', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
 
+    variant('build_type', default='None', values=('None'),
+            description='CMake build type')
+
     depends_on("cmake@3.0.2:", type='build')
     depends_on("boost@1.50.0:1.59.0")
     depends_on("papi")
@@ -64,9 +67,6 @@ class CbtfArgonavis(CMakePackage):
     parallel = False
 
     build_directory = 'build_cbtf_argonavis'
-
-    def build_type(self):
-        return 'None'
 
     def cmake_args(self):
         spec = self.spec

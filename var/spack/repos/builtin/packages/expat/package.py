@@ -27,7 +27,9 @@ from spack import *
 
 class Expat(AutotoolsPackage):
     """Expat is an XML parser library written in C."""
-    homepage = "http://expat.sourceforge.net/"
-    url = "http://downloads.sourceforge.net/project/expat/expat/2.2.0/expat-2.2.0.tar.bz2"
 
+    homepage = "http://expat.sourceforge.net/"
+    url      = "https://sourceforge.net/projects/expat/files/expat/2.2.2/expat-2.2.2.tar.bz2"
+
+    version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
     version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
