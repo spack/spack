@@ -221,8 +221,9 @@ class DefaultConcretizer(object):
         if spec.architecture is None and root_arch is None:
             spec.architecture = spack.spec.ArchSpec(sys_arch)
             spec_changed = True
-        else:
+        elif spec.architecture is None:
             spec.architecture = root_arch
+            spec_changed = True
 
         default_archs = list(x for x in [root_arch, sys_arch] if x)
         for arch in default_archs:
