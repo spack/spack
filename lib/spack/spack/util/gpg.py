@@ -26,24 +26,25 @@
 import os
 
 import spack
-from spack.util.executable import which
+from spack.util.executable import Executable
 
 GNUPGHOME = spack.gpg_path
 
 
-def get_gpg2_path():
-    gnupg_spec = spack.cmd.parse_specs("gnupg", concretize=True)[0]
+def get_gpg2():
+    gnupg_spec = Spec("gnupg")
+    gnupg_spec.concretize()
     gnupg = spack.repo.get(gnupg_spec)
     if not gnupg.installed:
         gnupg.do_install()
-    return gnupg.prefix.bin
+    return '%s/gpg2' % gnupg.prefix.bin
 
 
 class Gpg(object):
     @staticmethod
     def gpg():
         # TODO: Support loading up a GPG environment from a built gpg.
-        gpg = which('gpg2', path=get_gpg2_path())
+        gpg = Executable('gpg2')
         if not os.path.exists(GNUPGHOME):
             os.makedirs(GNUPGHOME)
             os.chmod(GNUPGHOME, 0o700)
