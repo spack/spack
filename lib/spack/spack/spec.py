@@ -2706,11 +2706,8 @@ class Spec(object):
         named_str = fmt = ''
 
         def write(s, c):
-            if color:
-                f = color_formats[c] + cescape(s) + '@.'
-                cwrite(f, stream=out, color=color)
-            else:
-                out.write(s)
+            f = color_formats[c] + cescape(s) + '@.'
+            cwrite(f, stream=out, color=color)
 
         iterator = enumerate(format_string)
         for i, c in iterator:
@@ -2802,7 +2799,7 @@ class Spec(object):
                         write(fmt % str(self.variants), '+')
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture), ' arch=')
+                        write(fmt % str(self.architecture), '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dag_hash(7)))
