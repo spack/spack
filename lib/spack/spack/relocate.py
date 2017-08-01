@@ -41,13 +41,11 @@ def get_patchelf():
     # as we may need patchelf, find out where it is
     if platform.system() == 'Darwin':
         return None
-    dir = os.getcwd()
     patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
     patchelf = spack.repo.get(patchelf_spec)
     if not patchelf.installed:
         patchelf.do_install()
-    os.chdir(dir)
-    patchelf_executable = os.path.join(patchelf.prefix, "bin", "patchelf")
+    patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
     return patchelf_executable
 
 
