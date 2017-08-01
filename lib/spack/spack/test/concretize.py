@@ -429,18 +429,6 @@ class TestConcretize(object):
         dyninst = Spec(spec_string)
         dyninst.concretize()
 
-        for f, v in dyninst.compiler_flags.items():
-            print f, v
-        print '------'
-        for f, v in dyninst['libelf'].compiler_flags.items():
-            print f, v
-        print '------'
-        for f, v in libelf.compiler_flags.items():
-            print f, v
-        print '------'
-        for f, v in dyninst['libdwarf'].compiler_flags.items():
-            print f, v
-
         # Libelf appropriately keeps its compiler flags
         assert libelf.compiler_flags == dyninst['libelf'].compiler_flags
         # Dyninst does not pass its flags to libelf.

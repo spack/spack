@@ -351,6 +351,14 @@ class DefaultConcretizer(object):
             spec.compiler == other.compiler and
             spec.architecture == other.architecture)
 
+        def loose_compiler_match(other):
+            # The other compiler could eventually match this one
+            ret = True
+            if other.compiler and other.compiler.concrete:
+                ret = (spec.compiler == other.compiler and
+                       spec.architecture == other.architecture)
+            return ret
+
         ret = False
         for flag in spack.spec.FlagMap.valid_compiler_flags():
             if flag not in spec.compiler_flags:
@@ -370,13 +378,11 @@ class DefaultConcretizer(object):
                 except StopIteration:
                     try:
                         n = next(p for p in spec.traverse(direction='parents')
-                                 if (compiler_match(p) and p is not spec))
+                                 if (loose_compiler_match(p) and p is not spec))
                         return True
                     except StopIteration:
                         spec.compiler_flags[flag] = []
                         return True
-
-
 
         # Include the compiler flag defaults from the config files
         # This ensures that spack will detect conflicts that stem from a change
