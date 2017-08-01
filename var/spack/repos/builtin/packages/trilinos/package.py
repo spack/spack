@@ -93,8 +93,6 @@ class Trilinos(CMakePackage):
             description='Build python wrappers')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
-    variant('debug',        default=False,
-            description='Builds a debug version of the libraries')
     variant('boost',        default=True,
             description='Compile with Boost')
     variant('tpetra',       default=True,
@@ -173,7 +171,7 @@ class Trilinos(CMakePackage):
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
     # deprecated SuperLUDist v3.3 together with an Amesos patch is working.
-    conflicts('+superlu-dist', when='@:11.14.3')
+    conflicts('+superlu-dist', when='@11.4.1:11.14.3')
     # PnetCDF was only added after v12.10.1
     conflicts('+pnetcdf', when='@:12.10.1')
 
@@ -241,8 +239,6 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
             '-DTrilinos_ENABLE_EXAMPLES:BOOL=OFF',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
 

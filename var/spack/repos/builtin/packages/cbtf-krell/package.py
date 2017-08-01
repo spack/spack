@@ -68,6 +68,8 @@ class CbtfKrell(CMakePackage):
             description="Build mpi experiment collector for mpich2 MPI.")
     variant('mpich', default=False,
             description="Build mpi experiment collector for mpich MPI.")
+    variant('build_type', default='None', values=('None'),
+            description='CMake build type')
 
     # Dependencies for cbtf-krell
     depends_on("cmake@3.0.2:", type='build')
@@ -128,9 +130,6 @@ class CbtfKrell(CMakePackage):
             MPIOptions.append('-DMPT_DIR=%s' % spec['mpt'].prefix)
 
         cmakeOptions.extend(MPIOptions)
-
-    def build_type(self):
-        return 'None'
 
     def cmake_args(self):
         spec = self.spec

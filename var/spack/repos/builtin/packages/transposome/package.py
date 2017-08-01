@@ -25,26 +25,13 @@
 from spack import *
 
 
-class Gbenchmark(CMakePackage):
-    """A microbenchmark support library"""
+class Transposome(PerlPackage):
+    """A toolkit for annotation of transposable element families from
+       unassembled sequence reads."""
 
-    homepage = "https://github.com/google/benchmark"
-    url = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
+    homepage = "https://sestaton.github.io/Transposome/"
+    url      = "https://github.com/sestaton/Transposome/archive/v0.11.2.tar.gz"
 
-    version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae')
-    version('1.0.0', '4f778985dce02d2e63262e6f388a24b595254a93')
+    version('0.11.2', '157c1fc090b0aa30050d03df885dcde0')
 
-    def build_type(self):
-        return "Release"
-
-    def patch(self):
-        filter_file(
-            r'add_cxx_compiler_flag..fstrict.aliasing.',
-            r'##### add_cxx_compiler_flag(-fstrict-aliasing)',
-            'CMakeLists.txt'
-        )
-        filter_file(
-            r'add_cxx_compiler_flag..Werror',
-            r'##### add_cxx_compiler_flag(-Werror',
-            'CMakeLists.txt'
-        )
+    depends_on('blast-plus')

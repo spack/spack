@@ -75,7 +75,8 @@ def remove_options(parser, *options):
                 break
 
 
-def get_cmd_function_name(name):
+def get_python_name(name):
+    """Commands can have '-' in their names, unlike Python identifiers."""
     return name.replace("-", "_")
 
 
@@ -89,7 +90,7 @@ def get_module(name):
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
 
-    fn_name = get_cmd_function_name(name)
+    fn_name = get_python_name(name)
     if not hasattr(module, fn_name):
         tty.die("Command module %s (%s) must define function '%s'." %
                 (module.__name__, module.__file__, fn_name))
@@ -99,7 +100,8 @@ def get_module(name):
 
 def get_command(name):
     """Imports the command's function from a module and returns it."""
-    return getattr(get_module(name), get_cmd_function_name(name))
+    python_name = get_python_name(name)
+    return getattr(get_module(python_name), python_name)
 
 
 def parse_specs(args, **kwargs):
@@ -152,9 +154,8 @@ def disambiguate_spec(spec):
     elif len(matching_specs) > 1:
         args = ["%s matches multiple packages." % spec,
                 "Matching packages:"]
-        color = sys.stdout.isatty()
-        args += [colorize("  @K{%s} " % s.dag_hash(7), color=color) +
-                 s.format('$_$@$%@$=', color=color) for s in matching_specs]
+        args += [colorize("  @K{%s} " % s.dag_hash(7)) +
+                 s.cformat('$_$@$%@$=') for s in matching_specs]
         args += ["Use a more specific spec."]
         tty.die(*args)
 
@@ -198,7 +199,7 @@ def display_specs(specs, **kwargs):
         specs = index[(architecture, compiler)]
         specs.sort()
 
-        abbreviated = [s.format(format_string, color=True) for s in specs]
+        abbreviated = [s.cformat(format_string) for s in specs]
         if mode == 'paths':
             # Print one spec per line along with prefix path
             width = max(len(s) for s in abbreviated)
@@ -213,7 +214,6 @@ def display_specs(specs, **kwargs):
             for spec in specs:
                 print(spec.tree(
                     format=format_string,
-                    color=True,
                     indent=4,
                     prefix=(lambda s: gray_hash(s, hlen)) if hashes else None))
 
@@ -225,7 +225,7 @@ def display_specs(specs, **kwargs):
                     string = ""
                     if hashes:
                         string += gray_hash(s, hlen) + ' '
-                    string += s.format('$-%s$@%s' % (nfmt, vfmt), color=True)
+                    string += s.cformat('$-%s$@%s' % (nfmt, vfmt))
 
                     return string
 
@@ -235,7 +235,7 @@ def display_specs(specs, **kwargs):
                 for spec in specs:
                     # Print the hash if necessary
                     hsh = gray_hash(spec, hlen) + ' ' if hashes else ''
-                    print(hsh + spec.format(format_string, color=True) + '\n')
+                    print(hsh + spec.cformat(format_string) + '\n')
 
         else:
             raise ValueError(
