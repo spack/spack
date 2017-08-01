@@ -59,10 +59,9 @@ class Adios(AutotoolsPackage):
     # transports and serial file converters
     variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
     variant("netcdf", default=False, description="Enable netCDF")
-    # Lots of setting up here for this package
-    # module swap PrgEnv-intel PrgEnv-$COMP
-    # module load cray-hdf5/1.8.14
-    # module load python/2.7.10
+    variant("flexpath", default=False, description="Enable flexpath transport")
+    variant("dataspaces", default=False, description="Enable dataspaces transport")
+    variant("staging", default=False, description="Enable dataspaces and flexpath staging transport")
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -79,6 +78,13 @@ class Adios(AutotoolsPackage):
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
     depends_on("netcdf", when="+netcdf")
+    depends_on("libevpath", when="+flexpath")
+    depends_on("libevpath", when="+staging")
+    depends_on("dataspaces+mpi", when="+dataspaces")
+    depends_on("dataspaces+mpi", when="+staging")
+
+    for p in ["+hdf5", "+netcdf", "+flexpath", "+dataspaces", "+staging"]:
+        conflicts(p, when="~mpi")
 
     build_directory = 'spack-build'
 
@@ -139,4 +145,17 @@ class Adios(AutotoolsPackage):
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
         if "+netcdf" in spec:
             extra_args.append("--with-netcdf=%s" % spec['netcdf'].prefix)
+        else:
+            extra_args.append("--without-netcdf")
+
+        # Staging transports
+        if "+flexpath" in spec or "+staging" in spec:
+            extra_args.append("--with-flexpath=%s" % spec["libevpath"].prefix)
+        else:
+            extra_args.append("--without-flexpath")
+
+        if "+dataspaces" in spec or "+staging" in spec:
+            extra_args.append("--with-dataspaces=%s" % spec["dataspaces"].prefix)
+        else:
+            extra_args.append("--without-dataspaces")
         return extra_args
