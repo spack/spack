@@ -364,9 +364,9 @@ class DefaultConcretizer(object):
             if flag not in spec.compiler_flags:
                 try:
                     n = next(p for p in spec.traverse(direction='parents')
-                                   if (compiler_match(p) and
-                                       (p is not spec) and
-                                       flag in p.compiler_flags))
+                             if (compiler_match(p) and
+                                 (p is not spec) and
+                                 flag in p.compiler_flags))
 
                     nearest_flags = set(n.compiler_flags[flag])
                     flags = set()
