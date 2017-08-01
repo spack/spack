@@ -347,17 +347,15 @@ class DefaultConcretizer(object):
             # running.
             return True
 
-        compiler_match = lambda other: (
-            spec.compiler == other.compiler and
-            spec.architecture == other.architecture)
-
-        def loose_compiler_match(other):
-            # The other compiler could eventually match this one
-            ret = True
-            if other.compiler and other.compiler.concrete:
-                ret = (spec.compiler == other.compiler and
-                       spec.architecture == other.architecture)
-            return ret
+        def compiler_match(other, strict=True):
+            if strict:
+                return (spec.compiler == other.compiler and
+                        spec.architecture == other.architecture)
+            else:
+                if other.compiler and other.compiler.concrete:
+                    return (spec.compiler == other.compiler and
+                            spec.architecture == other.architecture)
+                return True
 
         ret = False
         for flag in spack.spec.FlagMap.valid_compiler_flags():
@@ -378,7 +376,7 @@ class DefaultConcretizer(object):
                 except StopIteration:
                     try:
                         n = next(p for p in spec.traverse(direction='parents')
-                                 if (loose_compiler_match(p) and p is not spec))
+                                 if (compiler_match(p, False) and p is not spec))
                         return True
                     except StopIteration:
                         spec.compiler_flags[flag] = []
