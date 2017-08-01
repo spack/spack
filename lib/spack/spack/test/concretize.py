@@ -416,3 +416,34 @@ class TestConcretize(object):
         s._concrete = False
 
         assert not s.concrete
+
+    def test_concrete_compiler_flags(self, database):
+        install_db = database.mock.db
+
+        libelf = install_db.get_record('libelf').spec
+        libelf_hash = libelf.dag_hash()
+
+        spec_string = 'dyninst cppflags=-cpp cflags=-c '
+        spec_string += 'cxxflags=-cxx fflags="-f -fortran" '
+        spec_string += 'ldflags=-Lpath ldlibs=-llib ^/{0}'.format(libelf_hash)
+        dyninst = Spec(spec_string)
+        dyninst.concretize()
+
+        for f, v in dyninst.compiler_flags.items():
+            print f, v
+        print '------'
+        for f, v in dyninst['libelf'].compiler_flags.items():
+            print f, v
+        print '------'
+        for f, v in libelf.compiler_flags.items():
+            print f, v
+        print '------'
+        for f, v in dyninst['libdwarf'].compiler_flags.items():
+            print f, v
+
+        # Libelf appropriately keeps its compiler flags
+        assert libelf.compiler_flags == dyninst['libelf'].compiler_flags
+        # Dyninst does not pass its flags to libelf.
+        assert dyninst.compiler_flags != dyninst['libelf'].compiler_flags
+        # Dyninst appropriately passes its flags to libdwarf
+        assert dyninst.compiler_flags == dyninst['libdwarf'].compiler_flags
