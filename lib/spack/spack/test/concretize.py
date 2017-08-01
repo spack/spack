@@ -336,6 +336,7 @@ class TestConcretize(object):
         """
         spec = Spec('externaltest ^externaltool+v1')
         spec.concretize()
+        assert 'externaltool~v1' not in spec
 
     def test_find_spec_parents(self):
         """Tests the spec finding logic used by concretization. """
