@@ -355,15 +355,15 @@ class DefaultConcretizer(object):
         for flag in spack.spec.FlagMap.valid_compiler_flags():
             if flag not in spec.compiler_flags:
                 try:
-                    nearest = next(p for p in spec.traverse(direction='parents')
+                    n = next(p for p in spec.traverse(direction='parents')
                                    if (compiler_match(p) and
                                        (p is not spec) and
                                        flag in p.compiler_flags))
 
-                    nearest_flags = set(nearest.compiler_flags[flag])
+                    nearest_flags = set(n.compiler_flags[flag])
                     flags = set()
 
-                    if (nearest_flags - flags) or nearest.compiler_flags[flag] == []:
+                    if (nearest_flags - flags) or n.compiler_flags[flag] == []:
                         spec.compiler_flags[flag] = list(nearest_flags | flags)
                         ret = True
 
