@@ -70,12 +70,18 @@ def test_yaml_directory_layout_parameters(
     # Test path_scheme
     arch, compiler, package7 = path_7.split('/')
     scheme_package7 = "${PACKAGE}-${VERSION}-${HASH:7}"
-
     layout_package7 = YamlDirectoryLayout(str(tmpdir),
                                           path_scheme=scheme_package7)
     path_package7 = layout_package7.relative_path_for_spec(spec)
 
     assert(package7 == path_package7)
+
+    # Test separation of architecture
+    arch_scheme_package = "${PLATFORM}/${TARGET}/${OS}/${PACKAGE}/${VERSION}/${HASH:7}"   # NOQA: ignore=E501
+    layout_arch_package = YamlDirectoryLayout(str(tmpdir),
+                                              path_scheme=arch_scheme_package)
+    arch_path_package = layout_arch_package.relative_path_for_spec(spec)
+    assert(arch_path_package == spec.format(arch_scheme_package))
 
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):

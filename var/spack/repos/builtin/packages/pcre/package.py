@@ -42,6 +42,7 @@ class Pcre(AutotoolsPackage):
     variant('utf', default=True,
             description='Enable support for UTF-8/16/32, '
             'incompatible with EBCDIC.')
+    variant("shared", default=True, description="Enable shared libs")
 
     def configure_args(self):
         args = []
@@ -49,5 +50,12 @@ class Pcre(AutotoolsPackage):
         if '+utf' in self.spec:
             args.append('--enable-utf')
             args.append('--enable-unicode-properties')
+        if "+shared" in self.spec:
+            args.append("--enable-shared")
+        else:
+            args.append("--disable-shared")
+
+        if self.spec.satisfies("%intel") and self.spec.satisfies("os=cnl5"):
+            args.append("--host=x86_64")
 
         return args

@@ -1,0 +1,90 @@
+packages:
+    all:
+        compiler: [intel@17.0.2.174, gcc@6.3.0, cce@8.5.4]
+        variants: ~shared
+        craype_link_type: "static"
+        providers:
+            mpi: [mpich]
+            mkl: [intel-mkl]
+            blas: [cray-libsci, intel-mkl]
+            scalapack: [cray-libsci, intel-mkl]
+    mpich:
+        buildable: false
+        modules:
+            mpich@7.6.0%gcc@6.3.0: cray-mpich
+            mpich@7.6.0%intel@17.0.2.174: cray-mpich
+    intel-mkl:
+        buildable: false
+        paths:
+            intel-mkl@2017.2.174%gcc@6.3.0~ilp64~openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%gcc@6.3.0+ilp64~openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%gcc@6.3.0+ilp64+openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%gcc@6.3.0+ilp64+openmp+shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%intel@17.0.2.174~ilp64~openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%intel@17.0.2.174+ilp64~openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%intel@17.0.2.174+ilp64+openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%intel@17.0.2.174+ilp64+openmp+shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+    fftw:
+        buildable: false
+        modules:
+            fftw@3.3.6.2%gcc@6.3.0+openmp: cray-fftw
+            fftw@3.3.6.2%intel@17.0.2.174+openmp: cray-fftw
+    hdf5:
+        buildable: false
+        modules:
+            hdf5@1.10.0.3%gcc@6.3.0~mpi~shared~szip: cray-hdf5
+            hdf5@1.10.0.3%gcc@6.3.0~mpi+shared~szip: cray-hdf5
+            hdf5@1.10.0.3%gcc@6.3.0~mpi+shared+szip: cray-hdf5
+            hdf5@1.10.0.3%gcc@6.3.0~mpi~shared+szip: cray-hdf5
+            hdf5@1.10.0.3%intel@17.0.2.174~mpi~shared~szip: cray-hdf5
+            hdf5@1.10.0.3%intel@17.0.2.174~mpi+shared~szip: cray-hdf5
+            hdf5@1.10.0.3%intel@17.0.2.174~mpi+shared+szip: cray-hdf5
+            hdf5@1.10.0.3%intel@17.0.2.174~mpi~shared+szip: cray-hdf5
+            hdf5@1.10.0.3%intel@17.0.2.174+mpi~shared~szip: cray-hdf5-parallel
+            hdf5@1.10.0.3%intel@17.0.2.174+mpi+shared~szip: cray-hdf5-parallel
+            hdf5@1.10.0.3%intel@17.0.2.174+mpi+shared+szip: cray-hdf5-parallel
+            hdf5@1.10.0.3%intel@17.0.2.174+mpi~shared+szip: cray-hdf5-parallel
+            hdf5@1.10.0.3%gcc@6.3.0+mpi~shared~szip: cray-hdf5-parallel
+            hdf5@1.10.0.3%gcc@6.3.0+mpi+shared~szip: cray-hdf5-parallel
+            hdf5@1.10.0.3%gcc@6.3.0+mpi+shared+szip: cray-hdf5-parallel
+            hdf5@1.10.0.3%gcc@6.3.0+mpi~shared+szip: cray-hdf5-parallel
+    cray-libsci:
+        buildable: false
+        modules:
+            cray-libsci@16.07.1%gcc@6.3.0: cray-libsci
+            cray-libsci@16.07.1%intel@17.0.2.174: cray-libsci
+    netcdf:
+        buildable: false
+        modules:
+            netcdf@4.4.1.1.3%gcc@6.3.0+parallel-netcdf: cray-netcdf-hdf5parallel
+            netcdf@4.4.1.1.3%intel@17.0.2.174+parallel-netcdf: cray-netcdf-hdf5parallel
+            netcdf@4.4.1.1.3%gcc@6.3.0~parallel-netcdf: cray-netcdf
+            netcdf@4.4.1.1.3%intel@17.0.2.174~parallel-netcdf: cray-netcdf
+    python:
+        buildable: false
+        modules:
+            python@2.7.13%gcc@6.3.0+shared: python
+            python@2.7.13%intel@17.0.2.174+shared: python
+    petsc:
+        buildable: false
+        modules:
+            petsc@3.7.6.0%gcc@6.3.0~complex~int64 : cray-petsc
+            petsc@3.7.6.0%intel@17.0.2.174~complex~int64 : cray-petsc
+            petsc@3.7.6.0%gcc@6.3.0+complex~int64 : cray-petsc-complex
+            petsc@3.7.6.0%intel@17.0.2.174+complex~int64 : cray-petsc-complex
+            petsc@3.7.6.0%gcc@6.3.0~complex+int64 : cray-petsc-64
+            petsc@3.7.6.0%gcc@6.3.0+complex+int64 : cray-petsc-complex-64
+            petsc@3.7.6.0%intel@17.0.2.174~complex+int64 : cray-petsc-complex
+            petsc@3.7.6.0%intel@17.0.2.174+complex+int64 : cray-petsc-complex-64
+    papi:
+        buildable: false
+        modules:
+            papi@5.5.1.2%gcc@6.3.0: papi
+            papi@5.5.1.2%intel@17.0.2.174: papi
+    trilinos:
+        buildable: false
+        modules:
+            trilinos@12.10.1.1%gcc@6.3.0: cray-trilinos
+            trilinos@12.10.1.1%intel@17.0.2.174: cray-trilinos
+            trilinos@12.10.1.1%gcc@6.3.0+shared: cray-trilinos
+            trilinos@12.10.1.1%intel@17.0.2.174+shared: cray-trilinos

@@ -28,6 +28,7 @@ import llnl.util.tty as tty
 from spack import build_env_path
 from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
+import spack.config
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
 from llnl.util.filesystem import join_path
@@ -81,6 +82,11 @@ class Cray(Platform):
                 safe_name = _target.replace('-', '_')
                 setattr(self, name, safe_name)
                 self.add_target(name, self.targets[safe_name])
+            if _target is None and name == 'front_end':
+                setattr(self, name, 'x86_64')
+                x86_64 = Target('x86_64')
+                self.add_target(name, x86_64)
+                self.add_target('x86_64', x86_64)
 
         if self.back_end is not None:
             self.default = self.back_end
@@ -103,8 +109,15 @@ class Cray(Platform):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
-        env.set('CRAYPE_LINK_TYPE', 'dynamic')
+        packages = spack.config.get_config("packages")
+        link_type = packages.get(pkg.name, {}).get("craype_link_type", "")
+        if not link_type:
+            link_type = packages.get("all").get("craype_link_type")
+        if not link_type:
+            link_type = "dynamic"
+        env.set('CRAYPE_LINK_TYPE', link_type)
         cray_wrapper_names = join_path(build_env_path, 'cray')
+
         if os.path.isdir(cray_wrapper_names):
             env.prepend_path('PATH', cray_wrapper_names)
             env.prepend_path('SPACK_ENV_PATH', cray_wrapper_names)

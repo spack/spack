@@ -85,7 +85,7 @@ def test_hash_detection(checksum_type):
     algo = crypto.hashes[checksum_type]()
     h = 'f' * (algo.digest_size * 2)  # hex -> bytes
     checker = crypto.Checker(h)
-    assert checker.hash_name == checksum_type
+    assert checker.hash_name.lower() == checksum_type.lower()
 
 
 def test_unknown_hash(checksum_type):
