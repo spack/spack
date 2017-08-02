@@ -272,7 +272,7 @@ class Mfem(Package):
             options += ['OPENMP_OPT = %s' % self.compiler.openmp_flag]
 
         make('config', *options)
-        make('all')
+        make('lib')
 
         if self.run_tests:
             make('check')
