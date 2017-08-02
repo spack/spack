@@ -87,6 +87,9 @@ def setup_parser(subparser):
     list.set_defaults(func=gpg_list)
 
     init = subparsers.add_parser('init')
+    init.add_argument('import_dir',type=str,
+                      help='directory to import keys to trust;'+
+                           'defaults to spack/var/spack/gpg')
     init.set_defaults(func=gpg_init)
     init.set_defaults(import_dir=spack.gpg_keys_path)
 
