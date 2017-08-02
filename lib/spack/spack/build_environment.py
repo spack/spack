@@ -54,6 +54,7 @@ calls you can make from within the install() function.
 import inspect
 import multiprocessing
 import os
+import errno
 import shutil
 import sys
 import traceback
@@ -582,9 +583,10 @@ def fork(pkg, function, dirty=False):
         # '[Errno 22] Invalid argument') then just use os.devnull
         try:
             input_stream = lang.duplicate_stream(sys.stdin)
-        except:
-            tty.debug("Using devnull as input_stream")
-            input_stream = open(os.devnull)
+        except OSError as e:
+            if e.errno == errno.EINVAL:
+                tty.debug("Using devnull as input_stream")
+                input_stream = open(os.devnull)
         p = multiprocessing.Process(
             target=child_execution,
             args=(child_connection, input_stream)
