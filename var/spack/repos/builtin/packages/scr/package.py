@@ -41,7 +41,7 @@ class Scr(CMakePackage):
 
     version('master', git='https://github.com/llnl/scr.git', branch='master')
 
-    depends_on('pdsh+ssh', type=('build', 'run'))
+    depends_on('pdsh+static_modules', type=('build', 'run'))
     depends_on('zlib')
     depends_on('mpi')
 
@@ -107,19 +107,19 @@ class Scr(CMakePackage):
 
         # We uppercase the values for these to avoid unnecessary user error.
         args.append('-DSCR_RESOURCE_MANAGER={0}'.format(
-                spec.variants['resource_manager'].value.upper()))
+            spec.variants['resource_manager'].value.upper()))
 
         args.append('-DSCR_ASYNC_API={0}'.format(
-                spec.variants['async_api'].value.upper()))
+            spec.variants['async_api'].value.upper()))
 
         args.append('-DSCR_FILE_LOCK={0}'.format(
-                spec.variants['file_lock'].value.upper()))
+            spec.variants['file_lock'].value.upper()))
 
         args.append('-DSCR_CACHE_BASE={0}'.format(
-                spec.variants['cache_base'].value))
+            spec.variants['cache_base'].value))
 
         args.append('-DSCR_CNTL_BASE={0}'.format(
-                spec.variants['cntl_base'].value))
+            spec.variants['cntl_base'].value))
 
         args.append('-DWITH_PDSH_PREFX={0}'.format(spec['pdsh'].prefix))
 
@@ -127,10 +127,12 @@ class Scr(CMakePackage):
             args.append('-DWITH_DTCMP_PREFIX={0}'.format(spec['dtcmp'].prefix))
 
         if "+libyogrt" in spec:
-            args.append('-DWITH_YOGRT_PREFIX={0}'.format(spec['libyogrt'].prefix))
+            args.append('-DWITH_YOGRT_PREFIX={0}'.format(
+                spec['libyogrt'].prefix))
 
         # if "+mysql" in spec:
-                # args.append('-DWITH_MYSQL_PREFIX={0}'.format(spec['mysql'].prefix))
+                # args.append('-DWITH_MYSQL_PREFIX={0}'.format(
+                      # spec['mysql'].prefix))
 
         return args
 

@@ -37,7 +37,12 @@ class Pdsh(AutotoolsPackage):
 
     variant('ssh', default=True, description="Build with ssh module")
 
+    variant('static_modules', default=True, description="Build with static modules")
+
     def configure_args(self):
+        args = []
         if '+ssh' in self.spec:
-            return ['--with-ssh']
-        return []
+            args.append('--with-ssh')
+        if '+static_modules' in self.spec:
+            args.append('--enable-static-modules')
+        return args
