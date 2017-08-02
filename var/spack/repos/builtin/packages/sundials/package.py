@@ -63,7 +63,7 @@ class Sundials(Package):
 
     def install(self, spec, prefix):
 
-        def on_off(self, varstr):
+        def on_off(varstr):
             return 'ON' if varstr in self.spec else 'OFF'
 
         cmake_args = std_cmake_args[:]
@@ -74,13 +74,13 @@ class Sundials(Package):
             '-DEXAMPLES_ENABLE=ON',
             '-DEXAMPLES_INSTALL=ON',
             '-DFCMIX_ENABLE=ON',
-            '-DMPI_ENABLE=%s' % self.on_off('+mpi'),
-            '-DLAPACK_ENABLE=%s' % self.on_off('+lapack'),
-            '-DKLU_ENABLE=%s' % self.on_off('+klu'),
-            '-DHYPRE_ENABLE=%s' % self.on_off('+hypre'),
-            '-DSUPERLUMT_ENABLE=%s' % self.on_off('+superlu'),
-            '-DOPENMP_ENABLE=%s' % self.on_off('+openmp'),
-            '-DPTHREAD_ENABLE=%s' % self.on_off('+pthread')
+            '-DMPI_ENABLE=%s' % on_off('+mpi'),
+            '-DLAPACK_ENABLE=%s' % on_off('+lapack'),
+            '-DKLU_ENABLE=%s' % on_off('+klu'),
+            '-DHYPRE_ENABLE=%s' % on_off('+hypre'),
+            '-DSUPERLUMT_ENABLE=%s' % on_off('+superlu'),
+            '-DOPENMP_ENABLE=%s' % on_off('+openmp'),
+            '-DPTHREAD_ENABLE=%s' % on_off('+pthread')
         ])
 
         # MPI support

@@ -147,7 +147,8 @@ class Mfem(Package):
     def install(self, spec, prefix):
         self.check_variants(spec)
 
-        no_yes  = ('NO', 'YES')
+        def yes_no(varstr):
+            return 'YES' if varstr in self.spec else 'NO'
 
         metis5_str = 'NO'
         if '+superlu-dist' in spec or  \
@@ -162,20 +163,20 @@ class Mfem(Package):
         options = [
             'PREFIX=%s' % prefix,
             'MFEM_USE_MEMALLOC=YES',
-            'MFEM_DEBUG=%s' % no_yes ['+debug' in spec],
-            'MFEM_USE_LIBUNWIND=%s' % no_yes ['+debug' in spec],
-            'MFEM_USE_GZSTREAM=%s' % no_yes ['+gzstream' in spec],
+            'MFEM_DEBUG=%s' % yes_no('+debug'),
+            'MFEM_USE_LIBUNWIND=%s' % yes_no('+debug'),
+            'MFEM_USE_GZSTREAM=%s' % yes_no('+gzstream'),
             'MFEM_USE_METIS_5=%s' % metis5_str,
             'MFEM_THREAD_SAFE=%s' % threadsafe_str,
-            'MFEM_USE_MPI=%s' % no_yes ['+mpi' in spec],
-            'MFEM_USE_LAPACK=%s' % no_yes ['+lapack' in spec],
-            'MFEM_USE_SUPERLU=%s' % no_yes ['+superlu-dist' in spec],
-            'MFEM_USE_SUITESPARSE=%s' % no_yes ['+suite-sparse' in spec],
-            'MFEM_USE_SUNDIALS=%s' % no_yes ['+sundials' in spec],
-            'MFEM_USE_PETSC=%s' % no_yes ['+petsc' in spec],
-            'MFEM_USE_NETCDF=%s' % no_yes ['+netcdf' in spec],
-            'MFEM_USE_MPFR=%s' % no_yes ['+mpfr' in spec],
-            'MFEM_USE_OPENMP=%s' % no_yes ['+openmp' in spec]]
+            'MFEM_USE_MPI=%s' % yes_no('+mpi'),
+            'MFEM_USE_LAPACK=%s' % yes_no('+lapack'),
+            'MFEM_USE_SUPERLU=%s' % yes_no('+superlu-dist'),
+            'MFEM_USE_SUITESPARSE=%s' % yes_no('+suite-sparse'),
+            'MFEM_USE_SUNDIALS=%s' % yes_no('+sundials'),
+            'MFEM_USE_PETSC=%s' % yes_no('+petsc'),
+            'MFEM_USE_NETCDF=%s' % yes_no('+netcdf'),
+            'MFEM_USE_MPFR=%s' % yes_no('+mpfr'),
+            'MFEM_USE_OPENMP=%s' % yes_no('+openmp')]
 
         if '+hypre' in spec:
             options += [
