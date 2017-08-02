@@ -26,14 +26,15 @@ from spack import *
 
 
 class VirtualBuild2(Package):
-    """Package that erroneously requires mpi as a build-only dependency"""
+    """Package that erroneously requires indirect virtual as a build-only
+       dependency"""
 
     homepage = "http://www.example.com"
     url = "http://www.example.com/virtualbuild2-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
-    depends_on('mpileaks', type='build')
+    depends_on('virtual-dependent', type='build')
 
     def install(self, spec, prefix):
         pass

@@ -25,15 +25,15 @@
 from spack import *
 
 
-class VirtualBuild1(Package):
-    """Package that erroneously requires virtual as a build-only dependency"""
+class VirtualDependent(Package):
+    """Simple package that depends on a virtual package"""
 
     homepage = "http://www.example.com"
-    url = "http://www.example.com/virtualbuild1-1.0.tar.gz"
+    url = "http://www.example.com/virtualdependent-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
-    depends_on('stuff', type='build')
+    depends_on('stuff')
 
     def install(self, spec, prefix):
         pass
