@@ -70,12 +70,14 @@ def fake_fetchify(url, pkg):
     fetcher.append(URLFetchStrategy(url))
     pkg.fetcher = fetcher
 
+
 @pytest.fixture(scope='function')
 def testing_gpg_directory(tmpdir):
     old_gpg_path = spack.util.gpg.GNUPGHOME
     spack.util.gpg.GNUPGHOME = str(tmpdir.join('gpg'))
     yield
     spack.util.gpg.GNUPGHOME = old_gpg_path
+
 
 def has_gnupg2():
     try:
@@ -84,7 +86,8 @@ def has_gnupg2():
     except Exception:
         return False
 
-@pytest.mark.usefixtures('install_mockery','testing_gpg_directory')
+
+@pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
 def test_packaging(mock_archive, tmpdir):
     # tweak patchelf to only do a download
     spec = Spec("patchelf")
@@ -127,10 +130,10 @@ echo $PATH"""
     buildcache.setup_parser(parser)
 
     if has_gnupg2():
-        spack.util.gpg.Gpg.trust(spack.mock_gpg_keys_path+'/external.key')
-        spack.util.gpg.Gpg.create(name='test key 1', expires='0'
-                                  ,email='spack@googlegroups.com'
-                                  ,comment='Spack test key')
+        spack.util.gpg.Gpg.trust(spack.mock_gpg_keys_path + '/external.key')
+        spack.util.gpg.Gpg.create(name='test key 1', expires='0',
+                                  email='spack@googlegroups.com',
+                                  comment='Spack test key')
     # Create a build cache without signing
     args = parser.parse_args(['create', '-d', mirror_path, '-y', str(spec)])
     buildcache.buildcache(parser, args)
