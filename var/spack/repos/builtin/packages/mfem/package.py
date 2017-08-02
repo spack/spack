@@ -93,8 +93,8 @@ class Mfem(Package):
         description='Support zip\'d streams for I/O')
     variant('examples', default=False,
         description='Build and install examples')
-    variant('minapps', default=False,
-        description='Build and install minapps')
+    variant('miniapps', default=False,
+        description='Build and install miniapps')
 
     conflicts('+mpi', when='~hypre')
     conflicts('+suite-sparse', when='~lapack')
@@ -147,7 +147,7 @@ class Mfem(Package):
     def install(self, spec, prefix):
         self.check_variants(spec)
 
-        yes_no = ('NO', 'YES')
+        no_yes  = ('NO', 'YES')
 
         metis5_str = 'NO'
         if '+superlu-dist' in spec or  \
@@ -162,20 +162,20 @@ class Mfem(Package):
         options = [
             'PREFIX=%s' % prefix,
             'MFEM_USE_MEMALLOC=YES',
-            'MFEM_DEBUG=%s' % yes_no['+debug' in spec],
-            'MFEM_USE_LIBUNWIND=%s' % yes_no['+debug' in spec],
-            'MFEM_USE_GZSTREAM=%s' % yes_no['+gzstream' in spec],
+            'MFEM_DEBUG=%s' % no_yes ['+debug' in spec],
+            'MFEM_USE_LIBUNWIND=%s' % no_yes ['+debug' in spec],
+            'MFEM_USE_GZSTREAM=%s' % no_yes ['+gzstream' in spec],
             'MFEM_USE_METIS_5=%s' % metis5_str,
             'MFEM_THREAD_SAFE=%s' % threadsafe_str,
-            'MFEM_USE_MPI=%s' % yes_no['+mpi' in spec],
-            'MFEM_USE_LAPACK=%s' % yes_no['+lapack' in spec],
-            'MFEM_USE_SUPERLU=%s' % yes_no['+superlu-dist' in spec],
-            'MFEM_USE_SUITESPARSE=%s' % yes_no['+suite-sparse' in spec],
-            'MFEM_USE_SUNDIALS=%s' % yes_no['+sundials' in spec],
-            'MFEM_USE_PETSC=%s' % yes_no['+petsc' in spec],
-            'MFEM_USE_NETCDF=%s' % yes_no['+netcdf' in spec],
-            'MFEM_USE_MPFR=%s' % yes_no['+mpfr' in spec],
-            'MFEM_USE_OPENMP=%s' % yes_no['+openmp' in spec]]
+            'MFEM_USE_MPI=%s' % no_yes ['+mpi' in spec],
+            'MFEM_USE_LAPACK=%s' % no_yes ['+lapack' in spec],
+            'MFEM_USE_SUPERLU=%s' % no_yes ['+superlu-dist' in spec],
+            'MFEM_USE_SUITESPARSE=%s' % no_yes ['+suite-sparse' in spec],
+            'MFEM_USE_SUNDIALS=%s' % no_yes ['+sundials' in spec],
+            'MFEM_USE_PETSC=%s' % no_yes ['+petsc' in spec],
+            'MFEM_USE_NETCDF=%s' % no_yes ['+netcdf' in spec],
+            'MFEM_USE_MPFR=%s' % no_yes ['+mpfr' in spec],
+            'MFEM_USE_OPENMP=%s' % no_yes ['+openmp' in spec]]
 
         if '+hypre' in spec:
             options += [
@@ -283,6 +283,6 @@ class Mfem(Package):
             make('examples')
             install_tree('examples', join_path(prefix, 'examples'))
 
-        if '+minapps' in spec:
+        if '+miniapps' in spec:
             make('miniapps')
             install_tree('miniapps', join_path(prefix, 'miniapps'))
