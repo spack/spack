@@ -421,23 +421,35 @@ def get_specs():
                 "download of build caches.")
     path = str(spack.architecture.sys_type())
     specs = set()
+    urls = set()
     from collections import defaultdict
     durls = defaultdict(list)
     for key in mirrors:
         url = mirrors[key]
-        tty.msg("Finding buildcaches on %s" % url)
-        p, links = spider(url + "/build_cache")
-        for link in links:
-            if re.search("spec.yaml", link) and re.search(path, link):
-                with Stage(link, name="build_cache", keep=True) as stage:
-                    try:
-                        stage.fetch()
-                    except fs.FetchError:
-                        next
-                    with open(stage.save_filename, 'r') as f:
-                        spec = spack.spec.Spec.from_yaml(f)
-                        specs.add(spec)
-                        durls[spec].append(link)
+        if url.startswith('file'):
+            mirror = url.replace('file://', '') + '/build_cache'
+            tty.msg("Finding buildcaches in %s")
+            files = os.listdir(mirror)
+            for file in files:
+                if re.search('spec.yaml', file):
+                    link = 'file://' + mirror + '/' + file
+                    urls.add(link)
+        else:
+            tty.msg("Finding buildcaches on %s" % url)
+            p, links = spider(url + "/build_cache")
+            for link in links:
+                if re.search("spec.yaml", link) and re.search(path, link):
+                    urls.add(link)
+        for link in urls:
+            with Stage(link, name="build_cache", keep=True) as stage:
+                try:
+                    stage.fetch()
+                except fs.FetchError:
+                    next
+                with open(stage.save_filename, 'r') as f:
+                    spec = spack.spec.Spec.from_yaml(f)
+                    specs.add(spec)
+                    durls[spec].append(link)
     return specs, durls
 
 
@@ -449,27 +461,35 @@ def get_keys(install=False, yes_to_all=False):
     if len(mirrors) == 0:
         tty.die("Please add a spack mirror to allow " +
                 "download of build caches.")
+
+    keys = set()
     for key in mirrors:
         url = mirrors[key]
-        tty.msg("Finding public keys on %s" % url)
-        p, links = spider(url + "/build_cache", depth=1)
-        for link in links:
-            if re.search("\.key", link):
-                with Stage(link, name="build_cache", keep=True) as stage:
-                    try:
-                        stage.fetch()
-                    except fs.FetchError:
-                        next
-                tty.msg('Found key %s' % link)
-                if install:
-                    if yes_to_all:
-                        Gpg.trust(stage.save_filename)
-                        tty.msg('Added this key to trusted keys.')
-                    else:
-                        answer = tty.get_yes_or_no(
-                            'Add this key to trusted keys?')
-                        if answer:
-                            Gpg.trust(stage.save_filename)
-                            tty.msg('Added this key to trusted keys.')
-                        else:
-                            tty.msg('Will not add this key to trusted keys.')
+        if url.startswith('file'):
+            mirror = url.replace('file://', '') + '/build_cache'
+            tty.msg("Finding public keys in %s" % mirror)
+            files = os.listdir(mirror)
+            for file in files:
+                if re.search('\.key', file):
+                    link = 'file://' + mirror + '/' + file
+                    keys.add(link)
+        else:
+            tty.msg("Finding public keys on %s" % url)
+            p, links = spider(url + "/build_cache", depth=1)
+            for link in links:
+                if re.search("\.key", link):
+                    keys.add(link)
+        for link in keys:
+            with Stage(link, name="build_cache", keep=True) as stage:
+                try:
+                    stage.fetch()
+                except fs.FetchError:
+                    next
+            tty.msg('Found key %s' % link)
+            if install:
+                if yes_to_all:
+                    Gpg.trust(stage.save_filename)
+                    tty.msg('Added this key to trusted keys.')
+                else:
+                    tty.msg('Will not add this key to trusted keys.'
+                            'Use -y to override')
