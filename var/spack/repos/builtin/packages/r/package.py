@@ -88,7 +88,9 @@ class R(AutotoolsPackage):
 
     patch('zlib.patch', when='@:3.3.2')
 
-    filter_compiler_wrappers('Makeconf')
+    filter_compiler_wrappers(
+        'Makeconf', relative_root=os.path.join('rlib', 'R', 'etc')
+    )
 
     @property
     def etcdir(self):

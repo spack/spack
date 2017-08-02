@@ -71,7 +71,9 @@ spack package at this time.''',
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
-    filter_compiler_wrappers('mpicc', 'mpicxx', 'mpif77', 'mpif90')
+    filter_compiler_wrappers(
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
+    )
 
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
