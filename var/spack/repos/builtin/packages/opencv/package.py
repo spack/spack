@@ -42,8 +42,17 @@ class Opencv(CMakePackage):
     homepage = 'http://opencv.org/'
     url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
 
-    version('3.2.0', 'a43b65488124ba33dde195fea9041b70')
-    version('3.1.0', '70e1dd07f0aa06606f1bc0e3fa15abd3')
+    version('master', git="https://github.com/opencv/opencv.git", branch="master")
+    version('3.3.0-rc', '16ac824307b130b0fda3c6e4b27dc3d1')
+    version('3.2.0-rc', 'a4ec8f365505dd60b777801e2f3092d5')
+    version('3.2.0',    'a43b65488124ba33dde195fea9041b70')
+    version('3.1.0',    '70e1dd07f0aa06606f1bc0e3fa15abd3')
+    version('2.4.13.2', 'fe52791ce523681a67036def4c25261b')
+    version('2.4.13.1', 'f6d354500d5013e60dc0fc44b07a63d1')
+    version('2.4.13',   '8feb45a71adad89b8017a777477c3eff')
+    version('2.4.12.3', '2496a4a4caf8fecfbfc294fbe6a814b0')
+    version('2.4.12.2', 'bc0c60c2ea1cf4078deef99569912fc7')
+    version('2.4.12.1', '7192f51434710904b5e3594872b897c3')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -59,13 +68,21 @@ class Opencv(CMakePackage):
             description='Enables the build of Python extensions')
     variant('java', default=False,
             description='Activates support for Java')
+    variant('openmp', default=False, description='Activates support for OpenMP threads')
+    variant('core', default=False, description='Include opencv_core module into the OpenCV build')
+    variant('highgui', default=False, description='Include opencv_highgui module into the OpenCV build')
+    variant('imgproc', default=False, description='Include opencv_imgproc module into the OpenCV build')
+    variant('jpeg', default=False, description='Include JPEG support')
+    variant('png', default=False, description='Include PNG support')
+    variant('tiff', default=False, description='Include TIFF support')
+    variant('zlib', default=False, description='Build zlib from source')
 
     depends_on('eigen', when='+eigen', type='build')
 
     depends_on('zlib')
     depends_on('libpng')
     depends_on('libjpeg-turbo')
-    depends_on('libtiff')
+    depends_on('libtiff+turbo', when='+tiff')
 
     depends_on('jasper', when='+jasper')
     depends_on('cuda', when='+cuda')
@@ -94,6 +111,22 @@ class Opencv(CMakePackage):
                 'ON' if '+vtk' in spec else 'OFF')),
             '-DBUILD_opencv_java:BOOL={0}'.format((
                 'ON' if '+java' in spec else 'OFF')),
+            '-DBUILD_opencv_core:BOOL={0}'.format((
+                'ON' if '+core' in spec else 'OFF')),
+            '-DBUILD_opencv_highgui:BOOL={0}'.format((
+                'ON' if '+highgui' in spec else 'OFF')),
+            '-DBUILD_opencv_imgproc:BOOL={0}'.format((
+                'ON' if '+imgproc' in spec else 'OFF')),
+            '-DWITH_JPEG:BOOL={0}'.format((
+                'ON' if '+jpeg' in spec else 'OFF')),
+            '-DWITH_PNG:BOOL={0}'.format((
+                'ON' if '+png' in spec else 'OFF')),
+            '-DWITH_TIFF:BOOL={0}'.format((
+                'ON' if '+tiff' in spec else 'OFF')),
+            '-DWITH_ZLIB:BOOL={0}'.format((
+                'ON' if '+zlib' in spec else 'OFF')),
+            '-DWITH_OPENMP:BOOL={0}'.format((
+                'ON' if '+openmp' in spec else 'OFF')),
         ]
 
         # Media I/O
@@ -115,31 +148,35 @@ class Opencv(CMakePackage):
             '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
         ])
 
-        libjpeg = spec['libjpeg-turbo']
-        args.extend([
-            '-DJPEG_LIBRARY:FILEPATH={0}'.format(
-                join_path(libjpeg.prefix.lib,
-                          'libjpeg.{0}'.format(dso_suffix))),
-            '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
-        ])
+        if '+jpeg' in spec:
+          libjpeg = spec['libjpeg-turbo']
+          cmake_options.extend([
+              '-DBUILD_JPEG:BOOL=OFF',
+              '-DJPEG_LIBRARY:FILEPATH={0}'.format(
+                  join_path(libjpeg.prefix.lib,
+                            'libjpeg.{0}'.format(dso_suffix))),
+              '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
+          ])
 
-        libtiff = spec['libtiff']
-        args.extend([
-            '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(libtiff.prefix.lib,
-                          'libtiff.{0}'.format(dso_suffix))),
-            '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
-        ])
+        if '+tiff' in spec:
+          libtiff = spec['libtiff']
+          cmake_options.extend([
+              '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
+                  'DEBUG' if '+debug' in spec else 'RELEASE'),
+                  join_path(libtiff.prefix.lib,
+                            'libtiff.{0}'.format(dso_suffix))),
+              '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
+          ])
 
-        jasper = spec['jasper']
-        args.extend([
-            '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(jasper.prefix.lib,
-                          'libjasper.{0}'.format(dso_suffix))),
-            '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
-        ])
+        if '+jasper' in spec:
+          jasper = spec['jasper']
+          cmake_options.extend([
+              '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
+                  'DEBUG' if '+debug' in spec else 'RELEASE'),
+                  join_path(jasper.prefix.lib,
+                            'libjasper.{0}'.format(dso_suffix))),
+              '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
+          ])
 
         # GUI
         if '+gtk' not in spec:
