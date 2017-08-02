@@ -802,7 +802,18 @@ def _libs_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If no libraries are found
     """
-    name = 'lib' + spec.name
+
+    # Variable 'name' is passed to function 'find_libraries', which supports
+    # glob characters. For example, we have a package with a name 'abc-abc'.
+    # Now, we don't know if the original name of the package is 'abc_abc'
+    # (and it generates a library 'libabc_abc.so') or 'abc-abc' (and it
+    # generates a library 'libabc-abc.so'). So, we tell the function
+    # 'find_libraries' to give us anything that matches 'libabc?abc' and it
+    # gives us either 'libabc-abc.so' or 'libabc_abc.so' (or an error)
+    # depending on which one exists (there is a possibility, of course, to
+    # get something like 'libabcXabc.so, but for now we consider this
+    # unlikely).
+    name = 'lib' + spec.name.replace('-', '?')
 
     if '+shared' in spec:
         libs = find_libraries(
