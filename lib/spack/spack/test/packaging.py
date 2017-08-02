@@ -150,7 +150,6 @@ echo $PATH"""
 
     # register mirror with spack config
     mirrors = {'spack-mirror-test': 'file://' + mirror_path}
-    mirrors['scisoft'] = 'http://scisoft.fnal.gov/scisoft/spack-mirror'
     spack.config.update_config('mirrors', mirrors)
 
     # Uninstall the package
