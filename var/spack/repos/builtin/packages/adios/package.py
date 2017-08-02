@@ -65,11 +65,6 @@ class Adios(AutotoolsPackage):
     variant('dataspaces', default=False, description='Enable dataspaces transport')
     variant('staging', default=False, description='Enable dataspaces and flexpath staging transports')
 
-    # Lots of setting up here for this package
-    # module swap PrgEnv-intel PrgEnv-$COMP
-    # module load cray-hdf5/1.8.14
-    # module load python/2.7.10
-
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool@:2.4.2', type='build')
