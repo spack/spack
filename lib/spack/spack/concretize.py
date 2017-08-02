@@ -118,6 +118,9 @@ class DefaultConcretizer(object):
         # use that spec to calibrate compiler compatibility.
         abi_exemplar = find_spec(spec, lambda x: x.compiler, spec.root)
 
+        if not abi_exemplar.compiler:
+            return [spec]
+
         # Sort candidates from most to least compatibility.
         #   We reverse because True > False.
         #   Sort is stable, so candidates keep their order.
