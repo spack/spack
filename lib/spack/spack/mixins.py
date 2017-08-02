@@ -143,23 +143,46 @@ def filter_compiler_wrappers(*files, **kwargs):
     whatever compiler they were built with.
 
     Args:
-        *files: files to be filtered
-        **kwargs: at present supports the keyword 'after' to specify after
-            which phase the files should be filtered (defaults to 'install').
+        *files: files to be filtered relative to the search root (which is,
+            by default, the installation prefix)
+
+        **kwargs: allowed keyword arguments
+
+            after
+                specifies after which phase the files should be
+                filtered (defaults to 'install')
+
+            relative_root
+                path relative to prefix where to start searching for
+                the files to be filtered. If not set the install prefix
+                wil be used as the search root. **It is highly recommended
+                to set this, as searching from the installation prefix may
+                affect performance severely in some cases**.
+
+            ignore_absent, backup
+                these two keyword arguments, if present, will be forwarded
+                to ``filter_file`` (see its documentation for more information
+                on their behavior)
     """
     after = kwargs.get('after', 'install')
+    relative_root = kwargs.get('relative_root', None)
+
+    filter_kwargs = {
+        'ignore_absent': kwargs.get('ignore_absent', True),
+        'backup': kwargs.get('backup', False),
+        'string': True
+    }
 
     def _filter_compiler_wrappers_impl(self):
+        # Compute the absolute path of the search root
+        root = os.path.join(
+            self.prefix, relative_root
+        ) if relative_root else self.prefix
+
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
-        abs_files = llnl.util.filesystem.find(self.prefix, files)
+        abs_files = llnl.util.filesystem.find(root, files)
         abs_files = [x for x in abs_files if not os.path.islink(x)]
-
-        filter_kwargs = {
-            'ignore_absent': True,
-            'backup': False,
-            'string': True
-        }
 
         x = llnl.util.filesystem.FileFilter(*abs_files)
 

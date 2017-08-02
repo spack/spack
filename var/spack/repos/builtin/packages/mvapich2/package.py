@@ -107,7 +107,9 @@ class Mvapich2(AutotoolsPackage):
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
     depends_on('cuda', when='+cuda')
 
-    filter_compiler_wrappers('mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort')
+    filter_compiler_wrappers(
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
+    )
 
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"

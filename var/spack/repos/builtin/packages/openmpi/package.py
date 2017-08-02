@@ -228,7 +228,8 @@ class Openmpi(AutotoolsPackage):
         'mpif90-vt-wrapper-data.txt',
         'mpif90-wrapper-data.txt',
         'mpif77-vt-wrapper-data.txt',
-        'mpif77-wrapper-data.txt'
+        'mpif77-wrapper-data.txt',
+        relative_root=os.path.join('share', 'openmpi')
     )
 
     def url_for_version(self, version):
