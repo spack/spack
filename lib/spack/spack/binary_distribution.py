@@ -41,8 +41,16 @@ from spack.stage import Stage
 import spack.fetch_strategy as fs
 import spack.relocate
 from contextlib import closing
+import spack.util.gpg as gpg_util
 import hashlib
-from spack.util.executable import which
+
+
+def has_gnupg2():
+    try:
+        gpg_util.Gpg.gpg()('--version', output=os.devnull)
+        return True
+    except Exception:
+        return False
 
 
 def buildinfo_file_name(spec):
@@ -154,7 +162,7 @@ def sign_tarball(spec, outdir, yes_to_all, key,
                  tarfile_path, specfile_path):
     # Sign the packages if keys available
     sign = True
-    if not which('gpg2'):
+    if not has_gnupg2():
         tty.warn('gpg2 is not available for signing.')
         sign = False
     else:
@@ -233,6 +241,9 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
             tty.warn("file exists, use -f to force overwrite: %s" %
                      specfile_path)
             return
+
+
+#    shutil.copyfile(spec_file, specfile_path)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec)
@@ -432,7 +443,7 @@ def get_specs():
 
 def get_keys(install=False, yes_to_all=False):
     """
-    Get public keys available on mirror
+    Get pgp public keys available on mirror
     """
     mirrors = spack.config.get_config('mirrors')
     if len(mirrors) == 0:
