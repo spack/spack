@@ -31,7 +31,7 @@ import spack.architecture
 import spack.package
 
 from spack.version import Version
-from spack.spec import Spec
+from spack.spec import Spec, canonical_deptype, alldeps
 
 from ordereddict_backport import OrderedDict
 
@@ -842,3 +842,54 @@ class TestSpecDag(object):
 
         with pytest.raises(AttributeError):
             q.libs
+
+    def test_canonical_deptype(self):
+        # special values
+        assert canonical_deptype(all) == alldeps
+        assert canonical_deptype('all') == alldeps
+        assert canonical_deptype(None) == alldeps
+
+        # everything in alldeps is canonical
+        for v in alldeps:
+            assert canonical_deptype(v) == (v,)
+
+        # tuples
+        assert canonical_deptype(('build',)) == ('build',)
+        assert canonical_deptype(
+            ('build', 'link', 'run')) == ('build', 'link', 'run')
+        assert canonical_deptype(
+            ('build', 'link')) == ('build', 'link')
+        assert canonical_deptype(
+            ('build', 'run')) == ('build', 'run')
+
+        # lists
+        assert canonical_deptype(
+            ['build', 'link', 'run']) == ('build', 'link', 'run')
+        assert canonical_deptype(
+            ['build', 'link']) == ('build', 'link')
+        assert canonical_deptype(
+            ['build', 'run']) == ('build', 'run')
+
+        # sorting
+        assert canonical_deptype(
+            ('run', 'build', 'link')) == ('build', 'link', 'run')
+        assert canonical_deptype(
+            ('run', 'link', 'build')) == ('build', 'link', 'run')
+        assert canonical_deptype(
+            ('run', 'link')) == ('link', 'run')
+        assert canonical_deptype(
+            ('link', 'build')) == ('build', 'link')
+
+        # can't put 'all' in tuple or list
+        with pytest.raises(ValueError):
+            canonical_deptype(['all'])
+        with pytest.raises(ValueError):
+            canonical_deptype(('all',))
+
+        # invalid values
+        with pytest.raises(ValueError):
+            canonical_deptype('foo')
+        with pytest.raises(ValueError):
+            canonical_deptype(('foo', 'bar'))
+        with pytest.raises(ValueError):
+            canonical_deptype(('foo',))

@@ -57,6 +57,8 @@ from spack.url import *
     ('gromacs-4.6.1-tar', 'gromacs-4.6.1'),
     # Download type - sh
     ('Miniconda2-4.3.11-Linux-x86_64.sh', 'Miniconda2-4.3.11'),
+    # Download version - release
+    ('v1.0.4-release', 'v1.0.4'),
     # Download version - stable
     ('libevent-2.0.21-stable', 'libevent-2.0.21'),
     # Download version - final
@@ -105,7 +107,9 @@ from spack.url import *
     # Combinations of multiple patterns - public
     ('dakota-6.3-public.src', 'dakota-6.3'),
     # Combinations of multiple patterns - universal
-    ('synergy-1.3.6p2-MacOSX-Universal', 'synergy-1.3.6p2')
+    ('synergy-1.3.6p2-MacOSX-Universal', 'synergy-1.3.6p2'),
+    # Combinations of multiple patterns - dynamic
+    ('snptest_v2.5.2_linux_x86_64_dynamic', 'snptest_v2.5.2'),
 ])
 def test_url_strip_version_suffixes(url, expected):
     stripped = strip_version_suffixes(url)

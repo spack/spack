@@ -90,7 +90,8 @@ def graph(parser, args):
     deptype = ('link', 'run')
     if args.deptype:
         deptype = tuple(args.deptype.split(','))
-        validate_deptype(deptype)
+        if deptype == ('all',):
+            deptype = 'all'
         deptype = canonical_deptype(deptype)
 
     if args.dot:  # Dot graph only if asked for.

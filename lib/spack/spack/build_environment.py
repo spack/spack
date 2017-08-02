@@ -469,6 +469,19 @@ def setup_package(pkg, dirty=False):
     for s in pkg.spec.traverse():
         s.package.spec = s
 
+    # Trap spack-tracked compiler flags as appropriate.
+    # Must be before set_compiler_environment_variables
+    # Current implementation of default flag handler relies on this being
+    # the first thing to affect the spack_env (so there is no appending), or
+    # on no other build_environment methods trying to affect these variables
+    # (CFLAGS, CXXFLAGS, etc). Currently both are true, either is sufficient.
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
+        trap_func = getattr(pkg, flag + '_handler',
+                            getattr(pkg, 'default_flag_handler',
+                                    lambda x, y: y[1]))
+        flag_val = pkg.spec.compiler_flags[flag]
+        pkg.spec.compiler_flags[flag] = trap_func(spack_env, (flag, flag_val))
+
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)

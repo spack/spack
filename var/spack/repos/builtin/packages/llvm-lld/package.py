@@ -38,7 +38,10 @@ class LlvmLld(Package):
     depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
-        env['CXXFLAGS'] = self.compiler.cxx11_flag
+        if 'CXXFLAGS' in env and env['CXXFLAGS']:
+            env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
+        else:
+            env['CXXFLAGS'] = self.compiler.cxx11_flag
 
         with working_dir('spack-build', create=True):
             cmake('..',

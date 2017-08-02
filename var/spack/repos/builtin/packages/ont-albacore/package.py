@@ -33,14 +33,15 @@ class OntAlbacore(Package):
     kits and Flow Cells."""
 
     homepage = "https://nanoporetech.com"
-    url = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.1.0-cp35-cp35m-manylinux1_x86_64.whl"
+    url = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.2.4-cp35-cp35m-manylinux1_x86_64.whl"
 
+    version('1.2.4', '559640bec4693af12e4d923e8d77adf6', expand=False)
     version('1.1.0', 'fab4502ea1bad99d813aa2629e03e83d', expand=False)
     extends('python')
 
     depends_on('python@3.5.0:3.5.999', type=('build', 'run'))
     depends_on('py-setuptools',        type=('build', 'run'))
-    depends_on('py-numpy',             type=('build', 'run'))
+    depends_on('py-numpy@1.13.0',      type=('build', 'run'))
     depends_on('py-dateutil',          type=('build', 'run'))
     depends_on('py-h5py',              type=('build', 'run'))
     depends_on('py-ont-fast5-api',     type=('build', 'run'))
