@@ -29,8 +29,6 @@ import collections
 import os
 
 import llnl.util.filesystem
-import llnl.util.tty as tty
-
 
 __all__ = [
     'filter_compiler_wrappers'
@@ -152,25 +150,26 @@ def filter_compiler_wrappers(*files, **kwargs):
     after = kwargs.get('after', 'install')
 
     def _filter_compiler_wrappers_impl(self):
-
-        tty.debug('Filtering compiler wrappers: {0}'.format(files))
-
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
         abs_files = llnl.util.filesystem.find(self.prefix, files)
         abs_files = [x for x in abs_files if not os.path.islink(x)]
 
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
+        filter_kwargs = {
+            'ignore_absent': True,
+            'backup': False,
+            'string': True
+        }
 
         x = llnl.util.filesystem.FileFilter(*abs_files)
 
-        x.filter(os.environ['CC'], self.compiler.cc, **kwargs)
-        x.filter(os.environ['CXX'], self.compiler.cxx, **kwargs)
-        x.filter(os.environ['F77'], self.compiler.f77, **kwargs)
-        x.filter(os.environ['FC'], self.compiler.fc, **kwargs)
+        x.filter(os.environ['CC'], self.compiler.cc, **filter_kwargs)
+        x.filter(os.environ['CXX'], self.compiler.cxx, **filter_kwargs)
+        x.filter(os.environ['F77'], self.compiler.f77, **filter_kwargs)
+        x.filter(os.environ['FC'], self.compiler.fc, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
-        x.filter('-Wl,--enable-new-dtags', '', **kwargs)
+        x.filter('-Wl,--enable-new-dtags', '', **filter_kwargs)
 
     PackageMixinsMeta.register_method_after(
         _filter_compiler_wrappers_impl, after

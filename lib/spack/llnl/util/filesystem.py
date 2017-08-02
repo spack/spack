@@ -119,9 +119,15 @@ def filter_file(regex, repl, *filenames, **kwargs):
         regex = re.escape(regex)
 
     for filename in filenames:
+
+        msg = 'FILTER FILE: {0} [replacing "{1}"]'
+        tty.debug(msg.format(filename, regex))
+
         backup_filename = filename + "~"
 
         if ignore_absent and not os.path.exists(filename):
+            msg = 'FILTER FILE: file "{0}" not found. Skipping to next file.'
+            tty.debug(msg.format(filename))
             continue
 
         # Create backup file. Don't overwrite an existing backup
