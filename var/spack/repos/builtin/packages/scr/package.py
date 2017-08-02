@@ -27,6 +27,7 @@ from spack import *
 import os
 import shutil
 
+
 class Scr(CMakePackage):
     """SCR caches checkpoint data in storage on the compute nodes of a
        Linux cluster to provide a fast, scalable checkpoint/restart
@@ -34,8 +35,8 @@ class Scr(CMakePackage):
 
     homepage = "http://computation.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
 
-    ## NOTE: scr-v1.1.8 is built with autotools and is not properly build here.
-    ## scr-v1.1.8 will be deprecated with the upcoming release of v1.2.0
+    # NOTE: scr-v1.1.8 is built with autotools and is not properly build here.
+    # scr-v1.1.8 will be deprecated with the upcoming release of v1.2.0
     # url      = "https://github.com/LLNL/scr/releases/download/v1.1.8/scr-1.1.8.tar.gz"
     # version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e')
 
@@ -54,7 +55,7 @@ class Scr(CMakePackage):
             description="Build SCR with libyogrt for get_time_remaining.")
     depends_on('libyogrt', when="+libyogrt")
 
-    ## MySQL not yet in spack
+    # MySQL not yet in spack
     # variant('mysql', default=True, decription="MySQL database for logging")
     # depends_on('mysql', when="+mysql")
 
@@ -131,8 +132,8 @@ class Scr(CMakePackage):
                 spec['libyogrt'].prefix))
 
         # if "+mysql" in spec:
-                # args.append('-DWITH_MYSQL_PREFIX={0}'.format(
-                      # spec['mysql'].prefix))
+        # args.append('-DWITH_MYSQL_PREFIX={0}'.format(
+        # spec['mysql'].prefix))
 
         return args
 
