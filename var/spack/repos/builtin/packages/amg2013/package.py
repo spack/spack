@@ -39,14 +39,10 @@ class Amg2013(MakefilePackage):
     version('master', '9d918d2a69528b83e6e0aba6ba601fef',
             url='https://codesign.llnl.gov/amg2013/amg2013.tgz')
 
-    variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('assumepartition', default=False, description='Assumed partition (for thousands of processors)')
 
     depends_on('mpi')
-
-    conflicts('+openmp', when='~mpi')
-    conflicts('+assumepartition', when='~mpi')
 
     @property
     def build_targets(self):
@@ -61,7 +57,7 @@ class Amg2013(MakefilePackage):
         if '+openmp' in self.spec:
             include_cflags += '-DHYPRE_USING_OPENMP ' + self.compiler.openmp_flag
             include_lflags += ' ' + self.compiler.openmp_flag
-            
+
         targets.append('INCLUDE_CFLAGS={0}'.format(include_cflags))
         targets.append('INCLUDE_LFLAGS={0}'.format(include_lflags))
         targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
