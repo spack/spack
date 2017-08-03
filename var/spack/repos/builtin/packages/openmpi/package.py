@@ -229,7 +229,7 @@ class Openmpi(AutotoolsPackage):
             libraries = ['libmpi_cxx'] + libraries
 
         return find_libraries(
-            libraries, root=self.prefix, shared=True, recurse=True
+            libraries, root=self.prefix, shared=True, recursive=True
         )
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
