@@ -25,30 +25,14 @@
 from spack import *
 
 
-class Expat(AutotoolsPackage):
-    """Expat is an XML parser library written in C."""
+class Libbsd(AutotoolsPackage):
+    """This library provides useful functions commonly found on BSD
+    systems, and lacking on others like GNU systems, thus making it easier
+    to port projects with strong BSD origins, without needing to embed the
+    same code over and over again on each project.
+    """
 
-    homepage = "http://expat.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/expat/files/expat/2.2.2/expat-2.2.2.tar.bz2"
+    homepage = "https://libbsd.freedesktop.org/wiki/"
+    url      = "https://libbsd.freedesktop.org/releases/libbsd-0.8.6.tar.xz"
 
-    # Version 2.2.2 introduced a requirement for a high quality
-    # entropy source.  "Older" linux systems (aka CentOS 7) do not
-    # support get_random so we'll provide a high quality source via
-    # libbsd.
-    # There's no need for it in earlier versions, so 'conflict' if
-    # someone's asking for an older version and also libbsd.
-    # In order to install an older version, you'll need to add
-    # `~libbsd`.
-    variant('libbsd', default=True,
-            description="Use libbsd (for high quality randomness)")
-    depends_on('libbsd', when="@2.2.1:+libbsd")
-
-    version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
-    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
-
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '+libbsd' in spec and '@2.2.1:' in spec:
-            args = ['--with-libbsd']
-        return args
+    version('0.8.6', '4ab7bec639af17d0aacb50222b479110')
