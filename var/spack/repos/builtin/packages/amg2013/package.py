@@ -55,7 +55,8 @@ class Amg2013(MakefilePackage):
             include_cflags += '-DHYPRE_NO_GLOBAL_PARTITION' + ' '
 
         if '+openmp' in self.spec:
-            include_cflags += '-DHYPRE_USING_OPENMP ' + self.compiler.openmp_flag
+            include_cflags += '-DHYPRE_USING_OPENMP '
+            include_cflags += self.compiler.openmp_flag
             include_lflags += ' ' + self.compiler.openmp_flag
 
         targets.append('INCLUDE_CFLAGS={0}'.format(include_cflags))
