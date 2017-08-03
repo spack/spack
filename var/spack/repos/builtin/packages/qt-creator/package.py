@@ -37,6 +37,7 @@ class QtCreator(Package):
     version('4.1.0',  '657727e4209befa4bf5889dff62d9e0a')
 
     depends_on("qt")
+    depends_on("sqlite@3.8.5")
 
     def install(self, spec, prefix):
         os.environ['INSTALL_ROOT'] = self.prefix
