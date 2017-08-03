@@ -33,9 +33,12 @@ class Qwt(QMakePackage):
     ranges of type double.
     """
     homepage = "http://qwt.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/qwt/qwt/5.2.2/qwt-5.2.2.tar.bz2"
+    url      = "https://sourceforge.net/projects/qwt/files/qwt/6.1.3/qwt-6.1.3.tar.bz2"
 
+    version('6.1.3', '19d1f5fa5e22054d22ee3accc37c54ba')
     version('5.2.2', '70d77e4008a6cc86763737f0f24726ca')
+
+    depends_on('qt+opengl')
 
     def patch(self):
         # Subvert hardcoded prefix
