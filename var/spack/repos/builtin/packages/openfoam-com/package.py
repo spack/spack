@@ -66,6 +66,7 @@ import glob
 import re
 import shutil
 import os
+import platform
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [
@@ -657,36 +658,35 @@ class OpenfoamArch(object):
         if '+float32' in spec:
             self.precision_option = 'SP'
 
-        # spec.architecture.platform is like `uname -s`, but lower-case
-        platform = spec.architecture.platform
+        # OpenFOAM chooses which wmake rules to use based on the output of
+        # `uname -s` and `uname -m`.  We can get the same information from
+        # Python's platform library.
 
-        # spec.architecture.target is like `uname -m`
-        target   = spec.architecture.target
+        system = platform.system().lower()
+        machine = platform.machine()
 
-        if platform == 'linux':
-            if target == 'i686':
+        self.arch = system
+        self.arch_option = '64'
+
+        if system == 'linux':
+            if machine == 'i686':
                 self.arch_option = '32'  # Force consistency
-            elif target == 'x86_64':
-                if self.arch_option == '64':
-                    platform += '64'
-            elif target == 'ia64':
-                platform += 'ia64'
-            elif target == 'armv7l':
-                platform += 'ARM7'
-            elif target == 'ppc64':
-                platform += 'PPC64'
-            elif target == 'ppc64le':
-                platform += 'PPC64le'
-        elif platform == 'darwin':
-            if target == 'x86_64':
-                platform += 'Intel'
-                if self.arch_option == '64':
-                    platform += '64'
-        elif platform == 'cray':
-            platform = 'linux64'
-        # ... and others?
+            elif machine == 'x86_64':
+                self.arch += '64'
+            elif machine == 'ia64':
+                self.arch += 'ia64'
+            elif machine == 'armv7l':
+                self.arch += 'ARM7'
+            elif machine == 'ppc64':
+                self.arch += 'PPC64'
+            elif machine == 'ppc64le':
+                self.arch += 'PPC64le'
 
-        self.arch = platform
+        elif system == 'darwin':
+            if machine == 'x86_64':
+                self.arch += 'Intel'
+                if self.arch_option == '64':
+                    self.arch += '64'
 
         # Capitalized version of the compiler name, which usually corresponds
         # to how OpenFOAM will camel-case things.
