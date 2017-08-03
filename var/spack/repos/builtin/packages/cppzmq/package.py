@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,16 +25,16 @@
 from spack import *
 
 
-class Bml(CMakePackage):
-    """The basic matrix library (bml) is a collection of various matrix data
-    formats (in dense and sparse) and their associated algorithms for basic
-    matrix operations."""
+class Cppzmq(CMakePackage):
+    """C++ binding for 0MQ"""
 
-    homepage = "http://lanl.github.io/bml/"
-    url      = "https://github.com/lanl/bml"
+    homepage = "http://www.zeromq.org"
+    url      = "https://github.com/zeromq/cppzmq/archive/v4.2.2.tar.gz"
 
-    version('develop', git='https://github.com/lanl/bml', branch='master')
-    version('1.1.0', git='https://github.com/lanl/bml', tag='v1.1.0')
+    version('develop', branch='master',
+            git='https://github.com/zeromq/cppzmq.git')
 
-    depends_on("blas")
-    depends_on("lapack")
+    version('4.2.2', 'bd809b47296e77fe9f192bd9dafd5cc3')
+
+    depends_on('cmake@3.0.0:', type='build')
+    depends_on('zeromq@4.2.2')

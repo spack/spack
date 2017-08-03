@@ -37,5 +37,21 @@ class Zsh(AutotoolsPackage):
     version('5.3.1', checksum='d583fbca0c2410bf9542ce8a651c26ca')
     version('5.1.1', checksum='8ba28a9ef82e40c3a271602f18343b2f')
 
+    # Testing for terminal related things causes failures in e.g. Jenkins.
+    # See e.g. https://www.zsh.org/mla/users/2003/msg00845.html,
+    # although the name of the option has evolved since then.
+    variant('skip-tcsetpgrp-test', default=True,
+            description="Skip configure's tcsetpgrp test")
+
     depends_on("pcre")
     depends_on("ncurses")
+
+    def configure_args(self):
+        if '+skip-tcsetpgrp-test' in self.spec:
+            # assert that we have a functional tcsetpgrp
+            args = ['--with-tcsetpgrp']
+        else:
+            # let configure run it's test and see what's what
+            args = []
+
+        return args

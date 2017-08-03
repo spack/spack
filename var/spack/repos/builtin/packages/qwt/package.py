@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,16 +25,26 @@
 from spack import *
 
 
-class Bml(CMakePackage):
-    """The basic matrix library (bml) is a collection of various matrix data
-    formats (in dense and sparse) and their associated algorithms for basic
-    matrix operations."""
+class Qwt(Package):
+    """The Qwt library contains GUI Components and utility classes which are
+    primarily useful for programs with a technical background. Beside a
+    framework for 2D plots it provides scales, sliders, dials, compasses,
+    thermometers, wheels and knobs to control or display values, arrays, or
+    ranges of type double.
+    """
+    homepage = "http://qwt.sourceforge.net/"
+    url      = "https://downloads.sourceforge.net/project/qwt/qwt/5.2.2/qwt-5.2.2.tar.bz2"
 
-    homepage = "http://lanl.github.io/bml/"
-    url      = "https://github.com/lanl/bml"
+    version('5.2.2', '70d77e4008a6cc86763737f0f24726ca')
 
-    version('develop', git='https://github.com/lanl/bml', branch='master')
-    version('1.1.0', git='https://github.com/lanl/bml', tag='v1.1.0')
+    depends_on("qt")
 
-    depends_on("blas")
-    depends_on("lapack")
+    def install(self, spec, prefix):
+
+        # Subvert hardcoded prefix
+        filter_file(r'/usr/local/qwt-\$\$VERSION', prefix, 'qwtconfig.pri')
+
+        qmake = which('qmake')
+        qmake()
+        make()
+        make("install")
