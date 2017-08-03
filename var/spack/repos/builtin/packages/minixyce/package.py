@@ -34,6 +34,8 @@ class Minixyce(MakefilePackage):
     homepage = "https://mantevo.org"
     url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniXyce/miniXyce_1.0.tar.gz"
 
+    tags = ['proxy-app']
+
     version('1.0', '6fc0e5a561af0b8ff581d9f704194133')
 
     variant('mpi', default=True, description='Build with MPI Support')

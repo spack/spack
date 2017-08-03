@@ -37,6 +37,8 @@ class Minighost(MakefilePackage):
     homepage = "http://mantevo.org"
     url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniGhost/miniGhost_1.0.1.tar.gz"
 
+    tags = ['proxy-app']
+
     version('1.0.1', '2a4ac4383e9be00f87b6067c3cfe6463')
 
     variant('mpi', default=True, description='Enable MPI Support')

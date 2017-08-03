@@ -35,6 +35,8 @@ class Minismac2d(MakefilePackage):
     homepage = "http://mantevo.org"
     url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniSMAC2D/miniSMAC2D-2.0.tgz"
 
+    tags = ['proxy-app']
+
     version('2.0', '1bb1a52cea21bc9162bf7a71a6ddf37d')
 
     depends_on('mpi')

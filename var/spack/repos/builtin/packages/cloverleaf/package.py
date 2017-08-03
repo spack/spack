@@ -37,6 +37,8 @@ class Cloverleaf(MakefilePackage):
     homepage = "http://uk-mac.github.io/CloverLeaf"
     url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/CloverLeaf/CloverLeaf-1.1.tar.gz"
 
+    tags = ['proxy-app']
+
     version('1.1', '65652b30a64eb237ec844a6fdd4cd518')
 
     variant('build', default='ref', description='Type of Parallelism Build',
