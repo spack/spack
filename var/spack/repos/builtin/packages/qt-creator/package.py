@@ -23,21 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import shutil
 
 
 class QtCreator(QMakePackage):
     """The Qt Creator IDE."""
     homepage = 'https://www.qt.io/ide/'
-    url      = 'http://download.qt.io/official_releases/qtcreator/4.1/4.1.0/qt-creator-opensource-src-4.1.0.tar.gz'
+    url      = 'http://download.qt.io/official_releases/qtcreator/4.3/4.3.1/qt-creator-opensource-src-4.3.1.tar.gz'
 
     list_url = 'http://download.qt.io/official_releases/qtcreator/'
     list_depth = 2
 
-    version('4.1.0',  '657727e4209befa4bf5889dff62d9e0a')
+    version('4.3.1', '6769ea47f287e2d9e30ff92acb899eef')
+    version('4.1.0', '657727e4209befa4bf5889dff62d9e0a')
 
-    depends_on('qt@5.5.0:+opengl', type='build')
+    depends_on('qt@5.5.0:+opengl')
     depends_on('sqlite@3.8.10.2')
+
+    def url_for_version(self, version):
+        url = 'http://download.qt.io/official_releases/qtcreator/{0}/{1}/qt-creator-opensource-src-{1}.tar.gz'
+        return url.format(version.up_to(2), version)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('INSTALL_ROOT', self.prefix)
