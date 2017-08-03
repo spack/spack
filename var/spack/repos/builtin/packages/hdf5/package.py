@@ -163,7 +163,7 @@ class Hdf5(AutotoolsPackage):
         libraries = query2libraries[key]
 
         return find_libraries(
-            libraries, root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recursive=True
         )
 
     @run_before('configure')

@@ -142,7 +142,7 @@ class Atlas(Package):
             to_find = ['liblapack'] + interfaces + ['libatlas']
             shared = False
         return find_libraries(
-            to_find, root=self.prefix, shared=shared, recurse=True
+            to_find, root=self.prefix, shared=shared, recursive=True
         )
 
     def install_test(self):

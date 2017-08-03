@@ -70,7 +70,7 @@ class IntelMpi(IntelPackage):
             libraries = ['libmpicxx'] + libraries
 
         return find_libraries(
-            libraries, root=mpi_root, shared=True, recurse=True
+            libraries, root=mpi_root, shared=True, recursive=True
         )
 
     @property
@@ -78,7 +78,7 @@ class IntelMpi(IntelPackage):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
         mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
-        return find_headers('mpi', root=mpi_root, recurse=False)
+        return find_headers('mpi', root=mpi_root, recursive=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('I_MPI_CC', spack_cc)
