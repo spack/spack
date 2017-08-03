@@ -36,7 +36,7 @@ class QtCreator(QMakePackage):
     version('4.3.1', '6769ea47f287e2d9e30ff92acb899eef')
     version('4.1.0', '657727e4209befa4bf5889dff62d9e0a')
 
-    depends_on('qt@5.5.0:+opengl')
+    depends_on('qt@5.6.0:+opengl')
     depends_on('sqlite@3.8.10.2')
 
     def url_for_version(self, version):
