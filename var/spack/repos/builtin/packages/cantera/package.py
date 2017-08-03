@@ -42,9 +42,9 @@ class Cantera(SConsPackage):
             description='Build the Cantera Matlab toolbox')
 
     # Required dependencies
-    depends_on('fmt@3.0.0:', when='@2.3.0:')
-    depends_on('googletest', when='@2.3.0:')
-    depends_on('eigen',      when='@2.3.0:')
+    depends_on('fmt@3.0.0:3.0.2', when='@2.3.0:')
+    depends_on('googletest',      when='@2.3.0:')
+    depends_on('eigen',           when='@2.3.0:')
     depends_on('boost')
     depends_on('sundials')  # must be compiled with -fPIC
     depends_on('blas')
