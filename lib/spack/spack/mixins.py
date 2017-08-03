@@ -163,6 +163,11 @@ def filter_compiler_wrappers(*files, **kwargs):
                 these two keyword arguments, if present, will be forwarded
                 to ``filter_file`` (see its documentation for more information
                 on their behavior)
+
+            recursive
+                this keyword argument, if present, will be forwarded to
+                ``find`` (see its documentation for more information on the
+                behavior)
     """
     after = kwargs.get('after', 'install')
     relative_root = kwargs.get('relative_root', None)
@@ -173,6 +178,10 @@ def filter_compiler_wrappers(*files, **kwargs):
         'string': True
     }
 
+    find_kwargs = {
+        'recursive': kwargs.get('recursive', False)
+    }
+
     def _filter_compiler_wrappers_impl(self):
         # Compute the absolute path of the search root
         root = os.path.join(
@@ -181,7 +190,7 @@ def filter_compiler_wrappers(*files, **kwargs):
 
         # Compute the absolute path of the files to be filtered and
         # remove links from the list.
-        abs_files = llnl.util.filesystem.find(root, files)
+        abs_files = llnl.util.filesystem.find(root, files, **find_kwargs)
         abs_files = [x for x in abs_files if not os.path.islink(x)]
 
         x = llnl.util.filesystem.FileFilter(*abs_files)
