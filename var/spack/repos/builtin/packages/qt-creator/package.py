@@ -37,6 +37,11 @@ class QtCreator(QMakePackage):
     version('4.1.0', '657727e4209befa4bf5889dff62d9e0a')
 
     depends_on('qt@5.6.0:+opengl')
+    # Qt Creator comes bundled with its own copy of sqlite. Qt has a build
+    # dependency on Python, which has a dependency on sqlite. If Python is
+    # built with a different version of sqlite than the bundled copy, it will
+    # cause symbol conflict. Force Spack to build with the same version of
+    # sqlite as the bundled copy.
     depends_on('sqlite@3.8.10.2')
 
     def url_for_version(self, version):
