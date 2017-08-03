@@ -39,6 +39,9 @@ class Qwt(QMakePackage):
     version('5.2.2', '70d77e4008a6cc86763737f0f24726ca')
 
     depends_on('qt+opengl')
+    # Qwt 6.1.1 and older use a constant that was removed in Qt 5.4
+    # https://bugs.launchpad.net/ubuntu/+source/qwt-qt5/+bug/1485213
+    depends_on('qt@:5.3', when='@:6.1.1')
 
     def patch(self):
         # Subvert hardcoded prefix
