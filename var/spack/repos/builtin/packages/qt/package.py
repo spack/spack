@@ -65,7 +65,7 @@ class Qt(Package):
             description="Build with D-Bus support.")
     variant('phonon',     default=False,
             description="Build with phonon support.")
-    variant('opengl',     default=True,
+    variant('opengl',     default=False,
             description="Build with OpenGL support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
