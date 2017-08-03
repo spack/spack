@@ -36,32 +36,19 @@ class Cantera(SConsPackage):
     version('2.3.0', 'aebbd8d891cb1623604245398502b72e')
     version('2.2.1', '9d1919bdef39ddec54485fc8a741a3aa')
 
-    variant('eigen',      default=True,
-            description='Build with external Eigen')
-    variant('fmt',        default=True,
-            description='Build with external fmt')
-    variant('googletest', default=True,
-            description='Build with external gtest')
-    variant('lapack',     default=True,
-            description='Build with external BLAS/LAPACK libraries')
-    variant('threadsafe', default=True,
-            description='Build threadsafe, requires Boost')
-    variant('sundials',   default=True,
-            description='Build with external Sundials')
     variant('python',     default=False,
             description='Build the Cantera Python module')
     variant('matlab',     default=False,
             description='Build the Cantera Matlab toolbox')
 
-    # Recommended dependencies
-    depends_on('eigen', when='@2.3.0:+eigen', type='build')
-    depends_on('fmt',   when='@2.3.0:+fmt')
-    depends_on('googletest', when='@2.3.0:+googletest')
-    depends_on('blas',      when='+lapack')
-    depends_on('lapack',    when='+lapack')
-    depends_on('boost',     when='+threadsafe', type='build')
-    depends_on('boost',     when='@2.3.0:', type='build')
-    depends_on('sundials',  when='+sundials')  # must be compiled with -fPIC
+    # Required dependencies
+    depends_on('fmt@3.0.0:', when='@2.3.0:')
+    depends_on('googletest', when='@2.3.0:')
+    depends_on('eigen',      when='@2.3.0:')
+    depends_on('boost')
+    depends_on('sundials')  # must be compiled with -fPIC
+    depends_on('blas')
+    depends_on('lapack')
 
     # Python module dependencies
     extends('python', when='+python')
@@ -83,6 +70,7 @@ class Cantera(SConsPackage):
         args = [
             'build',
             'prefix={0}'.format(prefix),
+            'VERBOSE=yes',
             'CC={0}'.format(spack_cc),
             'CXX={0}'.format(spack_cxx),
             'FORTRAN={0}'.format(spack_fc),
@@ -94,73 +82,55 @@ class Cantera(SConsPackage):
         if spec.satisfies('@:2.2.1'):
             args.append('F77={0}'.format(spack_f77))
 
-        # Eigen support
-        if spec.satisfies('@2.3.0:'):
-            if '+eigen' in spec:
-                args.extend([
-                    'system_eigen=y',
-                    'extra_inc_dirs={0}'.format(
-                        spec['eigen'].prefix.include.eigen3),
-                ])
-            else:
-                args.append('system_eigen=n')
-
         # fmt support
         if spec.satisfies('@2.3.0:'):
-            if '+fmt' in spec:
-                args.append('system_fmt=y')
-            else:
-                args.append('system_fmt=n')
+            args.append('system_fmt=y')
 
         # Googletest support
         if spec.satisfies('@2.3.0:'):
-            if '+googletest' in spec:
-                args.append('system_googletest=y')
-            else:
-                args.append('system_googletest=n')
+            args.append('system_googletest=y')
+
+        # Eigen support
+        if spec.satisfies('@2.3.0:'):
+            args.extend([
+                'system_eigen=y',
+                'extra_inc_dirs={0}'.format(
+                    join_path(spec['eigen'].prefix.include, 'eigen{0}'.format(
+                        spec['eigen'].version.up_to(1)))),
+            ])
 
         # BLAS/LAPACK support
-        if '+lapack' in spec:
-            lapack_blas = spec['lapack'].libs + spec['blas'].libs
-            args.extend([
-                'blas_lapack_libs={0}'.format(','.join(lapack_blas.names)),
-                'blas_lapack_dir={0}'.format(spec['lapack'].prefix.lib)
-            ])
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        args.extend([
+            'blas_lapack_libs={0}'.format(','.join(lapack_blas.names)),
+            'blas_lapack_dir={0}'.format(spec['lapack'].prefix.lib)
+        ])
 
         # Boost support
         if spec.satisfies('@2.3.0:'):
             args.append('boost_inc_dir={0}'.format(
                 spec['boost'].prefix.include))
         else:
-            if '+threadsafe' in spec:
-                args.extend([
-                    'build_thread_safe=yes',
-                    'boost_inc_dir={0}'.format(spec['boost'].prefix.include),
-                    'boost_lib_dir={0}'.format(spec['boost'].prefix.lib)
-                ])
-            else:
-                args.append('build_thread_safe=no')
+            args.extend([
+                'build_thread_safe=yes',
+                'boost_inc_dir={0}'.format(spec['boost'].prefix.include),
+                'boost_lib_dir={0}'.format(spec['boost'].prefix.lib),
+            ])
 
         # Sundials support
-        if '+sundials' in spec:
-            if spec.satisfies('@2.3.0:'):
-                args.append('system_sundials=y')
-            else:
-                args.extend([
-                    'use_sundials=y',
-                    'sundials_license={0}'.format(
-                        spec['sundials'].prefix.LICENSE)
-                ])
-
-            args.extend([
-                'sundials_include={0}'.format(spec['sundials'].prefix.include),
-                'sundials_libdir={0}'.format(spec['sundials'].prefix.lib),
-            ])
+        if spec.satisfies('@2.3.0:'):
+            args.append('system_sundials=y')
         else:
-            if spec.satisfies('@2.3.0:'):
-                args.append('system_sundials=n')
-            else:
-                args.append('use_sundials=n')
+            args.extend([
+                'use_sundials=y',
+                'sundials_license={0}'.format(
+                    spec['sundials'].prefix.LICENSE)
+            ])
+
+        args.extend([
+            'sundials_include={0}'.format(spec['sundials'].prefix.include),
+            'sundials_libdir={0}'.format(spec['sundials'].prefix.lib),
+        ])
 
         # Python module
         if '+python' in spec:
