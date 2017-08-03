@@ -41,14 +41,14 @@ class Expat(AutotoolsPackage):
     # `~libbsd`.
     variant('libbsd', default=True,
             description="Use libbsd (for high quality randomness)")
-    depends_on('libbsd', when="+libbsd")
-    conflicts('+libbsd', when="@:2.2.0")
+    depends_on('libbsd', when="@2.2.1:+libbsd")
 
     version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
     version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
 
     def configure_args(self):
+        spec = self.spec
         args = []
-        if '+libbsd' in spec:
+        if '+libbsd' in spec and '@2.2.1:' in spec:
             args = ['--with-libbsd']
         return args
