@@ -122,7 +122,7 @@ class Scr(CMakePackage):
         args.append('-DSCR_CNTL_BASE={0}'.format(
             spec.variants['cntl_base'].value))
 
-        args.append('-DWITH_PDSH_PREFX={0}'.format(spec['pdsh'].prefix))
+        args.append('-DWITH_PDSH_PREFIX={0}'.format(spec['pdsh'].prefix))
 
         if "+dtcmp" in spec:
             args.append('-DWITH_DTCMP_PREFIX={0}'.format(spec['dtcmp'].prefix))
