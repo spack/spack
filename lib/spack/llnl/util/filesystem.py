@@ -26,7 +26,6 @@ import collections
 import errno
 import hashlib
 import fileinput
-import fnmatch
 import glob
 import numbers
 import os
@@ -606,7 +605,7 @@ def fix_darwin_install_name(path):
                     break
 
 
-def find(root, files, recurse=True):
+def find(root, files, recursive=True):
     """Search for ``files`` starting from the ``root`` directory.
 
     Like GNU/BSD find but written entirely in Python.
@@ -627,7 +626,7 @@ def find(root, files, recurse=True):
 
     is equivalent to:
 
-    >>> find('/usr/local/bin', 'python', recurse=False)
+    >>> find('/usr/local/bin', 'python', recursive=False)
 
     Accepts any glob characters accepted by fnmatch:
 
@@ -652,7 +651,7 @@ def find(root, files, recurse=True):
     if isinstance(files, six.string_types):
         files = [files]
 
-    if recurse:
+    if recursive:
         return _find_recursive(root, files)
     else:
         return _find_non_recursive(root, files)
@@ -666,11 +665,14 @@ def _find_recursive(root, search_files):
     # found in a key, and reconstructing the stable order later.
     found_files = collections.defaultdict(list)
 
+    # Make the path absolute to have os.walk also return an absolute path
+    root = os.path.abspath(root)
+
     for path, _, list_files in os.walk(root):
         for search_file in search_files:
-            for list_file in list_files:
-                if fnmatch.fnmatch(list_file, search_file):
-                    found_files[search_file].append(join_path(path, list_file))
+            matches = glob.glob(os.path.join(path, search_file))
+            matches = [os.path.join(path, x) for x in matches]
+            found_files[search_file].extend(matches)
 
     answer = []
     for search_file in search_files:
@@ -684,10 +686,13 @@ def _find_non_recursive(root, search_files):
     # can return files in any order (does not preserve stability)
     found_files = collections.defaultdict(list)
 
-    for list_file in os.listdir(root):
-        for search_file in search_files:
-            if fnmatch.fnmatch(list_file, search_file):
-                found_files[search_file].append(join_path(root, list_file))
+    # Make the path absolute to have absolute path returned
+    root = os.path.abspath(root)
+
+    for search_file in search_files:
+        matches = glob.glob(os.path.join(root, search_file))
+        matches = [os.path.join(root, x) for x in matches]
+        found_files[search_file].extend(matches)
 
     answer = []
     for search_file in search_files:
@@ -878,7 +883,7 @@ class HeaderList(FileList):
         self._macro_definitions.append(macro)
 
 
-def find_headers(headers, root, recurse=False):
+def find_headers(headers, root, recursive=False):
     """Returns an iterable object containing a list of full paths to
     headers if found.
 
@@ -896,7 +901,7 @@ def find_headers(headers, root, recurse=False):
     Parameters:
         headers (str or list of str): Header name(s) to search for
         root (str): The root directory to start searching from
-        recurses (bool, optional): if False search only root folder,
+        recursive (bool, optional): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
 
     Returns:
@@ -916,7 +921,7 @@ def find_headers(headers, root, recurse=False):
     # List of headers we are searching with suffixes
     headers = ['{0}.{1}'.format(header, suffix) for header in headers]
 
-    return HeaderList(find(root, headers, recurse))
+    return HeaderList(find(root, headers, recursive))
 
 
 class LibraryList(FileList):
@@ -1057,7 +1062,7 @@ def find_system_libraries(libraries, shared=True):
 
     for library in libraries:
         for root in search_locations:
-            result = find_libraries(library, root, shared, recurse=True)
+            result = find_libraries(library, root, shared, recursive=True)
             if result:
                 libraries_found += result
                 break
@@ -1065,7 +1070,7 @@ def find_system_libraries(libraries, shared=True):
     return libraries_found
 
 
-def find_libraries(libraries, root, shared=True, recurse=False):
+def find_libraries(libraries, root, shared=True, recursive=False):
     """Returns an iterable of full paths to libraries found in a root dir.
 
     Accepts any glob characters accepted by fnmatch:
@@ -1084,7 +1089,7 @@ def find_libraries(libraries, root, shared=True, recurse=False):
         root (str): The root directory to start searching from
         shared (bool, optional): if True searches for shared libraries,
             otherwise for static. Defaults to True.
-        recurse (bool, optional): if False search only root folder,
+        recursive (bool, optional): if False search only root folder,
             if True descends top-down from the root. Defaults to False.
 
     Returns:
@@ -1106,4 +1111,4 @@ def find_libraries(libraries, root, shared=True, recurse=False):
     # List of libraries we are searching with suffixes
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
-    return LibraryList(find(root, libraries, recurse))
+    return LibraryList(find(root, libraries, recursive))

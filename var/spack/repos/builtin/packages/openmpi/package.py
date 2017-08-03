@@ -214,23 +214,7 @@ class Openmpi(AutotoolsPackage):
     conflicts('fabrics=pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
 
-    filter_compiler_wrappers(
-        'mpicc-vt-wrapper-data.txt',
-        'mpicc-wrapper-data.txt',
-        'ortecc-wrapper-data.txt',
-        'shmemcc-wrapper-data.txt',
-        'mpic++-vt-wrapper-data.txt',
-        'mpic++-wrapper-data.txt',
-        'ortec++-wrapper-data.txt',
-        'mpifort-vt-wrapper-data.txt',
-        'mpifort-wrapper-data.txt',
-        'shmemfort-wrapper-data.txt',
-        'mpif90-vt-wrapper-data.txt',
-        'mpif90-wrapper-data.txt',
-        'mpif77-vt-wrapper-data.txt',
-        'mpif77-wrapper-data.txt',
-        relative_root=os.path.join('share', 'openmpi')
-    )
+    filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
