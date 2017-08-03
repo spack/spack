@@ -44,6 +44,9 @@ class QtCreator(QMakePackage):
     # sqlite as the bundled copy.
     depends_on('sqlite@3.8.10.2')
 
+    # Qt Creator 4.3.0+ requires a C++14 compiler
+    conflicts('%gcc@:4.8', when='@4.3.0:')
+
     def url_for_version(self, version):
         url = 'http://download.qt.io/official_releases/qtcreator/{0}/{1}/qt-creator-opensource-src-{1}.tar.gz'
         return url.format(version.up_to(2), version)
