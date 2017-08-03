@@ -43,7 +43,6 @@ class QMakePackage(PackageBase):
 
     They all have sensible defaults and for many packages the only thing
     necessary will be to override :py:meth:`~.QMakePackage.qmake_args`.
-
     """
     #: Phases of a qmake package
     phases = ['qmake', 'build', 'install']
@@ -51,6 +50,9 @@ class QMakePackage(PackageBase):
     #: This attribute is used in UI queries that need to know the build
     #: system base class
     build_system_class = 'QMakePackage'
+
+    #: Callback names for build-time test
+    build_time_test_callbacks = ['check']
 
     depends_on('qt', type='build')
 
@@ -71,6 +73,15 @@ class QMakePackage(PackageBase):
     def install(self, spec, prefix):
         """Make the install targets"""
         inspect.getmodule(self).make('install')
+
+    # Tests
+
+    def check(self):
+        """Searches the Makefile for a ``check:`` target and runs it if found.
+        """
+        self._if_make_target_execute('check')
+
+    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

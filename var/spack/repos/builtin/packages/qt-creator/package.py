@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import shutil
 
 
 class QtCreator(QMakePackage):
@@ -35,7 +36,8 @@ class QtCreator(QMakePackage):
 
     version('4.1.0',  '657727e4209befa4bf5889dff62d9e0a')
 
-    depends_on("qt@5.5.0:", type='build')
+    depends_on('qt@5.5.0:+opengl', type='build')
+    depends_on('sqlite@3.8.10.2')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('INSTALL_ROOT', self.prefix)
