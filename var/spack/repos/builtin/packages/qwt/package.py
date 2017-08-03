@@ -25,30 +25,26 @@
 from spack import *
 
 
-class Expat(AutotoolsPackage):
-    """Expat is an XML parser library written in C."""
+class Qwt(Package):
+    """The Qwt library contains GUI Components and utility classes which are
+    primarily useful for programs with a technical background. Beside a
+    framework for 2D plots it provides scales, sliders, dials, compasses,
+    thermometers, wheels and knobs to control or display values, arrays, or
+    ranges of type double.
+    """
+    homepage = "http://qwt.sourceforge.net/"
+    url      = "https://downloads.sourceforge.net/project/qwt/qwt/5.2.2/qwt-5.2.2.tar.bz2"
 
-    homepage = "http://expat.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/expat/files/expat/2.2.2/expat-2.2.2.tar.bz2"
+    version('5.2.2', '70d77e4008a6cc86763737f0f24726ca')
 
-    # Version 2.2.2 introduced a requirement for a high quality
-    # entropy source.  "Older" linux systems (aka CentOS 7) do not
-    # support get_random so we'll provide a high quality source via
-    # libbsd.
-    # There's no need for it in earlier versions, so 'conflict' if
-    # someone's asking for an older version and also libbsd.
-    # In order to install an older version, you'll need to add
-    # `~libbsd`.
-    variant('libbsd', default=True,
-            description="Use libbsd (for high quality randomness)")
-    depends_on('libbsd', when="@2.2.1:+libbsd")
+    depends_on("qt")
 
-    version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
-    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
+    def install(self, spec, prefix):
 
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '+libbsd' in spec and '@2.2.1:' in spec:
-            args = ['--with-libbsd']
-        return args
+        # Subvert hardcoded prefix
+        filter_file(r'/usr/local/qwt-\$\$VERSION', prefix, 'qwtconfig.pri')
+
+        qmake = which('qmake')
+        qmake()
+        make()
+        make("install")

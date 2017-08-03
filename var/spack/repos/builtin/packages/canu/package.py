@@ -25,30 +25,37 @@
 from spack import *
 
 
-class Expat(AutotoolsPackage):
-    """Expat is an XML parser library written in C."""
+class Canu(MakefilePackage):
+    """A single molecule sequence assembler for genomes large and
+       small."""
 
-    homepage = "http://expat.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/expat/files/expat/2.2.2/expat-2.2.2.tar.bz2"
+    homepage = "http://canu.readthedocs.io/"
+    url      = "https://github.com/marbl/canu/archive/v1.5.tar.gz"
 
-    # Version 2.2.2 introduced a requirement for a high quality
-    # entropy source.  "Older" linux systems (aka CentOS 7) do not
-    # support get_random so we'll provide a high quality source via
-    # libbsd.
-    # There's no need for it in earlier versions, so 'conflict' if
-    # someone's asking for an older version and also libbsd.
-    # In order to install an older version, you'll need to add
-    # `~libbsd`.
-    variant('libbsd', default=True,
-            description="Use libbsd (for high quality randomness)")
-    depends_on('libbsd', when="@2.2.1:+libbsd")
+    version('1.5', '65df275baa28ecf11b15dfd7343361e3')
 
-    version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
-    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
+    depends_on('gnuplot', type='run')
+    depends_on('jdk', type='run')
+    depends_on('perl', type='run')
 
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '+libbsd' in spec and '@2.2.1:' in spec:
-            args = ['--with-libbsd']
-        return args
+    build_directory = 'src'
+
+    def patch(self):
+        # Use our perl, not whatever is in the environment
+        perl = self.spec['perl'].prefix.bin.perl
+        filter_file(r'^#!/usr/bin/env perl',
+                    '#!{0}'.format(perl),
+                    'src/pipelines/canu.pl')
+
+    def install(self, spec, prefix):
+        # replicate the Makefile logic here:
+        # https://github.com/marbl/canu/blob/master/src/Makefile#L344
+        uname = which('uname')
+        ostype = uname(output=str).strip()
+        machinetype = uname('-m', output=str).strip()
+        if machinetype == 'x86_64':
+            machinetype = 'amd64'
+        target_dir = '{0}-{1}'.format(ostype, machinetype)
+        bin = join_path(target_dir, 'bin')
+
+        install_tree(bin, prefix.bin)
