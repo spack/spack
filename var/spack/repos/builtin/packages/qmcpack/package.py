@@ -36,7 +36,7 @@ class Qmcpack(CMakePackage):
     version('3.1.0', 'bdf3acd090557acdb6cab5ddbf7c7960')
     version('3.0.0', '75f9cf70e6cc6d8b7ff11a86340da43d')
 
-    # This download method is untrusted, and is not recommend by th Spack manual.
+    # This download method is untrusted, and is not recommend by the Spack manual.
     version('develop', git='https://github.com/QMCPACK/qmcpack.git')
 
     # These defaults match those in the QMCPACK manual
@@ -77,8 +77,6 @@ class Qmcpack(CMakePackage):
                     '${LIBXML2_HOME}/lib $ENV{LIBXML2_HOME}/lib',
                     'CMake/FindLibxml2QMC.cmake')
   
-        print dir(self.spec['hdf5'].prefix)
-        print self.spec['boost'].prefix
 
         if 'cxxflags' in self.compiler.flags:
             cxx_flags = ' '.join(self.compiler.flags['cxxflags'])
@@ -92,9 +90,6 @@ class Qmcpack(CMakePackage):
             args.append('-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc))
             args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx))
             args.append('-DMPI_BASE_DIR:PATH={0}'.format(self.spec['mpi'].prefix))
-        else:
-            args.append('-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc))
-            args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx))
 
         # Currently FFTW_HOME and LIBXML2_HOME are used. CMake Warning is benign.
         args.append('-DLIBXML2_HOME={0}'.format(self.spec['libxml2'].prefix))
@@ -123,6 +118,25 @@ class Qmcpack(CMakePackage):
 
     def install(self, spec, prefix):
         """Make the install targets"""
+
+        # QMCPACK 'make install' does nothing, which causes
+        # Spack to throw an error.  
+        #
+        # This install method creates the top level directory
+        # and copies the bin subdirectory into the appropriate
+        # location. We do not copy include or lib at this time due
+        # to technical difficulties in qmcpack itself.
+
+        mkdirp(prefix)
+
+        # We assume cwd is self.stage.source_path
+        
+        # install manual 
+        install_tree('manual', prefix.manual)
+
+        # install nexus
+        install_tree('nexus', prefix.nexus)
+        
         with working_dir(self.build_directory):
             # QMCPACK 'make install' does nothing, which causes
             # Spack to throw an error.  
@@ -130,20 +144,11 @@ class Qmcpack(CMakePackage):
             # This install method creates the top level directory
             # and copies the bin subdirectory into the appropriate
             # location. We do not copy include or lib at this time due
-            # to technical difficulties.
+            # to technical difficulties in qmcpack itself.
             mkdirp(prefix)
 
             # install binaries
-            install_tree(join_path(self.build_directory, 'bin'),
-                         prefix.bin)
-
-            # install manual
-            install_tree(join_path(self.stage.source_path, 'manual'), 
-                         join_path(prefix,'manual'))
-
-            # install nexus
-            install_tree(join_path(self.stage.source_path, 'nexus'),
-                         join_path(prefix,'nexus'))
+            install_tree('bin', prefix.bin)
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
