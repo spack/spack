@@ -60,7 +60,9 @@ class Arpack(Package):
 
         # Be sure to use the Spack compiler wrapper
         makefile.filter('^FC.*', 'FC = {0}'.format(os.environ['F77']))
-        makefile.filter('^FFLAGS.*', 'FFLAGS = -O2 -g -fPIC')
+        makefile.filter(
+            '^FFLAGS.*', 'FFLAGS = -O2 -g {0}'.format(self.compiler.pic_flag)
+        )
 
         if not which('ranlib'):
             makefile.filter('^RANLIB.*', 'RANLIB = touch')

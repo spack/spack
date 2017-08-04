@@ -58,8 +58,8 @@ class Sundials(Package):
         cmake_args = std_cmake_args[:]
         cmake_args.extend([
             '-DBUILD_SHARED_LIBS=ON',
-            '-DCMAKE_C_FLAGS=-fPIC',
-            '-DCMAKE_Fortran_FLAGS=-fPIC',
+            '-DCMAKE_C_FLAGS={0}'.format(self.compiler.pic_flag),
+            '-DCMAKE_Fortran_FLAGS={0}'.format(self.compiler.pic_flag),
             '-DEXAMPLES_ENABLE=ON',
             '-DEXAMPLES_INSTALL=ON',
             '-DFCMIX_ENABLE=ON'

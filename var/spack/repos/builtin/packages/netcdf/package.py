@@ -133,7 +133,7 @@ class Netcdf(AutotoolsPackage):
             config_args.append('--disable-shared')
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
-            CFLAGS.append('-fPIC')
+            CFLAGS.append(self.compiler.pic_flag)
 
         if '+dap' in spec:
             config_args.append('--enable-dap')

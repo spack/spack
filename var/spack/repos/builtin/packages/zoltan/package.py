@@ -76,7 +76,7 @@ class Zoltan(Package):
         if '+shared' in spec:
             config_args.append('RANLIB=echo')
             config_args.append('--with-ar=$(CXX) -shared $(LDFLAGS) -o')
-            config_cflags.append('-fPIC')
+            config_cflags.append(self.compiler.pic_flag)
             if spec.satisfies('%gcc'):
                 config_args.append('--with-libs={0}'.format('-lgfortran'))
 

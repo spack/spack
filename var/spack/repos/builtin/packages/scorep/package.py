@@ -88,5 +88,8 @@ class Scorep(AutotoolsPackage):
         if '~shmem' in spec:
             config_args.append("--without-shmem")
 
-        config_args.extend(["CFLAGS=-fPIC", "CXXFLAGS=-fPIC"])
+        config_args.extend([
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+        ])
         return config_args
