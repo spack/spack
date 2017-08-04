@@ -1454,6 +1454,15 @@ class Spec(object):
         return spec
 
     @staticmethod
+    def dependencies_from_node_dict(node):
+        name = next(iter(node))
+        node = node[name]
+        if 'dependencies' not in node:
+            return
+        for t in Spec.read_yaml_dep_specs(node['dependencies']):
+            yield t
+
+    @staticmethod
     def read_yaml_dep_specs(dependency_dict):
         """Read the DependencySpec portion of a YAML-formatted Spec.
 

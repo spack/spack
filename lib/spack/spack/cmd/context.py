@@ -174,8 +174,11 @@ class Context(object):
 
     def to_dict(self):
         concretized_order = list(self.concretized_order)
-        concrete_specs = dict((k, v.to_dict(all_deps=True))
-                              for k, v in self.specs_by_hash.items())
+        concrete_specs = dict()
+        for spec in self.specs_by_hash.values():
+            for s in spec.traverse():
+                if s.dag_hash() not in concrete_specs:
+                    concrete_specs[s.dag_hash()] = s.to_node_dict()
         format = {
             'user_specs': self.user_specs,
             'concretized_order': concretized_order,
@@ -189,8 +192,7 @@ class Context(object):
         c.user_specs = list(d['user_specs'])
         c.concretized_order = list(d['concretized_order'])
         specs_dict = d['concrete_specs']
-        c.specs_by_hash = dict((x, Spec.from_dict(y))
-                               for x, y in specs_dict.items())
+        c.specs_by_hash = reconstitute(specs_dict, set(c.concretized_order))
         return c
 
     def path(self):
@@ -201,6 +203,20 @@ class Context(object):
 
     def repo_path(self):
         return fs.join_path(self.path(), 'repo')
+
+
+def reconstitute(hash_to_node_dict, root_hashes):
+    specs_by_hash = {}
+    for dag_hash, node_dict in hash_to_node_dict.items():
+        specs_by_hash[dag_hash] = Spec.from_node_dict(node_dict)
+
+    for dag_hash, node_dict in hash_to_node_dict.items():
+        for dep_name, dep_hash, deptypes in (
+                Spec.dependencies_from_node_dict(node_dict)):
+            specs_by_hash[dag_hash]._add_dependency(
+                specs_by_hash[dep_hash], deptypes)
+
+    return dict((x, y) for x, y in specs_by_hash.items() if x in root_hashes)
 
 
 def reset_os_and_compiler(spec, compiler=None):
