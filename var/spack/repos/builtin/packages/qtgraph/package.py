@@ -77,8 +77,8 @@ class Qtgraph(Package):
         # The implementor has set up the library and include paths in
         # a non-conventional way.  We reflect that here.
         run_env.prepend_path('LD_LIBRARY_PATH',
-                            join_path(libdir,
-                            '{0}'.format(self.spec['qt'].version.up_to(3))))
+                             join_path(libdir,
+                             '{0}'.format(self.spec['qt'].version.up_to(3))))
         run_env.prepend_path('CPATH',
                              join_path(self.prefix, 'include', 'QtGraph'))
 
