@@ -76,7 +76,7 @@ class Context(object):
     def install(self):
         for concretized_hash in self.concretized_order:
             spec = self.specs_by_hash[concretized_hash]
-            spec.package.do_install(explicit=True)
+            spec.package.do_install()
 
     def list(self, stream, include_deps=False):
         for user_spec, concretized_hash in zip_longest(
