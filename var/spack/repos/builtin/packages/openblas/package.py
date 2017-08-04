@@ -57,7 +57,8 @@ class Openblas(MakefilePackage):
     patch('make.patch', when='@0.2.16:')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
-    patch('openblas_icc.patch', when='%intel')
+    #  UPD: the patch has been merged starting version 0.2.20
+    patch('openblas_icc.patch', when='@:0.2.19%intel')
     patch('openblas_icc_openmp.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
 
