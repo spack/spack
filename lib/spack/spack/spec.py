@@ -1868,6 +1868,7 @@ class Spec(object):
         pkg = spack.repo.get(self.fullname)
         conditions = pkg.dependencies[name]
 
+        substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
         for when_spec, dep_spec in conditions.items():
