@@ -149,34 +149,34 @@ class Opencv(CMakePackage):
         ])
 
         if '+jpeg' in spec:
-          libjpeg = spec['libjpeg-turbo']
-          cmake_options.extend([
-              '-DBUILD_JPEG:BOOL=OFF',
-              '-DJPEG_LIBRARY:FILEPATH={0}'.format(
-                  join_path(libjpeg.prefix.lib,
-                            'libjpeg.{0}'.format(dso_suffix))),
-              '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
-          ])
+            libjpeg = spec['libjpeg-turbo']
+            cmake_options.extend([
+                '-DBUILD_JPEG:BOOL=OFF',
+                '-DJPEG_LIBRARY:FILEPATH={0}'.format(
+                    join_path(libjpeg.prefix.lib,
+                              'libjpeg.{0}'.format(dso_suffix))),
+                '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
+            ])
 
         if '+tiff' in spec:
-          libtiff = spec['libtiff']
-          cmake_options.extend([
-              '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
-                  'DEBUG' if '+debug' in spec else 'RELEASE'),
-                  join_path(libtiff.prefix.lib,
-                            'libtiff.{0}'.format(dso_suffix))),
-              '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
-          ])
+            libtiff = spec['libtiff']
+            cmake_options.extend([
+                '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(libtiff.prefix.lib,
+                              'libtiff.{0}'.format(dso_suffix))),
+                '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
+            ])
 
         if '+jasper' in spec:
-          jasper = spec['jasper']
-          cmake_options.extend([
-              '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
-                  'DEBUG' if '+debug' in spec else 'RELEASE'),
-                  join_path(jasper.prefix.lib,
-                            'libjasper.{0}'.format(dso_suffix))),
-              '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
-          ])
+            jasper = spec['jasper']
+            cmake_options.extend([
+                '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(jasper.prefix.lib,
+                              'libjasper.{0}'.format(dso_suffix))),
+                '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
+            ])
 
         # GUI
         if '+gtk' not in spec:

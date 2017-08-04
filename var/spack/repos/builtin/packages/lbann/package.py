@@ -65,6 +65,7 @@ class Lbann(CMakePackage):
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(self.spec['elemental'].prefix),
+            '-DCNPY_DIR={0}'.format(self.spec['cnpy'].prefix),
             '-DELEMENTAL_MATH_LIBS={0}'.format(
                 self.spec['elemental'].libs),
             '-DVERBOSE=0',
