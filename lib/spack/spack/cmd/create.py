@@ -208,15 +208,14 @@ class QMakePackageTemplate(PackageTemplate):
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
-    dependencies = """\
-    # FIXME: Add additional dependencies if required.
-    depends_on('scons', type='build')"""
+    base_class_name = 'SConsPackage'
 
     body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        scons('prefix={0}'.format(prefix))
-        scons('install')"""
+    def build_args(self, spec, prefix):
+        # FIXME: Add arguments to pass to build.
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
 
 class WafPackageTemplate(PackageTemplate):

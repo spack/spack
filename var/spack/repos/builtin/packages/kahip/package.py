@@ -29,7 +29,7 @@ import os
 import re
 
 
-class Kahip(Package):
+class Kahip(SConsPackage):
     """KaHIP - Karlsruhe High Quality Partitioning - is a family of graph
     partitioning programs. It includes KaFFPa (Karlsruhe Fast Flow
     Partitioner), which is a multilevel graph partitioning algorithm,
@@ -46,17 +46,25 @@ class Kahip(Package):
     url       = 'http://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.00.tar.gz'
 
     version('develop', git='https://github.com/schulzchristian/KaHIP.git')
-    version('2.00', '9daeda32f43c90570ed436d5d93c8a872b1a14d8')
+    version('2.00', '0a66b0a604ad72cfb7e3dce00e2c9fdfac82b855')
 
     depends_on('argtable')
     depends_on('mpi')  # Note: upstream package only tested on openmpi
-    depends_on('scons', type='build')
 
-    phases = ['build', 'install']
+    conflicts('%clang')
 
-    #
-    # - End of definitions / setup -
-    #
+    def patch(self):
+        """Internal compile.sh scripts hardcode number of cores to build with.
+        Filter these out so Spack can control it."""
+
+        files = [
+            'compile.sh',
+            'parallel/modified_kahip/compile.sh',
+            'parallel/parallel_src/compile.sh',
+        ]
+
+        for f in files:
+            filter_file('NCORES=.*', 'NCORES={0}'.format(make_jobs), f)
 
     def build(self, spec, prefix):
         """Build using the KaHIP compile.sh script. Uses scons internally."""

@@ -22,29 +22,26 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.cmd.configure as cfg
-
 from spack import *
 
-description = 'stops at build stage when installing a package, if possible'
-section = "build"
-level = "long"
 
+class Fmt(CMakePackage):
+    """fmt (formerly cppformat) is an open-source formatting library.
+    It can be used as a safe alternative to printf or as a fast alternative
+    to C++ IOStreams."""
 
-build_system_to_phase = {
-    AutotoolsPackage: 'build',
-    CMakePackage: 'build',
-    QMakePackage: 'build',
-    SConsPackage: 'build',
-    WafPackage: 'build',
-    PythonPackage: 'build',
-    PerlPackage: 'build',
-}
+    homepage = "http://fmtlib.net/latest/index.html"
+    url      = "https://github.com/fmtlib/fmt/releases/download/4.0.0/fmt-4.0.0.zip"
 
+    version('4.0.0', '605b5abee11b83195191234f4f414cf1')
+    version('3.0.2', 'b190a7b8f2a5e522ee70cf339a53d3b2')
+    version('3.0.1', '14505463b838befe1513b09cae112715')
+    version('3.0.0', 'c099561e70fa194bb03b3fd5de2d3fd0')
 
-def setup_parser(subparser):
-    cfg.setup_parser(subparser)
+    depends_on('cmake@2.8.12:', type='build')
 
-
-def build(parser, args):
-    cfg._stop_at_phase_during_install(args, build, build_system_to_phase)
+    def cmake_args(self):
+        return [
+            '-DCMAKE_C_FLAGS={0}'.format(self.compiler.pic_flag),
+            '-DCMAKE_CXX_FLAGS={0}'.format(self.compiler.pic_flag),
+        ]

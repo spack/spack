@@ -2121,6 +2121,9 @@ The classes that are currently provided by Spack are:
     | :py:class:`.QMakePackage`     | Specialized class for packages   |
     |                               | build using QMake                |
     +-------------------------------+----------------------------------+
+    | :py:class:`.SConsPackage`     | Specialized class for packages   |
+    |                               | built using SCons                |
+    +-------------------------------+----------------------------------+
     | :py:class:`.WafPackage`       | Specialized class for packages   |
     |                               | built using Waf                  |
     +-------------------------------+----------------------------------+
