@@ -193,6 +193,18 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class QMakePackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for QMake-based packages"""
+
+    base_class_name = 'QMakePackage'
+
+    body = """\
+    def qmake_args(self):
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
@@ -363,6 +375,7 @@ templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
     'cmake':      CMakePackageTemplate,
+    'qmake':      QMakePackageTemplate,
     'scons':      SconsPackageTemplate,
     'waf':        WafPackageTemplate,
     'bazel':      BazelPackageTemplate,
@@ -426,18 +439,19 @@ class BuildSystemGuesser:
         # uses. If the regular expression matches a file contained in the
         # archive, the corresponding build system is assumed.
         clues = [
-            ('/configure$',         'autotools'),
-            ('/configure.(in|ac)$', 'autoreconf'),
-            ('/Makefile.am$',       'autoreconf'),
-            ('/CMakeLists.txt$',    'cmake'),
-            ('/SConstruct$',        'scons'),
-            ('/waf$',               'waf'),
-            ('/setup.py$',          'python'),
-            ('/NAMESPACE$',         'r'),
-            ('/WORKSPACE$',         'bazel'),
-            ('/Build.PL$',          'perlbuild'),
-            ('/Makefile.PL$',       'perlmake'),
-            ('/(GNU)?[Mm]akefile$', 'makefile'),
+            (r'/configure$',          'autotools'),
+            (r'/configure\.(in|ac)$', 'autoreconf'),
+            (r'/Makefile\.am$',       'autoreconf'),
+            (r'/CMakeLists\.txt$',    'cmake'),
+            (r'/SConstruct$',         'scons'),
+            (r'/waf$',                'waf'),
+            (r'/setup\.py$',          'python'),
+            (r'/NAMESPACE$',          'r'),
+            (r'/WORKSPACE$',          'bazel'),
+            (r'/Build\.PL$',          'perlbuild'),
+            (r'/Makefile\.PL$',       'perlmake'),
+            (r'/.*\.pro$',            'qmake'),
+            (r'/(GNU)?[Mm]akefile$',  'makefile'),
         ]
 
         # Peek inside the compressed file.
