@@ -3437,8 +3437,7 @@ recover disk space if temporary files from interrupted or failed installs
 accumulate in the staging area.
 
 When called with ``--stage`` or without arguments this removes all staged
-files and will be equivalent to running ``spack clean`` for every package
-you have fetched or staged.
+files.
 
 When called with ``--downloads`` this will clear all resources
 :ref:`cached <caching>` during installs.
@@ -3448,10 +3447,9 @@ directory, including cached virtual indices.
 
 To remove all of the above, the command can be called with ``--all``.
 
-Also, cleans up temporary files for a particular package, by deleting the
-expanded/checked out source code *and* any downloaded archive.  If
-``fetch``, ``stage``, or ``install`` are run again after this, Spack's
-build process will start from scratch.
+When called with positional arguments, cleans up temporary files only
+for a particular package. If ``fetch``, ``stage``, or ``install``
+are run again after this, Spack's build process will start from scratch.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
