@@ -61,7 +61,8 @@ class Lbann(CMakePackage):
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
             '-DWITH_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DWITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
-            '-DELEMENTAL_USE_CUBLAS:BOOL=%s' % ('+cublas' in spec['elemental']),
+            '-DELEMENTAL_USE_CUBLAS:BOOL=%s' 
+                % ('+cublas' in spec['elemental']),
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(self.spec['elemental'].prefix),
