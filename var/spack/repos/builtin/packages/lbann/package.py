@@ -61,7 +61,8 @@ class Lbann(CMakePackage):
         if '~seq_init' in spec:
             CPPFLAGS.append('-DLBANN_PARALLEL_RANDOM_MATRICES')
 
-        CPPFLAGS.append('-DLBANN_DATATYPE={0}'.format(int(self.spec.variants['dtype'].value)))
+        CPPFLAGS.append('-DLBANN_DATATYPE={0}'.format(
+            int(self.spec.variants['dtype'].value)))
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
