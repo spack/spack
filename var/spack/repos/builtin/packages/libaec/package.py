@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,26 +25,18 @@
 from spack import *
 
 
-class Szip(AutotoolsPackage):
-    """Szip is an implementation of the extended-Rice lossless
-     compression algorithm.
+class Libaec(CMakePackage):
+    """Libaec provides fast lossless compression of 1 up to 32 bit wide signed
+       or unsigned integers (samples). It implements Golomb-Rice compression
+       method under the BSD license and includes a free drop-in replacement for
+       the SZIP library."""
 
-    It provides lossless compression of scientific data, and is
-    provided with HDF software products.
-    """
+    homepage = 'https://gitlab.dkrz.de/k202009/libaec'
 
-    homepage = "https://support.hdfgroup.org/doc_resource/SZIP/"
-    url      = "https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz"
-    list_url = "https://support.hdfgroup.org/ftp/lib-external/szip"
-    list_depth = 2
+    # We provide per version urls.
+    url = 'https://gitlab.dkrz.de/k202009/libaec/uploads/'
 
-    version('2.1.1', 'dd579cf0f26d44afd10a0ad7291fc282')
-    version('2.1',   '902f831bcefb69c6b635374424acbead')
+    provides('szip')
 
-    def configure_args(self):
-        return [
-            '--enable-production',
-            '--enable-shared',
-            '--enable-static',
-            '--enable-encoding',
-        ]
+    version('1.0.1', 'cdf70e2b8f9153ee644710bb441f9e1e', url=url + '926fe2b181865e38a236ad12bf053cfa/libaec-1.0.1.tar.gz')
+    version('1.0.0', 'a848b4e397ed210313183a5e92592e42', url=url + '631e85bcf877c2dcaca9b2e6d6526339/libaec-1.0.0.tar.gz')
