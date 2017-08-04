@@ -40,9 +40,13 @@ class Lbann(CMakePackage):
     variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
     variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
     variant('dtype', default=4, description='Size (bits) of floating point representation for weights')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
     depends_on('elemental +openmp_blas +scalapack +shared +int64')
-    depends_on('elemental +openmp_blas +scalapack +shared +int64 +debug', when='+debug')
+#    depends_on('elemental +openmp_blas +scalapack +shared +int64 build_type=Debug', 
+#               when=('build_type' == 'Debug'))
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
     depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib', when='+opencv')
