@@ -39,6 +39,7 @@ class Lbann(CMakePackage):
     variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
     variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
     variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
+    variant('dtype', default=4, description='Size (bits) of floating point representation for weights')
 
     depends_on('elemental +openmp_blas +scalapack +shared +int64')
     depends_on('elemental +openmp_blas +scalapack +shared +int64 +debug', when='+debug')
@@ -56,13 +57,15 @@ class Lbann(CMakePackage):
         if '~seq_init' in spec:
             CPPFLAGS.append('-DLBANN_PARALLEL_RANDOM_MATRICES')
 
+        CPPFLAGS.append('-DLBANN_DATATYPE={0}'.format(int(self.spec.variants['dtype'].value)))
+
         args = [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
             '-DWITH_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DWITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
-            '-DELEMENTAL_USE_CUBLAS:BOOL=%s' 
-                % ('+cublas' in spec['elemental']),
+            '-DELEMENTAL_USE_CUBLAS:BOOL=%s' % (
+                '+cublas' in spec['elemental']),
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(self.spec['elemental'].prefix),
