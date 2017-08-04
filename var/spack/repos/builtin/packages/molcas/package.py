@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import sys
 
 
 class Molcas(CMakePackage):
@@ -34,7 +33,6 @@ class Molcas(CMakePackage):
        export MOLCAS_LICENSE=/path/to/molcas/license/"""
 
     homepage = "http://www.molcas.org/"
-    #url      = "file:///spack/mirror/molcas/molcas-8.2.tar.gz"
 
     version('8.2', '25b5fb8e1338b458a3eaea0b3d3b5e58')
 
@@ -43,16 +41,17 @@ class Molcas(CMakePackage):
     license_comment = ''
     licnese_file = ['license.dat']
     license_vars = ['MOLCAS_LICENSE']
-    
+
     depends_on('openmpi')
     depends_on('openblas')
     depends_on('hdf5')
-   
+
+    patch('install_driver.patch')
 
     def url_for_version(self, version):
         return "file://{0}/molcas{1}.tar.gz".format(
             os.getcwd(), version)
-    
+
     def cmake_args(self):
         args = []
         return args
