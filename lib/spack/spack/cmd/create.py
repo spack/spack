@@ -438,11 +438,13 @@ class BuildSystemGuesser:
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
         # archive, the corresponding build system is assumed.
+        # NOTE: Order is important here. If a package supports multiple
+        # build systems, we choose the first match in this list.
         clues = [
+            (r'/CMakeLists\.txt$',    'cmake'),
             (r'/configure$',          'autotools'),
             (r'/configure\.(in|ac)$', 'autoreconf'),
             (r'/Makefile\.am$',       'autoreconf'),
-            (r'/CMakeLists\.txt$',    'cmake'),
             (r'/SConstruct$',         'scons'),
             (r'/waf$',                'waf'),
             (r'/setup\.py$',          'python'),
