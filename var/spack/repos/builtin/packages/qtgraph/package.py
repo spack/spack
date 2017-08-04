@@ -42,10 +42,11 @@
 from spack import *
 import os
 
+
 class Qtgraph(Package):
-    """The baseline library used in the CUDA-centric Open|SpeedShop Graphical 
-       User Interface (GUI) which allows Graphviz DOT formatted data to be 
-       imported into a Qt application by wrapping the Graphviz libcgraph and 
+    """The baseline library used in the CUDA-centric Open|SpeedShop Graphical
+       User Interface (GUI) which allows Graphviz DOT formatted data to be
+       imported into a Qt application by wrapping the Graphviz libcgraph and
        libgvc within the Qt Graphics View Framework."""
 
     # url for qtgraph package's homepage here.
@@ -75,10 +76,10 @@ class Qtgraph(Package):
 
         # The implementor has set up the library and include paths in
         # a non-conventional way.  We reflect that here.
-        run_env.prepend_path('LD_LIBRARY_PATH', 
-            join_path(libdir, '{0}'.format(self.spec['qt'].version.up_to(3))))
-        run_env.prepend_path('CPATH', join_path(self.prefix, 'include', 'QtGraph'))
-
+        run_env.prepend_path('LD_LIBRARY_PATH',
+             join_path(libdir, '{0}'.format(self.spec['qt'].version.up_to(3))))
+        run_env.prepend_path('CPATH', 
+             join_path(self.prefix, 'include', 'QtGraph'))
 
     def install(self, spec, prefix):
         qmake = which('qmake')
@@ -86,4 +87,3 @@ class Qtgraph(Package):
 
         make()
         make('install')
-
