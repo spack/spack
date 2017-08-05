@@ -79,7 +79,7 @@ class OpenfoamOrg(Package):
 
     version('4.1', '318a446c4ae6366c7296b61184acd37c',
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
-    version('dev', git='https://github.com/OpenFOAM/OpenFOAM-dev.git')
+    version('develop', git='https://github.com/OpenFOAM/OpenFOAM-dev.git')
 
     variant('int64', default=False,
             description='Compile with 64-bit label')
