@@ -65,15 +65,21 @@ class Elemental(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
+    variant('blas', default='openblas', values=('openblas', 'mkl'),
+            description='Enable the use of OpenBlas/MKL')
 
-    # Note that this forces us to use OpenBLAS until #1712 is fixed
+    # Note that #1712 forces us to enumerate the different blas variants
     depends_on('blas', when='~openmp_blas ~int64_blas')
     # Hack to forward variant to openblas package
     # Allow Elemental to build internally when using 8-byte ints
-    depends_on('openblas +openmp', when='+openmp_blas ~int64_blas')
+    depends_on('openblas +openmp', when='blas=openblas +openmp_blas ~int64_blas')
+
+    depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
+    depends_on('intel-mkl +openmp', when='blas=mkl +openmp_blas ~int64_blas')
+    depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
-    depends_on('lapack', when='~openmp_blas')
+    depends_on('lapack', when='blas=openblas ~openmp_blas')
     depends_on('metis')
     depends_on('metis +int64', when='+int64')
     depends_on('mpi')
