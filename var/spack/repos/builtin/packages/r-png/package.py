@@ -32,7 +32,10 @@ class RPng(RPackage):
 
     homepage = "http://www.rforge.net/png/"
     url      = "https://cran.r-project.org/src/contrib/png_0.1-7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/png"
 
     version('0.1-7', '1ebc8b8aa5979b12c5ec2384b30d649f')
+
+    depends_on('r@2.9.0:', type=('build', 'run'))
 
     depends_on('libpng')

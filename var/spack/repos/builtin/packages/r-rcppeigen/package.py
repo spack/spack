@@ -41,10 +41,14 @@ class RRcppeigen(RPackage):
     GNU GPL version 2 or later, as is the rest of 'Rcpp'."""
 
     homepage = "http://eigen.tuxfamily.org/"
-    url      = "https://cran.r-project.org/src/contrib/RcppEigen_0.3.2.9.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/RcppEigen_0.3.3.3.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RcppEigen"
 
+    version('0.3.3.3.0', '1d03ae8a560b658e26fec22514d4ade7')
     version('0.3.2.9.0', '14a7786882a5d9862d53c4b2217df318')
     version('0.3.2.8.1', '4146e06e4fdf7f4d08db7839069d479f')
 
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r@2.15.1:', type=('build', 'run'))
+
+    depends_on('r-matrix@1.1-0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

@@ -31,7 +31,8 @@ class RAde4(RPackage):
 
     homepage = "http://pbil.univ-lyon1.fr/ADE-4"
     url      = "https://cran.r-project.org/src/contrib/ade4_1.7-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ade4"
 
     version('1.7-6', '63401ca369677538c96c3d7b75b3f4a1')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10:', type=('build', 'run'))

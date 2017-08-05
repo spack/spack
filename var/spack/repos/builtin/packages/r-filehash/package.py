@@ -36,7 +36,11 @@ class RFilehash(RPackage):
     are currently available and new formats can easily be incorporated by third
     parties for use in the 'filehash' framework."""
 
-    homepage = 'https://cran.r-project.org/'
-    url      = "https://cran.r-project.org/src/contrib/filehash_2.3.tar.gz"
+    homepage = "https://cran.r-project.org/"
+    url      = "https://cran.r-project.org/src/contrib/filehash_2.4-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/filehash"
 
+    version('2.4-1', '1f7f55ce99b33a137b192f1b1ba58ec6')
     version('2.3', '01fffafe09b148ccadc9814c103bdc2f')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))

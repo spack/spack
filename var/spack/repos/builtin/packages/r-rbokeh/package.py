@@ -35,7 +35,7 @@ class RRbokeh(RPackage):
 
     version('0.5.0', '4e14778c3fbd9286460ca28c68f57d10')
 
-    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-htmlwidgets@0.5:', type=('build', 'run'))
     depends_on('r-maps', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))

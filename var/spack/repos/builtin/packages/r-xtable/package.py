@@ -30,5 +30,8 @@ class RXtable(RPackage):
 
     homepage = "http://xtable.r-forge.r-project.org/"
     url      = "https://cran.r-project.org/src/contrib/xtable_1.8-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/xtable"
 
     version('1.8-2', '239e4825cd046156a67efae3aac01d86')
+
+    depends_on('r@2.10.0:', type=('build', 'run'))

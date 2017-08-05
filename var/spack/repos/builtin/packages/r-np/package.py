@@ -35,9 +35,12 @@ class RNp(RPackage):
     Research Computing Network (SHARCNET:www.sharcnet.ca)."""
 
     homepage = "https://github.com/JeffreyRacine/R-Package-np/"
-    url      = "https://cran.r-project.org/src/contrib/np_0.60-2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/np_0.60-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/np"
 
+    version('0.60-3', '1d7dd15f5618bf72c19df369f8777118')
     version('0.60-2', 'e094d52ddff7280272b41e6cb2c74389')
 
     depends_on('r-boot', type=('build', 'run'))
     depends_on('r-cubature', type=('build', 'run'))
+    depends_on('r-quantreg', when=('@0.60-3:'), type=('build', 'run'))

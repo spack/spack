@@ -33,12 +33,14 @@ class RPbkrtest(RPackage):
     models."""
 
     homepage = "http://people.math.aau.dk/~sorenh/software/pbkrtest/"
-    url      = "https://cran.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/pbkrtest_0.4-7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pbkrtest"
 
+    version('0.4-7', '4c99b91ffbc441e2efdbd9258cb0ea16')
     version('0.4-6', '0a7d9ff83b8d131af9b2335f35781ef9')
     version('0.4-4', '5e54b1b1b35413dd1d24ef15735ec645')
 
-    depends_on('r@3.2.3:')
+    depends_on('r@3.2.3:', type=('build', 'run'))
 
     depends_on('r-lme4@1.1.10:', type=('build', 'run'))
     depends_on('r-matrix@1.2.3:', type=('build', 'run'))

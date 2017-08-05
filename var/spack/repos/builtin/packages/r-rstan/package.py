@@ -37,14 +37,18 @@ class RRstan(RPackage):
     the need to derive the partial derivatives."""
 
     homepage = "http://mc-stan.org/"
-    url      = "https://cran.r-project.org/src/contrib/rstan_2.10.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/rstan_2.15.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rstan"
 
+    version('2.15.1', 'f4bf5d98ed6e32e532aec28dcb464e82')
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-stanheaders', type=('build', 'run'))
+    depends_on('r@3.0.2:', type=('build', 'run'))
+
+    depends_on('r-ggplot2@2.0.0:', type=('build', 'run'))
+    depends_on('r-stanheaders@2.15.0:', type=('build', 'run'))
     depends_on('r-inline', type=('build', 'run'))
-    depends_on('r-gridextra', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-gridextra@2.0.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.0:', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
+    depends_on('r-bh@1.62:', type=('build', 'run'))

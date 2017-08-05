@@ -32,10 +32,12 @@ class RSeqinr(RPackage):
 
     homepage = "http://seqinr.r-forge.r-project.org"
     url      = "https://cran.r-project.org/src/contrib/seqinr_3.3-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/seqinr"
 
     version('3.3-6', '73023d627e72021b723245665e1ad055')
 
-    depends_on('r@2.10:')
+    depends_on('r@2.10.0:', type=('build', 'run'))
+
     depends_on('r-ade4', type=('build', 'run'))
     depends_on('r-segmented', type=('build', 'run'))
     depends_on('zlib')

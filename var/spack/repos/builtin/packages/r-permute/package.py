@@ -36,7 +36,8 @@ class RPermute(RPackage):
 
     homepage = "https://github.com/gavinsimpson/permute"
     url      = "https://cran.r-project.org/src/contrib/permute_0.9-4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/permute"
 
     version('0.9-4', '569fc2442d72a1e3b7e2d456019674c9')
 
-    depends_on('r@2.14:')
+    depends_on('r@2.14:', type=('build', 'run'))

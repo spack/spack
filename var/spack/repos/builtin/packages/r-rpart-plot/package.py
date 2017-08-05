@@ -30,8 +30,12 @@ class RRpartPlot(RPackage):
     'rpart' package."""
 
     homepage = "https://cran.r-project.org/package=rpart.plot"
-    url      = "https://cran.r-project.org/src/contrib/rpart.plot_2.1.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/rpart.plot_2.1.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart.plot"
 
+    version('2.1.2', '07f0628b96d2a50102c379160aa2208d')
     version('2.1.0', 'fb0f8edfe22c464683ee82aa429136f9')
 
-    depends_on('r-rpart@4.1-0:', type=('build', 'run'))
+    depends_on('r@3.2.0:', type=('build', 'run'))
+
+    depends_on('r-rpart@4.1-10:', type=('build', 'run'))

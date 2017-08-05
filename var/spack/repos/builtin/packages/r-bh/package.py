@@ -42,6 +42,8 @@ class RBh(RPackage):
     'tuple' 'type_trains' 'typeof' 'unordered' 'utility' 'uuid'."""
 
     homepage = "https://cran.r-project.org/web/packages/BH/index.html"
-    url      = "https://cran.r-project.org/src/contrib/BH_1.60.0-2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/BH_1.62.0-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/BH"
 
+    version('1.62.0-1', '8b0316d7b0df3b1ca54bb5c030dfc079')
     version('1.60.0-2', 'b50fdc85285da05add4e9da664a2d551')

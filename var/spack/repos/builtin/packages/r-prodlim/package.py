@@ -31,11 +31,13 @@ class RProdlim(RPackage):
     history (survival) analysis. Kaplan-Meier and Aalen-Johansen method."""
 
     homepage = "https://cran.r-project.org/package=prodlim"
-    url      = "https://cran.r-project.org/src/contrib/prodlim_1.5.9.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/prodlim_1.6.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/prodlim"
 
+    version('1.6.1', 'c206cc9ad15953adf67834bf4ee3551d')
     version('1.5.9', 'e0843053c9270e41b657a733d6675dc9')
 
-    depends_on('r@2.9.0:')
+    depends_on('r@2.9.0:', type=('build', 'run'))
 
     depends_on('r-rcpp@0.11.5:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))

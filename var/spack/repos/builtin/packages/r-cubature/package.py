@@ -29,6 +29,10 @@ class RCubature(RPackage):
     """Adaptive multivariate integration over hypercubes"""
 
     homepage = "https://cran.r-project.org/package=cubature"
-    url      = "https://cran.r-project.org/src/contrib/cubature_1.1-2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/cubature_1.3-8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/cubature"
 
+    version('1.3-8', '2db7180130789588054a05ee157470dd')
     version('1.1-2', '5617e1d82baa803a3814d92461da45c9')
+
+    depends_on('r-rcpp', type=('build', 'run'))

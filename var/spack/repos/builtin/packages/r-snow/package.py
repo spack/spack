@@ -30,8 +30,10 @@ class RSnow(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/snow/index.html"
     url      = "https://cran.r-project.org/src/contrib/snow_0.4-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/snow"
 
     version('0.4-2', 'afc7b0dfd4518aedb6fc81712fd2ac70')
 
-    depends_on('r-rmpi', type='run')
     depends_on('r@2.13.1:', type=('build', 'run'))
+
+    depends_on('r-rmpi', type='run')

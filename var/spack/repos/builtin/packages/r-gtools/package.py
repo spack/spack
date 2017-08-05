@@ -49,5 +49,8 @@ class RGtools(RPackage):
 
     homepage = "https://cran.r-project.org/package=gtools"
     url      = "https://cran.r-project.org/src/contrib/gtools_3.5.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/gtools"
 
     version('3.5.0', '45f8800c0336d35046641fbacc56bdbb')
+
+    depends_on('r@2.10:', type=('build', 'run'))

@@ -32,14 +32,19 @@ class RShiny(RPackage):
     powerful applications with minimal effort."""
 
     homepage = "http://shiny.rstudio.com/"
-    url      = "https://cran.r-project.org/src/contrib/shiny_0.13.2.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/shiny_1.0.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/shiny"
 
+    version('1.0.3', '69f14b7a91949e8aef4503a0a7c54cf7')
     version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
 
-    depends_on('r-httpuv', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'))
+
+    depends_on('r-httpuv@1.3.3:', type=('build', 'run'))
+    depends_on('r-mime@0.3:', type=('build', 'run'))
+    depends_on('r-jsonlite@0.9.16:', type=('build', 'run'))
     depends_on('r-xtable', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
+    depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
+    depends_on('r-r6@2.0:', type=('build', 'run'))
+    depends_on('r-sourcetools', type=('build', 'run'), when=('@1.0.0:'))

@@ -32,15 +32,19 @@ class RLme4(RPackage):
     numerical linear algebra and 'RcppEigen' "glue"."""
 
     homepage = "https://github.com/lme4/lme4/"
-    url      = "https://cran.r-project.org/src/contrib/lme4_1.1-12.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/lme4_1.1-13.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/lme4"
 
+    version('1.1-13', '32633db64b2c8042a12ae590e5fcd4f3')
     version('1.1-12', 'da8aaebb67477ecb5631851c46207804')
 
-    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r@3.0.2:', type=('build', 'run'))
+
+    depends_on('r-matrix@1.1.1:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-nlme', type=('build', 'run'))
-    depends_on('r-minqa', type=('build', 'run'))
-    depends_on('r-nloptr', type=('build', 'run'))
+    depends_on('r-nlme@3.1-123:', type=('build', 'run'))
+    depends_on('r-minqa@1.1.15:', type=('build', 'run'))
+    depends_on('r-nloptr@1.0.4:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))

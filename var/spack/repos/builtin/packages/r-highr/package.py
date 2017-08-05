@@ -33,5 +33,8 @@ class RHighr(RPackage):
 
     homepage = "https://github.com/yihui/highr"
     url      = "https://cran.r-project.org/src/contrib/highr_0.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/highr"
 
     version('0.6', 'bf47388c5f57dc61962362fb7e1d8b16')
+
+    depends_on('r@3.0.2:', type=('build', 'run'))

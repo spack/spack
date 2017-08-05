@@ -31,11 +31,13 @@ class RCoin(RPackage):
     censored, ordered and multivariate problems."""
 
     homepage = "https://cran.r-project.org/package=coin"
-    url      = "https://cran.r-project.org/src/contrib/coin_1.1-3.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/coin_1.2-0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/coin"
 
+    version('1.2-0', '075adbe01b30ede810b95c2df9d897da')
     version('1.1-3', '97d3d21f1e4a5762e36dd718dd2d0661')
 
-    depends_on('r@2.14.0:')
+    depends_on('r@2.14.0:', type=('build', 'run'))
 
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-modeltools@0.2-9:', type=('build', 'run'))

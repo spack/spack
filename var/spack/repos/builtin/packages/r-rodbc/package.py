@@ -29,8 +29,12 @@ class RRodbc(RPackage):
     """An ODBC database interface."""
 
     homepage = "https://cran.rstudio.com/web/packages/RODBC/"
-    url      = "https://cran.rstudio.com/src/contrib/RODBC_1.3-13.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/RODBC_1.3-15.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/RODBC"
 
+    version('1.3-15', '53bdb64579f3b70030f5585335c3e215')
     version('1.3-13', 'c52ef9139c2ed85adc53ad6effa7d68e')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('unixodbc')

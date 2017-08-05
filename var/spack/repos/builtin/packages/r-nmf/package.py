@@ -35,14 +35,17 @@ class RNmf(RPackage):
 
     homepage = "http://renozao.github.io/NMF"
     url      = "https://cran.r-project.org/src/contrib/NMF_0.20.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/NMF"
 
     version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
 
-    depends_on('r-pkgmaker', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'))
+
+    depends_on('r-pkgmaker@0.20:', type=('build', 'run'))
     depends_on('r-registry', type=('build', 'run'))
-    depends_on('r-rngtools', type=('build', 'run'))
+    depends_on('r-rngtools@1.2.3:', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))
-    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-stringr@1.0.0:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-gridbase', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))

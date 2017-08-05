@@ -30,8 +30,10 @@ class RBiocinstaller(RPackage):
     and (some) github packages."""
 
     homepage = "http://bioconductor.org/packages/devel/bioc/html/BiocInstaller.html"
-    url      = "http://bioconductor.org/packages/devel/bioc/src/contrib/BiocInstaller_1.25.3.tar.gz"
 
-    version('1.25.3', '6214770455a5122dca5544861f52c91d')
+    version('1.27.2', '7df8d0bf003d82af08d7ecfafde1549f',
+            url='http://bioconductor.org/packages/devel/bioc/src/contrib/BiocInstaller_1.27.2.tar.gz')
+    version('1.25.3', '6214770455a5122dca5544861f52c91d',
+            url='http://bioconductor.org/packages/devel/bioc/src/contrib/BiocInstaller_1.25.3.tar.gz')
 
-    depends_on('r@3.4.0:')
+    depends_on('r@3.4.0:', type=('build', 'run'))

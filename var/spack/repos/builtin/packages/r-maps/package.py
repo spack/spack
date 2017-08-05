@@ -30,6 +30,10 @@ class RMaps(RPackage):
     packages ('mapproj' and 'mapdata')."""
 
     homepage = "https://cran.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/maps_3.1.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/maps_3.2.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/maps"
 
+    version('3.2.0', 'e6864bbb3ca7aa87f05b290be5695d3e')
     version('3.1.1', 'ff045eccb6d5a658db5a539116ddf764')
+
+    depends_on('r@2.14:', type=('build', 'run'))

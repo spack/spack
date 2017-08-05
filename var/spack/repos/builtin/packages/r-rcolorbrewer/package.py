@@ -31,5 +31,8 @@ class RRcolorbrewer(RPackage):
 
     homepage = "http://colorbrewer2.org"
     url      = "https://cran.r-project.org/src/contrib/RColorBrewer_1.1-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RColorBrewer"
 
     version('1.1-2', '66054d83eade4dff8a43ad4732691182')
+
+    depends_on('r@2.0.0:', type=('build', 'run'))

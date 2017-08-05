@@ -31,10 +31,11 @@ class RDomc(RPackage):
 
     homepage = "https://cran.r-project.org/package=doMC"
     url      = "https://cran.r-project.org/src/contrib/doMC_1.3.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/doMC"
 
     version('1.3.4', 'f965b09add9056e84f99a831dc3af7d1')
 
-    depends_on('r@2.14.0:')
+    depends_on('r@2.14.0:', type=('build', 'run'))
 
     depends_on('r-foreach@1.2.0:', type=('build', 'run'))
     depends_on('r-iterators@1.0.0:', type=('build', 'run'))

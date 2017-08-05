@@ -32,5 +32,8 @@ class RLazyeval(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/lazyeval/index.html"
     url      = "https://cran.r-project.org/src/contrib/lazyeval_0.2.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/lazyeval"
 
     version('0.2.0', 'df1daac908dcf02ae7e12f4335b1b13b')
+
+    depends_on('r@3.1.0:', type=('build', 'run'))

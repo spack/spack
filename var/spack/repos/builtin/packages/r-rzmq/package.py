@@ -30,8 +30,13 @@ class RRzmq(RPackage):
     """Interface to the ZeroMQ lightweight messaging kernel."""
 
     homepage = "http://github.com/armstrtw/rzmq"
-    url      = "https://cran.r-project.org/src/contrib/rzmq_0.7.7.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/rzmq_0.9.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rzmq"
 
+    version('0.9.2', '9f8fb8679ac194c2f506cacb6ff7ac7a')
+    version('0.9.1', '4b37020e161a2cd2a0d2c7d3b409a39e')
     version('0.7.7', '8ba18fd1c222d1eb25bb622ccd2897e0')
 
-    depends_on('zeromq')
+    depends_on('r@3.1.0:', type=('build', 'run'))
+
+    depends_on('zeromq@3.0.0:')

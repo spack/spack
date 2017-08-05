@@ -32,8 +32,12 @@ class RSp(RPackage):
     methods for retrieving coordinates, for subsetting, print, summary, etc."""
 
     homepage = "https://github.com/edzer/sp/"
-    url      = "https://cran.r-project.org/src/contrib/sp_1.2-3.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/sp_1.2-4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/sp"
 
+    version('1.2-4', '5827dd291d45a3a378bd68f1b091328f')
     version('1.2-3', 'f0e24d993dec128642ee66b6b47b10c1')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-lattice', type=('build', 'run'))

@@ -31,9 +31,10 @@ class RSandwich(RPackage):
 
     homepage = "https://cran.r-project.org/package=sandwich"
     url      = "https://cran.r-project.org/src/contrib/sandwich_2.3-4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/sandwich"
 
     version('2.3-4', 'a621dbd8a57b6e1e036496642aadc2e5')
 
-    depends_on('r@2.0.0:')
+    depends_on('r@2.0.0:', type=('build', 'run'))
 
     depends_on('r-zoo', type=('build', 'run'))

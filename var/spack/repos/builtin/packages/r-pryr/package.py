@@ -32,8 +32,12 @@ class RPryr(RPackage):
 
     homepage = "https://github.com/hadley/pryr"
     url      = "https://cran.r-project.org/src/contrib/pryr_0.1.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pryr"
 
     version('0.1.2', '66b597a762aa15a3b7037779522983b6')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
+
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-codetools', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

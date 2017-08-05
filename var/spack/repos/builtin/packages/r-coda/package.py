@@ -33,7 +33,10 @@ class RCoda(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/coda/index.html"
     url      = "https://cran.r-project.org/src/contrib/coda_0.19-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/coda"
 
     version('0.19-1', '0d2aca6a5a3bdae9542708817c1ec001')
+
+    depends_on('r@2.14.0:', type=('build', 'run'))
 
     depends_on('r-lattice', type=('build', 'run'))

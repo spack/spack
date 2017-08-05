@@ -30,15 +30,24 @@ class RDplyr(RPackage):
     in memory and out of memory."""
 
     homepage = "https://github.com/hadley/dplyr"
-    url      = "https://cran.r-project.org/src/contrib/dplyr_0.5.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/dplyr_0.7.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
 
+    version('0.7.1', '97fc9b8a8f0dd3a3746260ad885a56c9')
     version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
 
+    depends_on('r@3.1.2:', type=('build', 'run'))
+
     depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
+    depends_on('r-bindrcpp@0.2:', type=('build', 'run'), when=('@0.7.1:'))
+    depends_on('r-glue@1.1.0:', type=('build', 'run'), when=('@0.7.1:'))
     depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-lazyeval', type=('build', 'run'))
-    depends_on('r-dbi', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
+    depends_on('r-pkgconfig', type=('build', 'run'), when=('@0.7.1:'))
+    depends_on('r-rlang@0.1:', type=('build', 'run'), when=('@0.7.1:'))
+    depends_on('r-r6', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.6:', type=('build', 'run'))
+    depends_on('r-tibble@1.3.1:', type=('build', 'run'))
+    depends_on('r-bh@1.58.0-1:', type=('build', 'run'))
+    depends_on('r-plogr', type=('build', 'run'), when=('@0.7.1:'))
+    depends_on('r-lazyeval', type=('build', 'run'), when=('@0.5.0'))
+    depends_on('r-dbi', type=('build', 'run'), when=('@0.5.0'))

@@ -33,8 +33,12 @@ class RMarkdown(RPackage):
     'Markdown'."""
 
     homepage = "https://github.com/rstudio/markdown"
-    url      = "https://cran.r-project.org/src/contrib/markdown_0.7.7.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/markdown_0.8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/markdown"
 
+    version('0.8', '5dde829a865ad65bab37a2b9d243b071')
     version('0.7.7', '72deca9c675c7cc9343048edbc29f7ff')
 
-    depends_on('r-mime', type=('build', 'run'))
+    depends_on('r@2.11.1:', type=('build', 'run'))
+
+    depends_on('r-mime@0.3:', type=('build', 'run'))

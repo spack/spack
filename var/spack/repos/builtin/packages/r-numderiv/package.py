@@ -31,7 +31,8 @@ class RNumderiv(RPackage):
 
     homepage = "https://cran.r-project.org/package=numDeriv"
     url      = "https://cran.r-project.org/src/contrib/numDeriv_2016.8-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/numDeriv"
 
     version('2016.8-1', '30e486298d5126d86560095be8e8aac1')
 
-    depends_on('r@2.11.1:')
+    depends_on('r@2.11.1:', type=('build', 'run'))

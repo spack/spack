@@ -34,8 +34,12 @@ class RLubridate(RPackage):
     fun."""
 
     homepage = "https://cran.r-project.org/web/packages/lubridate/index.html"
-    url      = "https://cran.r-project.org/src/contrib/lubridate_1.5.6.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/lubridate_1.6.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/lubridate"
 
+    version('1.6.0', '10d6d0433f714096927eb032dfafe289')
     version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-stringr', type=('build', 'run'))

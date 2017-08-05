@@ -32,9 +32,13 @@ class RRgooglemaps(RPackage):
     scaling."""
 
     homepage = "https://cran.r-project.org/package=RgoogleMaps"
-    url      = "https://cran.r-project.org/src/contrib/RgoogleMaps_1.2.0.7.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/RgoogleMaps_1.4.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RgoogleMaps"
 
+    version('1.4.1', '20f61fbd4da361a783ba1f49b26f123f')
     version('1.2.0.7', '2e1df804f0331b4122d841105f0c7ea5')
 
+    depends_on('r@2.10:', type=('build', 'run'))
+
     depends_on('r-png', type=('build', 'run'))
-    depends_on('r-rjsonio', type=('build', 'run'))
+    # depends_on('r-rjsonio', type=('build', 'run'))

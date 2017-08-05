@@ -32,14 +32,15 @@ class RHttr(RPackage):
 
     homepage = "https://github.com/hadley/httr"
     url      = "https://cran.r-project.org/src/contrib/httr_1.2.1.tar.gz"
+    lsit_url = "https://cran.r-project.org/src/contrib/Archive/httr"
 
     version('1.2.1', 'c469948dedac9ab3926f23cf484b33d9')
     version('1.1.0', '5ffbbc5c2529e49f00aaa521a2b35600')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))
 
     depends_on('r-jsonlite', type=('build', 'run'))
     depends_on('r-mime', type=('build', 'run'))
     depends_on('r-curl@0.9.1:', type=('build', 'run'))
-    depends_on('r-openssl', type=('build', 'run'))
+    depends_on('r-openssl@0.8:', type=('build', 'run'))
     depends_on('r-r6', type=('build', 'run'))

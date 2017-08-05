@@ -33,4 +33,4 @@ class RViridislite(RPackage):
 
     version('0.2.0', '04a04415cf651a2b5f964b261896c0fb')
 
-    depends_on('r@2.1.0:')
+    depends_on('r@2.1.0:', type=('build', 'run'))
