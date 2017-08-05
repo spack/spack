@@ -177,6 +177,7 @@ def strip_version_suffixes(path):
         '[Uu]niversal',
         'jar',
         'complete',
+        'dynamic',
         'oss',
         'gem',
         'tar',
