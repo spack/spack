@@ -60,6 +60,7 @@ import traceback
 from six import iteritems
 
 import llnl.util.tty as tty
+from llnl.util.tty.color import colorize
 from llnl.util.filesystem import *
 
 import spack
@@ -606,11 +607,14 @@ def fork(pkg, function, dirty=False):
     return child_result
 
 
-def get_package_context(traceback):
+def get_package_context(traceback, context=3):
     """Return some context for an error message when the build fails.
 
     Args:
-    traceback -- A traceback from some exception raised during install.
+        traceback (traceback): A traceback from some exception raised during
+            install
+        context (int): Lines of context to show before and after the line
+            where the error happened
 
     This function inspects the stack to find where we failed in the
     package file, and it adds detailed context to the long_message
@@ -646,9 +650,17 @@ def get_package_context(traceback):
 
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
+
+    l = frame.f_lineno - start
+    start_ctx = max(0, l - context)
+    sourcelines = sourcelines[start_ctx:l + context + 1]
     for i, line in enumerate(sourcelines):
-        mark = ">> " if start + i == frame.f_lineno else "   "
-        lines.append("  %s%-5d%s" % (mark, start + i, line.rstrip()))
+        is_error = start_ctx + i == l
+        mark = ">> " if is_error else "   "
+        marked = "  %s%-5d%s" % (mark, start_ctx + i, line.rstrip())
+        if is_error:
+            marked = colorize('@R{%s}' % marked)
+        lines.append(marked)
 
     return lines
 
