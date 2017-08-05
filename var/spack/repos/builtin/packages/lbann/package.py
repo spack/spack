@@ -58,8 +58,6 @@ class Lbann(CMakePackage):
         # Environment variables
         CPPFLAGS = []
         CPPFLAGS.append('-DLBANN_SET_EL_RNG')
-        if '~seq_init' in spec:
-            CPPFLAGS.append('-DLBANN_PARALLEL_RANDOM_MATRICES')
 
         CPPFLAGS.append('-DLBANN_DATATYPE={0}'.format(
             int(self.spec.variants['dtype'].value)))
@@ -77,6 +75,7 @@ class Lbann(CMakePackage):
             '-DCNPY_DIR={0}'.format(self.spec['cnpy'].prefix),
             '-DELEMENTAL_MATH_LIBS={0}'.format(
                 self.spec['elemental'].libs),
+            '-DSEQ_INIT:BOOL=%s' % ('+seq_init' in spec),
             '-DVERBOSE=0',
             '-DLBANN_HOME=.',
             '-DLBANN_VER=spack']
