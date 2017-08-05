@@ -174,8 +174,10 @@ class Openmpi(AutotoolsPackage):
     variant(
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
-        description='List of fabrics that are enabled',
-        values=('psm', 'psm2', 'pmi', 'verbs', 'mxm'),
+        description=("List of fabrics that are enabled ('rdma' enables "
+                     "'verbs', but implemented via the 'rdma-core' Spack "
+                     "package)"),
+        values=('psm', 'psm2', 'pmi', 'rdma', 'verbs', 'mxm'),
         multi=True
     )
 
@@ -202,6 +204,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc')
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('jdk', when='+java')
+    depends_on('rdma-core', when='fabrics=rdma')
     depends_on('sqlite', when='+sqlite3@:1.11')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
@@ -258,7 +261,10 @@ class Openmpi(AutotoolsPackage):
         if not activated:
             return '--without-{0}'.format(opt)
         line = '--with-{0}'.format(opt)
-        path = _verbs_dir()
+        if 'fabrics=rdma' in self.spec:
+            path = self.spec['rdma-core'].prefix
+        else:
+            path = _verbs_dir()
         if (path is not None) and (path not in ('/usr', '/usr/local')):
             line += '={0}'.format(path)
         return line
@@ -290,9 +296,16 @@ class Openmpi(AutotoolsPackage):
             '--enable-shared',
             '--enable-static'
         ]
-        if self.spec.satisfies('@2.0:'):
+        if spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
+
+        if 'fabrics=rdma' in spec and 'fabrics=verbs' in spec:
+            raise InstallError(
+                "variants 'fabrics=rdma' and 'fabrics=verbs' conflict since "
+                "both ultimately enable ibverbs: 'rdma' via the 'rdma-core' "
+                "Spack package, 'verbs' via software expected to be "
+                "pre-installed on the system")
 
         # Fabrics and schedulers
         config_args.extend(self.with_or_without('fabrics'))
