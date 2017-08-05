@@ -48,12 +48,15 @@ class Gromacs(CMakePackage):
     variant('mpi', default=True, description='Activate MPI support')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('debug', default=False, description='Enables debug mode')
     variant(
         'double', default=False,
         description='Produces a double precision version of the executables')
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
+                    'Reference', 'RelWithAssert', 'Profile'))
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
@@ -78,11 +81,6 @@ class Gromacs(CMakePackage):
 
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
-
-        if '+debug' in self.spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
-        else:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
 
         if '+cuda' in self.spec:
             options.append('-DGMX_GPU:BOOL=ON')

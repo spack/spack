@@ -98,7 +98,9 @@ class AutotoolsPackage(PackageBase):
     @run_after('autoreconf')
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
-        this updated when installed on a newer architecture."""
+        this updated when installed on a newer architecture. In particular,
+        config.guess fails for PPC64LE for version prior to a 2013-06-10
+        build date (automake 1.13.4)."""
 
         if not self.patch_config_guess or not self.spec.satisfies(
                 'arch=linux-rhel7-ppc64le'
@@ -180,6 +182,15 @@ class AutotoolsPackage(PackageBase):
     def build_directory(self):
         """Override to provide another place to build the package"""
         return self.configure_directory
+
+    def default_flag_handler(self, spack_env, flag_val):
+        # Relies on being the first thing that can affect the spack_env
+        # EnvironmentModification after it is instantiated or no other
+        # method trying to affect these variables. Currently both are true
+        # flag_val is a tuple (flag, value_list).
+        spack_env.set(flag_val[0].upper(),
+                      ' '.join(flag_val[1]))
+        return []
 
     @run_before('autoreconf')
     def delete_configure_to_force_update(self):

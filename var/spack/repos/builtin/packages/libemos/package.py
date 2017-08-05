@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libemos(Package):
+class Libemos(CMakePackage):
     """The Interpolation library (EMOSLIB) includes Interpolation software and
        BUFR & CREX encoding/decoding routines."""
 
@@ -37,27 +37,27 @@ class Libemos(Package):
 
     variant('eccodes', default=False,
             description="Use eccodes instead of grib-api for GRIB decoding")
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'Production'))
 
-    depends_on('cmake', type='build')
     depends_on('eccodes', when='+eccodes')
     depends_on('grib-api', when='~eccodes')
     depends_on('fftw+float+double')
+    depends_on('cmake@2.8.11:', type='build')
 
-    def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
+    def cmake_args(self):
+        spec = self.spec
+        args = []
 
         if spec.satisfies('+eccodes'):
-            options.append('-DENABLE_ECCODES=ON')
-            options.append('-DECCODES_PATH=%s' % spec['eccodes'].prefix)
+            args.append('-DENABLE_ECCODES=ON')
+            args.append('-DECCODES_PATH=%s' % spec['eccodes'].prefix)
         else:
-            options.append('-DENABLE_ECCODES=OFF')
-            options.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
+            args.append('-DENABLE_ECCODES=OFF')
+            args.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
 
         # To support long pathnames that spack generates
-        options.append('-DCMAKE_Fortran_FLAGS=-ffree-line-length-none')
+        args.append('-DCMAKE_Fortran_FLAGS=-ffree-line-length-none')
 
-        with working_dir('spack-build', create=True):
-            cmake('..', *options)
-            make()
-            make('install')
+        return args

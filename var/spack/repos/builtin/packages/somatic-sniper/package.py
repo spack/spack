@@ -33,4 +33,6 @@ class SomaticSniper(CMakePackage):
 
     version('1.0.5.0', '64bc2b001c9a8089f2a05900f8a0abfe')
 
+    depends_on('ncurses')
+
     parallel = False

@@ -30,20 +30,11 @@ class Bml(CMakePackage):
     formats (in dense and sparse) and their associated algorithms for basic
     matrix operations."""
 
-    homepage = "https://github.com/qmmd/bml"
-    url      = "https://github.com/qmmd/bml"
+    homepage = "http://lanl.github.io/bml/"
+    url      = "https://github.com/lanl/bml"
 
-    version('develop', git='https://github.com/qmmd/bml', branch='master')
-    version('1.1.0', git='https://github.com/qmmd/bml', tag='v1.1.0')
-
-    variant('debug', default=False, description='Build debug version')
+    version('develop', git='https://github.com/lanl/bml', branch='master')
+    version('1.1.0', git='https://github.com/lanl/bml', tag='v1.1.0')
 
     depends_on("blas")
     depends_on("lapack")
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
