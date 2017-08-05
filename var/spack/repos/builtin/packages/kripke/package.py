@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Kripke(Package):
+class Kripke(CMakePackage):
     """Kripke is a simple, scalable, 3D Sn deterministic particle
        transport proxy/mini app.
     """
@@ -38,21 +38,20 @@ class Kripke(Package):
     variant('mpi',    default=True, description='Build with MPI.')
     variant('openmp', default=True, description='Build with OpenMP enabled.')
 
-    depends_on('mpi', when="+mpi")
+    depends_on('mpi', when='+mpi')
+    depends_on('cmake@3.0:', type='build')
+
+    def cmake_args(self):
+        def enabled(variant):
+            return (1 if variant in spec else 0)
+
+        return [
+            '-DENABLE_OPENMP=%d' % enabled('+openmp'),
+            '-DENABLE_MPI=%d' % enabled('+mpi'),
+        ]
 
     def install(self, spec, prefix):
-        with working_dir('build', create=True):
-            def enabled(variant):
-                return (1 if variant in spec else 0)
-
-            cmake('-DCMAKE_INSTALL_PREFIX:PATH=.',
-                  '-DENABLE_OPENMP=%d' % enabled('+openmp'),
-                  '-DENABLE_MPI=%d' % enabled('+mpi'),
-                  '..',
-                  *std_cmake_args)
-            make()
-
-            # Kripke does not provide install target, so we have to copy
-            # things into place.
-            mkdirp(prefix.bin)
-            install('kripke', prefix.bin)
+        # Kripke does not provide install target, so we have to copy
+        # things into place.
+        mkdirp(prefix.bin)
+        install('kripke', prefix.bin)

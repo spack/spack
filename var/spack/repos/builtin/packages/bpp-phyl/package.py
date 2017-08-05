@@ -25,7 +25,7 @@
 from spack import *
 
 
-class BppPhyl(Package):
+class BppPhyl(CMakePackage):
     """Bio++ phylogeny library."""
 
     homepage = "http://biopp.univ-montp2.fr/wiki/index.php/Installation"
@@ -33,11 +33,9 @@ class BppPhyl(Package):
 
     version('2.2.0', '5c40667ec0bf37e0ecaba321be932770')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.6:', type='build')
     depends_on('bpp-core')
     depends_on('bpp-seq')
 
-    def install(self, spec, prefix):
-        cmake('-DBUILD_TESTING=FALSE', '.', *std_cmake_args)
-        make()
-        make('install')
+    def cmake_args(self):
+        return ['-DBUILD_TESTING=FALSE']

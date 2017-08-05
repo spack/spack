@@ -25,14 +25,10 @@
 from spack import *
 
 
-class Raja(Package):
+class Raja(CMakePackage):
     """RAJA Parallel Framework."""
     homepage = "http://software.llnl.gov/RAJA/"
 
     version('git', git='https://github.com/LLNL/RAJA.git', branch="master")
 
-    def install(self, spec, prefix):
-        with working_dir('build', create=True):
-            cmake('..', *std_cmake_args)
-            make()
-            make('install')
+    depends_on('cmake@3.3:', type='build')

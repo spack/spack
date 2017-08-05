@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Doxygen(Package):
+class Doxygen(CMakePackage):
     """Doxygen is the de facto standard tool for generating documentation
     from annotated C++ sources, but it also supports other popular programming
     languages such as C, Objective-C, C#, PHP, Java, Python, IDL (Corba,
@@ -49,9 +49,3 @@ class Doxygen(Package):
 
     # optional dependencies
     depends_on("graphviz", when="+graphviz", type='run')
-
-    def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
-
-        make()
-        make("install")

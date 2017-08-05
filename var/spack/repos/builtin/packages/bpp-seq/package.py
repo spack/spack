@@ -25,7 +25,7 @@
 from spack import *
 
 
-class BppSeq(Package):
+class BppSeq(CMakePackage):
     """Bio++ seq library."""
 
     homepage = "http://biopp.univ-montp2.fr/wiki/index.php/Installation"
@@ -33,10 +33,8 @@ class BppSeq(Package):
 
     version('2.2.0', '44adef0ff4d5ca4e69ccf258c9270633')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.6:', type='build')
     depends_on('bpp-core')
 
-    def install(self, spec, prefix):
-        cmake('-DBUILD_TESTING=FALSE', '.', *std_cmake_args)
-        make()
-        make('install')
+    def cmake_args(self):
+        return ['-DBUILD_TESTING=FALSE']

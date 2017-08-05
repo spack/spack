@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Opencv(Package):
+class Opencv(CMakePackage):
     """OpenCV is released under a BSD license and hence it's free for both
     academic and commercial use. It has C++, C, Python and Java interfaces and
     supports Windows, Linux, Mac OS, iOS and Android. OpenCV was designed for
@@ -47,8 +47,6 @@ class Opencv(Package):
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('debug', default=False,
-            description='Builds a debug version of the libraries')
 
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
@@ -62,7 +60,6 @@ class Opencv(Package):
     variant('java', default=False,
             description='Activates support for Java')
 
-    depends_on('cmake', type='build')
     depends_on('eigen', when='+eigen', type='build')
 
     depends_on('zlib')
@@ -80,13 +77,10 @@ class Opencv(Package):
 
     extends('python', when='+python')
 
-    def install(self, spec, prefix):
-        cmake_options = []
-        cmake_options.extend(std_cmake_args)
+    def cmake_args(self):
+        spec = self.spec
 
-        cmake_options.extend([
-            '-DCMAKE_BUILD_TYPE:STRING={0}'.format((
-                'Debug' if '+debug' in spec else 'Release')),
+        args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format((
                 'ON' if '+shared' in spec else 'OFF')),
             '-DENABLE_PRECOMPILED_HEADERS:BOOL=OFF',
@@ -100,11 +94,11 @@ class Opencv(Package):
                 'ON' if '+vtk' in spec else 'OFF')),
             '-DBUILD_opencv_java:BOOL={0}'.format((
                 'ON' if '+java' in spec else 'OFF')),
-        ])
+        ]
 
         # Media I/O
         zlib = spec['zlib']
-        cmake_options.extend([
+        args.extend([
             '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
                 join_path(zlib.prefix.lib,
@@ -113,7 +107,7 @@ class Opencv(Package):
         ])
 
         libpng = spec['libpng']
-        cmake_options.extend([
+        args.extend([
             '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
                 join_path(libpng.prefix.lib,
@@ -122,7 +116,7 @@ class Opencv(Package):
         ])
 
         libjpeg = spec['libjpeg-turbo']
-        cmake_options.extend([
+        args.extend([
             '-DJPEG_LIBRARY:FILEPATH={0}'.format(
                 join_path(libjpeg.prefix.lib,
                           'libjpeg.{0}'.format(dso_suffix))),
@@ -130,7 +124,7 @@ class Opencv(Package):
         ])
 
         libtiff = spec['libtiff']
-        cmake_options.extend([
+        args.extend([
             '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
                 join_path(libtiff.prefix.lib,
@@ -139,7 +133,7 @@ class Opencv(Package):
         ])
 
         jasper = spec['jasper']
-        cmake_options.extend([
+        args.extend([
             '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
                 join_path(jasper.prefix.lib,
@@ -149,17 +143,17 @@ class Opencv(Package):
 
         # GUI
         if '+gtk' not in spec:
-            cmake_options.extend([
+            args.extend([
                 '-DWITH_GTK:BOOL=OFF',
                 '-DWITH_GTK_2_X:BOOL=OFF'
             ])
         elif '^gtkplus@3:' in spec:
-            cmake_options.extend([
+            args.extend([
                 '-DWITH_GTK:BOOL=ON',
                 '-DWITH_GTK_2_X:BOOL=OFF'
             ])
         elif '^gtkplus@2:3' in spec:
-            cmake_options.extend([
+            args.extend([
                 '-DWITH_GTK:BOOL=OFF',
                 '-DWITH_GTK_2_X:BOOL=ON'
             ])
@@ -171,7 +165,7 @@ class Opencv(Package):
             python_include_dir = spec['python'].headers.directories[0]
 
             if '^python@3:' in spec:
-                cmake_options.extend([
+                args.extend([
                     '-DBUILD_opencv_python3=ON',
                     '-DPYTHON3_EXECUTABLE={0}'.format(python_exe),
                     '-DPYTHON3_LIBRARY={0}'.format(python_lib),
@@ -179,7 +173,7 @@ class Opencv(Package):
                     '-DBUILD_opencv_python2=OFF',
                 ])
             elif '^python@2:3' in spec:
-                cmake_options.extend([
+                args.extend([
                     '-DBUILD_opencv_python2=ON',
                     '-DPYTHON2_EXECUTABLE={0}'.format(python_exe),
                     '-DPYTHON2_LIBRARY={0}'.format(python_lib),
@@ -187,12 +181,9 @@ class Opencv(Package):
                     '-DBUILD_opencv_python3=OFF',
                 ])
         else:
-            cmake_options.extend([
+            args.extend([
                 '-DBUILD_opencv_python2=OFF',
                 '-DBUILD_opencv_python3=OFF'
             ])
 
-        with working_dir('spack_build', create=True):
-            cmake('..', *cmake_options)
-            make('VERBOSE=1')
-            make("install")
+        return args
