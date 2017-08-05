@@ -37,4 +37,4 @@ class Libbsd(AutotoolsPackage):
 
     version('0.8.6', '4ab7bec639af17d0aacb50222b479110')
 
-    patch('cdefs.h.patch', when='%gcc@:4.8.5')
+    patch('cdefs.h.patch', when='%gcc@:4')
