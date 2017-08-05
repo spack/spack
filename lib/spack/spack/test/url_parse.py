@@ -124,6 +124,8 @@ def test_url_strip_version_suffixes(url, expected):
     ('converge_install_2.3.16', '2.3.16', 'converge'),
     # Download type - src
     ('jpegsrc.v9b', '9b', 'jpeg'),
+    # Download type - archive
+    ('coinhsl-archive-2014.01.17', '2014.01.17', 'coinhsl'),
     # Download type - std
     ('ghostscript-fonts-std-8.11', '8.11', 'ghostscript-fonts'),
     # Download version - release

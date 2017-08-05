@@ -290,6 +290,7 @@ def strip_name_suffixes(path, version):
         'install',
         'src',
         '(open)?[Ss]ources?',
+        '[._-]archive',
         '[._-]std',
 
         # Download version
