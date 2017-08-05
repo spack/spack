@@ -36,7 +36,7 @@ class PyGriddataformats(PythonPackage):
 
     version('0.3.3', '5c83d3bdd421eebcee10111942c5a21f')
 
-    depends_on('python@2.7:')
+    extends('python@2.7:')
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.0.3:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))

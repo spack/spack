@@ -36,7 +36,7 @@ class PyVirtualenv(PythonPackage):
     version('13.0.1', '1ffc011bde6667f0e37ecd976f4934db')
     version('1.11.6', 'f61cdd983d2c4e6aeabb70b1060d6f49')
 
-    depends_on('python@2.6:')
+    extends('python@2.6:')
 
     # not just build-time, requires pkg_resources
     depends_on('py-setuptools', type=('build', 'run'))

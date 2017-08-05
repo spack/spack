@@ -25,21 +25,56 @@
 from spack import *
 
 
-class PyGenders(Package):
+class Genders(AutotoolsPackage):
     """Genders is a static cluster configuration database used for cluster
        configuration management. It is used by a variety of tools and scripts
        for management of large clusters."""
+
     homepage = "https://github.com/chaos/genders"
     url      = "https://github.com/chaos/genders/releases/download/genders-1-22-1/genders-1.22.tar.gz"
 
     version('1.22', '9ea59a024dcbddb85b0ed25ddca9bc8e',
             url='https://github.com/chaos/genders/releases/download/genders-1-22-1/genders-1.22.tar.gz')
-    extends('python')
 
-    # FIXME: Missing a dependency on genders
-    # #include <genders.h>
+    variant('perl',   default=False, description='Enable Perl extensions build')
+    variant('python', default=False, description='Enable Python extensions build')
+    variant('cxx',    default=True,  description='Enable C++ extensions build')
+    variant('java',   default=False, description='Enable Java extensions build')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make(parallel=False)
-        make("install")
+    extends('perl',   when='+perl')
+    extends('python', when='+python', type=('build', 'link', 'run'))
+    depends_on('jdk', when='+java')
+
+    # FIXME: Known build problems when building Java extensions
+    # src/Gendersjni.c:8:10: fatal error: genders.h: No such file or directory
+
+    def configure_args(self):
+        spec = self.spec
+
+        args = []
+
+        if '+perl' in spec:
+            args.append('--with-perl-extensions')
+        else:
+            args.append('--without-perl-extensions')
+
+        if '+python' in spec:
+            args.append('--with-python-extensions')
+        else:
+            args.append('--without-python-extensions')
+
+        if '+cxx' in spec:
+            args.append('--with-cplusplus-extensions')
+        else:
+            args.append('--without-cplusplus-extensions')
+
+        if '+java' in spec:
+            args.extend([
+                '--with-java-extensions',
+                'CPPFLAGS=-I{0}'.format(join_path(
+                    spec['jdk'].prefix.include, 'linux')),
+            ])
+        else:
+            args.append('--without-java-extensions')
+
+        return args

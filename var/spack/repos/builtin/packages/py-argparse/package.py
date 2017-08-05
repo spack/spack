@@ -33,6 +33,6 @@ class PyArgparse(PythonPackage):
 
     version('1.4.0', '08062d2ceb6596fcbc5a7e725b53746f')
 
-    depends_on('python@2.3:')
+    extends('python@2.3:')
 
     depends_on('py-setuptools', type='build')

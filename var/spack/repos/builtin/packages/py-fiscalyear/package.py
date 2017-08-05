@@ -40,7 +40,8 @@ class PyFiscalyear(PythonPackage):
             git='https://github.com/adamjstewart/fiscalyear.git')
     version('0.1.0', '30e36b259f3e72e4929abbf259335742')
 
-    depends_on('python@2.5:')
+    extends('python@2.5:')
+
     depends_on('py-setuptools', type='build')
 
     # TODO: Add a 'test' deptype

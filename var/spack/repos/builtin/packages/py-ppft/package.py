@@ -35,7 +35,7 @@ class PyPpft(PythonPackage):
     version('1.6.4.6',   'e533432bfba4b5a523a07d58011df209')
     version('1.6.4.5',   'd2b1f9f07eae22b31bfe90f544dd3044')
 
-    depends_on('python@2.5:2.8,3.1:')
+    extends('python@2.5:2.8,3.1:')
 
     depends_on('py-setuptools@0.6:', type='build')
     depends_on('py-six@1.7.3:', type=('build', 'run'))

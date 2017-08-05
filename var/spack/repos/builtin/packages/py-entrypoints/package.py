@@ -36,7 +36,7 @@ class PyEntrypoints(PythonPackage):
 
     version('0.2.2', '73bd7ce92c19b25dc5a20aff41be996a', expand=False)
 
-    depends_on('python@2.7:', type=('build', 'run'))
+    extends('python@2.7:')
 
     depends_on('py-pip', type='build')
     depends_on('py-configparser', when='^python@:2.8', type=('build', 'run'))

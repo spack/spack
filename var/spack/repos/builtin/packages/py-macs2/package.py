@@ -34,7 +34,7 @@ class PyMacs2(PythonPackage):
 
     version('2.1.1.20160309', '2008ba838f83f34f8e0fddefe2a3a0159f4a740707c68058f815b31ddad53d26')
 
-    depends_on('python@2.7:2.8')
+    extends('python@2.7:2.8')
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-macs2 requires py-setuptools during runtime as well.

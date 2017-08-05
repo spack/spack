@@ -37,7 +37,7 @@ build_system_to_phase = {
     QMakePackage: 'build',
     SConsPackage: 'build',
     WafPackage: 'build',
-    PythonPackage: 'build',
+    PythonPackage: 'build_scripts',
     PerlPackage: 'build',
 }
 

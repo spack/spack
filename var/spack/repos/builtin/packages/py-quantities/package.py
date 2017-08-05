@@ -33,5 +33,6 @@ class PyQuantities(PythonPackage):
 
     version('0.11.1', 'f4c6287bfd2e93322b25a7c1311a0243')
 
-    depends_on('python@2.6.0:')
+    extends('python@2.6.0:')
+
     depends_on('py-numpy@1.4.0:', type=('build', 'run'))

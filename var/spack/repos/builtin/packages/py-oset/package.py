@@ -35,5 +35,6 @@ class PyOset(PythonPackage):
 
     version('0.1.3', 'f23e5a545d2c77df3916398d2d39a3ab')
 
+    extends('python@2.5:')
+
     depends_on('py-setuptools', type='build')
-    depends_on('python@2.5:', type=('build', 'run'))

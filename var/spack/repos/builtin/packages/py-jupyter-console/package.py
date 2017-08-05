@@ -37,7 +37,8 @@ class PyJupyterConsole(PythonPackage):
     version('4.0.3', '0e928ea261e7f8154698cf69ed4f2459')
     version('4.0.2', 'f2e174938c91136549b908bd39fa5d59')
 
-    depends_on('python@2.7:2.8,3.3:')
+    extends('python@2.7:2.8,3.3:')
+
     depends_on('py-jupyter-client', type=('build', 'run'))
     depends_on('py-ipython', type=('build', 'run'))
     depends_on('py-ipykernel', type=('build', 'run'))

@@ -33,7 +33,7 @@ class PyOpenpyxl(PythonPackage):
 
     version('2.4.5', '3de13dc9b731e1a9dd61b873d9b35a8a')
 
-    depends_on('python@2.6:2.8,3.0:3.1,3.3:')
+    extends('python@2.6:2.8,3.0:3.1,3.3:')
 
     depends_on('py-setuptools', type='build')
 

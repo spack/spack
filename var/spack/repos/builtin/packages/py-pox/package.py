@@ -35,6 +35,6 @@ class PyPox(PythonPackage):
     version('0.2.2', 'e1e2ce99a63d7226ea3c1a2ce389610d')
     version('0.2.1', '517dc13c2bc2429d36a0c636f3ce42db')
 
-    depends_on('python@2.5:2.8,3.1:')
+    extends('python@2.5:2.8,3.1:')
 
     depends_on('py-setuptools@0.6:', type='build')

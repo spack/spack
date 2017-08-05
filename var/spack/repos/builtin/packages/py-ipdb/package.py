@@ -39,7 +39,7 @@ class PyIpdb(PythonPackage):
     # this the original packager does not know what they are. See the 3rd party
     # section on ipdb's GitHub:
     #     https://github.com/gotcha/ipdb#third-party-support
-    depends_on('python@2.6:2.8,3.2:')
+    extends('python@2.6:2.8,3.2:')
 
     # Dependencies gathered from:
     #     https://github.com/gotcha/ipdb/blob/master/setup.py

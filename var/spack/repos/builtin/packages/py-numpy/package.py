@@ -36,8 +36,6 @@ class PyNumpy(PythonPackage):
     homepage = "http://www.numpy.org/"
     url      = "https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip"
 
-    install_time_test_callbacks = ['install_test', 'import_module_test']
-
     import_modules = [
         'numpy', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc',
         'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma',
@@ -62,7 +60,8 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:')
+    extends('python@2.7:2.8,3.4:', type=('build', 'link', 'run'))
+
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
@@ -151,21 +150,6 @@ class PyNumpy(PythonPackage):
 
         return args
 
-    def test(self):
-        # `setup.py test` is not supported.  Use one of the following
-        # instead:
-        #
-        # - `python runtests.py`              (to build and test)
-        # - `python runtests.py --no-build`   (to test installed numpy)
-        # - `>>> numpy.test()`           (run tests for installed numpy
-        #                                 from within an interpreter)
-        pass
-
     def install_test(self):
-        # Change directories due to the following error:
-        #
-        # ImportError: Error importing numpy: you should not try to import
-        #       numpy from its source directory; please exit the numpy
-        #       source tree, and relaunch your python interpreter from there.
         with working_dir('..'):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')

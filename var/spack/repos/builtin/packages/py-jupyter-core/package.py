@@ -42,5 +42,6 @@ class PyJupyterCore(PythonPackage):
     version('4.0.1', 'f849136b2badaaba2a8a3b397bf04639')
     version('4.0',   'b6b37cb4f40bd0fcd20433cb2cc7a4c1')
 
-    depends_on('python@2.7:2.8,3.3:')
+    extends('python@2.7:2.8,3.3:')
+
     depends_on('py-traitlets', type=('build', 'run'))

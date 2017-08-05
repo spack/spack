@@ -26,13 +26,24 @@ from spack import *
 
 
 class PyPetsc4py(PythonPackage):
-    """This package provides Python bindings for the PETSc package.
-    """
+    """This package provides Python bindings for the PETSc package."""
+
     homepage = "https://pypi.python.org/pypi/petsc4py"
-    url      = "https://pypi.python.org/packages/b3/d5/84a71e3ccc13bf90b5055d264e5b256d161ae513392d0f28e8a7ac80d15c/petsc4py-3.7.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/petsc4py/petsc4py-3.7.0.tar.gz"
 
     version('3.7.0', '816a20040a6a477bd637f397c9fb5b6d')
 
+    variant('mpi', default=True, description='Enable MPI support')
+
+    # Python version 2.6, 2.7 or >= 3.2 required
+    extends('python@2.6:2.8,3.2:')
+
     depends_on('py-setuptools', type='build')
-    depends_on('py-mpi4py', type=('build', 'run'))
-    depends_on('petsc+mpi')    
+    depends_on('py-cython@0.22:', type='build')
+    depends_on('py-numpy', type=('build', 'link', 'run'))
+    depends_on('py-mpi4py', type=('build', 'run'), when='+mpi')
+
+    # Major and minor version must match
+    depends_on('petsc')
+    depends_on('petsc+mpi', when='+mpi')
+    depends_on('petsc@3.7.0:3.7.999', when='@3.7.0:3.7.999')

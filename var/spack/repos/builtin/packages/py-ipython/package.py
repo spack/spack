@@ -37,7 +37,7 @@ class PyIpython(PythonPackage):
     version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
     version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
 
-    depends_on('python@2.7:2.8,3.3:')
+    extends('python@2.7:2.8,3.3:')
 
     # These dependencies breaks concretization
     # See https://github.com/LLNL/spack/issues/2793

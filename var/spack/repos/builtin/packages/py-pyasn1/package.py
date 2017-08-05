@@ -33,5 +33,7 @@ class PyPyasn1(PythonPackage):
     url      = "https://pypi.io/packages/source/p/pyasn1/pyasn1-0.2.3.tar.gz"
 
     version('0.2.3', '79f98135071c8dd5c37b6c923c51be45')
+
+    extends('python@2.4:')
+
     depends_on('py-setuptools',    type='build')
-    depends_on('python@2.4:', type=('build', 'run'))

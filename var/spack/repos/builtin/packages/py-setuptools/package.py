@@ -49,7 +49,7 @@ class PySetuptools(PythonPackage):
     version('16.0',   '0ace0b96233516fc5f7c857d086aa3ad')
     version('11.3.1', '01f69212e019a2420c1693fb43593930')
 
-    depends_on('python@2.6:2.8,3.3:')
+    extends('python@2.6:2.8,3.3:')
 
     # Previously, setuptools vendored all of its dependencies to allow
     # easy bootstrapping. As of version 34.0.0, this is no longer done

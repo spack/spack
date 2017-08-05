@@ -59,6 +59,8 @@ class PyYt(PythonPackage):
     variant("scipy", default=True, description="enable scipy support")
     variant("rockstar", default=False, description="enable rockstar support")
 
+    extends("python@2.7:2.8,3.4:")
+
     depends_on("py-astropy", type=('build', 'run'), when="+astropy")
     depends_on("py-cython", type=('build', 'run'))
     depends_on("py-h5py", type=('build', 'run'), when="+h5py")
@@ -69,7 +71,6 @@ class PyYt(PythonPackage):
     depends_on("py-setuptools", type=('build', 'run'))
     depends_on("py-sympy", type=('build', 'run'))
     depends_on("rockstar@yt", type=('build', 'run'), when="+rockstar")
-    depends_on("python@2.7:2.8,3.4:")
 
     @run_before('install')
     def prep_yt(self):
@@ -77,9 +78,7 @@ class PyYt(PythonPackage):
             with open('rockstar.cfg', 'w') as rockstar_cfg:
                 rockstar_cfg.write(self.spec['rockstar'].prefix)
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def check_install(self):
+    def install_test(self):
         # The Python interpreter path can be too long for this
         # yt = Executable(join_path(prefix.bin, "yt"))
         # yt("--help")

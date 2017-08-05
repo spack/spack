@@ -26,15 +26,16 @@
 import inspect
 import os
 
-from spack.directives import depends_on, extends
+from spack.directives import extends
 from spack.package import PackageBase, run_after
+from spack.util.environment import filter_system_paths
 
 from llnl.util.filesystem import working_dir
 
 
 class PythonPackage(PackageBase):
     """Specialized class for packages that are built using Python
-    setup.py files
+    ``setup.py`` files
 
     This class provides the following phases that can be overridden:
 
@@ -64,24 +65,30 @@ class PythonPackage(PackageBase):
 
        $ python setup.py --help-commands
 
-    By default, only the 'build' and 'install' phases are run, but if you
-    need to run more phases, simply modify your ``phases`` list like so:
+    By default, only the following phases are run:
+
+    * build_py
+    * build_ext
+    * build_clib
+    * build_scripts
+    * install
+
+    If you need to run more phases, simply modify your ``phases`` list like so:
 
     .. code-block:: python
 
        phases = ['build_ext', 'install', 'bdist']
 
-    Each phase provides a function <phase> that runs:
+    Each phase provides a function ``<phase>`` that runs:
 
     .. code-block:: console
 
        $ python setup.py --no-user-cfg <phase>
 
-    Each phase also has a <phase_args> function that can pass arguments to
-    this call. All of these functions are empty except for the ``install_args``
-    function, which passes ``--prefix=/path/to/installation/directory``.
+    Each phase also has a ``<phase>_args`` function that can pass arguments
+    to this call.
 
-    If you need to run a phase which is not a standard setup.py command,
+    If you need to run a phase which is not a standard ``setup.py`` command,
     you'll need to define a function for it like so:
 
     .. code-block:: python
@@ -89,32 +96,32 @@ class PythonPackage(PackageBase):
        def configure(self, spec, prefix):
            self.setup_py('configure')
     """
-    # Default phases
-    phases = ['build', 'install']
+    #: Default phases
+    phases = [
+        'build_py', 'build_ext', 'build_clib', 'build_scripts', 'install'
+    ]
 
-    # Name of modules that the Python package provides
-    # This is used to test whether or not the installation succeeded
-    # These names generally come from running:
-    #
-    # >>> import setuptools
-    # >>> setuptools.find_packages()
-    #
-    # in the source tarball directory
+    #: Name of modules that the Python package provides.
+    #: This is used to test whether or not the installation succeeded.
+    #: These names generally come from running:
+    #:
+    #: >>> import setuptools
+    #: >>> setuptools.find_packages()
+    #:
+    #: in the source tarball directory
     import_modules = []
 
-    # To be used in UI queries that require to know which
-    # build-system class we are using
+    #: To be used in UI queries that require to know which
+    #: build-system class we are using
     build_system_class = 'PythonPackage'
 
     #: Callback names for build-time test
     build_time_test_callbacks = ['test']
 
     #: Callback names for install-time test
-    install_time_test_callbacks = ['import_module_test']
+    install_time_test_callbacks = ['install_test', 'import_module_test']
 
     extends('python')
-
-    depends_on('python', type=('build', 'run'))
 
     def setup_file(self):
         """Returns the name of the setup file to use."""
@@ -133,27 +140,6 @@ class PythonPackage(PackageBase):
 
         with working_dir(self.build_directory):
             self.python(setup, '--no-user-cfg', *args, **kwargs)
-
-    def _setup_command_available(self, command):
-        """Determines whether or not a setup.py command exists.
-
-        Args:
-            command (str): The command to look for
-
-        Returns:
-            bool: True if the command is found, else False
-        """
-        kwargs = {
-            'output': os.devnull,
-            'error':  os.devnull,
-            'fail_on_error': False
-        }
-
-        python = inspect.getmodule(self).python
-        setup = self.setup_file()
-
-        python(setup, '--no-user-cfg', command, '--help', **kwargs)
-        return python.returncode == 0
 
     # The following phases and their descriptions come from:
     #   $ python setup.py --help-commands
@@ -184,6 +170,46 @@ class PythonPackage(PackageBase):
         """Build C/C++ extensions (compile/link to build directory)."""
         args = self.build_ext_args(spec, prefix)
 
+        # Get link dependencies
+        link_deps = self.spec.traverse(root=False, deptype=('link'))
+        link_prefixes = [dep.prefix for dep in link_deps]
+
+        # Filter out system paths: ['/', '/usr', '/usr/local']
+        # These paths can be introduced into the build when an external package
+        # is added as a dependency. The problem with these paths is that they
+        # contain hundreds of other packages installed in the same directory.
+        # If these paths come first, they can overshadow Spack installations.
+        link_prefixes = filter_system_paths(link_prefixes)
+
+        # Only add include and lib directories that actually exist
+        include_dirs = []
+        for prefix in link_prefixes:
+            if os.path.isdir(prefix.include):
+                include_dirs.append(prefix.include)
+            if os.path.isdir(prefix.include64):
+                include_dirs.append(prefix.include64)
+
+        library_dirs = []
+        for prefix in link_prefixes:
+            if os.path.isdir(prefix.lib):
+                library_dirs.append(prefix.lib)
+            if os.path.isdir(prefix.lib64):
+                library_dirs.append(prefix.lib)
+
+        # RPATH link dependencies. Python packages build with the compiler
+        # used to install Python. Unfortunately, we have to filter the
+        # Spack compiler wrappers out after installation, so Python builds
+        # its modules with the regular compilers. I haven't yet found a way
+        # to override the compiler, so we explicitly set --rpath instead.
+        if include_dirs:
+            args.append('--include-dirs={0}'.format(':'.join(include_dirs)))
+
+        if library_dirs:
+            args.extend([
+                '--library-dirs={0}'.format(':'.join(library_dirs)),
+                '--rpath={0}'.format(':'.join(library_dirs)),
+            ])
+
         self.setup_py('build_ext', *args)
 
     def build_ext_args(self, spec, prefix):
@@ -206,6 +232,10 @@ class PythonPackage(PackageBase):
 
         self.setup_py('build_scripts', *args)
 
+    def build_scripts_args(self, spec, prefix):
+        """Arguments to pass to build_scripts."""
+        return []
+
     def clean(self, spec, prefix):
         """Clean up temporary files from 'build' command."""
         args = self.clean_args(spec, prefix)
@@ -220,11 +250,7 @@ class PythonPackage(PackageBase):
         """Install everything from build directory."""
         args = self.install_args(spec, prefix)
 
-        self.setup_py('install', *args)
-
-    def install_args(self, spec, prefix):
-        """Arguments to pass to install."""
-        args = ['--prefix={0}'.format(prefix)]
+        args.append('--prefix={0}'.format(prefix))
 
         # This option causes python packages (including setuptools) NOT
         # to create eggs or easy-install.pth files.  Instead, they
@@ -241,7 +267,11 @@ class PythonPackage(PackageBase):
             'py-setuptools' in spec._dependencies):  # it's an immediate dep
             args += ['--single-version-externally-managed', '--root=/']
 
-        return args
+        self.setup_py('install', *args)
+
+    def install_args(self, spec, prefix):
+        """Arguments to pass to install."""
+        return []
 
     def install_lib(self, spec, prefix):
         """Install all Python modules (extensions and pure Python)."""
@@ -368,18 +398,20 @@ class PythonPackage(PackageBase):
     def test(self):
         """Run unit tests after in-place build.
 
-        These tests are only run if the package actually has a 'test' command.
+        By default, this function does nothing. Override it to add custom
+        unit tests for the package.
         """
-        if self._setup_command_available('test'):
-            args = self.test_args(self.spec, self.prefix)
+        pass
 
-            self.setup_py('test', *args)
+    run_after('build_scripts')(PackageBase._run_default_build_time_test_callbacks)  # noqa
 
-    def test_args(self, spec, prefix):
-        """Arguments to pass to test."""
-        return []
+    def install_test(self):
+        """Run unit tests post-installation.
 
-    run_after('build')(PackageBase._run_default_build_time_test_callbacks)
+        By default, this function does nothing. Override it to add custom
+        unit tests for the package.
+        """
+        pass
 
     def import_module_test(self):
         """Attempts to import the module that was just installed.

@@ -34,5 +34,3 @@ class PyDev(PythonPackage):
     version('0.4.0', '00449cf0b347c32da9c840adcb4cf24b')
 
     patch('__init__.py.patch')
-
-    depends_on('py-setuptools', type='build')

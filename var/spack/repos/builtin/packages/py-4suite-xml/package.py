@@ -34,4 +34,4 @@ class Py4suiteXml(PythonPackage):
 
     version('1.0.2', '3ca3db95cb0263ad80beba034d1ff6ea')
 
-    depends_on('python@2.2.1:')
+    extends('python@2.2.1:', type=('build', 'link', 'run'))

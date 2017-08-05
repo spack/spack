@@ -39,7 +39,8 @@ class PyPynn(PythonPackage):
     version('0.8.1', '7fb165ed5af35a115cb9c60991645ae6')
     version('0.7.5', 'd8280544e4c9b34b40fd372b16342841')
 
-    depends_on('python@2.6:2.8,3.3:')
+    extends('python@2.6:2.8,3.3:')
+
     depends_on('py-jinja2@2.7:',        type=('build', 'run'))
     depends_on('py-docutils@0.10:',     type=('build', 'run'))
     depends_on('py-numpy@1.5:',         type=('build', 'run'))

@@ -34,7 +34,8 @@ class PyBackportsShutilGetTerminalSize(PythonPackage):
 
     version('1.0.0', '03267762480bd86b50580dc19dff3c66')
 
+    extends('python@:3.2')
+
     # newer setuptools version mess with "namespace" packages in an
     # incompatible way cf. https://github.com/pypa/setuptools/issues/900
     depends_on('py-setuptools@:30.999.999', type='build')
-    depends_on('python@:3.2')

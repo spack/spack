@@ -33,8 +33,6 @@ class PyEnum34(PythonPackage):
 
     version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
 
-    depends_on('python')
-
     # This dependency breaks concretization
     # See https://github.com/LLNL/spack/issues/2793
     # depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
