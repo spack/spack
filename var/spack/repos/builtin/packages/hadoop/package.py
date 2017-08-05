@@ -36,7 +36,7 @@ class Hadoop(Package):
 
     version('2.6.4', '37019f13d7dcd819727be158440b9442')
 
-    depends_on('jdk', type='run')
+    depends_on('java', type='run')
 
     def install(self, spec, prefix):
 

@@ -46,7 +46,7 @@ class Thrift(Package):
     variant('python', default=True,
             description="Build support for python")
 
-    depends_on('jdk')
+    depends_on('java')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
@@ -63,7 +63,7 @@ class Thrift(Package):
 
     def install(self, spec, prefix):
         env['PY_PREFIX'] = prefix
-        env['JAVA_HOME'] = spec['jdk'].prefix
+        env['JAVA_HOME'] = spec['java'].prefix
 
         # configure options
         options = ['--prefix=%s' % prefix]

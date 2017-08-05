@@ -104,7 +104,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('libtool')
     depends_on('pkg-config', type='build')
 
-    depends_on('jdk', when='+java')
+    depends_on('java', when='+java')
     depends_on('python@2:2.8', when='+python')
 
     def patch(self):

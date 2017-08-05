@@ -22,22 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Stc(AutotoolsPackage):
-    """STC: The Swift-Turbine Compiler"""
+class AlsaLib(AutotoolsPackage):
+    """The Advanced Linux Sound Architecture (ALSA) provides audio and MIDI
+    functionality to the Linux operating system. alsa-lib contains the user
+    space library that developers compile ALSA applications against."""
 
-    homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/stc-0.7.3.tar.gz'
+    homepage = "https://www.alsa-project.org"
+    url      = "ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.1.4.1.tar.bz2"
 
-    version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
-
-    depends_on('java')
-    depends_on('ant')
-    depends_on('turbine')
-
-    def configure_args(self):
-        args = ['--with-turbine=' + self.spec['turbine'].prefix]
-        return args
+    version('1.1.4.1', '29fa3e69122d3cf3e8f0e01a0cb1d183')

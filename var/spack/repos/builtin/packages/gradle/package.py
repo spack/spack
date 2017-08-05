@@ -77,7 +77,7 @@ class Gradle(Package):
     version('0.8',    '73a0ed51b6ec00a7d3a9d242d51aae60')
     version('0.7',    'a8417dbbd62f7013002cb55a44f12cc3')
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
         copy_tree('.', prefix)

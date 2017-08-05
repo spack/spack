@@ -84,7 +84,7 @@ class R(AutotoolsPackage):
     depends_on('libxt', when='+X')
     depends_on('curl')
     depends_on('pcre')
-    depends_on('jdk')
+    depends_on('java')
 
     patch('zlib.patch', when='@:3.3.2')
 

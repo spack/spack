@@ -41,7 +41,7 @@ class Ant(Package):
     version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
     version('1.9.6',  '29b7507c9053e301d2b85091f2aec6f0')
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
         env['ANT_HOME'] = self.prefix
