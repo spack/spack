@@ -22,22 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Stc(AutotoolsPackage):
-    """STC: The Swift-Turbine Compiler"""
+class Cups(AutotoolsPackage):
+    """CUPS is the standards-based, open source printing system developed by
+    Apple Inc. for macOS and other UNIX-like operating systems. CUPS uses the
+    Internet Printing Protocol (IPP) to support printing to local and network
+    printers. This provides the core CUPS libraries, not a complete CUPS
+    install."""
 
-    homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/stc-0.7.3.tar.gz'
+    homepage = "https://www.cups.org/"
+    url = "https://github.com/apple/cups/releases/download/v2.2.3/cups-2.2.3-source.tar.gz"
 
-    version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
+    version('2.2.3', '006a8156680a516e43c59034e31df8bf')
 
-    depends_on('java')
-    depends_on('ant')
-    depends_on('turbine')
+    depends_on('gnutls')
 
     def configure_args(self):
-        args = ['--with-turbine=' + self.spec['turbine'].prefix]
+        args = ['--enable-gnutls', '--with-components=core']
         return args
