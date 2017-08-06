@@ -241,8 +241,7 @@ def _depends_on(pkg, spec, when=None, type=None):
         #               but is most backwards-compatible.
         type = ('build', 'link')
 
-    if isinstance(type, str):
-        type = spack.spec.special_types.get(type, (type,))
+    type = spack.spec.canonical_deptype(type)
 
     for deptype in type:
         if deptype not in spack.spec.alldeps:
@@ -372,7 +371,7 @@ def variant(
         name,
         default=None,
         description='',
-        values=(True, False),
+        values=None,
         multi=False,
         validator=None
 ):
@@ -394,6 +393,12 @@ def variant(
             logic. It receives a tuple of values and should raise an instance
             of SpackError if the group doesn't meet the additional constraints
     """
+    if values is None:
+        if default in (True, False) or (type(default) is str and
+                                        default.upper() in ('TRUE', 'FALSE')):
+            values = (True, False)
+        else:
+            values = lambda x: True
 
     if default is None:
         default = False if values == (True, False) else ''

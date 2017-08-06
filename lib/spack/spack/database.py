@@ -288,7 +288,7 @@ class Database(object):
                 if dhash not in data:
                     tty.warn("Missing dependency not in database: ",
                              "%s needs %s-%s" % (
-                                 spec.format('$_$/'), dname, dhash[:7]))
+                                 spec.cformat('$_$/'), dname, dhash[:7]))
                     continue
 
                 child = data[dhash].spec
@@ -440,8 +440,7 @@ class Database(object):
                     # just to be conservative in case a command like
                     # "autoremove" is run by the user after a reindex.
                     tty.debug(
-                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec)
-                    )
+                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
                     explicit = True
                     if old_data is not None:
                         old_info = old_data.get(spec.dag_hash())
@@ -467,8 +466,7 @@ class Database(object):
                     # installed compilers or externally installed
                     # applications.
                     tty.debug(
-                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec)
-                    )
+                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
                     try:
                         layout = spack.store.layout
                         if entry.spec.external:
@@ -713,13 +711,34 @@ class Database(object):
             return self._remove(spec)
 
     @_autospec
-    def installed_dependents(self, spec):
-        """List the installed specs that depend on this one."""
-        dependents = set()
+    def installed_relatives(self, spec, direction='children', transitive=True):
+        """Return installed specs related to this one."""
+        if direction not in ('parents', 'children'):
+            raise ValueError("Invalid direction: %s" % direction)
+
+        relatives = set()
         for spec in self.query(spec):
-            for dependent in spec.traverse(direction='parents', root=False):
-                dependents.add(dependent)
-        return dependents
+            if transitive:
+                to_add = spec.traverse(direction=direction, root=False)
+            elif direction == 'parents':
+                to_add = spec.dependents()
+            else:  # direction == 'children'
+                to_add = spec.dependencies()
+
+            for relative in to_add:
+                hash_key = relative.dag_hash()
+                if hash_key not in self._data:
+                    reltype = ('Dependent' if direction == 'parents'
+                               else 'Dependency')
+                    tty.warn("Inconsistent state! %s %s of %s not in DB"
+                             % (reltype, hash_key, spec.dag_hash()))
+                    continue
+
+                if not self._data[hash_key].installed:
+                    continue
+
+                relatives.add(relative)
+        return relatives
 
     @_autospec
     def installed_extensions_for(self, extendee_spec):

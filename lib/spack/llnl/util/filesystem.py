@@ -251,7 +251,11 @@ def mkdirp(*paths):
     """Creates a directory, as well as parent directories if needed."""
     for path in paths:
         if not os.path.exists(path):
-            os.makedirs(path)
+            try:
+                os.makedirs(path)
+            except OSError as e:
+                if e.errno != errno.EEXIST or not os.path.isdir(path):
+                    raise e
         elif not os.path.isdir(path):
             raise OSError(errno.EEXIST, "File already exists", path)
 
@@ -291,8 +295,14 @@ def hide_files(*file_list):
 
 def touch(path):
     """Creates an empty file at the specified path."""
-    with open(path, 'a'):
+    perms = (os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY)
+    fd = None
+    try:
+        fd = os.open(path, perms)
         os.utime(path, None)
+    finally:
+        if fd is not None:
+            os.close(fd)
 
 
 def touchp(path):
@@ -539,7 +549,7 @@ def find(root, files, recurse=True):
             if True descends top-down from the root. Defaults to True.
 
     Returns:
-        :func:`list`: The files that have been found
+        list of strings: The files that have been found
     """
     if isinstance(files, six.string_types):
         files = [files]
@@ -608,9 +618,14 @@ class FileList(collections.Sequence):
         """Stable de-duplication of the directories where the files reside.
 
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/libc.a'])
-        >>> assert l.directories == ['/dir1', '/dir2']
+        >>> l.directories
+        ['/dir1', '/dir2']
         >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-        >>> assert h.directories == ['/dir1', '/dir2']
+        >>> h.directories
+        ['/dir1', '/dir2']
+
+        Returns:
+            list of strings: A list of directories
         """
         return list(dedupe(
             os.path.dirname(x) for x in self.files if os.path.dirname(x)
@@ -621,18 +636,27 @@ class FileList(collections.Sequence):
         """Stable de-duplication of the base-names in the list
 
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.a'])
-        >>> assert l.basenames == ['liba.a', 'libb.a']
+        >>> l.basenames
+        ['liba.a', 'libb.a']
         >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
-        >>> assert h.basenames == ['a.h', 'b.h']
+        >>> h.basenames
+        ['a.h', 'b.h']
+
+        Returns:
+            list of strings: A list of base-names
         """
         return list(dedupe(os.path.basename(x) for x in self.files))
 
     @property
     def names(self):
-        """Stable de-duplication of file names in the list
+        """Stable de-duplication of file names in the list without extensions
 
         >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
-        >>> assert h.names == ['a', 'b']
+        >>> h.names
+        ['a', 'b']
+
+        Returns:
+            list of strings: A list of files without extensions
         """
         return list(dedupe(x.split('.')[0] for x in self.basenames))
 
@@ -678,6 +702,11 @@ class HeaderList(FileList):
 
     @property
     def headers(self):
+        """Stable de-duplication of the headers.
+
+        Returns:
+            list of strings: A list of header files
+        """
         return self.files
 
     @property
@@ -685,7 +714,11 @@ class HeaderList(FileList):
         """Include flags
 
         >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
-        >>> assert h.cpp_flags == '-I/dir1 -I/dir2'
+        >>> h.include_flags
+        '-I/dir1 -I/dir2'
+
+        Returns:
+            str: A joined list of include flags
         """
         return ' '.join(['-I' + x for x in self.directories])
 
@@ -696,7 +729,11 @@ class HeaderList(FileList):
         >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
         >>> h.add_macro('-DBOOST_LIB_NAME=boost_regex')
         >>> h.add_macro('-DBOOST_DYN_LINK')
-        >>> assert h.macro_definitions == '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'  # noqa
+        >>> h.macro_definitions
+        '-DBOOST_LIB_NAME=boost_regex -DBOOST_DYN_LINK'
+
+        Returns:
+            str: A joined list of macro definitions
         """
         return ' '.join(self._macro_definitions)
 
@@ -705,13 +742,26 @@ class HeaderList(FileList):
         """Include flags + macro definitions
 
         >>> h = HeaderList(['/dir1/a.h', '/dir1/b.h', '/dir2/c.h'])
+        >>> h.cpp_flags
+        '-I/dir1 -I/dir2'
         >>> h.add_macro('-DBOOST_DYN_LINK')
-        >>> assert h.macro_definitions == '-I/dir1 -I/dir2 -DBOOST_DYN_LINK'
+        >>> h.cpp_flags
+        '-I/dir1 -I/dir2 -DBOOST_DYN_LINK'
+
+        Returns:
+            str: A joined list of include flags and macro definitions
         """
-        return self.include_flags + ' ' + self.macro_definitions
+        cpp_flags = self.include_flags
+        if self.macro_definitions:
+            cpp_flags += ' ' + self.macro_definitions
+        return cpp_flags
 
     def add_macro(self, macro):
-        """Add a macro definition"""
+        """Add a macro definition
+
+        Parameters:
+            macro (str): The macro to add
+        """
         self._macro_definitions.append(macro)
 
 
@@ -765,6 +815,11 @@ class LibraryList(FileList):
 
     @property
     def libraries(self):
+        """Stable de-duplication of library files.
+
+        Returns:
+            list of strings: A list of library files
+        """
         return self.files
 
     @property
@@ -772,7 +827,11 @@ class LibraryList(FileList):
         """Stable de-duplication of library names in the list
 
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir3/liba.so'])
-        >>> assert l.names == ['a', 'b']
+        >>> l.names
+        ['a', 'b']
+
+        Returns:
+            list of strings: A list of library names
         """
         return list(dedupe(x.split('.')[0][3:] for x in self.basenames))
 
@@ -781,7 +840,11 @@ class LibraryList(FileList):
         """Search flags for the libraries
 
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
-        >>> assert l.search_flags == '-L/dir1 -L/dir2'
+        >>> l.search_flags
+        '-L/dir1 -L/dir2'
+
+        Returns:
+            str: A joined list of search flags
         """
         return ' '.join(['-L' + x for x in self.directories])
 
@@ -790,7 +853,11 @@ class LibraryList(FileList):
         """Link flags for the libraries
 
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
-        >>> assert l.search_flags == '-la -lb'
+        >>> l.link_flags
+        '-la -lb'
+
+        Returns:
+            str: A joined list of link flags
         """
         return ' '.join(['-l' + name for name in self.names])
 
@@ -799,7 +866,11 @@ class LibraryList(FileList):
         """Search flags + link flags
 
         >>> l = LibraryList(['/dir1/liba.a', '/dir2/libb.a', '/dir1/liba.so'])
-        >>> assert l.search_flags == '-L/dir1 -L/dir2 -la -lb'
+        >>> l.ld_flags
+        '-L/dir1 -L/dir2 -la -lb'
+
+        Returns:
+            str: A joined list of search flags and link flags
         """
         return self.search_flags + ' ' + self.link_flags
 

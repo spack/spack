@@ -34,6 +34,8 @@ level = "long"
 build_system_to_phase = {
     AutotoolsPackage: 'build',
     CMakePackage: 'build',
+    QMakePackage: 'build',
+    SConsPackage: 'build',
     WafPackage: 'build',
     PythonPackage: 'build',
     PerlPackage: 'build',

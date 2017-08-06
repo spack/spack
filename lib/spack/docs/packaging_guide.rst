@@ -490,6 +490,21 @@ version.joined       123
    Python properties don't need parentheses. ``version.dashed`` is correct.
    ``version.dashed()`` is incorrect.
 
+In addition, these version properties can be combined with ``up_to()``.
+For example:
+
+.. code-block:: python
+
+   >>> version = Version('1.2.3')
+   >>> version.up_to(2).dashed
+   Version('1-2')
+   >>> version.underscored.up_to(2)
+   Version('1_2')
+
+
+As you can see, order is not important. Just keep in mind that ``up_to()`` and
+the other version properties return ``Version`` objects, not strings.
+
 If a URL cannot be derived systematically, or there is a special URL for one
 of its versions, you can add an explicit URL for a particular version:
 
@@ -925,7 +940,7 @@ Submodules
   .. code-block:: python
 
      version('1.0.1', git='https://github.com/example-project/example.git',
-             tag='v1.0.1', submdoules=True)
+             tag='v1.0.1', submodules=True)
 
 
 .. _github-fetch:
@@ -2103,7 +2118,13 @@ The classes that are currently provided by Spack are:
     | :py:class:`.CMakePackage`     | Specialized class for packages   |
     |                               | built using CMake                |
     +-------------------------------+----------------------------------+
-    | :py:class:`.WafPackage`       | Specialize class for packages    |
+    | :py:class:`.QMakePackage`     | Specialized class for packages   |
+    |                               | build using QMake                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.SConsPackage`     | Specialized class for packages   |
+    |                               | built using SCons                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.WafPackage`       | Specialized class for packages   |
     |                               | built using Waf                  |
     +-------------------------------+----------------------------------+
     | :py:class:`.RPackage`         | Specialized class for            |
@@ -2389,6 +2410,94 @@ build system.
 ^^^^^^^^^^^^^^
 Compiler flags
 ^^^^^^^^^^^^^^
+
+Compiler flags set by the user through the Spec object can be passed to
+the build in one of two ways. For packages inheriting from the
+``CmakePackage`` or ``AutotoolsPackage`` classes, the build environment
+passes those flags to the relevant environment variables (``CFLAGS``,
+``CXXFLAGS``, etc) that are respected by the build system. For all other
+packages, the default behavior is to inject the flags directly into the
+compiler commands using Spack's compiler wrappers.
+
+Individual packages can override the default behavior for the flag
+handling.  Packages can define a ``default_flag_handler`` method that
+applies to all sets of flags handled by Spack, or may define
+individual methods ``cflags_handler``, ``cxxflags_handler``,
+etc. Spack will apply the individual method for a flag set if it
+exists, otherwise the ``default_flag_handler`` method if it exists,
+and fall back on the default for that package class if neither exists.
+
+These methods are defined on the package class, and take two
+parameters in addition to the packages itself. The ``env`` parameter
+is an ``EnvironmentModifications`` object that can be used to change
+the build environment. The ``flag_val`` parameter is a tuple. Its
+first entry is the name of the flag (``cflags``, ``cxxflags``, etc.)
+and its second entry is a list of the values for that flag.
+
+There are three primary idioms that can be combined to create whatever
+behavior the package requires.
+
+1. The default behavior for packages inheriting from
+``AutotoolsPackage`` or ``CmakePackage``.
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
+        return []
+
+2. The default behavior for other packages
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        return flag_val[1]
+
+
+3. Packages may have additional flags to add to the build. These flags
+can be added to either idiom above. For example:
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        flags = flag_val[1]
+        flags.append('-flag')
+        return flags
+
+or
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
+        env.append_flags(flag_val[0].upper(), '-flag')
+        return []
+
+Packages may also opt for methods that include aspects of any of the
+idioms above. E.g.
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        flags = []
+        if len(flag_val[1]) > 3:
+            env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1][3:]))
+            flags = flag_val[1][:3]
+        else:
+            flags = flag_val[1]
+        flags.append('-flag')
+        return flags
+
+Because these methods can pass values through environment variables,
+it is important not to override these variables unnecessarily in other
+package methods. In the ``setup_environment`` and
+``setup_dependent_environment`` methods, use the ``append_flags``
+method of the ``EnvironmentModifications`` class to append values to a
+list of flags whenever there is no good reason to override the
+existing value. In the ``install`` method and other methods that can
+operate on the build environment directly through the ``env``
+variable, test for environment variable existance before overriding
+values to add compiler flags.
 
 In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler

@@ -172,6 +172,8 @@ from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.qmake import QMakePackage
+from spack.build_systems.scons import SConsPackage
 from spack.build_systems.waf import WafPackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
@@ -185,6 +187,8 @@ __all__ += [
     'MakefilePackage',
     'AutotoolsPackage',
     'CMakePackage',
+    'QMakePackage',
+    'SConsPackage',
     'WafPackage',
     'PythonPackage',
     'RPackage',
