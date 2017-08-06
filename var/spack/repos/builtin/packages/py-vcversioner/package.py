@@ -29,7 +29,7 @@ class PyVcversioner(PythonPackage):
     """Vcversioner: Take version numbers from version control."""
 
     homepage = "https://github.com/habnabit/vcversioner"
-    url      = "https://pypi.python.org/packages/source/v/vcversioner/vcversioner-2.16.0.0.tar.gz"
+    url      = "https://pypi.io/packages/source/v/vcversioner/vcversioner-2.16.0.0.tar.gz"
 
     version('2.16.0.0', 'aab6ef5e0cf8614a1b1140ed5b7f107d')
 
