@@ -23,27 +23,36 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
 class NinjaFortran(Package):
-    """ A Fortran capable fork of ninja """
+    """A Fortran capable fork of ninja."""
+
     homepage = "https://github.com/Kitware/ninja"
     url      = "https://github.com/Kitware/ninja/archive/v1.7.2.gcc0ea.kitware.dyndep-1.tar.gz"
 
     version('1.7.2', '3982f508c415c0abaca34cb5e92e711a')
 
-    extends('python')
+    depends_on('python', type=('build', 'run'))
+
+    phases = ['configure', 'install']
 
     def url_for_version(self, version):
         url = 'https://github.com/Kitware/ninja/archive/v{0}.gcc0ea.kitware.dyndep-1.tar.gz'
         return url.format(version)
 
-    def install(self, spec, prefix):
+    def configure(self, spec, prefix):
         python('configure.py', '--bootstrap')
 
+    @run_after('configure')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        ninja = Executable('./ninja')
+        ninja('-j{0}'.format(make_jobs), 'ninja_test')
+        ninja_test = Executable('./ninja_test')
+        ninja_test()
+
+    def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('ninja', prefix.bin)
-        install_tree('misc', join_path(prefix, 'misc'))
-        with working_dir(prefix.bin):
-            os.symlink('ninja', 'ninja-build')
+        install_tree('misc', prefix.misc)
