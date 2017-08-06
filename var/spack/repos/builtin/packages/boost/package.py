@@ -207,8 +207,21 @@ class Boost(Package):
                                                        spack_cxx))
 
             if '+mpi' in spec:
-                f.write('using mpi : %s ;\n' %
-                        join_path(spec['mpi'].prefix.bin, 'mpicxx'))
+
+                # Use the correct mpi compiler.  If the compiler options are
+                # empty or undefined, Boost will attempt to figure out the
+                # correct options by running "${mpicxx} -show" or something
+                # similar, but that doesn't work with the Cray compiler
+                # wrappers.  Since Boost doesn't use the MPI C++ bindings,
+                # that can be used as a compiler option instead.
+
+                mpi_line = 'using mpi : %s' % spec['mpi'].mpicxx
+
+                if 'platform=cray' in spec:
+                    mpi_line += ' : <define>MPICH_SKIP_MPICXX'
+
+                f.write(mpi_line + ' ;\n')
+
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
 

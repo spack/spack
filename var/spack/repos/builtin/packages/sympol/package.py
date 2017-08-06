@@ -26,14 +26,14 @@
 from spack import *
 
 
-class Sympol(Package):
+class Sympol(CMakePackage):
     """SymPol is a C++ tool to work with symmetric polyhedra"""
     homepage = "http://www.math.uni-rostock.de/~rehn/software/sympol.html"
     url      = "http://www.math.uni-rostock.de/~rehn/software/sympol-0.1.8.tar.gz"
 
     version('0.1.8', '7cba1997f8532c754cb7259bf70caacb')
 
-    depends_on("cmake", type='build')
+    depends_on("cmake@2.6:", type="build")
 
     depends_on("bliss")
     depends_on("boost")
@@ -41,8 +41,3 @@ class Sympol(Package):
     depends_on("lrslib")
 
     patch("lrs_mp_close.patch")
-
-    def install(self, spec, prefix):
-        cmake(".", *std_cmake_args)
-        make()
-        make("install")
