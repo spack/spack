@@ -341,7 +341,11 @@ class Boost(Package):
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
 
         b2 = Executable(b2name)
-        b2_options = ['-j', '%s' % make_jobs]
+        jobs = make_jobs
+        # in 1.59 max jobs became dynamic
+        if jobs > 64 and spec.satisfies('@:1.58'):
+            jobs = 64
+        b2_options = ['-j', '%s' % jobs]
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 
