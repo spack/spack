@@ -67,11 +67,11 @@ class Qmcpack(CMakePackage):
     depends_on('cuda', when='+cuda')
 
     # qmcpack needs these for data analysis
-    depends_on('python', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('python', type='run')
+    depends_on('py-numpy', type='run')
 
     # GUI is optional and leads to a long complex DAG for dependencies
-    depends_on('py-matplotlib', type=('build', 'run'), when='+gui')
+    depends_on('py-matplotlib', type='run', when='+gui')
 
     # B-spline basis calculation require a patched version of
     # Quantum Espresso 5.3.0 (see QMCPACK manual)
@@ -170,7 +170,10 @@ class Qmcpack(CMakePackage):
     def check_build(self):
         """Run ctest after building binary.
         Use 'spack install --run-tests qmcpack'.
-        It can take 24 hours to run all the regression tests
-        and unit tests. """
-        self.ctest
-        pass
+        It can take 24 hours to run all the regression tests. 
+        We only run the unit tests and short tests."""
+        ctest('-L unit')
+        ctest('-R short')
+
+
+
