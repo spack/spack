@@ -29,7 +29,7 @@ class PySlepc4py(PythonPackage):
     """This package provides Python bindings for the SLEPc package.
     """
     homepage = "https://pypi.python.org/pypi/slepc4py"
-    url      = "https://pypi.python.org/packages/b4/dd/116fbdf865f6f9eda779c5d31bc5b68f37ef3dd5dbfc3feb4aaba1565560/slepc4py-3.7.0.tar.gz"
+    url      = "https://pypi.io/packages/source/s/slepc4py/slepc4py-3.7.0.tar.gz"
 
     version('3.7.0', 'c4775e88b0825c7313629c01de60ecb2')
 

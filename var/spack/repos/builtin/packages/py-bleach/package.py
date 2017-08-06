@@ -29,7 +29,7 @@ class PyBleach(PythonPackage):
     """An easy whitelist-based HTML-sanitizing tool."""
 
     homepage = "http://github.com/mozilla/bleach"
-    url      = "https://pypi.python.org/packages/99/00/25a8fce4de102bf6e3cc76bc4ea60685b2fee33bde1b34830c70cacc26a7/bleach-1.5.0.tar.gz"
+    url      = "https://pypi.io/packages/source/b/bleach/bleach-1.5.0.tar.gz"
 
     version('1.5.0', 'b663300efdf421b3b727b19d7be9c7e7')
 

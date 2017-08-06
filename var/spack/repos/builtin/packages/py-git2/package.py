@@ -31,9 +31,9 @@ class PyGit2(PythonPackage):
     """
 
     homepage = "http://www.pygit2.org/"
+    url      = "https://pypi.io/packages/source/p/pygit2/pygit2-0.24.1.tar.gz"
 
-    version('0.24.1', 'dd98b6a9fded731e36ca5a40484c8545',
-        url="https://pypi.python.org/packages/aa/56/84dcce942a48d4b7b970cfb7a779b8db1d904e5ec5f71e7a67a63a23a4e2/pygit2-0.24.1.tar.gz")
+    version('0.24.1', 'dd98b6a9fded731e36ca5a40484c8545')
 
     extends('python')
     depends_on('py-setuptools', type='build')

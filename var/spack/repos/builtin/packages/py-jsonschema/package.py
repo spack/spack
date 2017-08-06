@@ -29,7 +29,7 @@ class PyJsonschema(PythonPackage):
     """Jsonschema: An(other) implementation of JSON Schema for Python."""
 
     homepage = "http://github.com/Julian/jsonschema"
-    url      = "https://pypi.python.org/packages/source/j/jsonschema/jsonschema-2.5.1.tar.gz"
+    url      = "https://pypi.io/packages/source/j/jsonschema/jsonschema-2.5.1.tar.gz"
 
     version('2.5.1', '374e848fdb69a3ce8b7e778b47c30640')
 

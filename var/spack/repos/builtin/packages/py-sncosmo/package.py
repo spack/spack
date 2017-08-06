@@ -30,7 +30,7 @@ class PySncosmo(PythonPackage):
     analysis."""
 
     homepage = "http://sncosmo.readthedocs.io/"
-    url = "https://pypi.python.org/packages/source/s/sncosmo/sncosmo-1.2.0.tar.gz"
+    url = "https://pypi.io/packages/source/s/sncosmo/sncosmo-1.2.0.tar.gz"
 
     version('1.2.0', '028e6d1dc84ab1c17d2f3b6378b2cb1e')
 
