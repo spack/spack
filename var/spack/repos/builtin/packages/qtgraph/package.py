@@ -67,7 +67,7 @@ class Qtgraph(QMakePackage):
         # a non-conventional way.  We reflect that here.
         run_env.prepend_path(
             'LD_LIBRARY_PATH', join_path(
-                self.prefix.lib64, 
+                self.prefix.lib64,
                 '{0}'.format(self.spec['qt'].version.up_to(3))))
 
         run_env.prepend_path('CPATH', self.prefix.include.QtGraph)
