@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Armadillo(Package):
+class Armadillo(CMakePackage):
     """Armadillo is a high quality linear algebra library (matrix maths)
     for the C++ language, aiming towards a good balance between speed and
     ease of use."""
@@ -40,19 +40,21 @@ class Armadillo(Package):
 
     variant('hdf5', default=False, description='Include HDF5 support')
 
-    depends_on('cmake@2.8:', type='build')
+    depends_on('cmake@2.8.12:', type='build')
     depends_on('arpack-ng')  # old arpack causes undefined symbols
     depends_on('blas')
     depends_on('lapack')
     depends_on('superlu@5.2:')
     depends_on('hdf5', when='+hdf5')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+        spec = self.spec
+
         arpack = find_libraries('libarpack', root=spec[
                                 'arpack-ng'].prefix.lib, shared=True)
         superlu = find_libraries('libsuperlu', root=spec[
                                  'superlu'].prefix, shared=False, recurse=True)
-        cmake_args = [
+        return [
             # ARPACK support
             '-DARPACK_LIBRARY={0}'.format(arpack.joined()),
             # BLAS support
@@ -65,9 +67,3 @@ class Armadillo(Package):
             # HDF5 support
             '-DDETECT_HDF5={0}'.format('ON' if '+hdf5' in spec else 'OFF')
         ]
-
-        cmake_args.extend(std_cmake_args)
-        cmake('.', *cmake_args)
-
-        make()
-        make('install')

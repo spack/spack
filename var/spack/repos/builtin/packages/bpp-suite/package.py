@@ -25,7 +25,7 @@
 from spack import *
 
 
-class BppSuite(Package):
+class BppSuite(CMakePackage):
     """BppSuite is a suite of ready-to-use programs for phylogenetic and
        sequence analysis."""
 
@@ -34,13 +34,8 @@ class BppSuite(Package):
 
     version('2.2.0', 'd8b29ad7ccf5bd3a7beb701350c9e2a4')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.6:', type='build')
     depends_on('texinfo', type='build')
     depends_on('bpp-core')
     depends_on('bpp-seq')
     depends_on('bpp-phyl')
-
-    def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
-        make()
-        make('install')

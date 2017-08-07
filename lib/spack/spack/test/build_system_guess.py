@@ -34,6 +34,7 @@ import spack.stage
     params=[
         ('configure',      'autotools'),
         ('CMakeLists.txt', 'cmake'),
+        ('project.pro',    'qmake'),
         ('SConstruct',     'scons'),
         ('waf',            'waf'),
         ('setup.py',       'python'),
