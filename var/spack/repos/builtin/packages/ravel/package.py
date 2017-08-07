@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Ravel(Package):
+class Ravel(CMakePackage):
     """Ravel is a parallel communication trace visualization tool that
        orders events according to logical time."""
 
@@ -41,7 +41,5 @@ class Ravel(Package):
     depends_on('otf2')
     depends_on('qt@5:')
 
-    def install(self, spec, prefix):
-        cmake('-Wno-dev', *std_cmake_args)
-        make()
-        make("install")
+    def cmake_args(self):
+        return ['-Wno-dev']

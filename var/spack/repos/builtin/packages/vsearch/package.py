@@ -25,26 +25,15 @@
 from spack import *
 
 
-class Gbenchmark(CMakePackage):
-    """A microbenchmark support library"""
+class Vsearch(AutotoolsPackage):
+    """VSEARCH is a versatile open-source tool for metagenomics."""
 
-    homepage = "https://github.com/google/benchmark"
-    url = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
+    homepage = "https://github.com/torognes/vsearch"
+    url      = "https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz"
 
-    version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae')
-    version('1.0.0', '4f778985dce02d2e63262e6f388a24b595254a93')
+    version('2.4.3', '8f57210fe447a781078fde06e6402650')
 
-    def build_type(self):
-        return "Release"
-
-    def patch(self):
-        filter_file(
-            r'add_cxx_compiler_flag..fstrict.aliasing.',
-            r'##### add_cxx_compiler_flag(-fstrict-aliasing)',
-            'CMakeLists.txt'
-        )
-        filter_file(
-            r'add_cxx_compiler_flag..Werror',
-            r'##### add_cxx_compiler_flag(-Werror',
-            'CMakeLists.txt'
-        )
+    depends_on('m4',       type='build')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
