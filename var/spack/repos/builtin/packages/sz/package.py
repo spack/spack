@@ -30,7 +30,7 @@ class Sz(AutotoolsPackage):
     """Error-bounded Lossy Compressor for HPC Data."""
 
     homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
-    url      = "http://www.mcs.anl.gov/~shdi/download/sz-1.4.9-beta.tar.gz"
+    url      = "https://github.com/disheng222/SZ/archive/v1.4.9.2.tar.gz"
 
     version('develop', git='https://github.com/disheng222/SZ.git',
             branch='master')
