@@ -57,3 +57,7 @@ class Vpfft(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('VPFFT++', prefix.bin)
+        install('README.md', prefix)
+        install('README.make', prefix)
+        install('README-license.txt', prefix)
+        install_dir('docs')
