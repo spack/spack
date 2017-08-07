@@ -39,9 +39,7 @@ def _valid_components():
 
     components = root.findall('.//Abbr')
     for component in components:
-        # For some reason, mediaconfig.xml contains an invalid component:
-        if component.text != 'intel-tbb-psxe__noarch':
-            yield component.text
+        yield component.text
 
 
 class IntelPackage(PackageBase):
@@ -85,19 +83,23 @@ class IntelPackage(PackageBase):
 
     @property
     def _filtered_components(self):
-        """Returns a list of valid components that match the requested
-        components from ``components``."""
+        """Returns a list or set of valid components that match
+        the requested components from ``components``."""
 
         # Don't filter 'ALL'
         if self.components == ['ALL']:
             return self.components
 
-        matches = []
+        # mediaconfig.xml is known to contain duplicate components.
+        # If more than one copy of the same component is used, you
+        # will get an error message about invalid components.
+        # Use a set to store components to prevent duplicates.
+        matches = set()
 
         for valid in _valid_components():
             for requested in self.components:
                 if valid.startswith(requested):
-                    matches.append(valid)
+                    matches.add(valid)
 
         return matches
 
