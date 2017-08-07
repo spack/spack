@@ -49,7 +49,10 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--isolate', action='store_true', dest='isolate',
         help="isolate the bootstraped enviroment from the system")
-
+    subparser.add_argument(
+        '--tarball',
+        help="name of the tar file which contains the operating system"
+    )
 
 def get_origin_info(remote):
     git_dir = join_path(spack.prefix, '.git')
@@ -86,10 +89,15 @@ def adapt_config(install_dir):
     config['isolate'] = True
     spack.config.update_config("config", config, "bootstrap")
 
+def unpack_environment(path, tarball):
+    tar = which('tar', required=True)
+    tar('-xzf', tarball, '-C', path, '--strip-components=1')
+
 def bootstrap(parser, args):
-    origin_url, branch = "https://github.com/TheTimmy/spack", "features/bootstrap-packagesystem" #get_origin_info(args.remote)
+    origin_url, branch = "https://github.com/TheTimmy/spack", "features/bootstrap-systemimages" #get_origin_info(args.remote)
     prefix = args.prefix
     isolate = args.isolate
+    tarball = args.tarball
 
     tty.msg("Fetching spack from '%s': %s" % (args.remote, origin_url))
 
@@ -99,13 +107,16 @@ def bootstrap(parser, args):
     mkdirp(prefix)
 
     if isolate:
+        if not tarball:
+            tty.die("Require a tarball with the target system")
+
+        unpack_environment(prefix, tarball)
         home = os.path.join(prefix, 'home')
-        tmp = os.path.join(prefix, 'tmp')
         install_dir = os.path.join(home, 'spack')
 
         mkdirp(home)
-        mkdirp(tmp)
         mkdirp(install_dir)
+
         #generate and remove enviroment
         build_chroot_enviroment(prefix)
         remove_chroot_enviroment(prefix)
