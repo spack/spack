@@ -26,7 +26,7 @@ from spack import *
 
 
 class Vpfft(MakefilePackage):
-    """ Proxy Application. VPFFT is an implementation of a mesoscale
+    """Proxy Application. VPFFT is an implementation of a mesoscale
     micromechanical materials model. By solving the viscoplasticity
     model, VPFFT simulates the evolution of a material under deformation.
     The solution time to the viscoplasticity model, described by a set
@@ -48,7 +48,7 @@ class Vpfft(MakefilePackage):
     def build_targets(self):
         targets = [
             "--file=Makefile.make",
-            "EIGEN_PATH={0}/include/eigen3".format(self.spec['eigen'].prefix),
+            "EIGEN_PATH={0}".format(join_path(self.spec['eigen'].prefix.include, 'eigen{0}'.format(self.spec['eigen'].version.up_to(1)))),
             "FFTW_PATH={0}".format(self.spec['fftw'].prefix),
             "CC={0}".format(self.spec['mpi'].mpicxx)
         ]
@@ -60,4 +60,4 @@ class Vpfft(MakefilePackage):
         install('README.md', prefix)
         install('README.make', prefix)
         install('README-license.txt', prefix)
-        install_dir('docs')
+        install_tree('docs', join_path(prefix, 'docs'))
