@@ -25,26 +25,25 @@
 from spack import *
 
 
-class Gbenchmark(CMakePackage):
-    """A microbenchmark support library"""
+class Qwt(QMakePackage):
+    """The Qwt library contains GUI Components and utility classes which are
+    primarily useful for programs with a technical background. Beside a
+    framework for 2D plots it provides scales, sliders, dials, compasses,
+    thermometers, wheels and knobs to control or display values, arrays, or
+    ranges of type double.
+    """
+    homepage = "http://qwt.sourceforge.net/"
+    url      = "https://sourceforge.net/projects/qwt/files/qwt/6.1.3/qwt-6.1.3.tar.bz2"
 
-    homepage = "https://github.com/google/benchmark"
-    url = "https://github.com/google/benchmark/archive/v1.0.0.tar.gz"
+    version('6.1.3', '19d1f5fa5e22054d22ee3accc37c54ba')
+    version('5.2.2', '70d77e4008a6cc86763737f0f24726ca')
 
-    version('1.1.0', '8c539bbe2a212618fa87b6c38fba087100b6e4ae')
-    version('1.0.0', '4f778985dce02d2e63262e6f388a24b595254a93')
-
-    def build_type(self):
-        return "Release"
+    depends_on('qt+opengl')
+    # Qwt 6.1.1 and older use a constant that was removed in Qt 5.4
+    # https://bugs.launchpad.net/ubuntu/+source/qwt-qt5/+bug/1485213
+    depends_on('qt@:5.3', when='@:6.1.1')
 
     def patch(self):
-        filter_file(
-            r'add_cxx_compiler_flag..fstrict.aliasing.',
-            r'##### add_cxx_compiler_flag(-fstrict-aliasing)',
-            'CMakeLists.txt'
-        )
-        filter_file(
-            r'add_cxx_compiler_flag..Werror',
-            r'##### add_cxx_compiler_flag(-Werror',
-            'CMakeLists.txt'
-        )
+        # Subvert hardcoded prefix
+        filter_file(r'/usr/local/qwt-\$\$(QWT_)?VERSION.*',
+                    self.prefix, 'qwtconfig.pri')

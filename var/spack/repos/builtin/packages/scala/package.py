@@ -40,7 +40,7 @@ class Scala(Package):
     version('2.11.11', '3f5b76001f60cbc31111ddb81de5ea07')
     version('2.20.6', 'd79dc9fdc627b73289306bdaec81ca98')
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
 
