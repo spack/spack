@@ -76,3 +76,5 @@ class AmrExpParabolic(MakefilePackage):
         files = glob.glob(join_path(self.build_directory, '*.exe'))
         for f in files:
             install(f, prefix.bin)
+        install('README.txt', prefix)
+        install('license.txt', prefix)
