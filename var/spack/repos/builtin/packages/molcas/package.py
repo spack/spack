@@ -38,8 +38,6 @@ class Molcas(CMakePackage):
 
     # Licensing
     license_required = True
-    license_comment = ''
-    licnese_file = ['license.dat']
     license_vars = ['MOLCAS_LICENSE']
 
     depends_on('openmpi')
@@ -48,10 +46,4 @@ class Molcas(CMakePackage):
 
     patch('install_driver.patch')
 
-    def url_for_version(self, version):
-        return "file://{0}/molcas{1}.tar.gz".format(
-            os.getcwd(), version)
-
-    def cmake_args(self):
-        args = []
-        return args
+    url = "file://{0}/molcas8.2.tar.gz".format(os.getcwd())
