@@ -60,7 +60,7 @@ class Lbann(CMakePackage):
         CPPFLAGS.append('-DLBANN_SET_EL_RNG')
 
         CPPFLAGS.append('-DLBANN_DATATYPE={0}'.format(
-            int(self.spec.variants['dtype'].value)))
+            int(spec.variants['dtype'].value)))
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
@@ -71,17 +71,17 @@ class Lbann(CMakePackage):
                 '+cublas' in spec['elemental']),
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
-            '-DElemental_DIR={0}'.format(self.spec['elemental'].prefix),
-            '-DCNPY_DIR={0}'.format(self.spec['cnpy'].prefix),
+            '-DElemental_DIR={0}'.format(spec['elemental'].prefix),
+            '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
             '-DELEMENTAL_MATH_LIBS={0}'.format(
-                self.spec['elemental'].libs),
+                spec['elemental'].libs),
             '-DSEQ_INIT:BOOL=%s' % ('+seq_init' in spec),
             '-DVERBOSE=0',
             '-DLBANN_HOME=.',
             '-DLBANN_VER=spack']
 
-        if '+opencv' in self.spec:
+        if '+opencv' in spec:
             args.extend(['-DOpenCV_DIR:STRING={0}'.format(
-                self.spec['opencv'].prefix)])
+                spec['opencv'].prefix)])
 
         return args

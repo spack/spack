@@ -137,8 +137,7 @@ class Elemental(CMakePackage):
                 math_libs = spec['scalapack'].libs + math_libs
 
             args.extend([
-                '-DMATH_LIBS:STRING={0} {1}'.format(
-                    math_libs.search_flags, math_libs.link_flags)])
+                '-DMATH_LIBS:STRING={0}'.format(math_libs.ld_flags)])
 
         if '+python' in spec:
             args.extend([

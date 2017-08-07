@@ -43,8 +43,6 @@ class Opencv(CMakePackage):
     url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
 
     version('master', git="https://github.com/opencv/opencv.git", branch="master")
-    version('3.3.0-rc', '16ac824307b130b0fda3c6e4b27dc3d1')
-    version('3.2.0-rc', 'a4ec8f365505dd60b777801e2f3092d5')
     version('3.2.0',    'a43b65488124ba33dde195fea9041b70')
     version('3.1.0',    '70e1dd07f0aa06606f1bc0e3fa15abd3')
     version('2.4.13.2', 'fe52791ce523681a67036def4c25261b')
@@ -79,9 +77,9 @@ class Opencv(CMakePackage):
 
     depends_on('eigen', when='+eigen', type='build')
 
-    depends_on('zlib')
-    depends_on('libpng')
-    depends_on('libjpeg-turbo')
+    depends_on('zlib', when='+zlib')
+    depends_on('libpng', when='+png')
+    depends_on('libjpeg-turbo', when='+jpeg')
     depends_on('libtiff+turbo', when='+tiff')
 
     depends_on('jasper', when='+jasper')
