@@ -25,14 +25,22 @@
 from __future__ import print_function
 
 import textwrap
-from six.moves import zip_longest
-from llnl.util.tty.colify import *
+
+import llnl.util.tty.color as color
 import spack
 import spack.fetch_strategy as fs
+import spack.spec
 
-description = "get detailed information on a particular package"
-section = "basic"
-level = "short"
+from llnl.util.tty.colify import *
+
+from six.moves import zip_longest
+
+description = 'get detailed information on a particular package'
+section = 'basic'
+level = 'short'
+
+header_color = '@*k'
+plain_format = '@.'
 
 
 def padder(str_list, extra=0):
@@ -48,7 +56,19 @@ def padder(str_list, extra=0):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'name', metavar="PACKAGE", help="name of package to get info for")
+        'name', metavar='PACKAGE', help='name of package to get info for')
+
+
+def section_title(s):
+    return header_color + s + plain_format
+
+
+def version(s):
+    return spack.spec.version_color + s + plain_format
+
+
+def variant(s):
+    return spack.spec.enabled_variant_color + s + plain_format
 
 
 class VariantFormatter(object):
@@ -102,9 +122,9 @@ class VariantFormatter(object):
     @property
     def lines(self):
         if not self.variants:
-            yield "    None"
+            yield '    None'
         else:
-            yield "    " + self.fmt % self.headers
+            yield '    ' + self.fmt % self.headers
             yield '\n'
             for k, v in sorted(self.variants.items()):
                 name = textwrap.wrap(
@@ -128,56 +148,73 @@ class VariantFormatter(object):
 
 def print_text_info(pkg):
     """Print out a plain text description of a package."""
-    header = "{0}:   ".format(pkg.build_system_class)
 
-    print(header, pkg.name)
+    header = section_title(
+        '{0}:   '
+    ).format(pkg.build_system_class) + pkg.name
+    color.cprint(header)
 
-    print()
-    print("Description:")
+    color.cprint('')
+    color.cprint(section_title('Description:'))
     if pkg.__doc__:
         print(pkg.format_doc(indent=4))
     else:
         print("    None")
 
-    whitespaces = ''.join([' '] * (len(header) - len("Homepage: ")))
-    print("Homepage:", whitespaces, pkg.homepage)
+    whitespaces = ''.join([' '] * (len(header) - len('Homepage: ')))
+    color.cprint(section_title('Homepage:') + whitespaces + pkg.homepage)
 
-    print()
-    print("Safe versions:  ")
+    color.cprint('')
+    color.cprint(section_title('Safe versions:  '))
 
     if not pkg.versions:
-        print("    None")
+        color.cprint(version('    None'))
     else:
         pad = padder(pkg.versions, 4)
-        for v in reversed(sorted(pkg.versions)):
-            f = fs.for_package_version(pkg, v)
-            print("    %s%s" % (pad(v), str(f)))
+        l = [
+            (value.get('preferred', False), key)
+            for key, value in pkg.versions.items()
+        ]
 
-    print()
-    print("Variants:")
+        _, first = l[0]
+        l = l[1:]
+
+        f = fs.for_package_version(pkg, first)
+        line = '@*c    {0}'.format(pad(first)) + '@*k' + str(f) + '@.'
+        color.cprint('')
+        color.cprint(line)
+        color.cprint('')
+
+        for _, v in reversed(sorted(l)):
+            f = fs.for_package_version(pkg, v)
+            line = version('    {0}'.format(pad(v))) + str(f)
+            color.cprint(line)
+
+    color.cprint('')
+    color.cprint(section_title('Variants:'))
 
     formatter = VariantFormatter(pkg.variants)
     for line in formatter.lines:
-        print(line)
+        color.cprint(line)
 
-    print()
-    print("Installation Phases:")
+    color.cprint('')
+    color.cprint(section_title('Installation Phases:'))
     phase_str = ''
     for phase in pkg.phases:
         phase_str += "    {0}".format(phase)
-    print(phase_str)
+    color.cprint(phase_str)
 
     for deptype in ('build', 'link', 'run'):
-        print()
-        print("%s Dependencies:" % deptype.capitalize())
+        color.cprint('')
+        color.cprint(section_title('%s Dependencies:' % deptype.capitalize()))
         deps = sorted(pkg.dependencies_of_type(deptype))
         if deps:
             colify(deps, indent=4)
         else:
-            print("    None")
+            print('    None')
 
-    print()
-    print("Virtual Packages: ")
+    color.cprint('')
+    color.cprint(section_title('Virtual Packages: '))
     if pkg.provided:
         inverse_map = {}
         for spec, whens in pkg.provided.items():
@@ -186,8 +223,11 @@ def print_text_info(pkg):
                     inverse_map[when] = set()
                 inverse_map[when].add(spec)
         for when, specs in reversed(sorted(inverse_map.items())):
-            print("    %s provides %s" % (
-                when, ', '.join(str(s) for s in specs)))
+            line = "    %s provides %s" % (
+                when.colorized(), ', '.join(s.colorized() for s in specs)
+            )
+            print(line)
+
     else:
         print("    None")
 
