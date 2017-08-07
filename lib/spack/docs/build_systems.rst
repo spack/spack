@@ -556,6 +556,16 @@ PerlPackage
 Much like Python and R, Perl has its own language-specific
 build system.
 
+-----------
+RubyPackage
+-----------
+
+Like Python, R, and Perl, Ruby has its own build system for
+installing Ruby gems.
+
+This build system is a work-in-progress. See
+https://github.com/LLNL/spack/pull/3127 for more information.
+
 ------------
 SConsPackage
 ------------
@@ -573,6 +583,13 @@ on Makefiles to build software.
 ------------
 IntelPackage
 ------------
+
+Intel provides many licensed software packages, which all share the
+same basic steps for configuring and installing, as well as license
+management.
+
+This build system is a work-in-progress. See
+https://github.com/LLNL/spack/pull/4300 for more information.
 
 --------------------
 Custom Build Systems
