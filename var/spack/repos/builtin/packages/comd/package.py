@@ -52,4 +52,4 @@ class Comd(MakefilePackage):
             install('Makefile.vanilla', 'Makefile')
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix + '/bin')
+        install_tree('bin', prefix.bin)
