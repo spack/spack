@@ -43,7 +43,7 @@ class Savanna(MakefilePackage):
 
     depends_on('mpi')
     depends_on('stc')
-    depends_on('adios +fortran +staging')
+    depends_on('adios +fortran +zlib +sz +zfp +staging')
     depends_on('mpix-launch-swift')
     depends_on('tau', when='+tau')
 
