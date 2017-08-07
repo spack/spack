@@ -34,7 +34,7 @@ class Sbt(Package):
 
     version('0.13.12', 'cec3071d46ef13334c8097cc3467ff28')
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
         shutil.copytree('bin', join_path(prefix, 'bin'), symlinks=True)
