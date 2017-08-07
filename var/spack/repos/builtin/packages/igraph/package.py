@@ -25,32 +25,12 @@
 from spack import *
 
 
-class Abyss(AutotoolsPackage):
-    """ABySS is a de novo, parallel, paired-end sequence assembler
-       that is designed for short reads. The single-processor version
-       is useful for assembling genomes up to 100 Mbases in size."""
+class Igraph(AutotoolsPackage):
+    """igraph is a library for creating and manipulating graphs."""
 
-    homepage = "http://www.bcgsc.ca/platform/bioinfo/software/abyss"
-    url      = "https://github.com/bcgsc/abyss/archive/2.0.2.tar.gz"
+    homepage = "http://igraph.org/"
+    url      = "https://github.com/igraph/igraph/releases/download/0.7.1/igraph-0.7.1.tar.gz"
 
-    version('2.0.2', '1623f55ad7f4586e80f6e74b1f27c798')
-    version('1.5.2', '10d6d72d1a915e618d41a5cbbcf2364c')
+    version('0.7.1', '4f6e7c16b45fce8ed423516a9786e4e8')
 
-    depends_on('mpi')
-    depends_on('boost@:1.50.0,1.53.0:', when='@2.0.2:')
-    depends_on('boost@:1.50.0,1.53.0:1.59.0', when='@:1.5.2')
-    depends_on('sparsehash')
-    depends_on('sqlite')
-
-    conflicts('^intel-mpi')
-    conflicts('^intel-parallel-studio+mpi')
-    conflicts('^mvapich2')
-    conflicts('^spectrum-mpi')
-
-    def configure_args(self):
-        args = ['--with-boost=%s' % self.spec['boost'].prefix,
-                '--with-sqlite=%s' % self.spec['sqlite'].prefix,
-                '--with-mpi=%s' % self.spec['mpi'].prefix]
-        if self.spec['mpi'].name == 'mpich':
-                args.append('--enable-mpich')
-        return args
+    depends_on('libxml2')
