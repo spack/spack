@@ -103,13 +103,12 @@ class Adios(AutotoolsPackage):
         spec = self.spec
         self.validate(spec)
 
-        extra_args = []
-
-        # required, otherwise building its python bindings on ADIOS will fail
-        extra_args.append("CFLAGS=-fPIC")
-
-        # always build external MXML, even in ADIOS 1.10.0+
-        extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
+        extra_args = [
+            # required, otherwise building its python bindings will fail
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            # always build external MXML, even in ADIOS 1.10.0+
+            '--with-mxml={0}'.format(spec['mxml'].prefix)
+        ]
 
         if '+shared' in spec:
             extra_args.append('--enable-shared')

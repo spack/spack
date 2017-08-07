@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Mariadb(Package):
+class Mariadb(CMakePackage):
     """MariaDB turns data into structured information in a wide array of
     applications, ranging from banking to websites. It is an enhanced, drop-in
     replacement for MySQL. MariaDB is used because it is fast, scalable and
@@ -45,18 +45,10 @@ class Mariadb(Package):
             'operations in the mariadb client library.')
 
     depends_on('boost')
-    depends_on('cmake')
+    depends_on('cmake@2.6:', type='build')
     depends_on('jemalloc')
     depends_on('libaio')
     depends_on('libedit')
     depends_on('libevent', when='+nonblocking')
     depends_on('ncurses')
     depends_on('zlib')
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-
-            cmake('..', *std_cmake_args)
-
-            make()
-            make('install')
