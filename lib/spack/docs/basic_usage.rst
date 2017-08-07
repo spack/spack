@@ -808,17 +808,46 @@ Specifying Specs by Hash
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Complicated specs can become cumbersome to enter on the command line,
-especially when many of the qualifications are necessary to
-distinguish between similar installs, for example when using the
-``uninstall`` command. To avoid this, when referencing an existing spec,
+especially when many of the qualifications are necessary to distinguish
+between similar installs. To avoid this, when referencing an existing spec,
 Spack allows you to reference specs by their hash. We previously
 discussed the spec hash that Spack computes. In place of a spec in any
 command, substitute ``/<hash>`` where ``<hash>`` is any amount from
-the beginning of a spec hash. If the given spec hash is sufficient
-to be unique, Spack will replace the reference with the spec to which
-it refers. Otherwise, it will prompt for a more qualified hash.
+the beginning of a spec hash.
 
-Note that this will not work to reinstall a depencency uninstalled by
+For example, lets say that you accidentally installed two different
+``mvapich2`` installations. If you want to uninstall one of them but don't
+know what the difference is, you can run:
+
+.. code-block:: console
+
+   $ spack find --long mvapich2
+   ==> 2 installed packages.
+   -- linux-centos7-x86_64 / gcc@6.3.0 ----------
+   qmt35td mvapich2@2.2%gcc
+   er3die3 mvapich2@2.2%gcc
+
+
+You can then uninstall the latter installation using:
+
+.. code-block:: console
+
+   $ spack uninstall /er3die3
+
+
+Or, if you want to build with a specific installation as a dependency,
+you can use:
+
+.. code-block:: console
+
+   $ spack install trilinos ^/er3die3
+
+
+If the given spec hash is sufficiently long as to be unique, Spack will
+replace the reference with the spec to which it refers. Otherwise, it will
+prompt for a more qualified hash.
+
+Note that this will not work to reinstall a dependency uninstalled by
 ``spack uninstall --force``.
 
 .. _cmd-spack-providers:

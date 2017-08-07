@@ -25,7 +25,7 @@
 from spack import *
 
 
-class OmptOpenmp(Package):
+class OmptOpenmp(CMakePackage):
     """LLVM/Clang OpenMP runtime with OMPT support. This is a fork of the
        OpenMPToolsInterface/LLVM-openmp fork of the official LLVM OpenMP
        mirror.  This library provides a drop-in replacement of the OpenMP
@@ -37,13 +37,8 @@ class OmptOpenmp(Package):
 
     version('0.1', '2334e6a84b52da41b27afd9831ed5370')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.8:', type='build')
 
-    def install(self, spec, prefix):
-        with working_dir("runtime/build", create=True):
-            cmake('-DCMAKE_C_COMPILER=%s' % self.compiler.cc,
-                  '-DCMAKE_CXX_COMPILER=%s' % self.compiler.cxx,
-                  '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-            make()
-            make("install")
+    conflicts('%gcc@:4.7')
+
+    root_cmakelists_dir = 'runtime'

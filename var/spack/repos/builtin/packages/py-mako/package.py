@@ -30,7 +30,7 @@ class PyMako(PythonPackage):
        ideas from the existing templating languages."""
 
     homepage = "https://pypi.python.org/pypi/mako"
-    url = "https://pypi.python.org/packages/source/M/Mako/Mako-1.0.1.tar.gz"
+    url = "https://pypi.io/packages/source/M/Mako/Mako-1.0.1.tar.gz"
 
     version('1.0.4', 'c5fc31a323dd4990683d2f2da02d4e20')
     version('1.0.1', '9f0aafd177b039ef67b90ea350497a54')
