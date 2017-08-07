@@ -416,12 +416,12 @@ class EnvironmentModifications(object):
                 # before_list
                 remaining_list = [
                     ii for ii in before_list if ii in after_list]
-                    try:
-                        start = after_list.index(remaining_list[0])
-                        end = after_list.index(remaining_list[-1])
-                        search = sep.join(after_list[start:end + 1])
-                    except IndexError:
-                        env.set(x, env_after[x])
+                try:
+                    start = after_list.index(remaining_list[0])
+                    end = after_list.index(remaining_list[-1])
+                    search = sep.join(after_list[start:end + 1])
+                except IndexError:
+                    env.set(x, env_after[x])
 
                 if search not in before:
                     # We just need to set the variable to the new value
