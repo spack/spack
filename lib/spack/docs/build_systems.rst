@@ -44,15 +44,57 @@ MakefilePackage
 The most primitive build system a package can use is a plain Makefile.
 Makefiles are simple to write for small projects, but they usually
 require you to edit the Makefile to set platform and compiler-specific
-variables. For this reason, ``MakefilePackage`` comes with 3 phases:
+variables.
 
-#. edit - edit the Makefile
-#. build - build the project
-#. install - install the project
+^^^^^^
+Phases
+^^^^^^
+
+``MakefilePackage`` comes with 3 phases:
+
+#. ``edit`` - edit the Makefile
+#. ``build`` - build the project
+#. ``install`` - install the project
 
 By default, ``edit`` does nothing, but you can override it to replace
-hard-coded Makefile variables. The ``build`` phase runs ``make`` by
-default, while the ``install`` phase runs ``make install``.
+hard-coded Makefile variables. The ``build`` and ``install`` phases
+run:
+
+.. code-block:: console
+
+   $ make
+   $ make install
+
+
+^^^^^^^^^^^^^^^
+Important files
+^^^^^^^^^^^^^^^
+
+The main file that matters for a ``MakefilePackage`` is the Makefile.
+This file will be named one of the following ways:
+
+* GNUmakefile (only works with GNU Make)
+* Makefile (most common)
+* makefile
+
+``Makefile`` is the most common name.
+
+Some Makefiles also *include* other configuration files. Check for an
+``include`` directive in the Makefile.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Build system dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack assumes that the operating system will have a valid ``make`` utility
+installed already, so you don't need to add a dependency on ``make``.
+However, if the package uses a ``GNUmakefile`` or the developers recommend
+using GNU Make, you should add a dependency on ``gmake``:
+
+.. code-block:: python
+
+   depends_on('gmake', type='build')
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Types of Makefile packages
@@ -226,7 +268,9 @@ The following is a list of common variables to watch out for:
   This includes variables like ``MPI``, ``OPENMP``, ``PIC``, and
   ``DEBUG``. These flags often require you to create a variant
   so that you can either build with or without MPI support, for
-  example.
+  example. These flags are often compiler-dependent. You should
+  replace them with the appropriate compiler flags, such as
+  ``self.compiler.openmp_flag`` or ``self.compiler.pic_flag``.
 
 * Platform flags
 
@@ -287,8 +331,23 @@ AutotoolsPackage
 Autotools is a GNU build system that provides a build script generator.
 By running the platform-independent ``./configure`` script that comes
 with the package, you can generate a platform-dependent Makefile.
-In its simplest form, Spack's ``AutotoolsPackage`` runs the following
-steps:
+
+^^^^^^
+Phases
+^^^^^^
+
+Spack's ``AutotoolsPackage`` comes with the following phases:
+
+#. ``autoreconf`` - generate the configure script
+#. ``configure`` - generate the Makefiles
+#. ``build`` - build the package
+#. ``install`` - install the package
+
+Most of the time, the ``autoreconf`` phase will do nothing, but if the
+package is missing a ``configure`` script, ``autoreconf`` will generate
+one for you.
+
+The other phases run:
 
 .. code-block:: console
 
@@ -302,6 +361,14 @@ steps:
 Of course, you may need to add a few arguments to the ``./configure``
 line.
 
+^^^^^^^^^^^^^^^
+Important files
+^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Build system dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
 ^^^^^^^^^^^^^^^^^^^^^^^
 Finding configure flags
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -309,6 +376,41 @@ Finding configure flags
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Addings flags to configure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Configure script in a sub-directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+^^^^^^^^^^^^^^^^^^^^^^
+Building out of source
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. warning::
+
+   Watch out for fake Autotools packages!
+
+   Autotools is a very popular build system, and many people are used to the
+   classic:
+
+   .. code-block:: console
+
+      $ ./configure
+      $ make
+      $ make install
+
+
+   steps to install a package. For this reason, some developers will write
+   their own ``configure`` scripts that have nothing to do with Autotools.
+   These packages may not accept the same flags as other Autotools packages,
+   so it is better to create a custom build system. You can tell if a package
+   uses Autotools by running ``./configure --help`` and comparing the output
+   to other known Autotools packages. You should also look for files like:
+
+   * ``configure.ac``
+   * ``configure.in``
+   * ``Makefile.am``
+
+   Packages that don't use Autotools aren't likely to have these files.
 
 ------------
 CMakePackage
@@ -352,6 +454,89 @@ QMake does not appear to have a standardized way of specifying
 the installation directory, so you may have to set environment
 variables or edit ``*.pro`` files to get things working properly.
 
+^^^^^^
+Phases
+^^^^^^
+
+The ``QMakePackage`` base class comes with the following phases:
+
+#. ``qmake`` - generate Makefiles
+#. ``build`` - build the project
+#. ``install`` - install the project
+
+By default, these phases run:
+
+.. code-block::
+
+   $ qmake
+   $ make
+   $ make install
+
+
+Any of these phases can be overridden in your package as necessary.
+There is also a ``check`` method that looks for a ``check:`` target
+in the Makefile. If a ``check:`` target exists and the user runs:
+
+.. code-block:: console
+
+   $ spack install --run-tests <qmake-package>
+
+
+Spack will run ``make check`` after the build phase.
+
+^^^^^^^^^^^^^^^
+Important files
+^^^^^^^^^^^^^^^
+
+Packages that use the QMake build system can be identified by the
+presence of a ``<project-name>.pro`` file. This file declares things
+like build instructions and dependencies.
+
+One thing to look for is the ``minQtVersion`` function:
+
+.. code-block::
+
+   minQtVersion(5, 6, 0)
+
+
+This means that Qt 5.6.0 is the earliest release that will work.
+You should specify this in a ``depends_on`` statement.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Build system dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+At the bare minimum, packages that use the QMake build system need a
+``qt`` dependency. Since this is always the case, the ``QMakePackage``
+base class already contains:
+
+.. code-block:: python
+
+   depends_on('qt', type='build')
+
+
+If you want to specify a particular version requirement, or need to
+link to the ``qt`` libraries, you can override this in your package:
+
+.. code-block:: python
+
+   depends_on('qt@5.6.0:')
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding arguments to the qmake call
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you need to pass any arguments to the ``qmake`` call, you can
+override the ``qmake_args`` method like so:
+
+.. code-block:: python
+
+   def qmake_args(self):
+       return ['-recursive']
+
+
+This method can be used to pass flags as well as variables.
+
 -------------
 PythonPackage
 -------------
@@ -384,6 +569,10 @@ WafPackage
 
 Like SCons, Waf is a general-purpose build system that does not rely
 on Makefiles to build software.
+
+------------
+IntelPackage
+------------
 
 --------------------
 Custom Build Systems
