@@ -43,7 +43,7 @@ from spack import *
 import os
 
 
-class Qtgraph(Package):
+class Qtgraph(QMakePackage):
     """The baseline library used in the CUDA-centric Open|SpeedShop Graphical
        User Interface (GUI) which allows Graphviz DOT formatted data to be
        imported into a Qt application by wrapping the Graphviz libcgraph and
@@ -83,9 +83,3 @@ class Qtgraph(Package):
         run_env.prepend_path(
             'CPATH', join_path(self.prefix, 'include', 'QtGraph'))
 
-    def install(self, spec, prefix):
-        qmake = which('qmake')
-        qmake()
-
-        make()
-        make('install')
