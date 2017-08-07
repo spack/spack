@@ -95,10 +95,10 @@ class Qbox(MakefilePackage):
                 'XERCESC_3', 'MPICH_IGNORE_CXX_SEEK', 'SCALAPACK',
                 'USE_FFTW3', 'FFTWMEASURE', 'FFTW3_2D', 'ADD_',
             ))))
-            mkfile.write('CXXFLAGS = {}\n'.format(' '.join((
+            mkfile.write('CXXFLAGS = {0}\n'.format(' '.join((
                 '-g', '-O3', '$(INCLUDE)', '$(DFLAGS)',
             ))))
-        filter_file(r'\$\(TARGET\)', 'spack', 'src/Makefile')
+        filter_file('$(TARGET)', 'spack', 'src/Makefile', string=True)
 
     def install(self, spec, prefix):
         mkdir(prefix.src)
