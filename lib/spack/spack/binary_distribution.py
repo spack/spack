@@ -184,8 +184,8 @@ def sign_tarball(spec, outdir, yes_to_all, key,
         Gpg.sign(key, tarfile_path, '%s.asc' % tarfile_path)
     else:
         if not yes_to_all:
-            raise RuntimeError('Not creating unsigned build cache.' +
-                               'Use spack buildcache create -y ' +
+            raise RuntimeError('Not creating unsigned build cache. '
+                               'Use spack buildcache create -y '
                                'option to override.')
     return sign
 
@@ -251,7 +251,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # optinally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if rel:
-        prelocate_package(spec)
+        make_package_relative(spec)
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % spec.prefix, arcname='%s' %
@@ -280,15 +280,13 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
         tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
         if signed:
-            tar.add(name='%s.asc' % tarfile_path, arcname='%s.asc' %
-                    tarfile_name)
             tar.add(name='%s.asc' % specfile_path,
                     arcname='%s.asc' % specfile_name)
 
     # cleanup file moved to archive
     os.remove(tarfile_path)
     if signed:
-        os.remove('%s.asc' % tarfile_path)
+        #        os.remove('%s.asc' % tarfile_path)
         os.remove('%s.asc' % specfile_path)
     if os.path.exists(indexfile_path):
         os.remove(indexfile_path)
@@ -376,16 +374,16 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     os.remove(specfile_path)
 
 
-def prelocate_package(spec):
+def make_package_relative(spec):
     """
-    Prelocate the given package
+    Change paths in binaries to relative paths
     """
     buildinfo = read_buildinfo_file(spec)
     old_path = buildinfo['buildpath']
     for filename in buildinfo['relocate_binaries']:
         path_name = os.path.join(spec.prefix, filename)
-        spack.relocate.prelocate_binary(path_name,
-                                        old_path)
+        spack.relocate.make_binary_relative(path_name,
+                                            old_path)
 
 
 def relocate_package(spec):
@@ -428,7 +426,7 @@ def get_specs():
         url = mirrors[key]
         if url.startswith('file'):
             mirror = url.replace('file://', '') + '/build_cache'
-            tty.msg("Finding buildcaches in %s")
+            tty.msg("Finding buildcaches in %s" % mirror)
             files = os.listdir(mirror)
             for file in files:
                 if re.search('spec.yaml', file):
@@ -484,7 +482,7 @@ def get_keys(install=False, yes_to_all=False):
                 try:
                     stage.fetch()
                 except fs.FetchError:
-                    next
+                    continue
             tty.msg('Found key %s' % link)
             if install:
                 if yes_to_all:

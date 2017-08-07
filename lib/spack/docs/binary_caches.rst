@@ -62,13 +62,17 @@ Usage
 -----
 spack buildcache create <>
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create tarball of installed spack package, checksum tarball and 
+sign tarball if gpg2 is available.
+
 options:
 
--d : directory in which "build_cache" direcory is created, defaults to "."
+-d <path> : directory in which "build_cache" direcory is created, defaults to "."
 -f : overwrite ".spack" file in "build_cache" directory if it exists
--r : make rpaths in binaries relative before creating tarball
--k : the key to sign package with, defaults to first key in spack gpg directory
--ns : don't sign the package
+-k <key> : the key to sign package with. In the case where multiple keys exist,
+     the package will be unsigned unless -k is used.
+-r : make paths in binaries relative before creating tarball
+-y : answer yes to all create unsigned "build_cache" questions
 <> : list of package specs or package hashes with leading /
 
 spack buildcache list <>
@@ -81,15 +85,19 @@ package(s)
 
 spack buildcache install <>
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install "build_cache" available on spack mirror.
+
 options:
 
 -f : remove install directory if it exists before unpacking tarball
--nv : don't verify package with gpg
+-y : answer yes to all to don't verify package with gpg questions
 <> : list of package specs or package hashes with leading /
 
 spack buildcache keys
 ^^^^^^^^^^^^^^^^^^^^^
+List public keys available on spack mirror.
+
 options:
 
 -i : trust the keys downloaded with prompt for each
--y : answer yes to all
+-y : answer yes to all trust all keys downloaded

@@ -106,7 +106,7 @@ def macho_get_paths(path_name):
     return rpaths, deps, idpath
 
 
-def macho_make_paths_rel(path_name, old_dir, rpaths, deps, idpath):
+def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
     id = None
     nrpaths = []
     ndeps = []
@@ -145,29 +145,16 @@ def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
 def modify_macho_object(path_name, old_dir, new_dir, relative):
     """
     Modify MachO binaries by changing rpaths,and id and dependency lib paths.
-    Examines the output of otool -l for these three patterns
-    cmd LC_ID_DYLIB
-    cmdsize 160
-    name /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2
-    -apple/tcl-8.6.5-xfeydlhaojmei6iws2rnxndvriym242k/lib/libtcl8.6.dylib
-    (offset 24)
-    cmd LC_LOAD_DYLIB
-    cmdsize 160
-    name /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2
-    -apple/zlib-1.2.8-cyvcqvrzlgurne424y55hxvfucvz2354/lib/libz.1.dylib
-    (offset 24)
-    cmd LC_RPATH
-    cmdsize 128
-    path /Users/gartung/spack-macdev/opt/spack/darwin-x86_64/clang-7.0.2
-    -apple/xz-5.2.2-d4ecxpuzf2g3ycz3cnj3xmdj7zdnuqwb/lib
-    (offset 12)
-    the old install dir in LC_LOAD_DYLIB is replaced with the new install dir
+    Examines the output of otool -l for these three fields:
+    LC_ID_DYLIB, LC_LOAD_DYLIB, LC_RPATH
+    The old install dir in LC_ID_DYLIB is replaced with the new install dir
     using install_name_tool -id newid binary
-    the old install dir in LC_LOAD_DYLIB is replaced with the new install dir
+    The old install dir in LC_LOAD_DYLIB is replaced with the new install dir
     using install_name_tool -change old new binary
-    the old install dir in LC_RPATH is replaced with the new install dir using
+    The old install dir in LC_RPATH is replaced with the new install dir using
     install_name_tool  -rpath old new binary
     """
+    # avoid error message for libgcc_s
     if 'libgcc_' in path_name:
         return
     rpaths, deps, idpath = macho_get_paths(path_name)
@@ -175,13 +162,14 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
     nrpaths = []
     ndeps = []
     if relative:
-        nrpaths, ndeps, id = macho_make_paths_rel(path_name,
-                                                  old_dir, rpaths,
-                                                  deps, idpath)
+        nrpaths, ndeps, id = macho_make_paths_relative(path_name,
+                                                       old_dir, rpaths,
+                                                       deps, idpath)
     else:
         nrpaths, ndeps, id = macho_replace_paths(old_dir, new_dir, rpaths,
                                                  deps, idpath)
     st = os.stat(path_name)
+    # some installs create read-only binaries
     wmode = os.access(path_name, os.W_OK)
     if not wmode:
         try:
@@ -284,7 +272,7 @@ def relocate_binary(path_name, old_dir, new_dir):
         tty.die("Relocation not implemented for %s" % platform.system())
 
 
-def prelocate_binary(path_name, old_dir):
+def make_binary_relative(path_name, old_dir):
     """
     Change RPATHs in given elf or mach-o file to relative
     """
