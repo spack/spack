@@ -25,46 +25,15 @@
 from spack import *
 
 
-class A(AutotoolsPackage):
-    """Simple package with one optional dependency"""
+class Vsearch(AutotoolsPackage):
+    """VSEARCH is a versatile open-source tool for metagenomics."""
 
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    homepage = "https://github.com/torognes/vsearch"
+    url      = "https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', '2.0_a_hash')
+    version('2.4.3', '8f57210fe447a781078fde06e6402650')
 
-    variant(
-        'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=True
-    )
-
-    variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=False
-    )
-
-    depends_on('b', when='foobar=bar')
-
-    def with_or_without_fee(self, activated):
-        if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
-
-    def autoreconf(self, spec, prefix):
-        pass
-
-    def configure(self, spec, prefix):
-        pass
-
-    def build(self, spec, prefix):
-        pass
-
-    def install(self, spec, prefix):
-        pass
+    depends_on('m4',       type='build')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
