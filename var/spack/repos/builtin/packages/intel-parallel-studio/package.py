@@ -334,7 +334,8 @@ class IntelParallelStudio(IntelPackage):
             self.bin_dir
         ]
 
-        if '+advisor' in spec or ('+all' in spec and
+        if '+advisor' in spec or (
+            '+all' in spec and
             not spec.satisfies('@composer.0:composer.9999')):
 
             advisor_dir = 'advisor_xe/licenses'
@@ -344,7 +345,8 @@ class IntelParallelStudio(IntelPackage):
 
             directories.append(advisor_dir)
 
-        if '+inspector' in spec or ('+all' in spec and
+        if '+inspector' in spec or (
+            '+all' in spec and
             not spec.satisfies('@composer.0:composer.9999')):
 
             inspector_dir = 'inspector_xe/licenses'
@@ -354,14 +356,16 @@ class IntelParallelStudio(IntelPackage):
 
             directories.append(inspector_dir)
 
-        if '+itac' in spec or ('+all' in spec and
+        if '+itac' in spec or (
+            '+all' in spec and
             not spec.satisfies('@composer.0:composer.9999')):
 
             itac_dir = 'itac_{0}'.format(year)
 
             directories.append(itac_dir)
 
-        if '+vtune' in spec or ('+all' in spec and
+        if '+vtune' in spec or (
+            '+all' in spec and
             not spec.satisfies('@composer.0:composer.9999')):
 
             vtune_dir = 'vtune_amplifier_xe/licenses'
