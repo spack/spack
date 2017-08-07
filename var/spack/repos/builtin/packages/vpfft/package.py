@@ -38,7 +38,7 @@ class Vpfft(MakefilePackage):
     url      = "https://github.com/exmatex/VPFFT/archive/master.tar.gz"
     tag      = ['proxy-app']
 
-    version('master', git='https://github.com/exmatex/VPFFT.git')
+    version('develop', git='https://github.com/exmatex/VPFFT.git')
 
     depends_on('eigen')
     depends_on('fftw')
