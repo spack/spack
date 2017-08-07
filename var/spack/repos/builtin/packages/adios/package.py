@@ -112,10 +112,10 @@ class Adios(AutotoolsPackage):
         spec = self.spec
         self.validate(spec)
 
-        extra_args = []
-
-        # required, otherwise building its python bindings on ADIOS will fail
-        extra_args.append("CFLAGS=-fPIC")
+        extra_args = [
+            # required, otherwise building its python bindings will fail
+            'CFLAGS={0}'.format(self.compiler.pic_flag)
+        ]
 
         if '+shared' in spec:
             extra_args.append('--enable-shared')

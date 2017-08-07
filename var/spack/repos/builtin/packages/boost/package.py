@@ -207,8 +207,21 @@ class Boost(Package):
                                                        spack_cxx))
 
             if '+mpi' in spec:
-                f.write('using mpi : %s ;\n' %
-                        join_path(spec['mpi'].prefix.bin, 'mpicxx'))
+
+                # Use the correct mpi compiler.  If the compiler options are
+                # empty or undefined, Boost will attempt to figure out the
+                # correct options by running "${mpicxx} -show" or something
+                # similar, but that doesn't work with the Cray compiler
+                # wrappers.  Since Boost doesn't use the MPI C++ bindings,
+                # that can be used as a compiler option instead.
+
+                mpi_line = 'using mpi : %s' % spec['mpi'].mpicxx
+
+                if 'platform=cray' in spec:
+                    mpi_line += ' : <define>MPICH_SKIP_MPICXX'
+
+                f.write(mpi_line + ' ;\n')
+
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
 
@@ -328,7 +341,11 @@ class Boost(Package):
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
 
         b2 = Executable(b2name)
-        b2_options = ['-j', '%s' % make_jobs]
+        jobs = make_jobs
+        # in 1.59 max jobs became dynamic
+        if jobs > 64 and spec.satisfies('@:1.58'):
+            jobs = 64
+        b2_options = ['-j', '%s' % jobs]
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 
