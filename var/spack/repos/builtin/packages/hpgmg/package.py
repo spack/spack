@@ -59,15 +59,13 @@ class Hpgmg(Package):
 
     def configure_args(self):
         args = []
-        if '~fe' in self.spec:
-            args.append('--no-fe')
-        else:
+        if '+fe' in self.spec:
             args.append('--fe')
 
         if 'fv=serial' in self.spec:
             args.append('--no-fv-mpi')
 
-        if 'fv=mpi' in self.spec:
+        if 'mpi' in self.spec:
             args.append('--CC={0}'.format(self.spec['mpi'].mpicc))
 
         if 'fv=none' in self.spec:
@@ -85,3 +83,5 @@ class Hpgmg(Package):
 
     def install(self, spec, prefix):
         install_tree('build/bin', prefix.bin)
+        install('README.md', prefix)
+        install('LICENSE', prefix)
