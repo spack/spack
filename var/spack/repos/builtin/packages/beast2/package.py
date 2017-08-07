@@ -38,7 +38,7 @@ class Beast2(Package):
 
     version('2.4.6', 'b446f4ab121df9b991f7bb7ec94c8217')
 
-    depends_on('jdk')
+    depends_on('java')
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('BEAST', self.prefix)

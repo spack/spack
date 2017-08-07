@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -32,5 +31,28 @@ class Benchmark(CMakePackage):
     homepage = "https://github.com/google/benchmark"
     url      = "https://github.com/google/benchmark/archive/v1.1.0.tar.gz"
 
+    version('develop', branch='master',
+            git='https://github.com/google/benchmark.git')
+
+    # first properly installed CMake config packages in
+    # 1.2.0 release: https://github.com/google/benchmark/issues/363
+    version('1.2.0', '48d0b090cd7a84af2c4a28c8dc963c74')
     version('1.1.0', '66b2a23076cf70739525be0092fc3ae3')
     version('1.0.0', '1474ff826f8cd68067258db75a0835b8')
+
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'MinSizeRel', 'Coverage'))
+
+    def patch(self):
+        filter_file(
+            r'add_cxx_compiler_flag..fstrict.aliasing.',
+            r'##### add_cxx_compiler_flag(-fstrict-aliasing)',
+            'CMakeLists.txt'
+        )
+        filter_file(
+            r'add_cxx_compiler_flag..Werror',
+            r'##### add_cxx_compiler_flag(-Werror',
+            'CMakeLists.txt'
+        )
