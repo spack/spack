@@ -58,5 +58,7 @@ class Snap(MakefilePackage):
                 makefile.filter('OPENMP = yes', 'OPENMP = no')
 
     def install(self, spec, prefix):
-        install('README.md', prefix)
+        mkdirp(prefix.bin)
+        install('src/gsnap', prefix.bin)
         install_tree('qasnap', prefix.qasnap)
+        install('README.md', prefix)
