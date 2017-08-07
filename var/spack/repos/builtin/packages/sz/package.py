@@ -34,7 +34,7 @@ class Sz(AutotoolsPackage):
 
     version('develop', git='https://github.com/disheng222/SZ.git',
             branch='master')
-    version('1.4.9-beta', '8a00cddc39780c18d766215f69713f82')
+    version('1.4.9.2', '028ce90165b7a4c4051d4c0189f193c0')
 
     variant('fortran', default=False,
             description='Enable fortran compilation')
