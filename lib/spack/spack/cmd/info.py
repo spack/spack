@@ -72,7 +72,7 @@ def variant(s):
 
 
 class VariantFormatter(object):
-    def __init__(self, variants, max_widths=(25, 20, 35)):
+    def __init__(self, variants, max_widths=(30, 20, 30)):
         self.variants = variants
         self.headers = ('Name [Default]', 'Allowed values', 'Description')
         # Set max headers lengths
@@ -143,7 +143,6 @@ class VariantFormatter(object):
                         name, allowed, description, fillvalue=''
                 ):
                     yield "    " + self.fmt % t
-                yield ''  # Trigger a new line
 
 
 def print_text_info(pkg):
@@ -161,8 +160,7 @@ def print_text_info(pkg):
     else:
         print("    None")
 
-    whitespaces = ''.join([' '] * (len(header) - len('Homepage: ')))
-    color.cprint(section_title('Homepage:') + whitespaces + pkg.homepage)
+    color.cprint(section_title('Homepage: ') + pkg.homepage)
 
     color.cprint('')
     color.cprint(section_title('Preferred version:  '))
@@ -186,7 +184,7 @@ def print_text_info(pkg):
         _, _, preferred = l.pop()
 
         f = fs.for_package_version(pkg, preferred)
-        line = '@*c    {0}'.format(pad(preferred)) + '@.@*{' + str(f) + '}@.'
+        line = version('    {0}'.format(pad(preferred))) + str(f)
         color.cprint(line)
         color.cprint('')
         color.cprint(section_title('Safe versions:  '))
