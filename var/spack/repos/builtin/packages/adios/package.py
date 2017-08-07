@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -34,11 +33,13 @@ class Adios(AutotoolsPackage):
     """
 
     homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
-    url      = "https://github.com/ornladios/ADIOS/archive/v1.11.1.tar.gz"
+    url = "https://github.com/ornladios/ADIOS/archive/v1.12.0.tar.gz"
 
     version('develop', git='https://github.com/ornladios/ADIOS.git',
             branch='master')
+    version('1.12.0', '84a1c71b6698009224f6f748c5257fc9')
     version('1.11.1', '5639bfc235e50bf17ba9dafb14ea4185')
+    version('1.11.0', '5eead5b2ccf962f5e6d5f254d29d5238')
     version('1.10.0', 'eff450a4c0130479417cfd63186957f3')
     version('1.9.0', '310ff02388bbaa2b1c1710ee970b5678')
 
@@ -55,29 +56,37 @@ class Adios(AutotoolsPackage):
     variant('zlib', default=True, description='Enable zlib transform support')
     variant('bzip2', default=False, description='Enable bzip2 transform support')
     variant('szip', default=False, description='Enable szip transform support')
-    variant('zfp', default=False, description='Enable ZFP transform support')
+    variant('zfp', default=True, description='Enable ZFP transform support')
+    variant('sz', default=True, description='Enable SZ transform support')
     # transports and serial file converters
     variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
-
-    # Lots of setting up here for this package
-    # module swap PrgEnv-intel PrgEnv-$COMP
-    # module load cray-hdf5/1.8.14
-    # module load python/2.7.10
+    variant('netcdf', default=False, description='Enable netcdf support')
+    variant('flexpath', default=False, description='Enable flexpath transport')
+    variant('dataspaces', default=False, description='Enable dataspaces transport')
+    variant('staging', default=False, description='Enable dataspaces and flexpath staging transports')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    depends_on('libtool@:2.4.2', type='build')
     depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
-    depends_on('mxml@2.9:')
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
+    depends_on('sz', when='+sz')
     depends_on('zfp@:0.5.0', when='+zfp')
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
+    depends_on('netcdf', when='+netcdf')
+    depends_on('libevpath', when='+flexpath')
+    depends_on('libevpath', when='+staging')
+    depends_on('dataspaces+mpi', when='+dataspaces')
+    depends_on('dataspaces+mpi', when='+staging')
+
+    for p in ['+hdf5', '+netcdf', '+flexpath', '+dataspaces', '+staging']:
+        conflicts(p, when='~mpi')
 
     build_directory = 'spack-build'
 
@@ -105,16 +114,16 @@ class Adios(AutotoolsPackage):
 
         extra_args = [
             # required, otherwise building its python bindings will fail
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
-            # always build external MXML, even in ADIOS 1.10.0+
-            '--with-mxml={0}'.format(spec['mxml'].prefix)
+            'CFLAGS={0}'.format(self.compiler.pic_flag)
         ]
 
         if '+shared' in spec:
             extra_args.append('--enable-shared')
 
         if '+mpi' in spec:
-            extra_args.append('--with-mpi')
+            extra_args.append('--with-mpi=%s' % spec['mpi'].prefix)
+        else:
+            extra_args.append('--without-mpi')
         if '+infiniband' in spec:
             extra_args.append('--with-infiniband')
         else:
@@ -125,15 +134,47 @@ class Adios(AutotoolsPackage):
         else:
             extra_args.append('--disable-fortran')
 
+        # Transforms
         if '+zlib' in spec:
             extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
+        else:
+            extra_args.append('--without-zlib')
         if '+bzip2' in spec:
             extra_args.append('--with-bzip2=%s' % spec['bzip2'].prefix)
+        else:
+            extra_args.append('--without-bzip2')
         if '+szip' in spec:
             extra_args.append('--with-szip=%s' % spec['szip'].prefix)
+        else:
+            extra_args.append('--without-szip')
         if '+zfp' in spec:
             extra_args.append('--with-zfp=%s' % spec['zfp'].prefix)
+        else:
+            extra_args.append('--without-zfp')
+        if '+sz' in spec:
+            extra_args.append('--with-sz=%s' % spec['sz'].prefix)
+        else:
+            extra_args.append('--without-sz')
+
+        # External I/O libraries
         if '+hdf5' in spec:
             extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
+        else:
+            extra_args.append('--without-phdf5')
+        if '+netcdf' in spec:
+            extra_args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
+        else:
+            extra_args.append('--without-netcdf')
+
+        # Staging transports
+        if '+flexpath' in spec or '+staging' in spec:
+            extra_args.append('--with-flexpath=%s' % spec['libevpath'].prefix)
+        else:
+            extra_args.append('--without-flexpath')
+        if '+dataspaces' in spec or '+staging' in spec:
+            extra_args.append('--with-dataspaces=%s'
+                              % spec['dataspaces'].prefix)
+        else:
+            extra_args.append('--without-dataspaces')
 
         return extra_args
