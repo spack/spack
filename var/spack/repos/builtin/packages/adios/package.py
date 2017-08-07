@@ -57,7 +57,7 @@ class Adios(AutotoolsPackage):
     variant('bzip2', default=False, description='Enable bzip2 transform support')
     variant('szip', default=False, description='Enable szip transform support')
     variant('zfp', default=True, description='Enable ZFP transform support')
-    variant('sz', default=False, description='Enable SZ transform support')
+    variant('sz', default=True, description='Enable SZ transform support')
     # transports and serial file converters
     variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
     variant('netcdf', default=False, description='Enable netcdf support')
@@ -75,7 +75,7 @@ class Adios(AutotoolsPackage):
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
-    depends_on('sz@develop', when='+sz')
+    depends_on('sz', when='+sz')
     depends_on('zfp@:0.5.0', when='+zfp')
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
