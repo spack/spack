@@ -72,7 +72,7 @@ def bootstrap(parser, args, **kwargs):
     # Define requirement dictionary defining general specs which need
     # to be satisfied, and the specs to install when the general spec
     # isn't satisfied.
-    
+
     requirement_dict = {'environment-modules': 'environment-modules~X'}
 
     for requirement in requirement_dict:
