@@ -42,7 +42,8 @@ def test_transitive_dependents(builtin_mock):
     out, err = dependents('--transitive', 'libelf')
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set(
-        ['callpath', 'dyninst', 'libdwarf', 'mpileaks', 'multivalue_variant'])
+        ['callpath', 'dyninst', 'libdwarf', 'mpileaks', 'multivalue_variant',
+         'singlevalue-variant-dependent'])
 
 
 def test_immediate_installed_dependents(builtin_mock, database):
