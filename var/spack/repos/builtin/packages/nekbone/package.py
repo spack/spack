@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
@@ -34,7 +35,11 @@ class Nekbone(Package):
     homepage = "https://github.com/ANL-CESAR/"
     url = "https://github.com/ANL-CESAR/nekbone.git"
 
+    tags = ['proxy-app']
+
     version('develop', git='https://github.com/ANL-CESAR/nekbone.git')
+
+    depends_on('mpi')
 
     def install(self, spec, prefix):
 
@@ -44,6 +49,9 @@ class Nekbone(Package):
 
         for wdir in working_dirs:
             with working_dir('test/' + wdir):
+                makenec = FileFilter('makenek')
+                makenec.filter('CC.*', 'CC=' + self.spec['mpi'].mpicc)
+                makenec.filter('FF77.*', 'FF77=' + self.spec['mpi'].mpif77)
                 makenek = Executable('./makenek')
                 path = join_path(prefix.bin,  wdir)
                 makenek('ex1', '../../src')
