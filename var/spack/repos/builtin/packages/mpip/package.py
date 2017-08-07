@@ -33,10 +33,14 @@ class Mpip(AutotoolsPackage):
 
     version("3.4.1", "1168adc83777ac31d6ebd385823aabbd")
 
-    depends_on("libelf", type="build")
-    depends_on("libdwarf", type="build")
-    depends_on('libunwind', when=os.uname()[4] == "x86_64", type="build")
-    depends_on("mpi", type="build")
+    depends_on("libelf")
+    depends_on("libdwarf")
+    depends_on('libunwind', when=os.uname()[4] == "x86_64")
+    depends_on("mpi")
 
     def configure_args(self):
-        return ['--without-f77']
+        config_args = ['--without-f77']
+        config_args.append("--with-cc=%s" % self.spec['mpi'].mpicc)
+        config_args.append("--with-cxx=%s" % self.spec['mpi'].mpicxx)
+
+        return config_args
