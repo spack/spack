@@ -33,209 +33,15 @@ from itertools import product
 from spack.util.executable import which
 from llnl.util.filesystem import join_path
 
-# Packages to include into the chroot enviroment
-PACKAGES = [
-    'bash',
-    'curl',
-    'gcc',
-    'g++',
-    'lsb-release',
-
-    # only exact matches
-    ('apt-cache', True),
-    ('coreutils', True),
-    ('diffutils', True),
-    ('findutils', True),
-    ('gawk', True),
-    ('grep', True),
-    ('gzip', True),
-    ('libc5', True),
-    ('libc5-dev', True),
-    ('libc6', True),
-    ('libc6-dev', True),
-    ('linux-libc-dev', True),
-    ('make', True),
-    ('mawk', True),
-    ('patch', True),
-    ('perl', True),
-    ('python', True),
-    ('python3', True),
-    ('sed', True),
-
-    ('strace', True),
-]
-
-# Paths which are always needed
-DEFAULT_PATHS = [
-    '/usr/bin/awk',
-
-    # certificaes for Ubuntu 14.x
-    '/usr/lib/ssl',
-    '/usr/share/ca-certificates',
-
-    #'/bin',
+# Files or paths which need to be binded with mount --bind
+BIND_PATHS = [
     '/dev',
-    '/etc',
-    '/lib',
-    '/lib64',
-    '/proc',
-    '/run',
-    '/sys',
 ]
 
-# Package which are unnecessary and shouldn't be included
-EXCLUDE_PACKAGES = [
-    # unnecessary packages
-    'base-files',
-    'libpcre3',
+# Files or paths which need to be copied
+COPY_PATHS = [
+    '/etc/resolve.conf'
 ]
-
-# Paths which shouldn't be included into the chroot enviroment
-EXCLUDE_PATHS = [
-    '/tmp',
-    '/sbin',
-    '/home',
-    '/boot',
-    '/root',
-    '/lost+found',
-    '/cdrom',
-]
-
-def find_dependencies(package_name, package_cache):
-    apt_cache = spack.util.executable.which("apt-cache", requred=True)
-    cmd = 'LANG=C %s depends %s' % (apt_cache.exe[0], package_name)
-    dependencies = os.popen(cmd).read()
-
-    results = set()
-    reg = re.compile(r'(\s+)?(PreDepends|Depends):\s*([^\s]+)')
-    for dependency in dependencies.split('\n'):
-        found = reg.match(dependency)
-        if found:
-            name = found.group(3)
-            if name not in EXCLUDE_PACKAGES:
-                results.add(name)
-                if name not in package_cache:
-                    package_cache.add(name)
-                    results.update(find_dependencies(name, package_cache))
-
-    return results
-
-
-def find_packages(name, exact, package_cache):
-    dpkg = spack.util.executable.which("dpkg", requred=True)
-    installedPackages = dpkg('-l',output=str)
-    name = name.replace('\n', '').replace('+', r'\+')
-
-    result = set()
-    if not exact:
-        regStr = r'ii\s+(([^\s]*' + name + \
-                 r'[^\s|:]*)(:[^\s]+)?)\s+[^\s]+\s+[^\s]+\s+[^\n]+'
-    else:
-        regStr = r'ii\s+((' + name + r')(:[^\s]+)?)\s+[^\s]+\s+[^\s]+\s+[^\n]+'
-
-    regex = re.compile(regStr)
-    for package in installedPackages.split('\n'):
-        found = regex.match(package)
-        if found:
-            package_name = found.group(2)
-            dependencies = find_dependencies(package_name, package_cache)
-
-            result.add(name)
-            result.update(dependencies)
-    return result
-
-
-def find_package_files(package_name, file_cache):
-    if package_name in file_cache:
-        return file_cache[package_name]
-
-    dpkg = spack.util.executable.which("dpkg", requred=True)
-
-    package_name = package_name.replace('\n', '')
-    # TODO: Only works with popen and produces an invalid command without?
-    results = os.popen("%s -L %s" % (dpkg.exe[0], package_name)).read()
-
-    toRemove = set(['/.'])
-    results = set(results.split('\n'))
-    for file in results:
-        path = os.path.dirname(file)
-        while path != '/':
-            if path in results:
-                toRemove.add(path)
-                break
-            path = os.path.dirname(path)
-
-    for dub in toRemove:
-        if dub in results:
-            results.remove(dub)
-
-    for result in results:
-        if result == "/usr/bin":
-            print "USER:", package_name
-
-    file_cache[package_name] = list(results)
-    return file_cache[package_name]
-
-
-def merge_files(files, libraries):
-    merged = 0
-    final = set()
-    for file in files:
-        if not os.path.exists(file):
-            continue
-
-        dirname = os.path.dirname(file)
-        if dirname in final:
-            continue
-
-        files = [join_path(dirname, x) for x in os.listdir(dirname)]
-        count = sum([(1 if x in libraries else 0) for x in files])
-        if count == len(files):
-            merged += 1
-            final.add(dirname)
-        else:
-            final.add(file)
-
-    if merged != 0:
-        return merge_files(final, libraries)
-    return final
-
-def get_all_library_directories():
-    libraries = set(DEFAULT_PATHS)
-
-    package_cache = set()
-    file_cache = dict()
-    for package in PACKAGES:
-        if type(package) is tuple:
-            name, exact = package[0], package[1]
-        else:
-            name, exact = package, False
-
-        tty.msg("Search for %s " % (name))
-        package_names = find_packages(name, exact, package_cache)
-        for package_name in package_names:
-            for file in find_package_files(package_name, file_cache):
-                if file and file not in EXCLUDE_PATHS:
-                    libraries.add(file)
-
-    tty.msg("Compute amount of required files: %d" % (len(libraries)))
-
-    final = merge_files(libraries, libraries)
-    for lib in copy.deepcopy(final):
-        path = os.path.dirname(lib)
-        # Don't mount documentation files
-        if 'doc' in path or 'man' in path or '.mo' in path or '.po' in path:
-            final.remove(lib)
-        else:
-            while path and path != '/':
-                if path in final:
-                    final.remove(lib)
-                    break
-                path = os.path.dirname(path)
-
-    tty.msg("Compressed required files to: %d" % (len(final)))
-    return final
-
 
 def mount_bind_path(realpath, chrootpath):
     mount = True
@@ -266,14 +72,11 @@ def build_chroot_enviroment(dir):
     if os.path.ismount(dir):
         tty.die("The path is already a bootstraped enviroment")
 
-    libraries = get_all_library_directories()
-    for lib in libraries:
+    for lib in BIND_PATHS:
         mount_bind_path(lib, os.path.join(dir, lib[1:]))
 
 def remove_chroot_enviroment(dir):
-    libraries = get_all_library_directories()
-
-    for lib in libraries:
+    for lib in BIND_PATHS:
         umount_bind_path(os.path.join(dir, lib[1:]))
 
 def isolate_enviroment():
