@@ -46,7 +46,8 @@ class Ncurses(AutotoolsPackage):
             description='Enables symlinks. Needed on AFS filesystem.')
 
     depends_on('pkg-config', type='build')
-
+    depends_on('patch', type='build')
+    
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
 

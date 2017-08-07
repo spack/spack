@@ -40,7 +40,7 @@ BIND_PATHS = [
 
 # Files or paths which need to be copied
 COPY_PATHS = [
-    '/etc/resolve.conf'
+    '/etc/resolv.conf'
 ]
 
 def mount_bind_path(realpath, chrootpath):
@@ -68,12 +68,19 @@ def umount_bind_path(chrootpath):
     if os.path.exists(chrootpath):
         os.system ("sudo umount -l %s" % (chrootpath))
 
+def copy_path(realpath, chrootpath):
+    if os.path.exists(realpath):
+        os.system("cp %s %s" % (realpath, chrootpath))
+
 def build_chroot_enviroment(dir):
     if os.path.ismount(dir):
         tty.die("The path is already a bootstraped enviroment")
 
     for lib in BIND_PATHS:
         mount_bind_path(lib, os.path.join(dir, lib[1:]))
+
+    for lib in COPY_PATHS:
+        copy_path(lib, os.path.join(dir, lib[1:]))
 
 def remove_chroot_enviroment(dir):
     for lib in BIND_PATHS:
