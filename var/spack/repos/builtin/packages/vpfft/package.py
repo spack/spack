@@ -48,7 +48,11 @@ class Vpfft(MakefilePackage):
     def build_targets(self):
         targets = [
             "--file=Makefile.make",
-            "EIGEN_PATH={0}".format(join_path(self.spec['eigen'].prefix.include, 'eigen{0}'.format(self.spec['eigen'].version.up_to(1)))),
+            "EIGEN_PATH={0}".format(
+                join_path(
+                    self.spec['eigen'].prefix.include,
+                    'eigen{0}'.format(
+                        self.spec['eigen'].version.up_to(1)))),
             "FFTW_PATH={0}".format(self.spec['fftw'].prefix),
             "CC={0}".format(self.spec['mpi'].mpicxx)
         ]
@@ -60,4 +64,4 @@ class Vpfft(MakefilePackage):
         install('README.md', prefix)
         install('README.make', prefix)
         install('README-license.txt', prefix)
-        install_tree('docs', join_path(prefix, 'docs'))
+        install_tree('docs', prefix.docs)
