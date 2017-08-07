@@ -67,13 +67,13 @@ class Hpgmg(Package):
         if 'fv=serial' in self.spec:
             args.append('--no-fv-mpi')
 
+        if 'fv=mpi' in self.spec:
+            args.append('--CC={0}'.format(self.spec['mpi'].mpicc))
+
         if 'fv=none' in self.spec:
             args.append('--no-fv')
         else:
             args.append('--CFLAGS=' + self.compiler.openmp_flag)
-
-        if '+mpi' in self.spec:
-            args.append('--CC={0}'.format(self.spec['mpi'].mpicc))
 
         return args
 
