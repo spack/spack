@@ -85,6 +85,7 @@ class Libint(AutotoolsPackage):
     def configure_args(self):
 
         config_args = ['--enable-shared']
+
         optflags = self.optflags
 
         # Optimization flag names have changed in libint 2

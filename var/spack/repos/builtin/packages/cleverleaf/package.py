@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Cleverleaf(Package):
+class Cleverleaf(CMakePackage):
     """CleverLeaf is a hydrodynamics mini-app that extends CloverLeaf with
        Adaptive Mesh Refinement using the SAMRAI toolkit from Lawrence
        Livermore National Laboratory. The primary goal of CleverLeaf is
@@ -40,12 +40,7 @@ class Cleverleaf(Package):
     version('develop', git='https://github.com/UK-MAC/CleverLeaf_ref.git',
             branch='develop')
 
-    depends_on("samrai@3.8.0:")
-    depends_on("hdf5+mpi")
-    depends_on("boost")
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        cmake(*std_cmake_args)
-        make()
-        make("install")
+    depends_on('samrai@3.8.0:')
+    depends_on('hdf5+mpi')
+    depends_on('boost')
+    depends_on('cmake@3.1:', type='build')

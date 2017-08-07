@@ -39,7 +39,11 @@ def pre_run():
     if platform.system() != "Darwin":
         return
 
-    git_case_consistency_check(spack.repo.get_repo('builtin').packages_path)
+    try:
+        repo = spack.repo.get_repo('builtin')
+        git_case_consistency_check(repo.packages_path)
+    except spack.repository.UnknownNamespaceError:
+        pass
 
 
 def git_case_consistency_check(path):

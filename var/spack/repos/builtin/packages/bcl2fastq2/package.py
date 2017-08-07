@@ -59,7 +59,7 @@ class Bcl2fastq2(Package):
     # libexslt bits.
     patch('cxxConfigure-cmake.patch')
 
-    root_cmakelists_dir = '../src'
+    root_cmakelists_dir = 'src'
 
     def url_for_version(self, version):
         url = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
