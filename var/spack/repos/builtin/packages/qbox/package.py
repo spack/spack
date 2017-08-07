@@ -69,9 +69,9 @@ class Qbox(MakefilePackage):
 
     def edit(self, spec, prefix):
         with open('src/spack.mk', 'w') as mkfile:
-            mkfile.write('CXX = {}\n'.format(spec['mpi'].mpicxx))
+            mkfile.write('CXX = {0}\n'.format(spec['mpi'].mpicxx))
             mkfile.write('LD = $(CXX)\n')
-            mkfile.write('LIBPATH = {}\n'.format(' -L'.join((
+            mkfile.write('LIBPATH = {0}\n'.format(' -L'.join((
                 '',  # For -L in first element
                 spec['fftw'].prefix.lib,
                 spec['xerces-c'].prefix.lib,
@@ -79,17 +79,17 @@ class Qbox(MakefilePackage):
                 spec['blas'].prefix.lib,
             ))))
             blas_names = spec['blas'].libs.names
-            mkfile.write('LIBS = {}\n'.format(' -l'.join(
+            mkfile.write('LIBS = {0}\n'.format(' -l'.join(
                 ['', 'fftw3',  'scalapack', 'xerces-c'] + blas_names
             )))
             mkfile.write('LDFLAGS = $(LIBPATH) $(LIBS)\n')
-            mkfile.write('INCLUDE = {}\n'.format(' -I'.join((
+            mkfile.write('INCLUDE = {0}\n'.format(' -I'.join((
                 '',
                 spec['scalapack'].prefix.include,
                 spec['xerces-c'].prefix.include,
                 spec['fftw'].prefix.include,
             ))))
-            mkfile.write('DFLAGS = {}\n'.format(' -D'.join((
+            mkfile.write('DFLAGS = {0}\n'.format(' -D'.join((
                 '',
                 '_LARGEFILE_SOURCE', 'USE_MPI', 'USE_XERCES',
                 'XERCESC_3', 'MPICH_IGNORE_CXX_SEEK', 'SCALAPACK',
