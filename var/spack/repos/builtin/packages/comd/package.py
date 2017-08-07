@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import shutil
 from spack import *
 
 
@@ -50,7 +49,7 @@ class Comd(MakefilePackage):
         with working_dir('src-mpi'):
             filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
                         'Makefile.vanilla')
-            shutil.move('Makefile.vanilla', 'Makefile')
+            install('Makefile.vanilla', 'Makefile')
 
     def install(self, spec, prefix):
-        shutil.move('bin', prefix)
+        install_tree('bin', prefix + '/bin')
