@@ -484,67 +484,64 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #
     # These are default values for instance variables.
     #
+
+    #: By default we build in parallel.  Subclasses can override this.
     parallel = True
-    """By default we build in parallel.  Subclasses can override this."""
 
+    #: # jobs to use for parallel make. If set, overrides default of ncpus.
     make_jobs = spack.build_jobs
-    """# jobs to use for parallel make. If set, overrides default of ncpus."""
 
+    #: By default do not run tests within package's install()
     run_tests = False
-    """By default do not run tests within package's install()"""
 
     # FIXME: this is a bad object-oriented design, should be moved to Clang.
+    #: By default do not setup mockup XCode on macOS with Clang
     use_xcode = False
-    """By default do not setup mockup XCode on macOS with Clang"""
 
+    #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
-    """Most packages are NOT extendable. Set to True if you want extensions."""
 
+    #: When True, add RPATHs for the entire DAG. When False, add RPATHs only
+    #: for immediate dependencies.
     transitive_rpaths = True
-    """When True, add RPATHs for the entire DAG. When False, add RPATHs only
-       for immediate dependencies."""
 
+    #: List of prefix-relative file paths (or a single path). If these do
+    #: not exist after install, or if they exist but are not files,
+    #: sanity checks fail.
     sanity_check_is_file = []
-    """List of prefix-relative file paths (or a single path). If these do
-       not exist after install, or if they exist but are not files,
-       sanity checks fail.
-    """
 
+    #: List of prefix-relative directory paths (or a single path). If
+    #: these do not exist after install, or if they exist but are not
+    #: directories, sanity checks will fail.
     sanity_check_is_dir = []
-    """List of prefix-relative directory paths (or a single path). If
-       these do not exist after install, or if they exist but are not
-       directories, sanity checks will fail.
-    """
 
+    #
     # Set default licensing information
+    #
+
+    #: Boolean. If set to ``True``, this software requires a license.
+    #: If set to ``False``, all of the ``license_*`` attributes will
+    #: be ignored. Defaults to ``False``.
     license_required = False
-    """Boolean. If set to ``True``, this software requires a license.
-       If set to ``False``, all of the ``license_*`` attributes will
-       be ignored. Defaults to ``False``.
-    """
 
+    #: String. Contains the symbol used by the license manager to denote
+    #: a comment. Defaults to ``#``.
     license_comment = '#'
-    """String. Contains the symbol used by the license manager to denote
-       a comment. Defaults to ``#``.
-    """
 
+    #: List of strings. These are files that the software searches for when
+    #: looking for a license. All file paths must be relative to the
+    #: installation directory. More complex packages like Intel may require
+    #: multiple licenses for individual components. Defaults to the empty list.
     license_files = []
-    """List of strings. These are files that the software searches for when
-       looking for a license. All file paths must be relative to the
-       installation directory. More complex packages like Intel may require
-       multiple licenses for individual components. Defaults to the empty list.
-    """
 
+    #: List of strings. Environment variables that can be set to tell the
+    #: software where to look for a license if it is not in the usual location.
+    #: Defaults to the empty list.
     license_vars = []
-    """List of strings. Environment variables that can be set to tell the
-       software where to look for a license if it is not in the usual location.
-       Defaults to the empty list.
-    """
 
+    #: String. A URL pointing to license setup instructions for the software.
+    #: Defaults to the empty string.
     license_url = ''
-    """String. A URL pointing to license setup instructions for the software.
-       Defaults to the empty string.
-    """
 
     def __init__(self, spec):
         # this determines how the package should be built.
