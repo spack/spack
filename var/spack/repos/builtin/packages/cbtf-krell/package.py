@@ -75,7 +75,7 @@ class CbtfKrell(CMakePackage):
     depends_on("cmake@3.0.2:", type='build')
 
     # For binutils service
-    depends_on("binutils@2.24+krellpatch")
+    depends_on("binutils")
 
     # collectionTool
     depends_on("boost@1.50.0:1.59.0")
