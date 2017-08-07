@@ -388,7 +388,7 @@ class EnvironmentModifications(object):
         # separators like ':' or ';' are more likely to be paths
         for x in new_variables:
             sep = return_separator_if_any(env_after[x])
-            if sep in x:
+            if sep:
                 env.prepend_path(x, env_after[x], separator=sep)
             elif 'PATH' in x:
                 env.prepend_path(x, env_after[x])

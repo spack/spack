@@ -327,41 +327,46 @@ class IntelParallelStudio(IntelPackage):
     @property
     def license_files(self):
         spec = self.spec
+        year = self.version[1]
 
         directories = [
             'Licenses',
             self.bin_dir
         ]
 
-        if '+tools' in spec and (spec.satisfies('@cluster') or
-                                 spec.satisfies('@professional')):
-            advisor_dir = 'advisor_xe/licenses'
-            inspector_dir = 'inspector_xe/licenses'
-            vtune_amplifier_dir = 'vtune_amplifier_xe/licenses'
+        if '+advisor' in spec or ('+all' in spec and
+            not spec.satisfies('@composer.0:composer.9999')):
 
-            year = self.version[1]
+            advisor_dir = 'advisor_xe/licenses'
+
             if year >= 2017:
                 advisor_dir = 'advisor/licenses'
+
+            directories.append(advisor_dir)
+
+        if '+inspector' in spec or ('+all' in spec and
+            not spec.satisfies('@composer.0:composer.9999')):
+
+            inspector_dir = 'inspector_xe/licenses'
+
+            if year >= 2017:
                 inspector_dir = 'inspector/licenses'
 
-            directories.extend([
-                advisor_dir,
-                inspector_dir,
-                vtune_amplifier_dir
-            ])
+            directories.append(inspector_dir)
 
-        # if ('+all' in spec or '+mpi' in spec) and spec.satisfies('@cluster'):
-        #     for ifile in os.listdir(os.path.join(self.prefix, 'itac')):
-        #         if os.path.isdir(os.path.join(self.prefix, 'itac', ifile)):
-        #             directories.append(os.path.join(
-        #                 self.prefix, 'itac', ifile))
-        #         if os.path.isdir(os.path.join(self.prefix, 'itac',
-        #                                       ifile, 'intel64')):
-        #             directories.append(os.path.join(self.prefix, 'itac',
-        #                                ifile, 'intel64'))
-        #
-        # This is the same as itac/2017.3.030/intel64/
-        # Allow glob characters in license_files?
+        if '+itac' in spec or ('+all' in spec and
+            not spec.satisfies('@composer.0:composer.9999')):
+
+            itac_dir = 'itac_{0}'.format(year)
+
+            directories.append(itac_dir)
+
+        if '+vtune' in spec or ('+all' in spec and
+            not spec.satisfies('@composer.0:composer.9999')):
+
+            vtune_dir = 'vtune_amplifier_xe/licenses'
+
+            directories.append(vtune_dir)
 
         return [os.path.join(dir, 'license.lic') for dir in directories]
 
