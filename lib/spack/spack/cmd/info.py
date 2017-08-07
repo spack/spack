@@ -39,7 +39,7 @@ description = 'get detailed information on a particular package'
 section = 'basic'
 level = 'short'
 
-header_color = '@*k'
+header_color = '@*b'
 plain_format = '@.'
 
 
@@ -165,27 +165,33 @@ def print_text_info(pkg):
     color.cprint(section_title('Homepage:') + whitespaces + pkg.homepage)
 
     color.cprint('')
-    color.cprint(section_title('Safe versions:  '))
+    color.cprint(section_title('Preferred version:  '))
 
     if not pkg.versions:
         color.cprint(version('    None'))
+        color.cprint('')
+        color.cprint(section_title('Safe versions:  '))
+        color.cprint(version('    None'))
     else:
         pad = padder(pkg.versions, 4)
+
+        # Here we sort first on the fact that a version is marked
+        # as preferred in the package, then on the fact that the
+        # version is not develop, then lexicographically
         l = [
-            (value.get('preferred', False), key)
+            (value.get('preferred', False), not key.isdevelop(), key)
             for key, value in pkg.versions.items()
         ]
+        l = sorted(l)
+        _, _, preferred = l.pop()
 
-        _, first = l[0]
-        l = l[1:]
-
-        f = fs.for_package_version(pkg, first)
-        line = '@*c    {0}'.format(pad(first)) + '@*k' + str(f) + '@.'
-        color.cprint('')
+        f = fs.for_package_version(pkg, preferred)
+        line = '@*c    {0}'.format(pad(preferred)) + '@.@*{' + str(f) + '}@.'
         color.cprint(line)
         color.cprint('')
+        color.cprint(section_title('Safe versions:  '))
 
-        for _, v in reversed(sorted(l)):
+        for v in reversed(sorted(pkg.versions)):
             f = fs.for_package_version(pkg, v)
             line = version('    {0}'.format(pad(v))) + str(f)
             color.cprint(line)
