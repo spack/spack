@@ -69,7 +69,7 @@ class Gcc(AutotoolsPackage):
             multi=True,
             description='Compilers and runtime libraries to build')
     variant('binutils',
-            default=sys.platform != 'darwin',
+            default=False,
             description='Build via binutils')
     variant('piclibs',
             default=False,
