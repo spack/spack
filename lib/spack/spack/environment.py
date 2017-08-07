@@ -388,7 +388,9 @@ class EnvironmentModifications(object):
         # separators like ':' or ';' are more likely to be paths
         for x in new_variables:
             sep = return_separator_if_any(env_after[x])
-            if sep or 'PATH' in x:
+            if sep in x:
+                env.prepend_path(x, env_after[x], separator=sep)
+            elif 'PATH' in x:
                 env.prepend_path(x, env_after[x])
             else:
                 # We just need to set the variable to the new value
@@ -421,11 +423,11 @@ class EnvironmentModifications(object):
                     end = after_list.index(remaining_list[-1])
                     search = sep.join(after_list[start:end + 1])
                 except IndexError:
-                    env.set(x, env_after[x])
+                    env.prepend_path(x, env_after[x])
 
                 if search not in before:
                     # We just need to set the variable to the new value
-                    env.set(x, env_after[x])
+                    env.prepend_path(x, env_after[x])
                 else:
                     try:
                         prepend_list = after_list[:start]
