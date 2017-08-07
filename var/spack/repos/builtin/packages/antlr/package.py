@@ -45,7 +45,7 @@ class Antlr(AutotoolsPackage):
     variant('python', default=False, description='Enable ANTLR for Python')
 
     extends('python', when='+python')
-    depends_on('jdk', type=('build', 'run'), when='+java')
+    depends_on('java', type=('build', 'run'), when='+java')
 
     def configure_args(self):
         spec = self.spec
