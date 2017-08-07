@@ -33,6 +33,7 @@ class Molcas(CMakePackage):
        export MOLCAS_LICENSE=/path/to/molcas/license/"""
 
     homepage = "http://www.molcas.org/"
+    url = "file://{0}/molcas8.2.tar.gz".format(os.getcwd())
 
     version('8.2', '25b5fb8e1338b458a3eaea0b3d3b5e58')
 
@@ -45,5 +46,3 @@ class Molcas(CMakePackage):
     depends_on('hdf5')
 
     patch('install_driver.patch')
-
-    url = "file://{0}/molcas8.2.tar.gz".format(os.getcwd())
