@@ -61,4 +61,4 @@ class Snap(MakefilePackage):
         mkdirp(prefix.bin)
         install('src/gsnap', prefix.bin)
         install_tree('qasnap', prefix.qasnap)
-        install('README.md', prefix.bin)
+        install('README.md', prefix)
