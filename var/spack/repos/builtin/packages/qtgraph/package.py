@@ -49,10 +49,8 @@ class Qtgraph(QMakePackage):
        imported into a Qt application by wrapping the Graphviz libcgraph and
        libgvc within the Qt Graphics View Framework."""
 
-    # url for qtgraph package's homepage here.
     homepage = "https://github.com/OpenSpeedShop/QtGraph"
 
-    # Use when the git repository is available
     url      = "https://github.com/OpenSpeedShop/QtGraph.git"
     version('1.0.0', branch='master',
             git='https://github.com/OpenSpeedShop/QtGraph.git')
@@ -66,20 +64,10 @@ class Qtgraph(QMakePackage):
         spack_env.set('GRAPHVIZ_ROOT', self.spec['graphviz'].prefix)
         spack_env.set('INSTALL_ROOT', self.prefix)
 
-        # The assumed qt version changed to QT5 (as of paraview 5.2.1),
-        # so explicitly specify which QT major version is actually being used
-
-        # What lib suffix do we need to use?
-        libdir = self.prefix.lib64
-        if not os.path.isdir(libdir):
-            libdir = self.prefix.lib
-
         # The implementor has set up the library and include paths in
         # a non-conventional way.  We reflect that here.
         run_env.prepend_path(
             'LD_LIBRARY_PATH', join_path(
-                libdir, '{0}'.format(self.spec['qt'].version.up_to(3))))
+                self.prefix.lib64, '{0}'.format(self.spec['qt'].version.up_to(3))))
 
-        run_env.prepend_path(
-            'CPATH', join_path(self.prefix, 'include', 'QtGraph'))
-
+        run_env.prepend_path('CPATH', self.prefix.include.QtGraph)
