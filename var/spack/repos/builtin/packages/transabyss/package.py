@@ -25,32 +25,21 @@
 from spack import *
 
 
-class Abyss(AutotoolsPackage):
-    """ABySS is a de novo, parallel, paired-end sequence assembler
-       that is designed for short reads. The single-processor version
-       is useful for assembling genomes up to 100 Mbases in size."""
+class Transabyss(Package):
+    """De novo assembly of RNAseq data using ABySS"""
 
-    homepage = "http://www.bcgsc.ca/platform/bioinfo/software/abyss"
-    url      = "https://github.com/bcgsc/abyss/archive/2.0.2.tar.gz"
+    homepage = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss"
+    url      = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss/releases/1.5.5/transabyss-1.5.5.zip"
 
-    version('2.0.2', '1623f55ad7f4586e80f6e74b1f27c798')
-    version('1.5.2', '10d6d72d1a915e618d41a5cbbcf2364c')
+    version('1.5.5', '9ebe0394243006f167135cac4df9bee6')
 
-    depends_on('mpi')
-    depends_on('boost@:1.50.0,1.53.0:', when='@2.0.2:')
-    depends_on('boost@:1.50.0,1.53.0:1.59.0', when='@:1.5.2')
-    depends_on('sparsehash')
-    depends_on('sqlite')
+    depends_on('abyss@1.5.2')
+    depends_on('python@2.7.6:', type=('build', 'run'))
+    depends_on('py-igraph@0.7.0:', type=('build', 'run'))
+    depends_on('blat')
 
-    conflicts('^intel-mpi')
-    conflicts('^intel-parallel-studio+mpi')
-    conflicts('^mvapich2')
-    conflicts('^spectrum-mpi')
-
-    def configure_args(self):
-        args = ['--with-boost=%s' % self.spec['boost'].prefix,
-                '--with-sqlite=%s' % self.spec['sqlite'].prefix,
-                '--with-mpi=%s' % self.spec['mpi'].prefix]
-        if self.spec['mpi'].name == 'mpich':
-                args.append('--enable-mpich')
-        return args
+    def install(self, spec, prefix):
+        install('transabyss', prefix)
+        install('transabyss-merge', prefix)
+        install_tree('bin', prefix.bin)
+        install_tree('utilities', prefix.utilities)
