@@ -63,4 +63,9 @@ class Scalasca(AutotoolsPackage):
         config_args.append("--with-cube=%s" % spec['cube'].prefix.bin)
         config_args.append("--with-otf2=%s" % spec['otf2'].prefix.bin)
 
+        if self.spec['mpi'].name == 'openmpi':
+            config_args.append("--with-mpi=openmpi")
+        elif self.spec.satisfies('^mpich@3:'):
+            config_args.append("--with-mpi=mpich3")
+
         return config_args
