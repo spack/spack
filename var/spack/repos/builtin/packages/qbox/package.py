@@ -60,7 +60,7 @@ class Qbox(MakefilePackage):
     version('1.44.0', 'c46a2f0f68fe9229aa77779da188cea9')
 
     depends_on('mpi')
-    depends_on('atlas')
+    depends_on('blas')
     depends_on('scalapack')
     depends_on('fftw')
     depends_on('xerces-c')
@@ -68,23 +68,37 @@ class Qbox(MakefilePackage):
     build_directory = 'src'
 
     def edit(self, spec, prefix):
-        mkfile = 'build/gcc_atlas.mk'
-        filter_file(r'FFT\s*=.*', 'FFT = FFTW3', mkfile)
-        filter_file(r'SCALAPACKDIR\s*=.*',
-                    'SCALAPACKDIR = %s' % self.spec['scalapack'].prefix.lib,
-                    mkfile)
-        filter_file(r'XERCESCDIR\s*=.*',
-                    'XERCESCDIR = %s' % self.spec['xerces-c'].prefix, mkfile)
-        filter_file(r'ATLASDIR\s*=.*',
-                    'ATLASDIR = %s' % self.spec['atlas'].prefix.lib, mkfile)
-        filter_file(r'CXX\s*=.*',
-                    'CXX = %s' % self.spec['mpi'].mpicxx, mkfile)
-        filter_file(r'FFTWDIR\s*=.*',
-                    'FFTWDIR = %s' % self.spec['fftw'].prefix, mkfile)
-        filter_file(r'LIBS\s*\+=(.*-.*-.*)',  # Catch the line that's not fftw
-                    r'LIBS += -lsatlas \1 -lgfortran', mkfile)
-        shutil.move(mkfile, 'src/')
-        filter_file(r'\$\(TARGET\)', 'gcc_atlas', 'src/Makefile')
+        with open('src/spack.mk', 'w') as mkfile:
+            mkfile.write('CXX = {}\n'.format(spec['mpi'].mpicxx))
+            mkfile.write('LD = $(CXX)\n')
+            mkfile.write('LIBPATH = {}\n'.format(' -L'.join((
+                '',  # For -L in first element
+                spec['fftw'].prefix.lib,
+                spec['xerces-c'].prefix.lib,
+                spec['scalapack'].prefix.lib,
+                spec['blas'].prefix.lib,
+            ))))
+            blas_names = spec['blas'].libs.names
+            mkfile.write('LIBS = {}\n'.format(' -l'.join(
+                ['', 'fftw3',  'scalapack', 'xerces-c'] + blas_names
+            )))
+            mkfile.write('LDFLAGS = $(LIBPATH) $(LIBS)\n')
+            mkfile.write('INCLUDE = {}\n'.format(' -I'.join((
+                '',
+                spec['scalapack'].prefix.include,
+                spec['xerces-c'].prefix.include,
+                spec['fftw'].prefix.include,
+            ))))
+            mkfile.write('DFLAGS = {}\n'.format(' -D'.join((
+                '',
+                '_LARGEFILE_SOURCE', 'USE_MPI', 'USE_XERCES',
+                'XERCESC_3', 'MPICH_IGNORE_CXX_SEEK', 'SCALAPACK',
+                'USE_FFTW3', 'FFTWMEASURE', 'FFTW3_2D', 'ADD_',
+            ))))
+            mkfile.write('CXXFLAGS = {}\n'.format(' '.join((
+                '-g', '-O3', '$(INCLUDE)', '$(DFLAGS)',
+            ))))
+        filter_file(r'\$\(TARGET\)', 'spack', 'src/Makefile')
 
     def install(self, spec, prefix):
         mkdir(prefix.src)
