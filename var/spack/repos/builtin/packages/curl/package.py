@@ -49,6 +49,7 @@ class Curl(AutotoolsPackage):
 
     depends_on('openssl')
     depends_on('zlib')
+    depends_on('perl')
 
     def configure_args(self):
         spec = self.spec
