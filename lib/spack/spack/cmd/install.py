@@ -40,7 +40,7 @@ from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
 from spack.package import PackageBase
 from spack.util.chroot import build_chroot_environment, \
-                              remove_chroot_enviroment
+                              remove_chroot_environment
 
 description = "build and install packages"
 section = "build"
