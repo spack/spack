@@ -57,9 +57,7 @@ def buildinfo_file_name(spec):
     """
     Filename of the binary package meta-data file
     """
-    installpath = join_path(spack.store.layout.root,
-                            install_directory_name(spec))
-    return os.path.join(installpath, ".spack", "binary_distribution")
+    return os.path.join(spec.prefix, ".spack", "binary_distribution")
 
 
 def read_buildinfo_file(spec):
@@ -101,17 +99,6 @@ def write_buildinfo_file(spec):
     filename = buildinfo_file_name(spec)
     with open(filename, 'w') as outfile:
         outfile.write(yaml.dump(buildinfo, default_flow_style=True))
-
-
-def install_directory_name(spec):
-    """
-    Return name of the install directory according to the convention
-    <os>-<architecture>/<compiler>/<package>-<version>-<dag_hash>/
-    """
-    return "%s/%s/%s/%s-%s-%s" % (spack.store.layout.root,
-                                  spack.architecture.sys_type(),
-                                  str(spec.compiler).replace("@", "-"),
-                                  spec.name, spec.version, spec.dag_hash())
 
 
 def tarball_directory_name(spec):
@@ -158,8 +145,7 @@ def checksum_tarball(file):
     return hasher.hexdigest()
 
 
-def sign_tarball(spec, outdir, yes_to_all, key,
-                 tarfile_path, specfile_path):
+def sign_tarball(outdir, yes_to_all, key, force, specfile_path):
     # Sign the packages if keys available
     sign = True
     if not has_gnupg2():
@@ -180,8 +166,9 @@ def sign_tarball(spec, outdir, yes_to_all, key,
                 tty.warn('No signing keys are available.')
                 sign = False
     if sign:
+        if force and os.path.exists('%s.asc' % specfile_path):
+            os.remove('%s.asc' % specfile_path)
         Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
-        Gpg.sign(key, tarfile_path, '%s.asc' % tarfile_path)
     else:
         if not yes_to_all:
             raise RuntimeError('Not creating unsigned build cache. '
@@ -272,8 +259,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         outfile.write(yaml.dump(spec_dict))
 
     # sign the tarball and spec file with gpg
-    signed = sign_tarball(spec, outdir, yes_to_all, key,
-                          tarfile_path, specfile_path)
+    signed = sign_tarball(outdir, yes_to_all, key, force, specfile_path)
 
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
@@ -286,12 +272,11 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # cleanup file moved to archive
     os.remove(tarfile_path)
     if signed:
-        #        os.remove('%s.asc' % tarfile_path)
         os.remove('%s.asc' % specfile_path)
-    if os.path.exists(indexfile_path):
-        os.remove(indexfile_path)
 
     # create an index.html for the build_cache directory so specs can be found
+    if os.path.exists(indexfile_path):
+        os.remove(indexfile_path)
     generate_index(outdir, indexfile_path)
 
 
@@ -322,7 +307,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     """
     extract binary tarball for given package into install area
     """
-    installpath = install_directory_name(spec)
+    installpath = spec.prefix
     if os.path.exists(installpath) and force:
         shutil.rmtree(installpath)
     mkdirp(installpath)
@@ -397,7 +382,7 @@ def relocate_package(spec):
 # Need to relocate to add new compiler path to rpath
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
-    installpath = install_directory_name(spec)
+    installpath = spec.prefix
     for filename in buildinfo['relocate_binaries']:
         path_name = os.path.join(installpath, filename)
         spack.relocate.relocate_binary(path_name,

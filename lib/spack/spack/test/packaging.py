@@ -229,6 +229,7 @@ def test_relocate():
     out = substitute_rpath(
         ('/usr/lib', '/usr/lib64', '/opt/local/lib'), '/usr', '/opt')
     assert out == ['/opt/lib', '/opt/lib64', '/opt/local/lib']
+    print str(sys.platform)
 
 
 @pytest.mark.skipif(sys.platform != 'darwin',
@@ -239,8 +240,7 @@ def test_relocate_macho():
     macho_get_paths('/bin/bash')
 
 
-@pytest.mark.skipif(sys.platform != 'linux',
+@pytest.mark.skipif(sys.platform != 'linux2',
                     reason="only works with Elf objects")
 def test_relocate_elf():
-    get_patchelf()
     assert (needs_binary_relocation('ELF') is True)
