@@ -48,6 +48,10 @@ def setup_parser(subparser):
         '--remove-environment', action='store_true', dest='remove_environment',
         help="shutdown the local spack jailed enviroment")
     subparser.add_argument(
+        '--permanent', action='store_true', dest='permanent',
+        help="""generate a permanent chroot environment to require
+administrator rights when using spack as an user""")
+    subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="force the command (use this with caution!)")
     subparser.add_argument(

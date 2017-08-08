@@ -31,6 +31,7 @@ import llnl.util.tty as tty
 from socket import *
 from spack.util.executable import which
 from llnl.util.filesystem import join_path
+from fstab import Fstab
 
 from fstab import Fstab
 from daemon import Daemon
