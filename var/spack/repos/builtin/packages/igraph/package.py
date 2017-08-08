@@ -25,46 +25,12 @@
 from spack import *
 
 
-class A(AutotoolsPackage):
-    """Simple package with one optional dependency"""
+class Igraph(AutotoolsPackage):
+    """igraph is a library for creating and manipulating graphs."""
 
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    homepage = "http://igraph.org/"
+    url      = "https://github.com/igraph/igraph/releases/download/0.7.1/igraph-0.7.1.tar.gz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', '2.0_a_hash')
+    version('0.7.1', '4f6e7c16b45fce8ed423516a9786e4e8')
 
-    variant(
-        'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=True
-    )
-
-    variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=False
-    )
-
-    depends_on('b', when='foobar=bar')
-
-    def with_or_without_fee(self, activated):
-        if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
-
-    def autoreconf(self, spec, prefix):
-        pass
-
-    def configure(self, spec, prefix):
-        pass
-
-    def build(self, spec, prefix):
-        pass
-
-    def install(self, spec, prefix):
-        pass
+    depends_on('libxml2')

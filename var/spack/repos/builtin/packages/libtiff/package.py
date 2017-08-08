@@ -35,6 +35,9 @@ class Libtiff(AutotoolsPackage):
     version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
     version('4.0.3', '051c1068e6a0627f461948c365290410')
 
-    depends_on('jpeg')
+    variant('turbo', default=False, description='use libjpeg-turbo')
+
+    depends_on('jpeg', when='-turbo')
+    depends_on('libjpeg-turbo', when='+turbo')
     depends_on('zlib')
     depends_on('xz')
