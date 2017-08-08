@@ -33,6 +33,7 @@ class Lulesh(Package):
     homepage = "https://codesign.llnl.gov/lulesh.php"
     url      = "https://codesign.llnl.gov/lulesh/lulesh2.0.3.tgz"
 
+    tags = ['proxy-app']
     version("2.0.3", "336644a8750f71c7c6b9d2960976e7aa")
 
     patch("remove_defaults.patch")

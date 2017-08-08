@@ -29,7 +29,7 @@ import platform
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
-from spack.directives import depends_on
+from spack.directives import depends_on, variant
 from spack.package import PackageBase, run_after
 
 
@@ -49,11 +49,6 @@ class CMakePackage(PackageBase):
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
         +===============================================+====================+
-        | :py:meth:`~.CMakePackage.build_type`          | Specify the value  |
-        |                                               | for the            |
-        |                                               | CMAKE_BUILD_TYPE   |
-        |                                               | variable           |
-        +-----------------------------------------------+--------------------+
         | :py:meth:`~.CMakePackage.root_cmakelists_dir` | Location of the    |
         |                                               | root CMakeLists.txt|
         +-----------------------------------------------+--------------------+
@@ -74,14 +69,12 @@ class CMakePackage(PackageBase):
 
     build_time_test_callbacks = ['check']
 
+    # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
     depends_on('cmake', type='build')
-
-    def build_type(self):
-        """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
-
-        :return: value for ``CMAKE_BUILD_TYPE``
-        """
-        return 'RelWithDebInfo'
 
     @property
     def root_cmakelists_dir(self):
@@ -108,8 +101,8 @@ class CMakePackage(PackageBase):
     def _std_args(pkg):
         """Computes the standard cmake arguments for a generic package"""
         try:
-            build_type = pkg.build_type()
-        except AttributeError:
+            build_type = pkg.spec.variants['build_type'].value
+        except KeyError:
             build_type = 'RelWithDebInfo'
 
         args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
@@ -131,6 +124,15 @@ class CMakePackage(PackageBase):
         :return: directory where to build the package
         """
         return join_path(self.stage.source_path, 'spack-build')
+
+    def default_flag_handler(self, spack_env, flag_val):
+        # Relies on being the first thing that can affect the spack_env
+        # EnvironmentModification after it is instantiated or no other
+        # method trying to affect these variables. Currently both are true
+        # flag_val is a tuple (flag, value_list)
+        spack_env.set(flag_val[0].upper(),
+                      ' '.join(flag_val[1]))
+        return []
 
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to

@@ -70,7 +70,7 @@ class AmrExpParabolic(MakefilePackage):
             def_file.filter('F90.*:=.*', 'F90 = {0}'.format(spec['mpi'].mpifc))
             def_file.filter('mpi_include_dir =.*', 'mpi_include_dir = {0}'.format(join_path(spec['mpi'].prefix), 'include'))
             def_file.filter('mpi_lib_dir =.*', 'mpi_lib_dir = {0}'.format(join_path(spec['mpi'].prefix), 'lib'))
- 
+            
         with working_dir(self.build_directory):
             makefile = FileFilter('GNUmakefile')
             if '+debug' in spec:

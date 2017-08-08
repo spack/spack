@@ -26,12 +26,13 @@ from spack import *
 
 
 class A(AutotoolsPackage):
-    """Simple package with no dependencies"""
+    """Simple package with one optional dependency"""
 
     homepage = "http://www.example.com"
     url      = "http://www.example.com/a-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
+    version('2.0', '2.0_a_hash')
 
     variant(
         'foo',
