@@ -56,3 +56,8 @@ class Ninja(Package):
         mkdir(prefix.bin)
         install('ninja', prefix.bin)
         install_tree('misc', prefix.misc)
+
+        # Some distros like Fedora install a 'ninja-build' executable
+        # instead of 'ninja'. Install both for uniformity.
+        with working_dir(prefix.bin):
+            symlink('ninja', 'ninja-build')
