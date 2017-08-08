@@ -155,13 +155,6 @@ class Qmcpack(CMakePackage):
         install_tree('nexus', prefix.nexus)
 
         with working_dir(self.build_directory):
-            # QMCPACK 'make install' does nothing, which causes
-            # Spack to throw an error.
-            #
-            # This install method creates the top level directory
-            # and copies the bin subdirectory into the appropriate
-            # location. We do not copy include or lib at this time due
-            # to technical difficulties in qmcpack itself.
             mkdirp(prefix)
 
             # install binaries
