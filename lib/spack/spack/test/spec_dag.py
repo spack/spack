@@ -143,6 +143,8 @@ All deptypes are (link, build) except for x dependency on p.
     default = ('build', 'link')
 
     v = MockPackage('v', [], [])
+    # Adding a condition for q on v ensures that q's instance of v is not
+    # created during the first pass of the concretization algorithm
     q_conditions = {v.name: {'q@2:': v.name}}
     q = MockPackage('q', [v], [default], q_conditions)
     p = MockPackage('p', [v], [default])
@@ -155,6 +157,56 @@ All deptypes are (link, build) except for x dependency on p.
         spack.repo = mock_repo
         spec = Spec('w')
         spec.concretize()
+
+        v_instances = [spec['y']['v'], spec['x']['v'], spec['q']['v']]
+        assert all(v_instances[0] is s for s in v_instances)
+    finally:
+        spack.repo = saved_repo
+
+
+@pytest.mark.usefixtures('config')
+def test_separate_build_deps():
+    """Test that each instance of v is concretized separately in the
+following spec DAG::
+
+        w
+       / \
+      x   y
+     / \   \
+    v1  \   v3
+         z
+         |
+         v2
+
+All deptypes are (link, build) except for those on v.
+
+"""
+    saved_repo = spack.repo
+
+    default = ('build', 'link')
+    build_only = ('build',)
+
+    v = MockPackage('v', [], [])
+
+    z = MockPackage('z', [v], [build_only],
+                    {v.name: {'z': 'v@2'}})
+    x = MockPackage('x', [v, z], [build_only, default],
+                    {v.name: {'x': 'v@1'}})
+
+    y = MockPackage('y', [v], [build_only],
+                    {v.name: {'y': 'v@3'}})
+
+    w = MockPackage('w', [y, x], [default, default])
+
+    mock_repo = MockPackageMultiRepo([v, w, x, y, z])
+    try:
+        spack.repo = mock_repo
+        spec = Spec('w')
+        spec.concretize()
+
+        assert 'v@1' in spec['x']
+        assert 'v@2' in spec['z']
+        assert 'v@3' in spec['y']
     finally:
         spack.repo = saved_repo
 
