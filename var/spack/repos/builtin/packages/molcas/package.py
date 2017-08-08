@@ -23,48 +23,26 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
-class A(AutotoolsPackage):
-    """Simple package with one optional dependency"""
+class Molcas(CMakePackage):
+    """Molcas is an ab initio quantum chemistry software package
+       developed by scientists to be used by scientists.
+       Please set the path to licence file with the following command
+       export MOLCAS_LICENSE=/path/to/molcas/license/"""
 
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    homepage = "http://www.molcas.org/"
+    url = "file://{0}/molcas8.2.tar.gz".format(os.getcwd())
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', '2.0_a_hash')
+    version('8.2', '25b5fb8e1338b458a3eaea0b3d3b5e58')
 
-    variant(
-        'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=True
-    )
+    # Licensing
+    license_required = True
+    license_vars = ['MOLCAS_LICENSE']
 
-    variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=False
-    )
+    depends_on('openmpi')
+    depends_on('openblas')
+    depends_on('hdf5')
 
-    depends_on('b', when='foobar=bar')
-
-    def with_or_without_fee(self, activated):
-        if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
-
-    def autoreconf(self, spec, prefix):
-        pass
-
-    def configure(self, spec, prefix):
-        pass
-
-    def build(self, spec, prefix):
-        pass
-
-    def install(self, spec, prefix):
-        pass
+    patch('install_driver.patch')

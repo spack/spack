@@ -25,46 +25,16 @@
 from spack import *
 
 
-class A(AutotoolsPackage):
-    """Simple package with one optional dependency"""
+class Velvet(MakefilePackage):
+    """Velvet is a de novo genomic assembler specially designed for short read
+       sequencing technologies."""
 
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    homepage = "http://www.ebi.ac.uk/~zerbino/velvet/"
+    url      = "http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.10.tgz"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', '2.0_a_hash')
-
-    variant(
-        'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=True
-    )
-
-    variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=False
-    )
-
-    depends_on('b', when='foobar=bar')
-
-    def with_or_without_fee(self, activated):
-        if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
-
-    def autoreconf(self, spec, prefix):
-        pass
-
-    def configure(self, spec, prefix):
-        pass
-
-    def build(self, spec, prefix):
-        pass
+    version('1.2.10', '6e28c4b9bedc5f7ab2b947e7266a02f6')
 
     def install(self, spec, prefix):
-        pass
+        mkdirp(prefix.bin)
+        install('velvetg', prefix.bin)
+        install('velveth', prefix.bin)
