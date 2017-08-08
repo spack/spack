@@ -25,46 +25,10 @@
 from spack import *
 
 
-class A(AutotoolsPackage):
-    """Simple package with one optional dependency"""
+class Cnpy(CMakePackage):
+    """cnpy: library to read/write .npy and .npz files in C/C++."""
 
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    homepage = "https://github.com/rogersce/cnpy"
+    url      = "https://github.com/rogersce/cnpy"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', '2.0_a_hash')
-
-    variant(
-        'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=True
-    )
-
-    variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=False
-    )
-
-    depends_on('b', when='foobar=bar')
-
-    def with_or_without_fee(self, activated):
-        if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
-
-    def autoreconf(self, spec, prefix):
-        pass
-
-    def configure(self, spec, prefix):
-        pass
-
-    def build(self, spec, prefix):
-        pass
-
-    def install(self, spec, prefix):
-        pass
+    version('master', git='https://github.com/rogersce/cnpy.git', branch="master")
