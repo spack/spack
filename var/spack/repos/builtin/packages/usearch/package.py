@@ -45,4 +45,5 @@ class Usearch(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('usearch10.0.240_i86linux32', prefix.bin.usearch)
+        install('usearch{0}_i86linux32'.format(self.version),
+                prefix.bin.usearch)
