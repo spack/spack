@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Archer(Package):
+class Archer(CMakePackage):
     """ARCHER, a data race detection tool for large OpenMP applications."""
 
     homepage = "https://github.com/PRUNERS/ARCHER"
@@ -34,23 +34,24 @@ class Archer(Package):
 
     version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@3.4.3:', type='build')
     depends_on('llvm')
     depends_on('ninja', type='build')
     depends_on('llvm-openmp-ompt')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+        return [
+            '-G', 'Ninja',
+            '-DCMAKE_C_COMPILER=clang',
+            '-DCMAKE_CXX_COMPILER=clang++',
+            '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
+        ]
 
-        with working_dir('spack-build', create=True):
-            cmake_args = std_cmake_args[:]
-            cmake_args.extend([
-                '-G', 'Ninja',
-                '-DCMAKE_C_COMPILER=clang',
-                '-DCMAKE_CXX_COMPILER=clang++',
-                '-DOMP_PREFIX:PATH=%s' % spec['llvm-openmp-ompt'].prefix,
-            ])
-
-            cmake('..', *cmake_args)
-            ninja = Executable('ninja')
+    # TODO: Add better ninja support to CMakePackage
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory):
             ninja()
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
             ninja('install')
