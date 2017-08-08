@@ -164,7 +164,6 @@ def install_tarball(spec, args):
             tty.msg('Installing buildcache for spec %s' % spec.format())
             spack.binary_distribution.extract_tarball(spec, tarball,
                                                       yes_to_all, force)
-            spack.binary_distribution.relocate_package(spec)
             spack.store.db.reindex(spack.store.layout)
         else:
             tty.die('Download of binary cache file for spec %s failed.' %

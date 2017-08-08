@@ -38,6 +38,7 @@ from spack.relocate import *
 import os
 import stat
 import sys
+import shutil
 
 
 @pytest.fixture(scope='function')
@@ -104,7 +105,8 @@ echo $PATH"""
 
     parser = argparse.ArgumentParser()
     buildcache.setup_parser(parser)
-
+    shutil.copyfile(spack.mock_gpg_keys_path + '/external.key',
+                    'external.key')
     # Create a private key to sign package with if gpg2 available
     if has_gnupg2():
         spack.util.gpg.Gpg.create(name='test key 1', expires='0',
@@ -113,10 +115,6 @@ echo $PATH"""
     # Create a build cache with signing
     args = parser.parse_args(['create', '-d', mirror_path, '-y', str(spec)])
     buildcache.buildcache(parser, args)
-
-    # Validate the relocation information
-    buildinfo = bindist.read_buildinfo_file(spec)
-    assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
 
     # Create a build cache without signing, making rpaths relative first
     # overwriting previous build cache
@@ -134,8 +132,11 @@ echo $PATH"""
     # download and install tarball
     file = bindist.download_tarball(spec)
     bindist.extract_tarball(spec, file, True, True)
-    bindist.relocate_package(spec)
     spack.store.db.reindex(spack.store.layout)
+
+    # Validate the relocation information
+    buildinfo = bindist.read_buildinfo_file(spec.prefix)
+    assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
 
     args = parser.parse_args(['install', '-f', '-y', str(spec)])
     buildcache.install_tarball(spec, args)
@@ -237,10 +238,12 @@ def test_relocate_macho():
     get_patchelf()
     assert (needs_binary_relocation('Mach-O') is True)
     macho_get_paths('/bin/bash')
-    modify_macho_object('/bin/bash', '/usr', '/opt', False)
-    modify_macho_object('/bin/bash', '/usr', '/opt', True)
-    modify_macho_object('/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', False)
-    modify_macho_object('/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', True)
+    shutil.copyfile('/bin/bash', 'bash')
+    modify_macho_object('bash', '/usr', '/opt', False)
+    modify_macho_object('bash', '/usr', '/opt', True)
+    shutil.copyfile('/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
+    modify_macho_object('libncurses.5.4.dylib', '/usr', '/opt', False)
+    modify_macho_object('libncurses.5.4.dylib', '/usr', '/opt', True)
 
 
 @pytest.mark.skipif(sys.platform != 'linux2',

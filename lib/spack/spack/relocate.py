@@ -22,8 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#  "Benedikt Hegner (CERN)"
-#  "Patrick Gartung (FNAL)"
 
 import os
 import stat
@@ -31,8 +29,7 @@ import platform
 import re
 import spack
 import spack.cmd
-from spack.util.executable import which
-from spack.util.executable import ProcessError
+from spack.util.executable import Executable
 from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
 
@@ -54,12 +51,9 @@ def get_existing_elf_rpaths(path_name):
     Return the RPATHS in given elf file as a list of strings.
     """
     if platform.system() == 'Linux':
-        command = which(get_patchelf())
+        command = Executable(get_patchelf())
         output = command('--print-rpath', '%s' %
                          path_name, output=str, err=str)
-        if command.returncode != 0:
-            tty.warn('failed reading rpath for %s.' % path_name)
-            return False
         return output.rstrip('\n').split(':')
     else:
         tty.die('relocation not supported for this platform')
@@ -78,11 +72,8 @@ def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
 
 
 def macho_get_paths(path_name):
-    otool = which('otool')
+    otool = Executable('otool')
     output = otool("-l", path_name, output=str, err=str)
-    if otool.returncode != 0:
-        tty.warn('failed reading rpath for %s.' % path_name)
-        return False
     last_cmd = None
     idpath = ''
     rpaths = []
@@ -170,34 +161,16 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
                                                  deps, idpath)
     st = os.stat(path_name)
     # some installs create read-only binaries
-    wmode = os.access(path_name, os.W_OK)
-    if not wmode:
-        try:
-            os.chmod(path_name, st.st_mode | stat.S_IWUSR)
-        except OSError as e:
-            tty.warn(e)
-    install_name_tool = which('install_name_tool')
+    install_name_tool = Executable('install_name_tool')
     if id:
-        try:
-            install_name_tool('-id', id, path_name, output=str, err=str)
-        except ProcessError as e:
-            tty.warn(e)
+        install_name_tool('-id', id, path_name, output=str, err=str)
 
     for orig, new in zip(deps, ndeps):
-        try:
-            install_name_tool('-change', orig, new, path_name)
-        except ProcessError as e:
-            tty.warn(e)
+        install_name_tool('-change', orig, new, path_name)
 
     for orig, new in zip(rpaths, nrpaths):
-        try:
-            install_name_tool('-rpath', orig, new, path_name)
-        except ProcessError as e:
-            tty.warn(e)
-    try:
+        install_name_tool('-rpath', orig, new, path_name)
         os.chmod(path_name, st.st_mode)
-    except OSError as e:
-        tty.warn(e)
     return
 
 
@@ -205,12 +178,10 @@ def get_filetype(path_name):
     """
     Check the output of the file command for given string.
     """
-    bash = which('bash')
-    output = bash('-c', 'LC_ALL=C && file -b -h %s' % path_name,
+    file = Executable('file')
+    file.add_default_env('LC_ALL', 'C')
+    output = file('-b', '-h', '%s' % path_name,
                   output=str, err=str)
-    if bash.returncode != 0:
-        tty.warn('getting filetype of "%s" failed' % path_name)
-        return None
     return output.strip()
 
 
@@ -224,12 +195,9 @@ def modify_elf_object(path_name, orig_rpath, new_rpath):
         os.chmod(path_name, st.st_mode | stat.S_IWUSR)
     if platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
-        command = which(get_patchelf())
-        output = command('--force-rpath', '--set-rpath', '%s' % new_joined,
-                         '%s' % path_name, output=str, cmd=str)
-        if command.returncode != 0:
-            tty.warn('failed writing rpath for %s.' % path_name)
-            tty.warn(output)
+        patchelf = Executable(get_patchelf())
+        patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
+                 '%s' % path_name, output=str, cmd=str)
     else:
         tty.die('relocation not supported for this platform')
     os.chmod(path_name, st.st_mode)

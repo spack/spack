@@ -22,8 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-# "Benedikt Hegner (CERN)"
-# "Patrick Gartung (FNAL)"
 
 import os
 import re
@@ -33,7 +31,7 @@ import shutil
 
 import llnl.util.tty as tty
 from spack.util.gpg import Gpg
-from llnl.util.filesystem import mkdirp, join_path
+from llnl.util.filesystem import mkdirp, join_path, install_tree
 from spack.util.web import spider
 import spack.cmd
 import spack
@@ -53,25 +51,26 @@ def has_gnupg2():
         return False
 
 
-def buildinfo_file_name(spec):
+def buildinfo_file_name(prefix):
     """
     Filename of the binary package meta-data file
     """
-    return os.path.join(spec.prefix, ".spack", "binary_distribution")
+    name = prefix + "/.spack/binary_distribution"
+    return name
 
 
-def read_buildinfo_file(spec):
+def read_buildinfo_file(prefix):
     """
     Read buildinfo file
     """
-    filename = buildinfo_file_name(spec)
+    filename = buildinfo_file_name(prefix)
     with open(filename, 'r') as inputfile:
         content = inputfile.read()
         buildinfo = yaml.load(content)
     return buildinfo
 
 
-def write_buildinfo_file(spec):
+def write_buildinfo_file(prefix):
     """
     Create a cache file containing information
     required for the relocation
@@ -79,16 +78,16 @@ def write_buildinfo_file(spec):
     text_to_relocate = []
     binary_to_relocate = []
     blacklist = (".spack", "man")
-    for root, dirs, files in os.walk(spec.prefix, topdown=True):
+    for root, dirs, files in os.walk(prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
             filetype = spack.relocate.get_filetype(path_name)
             if spack.relocate.needs_binary_relocation(filetype):
-                rel_path_name = os.path.relpath(path_name, spec.prefix)
+                rel_path_name = os.path.relpath(path_name, prefix)
                 binary_to_relocate.append(rel_path_name)
             elif spack.relocate.needs_text_relocation(filetype):
-                rel_path_name = os.path.relpath(path_name, spec.prefix)
+                rel_path_name = os.path.relpath(path_name, prefix)
                 text_to_relocate.append(rel_path_name)
 
     # Create buildinfo data and write it to disk
@@ -96,7 +95,7 @@ def write_buildinfo_file(spec):
     buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
-    filename = buildinfo_file_name(spec)
+    filename = buildinfo_file_name(prefix)
     with open(filename, 'w') as outfile:
         outfile.write(yaml.dump(buildinfo, default_flow_style=True))
 
@@ -228,21 +227,26 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
             tty.warn("file exists, use -f to force overwrite: %s" %
                      specfile_path)
             return
-
-
-#    shutil.copyfile(spec_file, specfile_path)
+    # make a copy of the install directory to work with
+    prefix = join_path(outdir, os.path.basename(spec.prefix))
+    if os.path.exists(prefix):
+        shutil.rmtree(prefix)
+    install_tree(spec.prefix, prefix)
 
     # create info for later relocation and create tar
-    write_buildinfo_file(spec)
+    write_buildinfo_file(prefix)
 
     # optinally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if rel:
-        make_package_relative(spec)
+        make_package_relative(prefix)
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
-        tar.add(name='%s' % spec.prefix, arcname='%s' %
-                os.path.basename(spec.prefix))
+        tar.add(name='%s' % prefix,
+                arcname='%s' % os.path.basename(prefix))
+    # remove copy of install directory
+    shutil.rmtree(prefix)
+
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
 
@@ -303,6 +307,39 @@ def download_tarball(spec):
     return None
 
 
+def make_package_relative(prefix):
+    """
+    Change paths in binaries to relative paths
+    """
+    buildinfo = read_buildinfo_file(prefix)
+    old_path = buildinfo['buildpath']
+    for filename in buildinfo['relocate_binaries']:
+        path_name = os.path.join(prefix, filename)
+        spack.relocate.make_binary_relative(path_name,
+                                            old_path)
+
+
+def relocate_package(prefix):
+    """
+    Relocate the given package
+    """
+    buildinfo = read_buildinfo_file(prefix)
+    new_path = spack.store.layout.root
+    old_path = buildinfo['buildpath']
+    if new_path == old_path:
+        return
+
+    tty.msg("Relocating package from",
+            "%s to %s." % (old_path, new_path))
+    for filename in buildinfo['relocate_binaries']:
+        path_name = os.path.join(prefix, filename)
+        spack.relocate.relocate_binary(path_name, old_path, new_path)
+
+    for filename in buildinfo['relocate_textfiles']:
+        path_name = os.path.join(prefix, filename)
+        spack.relocate.relocate_text(path_name, old_path, new_path)
+
+
 def extract_tarball(spec, filename, yes_to_all=False, force=False):
     """
     extract binary tarball for given package into install area
@@ -357,41 +394,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
                  'use spack buildcache create -y option to override')
     os.remove(tarfile_path)
     os.remove(specfile_path)
-
-
-def make_package_relative(spec):
-    """
-    Change paths in binaries to relative paths
-    """
-    buildinfo = read_buildinfo_file(spec)
-    old_path = buildinfo['buildpath']
-    for filename in buildinfo['relocate_binaries']:
-        path_name = os.path.join(spec.prefix, filename)
-        spack.relocate.make_binary_relative(path_name,
-                                            old_path)
-
-
-def relocate_package(spec):
-    """
-    Relocate the given package
-    """
-    buildinfo = read_buildinfo_file(spec)
-    new_path = spack.store.layout.root
-    old_path = buildinfo['buildpath']
-
-# Need to relocate to add new compiler path to rpath
-    tty.msg("Relocating package from",
-            "%s to %s." % (old_path, new_path))
-    installpath = spec.prefix
-    for filename in buildinfo['relocate_binaries']:
-        path_name = os.path.join(installpath, filename)
-        spack.relocate.relocate_binary(path_name,
-                                       old_path,
-                                       new_path)
-
-    for filename in buildinfo['relocate_textfiles']:
-        path_name = os.path.join(installpath, filename)
-        spack.relocate.relocate_text(path_name, old_path, new_path)
+    relocate_package(installpath)
 
 
 def get_specs():
