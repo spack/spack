@@ -121,8 +121,12 @@ def isolate_environment():
 
     username, group = get_username_and_group()
     #restart the command in the chroot jail
-    os.system ("sudo chroot --userspec=%s:%s %s /home/spack/bin/spack %s"
-        % (username, group, spack.spack_bootstrap_root, ' '.join(sys.argv[1:])))
+
+    chrootCommand = "chroot %s /home/spack/bin/spack %s" \
+        % (spack.spack_bootstrap_root, ' '.join(sys.argv[1:]))
+    os.system("unshare --user --map-root-user --mount-proc --pid --fork sh -c '%s'" % chrootCommand)
+    #os.system ("sudo chroot --userspec=%s:%s %s /home/spack/bin/spack %s"
+    #    % (username, group, spack.spack_bootstrap_root, ' '.join(sys.argv[1:])))
 
     if not existed:
         remove_chroot_enviroment(spack.spack_bootstrap_root)
