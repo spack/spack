@@ -80,7 +80,6 @@ class Qmcpack(CMakePackage):
     depends_on('espresso@5.3.0+qmcpackconv~elpa', when='+mpi')
     depends_on('espresso@5.3.0+qmcpackconv~elpa~scalapack~mpi', when='~mpi')
 
-    
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
         # for libxml2, so we fix that.
@@ -90,7 +89,7 @@ class Qmcpack(CMakePackage):
 
     def cmake_args(self):
         args = []
-        
+
         if '+mpi' in self.spec:
             mpi = self.spec['mpi']
             args.append('-DCMAKE_C_COMPILER={0}'.format(mpi.mpicc))
@@ -161,10 +160,7 @@ class Qmcpack(CMakePackage):
     def check_build(self):
         """Run ctest after building binary.
         Use 'spack install --run-tests qmcpack'.
-        It can take 24 hours to run all the regression tests. 
+        It can take 24 hours to run all the regression tests.
         We only run the unit tests and short tests."""
         ctest('-L unit')
         ctest('-R short')
-
-
-
