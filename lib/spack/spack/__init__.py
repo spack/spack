@@ -174,7 +174,7 @@ isolate = _config.get('isolate', False)
 # isolate --remove-enviroment without being trapped inside a chroot jail
 if isolate and sys.argv[1] != 'isolate':
     if spack_root != "/home/spack":
-        isolate_enviroment()
+        isolate_environment()
         sys.exit(0) #exit main process because it wasn't called in a chroot jail
 
 #-----------------------------------------------------------------------------
