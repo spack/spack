@@ -50,7 +50,7 @@ class Astral(Package):
         install(script_sh, script)
         set_executable(script)
 
-        java = join_path(self.spec['jdk'].prefix, 'bin', 'java')
+        java = self.spec['jdk'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('astral.jar', join_path(prefix.tools, jar_file),
