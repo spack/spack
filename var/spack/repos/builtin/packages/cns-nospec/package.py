@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 import glob
 
 
@@ -58,8 +57,12 @@ class CnsNospec(MakefilePackage):
         if '+mpi' in spec:
             def_file.filter('FC.*:=.*', 'FC = {0}'.format(spec['mpi'].mpifc))
             def_file.filter('F90.*:=.*', 'F90 = {0}'.format(spec['mpi'].mpifc))
-            def_file.filter('mpi_include_dir =.*', 'mpi_include_dir = {0}'.format(join_path(spec['mpi'].prefix), 'include'))
-            def_file.filter('mpi_lib_dir =.*', 'mpi_lib_dir = {0}'.format(join_path(spec['mpi'].prefix), 'lib'))
+            def_file.filter(
+                'mpi_include_dir =.*',
+                'mpi_include_dir = {0}'.format(spec['mpi'].prefix.include))
+            def_file.filter(
+                'mpi_lib_dir =.*',
+                'mpi_lib_dir = {0}'.format(spec['mpi'].prefix.lib))
 
         with working_dir(self.build_directory):
             makefile = FileFilter('GNUmakefile')
@@ -87,7 +90,8 @@ class CnsNospec(MakefilePackage):
     def build_targets(self):
         spec = self.spec
         if '+mpi' in spec:
-            return ['CC = {0}'.format(spec['mpi'].mpicc), 'CXX = {0}'.format(spec['mpi'].mpicxx)]
+            return ['CC = {0}'.format(spec['mpi'].mpicc),
+                    'CXX = {0}'.format(spec['mpi'].mpicxx)]
         else:
             return []
 
