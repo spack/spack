@@ -80,11 +80,16 @@ class Qmcpack(CMakePackage):
     depends_on('espresso@5.3.0+qmcpackconv~elpa', when='+mpi')
     depends_on('espresso@5.3.0+qmcpackconv~elpa~scalapack~mpi', when='~mpi')
 
-    def cmake_args(self):
-        args = []
-
+    
+    def patch(self):
+        # FindLibxml2QMC.cmake doesn't check the environment by default
+        # for libxml2, so we fix that.
         filter_file(r'$ENV{LIBXML2_HOME}/lib',
                     '${LIBXML2_HOME}/lib $ENV{LIBXML2_HOME}/lib',
+                    'CMake/FindLibxml2QMC.cmake')
+
+    def cmake_args(self):
+        args = []
         
         if '+mpi' in self.spec:
             mpi = self.spec['mpi']
