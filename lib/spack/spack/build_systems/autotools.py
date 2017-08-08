@@ -291,49 +291,112 @@ class AutotoolsPackage(PackageBase):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
 
-    def _activate_or_not(self, active, inactive, name, active_parameters=None):
+    def _activate_or_not(self, active, inactive, name, activation=None):
+        """This function contains the current implementation details of
+        :py:meth:`~.AutotoolsPackage.with_or_without` and
+        :py:meth:`~.AutotoolsPackage.enable_or_disable`.
+
+        Args:
+            active (str): the default activation word ('with' in the case
+                of ``with_or_without``)
+            inactive (str): the default de-activation word ('without' in
+                the case of ``with_or_without``)
+            name (str): name of the variant that is being processed
+            activation (callable): callable that accepts a single
+                value and returns the parameter to be used leading to an entry
+                of the type '--{active}-{name}={parameter}
+
+        Returns:
+            list of strings that corresponds to the activation/deactivation
+            of the variant that has been processed
+        """
         spec = self.spec
         args = []
+
+        if activation == 'prefix':
+            activation = lambda x: spec[x].prefix
+
+        # Construct a list of option names and option values to be
+        # substituted later
+        if self.variants[name].values == (True, False):
+            # BoolValuedVariant carry information about a single option.
+            # Nonetheless, for uniformity of treatment we'll package them
+            # in an iterable of one element.
+            condition = '+{name}'.format(name=name)
+            options = [(name, condition in spec)]
+        else:
+            condition = '{name}={value}'
+            options = [
+                (value, condition.format(name=name, value=value) in spec)
+                for value in self.variants[name].values
+            ]
+
         # For each allowed value in the list of values
-        for value in self.variants[name].values:
-            # Check if the value is active in the current spec
-            condition = '{name}={value}'.format(name=name, value=value)
-            activated = condition in spec
+        for option_name, activated in options:
             # Search for an override in the package for this value
-            override_name = '{0}_or_{1}_{2}'.format(active, inactive, value)
+            override_name = '{0}_or_{1}_{2}'.format(
+                active, inactive, option_name
+            )
             line_generator = getattr(self, override_name, None)
             # If not available use a sensible default
             if line_generator is None:
                 def _default_generator(is_activated):
                     if is_activated:
-                        line = '--{0}-{1}'.format(active, value)
-                        if active_parameters is not None and active_parameters(value):  # NOQA=ignore=E501
-                            line += '={0}'.format(active_parameters(value))
+                        line = '--{0}-{1}'.format(active, option_name)
+                        if activation is not None and activation(option_name):  # NOQA=ignore=E501
+                            line += '={0}'.format(
+                                activation(option_name)
+                            )
                         return line
-                    return '--{0}-{1}'.format(inactive, value)
+                    return '--{0}-{1}'.format(inactive, option_name)
                 line_generator = _default_generator
             args.append(line_generator(activated))
         return args
 
-    def with_or_without(self, name, active_parameters=None):
-        """Inspects the multi-valued variant 'name' and returns the configure
-        arguments that activate / deactivate the selected feature.
+    def with_or_without(self, name, activation=None):
+        """Inspects a variant and returns the arguments that activate
+        or deactivate the selected feature(s).
 
-        :param str name: name of a valid multi-valued variant
-        :param callable active_parameters: if present accepts a single value
-            and returns the parameter to be used leading to an entry of the
-            type '--with-{name}={parameter}
+        This function works on all type of variants. For bool-valued variants
+        it will return by default ``--with-{name}`` or ``--without-{name}``.
+        For other kinds of variants it will cycle over the allowed values and
+        return either ``--with-{value}`` or ``--without-{value}``.
+
+        If activation is given it will be used to compute a return parameter
+        value of the form ``--with-{name}=activation(name)`` in case
+        the corresponding option needs to be activated.
+
+        Args:
+            name (str): name of a valid multi-valued variant
+            activation (callable): callable that accepts a single
+                value and returns the parameter to be used leading to an entry
+                of the type ``--with-{name}={parameter}``.
+
+                The special value 'prefix' can also be assigned and will return
+                ``spec[name].prefix`` as activation parameter.
+
+        Returns:
+            list of arguments to configure
         """
         return self._activate_or_not(
-            'with', 'without', name, active_parameters
+            'with', 'without', name, activation
         )
 
-    def enable_or_disable(self, name, active_parameters=None):
-        """Inspects the multi-valued variant 'name' and returns the configure
-        arguments that activate / deactivate the selected feature.
+    def enable_or_disable(self, name, activation=None):
+        """Same as :py:meth:`~.AutotoolsPackage.with_or_without` but substitute
+        ``with`` with ``enable`` and ``without`` with ``disable``.
+
+        Args:
+            name (str): name of a valid multi-valued variant
+            activation (callable): if present accepts a single value
+                and returns the parameter to be used leading to an entry of the
+                type ``--enable-{name}={parameter}``
+
+        Returns:
+            list of arguments to configure
         """
         return self._activate_or_not(
-            'enable', 'disable', name, active_parameters
+            'enable', 'disable', name, activation
         )
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)

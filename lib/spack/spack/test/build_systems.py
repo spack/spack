@@ -61,7 +61,7 @@ class TestAutotoolsPackage(object):
         def activate(value):
             return 'something'
 
-        l = pkg.with_or_without('foo', active_parameters=activate)
+        l = pkg.with_or_without('foo', activation=activate)
         assert '--with-bar=something' in l
         assert '--without-baz' in l
         assert '--no-fee' in l
@@ -70,3 +70,6 @@ class TestAutotoolsPackage(object):
         assert '--enable-bar' in l
         assert '--disable-baz' in l
         assert '--disable-fee' in l
+
+        l = pkg.with_or_without('bvv')
+        assert '--with-bvv' in l

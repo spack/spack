@@ -270,7 +270,7 @@ class Openmpi(AutotoolsPackage):
             return '--without-{0}'.format(opt)
         line = '--with-{0}'.format(opt)
         path = _mxm_dir()
-        if (path is not None):
+        if path is not None:
             line += '={0}'.format(path)
         return line
 
@@ -295,8 +295,8 @@ class Openmpi(AutotoolsPackage):
             config_args.extend(['--enable-mpi-cxx'])
 
         # Fabrics and schedulers
-        config_args.extend(self.with_or_without('fabrics'))
-        config_args.extend(self.with_or_without('schedulers'))
+        config_args += self.with_or_without('fabrics')
+        config_args += self.with_or_without('schedulers')
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
