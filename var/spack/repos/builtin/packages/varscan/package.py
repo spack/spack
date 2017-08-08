@@ -35,7 +35,7 @@ class Varscan(Package):
 
     version('2.4.2', '4b810741505a8145a7f8f9f6791bbacf', expand=False)
 
-    depends_on('jdk', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
@@ -48,7 +48,7 @@ class Varscan(Package):
         install(script_sh, script)
         set_executable(script)
 
-        java = join_path(self.spec['jdk'].prefix, 'bin', 'java')
+        java = join_path(self.spec['java'].prefix, 'bin', 'java')
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('varscan.jar', join_path(prefix.jar, jar_file),
