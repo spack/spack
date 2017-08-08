@@ -69,8 +69,7 @@ options:
 
 -d <path> : directory in which "build_cache" direcory is created, defaults to "."
 -f : overwrite ".spack" file in "build_cache" directory if it exists
--k <key> : the key to sign package with. In the case where multiple keys exist,
-     the package will be unsigned unless -k is used.
+-k <key> : the key to sign package with. In the case where multiple keys exist, the package will be unsigned unless -k is used.
 -r : make paths in binaries relative before creating tarball
 -y : answer yes to all create unsigned "build_cache" questions
 <> : list of package specs or package hashes with leading /

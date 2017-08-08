@@ -229,7 +229,6 @@ def test_relocate():
     out = substitute_rpath(
         ('/usr/lib', '/usr/lib64', '/opt/local/lib'), '/usr', '/opt')
     assert out == ['/opt/lib', '/opt/lib64', '/opt/local/lib']
-    print str(sys.platform)
 
 
 @pytest.mark.skipif(sys.platform != 'darwin',
