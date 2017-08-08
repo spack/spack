@@ -33,7 +33,7 @@ class Fseq(Package):
 
     version('1.84', 'f9124ad0f45c60f3a7eb74dde8c945b9')
 
-    depends_on('jdk', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)

@@ -50,7 +50,6 @@ class Clhep(CMakePackage):
     version('2.2.0.5', '1584e8ce6ebf395821aed377df315c7c')
     version('2.2.0.4', '71d2c7c2e39d86a0262e555148de01c1')
 
-    variant('debug', default=False, description="Switch to the debug version of CLHEP.")
     variant('cxx11', default=True, description="Compile using c++11 dialect.")
     variant('cxx14', default=False, description="Compile using c++14 dialect.")
 
@@ -65,25 +64,23 @@ class Clhep(CMakePackage):
 
     root_cmakelists_dir = 'CLHEP'
 
-    def build_type(self):
-        spec = self.spec
-
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'MinSizeRel'
-
     def cmake_args(self):
         spec = self.spec
         cmake_args = []
 
         if '+cxx11' in spec:
-            env['CXXFLAGS'] = self.compiler.cxx11_flag
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx11_flag
             cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
                               self.compiler.cxx11_flag)
 
         if '+cxx14' in spec:
-            env['CXXFLAGS'] = self.compiler.cxx14_flag
+            if 'CXXFLAGS' in env and env['CXXFLAGS']:
+                env['CXXFLAGS'] += ' ' + self.compiler.cxx14_flag
+            else:
+                env['CXXFLAGS'] = self.compiler.cxx14_flag
             cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
                               self.compiler.cxx14_flag)
 

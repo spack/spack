@@ -41,20 +41,12 @@ class Flecsi(CMakePackage):
 
     version('develop', git='https://github.com/laristra/flecsi', branch='master', submodules=True)
 
-    variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
 
     depends_on("cmake@3.1:", type='build')
     depends_on("legion+shared", when='~mpi')
     depends_on("legion+shared+mpi", when='+mpi')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         options = ['-DENABLE_UNIT_TESTS=ON']
