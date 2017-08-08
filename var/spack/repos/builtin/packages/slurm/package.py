@@ -48,17 +48,13 @@ class Slurm(AutotoolsPackage):
     variant('gtk', default=False, description='Enable GTK+ support')
     variant('mariadb', default=False, description='Use MariaDB instead of MySQL')
 
-    variant(
-        'features',
-        values=('hwloc', 'hdf5'),
-        default='hwloc',
-        multi=True,
-        description='Enable a few selected features of Slurm'
-    )
+    variant('hwloc', default=False, description='Enable hwloc support')
+    variant('hdf5', default=False, description='Enable hdf5 support')
+    variant('readline', default=True, description='Enable readline support')
 
     # TODO: add variant for BG/Q and Cray support
 
-    # TODO: add support for checkpoint/restart
+    # TODO: add support for checkpoint/restart (BLCR)
 
     # TODO: add support for lua
 
@@ -68,13 +64,13 @@ class Slurm(AutotoolsPackage):
     depends_on('lz4')
     depends_on('munge')
     depends_on('openssl')
-    depends_on('pkg-config')
+    depends_on('pkg-config', type='build')
     depends_on('readline')
     depends_on('zlib')
 
     depends_on('gtkplus+X', when='+gtk')
-    depends_on('hdf5~mpi', when='features=hdf5')
-    depends_on('hwloc', when='features=hwloc')
+    depends_on('hdf5', when='+hdf5')
+    depends_on('hwloc', when='+hwloc')
     depends_on('mariadb', when='+mariadb')
 
     def configure_args(self):
@@ -93,11 +89,21 @@ class Slurm(AutotoolsPackage):
         if '~gtk' in spec:
             args.append('--disable-gtktest')
 
-        def activation_argument(name):
-            if name == 'hdf5':
-                return spec[name].prefix.bin.h5cc
-            return spec[name].prefix
+        if '+readline' in spec:
+            args.append('--with-readline={0}'.format(spec['readline'].prefix))
+        else:
+            args.append('--without-readline')
 
-        args.extend(self.with_or_without('features', activation_argument))
+        if '+hdf5' in spec:
+            args.append(
+                '--with-hdf5={0}'.format(spec['hdf5'].prefix.bin.h5cc)
+            )
+        else:
+            args.append('--without-hdf5')
+
+        if '+hwloc' in spec:
+            args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
+        else:
+            args.append('--without-hwloc')
 
         return args
