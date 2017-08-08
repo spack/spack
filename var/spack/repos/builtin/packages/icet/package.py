@@ -40,3 +40,7 @@ class Icet(CMakePackage):
 
     def cmake_args(self):
         return ['-DICET_USE_OPENGL:BOOL=OFF']
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """Work-around for ill-placed CMake modules"""
+        spack_env.prepend_path('CMAKE_PREFIX_PATH', self.prefix.lib)
