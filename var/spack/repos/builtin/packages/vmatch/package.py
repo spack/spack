@@ -34,5 +34,9 @@ class Vmatch(Package):
 
     version('2.3.0', '592a4f941239494d892f3c6ff21a1423')
 
+    def url_for_version(self, version):
+        url = 'http://www.vmatch.de/distributions/vmatch-{0}-Linux_x86_64-64bit.tar.gz'
+        return url.format(version)
+
     def install(self, spec, prefix):
         install_tree(self.stage.source_path, prefix.bin)
