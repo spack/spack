@@ -9,7 +9,7 @@ This guide provides information specific to a particular build system.
 It assumes knowledge of general Spack packaging capabilities and expands
 on these ideas for each distinct build system that Spack supports.
 
-For reference, the `Build System API docs :py:mod:`spack.build_systems`
+For reference, the :py:mod:`Build System API docs <spack.build_systems>`
 provide a list of build systems and methods/attributes that can be
 overridden. If you are curious about the implementation of a particular
 build system, you can view the source code by running:
@@ -466,7 +466,7 @@ The ``QMakePackage`` base class comes with the following phases:
 
 By default, these phases run:
 
-.. code-block::
+.. code-block:: console
 
    $ qmake
    $ make
@@ -494,7 +494,7 @@ like build instructions and dependencies.
 
 One thing to look for is the ``minQtVersion`` function:
 
-.. code-block::
+.. code-block:: none
 
    minQtVersion(5, 6, 0)
 
