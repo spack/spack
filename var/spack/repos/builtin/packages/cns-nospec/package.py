@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 import glob
 
 
@@ -49,6 +50,14 @@ class CnsNospec(MakefilePackage):
     build_directory = 'MiniApps/CNS_NoSpec'
 
     def edit(self, spec, prefix):
+        def_file = FileFilter('Tools/F_mk/GMakedefs.mak')
+        def_file.filter('tdir = t/.*', 'tdir := t/$(suf)')
+        def_file.filter('hdir = t/.*', 'hdir := t/html')
+        def_file.filter('include $(BOXLIB_HOME)/Tools/F_mk/GMakeMPI.mak', '#')
+        def_file.filter('FC.*:=.*', 'FC = {0}'.format(spec['mpi'].mpifc))
+        def_file.filter('F90.*:=.*', 'F90 = {0}'.format(spec['mpi'].mpifc))
+        def_file.filter('mpi_include_dir =.*', 'mpi_include_dir = {0}'.format(join_path(spec['mpi'].prefix), 'include'))
+        def_file.filter('mpi_lib_dir =.*', 'mpi_lib_dir = {0}'.format(join_path(spec['mpi'].prefix), 'lib'))
         with working_dir(self.build_directory):
             makefile = FileFilter('GNUmakefile')
             if '+mpi' in spec:
@@ -60,6 +69,29 @@ class CnsNospec(MakefilePackage):
             if '+prof' in spec:
                 makefile.filter('PROF.*', 'PROF := t')
 
+            if self.compiler.name == 'gcc':
+                makefile.filter('COMP .*', 'COMP = gfortran')
+            if self.compiler.name == 'intel':
+                makefile.filter('COMP .*', 'COMP = Intel')
+            if self.compiler.name == 'pgi':
+                makefile.filter('COMP .*', 'COMP = PGI')
+            if self.compiler.name == 'xl':
+                makefile.filter('COMP .*', 'COMP = IBM')
+            if self.compiler.name == 'cce':
+                makefile.filter('COMP .*', 'COMP = Cray')
+
+    @property
+    def build_targets(self):
+        spec = self.spec
+        if '+mpi' in spec:
+            return ['CC = {0}'.format(spec['mpi'].mpicc), 'CXX = {0}'.format(spec['mpi'].mpicxx)]
+        else:
+            return []
+
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory):
+            gmake()
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         files = glob.glob(join_path(self.build_directory, '*.exe'))
@@ -67,3 +99,4 @@ class CnsNospec(MakefilePackage):
             install(f, prefix.bin)
         install('README.txt', prefix)
         install('license.txt', prefix)
+        install(join_path(self.build_directory, 'README'), prefix)
