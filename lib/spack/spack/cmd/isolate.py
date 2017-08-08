@@ -37,14 +37,18 @@ description = "starts an isolated bash session for spack"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '--build-enviroment', action='store_true', dest='build_enviroment',
+        '--build-environment', action='store_true', dest='build_enviroment',
         help="startup the isolation mode enviroment")
     subparser.add_argument(
-        '--remove-enviroment', action='store_false', dest='build_enviroment',
+        '--remove-environment', action='store_false', dest='build_enviroment',
         help="shutdown the isolation mode enviroment")
     subparser.add_argument(
-        '--start-enviroment', action='store_true', dest='start_enviroment',
+        '--start-environment', action='store_true', dest='start_enviroment',
         help="start a local bash in the generated enviroment")
+    subparser.add_argument(
+        '--permanent', action='store_true', dest='permanent',
+        help="""generate a permanent chroot environment to require
+administrator rights when using spack as an user""")
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="start a local bash in the generated enviroment")
@@ -55,6 +59,8 @@ def isolate(parser, args):
 
     force = args.force
     build_enviroment = args.build_enviroment
+    permanent = args.permanent
+
     if build_enviroment:
         if not os.path.exists(lockFile) or force:
             tty.msg("Startup bootstraped enviroment")
@@ -67,7 +73,7 @@ def isolate(parser, args):
             mkdirp(tmp)
             mkdirp(install_dir)
 
-            build_chroot_enviroment(spack.spack_bootstrap_root)
+            build_chroot_enviroment(spack.spack_bootstrap_root, permanent)
 
             #update the config to set the isolation mode active
             config = spack.config.get_config("config", "site")
@@ -81,9 +87,11 @@ def isolate(parser, args):
 
             config = spack.config.get_config("config", "site")
             config['isolate'] = False
+            wasPermanent = config['permanent']
+            config['permanent'] = False
             spack.config.update_config("config", config, "site")
 
-            remove_chroot_enviroment(spack.spack_bootstrap_root)
+            remove_chroot_enviroment(spack.spack_bootstrap_root, wasPermanent)
             os.remove(lockFile)
 
     if args.start_enviroment:

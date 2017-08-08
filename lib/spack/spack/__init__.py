@@ -31,9 +31,9 @@ import getpass
 from llnl.util.filesystem import *
 import llnl.util.tty as tty
 
-from spack.util.chroot import build_chroot_enviroment,  \
-                              remove_chroot_enviroment, \
-                              isolate_enviroment
+from spack.util.chroot import build_chroot_environment,  \
+                              remove_chroot_environment, \
+                              isolate_environment
 
 #-----------------------------------------------------------------------------
 # Variables describing how Spack is laid out in its prefix.
