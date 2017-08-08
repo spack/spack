@@ -25,46 +25,21 @@
 from spack import *
 
 
-class A(AutotoolsPackage):
-    """Simple package with one optional dependency"""
+class Transabyss(Package):
+    """De novo assembly of RNAseq data using ABySS"""
 
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/a-1.0.tar.gz"
+    homepage = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss"
+    url      = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss/releases/1.5.5/transabyss-1.5.5.zip"
 
-    version('1.0', '0123456789abcdef0123456789abcdef')
-    version('2.0', '2.0_a_hash')
+    version('1.5.5', '9ebe0394243006f167135cac4df9bee6')
 
-    variant(
-        'foo',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=True
-    )
-
-    variant(
-        'foobar',
-        values=('bar', 'baz', 'fee'),
-        default='bar',
-        description='',
-        multi=False
-    )
-
-    depends_on('b', when='foobar=bar')
-
-    def with_or_without_fee(self, activated):
-        if not activated:
-            return '--no-fee'
-        return '--fee-all-the-time'
-
-    def autoreconf(self, spec, prefix):
-        pass
-
-    def configure(self, spec, prefix):
-        pass
-
-    def build(self, spec, prefix):
-        pass
+    depends_on('abyss@1.5.2')
+    depends_on('python@2.7.6:', type=('build', 'run'))
+    depends_on('py-igraph@0.7.0:', type=('build', 'run'))
+    depends_on('blat')
 
     def install(self, spec, prefix):
-        pass
+        install('transabyss', prefix)
+        install('transabyss-merge', prefix)
+        install_tree('bin', prefix.bin)
+        install_tree('utilities', prefix.utilities)

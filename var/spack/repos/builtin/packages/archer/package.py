@@ -44,7 +44,7 @@ class Archer(CMakePackage):
             '-G', 'Ninja',
             '-DCMAKE_C_COMPILER=clang',
             '-DCMAKE_CXX_COMPILER=clang++',
-            '-DOMP_PREFIX:PATH=%s' % spec['llvm-openmp-ompt'].prefix,
+            '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
         ]
 
     # TODO: Add better ninja support to CMakePackage

@@ -78,7 +78,7 @@ class Openspeedshop(CMakePackage):
     variant('cuda', default=False,
             description="build with cuda packages included.")
 
-    variant('gui', default='qt3', values=('none', 'qt3', 'qt4'), 
+    variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
             description='Build or not build a GUI of choice'
     )
 
@@ -111,7 +111,7 @@ class Openspeedshop(CMakePackage):
     depends_on("libtool", type='build')
     depends_on("bison", type='build')
     depends_on("flex", type='build')
-    depends_on("binutils@2.24+krellpatch", type='build')
+    depends_on("binutils", type='build')
     depends_on("elf", type="link")
     depends_on("libdwarf")
     depends_on("sqlite")
