@@ -37,9 +37,13 @@ class Astral(Package):
 
     depends_on('jdk', type=('build', 'run'))
 
-    def install(self, spec, prefix):
+    phases = ['build', 'install']
+
+    def build(self, spec, prefix):
         make = Executable('./make.sh')
         make()
+
+    def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install_tree('lib', prefix.tools.lib)
         jar_file = 'astral.{v}.jar'.format(v=self.version)
