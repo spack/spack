@@ -41,4 +41,8 @@ class Otf2(AutotoolsPackage):
     version('1.2.1', '8fb3e11fb7489896596ae2c7c83d7fc8')
 
     def configure_args(self):
-        return ["--enable-shared", "CFLAGS=-fPIC", "CXXFLAGS=-fPIC"]
+        return [
+            '--enable-shared',
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+        ]
