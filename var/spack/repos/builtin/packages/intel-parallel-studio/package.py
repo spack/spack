@@ -169,16 +169,19 @@ class IntelParallelStudio(IntelPackage):
             mkl_integer = ['libmkl_intel_lp64']
 
         mkl_threading = ['libmkl_sequential']
+        omp_threading = []
 
         if '+openmp' in spec:
             if '%intel' in spec:
-                mkl_threading = ['libmkl_intel_thread', 'libiomp5']
+                mkl_threading = ['libmkl_intel_thread']
+                omp_threading = ['libiomp5']
             else:
                 mkl_threading = ['libmkl_gnu_thread']
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
-        mkl_root = join_path(prefix, 'mkl', 'lib', 'intel64')
+        mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        omp_root = prefix.compilers_and_libraries.linux.lib.intel64
 
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
@@ -186,13 +189,15 @@ class IntelParallelStudio(IntelPackage):
             shared=shared
         )
 
+        omp_libs = find_libraries(omp_threading, root=omp_root, shared=shared)
+
         # Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(
             ['libpthread', 'libm', 'libdl'],
             shared=shared
         )
 
-        return mkl_libs + system_libs
+        return mkl_libs + omp_libs + system_libs
 
     @property
     def lapack_libs(self):
@@ -215,16 +220,38 @@ class IntelParallelStudio(IntelPackage):
         # elif self.spec.satisfies('^intel-parallel-studio'):
         #     libnames.append('libmkl_blacs_intelmpi')
         else:
-            raise InstallError("No MPI found for scalapack")
+            raise InstallError('No MPI found for scalapack')
 
-        shared = True if '+shared' in self.spec else False
         integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
+        mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        shared = True if '+shared' in self.spec else False
+
         libs = find_libraries(
             ['{0}_{1}'.format(l, integer) for l in libnames],
-            root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
+            root=mkl_root,
             shared=shared
         )
         return libs
+
+    @property
+    def mpi_libs(self):
+        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.lib64
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpifort', 'libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpicxx'] + libraries
+
+        return find_libraries(
+            libraries, root=mpi_root, shared=True, recurse=True
+        )
+
+    @property
+    def mpi_headers(self):
+        # recurse from self.prefix will find too many things for all the
+        # supported sub-architectures like 'mic'
+        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
+        return find_headers('mpi', root=mpi_root, recurse=False)
 
     @property
     def components(self):
@@ -419,11 +446,12 @@ class IntelParallelStudio(IntelPackage):
                     os.path.join(bindir, 'psxevars.csh'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('I_MPI_CC',  spack_cc)
-        spack_env.set('I_MPI_CXX', spack_cxx)
-        spack_env.set('I_MPI_F77', spack_fc)
-        spack_env.set('I_MPI_F90', spack_f77)
-        spack_env.set('I_MPI_FC',  spack_fc)
+        if '+mpi' in self.spec or '+all' in self.spec:
+            spack_env.set('I_MPI_CC',  spack_cc)
+            spack_env.set('I_MPI_CXX', spack_cxx)
+            spack_env.set('I_MPI_F77', spack_fc)
+            spack_env.set('I_MPI_F90', spack_f77)
+            spack_env.set('I_MPI_FC',  spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
         if '+mpi' in self.spec or '+all' in self.spec:
