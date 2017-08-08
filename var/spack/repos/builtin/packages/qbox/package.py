@@ -71,24 +71,9 @@ class Qbox(MakefilePackage):
         with open('src/spack.mk', 'w') as mkfile:
             mkfile.write('CXX = {0}\n'.format(spec['mpi'].mpicxx))
             mkfile.write('LD = $(CXX)\n')
-            mkfile.write('LIBPATH = {0}\n'.format(' -L'.join((
-                '',  # For -L in first element
-                spec['fftw'].prefix.lib,
-                spec['xerces-c'].prefix.lib,
-                spec['scalapack'].prefix.lib,
-                spec['blas'].prefix.lib,
-            ))))
-            blas_names = spec['blas'].libs.names
-            mkfile.write('LIBS = {0}\n'.format(' -l'.join(
-                ['', 'fftw3',  'scalapack', 'xerces-c'] + blas_names
-            )))
-            mkfile.write('LDFLAGS = $(LIBPATH) $(LIBS)\n')
-            mkfile.write('INCLUDE = {0}\n'.format(' -I'.join((
-                '',
-                spec['scalapack'].prefix.include,
-                spec['xerces-c'].prefix.include,
-                spec['fftw'].prefix.include,
-            ))))
+            qbox_libs = spec['fftw'].libs + spec['xerces-c'].libs + \
+                spec['scalapack'].libs + spec['blas'].libs
+            mkfile.write('LDFLAGS = {0}\n'.format(qbox_libs.ld_flags))
             mkfile.write('DFLAGS = {0}\n'.format(' -D'.join((
                 '',
                 '_LARGEFILE_SOURCE', 'USE_MPI', 'USE_XERCES',
@@ -96,7 +81,7 @@ class Qbox(MakefilePackage):
                 'USE_FFTW3', 'FFTWMEASURE', 'FFTW3_2D', 'ADD_',
             ))))
             mkfile.write('CXXFLAGS = {0}\n'.format(' '.join((
-                '-g', '-O3', '$(INCLUDE)', '$(DFLAGS)',
+                '-g', '-O3', '$(DFLAGS)',
             ))))
         filter_file('$(TARGET)', 'spack', 'src/Makefile', string=True)
 
