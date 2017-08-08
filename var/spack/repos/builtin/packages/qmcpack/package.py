@@ -85,16 +85,7 @@ class Qmcpack(CMakePackage):
 
         filter_file(r'$ENV{LIBXML2_HOME}/lib',
                     '${LIBXML2_HOME}/lib $ENV{LIBXML2_HOME}/lib',
-                    'CMake/FindLibxml2QMC.cmake')
-
-        if 'cxxflags' in self.compiler.flags:
-            cxx_flags = ' '.join(self.compiler.flags['cxxflags'])
-            args.append('-DCMAKE_CXX_FLAGS={0}'.format(cxx_flags))
-
-        if 'cflags' in self.compiler.flags:
-            c_flags = ' '.join(self.compiler.flags['cflags'])
-            args.append('-DCMAKE_C_FLAGS={0}'.format(c_flags))
-
+        
         if '+mpi' in self.spec:
             mpi = self.spec['mpi']
             args.append('-DCMAKE_C_COMPILER={0}'.format(mpi.mpicc))
