@@ -35,7 +35,7 @@ class Astral(Package):
 
     version('4.10.7', '38c81020570254e3f5c75d6c3c27fc6d')
 
-    depends_on('jdk', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
 
     phases = ['build', 'install']
 
@@ -54,7 +54,7 @@ class Astral(Package):
         install(script_sh, script)
         set_executable(script)
 
-        java = self.spec['jdk'].prefix.bin.java
+        java = self.spec['java'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('astral.jar', join_path(prefix.tools, jar_file),
