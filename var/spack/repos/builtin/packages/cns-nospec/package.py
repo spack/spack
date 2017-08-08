@@ -54,10 +54,13 @@ class CnsNospec(MakefilePackage):
         def_file.filter('tdir = t/.*', 'tdir := t/$(suf)')
         def_file.filter('hdir = t/.*', 'hdir := t/html')
         def_file.filter('include $(BOXLIB_HOME)/Tools/F_mk/GMakeMPI.mak', '#')
-        def_file.filter('FC.*:=.*', 'FC = {0}'.format(spec['mpi'].mpifc))
-        def_file.filter('F90.*:=.*', 'F90 = {0}'.format(spec['mpi'].mpifc))
-        def_file.filter('mpi_include_dir =.*', 'mpi_include_dir = {0}'.format(join_path(spec['mpi'].prefix), 'include'))
-        def_file.filter('mpi_lib_dir =.*', 'mpi_lib_dir = {0}'.format(join_path(spec['mpi'].prefix), 'lib'))
+
+        if '+mpi' in spec:
+            def_file.filter('FC.*:=.*', 'FC = {0}'.format(spec['mpi'].mpifc))
+            def_file.filter('F90.*:=.*', 'F90 = {0}'.format(spec['mpi'].mpifc))
+            def_file.filter('mpi_include_dir =.*', 'mpi_include_dir = {0}'.format(join_path(spec['mpi'].prefix), 'include'))
+            def_file.filter('mpi_lib_dir =.*', 'mpi_lib_dir = {0}'.format(join_path(spec['mpi'].prefix), 'lib'))
+
         with working_dir(self.build_directory):
             makefile = FileFilter('GNUmakefile')
             if '+mpi' in spec:
