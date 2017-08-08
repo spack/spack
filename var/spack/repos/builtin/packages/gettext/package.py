@@ -54,6 +54,7 @@ class Gettext(AutotoolsPackage):
     # depends_on('gzip',     when='+gzip')
     depends_on('bzip2',    when='+bzip2')
     depends_on('xz',       when='+xz')
+    depends_on('patch', type="build")
 
     # Optional dependencies
     # depends_on('glib')  # circular dependency?
