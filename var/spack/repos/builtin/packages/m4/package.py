@@ -41,6 +41,7 @@ class M4(AutotoolsPackage):
             description="Build the libsigsegv dependency")
 
     depends_on('libsigsegv', when='+sigsegv')
+    depends_on('patch', type='build')
 
     build_directory = 'spack-build'
 
