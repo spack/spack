@@ -66,7 +66,7 @@ class Bcl2fastq2(Package):
     # who knows what the future will hold.
     def url_for_version(self, version):
         if version.string == '2.19.1.403':
-           return "ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v2.19.1-tar.zip"
+            return "ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v2.19.1-tar.zip"
         else:
             url = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
             # - required to change the version from dots to dashes.
