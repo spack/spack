@@ -57,9 +57,14 @@ class Openblas(MakefilePackage):
     patch('make.patch', when='@0.2.16:')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
-    patch('openblas_icc.patch', when='%intel')
+    #  UPD: the patch has been merged starting version 0.2.20
+    patch('openblas_icc.patch', when='@:0.2.19%intel')
     patch('openblas_icc_openmp.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
+
+    # Fixes compilation error on POWER8 with GCC 7
+    # https://github.com/xianyi/OpenBLAS/pull/1098
+    patch('power8.patch', when='@0.2.18:0.2.19 %gcc@7.1.0: target=ppc64')
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982

@@ -26,7 +26,7 @@ from spack import *
 import glob
 
 
-class Magics(Package):
+class Magics(CMakePackage):
     """Magics is the latest generation of the ECMWF's Meteorological plotting
        software MAGICS. Although completely redesigned in C++, it is intended
        to be as backwards-compatible as possible with the Fortran interface."""
@@ -52,8 +52,11 @@ class Magics(Package):
     variant('metview', default=False, description='Enable metview support')
     variant('qt', default=False, description='Enable metview support with qt')
     variant('eccodes', default=False, description='Use eccodes instead of grib-api')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'Production'))
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.8.11:', type='build')
     depends_on('pkg-config', type='build')
 
     # Currently python is only necessary to run
@@ -80,53 +83,50 @@ class Magics(Package):
         for pyfile in glob.glob('*/*.py'):
             filter_file('#!/usr/bin/python', '#!/usr/bin/env python', pyfile)
 
-    def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
-        options.append('-DENABLE_ODB=OFF')
-        options.append('-DENABLE_PYTHON=OFF')
-        options.append('-DBOOST_ROOT=%s' % spec['boost'].prefix)
-        options.append('-DPROJ4_PATH=%s' % spec['proj'].prefix)
-        options.append('-DENABLE_TESTS=OFF')
+    def cmake_args(self):
+        args = [
+            '-DENABLE_ODB=OFF',
+            '-DENABLE_PYTHON=OFF',
+            '-DBOOST_ROOT=%s' % spec['boost'].prefix,
+            '-DPROJ4_PATH=%s' % spec['proj'].prefix,
+            '-DENABLE_TESTS=OFF',
+        ]
 
         if '+bufr' in spec:
-            options.append('-DENABLE_BUFR=ON')
-            options.append('-DLIBEMOS_PATH=%s' % spec['libemos'].prefix)
+            args.append('-DENABLE_BUFR=ON')
+            args.append('-DLIBEMOS_PATH=%s' % spec['libemos'].prefix)
         else:
-            options.append('-DENABLE_BUFR=OFF')
+            args.append('-DENABLE_BUFR=OFF')
 
         if '+netcdf' in spec:
-            options.append('-DENABLE_NETCDF=ON')
-            options.append('-DNETCDF_PATH=%s' % spec['netcdf-cxx'].prefix)
+            args.append('-DENABLE_NETCDF=ON')
+            args.append('-DNETCDF_PATH=%s' % spec['netcdf-cxx'].prefix)
         else:
-            options.append('-DENABLE_NETCDF=OFF')
+            args.append('-DENABLE_NETCDF=OFF')
 
         if '+cairo' in spec:
-            options.append('-DENABLE_CAIRO=ON')
+            args.append('-DENABLE_CAIRO=ON')
         else:
-            options.append('-DENABLE_CAIRO=OFF')
+            args.append('-DENABLE_CAIRO=OFF')
 
         if '+metview' in spec:
             if '+qt' in spec:
-                options.append('-DENABLE_METVIEW=ON')
+                args.append('-DENABLE_METVIEW=ON')
                 if spec['qt'].version[0] == 5:
-                    options.append('-DENABLE_QT5=ON')
+                    args.append('-DENABLE_QT5=ON')
             else:
-                options.append('-DENABLE_METVIEW_NO_QT=ON')
+                args.append('-DENABLE_METVIEW_NO_QT=ON')
         else:
-            options.append('-DENABLE_METVIEW=OFF')
+            args.append('-DENABLE_METVIEW=OFF')
 
         if '+eccodes' in spec:
-            options.append('-DENABLE_ECCODES=ON')
-            options.append('-DECCODES_PATH=%s' % spec['eccodes'].prefix)
+            args.append('-DENABLE_ECCODES=ON')
+            args.append('-DECCODES_PATH=%s' % spec['eccodes'].prefix)
         else:
-            options.append('-DENABLE_ECCODES=OFF')
-            options.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
+            args.append('-DENABLE_ECCODES=OFF')
+            args.append('-DGRIB_API_PATH=%s' % spec['grib-api'].prefix)
 
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            options.append('-DENABLE_FORTRAN=OFF')
+            args.append('-DENABLE_FORTRAN=OFF')
 
-        with working_dir('spack-build', create=True):
-            cmake('..', *options)
-            make()
-            make('install')
+        return args

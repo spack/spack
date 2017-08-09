@@ -40,7 +40,7 @@ class Nextflow(Package):
     version('0.17.3', '5df00105fb1ce6fd0ba019ae735d9617',
             expand=False)
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
