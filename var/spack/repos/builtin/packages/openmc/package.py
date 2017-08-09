@@ -42,6 +42,8 @@ class Openmc(MakefilePackage):
 
     build_directory = 'src'
 
+    parallel = False
+
     @property
     def build_targets(self):
 
