@@ -32,11 +32,11 @@ class Shapeit(Package):
     homepage = "https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.html"
     url      = "https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.v2.r837.GLIBCv2.12.Linux.dynamic.tgz"
 
-    version('r837', '895873bb655a0a985cbfd870fdd1dd60')
+    version('2.837', '895873bb655a0a985cbfd870fdd1dd60')
 
     def url_for_version(self, version):
-        url = 'https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.v2.{0}.GLIBCv2.12.Linux.dynamic.tgz'
-        return url.format(version)
+        url = 'https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.v{0}.r{1}.GLIBCv2.12.Linux.dynamic.tgz'
+        return url.format(version[0], version[1])
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
