@@ -35,7 +35,7 @@ class RdpClassifier(Package):
 
     version('2.12', '7fdfa33512629810f0ff06b905642ddd')
 
-    depends_on('jdk')
+    depends_on('java', type=('build', 'run'))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
