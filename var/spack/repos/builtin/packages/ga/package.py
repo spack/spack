@@ -44,7 +44,7 @@ class Ga(AutotoolsPackage):
     """Global Arrays (GA) is a Partitioned Global Address Space (PGAS)
        programming model."""
 
-    homepage = "http://www.example.com"
+    homepage = "http://hpc.pnl.gov/globalarrays/"
     url = "https://github.com/GlobalArrays/ga/archive/v5.6.1.tar.gz"
 
     version('5.6.1', 'bf63d6b4170eefa8548bcbd46912989b')
