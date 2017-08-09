@@ -100,8 +100,6 @@ class IntelParallelStudio(IntelPackage):
             description='64 bit integers')
     variant('openmp',   default=False,
             description='OpenMP multithreading layer')
-    variant('all',      default=False,
-            description='Install all components of the requested edition')
 
     # Components available in all editions
     variant('daal', default=True,
@@ -130,25 +128,17 @@ class IntelParallelStudio(IntelPackage):
             description='Install the Intel VTune Amplifier XE')
 
     provides('daal', when='+daal')
-    provides('daal', when='+all')
 
     provides('ipp', when='+ipp')
-    provides('ipp', when='+all')
 
     provides('mkl',       when='+mkl')
-    provides('mkl',       when='+all')
     provides('blas',      when='+mkl')
-    provides('blas',      when='+all')
     provides('lapack',    when='+mkl')
-    provides('lapack',    when='+all')
     provides('scalapack', when='+mkl')
-    provides('scalapack', when='+all')
 
     provides('mpi', when='+mpi')
-    provides('mpi', when='+all')
 
     provides('tbb', when='+tbb')
-    provides('tbb', when='+all')
 
     # The following components are not available in the Composer Edition
     conflicts('+advisor',   when='@composer.0:composer.9999')
@@ -258,9 +248,6 @@ class IntelParallelStudio(IntelPackage):
         spec = self.spec
         edition = self.version[0]
 
-        if '+all' in spec:
-            return ['ALL']
-
         # Intel(R) Compilers
         components = [
             # Common files
@@ -361,10 +348,7 @@ class IntelParallelStudio(IntelPackage):
             self.bin_dir
         ]
 
-        if '+advisor' in spec or (
-            '+all' in spec and
-            not spec.satisfies('@composer.0:composer.9999')):
-
+        if '+advisor' in spec:
             advisor_dir = 'advisor_xe/licenses'
 
             if year >= 2017:
@@ -372,10 +356,7 @@ class IntelParallelStudio(IntelPackage):
 
             directories.append(advisor_dir)
 
-        if '+inspector' in spec or (
-            '+all' in spec and
-            not spec.satisfies('@composer.0:composer.9999')):
-
+        if '+inspector' in spec:
             inspector_dir = 'inspector_xe/licenses'
 
             if year >= 2017:
@@ -383,18 +364,12 @@ class IntelParallelStudio(IntelPackage):
 
             directories.append(inspector_dir)
 
-        if '+itac' in spec or (
-            '+all' in spec and
-            not spec.satisfies('@composer.0:composer.9999')):
-
+        if '+itac' in spec:
             itac_dir = 'itac_{0}'.format(year)
 
             directories.append(itac_dir)
 
-        if '+vtune' in spec or (
-            '+all' in spec and
-            not spec.satisfies('@composer.0:composer.9999')):
-
+        if '+vtune' in spec:
             vtune_dir = 'vtune_amplifier_xe/licenses'
 
             directories.append(vtune_dir)
@@ -405,7 +380,7 @@ class IntelParallelStudio(IntelPackage):
     def filter_compiler_wrappers(self):
         spec = self.spec
 
-        if ('+all' in spec or '+mpi' in spec) and spec.satisfies('@cluster'):
+        if '+mpi' in spec:
             if '~newdtags' in spec:
                 wrappers = [
                     'mpif77', 'mpif90', 'mpigcc', 'mpigxx',
@@ -446,7 +421,7 @@ class IntelParallelStudio(IntelPackage):
                     os.path.join(bindir, 'psxevars.csh'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if '+mpi' in self.spec or '+all' in self.spec:
+        if '+mpi' in self.spec:
             spack_env.set('I_MPI_CC',  spack_cc)
             spack_env.set('I_MPI_CXX', spack_cxx)
             spack_env.set('I_MPI_F77', spack_fc)
@@ -454,7 +429,7 @@ class IntelParallelStudio(IntelPackage):
             spack_env.set('I_MPI_FC',  spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
-        if '+mpi' in self.spec or '+all' in self.spec:
+        if '+mpi' in self.spec:
             # Intel comes with 2 different flavors of MPI wrappers:
             #
             # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
