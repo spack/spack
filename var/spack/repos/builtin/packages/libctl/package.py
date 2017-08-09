@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,24 +25,25 @@
 from spack import *
 
 
-class Libctl(Package):
+class Libctl(AutotoolsPackage):
     """libctl is a free Guile-based library implementing flexible
     control files for scientific simulations."""
 
     homepage = "http://ab-initio.mit.edu/wiki/index.php/Libctl"
     url      = "http://ab-initio.mit.edu/libctl/libctl-3.2.2.tar.gz"
+    list_url = "http://ab-initio.mit.edu/libctl/old"
 
     version('3.2.2', '5fd7634dc9ae8e7fa70a68473b9cbb68')
 
     depends_on('guile')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix),
-                  '--enable-shared',
-                  'GUILE={0}'.format(join_path(
-                      spec['guile'].prefix.bin, 'guile')),
-                  'GUILE_CONFIG={0}'.format(join_path(
-                      spec['guile'].prefix.bin, 'guile-config')))
+    def configure_args(self):
+        spec = self.spec
 
-        make()
-        make('install')
+        return [
+            '--enable-shared',
+            'GUILE={0}'.format(join_path(
+                spec['guile'].prefix.bin, 'guile')),
+            'GUILE_CONFIG={0}'.format(join_path(
+                spec['guile'].prefix.bin, 'guile-config')),
+        ]

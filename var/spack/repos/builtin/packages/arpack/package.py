@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -60,7 +60,9 @@ class Arpack(Package):
 
         # Be sure to use the Spack compiler wrapper
         makefile.filter('^FC.*', 'FC = {0}'.format(os.environ['F77']))
-        makefile.filter('^FFLAGS.*', 'FFLAGS = -O2 -g -fPIC')
+        makefile.filter(
+            '^FFLAGS.*', 'FFLAGS = -O2 -g {0}'.format(self.compiler.pic_flag)
+        )
 
         if not which('ranlib'):
             makefile.filter('^RANLIB.*', 'RANLIB = touch')

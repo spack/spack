@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,25 +25,28 @@
 from spack import *
 
 
-class Scorep(Package):
+class Scorep(AutotoolsPackage):
     """The Score-P measurement infrastructure is a highly scalable and
     easy-to-use tool suite for profiling, event tracing, and online analysis
     of HPC applications.
     """
 
     homepage = "http://www.vi-hps.org/projects/score-p"
-    url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-1.2.3.tar.gz"
+    url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-2.0.2.tar.gz"
 
-    version('2.0.2', '8f00e79e1b5b96e511c5ebecd10b2888',
-            url='http://www.vi-hps.org/upload/packages/scorep/scorep-2.0.2.tar.gz')
-    version('1.4.2', '3b9a042b13bdd5836452354e6567f71e',
-            url='http://www.vi-hps.org/upload/packages/scorep/scorep-1.4.2.tar.gz')
-    version('1.3', '9db6f957b7f51fa01377a9537867a55c',
-            url='http://www.vi-hps.org/upload/packages/scorep/scorep-1.3.tar.gz')
+    version('3.1',   '065bf8eb08398e8146c895718ddb9145')
+    version('3.0',   '44da8beaa3f71436a5f6fe51938aab2f')
+    version('2.0.2', '8f00e79e1b5b96e511c5ebecd10b2888')
+    version('1.4.2', '3b9a042b13bdd5836452354e6567f71e')
+    version('1.3',   '9db6f957b7f51fa01377a9537867a55c')
 
     ##########
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information.
+    # SCOREP 3
+    depends_on('otf2@2:', when='@3:')
+    depends_on('opari2@2:', when='@3:')
+    depends_on('cube@4.3:', when='@3:')
     # SCOREP 2.0.2
     depends_on('otf2@2.0', when='@2.0.2')
     depends_on('opari2@2.0', when='@2.0.2')
@@ -60,20 +63,33 @@ class Scorep(Package):
 
     depends_on("mpi")
     depends_on("papi")
+    depends_on('pdt')
 
-    def install(self, spec, prefix):
-        configure = Executable(join_path(self.stage.source_path, 'configure'))
-        with working_dir('spack-build', create=True):
-            configure_args = [
-                "--prefix=%s" % prefix,
-                "--with-otf2=%s" % spec['otf2'].prefix.bin,
-                "--with-opari2=%s" % spec['opari2'].prefix.bin,
-                "--with-cube=%s" % spec['cube'].prefix.bin,
-                "--with-papi-header=%s" % spec['papi'].prefix.include,
-                "--with-papi-lib=%s" % spec['papi'].prefix.lib,
-                "--enable-shared",
-                "CFLAGS=-fPIC",
-                "CXXFLAGS=-fPIC"]
-            configure(*configure_args)
-            make()
-            make("install")
+    variant('shmem', default=False, description='Enable shmem tracing')
+
+    # Score-P requires a case-sensitive file system, and therefore
+    # does not work on macOS
+    # https://github.com/LLNL/spack/issues/1609
+    conflicts('platform=darwin')
+
+    def configure_args(self):
+        spec = self.spec
+
+        config_args = [
+            "--with-otf2=%s" % spec['otf2'].prefix.bin,
+            "--with-opari2=%s" % spec['opari2'].prefix.bin,
+            "--with-cube=%s" % spec['cube'].prefix.bin,
+            "--with-papi-header=%s" % spec['papi'].prefix.include,
+            "--with-papi-lib=%s" % spec['papi'].prefix.lib,
+            "--with-pdt=%s" % spec['pdt'].prefix.bin,
+            "--enable-shared",
+        ]
+
+        if '~shmem' in spec:
+            config_args.append("--without-shmem")
+
+        config_args.extend([
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+        ])
+        return config_args

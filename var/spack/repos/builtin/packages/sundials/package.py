@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -58,8 +58,8 @@ class Sundials(Package):
         cmake_args = std_cmake_args[:]
         cmake_args.extend([
             '-DBUILD_SHARED_LIBS=ON',
-            '-DCMAKE_C_FLAGS=-fPIC',
-            '-DCMAKE_Fortran_FLAGS=-fPIC',
+            '-DCMAKE_C_FLAGS={0}'.format(self.compiler.pic_flag),
+            '-DCMAKE_Fortran_FLAGS={0}'.format(self.compiler.pic_flag),
             '-DEXAMPLES_ENABLE=ON',
             '-DEXAMPLES_INSTALL=ON',
             '-DFCMIX_ENABLE=ON'
@@ -80,8 +80,8 @@ class Sundials(Package):
             cmake_args.extend([
                 '-DLAPACK_ENABLE=ON',
                 '-DLAPACK_LIBRARIES={0}'.format(
-                    (spec['lapack'].lapack_libs +
-                     spec['blas'].blas_libs).joined(';')
+                    (spec['lapack'].libs +
+                     spec['blas'].libs).joined(';')
                 )
             ])
         else:

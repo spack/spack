@@ -1,0 +1,10 @@
+diff --git a/pyprof2html/__init__.py b/pyprof2html/__init__.py
+index 342eb6d..74b3392 100644
+--- a/pyprof2html/__init__.py
++++ b/pyprof2html/__init__.py
+@@ -10,3 +10,5 @@ __licence__ = 'New BSD License'
+ __author__ = 'Hideo Hattori <hhatto.jp@gmail.com>'
+ 
+ __all__ = ['Converter', 'pyprof2html_main']
++
++__version__ = '0.3.1'

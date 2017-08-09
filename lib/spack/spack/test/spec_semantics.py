@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,34 +24,51 @@
 ##############################################################################
 import spack.architecture
 import pytest
+
 from spack.spec import *
+from spack.variant import *
 
 
-def check_satisfies(spec, anon_spec, concrete=False):
-    left = Spec(spec, concrete=concrete)
+def target_factory(spec_string, target_concrete):
+    spec = Spec(spec_string)
+
+    if target_concrete:
+        spec._mark_concrete()
+        substitute_abstract_variants(spec)
+
+    return spec
+
+
+def argument_factory(argument_spec, left):
     try:
-        right = Spec(anon_spec)  # if it's not anonymous, allow it.
+        # If it's not anonymous, allow it
+        right = target_factory(argument_spec, False)
     except Exception:
-        right = parse_anonymous_spec(anon_spec, left.name)
+        right = parse_anonymous_spec(argument_spec, left.name)
+    return right
+
+
+def check_satisfies(target_spec, argument_spec, target_concrete=False):
+
+    left = target_factory(target_spec, target_concrete)
+    right = argument_factory(argument_spec, left)
 
     # Satisfies is one-directional.
     assert left.satisfies(right)
-    assert left.satisfies(anon_spec)
+    assert left.satisfies(argument_spec)
 
-    # if left satisfies right, then we should be able to consrain
+    # If left satisfies right, then we should be able to constrain
     # right by left.  Reverse is not always true.
     right.copy().constrain(left)
 
 
-def check_unsatisfiable(spec, anon_spec, concrete=False):
-    left = Spec(spec, concrete=concrete)
-    try:
-        right = Spec(anon_spec)  # if it's not anonymous, allow it.
-    except Exception:
-        right = parse_anonymous_spec(anon_spec, left.name)
+def check_unsatisfiable(target_spec, argument_spec, target_concrete=False):
+
+    left = target_factory(target_spec, target_concrete)
+    right = argument_factory(argument_spec, left)
 
     assert not left.satisfies(right)
-    assert not left.satisfies(anon_spec)
+    assert not left.satisfies(argument_spec)
 
     with pytest.raises(UnsatisfiableSpecError):
         right.copy().constrain(left)
@@ -243,6 +260,155 @@ class TestSpecSematics(object):
         check_satisfies('mpich~foo', 'mpich foo=FALSE')
         check_satisfies('mpich foo=False', 'mpich~foo')
 
+    def test_satisfies_multi_value_variant(self):
+        # Check quoting
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'multivalue_variant foo="bar,baz"')
+        check_satisfies('multivalue_variant foo=bar,baz',
+                        'multivalue_variant foo=bar,baz')
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'multivalue_variant foo=bar,baz')
+
+        # A more constrained spec satisfies a less constrained one
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'multivalue_variant foo="bar"')
+
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'multivalue_variant foo="baz"')
+
+        check_satisfies('multivalue_variant foo="bar,baz,barbaz"',
+                        'multivalue_variant foo="bar,baz"')
+
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'foo="bar,baz"')
+
+        check_satisfies('multivalue_variant foo="bar,baz"',
+                        'foo="bar"')
+
+    def test_satisfies_single_valued_variant(self):
+        """Tests that the case reported in
+        https://github.com/LLNL/spack/pull/2386#issuecomment-282147639
+        is handled correctly.
+        """
+        a = Spec('a foobar=bar')
+        a.concretize()
+
+        assert a.satisfies('foobar=bar')
+
+        # Assert that an autospec generated from a literal
+        # gives the right result for a single valued variant
+        assert 'foobar=bar' in a
+        assert 'foobar=baz' not in a
+        assert 'foobar=fee' not in a
+
+        # ... and for a multi valued variant
+        assert 'foo=bar' in a
+
+        # Check that conditional dependencies are treated correctly
+        assert '^b' in a
+
+    def test_unsatisfied_single_valued_variant(self):
+        a = Spec('a foobar=baz')
+        a.concretize()
+        assert '^b' not in a
+
+        mv = Spec('multivalue_variant')
+        mv.concretize()
+        assert 'a@1.0' not in mv
+
+    def test_indirect_unsatisfied_single_valued_variant(self):
+        spec = Spec('singlevalue-variant-dependent')
+        spec.concretize()
+        assert 'a@1.0' not in spec
+
+    def test_unsatisfiable_multi_value_variant(self):
+
+        # Semantics for a multi-valued variant is different
+        # Depending on whether the spec is concrete or not
+
+        a = target_factory(
+            'multivalue_variant foo="bar"', target_concrete=True
+        )
+        spec_str = 'multivalue_variant foo="bar,baz"'
+        b = Spec(spec_str)
+        assert not a.satisfies(b)
+        assert not a.satisfies(spec_str)
+        # A concrete spec cannot be constrained further
+        with pytest.raises(UnsatisfiableSpecError):
+            a.constrain(b)
+
+        a = Spec('multivalue_variant foo="bar"')
+        spec_str = 'multivalue_variant foo="bar,baz"'
+        b = Spec(spec_str)
+        # The specs are abstract and they **could** be constrained
+        assert a.satisfies(b)
+        assert a.satisfies(spec_str)
+        # An abstract spec can instead be constrained
+        assert a.constrain(b)
+
+        a = target_factory(
+            'multivalue_variant foo="bar,baz"', target_concrete=True
+        )
+        spec_str = 'multivalue_variant foo="bar,baz,quux"'
+        b = Spec(spec_str)
+        assert not a.satisfies(b)
+        assert not a.satisfies(spec_str)
+        # A concrete spec cannot be constrained further
+        with pytest.raises(UnsatisfiableSpecError):
+            a.constrain(b)
+
+        a = Spec('multivalue_variant foo="bar,baz"')
+        spec_str = 'multivalue_variant foo="bar,baz,quux"'
+        b = Spec(spec_str)
+        # The specs are abstract and they **could** be constrained
+        assert a.satisfies(b)
+        assert a.satisfies(spec_str)
+        # An abstract spec can instead be constrained
+        assert a.constrain(b)
+        # ...but will fail during concretization if there are
+        # values in the variant that are not allowed
+        with pytest.raises(InvalidVariantValueError):
+            a.concretize()
+
+        # This time we'll try to set a single-valued variant
+        a = Spec('multivalue_variant fee="bar"')
+        spec_str = 'multivalue_variant fee="baz"'
+        b = Spec(spec_str)
+        # The specs are abstract and they **could** be constrained,
+        # as before concretization I don't know which type of variant
+        # I have (if it is not a BV)
+        assert a.satisfies(b)
+        assert a.satisfies(spec_str)
+        # A variant cannot be parsed as single-valued until we try to
+        # concretize. This means that we can constrain the variant above
+        assert a.constrain(b)
+        # ...but will fail during concretization if there are
+        # multiple values set
+        with pytest.raises(MultipleValuesInExclusiveVariantError):
+            a.concretize()
+
+    def test_unsatisfiable_variant_types(self):
+        # These should fail due to incompatible types
+
+        # FIXME: these needs to be checked as the new relaxed
+        # FIXME: semantic makes them fail (constrain does not raise)
+        # check_unsatisfiable('multivalue_variant +foo',
+        #                     'multivalue_variant foo="bar"')
+        # check_unsatisfiable('multivalue_variant ~foo',
+        #                     'multivalue_variant foo="bar"')
+
+        check_unsatisfiable(
+            target_spec='multivalue_variant foo="bar"',
+            argument_spec='multivalue_variant +foo',
+            target_concrete=True
+        )
+
+        check_unsatisfiable(
+            target_spec='multivalue_variant foo="bar"',
+            argument_spec='multivalue_variant ~foo',
+            target_concrete=True
+        )
+
     def test_satisfies_unconstrained_variant(self):
         # only asked for mpich, no constraints.  Either will do.
         check_satisfies('mpich+foo', 'mpich')
@@ -266,7 +432,7 @@ class TestSpecSematics(object):
         # No matchi in specs
         check_unsatisfiable('mpich~foo', 'mpich+foo')
         check_unsatisfiable('mpich+foo', 'mpich~foo')
-        check_unsatisfiable('mpich foo=1', 'mpich foo=2')
+        check_unsatisfiable('mpich foo=True', 'mpich foo=False')
 
     def test_satisfies_matching_compiler_flag(self):
         check_satisfies('mpich cppflags="-O3"', 'mpich cppflags="-O3"')
@@ -293,7 +459,7 @@ class TestSpecSematics(object):
         copy = spec.copy()
         for s in spec.traverse():
             assert s.satisfies(copy[s.name])
-            assert copy[s.name].satisfies(s) 
+            assert copy[s.name].satisfies(s)
 
     def test_unsatisfiable_compiler_flag_mismatch(self):
         # No matchi in specs
@@ -416,6 +582,19 @@ class TestSpecSematics(object):
             'libelf+debug~foo', 'libelf+debug', 'libelf+debug~foo'
         )
 
+    def test_constrain_multi_value_variant(self):
+        check_constrain(
+            'multivalue_variant foo="bar,baz"',
+            'multivalue_variant foo="bar"',
+            'multivalue_variant foo="baz"'
+        )
+
+        check_constrain(
+            'multivalue_variant foo="bar,baz,barbaz"',
+            'multivalue_variant foo="bar,barbaz"',
+            'multivalue_variant foo="baz"'
+        )
+
     def test_constrain_compiler_flags(self):
         check_constrain(
             'libelf cflags="-O3" cppflags="-Wall"',
@@ -455,7 +634,7 @@ class TestSpecSematics(object):
 
         check_invalid_constraint('libelf+debug', 'libelf~debug')
         check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
-        check_invalid_constraint('libelf debug=2', 'libelf debug=1')
+        check_invalid_constraint('libelf debug=True', 'libelf debug=False')
 
         check_invalid_constraint(
             'libelf cppflags="-O3"', 'libelf cppflags="-O2"')

@@ -8,7 +8,7 @@
 #
 # For details, see https://github.com/llnl/spack
 #
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
 # published by the Free Software Foundation) version 2.1, February 1999.
@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import os
-import string
 import datetime as dt
 
 
@@ -75,7 +74,7 @@ class Lammps(MakefilePackage):
             config.append('CCFLAGS = -fopenmp')
             config.append('LINKFLAGS = -fopenmp $(OPTFLAGS)')
 
-        config.append('SHFLAGS = -fPIC')
+        config.append('SHFLAGS = {0}'.format(self.compiler.pic_flag))
         config.append('DEPFLAGS = -M')
         config.append('LINK = c++')
 
@@ -160,8 +159,8 @@ class Lammps(MakefilePackage):
 
             make('lib', '-f', 'Makefile.icc')
             with open('Makefile.lammps', 'w') as fh:
-                lapack_blas = (self.spec['lapack'].lapack_libs +
-                               self.spec['blas'].blas_libs)
+                lapack_blas = (self.spec['lapack'].libs +
+                               self.spec['blas'].libs)
                 makefile = [
                     'user-atc_SYSINC =',
                     'user-atc_SYSLIB = {0}'.format(lapack_blas.ld_flags),
@@ -178,16 +177,16 @@ class Lammps(MakefilePackage):
 
     def build(self, spec, prefix):
         for pkg in self.supported_packages:
-            _build_pkg_name = string.replace('build_{0}'.format(pkg), '-', '_')
-            if hasattr(self, _build_pkg_name):
-                _build_pkg = getattr(self, _build_pkg_name)
-                _build_pkg()
+            if '+{0}'.format(pkg) in spec:
+                _build_pkg_name = 'build_{0}'.format(pkg.replace('-', '_'))
+                if hasattr(self, _build_pkg_name):
+                    _build_pkg = getattr(self, _build_pkg_name)
+                    _build_pkg()
 
-        with working_dir('src'):
-            for pkg in self.supported_packages:
-                if '+{0}'.format(pkg) in spec:
+                with working_dir('src'):
                     make('yes-{0}'.format(pkg))
 
+        with working_dir('src'):
             make(self.target_name)
 
             if '+lib' in spec:

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,7 +26,7 @@ from spack import *
 import sys
 
 
-class NetlibScalapack(Package):
+class NetlibScalapack(CMakePackage):
     """ScaLAPACK is a library of high-performance linear algebra routines for
     parallel distributed memory machines
     """
@@ -46,9 +46,9 @@ class NetlibScalapack(Package):
         description='Build the shared library version'
     )
     variant(
-        'fpic',
+        'pic',
         default=False,
-        description='Build with -fpic compiler option'
+        description='Build position independent code'
     )
 
     provides('scalapack')
@@ -60,12 +60,16 @@ class NetlibScalapack(Package):
 
     @property
     def scalapack_libs(self):
+        # Note that the default will be to search
+        # for 'libnetlib-scalapack.<suffix>'
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libscalapack'], root=self.prefix, shared=shared, recurse=True
+            'libscalapack', root=self.prefix, shared=shared, recurse=True
         )
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+        spec = self.spec
+
         options = [
             "-DBUILD_SHARED_LIBS:BOOL=%s" % ('ON' if '+shared' in spec else
                                              'OFF'),
@@ -74,8 +78,8 @@ class NetlibScalapack(Package):
         ]
 
         # Make sure we use Spack's Lapack:
-        blas = spec['blas'].blas_libs
-        lapack = spec['lapack'].lapack_libs
+        blas = spec['blas'].libs
+        lapack = spec['lapack'].libs
         options.extend([
             '-DLAPACK_FOUND=true',
             '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,
@@ -83,19 +87,16 @@ class NetlibScalapack(Package):
             '-DBLAS_LIBRARIES=%s' % (blas.joined(';'))
         ])
 
-        if '+fpic' in spec:
+        if '+pic' in spec:
             options.extend([
-                "-DCMAKE_C_FLAGS=-fPIC",
-                "-DCMAKE_Fortran_FLAGS=-fPIC"
+                "-DCMAKE_C_FLAGS=%s" % self.compiler.pic_flag,
+                "-DCMAKE_Fortran_FLAGS=%s" % self.compiler.pic_flag
             ])
 
-        options.extend(std_cmake_args)
+        return options
 
-        with working_dir('spack-build', create=True):
-            cmake('..', *options)
-            make()
-            make("install")
-
+    @run_after('install')
+    def fix_darwin_install(self):
         # The shared libraries are not installed correctly on Darwin:
-        if (sys.platform == 'darwin') and ('+shared' in spec):
-            fix_darwin_install_name(prefix.lib)
+        if (sys.platform == 'darwin') and ('+shared' in self.spec):
+            fix_darwin_install_name(self.spec.prefix.lib)

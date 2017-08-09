@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -85,13 +85,7 @@ class OrderedLineLoader(Loader):
 
     def construct_yaml_str(self, node):
         value = self.construct_scalar(node)
-        try:
-            value = value.encode('ascii')
-        except UnicodeEncodeError:
-            pass
-
         value = syaml_str(value)
-
         mark(value, node)
         return value
 
@@ -137,7 +131,7 @@ class OrderedLineLoader(Loader):
             key = self.construct_object(key_node, deep=deep)
             try:
                 hash(key)
-            except TypeError, exc:
+            except TypeError as exc:
                 raise ConstructorError(
                     "while constructing a mapping", node.start_mark,
                     "found unacceptable key (%s)" % exc, key_node.start_mark)
@@ -154,11 +148,11 @@ class OrderedLineLoader(Loader):
 
 # register above new constructors
 OrderedLineLoader.add_constructor(
-    u'tag:yaml.org,2002:map', OrderedLineLoader.construct_yaml_map)
+    'tag:yaml.org,2002:map', OrderedLineLoader.construct_yaml_map)
 OrderedLineLoader.add_constructor(
-    u'tag:yaml.org,2002:seq', OrderedLineLoader.construct_yaml_seq)
+    'tag:yaml.org,2002:seq', OrderedLineLoader.construct_yaml_seq)
 OrderedLineLoader.add_constructor(
-    u'tag:yaml.org,2002:str', OrderedLineLoader.construct_yaml_str)
+    'tag:yaml.org,2002:str', OrderedLineLoader.construct_yaml_str)
 
 
 class OrderedLineDumper(Dumper):
@@ -181,7 +175,7 @@ class OrderedLineDumper(Dumper):
             # if it's a syaml_dict, preserve OrderedDict order.
             # Otherwise do the default thing.
             sort = not isinstance(mapping, syaml_dict)
-            mapping = mapping.items()
+            mapping = list(mapping.items())
             if sort:
                 mapping.sort()
 

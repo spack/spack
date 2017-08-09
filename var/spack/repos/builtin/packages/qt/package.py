@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import platform
 import os
 import sys
 
@@ -30,10 +31,15 @@ import sys
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
     homepage = 'http://qt.io'
+    # Alternative location 'http://download.qt.io/official_releases/qt/'
     url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
     list_url = 'http://download.qt.io/archive/qt/'
-    list_depth = 4
+    list_depth = 3
 
+    version('5.9.1',  '77b4af61c49a09833d4df824c806acaf')
+    version('5.9.0',  '9c8bc8b828c2b56721980368266df9d9')
+    version('5.8.0',  'a9f2494f75f966e2f22358ec367d8f41')
+    version('5.7.1',  '031fb3fd0c3cc0f1082644492683f18d')
     version('5.7.0',  '9a46cce61fc64c20c3ac0a0e0fa41b42')
     version('5.5.1',  '59f0216819152b77536cf660b015d784')
     version('5.4.2',  'fa1c4d819b401b267eb246a543a63ea5')
@@ -45,18 +51,33 @@ class Qt(Package):
 
     # Add patch for compile issues with qt3 found with use in the
     # OpenSpeedShop project
-    variant('krellpatch', default=False, description="Build with openspeedshop based patch.")
-    variant('mesa',       default=False, description="Depend on mesa.")
-    variant('gtk',        default=False, description="Build with gtkplus.")
-    variant('webkit',     default=False, description="Build the Webkit extension")
-    variant('examples',   default=False, description="Build examples.")
-    variant('dbus',       default=False, description="Build with D-Bus support.")
-    variant('phonon',     default=False, description="Build with phonon support.")
+    variant('krellpatch', default=False,
+            description="Build with openspeedshop based patch.")
+    variant('gtk',        default=False,
+            description="Build with gtkplus.")
+    variant('webkit',     default=False,
+            description="Build the Webkit extension")
+    variant('examples',   default=False,
+            description="Build examples.")
+    variant('dbus',       default=False,
+            description="Build with D-Bus support.")
+    variant('phonon',     default=False,
+            description="Build with phonon support.")
+    variant('opengl',     default=False,
+            description="Build with OpenGL support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
+    # see https://bugreports.qt.io/browse/QTBUG-57656
+    patch('QTBUG-57656.patch', when='@5.8.0')
+    # see https://bugreports.qt.io/browse/QTBUG-58038
+    patch('QTBUG-58038.patch', when='@5.8.0')
+
     # https://github.com/xboxdrv/xboxdrv/issues/188
     patch('btn_trigger_happy.patch', when='@5.7.0:')
+
+    # https://github.com/LLNL/spack/issues/1517
+    patch('qt5-pcre.patch', when='@5:')
 
     patch('qt4-corewlan-new-osx.patch', when='@4')
     patch('qt4-pcre-include-conflict.patch', when='@4')
@@ -75,16 +96,25 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
     depends_on("icu4c")
+    depends_on("fontconfig")
+    depends_on("freetype")
+    # FIXME:
+    # depends_on("freetype", when='@5.8:') and '-system-freetype'
+    # -system-harfbuzz
+    # -system-pcre
+
+    # QtQml
+    depends_on("python", when='@5.7.0:', type='build')
 
     # OpenGL hardware acceleration
-    depends_on("mesa", when='@4:+mesa')
+    depends_on("mesa", when='@4:+opengl')
     depends_on("libxcb", when=sys.platform != 'darwin')
+    depends_on("libx11", when=sys.platform != 'darwin')
 
     # Webkit
     depends_on("flex", when='+webkit', type='build')
     depends_on("bison", when='+webkit', type='build')
     depends_on("gperf", when='+webkit')
-    depends_on("fontconfig", when='+webkit')
 
     # Multimedia
     # depends_on("gstreamer", when='+multimedia')
@@ -99,9 +129,9 @@ class Qt(Package):
         url = self.list_url
 
         if version >= Version('4.0'):
-            url += version.up_to(2) + '/'
+            url += str(version.up_to(2)) + '/'
         else:
-            url += version.up_to(1) + '/'
+            url += str(version.up_to(1)) + '/'
 
         if version >= Version('4.8'):
             url += str(version) + '/'
@@ -121,17 +151,22 @@ class Qt(Package):
         elif version >= Version('3'):
             url += 'free-'
 
-        url += str(version) + '.tar.gz'
+        # 5.9 only has xz format. From 5.2.1 -> 5.8.0 .gz or .xz were possible
+        if version >= Version('5.9'):
+            url += str(version) + '.tar.xz'
+        else:
+            url += str(version) + '.tar.gz'
 
         return url
 
     def setup_environment(self, spack_env, run_env):
+        spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
         run_env.set('QTDIR', self.prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dspec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('QTDIR', self.prefix)
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
 
     def patch(self):
@@ -167,17 +202,34 @@ class Qt(Package):
             '-prefix', self.prefix,
             '-v',
             '-opensource',
-            '-opengl',
+            '-{0}opengl'.format('' if '+opengl' in self.spec else 'no-'),
             '-release',
             '-shared',
             '-confirm-license',
             '-openssl-linked',
             '-optimized-qmake',
-            '-no-openvg',
-            '-no-pch',
-            # NIS is deprecated in more recent glibc
-            '-no-nis'
+            '-fontconfig',
+            '-system-freetype',
+            '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include),
+            '-no-pch'
         ]
+
+        if '@:5.7.1' in self.spec:
+            config_args.append('-no-openvg')
+        else:
+            # FIXME: those could work for other versions
+            config_args.extend([
+                '-system-libpng',
+                '-system-libjpeg',
+                '-system-zlib'
+            ])
+
+        if '@:5.7.0' in self.spec:
+            config_args.extend([
+                # NIS is deprecated in more recent glibc,
+                # but qt-5.7.1 does not recognize this option
+                '-no-nis',
+            ])
 
         if '~examples' in self.spec:
             config_args.extend(['-nomake', 'examples'])
@@ -186,7 +238,12 @@ class Qt(Package):
             config_args.append('-no-phonon')
 
         if '+dbus' in self.spec:
+            dbus = self.spec['dbus'].prefix
             config_args.append('-dbus-linked')
+            config_args.append('-I%s/dbus-1.0/include' % dbus.lib)
+            config_args.append('-I%s/dbus-1.0' % dbus.include)
+            config_args.append('-L%s' % dbus.lib)
+            config_args.append('-ldbus-1')
         else:
             config_args.append('-no-dbus')
 
@@ -199,25 +256,30 @@ class Qt(Package):
             ])
 
         if '@4' in self.spec and sys.platform == 'darwin':
+            config_args.append('-cocoa')
+
+            mac_ver = tuple(platform.mac_ver()[0].split('.')[:2])
+            sdkname = 'macosx%s' % '.'.join(mac_ver)
             sdkpath = which('xcrun')('--show-sdk-path',
-                                     # XXX(macos): 10.11 SDK fails to configure
-                                     '--sdk', 'macosx10.9',
+                                     '--sdk', sdkname,
                                      output=str)
             config_args.extend([
                 '-sdk', sdkpath.strip(),
             ])
             use_clang_platform = False
             if self.spec.compiler.name == 'clang' and \
-               str(self.spec.compiler.version).endwith('-apple'):
+               str(self.spec.compiler.version).endswith('-apple'):
                 use_clang_platform = True
             # No one uses gcc-4.2.1 anymore; this is clang.
             if self.spec.compiler.name == 'gcc' and \
                str(self.spec.compiler.version) == '4.2.1':
                 use_clang_platform = True
             if use_clang_platform:
-                config_args.extend([
-                    '-platform', 'unsupported/macx-clang',
-                ])
+                config_args.append('-platform')
+                if mac_ver >= (10, 9):
+                    config_args.append('unsupported/macx-clang-libc++')
+                else:
+                    config_args.append('unsupported/macx-clang')
 
         return config_args
 
@@ -226,8 +288,14 @@ class Qt(Package):
 
     @when('@3')
     def configure(self):
-        # A user reported that this was necessary to link Qt3 on ubuntu
-        os.environ['LD_LIBRARY_PATH'] += os.pathsep + os.getcwd() + '/lib'
+        # A user reported that this was necessary to link Qt3 on ubuntu.
+        # However, if LD_LIBRARY_PATH is not set the qt build fails, check
+        # and set LD_LIBRARY_PATH if not set, update if it is set.
+        if os.environ.get('LD_LIBRARY_PATH'):
+            os.environ['LD_LIBRARY_PATH'] += os.pathsep + os.getcwd() + '/lib'
+        else:
+            os.environ['LD_LIBRARY_PATH'] = os.pathsep + os.getcwd() + '/lib'
+
         configure('-prefix', self.prefix,
                   '-v',
                   '-thread',

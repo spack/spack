@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,9 @@ class Coreutils(AutotoolsPackage):
        operating system.
     """
     homepage = "http://www.gnu.org/software/coreutils/"
-    url      = "http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
+    url      = "http://ftp.gnu.org/gnu/coreutils/coreutils-8.26.tar.xz"
 
+    version('8.26', 'd5aa2072f662d4118b9f4c63b94601a6')
     version('8.23', 'abed135279f87ad6762ce57ff6d89c41')
+
+    build_directory = 'spack-build'

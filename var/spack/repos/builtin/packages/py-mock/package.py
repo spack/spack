@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,8 +31,9 @@ class PyMock(PythonPackage):
     they have been used."""
 
     homepage = "https://github.com/testing-cabal/mock"
-    url      = "https://pypi.python.org/packages/source/m/mock/mock-1.3.0.tar.gz"
+    url      = "https://pypi.io/packages/source/m/mock/mock-1.3.0.tar.gz"
 
+    version('2.0.0', '0febfafd14330c9dcaa40de2d82d40ad')
     version('1.3.0', '73ee8a4afb3ff4da1b4afa287f39fdeb')
 
     depends_on('py-pbr', type=('build', 'run'))

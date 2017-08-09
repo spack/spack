@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,29 +25,98 @@
 import argparse
 
 import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
 
 import spack
 import spack.store
 import spack.cmd
 
-description = "show installed packages that depend on another"
+description = "show packages that depend on another"
+section = "basic"
+level = "long"
 
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs to list dependencies of")
+        '-i', '--installed', action='store_true', default=False,
+        help="List installed dependents of an installed spec, "
+        "instead of possible dependents of a package.")
+    subparser.add_argument(
+        '-t', '--transitive', action='store_true', default=False,
+        help="Show all transitive dependents.")
+    subparser.add_argument(
+        'spec', nargs=argparse.REMAINDER, help="spec or package name")
+
+
+def inverted_dependencies():
+    """Iterate through all packages and return a dictionary mapping package
+       names to possible dependnecies.
+
+       Virtual packages are included as sources, so that you can query
+       dependents of, e.g., `mpi`, but virtuals are not included as
+       actual dependents.
+    """
+    dag = {}
+    for pkg in spack.repo.all_packages():
+        dag.setdefault(pkg.name, set())
+        for dep in pkg.dependencies:
+            deps = [dep]
+
+            # expand virtuals if necessary
+            if spack.repo.is_virtual(dep):
+                deps += [s.name for s in spack.repo.providers_for(dep)]
+
+            for d in deps:
+                dag.setdefault(d, set()).add(pkg.name)
+    return dag
+
+
+def get_dependents(pkg_name, ideps, transitive=False, dependents=None):
+    """Get all dependents for a package.
+
+    Args:
+        pkg_name (str): name of the package whose dependents should be returned
+        ideps (dict): dictionary of dependents, from inverted_dependencies()
+        transitive (bool, optional): return transitive dependents when True
+    """
+    if dependents is None:
+        dependents = set()
+
+    if pkg_name in dependents:
+        return set()
+    dependents.add(pkg_name)
+
+    direct = ideps[pkg_name]
+    if transitive:
+        for dep_name in direct:
+            get_dependents(dep_name, ideps, transitive, dependents)
+    dependents.update(direct)
+    return dependents
 
 
 def dependents(parser, args):
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         tty.die("spack dependents takes only one spec.")
-    spec = spack.cmd.disambiguate_spec(specs[0])
 
-    tty.msg("Dependents of %s" % spec.format('$_$@$%@$/', color=True))
-    deps = spack.store.db.installed_dependents(spec)
-    if deps:
-        spack.cmd.display_specs(deps)
+    if args.installed:
+        spec = spack.cmd.disambiguate_spec(specs[0])
+
+        tty.msg("Dependents of %s" % spec.cformat('$_$@$%@$/'))
+        deps = spack.store.db.installed_relatives(
+            spec, 'parents', args.transitive)
+        if deps:
+            spack.cmd.display_specs(deps, long=True)
+        else:
+            print("No dependents")
+
     else:
-        print "No dependents"
+        spec = specs[0]
+        ideps = inverted_dependencies()
+
+        dependents = get_dependents(spec.name, ideps, args.transitive)
+        dependents.remove(spec.name)
+        if dependents:
+            colify(sorted(dependents))
+        else:
+            print("No dependents")

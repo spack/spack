@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
+from __future__ import print_function
 
+import argparse
 import llnl.util.tty as tty
 
 import spack
@@ -33,6 +34,8 @@ from spack.spec import *
 from spack.graph import *
 
 description = "generate graphs of package dependency relationships"
+section = "basic"
+level = "long"
 
 
 def setup_parser(subparser):
@@ -87,7 +90,8 @@ def graph(parser, args):
     deptype = alldeps
     if args.deptype:
         deptype = tuple(args.deptype.split(','))
-        validate_deptype(deptype)
+        if deptype == ('all',):
+            deptype = 'all'
         deptype = canonical_deptype(deptype)
 
     if args.dot:  # Dot graph only if asked for.
@@ -96,5 +100,5 @@ def graph(parser, args):
     elif specs:  # ascii is default: user doesn't need to provide it explicitly
         graph_ascii(specs[0], debug=spack.debug, deptype=deptype)
         for spec in specs[1:]:
-            print  # extra line bt/w independent graphs
+            print()  # extra line bt/w independent graphs
             graph_ascii(spec, debug=spack.debug)

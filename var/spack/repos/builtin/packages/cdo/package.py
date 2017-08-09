@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,12 +27,19 @@ from spack import *
 
 class Cdo(Package):
     """CDO is a collection of command line Operators to manipulate and analyse
-    Climate and NWP model Data. """
+    Climate and NWP model Data.
+    """
 
     homepage = "https://code.zmaw.de/projects/cdo"
+    url      = "https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz"
+    list_url = "https://code.zmaw.de/projects/cdo/files"
 
-    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31', url='https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz')
-    version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2', url='https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz')
+    version('1.8.2', '6a2e2f99b7c67ee9a512c40a8d4a7121',
+            url='https://code.zmaw.de/attachments/download/14686/cdo-1.8.2.tar.gz')
+    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31',
+            url='https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz')
+    version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2',
+            url='https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz')
 
     variant('szip', default=True, description='Enable szip compression for GRIB1')
     variant('hdf5', default=False, description='Enable HDF5 support')
@@ -54,7 +61,7 @@ class Cdo(Package):
     depends_on('proj', when='+proj')
     depends_on('curl', when='+curl')
     depends_on('fftw', when='+fftw')
-    depends_on('magics', when='+magics') 
+    depends_on('magics', when='+magics')
 
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,

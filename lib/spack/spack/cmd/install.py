@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -43,6 +43,8 @@ from spack.fetch_strategy import FetchError
 from spack.package import PackageBase
 
 description = "build and install packages"
+section = "build"
+level = "short"
 
 
 def setup_common_parser(subparser):
@@ -64,6 +66,9 @@ the dependencies"""
         '--keep-stage', action='store_true', dest='keep_stage',
         help="don't remove the build stage if installation succeeds")
     subparser.add_argument(
+        '--restage', action='store_true', dest='restage',
+        help="if a partial install is detected, delete prior state")
+    subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="do not check packages against checksum")
     subparser.add_argument(
@@ -72,6 +77,9 @@ the dependencies"""
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
         help="fake install. just remove prefix and create a fake file")
+    subparser.add_argument(
+        '-f', '--file', action='store_true', dest='file',
+        help="install from file. Read specs to install from .yaml files")
     subparser.add_argument(
         '--install-status', '-I', action='store_true', dest='install_status',
         help="Show spec before installing.")
@@ -319,6 +327,7 @@ def validate_args(args):
     ret = {
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
+        'restage': args.restage,
         'install_dependencies': ('dependencies' in only),
         'install_package': ('package' in only),
         'make_jobs': args.jobs,
@@ -404,8 +413,16 @@ def install(parser, args):
     kwargs = validate_args(args)
 
     # Spec from cli
-    specs = spack.cmd.parse_specs(
-        args.package, concretize=True, allow_multi=True)
+    specs = []
+    if args.file:
+        for file in args.package:
+            with open(file, 'r') as f:
+                specs.append(spack.spec.Spec.from_yaml(f))
+    else:
+        specs = spack.cmd.parse_specs(args.package, concretize=True)
+    if len(specs) == 0:
+        tty.error('The `spack install` command requires a spec to install.')
+
     for spec in specs:
         show_spec(spec, args)
 

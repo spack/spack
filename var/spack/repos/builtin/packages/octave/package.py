@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,9 +38,14 @@ class Octave(AutotoolsPackage):
 
     extendable = True
 
+    version('4.2.1', '80c28f6398576b50faca0e602defb9598d6f7308b0903724442c2a35a605333b')
     version('4.2.0', '443ba73782f3531c94bcf016f2f0362a58e186ddb8269af7dcce973562795567')
     version('4.0.2', 'c2a5cacc6e4c52f924739cdf22c2c687')
     version('4.0.0', 'a69f8320a4f20a8480c1b278b1adb799')
+
+    # patches
+    # see https://savannah.gnu.org/bugs/?50234
+    patch('patch_4.2.1_inline.diff', when='@4.2.1')
 
     # Variants
     variant('readline',   default=True)
@@ -77,7 +82,7 @@ class Octave(AutotoolsPackage):
     depends_on('readline',     when='+readline')
 
     # Optional dependencies
-    depends_on('arpack',       when='+arpack')
+    depends_on('arpack-ng',    when='+arpack')
     depends_on('curl',         when='+curl')
     depends_on('fftw',         when='+fftw')
     depends_on('fltk',         when='+fltk')
@@ -88,7 +93,7 @@ class Octave(AutotoolsPackage):
     depends_on('gnuplot',      when='+gnuplot')
     depends_on('image-magick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
-    depends_on('jdk',          when='+jdk')
+    depends_on('java',          when='+jdk')        # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
     # depends_on('opengl',      when='+opengl')    # TODO: add package
     depends_on('qhull',        when='+qhull')
@@ -108,8 +113,8 @@ class Octave(AutotoolsPackage):
 
         # Required dependencies
         config_args.extend([
-            "--with-blas=%s" % spec['blas'].blas_libs.ld_flags,
-            "--with-lapack=%s" % spec['lapack'].lapack_libs.ld_flags
+            "--with-blas=%s" % spec['blas'].libs.ld_flags,
+            "--with-lapack=%s" % spec['lapack'].libs.ld_flags
         ])
 
         # Strongly recommended dependencies
@@ -120,9 +125,10 @@ class Octave(AutotoolsPackage):
 
         # Optional dependencies
         if '+arpack' in spec:
+            sa = spec['arpack-ng']
             config_args.extend([
-                "--with-arpack-includedir=%s" % spec['arpack'].prefix.include,
-                "--with-arpack-libdir=%s"     % spec['arpack'].prefix.lib
+                "--with-arpack-includedir=%s" % sa.prefix.include,
+                "--with-arpack-libdir=%s"     % sa.prefix.lib
             ])
         else:
             config_args.append("--without-arpack")
@@ -167,6 +173,8 @@ class Octave(AutotoolsPackage):
         if '+magick' in spec:
             config_args.append("--with-magick=%s"
                                % spec['image-magick'].prefix.lib)
+        else:
+            config_args.append("--without-magick")
 
         if '+hdf5' in spec:
             config_args.extend([
@@ -178,16 +186,19 @@ class Octave(AutotoolsPackage):
 
         if '+jdk' in spec:
             config_args.extend([
-                "--with-java-homedir=%s"    % spec['jdk'].prefix,
-                "--with-java-includedir=%s" % spec['jdk'].prefix.include,
-                "--with-java-libdir=%s"     % spec['jdk'].prefix.lib
+                "--with-java-homedir=%s"    % spec['java'].prefix,
+                "--with-java-includedir=%s" % spec['java'].prefix.include,
+                "--with-java-libdir=%s"     % spec['java'].prefix.lib
             ])
+        else:
+            config_args.append("--disable-java")
 
         if '~opengl' in spec:
             config_args.extend([
                 "--without-opengl",
                 "--without-framework-opengl"
             ])
+        # TODO:  opengl dependency and package is missing?
 
         if '+qhull' in spec:
             config_args.extend([
@@ -220,7 +231,7 @@ class Octave(AutotoolsPackage):
     # Set up environment to make install easy for Octave extensions.
     # ========================================================================
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """Called before Octave modules' install() methods.
 
         In most cases, extensions will only need to have one line:

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,51 +23,63 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.spec import UnsupportedCompilerError
 
 
 class Elemental(CMakePackage):
-    """Elemental: Distributed-memory dense and sparse-direct linear algebra 
+    """Elemental: Distributed-memory dense and sparse-direct linear algebra
        and optimization library."""
 
     homepage = "http://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.6.tar.gz"
 
+    version('master', git='https://github.com/elemental/Elemental.git', branch='master')
+    version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
-    variant('debug', default=False, 
-            description='Builds a debug version of the libraries')
-    variant('shared', default=True, 
+    variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('hybrid', default=True, 
+    variant('hybrid', default=True,
             description='Make use of OpenMP within MPI packing/unpacking')
     variant('openmp_blas', default=False,
             description='Use OpenMP for threading in the BLAS library')
-    variant('c', default=False, 
+    variant('c', default=False,
             description='Build C interface')
-    variant('python', default=False, 
+    variant('python', default=False,
             description='Install Python interface')
-    variant('parmetis', default=False, 
+    variant('parmetis', default=False,
             description='Enable ParMETIS')
-    variant('quad', default=False, 
+    variant('quad', default=False,
             description='Enable quad precision')
-    variant('int64', default=False, 
+    variant('int64', default=False,
             description='Use 64bit integers')
+    variant('cublas', default=False,
+            description='Enable cuBLAS for local BLAS operations')
     # When this variant is set remove the normal dependencies since
     # Elemental has to build BLAS and ScaLAPACK internally
-    variant('int64_blas', default=False, 
-            description='Use 64bit integers for BLAS.' 
+    variant('int64_blas', default=False,
+            description='Use 64bit integers for BLAS.'
             ' Requires local build of BLAS library.')
     variant('scalapack', default=False,
             description='Build with ScaLAPACK library')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
+    variant('blas', default='openblas', values=('openblas', 'mkl'),
+            description='Enable the use of OpenBlas/MKL')
 
-    depends_on('cmake', type='build')
-    # Note that this forces us to use OpenBLAS until #1712 is fixed
+    # Note that #1712 forces us to enumerate the different blas variants
     depends_on('blas', when='~openmp_blas ~int64_blas')
     # Hack to forward variant to openblas package
     # Allow Elemental to build internally when using 8-byte ints
-    depends_on('openblas +openmp', when='+openmp_blas ~int64_blas')
+    depends_on('openblas +openmp', when='blas=openblas +openmp_blas ~int64_blas')
+
+    depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
+    depends_on('intel-mkl +openmp', when='blas=mkl +openmp_blas ~int64_blas')
+    depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
+
     # Note that this forces us to use OpenBLAS until #1712 is fixed
-    depends_on('lapack', when='~openmp_blas')
+    depends_on('lapack', when='blas=openblas ~openmp_blas')
     depends_on('metis')
     depends_on('metis +int64', when='+int64')
     depends_on('mpi')
@@ -76,24 +88,23 @@ class Elemental(CMakePackage):
     extends('python', when='+python')
     depends_on('python@:2.8', when='+python')
 
+    patch('elemental_cublas.patch', when='+cublas')
+
     @property
-    def elemental_libs(self):
+    def libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libEl'], root=self.prefix, shared=shared, recurse=True
+            'libEl', root=self.prefix, shared=shared, recurse=True
         )
-
-    def build_type(self):
-        """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
-        :return: value for ``CMAKE_BUILD_TYPE``
-        """
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         spec = self.spec
+
+        if '@:0.87.7' in spec and '%intel@:17.0.2' in spec:
+            raise UnsupportedCompilerError(
+                "Elemental {0} has a known bug with compiler: {1} {2}".format(
+                    spec.version, spec.compiler.name, spec.compiler.version))
+
         args = [
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
@@ -119,15 +130,14 @@ class Elemental(CMakePackage):
                     '_64_' if '+int64_blas' in spec else '_')),
                     '-DCUSTOM_LAPACK_SUFFIX:BOOL=TRUE']),
         else:
-            math_libs = (spec['lapack'].lapack_libs +
-                         spec['blas'].blas_libs)
+            math_libs = (spec['lapack'].libs +
+                         spec['blas'].libs)
 
             if '+scalapack' in spec:
-                math_libs = spec['scalapack'].scalapack_libs + math_libs
+                math_libs = spec['scalapack'].libs + math_libs
 
             args.extend([
-                '-DMATH_LIBS:STRING={0}'.format(math_libs.search_flags),
-                '-DMATH_LIBS:STRING={0}'.format(math_libs.link_flags)])
+                '-DMATH_LIBS:STRING={0}'.format(math_libs.ld_flags)])
 
         if '+python' in spec:
             args.extend([

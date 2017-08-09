@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,16 +24,13 @@
 ##############################################################################
 """
 These tests check Spec DAG operations using dummy packages.
-You can find the dummy packages here::
-
-    spack/lib/spack/spack/test/mock_packages
 """
 import pytest
 import spack
 import spack.architecture
 import spack.package
 
-from spack.spec import Spec
+from spack.spec import Spec, canonical_deptype, alldeps
 
 
 def check_links(spec_to_check):
@@ -66,8 +63,7 @@ def set_dependency(saved_deps):
         pkg = spack.repo.get(pkg_name)
         if pkg_name not in saved_deps:
             saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
-        # Change dep spec
-        # XXX(deptype): handle deptypes.
+
         pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
         pkg.dependency_types[spec.name] = set(deptypes)
     return _mock
@@ -93,7 +89,7 @@ class TestSpecDag(object):
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'zmpi', 'fake']
-        pairs = zip([0, 1, 2, 3, 4, 2, 3], names)
+        pairs = list(zip([0, 1, 2, 3, 4, 2, 3], names))
 
         traversal = dag.traverse()
         assert [x.name for x in traversal] == names
@@ -107,7 +103,7 @@ class TestSpecDag(object):
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'libelf', 'zmpi', 'fake', 'zmpi']
-        pairs = zip([0, 1, 2, 3, 4, 3, 2, 3, 1], names)
+        pairs = list(zip([0, 1, 2, 3, 4, 3, 2, 3, 1], names))
 
         traversal = dag.traverse(cover='edges')
         assert [x.name for x in traversal] == names
@@ -121,7 +117,7 @@ class TestSpecDag(object):
 
         names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
                  'libelf', 'zmpi', 'fake', 'zmpi', 'fake']
-        pairs = zip([0, 1, 2, 3, 4, 3, 2, 3, 1, 2], names)
+        pairs = list(zip([0, 1, 2, 3, 4, 3, 2, 3, 1, 2], names))
 
         traversal = dag.traverse(cover='paths')
         assert [x.name for x in traversal] == names
@@ -135,7 +131,7 @@ class TestSpecDag(object):
 
         names = ['libelf', 'libdwarf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'mpileaks']
-        pairs = zip([4, 3, 2, 3, 2, 1, 0], names)
+        pairs = list(zip([4, 3, 2, 3, 2, 1, 0], names))
 
         traversal = dag.traverse(order='post')
         assert [x.name for x in traversal] == names
@@ -149,7 +145,7 @@ class TestSpecDag(object):
 
         names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'zmpi', 'mpileaks']
-        pairs = zip([4, 3, 3, 2, 3, 2, 1, 1, 0], names)
+        pairs = list(zip([4, 3, 3, 2, 3, 2, 1, 1, 0], names))
 
         traversal = dag.traverse(cover='edges', order='post')
         assert [x.name for x in traversal] == names
@@ -163,7 +159,7 @@ class TestSpecDag(object):
 
         names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
                  'callpath', 'fake', 'zmpi', 'mpileaks']
-        pairs = zip([4, 3, 3, 2, 3, 2, 1, 2, 1, 0], names)
+        pairs = list(zip([4, 3, 3, 2, 3, 2, 1, 2, 1, 0], names))
 
         traversal = dag.traverse(cover='paths', order='post')
         assert [x.name for x in traversal] == names
@@ -612,6 +608,8 @@ class TestSpecDag(object):
         assert '^mpich2' in s2
 
     def test_construct_spec_with_deptypes(self):
+        """Ensure that it is possible to construct a spec with explicit
+           dependency types."""
         s = Spec('a',
                  Spec('b',
                       ['build'], Spec('c')),
@@ -636,7 +634,12 @@ class TestSpecDag(object):
         assert s['f']._dependents['e'].deptypes == ('run',)
 
     def check_diamond_deptypes(self, spec):
-        """Validate deptypes in dt-diamond spec."""
+        """Validate deptypes in dt-diamond spec.
+
+        This ensures that concretization works properly when two packages
+        depend on the same dependency in different ways.
+
+        """
         assert spec['dt-diamond']._dependencies[
             'dt-diamond-left'].deptypes == ('build', 'link')
 
@@ -690,3 +693,98 @@ class TestSpecDag(object):
 
         s4 = s3.copy()
         self.check_diamond_deptypes(s4)
+
+    def test_getitem_query(self):
+        s = Spec('mpileaks')
+        s.concretize()
+
+        # Check a query to a non-virtual package
+        a = s['callpath']
+
+        query = a.last_query
+        assert query.name == 'callpath'
+        assert len(query.extra_parameters) == 0
+        assert not query.isvirtual
+
+        # Check a query to a virtual package
+        a = s['mpi']
+
+        query = a.last_query
+        assert query.name == 'mpi'
+        assert len(query.extra_parameters) == 0
+        assert query.isvirtual
+
+        # Check a query to a virtual package with
+        # extra parameters after query
+        a = s['mpi:cxx,fortran']
+
+        query = a.last_query
+        assert query.name == 'mpi'
+        assert len(query.extra_parameters) == 2
+        assert 'cxx' in query.extra_parameters
+        assert 'fortran' in query.extra_parameters
+        assert query.isvirtual
+
+    def test_getitem_exceptional_paths(self):
+        s = Spec('mpileaks')
+        s.concretize()
+        # Needed to get a proxy object
+        q = s['mpileaks']
+
+        # Test that the attribute is read-only
+        with pytest.raises(AttributeError):
+            q.libs = 'foo'
+
+        with pytest.raises(AttributeError):
+            q.libs
+
+    def test_canonical_deptype(self):
+        # special values
+        assert canonical_deptype(all) == alldeps
+        assert canonical_deptype('all') == alldeps
+        assert canonical_deptype(None) == alldeps
+
+        # everything in alldeps is canonical
+        for v in alldeps:
+            assert canonical_deptype(v) == (v,)
+
+        # tuples
+        assert canonical_deptype(('build',)) == ('build',)
+        assert canonical_deptype(
+            ('build', 'link', 'run')) == ('build', 'link', 'run')
+        assert canonical_deptype(
+            ('build', 'link')) == ('build', 'link')
+        assert canonical_deptype(
+            ('build', 'run')) == ('build', 'run')
+
+        # lists
+        assert canonical_deptype(
+            ['build', 'link', 'run']) == ('build', 'link', 'run')
+        assert canonical_deptype(
+            ['build', 'link']) == ('build', 'link')
+        assert canonical_deptype(
+            ['build', 'run']) == ('build', 'run')
+
+        # sorting
+        assert canonical_deptype(
+            ('run', 'build', 'link')) == ('build', 'link', 'run')
+        assert canonical_deptype(
+            ('run', 'link', 'build')) == ('build', 'link', 'run')
+        assert canonical_deptype(
+            ('run', 'link')) == ('link', 'run')
+        assert canonical_deptype(
+            ('link', 'build')) == ('build', 'link')
+
+        # can't put 'all' in tuple or list
+        with pytest.raises(ValueError):
+            canonical_deptype(['all'])
+        with pytest.raises(ValueError):
+            canonical_deptype(('all',))
+
+        # invalid values
+        with pytest.raises(ValueError):
+            canonical_deptype('foo')
+        with pytest.raises(ValueError):
+            canonical_deptype(('foo', 'bar'))
+        with pytest.raises(ValueError):
+            canonical_deptype(('foo',))

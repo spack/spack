@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Callpath(Package):
+class Callpath(CMakePackage):
     """Library for representing callpaths consistently in
        distributed-memory performance tools."""
 
@@ -35,15 +35,20 @@ class Callpath(Package):
     version('1.0.2', 'b1994d5ee7c7db9d27586fc2dcf8f373')
     version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
 
-    depends_on("libelf")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on('cmake', type='build')
+    depends_on('elf', type='link')
+    depends_on('libdwarf')
+    depends_on('dyninst')
+    depends_on('adept-utils')
+    depends_on('mpi')
+    depends_on('cmake@2.8:', type='build')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
         # TODO: offer options for the walker used.
-        cmake('.', "-DCALLPATH_WALKER=dyninst", *std_cmake_args)
-        make()
-        make("install")
+        args = ["-DCALLPATH_WALKER=dyninst"]
+
+        if spec.satisfies("^dyninst@9.3.0:"):
+            std_flag = self.compiler.cxx11_flag
+            args.append("-DCMAKE_CXX_FLAGS='{0} -fpermissive'".format(
+                std_flag))
+
+        return args

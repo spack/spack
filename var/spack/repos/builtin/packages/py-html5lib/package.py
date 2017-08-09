@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,9 +29,9 @@ class PyHtml5lib(PythonPackage):
     """HTML parser based on the WHATWG HTML specification."""
 
     homepage = "https://github.com/html5lib/html5lib-python"
-    url      = "https://pypi.python.org/packages/ae/ae/bcb60402c60932b32dfaf19bb53870b29eda2cd17551ba5639219fb5ebf9/html5lib-0.9999999.tar.gz"
+    url      = "https://pypi.io/packages/source/h/html5lib/html5lib-0.9999999.tar.gz"
 
     version('0.9999999', 'ef43cb05e9e799f25d65d1135838a96f')
 
-    depends_on('python@2.6:2.7,3.2:3.4')
+    depends_on('python@2.6:2.8,3.2:3.4')
     depends_on('py-six', type=('build', 'run'))

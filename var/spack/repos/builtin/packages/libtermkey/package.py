@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,6 +35,9 @@ class Libtermkey(Package):
     version('0.16', '7a24b675aaeb142d30db28e7554987d4')
     version('0.15b', '27689756e6c86c56ae454f2ac259bc3d')
     version('0.14', 'e08ce30f440f9715c459060e0e048978')
+
+    depends_on('libtool', type='build')
+    depends_on('ncurses')
 
     def install(self, spec, prefix):
         make()

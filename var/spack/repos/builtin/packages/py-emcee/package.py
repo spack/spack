@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,8 +30,9 @@ class PyEmcee(PythonPackage):
     Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler."""
 
     homepage = "http://dan.iel.fm/emcee/current/"
-    url = "https://pypi.python.org/packages/source/e/emcee/emcee-2.1.0.tar.gz"
+    url = "https://pypi.io/packages/source/e/emcee/emcee-2.1.0.tar.gz"
 
     version('2.1.0', 'c6b6fad05c824d40671d4a4fc58dfff7')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))

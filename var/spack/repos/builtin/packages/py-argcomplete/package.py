@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ class PyArgcomplete(PythonPackage):
     """Bash tab completion for argparse."""
 
     homepage = "https://pypi.python.org/pypi/argcomplete"
-    url      = "https://pypi.python.org/packages/source/a/argcomplete/argcomplete-1.1.1.tar.gz"
+    url      = "https://pypi.io/packages/source/a/argcomplete/argcomplete-1.1.1.tar.gz"
 
     version('1.1.1', '89a3839096c9f991ad33828e72d21abf')
 
