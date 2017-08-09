@@ -41,10 +41,11 @@ from spack import *
 
 
 class Ga(AutotoolsPackage):
-    """Global Arrays (GA) is a Partitioned Global Address Space (PGAS) programming model."""
+    """Global Arrays (GA) is a Partitioned Global Address Space (PGAS)
+       programming model."""
 
     homepage = "http://www.example.com"
-    url      = "https://github.com/GlobalArrays/ga/archive/v5.6.1.tar.gz"
+    url = "https://github.com/GlobalArrays/ga/archive/v5.6.1.tar.gz"
 
     version('5.6.1', 'bf63d6b4170eefa8548bcbd46912989b')
 
@@ -53,4 +54,3 @@ class Ga(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('openmpi')
-    # depends_on('foo')
