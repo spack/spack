@@ -30,15 +30,11 @@ class Soapindel(MakefilePackage):
        paired-end sequencing data."""
 
     homepage = "http://soap.genomics.org.cn/soapindel.html"
-    url      = "http://soap.genomics.org.cn/down/SOAPindel_20130918_2.1.7.17.zip"
 
-    version('2.1.7.17', '317ef494173969cdc6a8244dd87d06bd')
+    version('2.1.7.17', '317ef494173969cdc6a8244dd87d06bd',
+            url='http://soap.genomics.org.cn/down/SOAPindel_20130918_2.1.7.17.zip')
 
     depends_on('perl', type=('build', 'run'))
-
-    def url_for_version(self, version):
-        url = 'http://soap.genomics.org.cn/down/SOAPindel_20130918_{0}.zip'
-        return url.format(version)
 
     build_directory = 'indel_detection.release'
 
