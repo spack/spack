@@ -77,6 +77,7 @@ class Adios2(CMakePackage):
     # depends_on('pybind11@2.1.1:', when='+python')
 
     depends_on('mpi', when='+mpi')
+    depends_on('zeromq', when='+dataman')
 
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
