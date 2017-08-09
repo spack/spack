@@ -38,4 +38,4 @@ class Ga(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
-    depends_on('openmpi')
+    depends_on('mpi')
