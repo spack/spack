@@ -128,27 +128,29 @@ class Opencv(CMakePackage):
         ]
 
         # Media I/O
-        zlib = spec['zlib']
-        args.extend([
-            '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(zlib.prefix.lib,
-                          'libz.{0}'.format(dso_suffix))),
-            '-DZLIB_INCLUDE_DIR:PATH={0}'.format(zlib.prefix.include)
-        ])
+        if '+zlib' in spec:
+            zlib = spec['zlib']
+            args.extend([
+                '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(zlib.prefix.lib,
+                              'libz.{0}'.format(dso_suffix))),
+                '-DZLIB_INCLUDE_DIR:PATH={0}'.format(zlib.prefix.include)
+            ])
 
-        libpng = spec['libpng']
-        args.extend([
-            '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(libpng.prefix.lib,
-                          'libpng.{0}'.format(dso_suffix))),
-            '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
-        ])
+        if '+png' in spec:
+            libpng = spec['libpng']
+            args.extend([
+                '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(libpng.prefix.lib,
+                              'libpng.{0}'.format(dso_suffix))),
+                '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
+            ])
 
         if '+jpeg' in spec:
             libjpeg = spec['libjpeg-turbo']
-            cmake_options.extend([
+            args.extend([
                 '-DBUILD_JPEG:BOOL=OFF',
                 '-DJPEG_LIBRARY:FILEPATH={0}'.format(
                     join_path(libjpeg.prefix.lib,
@@ -158,7 +160,7 @@ class Opencv(CMakePackage):
 
         if '+tiff' in spec:
             libtiff = spec['libtiff']
-            cmake_options.extend([
+            args.extend([
                 '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
                     'DEBUG' if '+debug' in spec else 'RELEASE'),
                     join_path(libtiff.prefix.lib,
@@ -168,7 +170,7 @@ class Opencv(CMakePackage):
 
         if '+jasper' in spec:
             jasper = spec['jasper']
-            cmake_options.extend([
+            args.extend([
                 '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
                     'DEBUG' if '+debug' in spec else 'RELEASE'),
                     join_path(jasper.prefix.lib,
