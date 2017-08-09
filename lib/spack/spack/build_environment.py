@@ -54,6 +54,7 @@ calls you can make from within the install() function.
 import inspect
 import multiprocessing
 import os
+import errno
 import shutil
 import sys
 import traceback
@@ -336,6 +337,7 @@ def set_module_variables_for_package(pkg, module):
     m.make = MakeExecutable('make', jobs)
     m.gmake = MakeExecutable('gmake', jobs)
     m.scons = MakeExecutable('scons', jobs)
+    m.ninja = MakeExecutable('ninja', jobs)
 
     # easy shortcut to os.environ
     m.env = os.environ
@@ -581,8 +583,15 @@ def fork(pkg, function, dirty=False):
     parent_connection, child_connection = multiprocessing.Pipe()
     try:
         # Forward sys.stdin to be able to activate / deactivate
-        # verbosity pressing a key at run-time
-        input_stream = lang.duplicate_stream(sys.stdin)
+        # verbosity pressing a key at run-time.  When sys.stdin can't
+        # be duplicated (e.g. running under nohup, which results in an
+        # '[Errno 22] Invalid argument') then just use os.devnull
+        try:
+            input_stream = lang.duplicate_stream(sys.stdin)
+        except OSError as e:
+            if e.errno == errno.EINVAL:
+                tty.debug("Using devnull as input_stream")
+                input_stream = open(os.devnull)
         p = multiprocessing.Process(
             target=child_execution,
             args=(child_connection, input_stream)

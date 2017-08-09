@@ -711,13 +711,34 @@ class Database(object):
             return self._remove(spec)
 
     @_autospec
-    def installed_dependents(self, spec):
-        """List the installed specs that depend on this one."""
-        dependents = set()
+    def installed_relatives(self, spec, direction='children', transitive=True):
+        """Return installed specs related to this one."""
+        if direction not in ('parents', 'children'):
+            raise ValueError("Invalid direction: %s" % direction)
+
+        relatives = set()
         for spec in self.query(spec):
-            for dependent in spec.traverse(direction='parents', root=False):
-                dependents.add(dependent)
-        return dependents
+            if transitive:
+                to_add = spec.traverse(direction=direction, root=False)
+            elif direction == 'parents':
+                to_add = spec.dependents()
+            else:  # direction == 'children'
+                to_add = spec.dependencies()
+
+            for relative in to_add:
+                hash_key = relative.dag_hash()
+                if hash_key not in self._data:
+                    reltype = ('Dependent' if direction == 'parents'
+                               else 'Dependency')
+                    tty.warn("Inconsistent state! %s %s of %s not in DB"
+                             % (reltype, hash_key, spec.dag_hash()))
+                    continue
+
+                if not self._data[hash_key].installed:
+                    continue
+
+                relatives.add(relative)
+        return relatives
 
     @_autospec
     def installed_extensions_for(self, extendee_spec):

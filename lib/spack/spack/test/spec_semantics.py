@@ -307,6 +307,20 @@ class TestSpecSematics(object):
         # Check that conditional dependencies are treated correctly
         assert '^b' in a
 
+    def test_unsatisfied_single_valued_variant(self):
+        a = Spec('a foobar=baz')
+        a.concretize()
+        assert '^b' not in a
+
+        mv = Spec('multivalue_variant')
+        mv.concretize()
+        assert 'a@1.0' not in mv
+
+    def test_indirect_unsatisfied_single_valued_variant(self):
+        spec = Spec('singlevalue-variant-dependent')
+        spec.concretize()
+        assert 'a@1.0' not in spec
+
     def test_unsatisfiable_multi_value_variant(self):
 
         # Semantics for a multi-valued variant is different

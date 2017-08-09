@@ -8,7 +8,9 @@
 *~
 .DS_Store
 .idea
-/etc/spack/licenses
+# Ignore everything in /etc/spack except /etc/spack/defaults
+/etc/spack/*
+!/etc/spack/defaults
 /etc/spackconfig
 /share/spack/dotkit
 /share/spack/modules

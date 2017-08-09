@@ -74,7 +74,7 @@ class Lammps(MakefilePackage):
             config.append('CCFLAGS = -fopenmp')
             config.append('LINKFLAGS = -fopenmp $(OPTFLAGS)')
 
-        config.append('SHFLAGS = -fPIC')
+        config.append('SHFLAGS = {0}'.format(self.compiler.pic_flag))
         config.append('DEPFLAGS = -M')
         config.append('LINK = c++')
 
