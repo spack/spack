@@ -43,7 +43,7 @@ class Kripke(CMakePackage):
 
     def cmake_args(self):
         def enabled(variant):
-            return (1 if variant in spec else 0)
+            return (1 if variant in self.spec else 0)
 
         return [
             '-DENABLE_OPENMP=%d' % enabled('+openmp'),
@@ -54,4 +54,4 @@ class Kripke(CMakePackage):
         # Kripke does not provide install target, so we have to copy
         # things into place.
         mkdirp(prefix.bin)
-        install('kripke', prefix.bin)
+        install('spack-build/kripke', prefix.bin)
