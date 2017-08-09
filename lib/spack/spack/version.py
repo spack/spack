@@ -202,25 +202,6 @@ class Version(object):
     def highest(self):
         return self
 
-    def isnumeric(self):
-        """Tells if this version is numeric (vs. a non-numeric version).  A
-        version will be numeric as long as the first section of it is,
-        even if it contains non-numerica portions.
-
-        Some numeric versions:
-            1
-            1.1
-            1.1a
-            1.a.1b
-            develop   == +infinity
-            1.develop == 1.+infinity
-        Some non-numeric versions:
-            system
-            myfavoritebranch
-        """
-        return (isinstance(self.version[0], numbers.Integral) or
-                self.version[0] in infinity_versions)
-
     def isdevelop(self):
         """Triggers on the special case of the `@develop-like` version."""
         for inf in infinity_versions:
@@ -282,8 +263,21 @@ class Version(object):
     def concrete(self):
         return self
 
-    def _numeric_lt(self, other):
-        """Compares two versions, knowing they're both numeric"""
+    @coerced
+    def __lt__(self, other):
+        """Version comparison is designed for consistency with the way RPM
+           does things.  If you need more complicated versions in installed
+           packages, you should override your package's version string to
+           express it more sensibly.
+        """
+        if other is None:
+            return False
+
+        # Coerce if other is not a Version
+        # simple equality test first.
+        if self.version == other.version:
+            return False
+
         # Standard comparison of two numeric versions
         for a, b in zip(self.version, other.version):
             if a == b:
@@ -313,37 +307,6 @@ class Version(object):
         # If the common prefix is equal, the one
         # with more segments is bigger.
         return len(self.version) < len(other.version)
-
-    @coerced
-    def __lt__(self, other):
-        """Version comparison is designed for consistency with the way RPM
-           does things.  If you need more complicated versions in installed
-           packages, you should override your package's version string to
-           express it more sensibly.
-        """
-        if other is None:
-            return False
-
-        # Coerce if other is not a Version
-        # simple equality test first.
-        if self.version == other.version:
-            return False
-
-        # Principle: Non-numeric is less than numeric
-        # (so numeric will always be preferred by default)
-        if self.isnumeric():
-            if other.isnumeric():
-                return self._numeric_lt(other)
-            else:    # self = numeric; other = non-numeric
-                # Numeric > Non-numeric (always)
-                return False
-        else:
-            if other.isnumeric():  # self = non-numeric, other = numeric
-                # non-numeric < numeric (always)
-                return True
-            else:  # Both non-numeric
-                # Maybe consider other ways to compare here...
-                return self.string < other.string
 
     @coerced
     def __eq__(self, other):
