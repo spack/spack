@@ -97,10 +97,12 @@ def changed_files(args):
     """Get list of changed files in the Spack repository."""
 
     git = which('git', required=True)
+    current_branch = git("rev-parse", "--abbrev-ref", "HEAD",
+                         output=str).strip("\n") + "..."
 
     git_args = [
         # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', 'develop...'],
+        ['diff', '--name-only', '--diff-filter=ACMR', current_branch],
         # Add changed files that have been staged but not yet committed
         ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
         # Add changed files that are unstaged

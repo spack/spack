@@ -34,20 +34,19 @@ typeset_func = subprocess.Popen('module avail',
 typeset_func.wait()
 typeset = typeset_func.stderr.read()
 MODULE_NOT_DEFINED = b'not found' in typeset
+MODULE_ENV = "BASH_FUNC_module()" if os.environ.get("BASH_FUNC_module()", None) is not None else "BASH_FUNC_module%%"
 
-
-@pytest.fixture
+@pytest.fixture()
 def save_env():
     old_PATH = os.environ.get('PATH', None)
-    old_bash_func = os.environ.get('BASH_FUNC_module()', None)
+    old_bash_func = os.environ.get(MODULE_ENV, None)
 
     yield
 
     if old_PATH:
         os.environ['PATH'] = old_PATH
     if old_bash_func:
-        os.environ['BASH_FUNC_module()'] = old_bash_func
-
+        os.environ[MODULE_ENV] = old_bash_func
 
 def test_get_path_from_module(save_env):
     lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
@@ -57,18 +56,18 @@ def test_get_path_from_module(save_env):
 
     for line in lines:
         module_func = '() { eval `echo ' + line + ' bash filler`\n}'
-        os.environ['BASH_FUNC_module()'] = module_func
+        os.environ[MODULE_ENV] = module_func
         path = get_path_from_module('mod')
 
         assert path == '/path/to'
 
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
+    os.environ[MODULE_ENV] = '() { eval $(echo fill bash $*)\n}'
     path = get_path_from_module('mod')
 
     assert path is None
 
 
-def test_get_argument_from_module_line():
+def test_get_argument_from_module_line(save_env):
     lines = ['prepend-path LD_LIBRARY_PATH /lib/path',
              'prepend-path  LD_LIBRARY_PATH  /lib/path',
              "prepend_path('PATH' , '/lib/path')",
@@ -103,7 +102,7 @@ def test_get_module_cmd_from_bash_using_modules():
 
 
 def test_get_module_cmd_from_bash_ticks(save_env):
-    os.environ['BASH_FUNC_module()'] = '() { eval `echo bash $*`\n}'
+    os.environ[MODULE_ENV] = '() { eval `echo bash $*`\n}'
 
     module_cmd = get_module_cmd()
     module_cmd_list = module_cmd('list', output=str, error=str)
@@ -112,7 +111,7 @@ def test_get_module_cmd_from_bash_ticks(save_env):
 
 
 def test_get_module_cmd_from_bash_parens(save_env):
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
+    os.environ[MODULE_ENV] = '() { eval $(echo fill bash $*)\n}'
 
     module_cmd = get_module_cmd()
     module_cmd_list = module_cmd('list', output=str, error=str)
@@ -121,7 +120,7 @@ def test_get_module_cmd_from_bash_parens(save_env):
 
 
 def test_get_module_cmd_fails(save_env):
-    os.environ.pop('BASH_FUNC_module()')
+    os.environ.pop(MODULE_ENV)
     os.environ.pop('PATH')
     with pytest.raises(ModuleError):
         module_cmd = get_module_cmd(b'--norc')
@@ -135,7 +134,7 @@ def test_get_module_cmd_from_which(tmpdir, save_env):
     f.chmod(0o770)
 
     os.environ['PATH'] = str(tmpdir.join('bin')) + ':' + os.environ['PATH']
-    os.environ.pop('BASH_FUNC_module()')
+    os.environ.pop(MODULE_ENV)
 
     module_cmd = get_module_cmd(b'--norc')
     module_cmd_list = module_cmd('list', output=str, error=str)
