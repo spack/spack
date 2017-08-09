@@ -22,36 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
+import os
 
 
-class Archer(CMakePackage):
-    """ARCHER, a data race detection tool for large OpenMP applications."""
+class Usearch(Package):
+    """USEARCH is a unique sequence analysis tool with thousands of users
+       world-wide.
 
-    homepage = "https://github.com/PRUNERS/ARCHER"
-    url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
+       Note: A manual download is required for USEARCH.
+       Spack will search your current directory for the download file.
+       Alternatively, add this file to a mirror so that Spack can find it.
+       For instructions on how to set up a mirror, see
+       http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
+    homepage = "http://www.drive5.com/usearch/"
 
-    depends_on('cmake@3.4.3:', type='build')
-    depends_on('llvm')
-    depends_on('ninja', type='build')
-    depends_on('llvm-openmp-ompt')
+    version('10.0.240', '05192b6d5e291530c190a19a3cc82b53', expand=False)
 
-    def cmake_args(self):
-        return [
-            '-G', 'Ninja',
-            '-DCMAKE_C_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER=clang++',
-            '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
-        ]
-
-    # TODO: Add better ninja support to CMakePackage
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja()
+    def url_for_version(self, version):
+        return "file://{0}/usearch{1}_i86linux32".format(os.getcwd(), version)
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja('install')
+        mkdirp(prefix.bin)
+        install('usearch{0}_i86linux32'.format(self.version),
+                prefix.bin.usearch)

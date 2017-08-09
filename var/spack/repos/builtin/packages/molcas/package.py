@@ -22,36 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
+import os
 
 
-class Archer(CMakePackage):
-    """ARCHER, a data race detection tool for large OpenMP applications."""
+class Molcas(CMakePackage):
+    """Molcas is an ab initio quantum chemistry software package
+       developed by scientists to be used by scientists.
+       Please set the path to licence file with the following command
+       export MOLCAS_LICENSE=/path/to/molcas/license/"""
 
-    homepage = "https://github.com/PRUNERS/ARCHER"
-    url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
+    homepage = "http://www.molcas.org/"
+    url = "file://{0}/molcas8.2.tar.gz".format(os.getcwd())
 
-    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
+    version('8.2', '25b5fb8e1338b458a3eaea0b3d3b5e58')
 
-    depends_on('cmake@3.4.3:', type='build')
-    depends_on('llvm')
-    depends_on('ninja', type='build')
-    depends_on('llvm-openmp-ompt')
+    # Licensing
+    license_required = True
+    license_vars = ['MOLCAS_LICENSE']
 
-    def cmake_args(self):
-        return [
-            '-G', 'Ninja',
-            '-DCMAKE_C_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER=clang++',
-            '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
-        ]
+    depends_on('openmpi')
+    depends_on('openblas')
+    depends_on('hdf5')
 
-    # TODO: Add better ninja support to CMakePackage
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja()
-
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja('install')
+    patch('install_driver.patch')

@@ -22,36 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
+import os
 
 
-class Archer(CMakePackage):
-    """ARCHER, a data race detection tool for large OpenMP applications."""
+class XplorNih(Package):
+    """XPLOR-NIH is a structure determination program.
 
-    homepage = "https://github.com/PRUNERS/ARCHER"
-    url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
+       Note: A manual download is required for XPLOR-NIH.
+       Spack will search your current directory for the download file.
+       Alternatively, add this file to a mirror so that Spack can find it.
+       For instructions on how to set up a mirror, see
+       http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
+    homepage = "https://nmr.cit.nih.gov/xplor-nih/"
 
-    depends_on('cmake@3.4.3:', type='build')
-    depends_on('llvm')
-    depends_on('ninja', type='build')
-    depends_on('llvm-openmp-ompt')
+    version('2.45', 'ab3e046604beb0effc89a1adb7bab438')
 
-    def cmake_args(self):
-        return [
-            '-G', 'Ninja',
-            '-DCMAKE_C_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER=clang++',
-            '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
-        ]
+    depends_on('python', type=('build', 'run'))
 
-    # TODO: Add better ninja support to CMakePackage
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja()
+    def url_for_version(self, version):
+        return "file://{0}/xplor-nih-{1}-Linux_x86_64.tar.gz".format(os.getcwd(), version)
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja('install')
+        install_tree(self.stage.source_path, prefix.bin)

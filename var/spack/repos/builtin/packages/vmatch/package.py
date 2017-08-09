@@ -22,36 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Archer(CMakePackage):
-    """ARCHER, a data race detection tool for large OpenMP applications."""
+class Vmatch(Package):
+    """Vmatch is a versatile software tool for efficiently solving large scale
+       sequence matching tasks"""
 
-    homepage = "https://github.com/PRUNERS/ARCHER"
-    url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
+    homepage = "http://www.vmatch.de/"
+    url      = "http://www.vmatch.de/distributions/vmatch-2.3.0-Linux_x86_64-64bit.tar.gz"
 
-    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
+    version('2.3.0', '592a4f941239494d892f3c6ff21a1423')
 
-    depends_on('cmake@3.4.3:', type='build')
-    depends_on('llvm')
-    depends_on('ninja', type='build')
-    depends_on('llvm-openmp-ompt')
-
-    def cmake_args(self):
-        return [
-            '-G', 'Ninja',
-            '-DCMAKE_C_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER=clang++',
-            '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
-        ]
-
-    # TODO: Add better ninja support to CMakePackage
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja()
+    def url_for_version(self, version):
+        url = 'http://www.vmatch.de/distributions/vmatch-{0}-Linux_x86_64-64bit.tar.gz'
+        return url.format(version)
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja('install')
+        install_tree(self.stage.source_path, prefix.bin)

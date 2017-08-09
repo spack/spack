@@ -22,36 +22,38 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
+import os.path
 
 
-class Archer(CMakePackage):
-    """ARCHER, a data race detection tool for large OpenMP applications."""
+class Varscan(Package):
+    """Variant calling and somatic mutation/CNV detection for next-generation
+       sequencing data"""
 
-    homepage = "https://github.com/PRUNERS/ARCHER"
-    url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
+    homepage = "http://dkoboldt.github.io/varscan/"
+    url      = "https://github.com/dkoboldt/varscan/releases/download/2.4.2/VarScan.v2.4.2.jar"
 
-    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
+    version('2.4.2', '4b810741505a8145a7f8f9f6791bbacf', expand=False)
 
-    depends_on('cmake@3.4.3:', type='build')
-    depends_on('llvm')
-    depends_on('ninja', type='build')
-    depends_on('llvm-openmp-ompt')
-
-    def cmake_args(self):
-        return [
-            '-G', 'Ninja',
-            '-DCMAKE_C_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER=clang++',
-            '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
-        ]
-
-    # TODO: Add better ninja support to CMakePackage
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja()
+    depends_on('java', type=('build', 'run'))
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja('install')
+        mkdirp(prefix.bin)
+        mkdirp(prefix.jar)
+        jar_file = 'VarScan.v{v}.jar'.format(v=self.version.dotted)
+        install(jar_file, prefix.jar)
+
+        script_sh = join_path(os.path.dirname(__file__), "varscan.sh")
+        script = prefix.bin.varscan
+        install(script_sh, script)
+        set_executable(script)
+
+        java = join_path(self.spec['java'].prefix, 'bin', 'java')
+        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+        filter_file('^java', java, script, **kwargs)
+        filter_file('varscan.jar', join_path(prefix.jar, jar_file),
+                    script, **kwargs)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('VARSCAN_HOME', self.prefix)
+        run_env.set('CLASSPATH', self.prefix.jar)

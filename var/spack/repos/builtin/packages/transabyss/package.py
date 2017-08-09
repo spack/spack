@@ -22,36 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Archer(CMakePackage):
-    """ARCHER, a data race detection tool for large OpenMP applications."""
+class Transabyss(Package):
+    """De novo assembly of RNAseq data using ABySS"""
 
-    homepage = "https://github.com/PRUNERS/ARCHER"
-    url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
+    homepage = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss"
+    url      = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss/releases/1.5.5/transabyss-1.5.5.zip"
 
-    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
+    version('1.5.5', '9ebe0394243006f167135cac4df9bee6')
 
-    depends_on('cmake@3.4.3:', type='build')
-    depends_on('llvm')
-    depends_on('ninja', type='build')
-    depends_on('llvm-openmp-ompt')
-
-    def cmake_args(self):
-        return [
-            '-G', 'Ninja',
-            '-DCMAKE_C_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER=clang++',
-            '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
-        ]
-
-    # TODO: Add better ninja support to CMakePackage
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja()
+    depends_on('abyss@1.5.2')
+    depends_on('python@2.7.6:', type=('build', 'run'))
+    depends_on('py-igraph@0.7.0:', type=('build', 'run'))
+    depends_on('blat')
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja('install')
+        install('transabyss', prefix)
+        install('transabyss-merge', prefix)
+        install_tree('bin', prefix.bin)
+        install_tree('utilities', prefix.utilities)

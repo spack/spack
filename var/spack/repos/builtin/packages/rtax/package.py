@@ -22,36 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Archer(CMakePackage):
-    """ARCHER, a data race detection tool for large OpenMP applications."""
+class Rtax(Package):
+    """Rapid and accurate taxonomic classification of short paired-end
+       sequence reads from the 16S ribosomal RNA gene"""
 
-    homepage = "https://github.com/PRUNERS/ARCHER"
-    url      = "https://github.com/PRUNERS/archer/archive/v1.0.0.tar.gz"
+    homepage = "https://github.com/davidsoergel/rtax"
+    url      = "http://static.davidsoergel.com/rtax-0.984.tgz"
 
-    version('1.0.0', '790bfaf00b9f57490eb609ecabfe954a')
+    version('0.984', 'e9dbbe4b3c26b0f0f6c14a5fb46aa587')
 
-    depends_on('cmake@3.4.3:', type='build')
-    depends_on('llvm')
-    depends_on('ninja', type='build')
-    depends_on('llvm-openmp-ompt')
-
-    def cmake_args(self):
-        return [
-            '-G', 'Ninja',
-            '-DCMAKE_C_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER=clang++',
-            '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
-        ]
-
-    # TODO: Add better ninja support to CMakePackage
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja()
+    depends_on('usearch')
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja('install')
+        mkdirp(prefix.bin)
+        install('rtax', prefix.bin)
+        install_tree('scripts', prefix.bin.scripts)
+        install_tree('greengenes', prefix.bin.greengenes)
