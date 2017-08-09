@@ -158,7 +158,9 @@ All deptypes are (link, build) except for x dependency on p.
         spec = Spec('w')
         spec.concretize()
 
-        v_instances = [spec['y']['v'], spec['x']['v'], spec['q']['v']]
+        v_instances = [spec['y'].get_dependency('v').spec,
+                       spec['x']['p'].get_dependency('v').spec,
+                       spec['q'].get_dependency('v').spec]
         assert all(v_instances[0] is s for s in v_instances)
     finally:
         spack.repo = saved_repo
