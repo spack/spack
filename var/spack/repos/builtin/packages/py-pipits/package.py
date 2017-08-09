@@ -25,29 +25,46 @@
 from spack import *
 
 
-class Pipits(PythonPackage):
-    """Automated pipeline for analyses of fungal ITS from the Illumina
-
-       Note: PIPITS requires that data sets are downloaded manually. The
-       environment variables will be set to the module file automatically by
-       this script, the only thing that will need to be done is placement of
-       these data sets into the appropriate directories. More information about
-       this can be found on PIPITS's homepage."""
+class PyPipits(PythonPackage):
+    """Automated pipeline for analyses of fungal ITS from the Illumina"""
 
     homepage = "https://github.com/hsgweon/pipits"
     url      = "https://github.com/hsgweon/pipits/archive/1.5.0.tar.gz"
 
     version('1.5.0', '3f9b52bd7ffbcdb96d7bec150275070a')
 
+    depends_on('python@:2.999', type=('build', 'run'))
+    depends_on('py-biom-format', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
     depends_on('hmmer')
     depends_on('fastx-toolkit')
     depends_on('vsearch')
     depends_on('itsx')
-    depends_on('py-biom-format', type=('build', 'run'))
     depends_on('rdp-classifier')
-    depends_on('java', type=('build', 'run'))
-    depends_on('python@:2.999', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
+
+    resource(
+        name='UNITE_retrained',
+        url='http://sourceforge.net/projects/pipits/files/UNITE_retrained_28.06.2017.tar.gz',
+        destination='refdb'
+    )
+
+    resource(
+        name='uchime_reference_dataset_01.01.2016.fasta',
+        url='https://unite.ut.ee/sh_files/uchime_reference_dataset_01.01.2016.zip',
+        destination=join_path('refdb', 'uchime_reference_dataset_01.01.2016')
+    )
+
+    resource(
+        name='warcup_retrained_V2',
+        url='https://sourceforge.net/projects/pipits/files/warcup_retrained_V2.tar.gz',
+        destination='refdb'
+    )
+
+    @run_after('install')
+    def install_db(self):
+        install_tree(join_path(self.stage.source_path, 'refdb'),
+                     self.prefix.refdb)
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('PIPITS_UNITE_REFERENCE_DATA_CHIMERA', join_path(
