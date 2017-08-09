@@ -97,7 +97,7 @@ def get_module_cmd_from_bash(bashopts=''):
     module_cmd = which(args[0])
     if module_cmd:
         for arg in args[1:]:
-            if arg == 'bash':
+            if arg in ('bash', 'sh'):
                 module_cmd.add_default_arg('python')
                 break
             else:
