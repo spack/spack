@@ -24,7 +24,6 @@
 ##############################################################################
 
 import os
-import stat
 import platform
 import re
 import spack
@@ -210,9 +209,6 @@ def modify_elf_object(path_name, orig_rpath, new_rpath):
     """
     Replace orig_rpath with new_rpath in RPATH of elf object path_name
     """
-    wmode = os.access(path_name, os.W_OK)
-    if not wmode:
-        os.chmod(path_name, st.st_mode | stat.S_IWUSR)
     if platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
         patchelf = Executable(get_patchelf())
@@ -220,7 +216,6 @@ def modify_elf_object(path_name, orig_rpath, new_rpath):
                  '%s' % path_name, output=str, cmd=str)
     else:
         tty.die('relocation not supported for this platform')
-    os.chmod(path_name, st.st_mode)
 
 
 def needs_binary_relocation(filetype):
