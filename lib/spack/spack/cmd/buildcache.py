@@ -30,8 +30,8 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
-from spack.binary_distribution import build_tarball
-
+import spack.binary_distribution as bindist
+from spack.binary_distribution import NoOverwriteException, NoGpgException, NoKeyException, PickKeyException, NoVerifyException, NoChecksumException
 
 description = "Create, download and install build cache files."
 section = "caching"
@@ -123,7 +123,22 @@ def createtarball(args):
                     specs.add(node)
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        build_tarball(spec, outdir, force, relative, yes_to_all, signkey)
+        try:
+            bindist.build_tarball(spec, outdir, force,
+                                  relative, yes_to_all, signkey)
+        except NoOverwriteException:
+            tty.warn("%s exists, use -f to force overwrite.")
+        except NoGpgException:
+            tty.warn("gpg2 is not available,"
+                     " use -y to create unsigned build caches")
+        except NoKeyException:
+            tty.warn("no default key available for signing,"
+                     " use -y to create unsigned build caches"
+                     " or spack gpg init to create one")
+        except PickKeyException:
+            tty.warn("multi keys available for signing,"
+                     " use -y to create unsigned build caches"
+                     " or -k <key hash> to pick a key")
 
 
 def installtarball(args):
@@ -131,7 +146,7 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.packages)
-    specs, links = spack.binary_distribution.get_specs()
+    specs, links = bindist.get_specs()
     matches = set()
     for spec in specs:
         for pkg in pkgs:
@@ -159,19 +174,28 @@ def install_tarball(spec, args):
     if s.concrete and package.installed and not force:
         tty.warn("Package for spec %s already installed." % spec.format())
     else:
-        tarball = spack.binary_distribution.download_tarball(spec)
+        tarball = bindist.download_tarball(spec)
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
-            spack.binary_distribution.extract_tarball(spec, tarball,
-                                                      yes_to_all, force)
-            spack.store.db.reindex(spack.store.layout)
+            try:
+                bindist.extract_tarball(spec, tarball, yes_to_all, force)
+            except NoOverwriteException as e:
+                tty.die("%s exists, use -f to force overwrite." % e.args)
+            except NoVerifyException:
+                tty.die("Package spec file failed signature verification,"
+                        " use -y to install unverified build caches")
+            except NoChecksumException:
+                tty.die("Package tarball failed checksum verification,"
+                        " use -y to install bad checksumed build caches")
+            finally:
+                spack.store.db.reindex(spack.store.layout)
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
                     spec.format())
 
 
 def listspecs(args):
-    specs, links = spack.binary_distribution.get_specs()
+    specs, links = bindist.get_specs()
     if args.packages:
         pkgs = set(args.packages)
         for pkg in pkgs:
@@ -195,7 +219,7 @@ def getkeys(args):
     yes_to_all = False
     if args.yes_to_all:
         yes_to_all = True
-    spack.binary_distribution.get_keys(install, yes_to_all)
+    bindist.get_keys(install, yes_to_all)
 
 
 def buildcache(parser, args):

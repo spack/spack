@@ -105,6 +105,7 @@ echo $PATH"""
 
     parser = argparse.ArgumentParser()
     buildcache.setup_parser(parser)
+    # Copy a key to the mirror to have something to download
     shutil.copyfile(spack.mock_gpg_keys_path + '/external.key',
                     'external.key')
     # Create a private key to sign package with if gpg2 available
@@ -116,6 +117,11 @@ echo $PATH"""
     args = parser.parse_args(['create', '-d', mirror_path, '-y', str(spec)])
     buildcache.buildcache(parser, args)
 
+    # Try creating the same build cache
+    try:
+        buildcache.buildcache(parser, args)
+    except:
+        pass
     # Create a build cache without signing, making rpaths relative first
     # overwriting previous build cache
     args = parser.parse_args(
