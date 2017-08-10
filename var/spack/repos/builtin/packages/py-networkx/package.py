@@ -31,8 +31,8 @@ class PyNetworkx(PythonPackage):
     homepage = "http://networkx.github.io/"
     url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
 
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
     version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
+    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
 
     depends_on('py-decorator', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
