@@ -353,8 +353,8 @@ fi
 # Write the input and output commands to debug logs if it's asked for.
 #
 if [[ $SPACK_DEBUG == TRUE ]]; then
-    input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.in.log"
-    output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.out.log"
+    input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-${SPACK_SHORT_SPEC//[^A-Za-z0-9_-]/-}.in.log"
+    output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-${SPACK_SHORT_SPEC//[^A-Za-z0-9_-]/-}.out.log"
     echo "[$mode] $command $input_command" >> "$input_log"
     echo "[$mode] ${full_command[@]}" >> "$output_log"
 fi
