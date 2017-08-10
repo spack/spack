@@ -72,7 +72,8 @@ class CbtfArgonavisGui(QMakePackage):
         spack_env.set('BOOSTROOT', self.spec['boost'].prefix)
         spack_env.set('CBTF_ROOT', self.spec['cbtf'].prefix)
         spack_env.set('CBTF_KRELL_ROOT', self.spec['cbtf-krell'].prefix)
-        spack_env.set('CBTF_ARGONAVIS_ROOT', self.spec['cbtf-argonavis'].prefix)
+        spack_env.set('CBTF_ARGONAVIS_ROOT', 
+                      self.spec['cbtf-argonavis'].prefix)
         spack_env.set('OSS_CBTF_ROOT', self.spec['openspeedshop'].prefix)
         spack_env.set('GRAPHVIZ_ROOT', self.spec['graphviz'].prefix)
         spack_env.set('QTGRAPHLIB_ROOT', self.spec['qtgraph'].prefix)
@@ -80,13 +81,13 @@ class CbtfArgonavisGui(QMakePackage):
         spack_env.set('KRELL_ROOT_XERCES', self.spec['xerces-c'].prefix)
         spack_env.set('INSTALL_ROOT', self.spec.prefix)
 
-        # The implementor of qtgraph has set up the library and include 
+        # The implementor of qtgraph has set up the library and include
         # paths in a non-conventional way.  We reflect that here.
         run_env.prepend_path(
             'LD_LIBRARY_PATH', join_path(
                 self.spec['qtgraph'].prefix.lib64,
                 '{0}'.format(self.spec['qt'].version.up_to(3))))
-        # The openspeedshop libraries are needed to actually load the 
+        # The openspeedshop libraries are needed to actually load the
         # performance information into the GUI.
         run_env.prepend_path(
             'LD_LIBRARY_PATH', self.spec['openspeedshop'].prefix.lib64)
