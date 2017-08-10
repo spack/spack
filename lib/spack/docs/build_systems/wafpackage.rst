@@ -115,3 +115,10 @@ phase, you can use:
 
 
 A list of valid options can be found by running ``./waf --help``.
+
+^^^^^^^^^^^^^^^^^^^^^^
+External documentation
+^^^^^^^^^^^^^^^^^^^^^^
+
+For more information on the Waf build system, see:
+https://waf.io/book/

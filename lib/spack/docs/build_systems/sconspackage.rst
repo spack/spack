@@ -287,3 +287,10 @@ compilers, which are stored in ``self.compiler.cc`` and friends.
 Note that this may involve passing additional flags to the build to
 locate dependencies, a task normally done by the compiler wrappers.
 ``serf`` is an example of a package with this limitation.
+
+^^^^^^^^^^^^^^^^^^^^^^
+External documentation
+^^^^^^^^^^^^^^^^^^^^^^
+
+For more information on the SCons build system, see:
+http://scons.org/documentation.html

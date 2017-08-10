@@ -102,3 +102,10 @@ override the ``qmake_args`` method like so:
 
 
 This method can be used to pass flags as well as variables.
+
+^^^^^^^^^^^^^^^^^^^^^^
+External documentation
+^^^^^^^^^^^^^^^^^^^^^^
+
+For more information on the QMake build system, see:
+http://doc.qt.io/qt-5/qmake-manual.html

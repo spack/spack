@@ -285,3 +285,11 @@ install the package:
        mkdir(prefix.bin)
        install('foo', prefix.bin)
        install_tree('lib', prefix.lib)
+
+
+^^^^^^^^^^^^^^^^^^^^^^
+External documentation
+^^^^^^^^^^^^^^^^^^^^^^
+
+For more information on reading and writing Makefiles, see:
+https://www.gnu.org/software/make/manual/make.html

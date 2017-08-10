@@ -329,3 +329,10 @@ mirror and install these packages for you.
 Where Spack really shines is its ability to install non-R dependencies
 and link to them properly, something the R installation mechanism
 cannot handle.
+
+^^^^^^^^^^^^^^^^^^^^^^
+External documentation
+^^^^^^^^^^^^^^^^^^^^^^
+
+For more information on installing R packages, see:
+https://stat.ethz.ch/R-manual/R-devel/library/utils/html/INSTALL.html
