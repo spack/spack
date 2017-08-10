@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import glob
 
 
 class GenemarkEt(Package):
@@ -43,9 +44,10 @@ class GenemarkEt(Package):
         mkdirp(prefix.bin)
         with working_dir('gmes_petap'):
             install_tree('lib', prefix.lib)
-        for filename in os.listdir('gmes_petap'):
-            if filename is file:
-                install(filename, prefix.bin)
+            files = glob.iglob('*')
+            for file in files:
+                if os.path.isfile(file):
+                    install(file, prefix.bin)
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PERL5LIB', prefix.lib)
