@@ -116,6 +116,9 @@ def test_develop():
     assert_ver_lt('1.develop.1', '1.develop.2')
     assert_ver_gt('1.develop.2', '1.develop.1')
     # other +infinity versions
+    assert_ver_gt('master', '9.0')
+    assert_ver_gt('head', '9.0')
+    assert_ver_gt('trunk', '9.0')
     assert_ver_gt('develop', '9.0')
     assert_ver_gt('9.0', 'system')
     # not develop
@@ -125,6 +128,9 @@ def test_develop():
 
 def test_isdevelop():
     assert ver('develop').isdevelop()
+    assert ver('master').isdevelop()
+    assert ver('head').isdevelop()
+    assert ver('trunk').isdevelop()
     assert ver('1.develop').isdevelop()
     assert ver('1.develop.2').isdevelop()
     assert not ver('1.1').isdevelop()
