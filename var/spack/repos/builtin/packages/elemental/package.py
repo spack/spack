@@ -84,9 +84,12 @@ class Elemental(CMakePackage):
     depends_on('metis +int64', when='+int64')
     depends_on('mpi')
     # Allow Elemental to build internally when using 8-byte ints
-    depends_on('scalapack', when='+scalapack ~int64_blas')
+    depends_on('scalapack', when='+scalapack blas=openblas ~int64_blas')
     extends('python', when='+python')
     depends_on('python@:2.8', when='+python')
+    depends_on('gmp')
+    depends_on('mpc')
+    depends_on('mpfr')
 
     patch('elemental_cublas.patch', when='+cublas')
 
