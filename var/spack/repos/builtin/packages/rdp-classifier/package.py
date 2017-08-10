@@ -22,46 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class RdpClassifier(Package):
+    """The RDP Classifier is a naive Bayesian classifier that can rapidly and
+       accurately provides taxonomic assignments from domain to genus, with
+       confidence estimates for each assignment. """
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "http://rdp.cme.msu.edu/"
+    url      = "https://downloads.sourceforge.net/project/rdp-classifier/rdp-classifier/rdp_classifier_2.12.zip"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    version('2.12', '7fdfa33512629810f0ff06b905642ddd')
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
+    depends_on('java', type=('build', 'run'))
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
-
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
-
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install(join_path('dist', 'classifier.jar'), prefix.bin)
+        install_tree(join_path('dist', 'lib'), prefix.bin.lib)
+        install(join_path('lib', 'junit-4.8.2.jar'), prefix.bin.lib)
+        install_tree('src', prefix.src)

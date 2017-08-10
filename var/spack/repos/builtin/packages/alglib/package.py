@@ -22,46 +22,40 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
+import glob
+import os
+import shutil
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class Alglib(MakefilePackage):
+    """ALGLIB is a cross-platform numerical analysis and data processing
+    library."""
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "http://www.alglib.net"
+    url      = "http://www.alglib.net/translator/re/alglib-3.11.0.cpp.gpl.tgz"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    version('3.11.0', 'f87bb05349924d486e8809590dee9f80')
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
+    def url_for_version(self, version):
+        return 'http://www.alglib.net/translator/re/alglib-{0}.cpp.gpl.tgz'.format(version.dotted)
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
+    build_directory = 'src'
 
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
+    def edit(self, spec, prefix):
+        # this package has no build system!
+        make_file_src = join_path(os.path.dirname(self.module.__file__),
+                                  'Makefile')
+        make_file = join_path(self.stage.source_path, 'src', 'Makefile')
+        shutil.copy(make_file_src, make_file)
+        filter_file(r'so', dso_suffix, make_file)
 
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+    def install(self, spec, prefix):
+        name = 'libalglib.{0}'.format(dso_suffix)
+        with working_dir('src'):
+            mkdirp(prefix.lib)
+            install(name, prefix.lib)
+            mkdirp(prefix.include)
+            headers = glob.glob('*.h')
+            for h in headers:
+                install(h, prefix.include)

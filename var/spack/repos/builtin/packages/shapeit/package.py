@@ -22,46 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class Shapeit(Package):
+    """SHAPEIT is a fast and accurate method for estimation of haplotypes (aka
+       phasing) from genotype or sequencing data."""
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.html"
+    url      = "https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.v2.r837.GLIBCv2.12.Linux.dynamic.tgz"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    version('2.837', '895873bb655a0a985cbfd870fdd1dd60')
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
+    def url_for_version(self, version):
+        url = 'https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.v{0}.r{1}.GLIBCv2.12.Linux.dynamic.tgz'
+        return url.format(version[0], version[1])
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
-
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
-
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        with working_dir('bin'):
+            install('shapeit', prefix.bin)

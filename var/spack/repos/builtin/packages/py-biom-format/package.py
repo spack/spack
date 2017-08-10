@@ -22,39 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-import spack.stage as stage
-
-description = "remove temporary build files and/or downloaded archives"
-section = "admin"
-level = "long"
+from spack import *
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        '-s', '--stage', action='store_true', default=True,
-        help="remove all temporary build stages (default)")
-    subparser.add_argument(
-        '-d', '--downloads', action='store_true',
-        help="remove cached downloads")
-    subparser.add_argument(
-        '-m', '--misc-cache', action='store_true',
-        help="remove long-lived caches, like the virtual package index")
-    subparser.add_argument(
-        '-a', '--all', action='store_true',
-        help="remove all of the above")
+class PyBiomFormat(PythonPackage):
+    """The BIOM file format (canonically pronounced biome) is designed to be
+       a general-use format for representing biological sample by observation
+       contingency tables."""
 
+    homepage = "https://pypi.python.org/pypi/biom-format/2.1.6"
+    url      = "https://pypi.io/packages/source/b/biom-format/biom-format-2.1.6.tar.gz"
 
-def purge(parser, args):
-    # Special case: no flags.
-    if not any((args.stage, args.downloads, args.misc_cache, args.all)):
-        stage.purge()
-        return
+    version('2.1.6', '1dd4925b74c56e8ee864d5e1973068de')
 
-    # handle other flags with fall through.
-    if args.stage or args.all:
-        stage.purge()
-    if args.downloads or args.all:
-        spack.fetch_cache.destroy()
-    if args.misc_cache or args.all:
-        spack.misc_cache.destroy()
+    variant('h5py', default=True, description='For use with BIOM 2.0+ files')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython', type='build')
+    depends_on('py-h5py', type=('build', 'run'), when='+h5py')
+    depends_on('py-click', type=('build', 'run'))
+    depends_on('py-numpy@1.3.0:', type=('build', 'run'))
+    depends_on('py-future@0.16.0:', type=('build', 'run'))
+    depends_on('py-scipy@0.13.0:', type=('build', 'run'))
+    depends_on('py-pandas@0.19.2:', type=('build', 'run'))
+    depends_on('py-six@1.10.0:', type=('build', 'run'))

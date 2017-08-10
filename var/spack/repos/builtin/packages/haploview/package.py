@@ -22,46 +22,33 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
+import os.path
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class Haploview(Package):
+    """Haploview is designed to simplify and expedite the process of haplotype
+       analysis."""
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "http://www.broadinstitute.org/haploview/haploview"
+    url      = "https://downloads.sourceforge.net/project/haploview/release/Haploview4.1.jar"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    version('4.1', 'f7aa4accda5fad1be74c9c1969c6ee7d', expand=False)
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
+    depends_on('java', type=('build', 'run'))
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        jar_file = 'Haploview{v}.jar'.format(v=self.version)
+        install(jar_file, prefix.bin)
 
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
+        script_sh = join_path(os.path.dirname(__file__), "haploview.sh")
+        script = prefix.bin.haploview
+        install(script_sh, script)
+        set_executable(script)
 
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+        java = self.spec['java'].prefix.bin.java
+        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+        filter_file('^java', java, script, **kwargs)
+        filter_file('haploview.jar', join_path(prefix.bin, jar_file),
+                    script, **kwargs)

@@ -22,46 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class Itsx(Package):
+    """Improved software detection and extraction of ITS1 and ITS2 from
+       ribosomal ITS sequences of fungi and other eukaryotes for use in
+       environmental sequencing"""
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "http://microbiology.se/software/itsx/"
+    url      = "http://microbiology.se/sw/ITSx_1.0.11.tar.gz"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    version('1.0.11', '1bff12f1d5742f19be6ca585e9bf81fa')
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
+    depends_on('perl', type=('build', 'run'))
+    depends_on('hmmer')
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
-
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
-
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('ITSx', prefix.bin)
+        install_tree('ITSx_db', prefix.bin.ITSx_db)

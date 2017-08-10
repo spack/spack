@@ -22,46 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class Soap2(Package):
+    """Software for short oligonucleotide alignment."""
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "http://soap.genomics.org.cn/soapaligner.html"
+    url      = "http://soap.genomics.org.cn/down/soap2.21release.tar.gz"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    version('2.21', '563b8b7235463b68413f9e841aa40779')
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
-
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
-
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
-
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        mkdirp(prefix.share.man)
+        install('soap', prefix.bin)
+        install('2bwt-builder', prefix.bin)
+        install('soap.1', prefix.share.man)
+        install('soap.man', prefix.share.man)

@@ -22,46 +22,32 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class Soapindel(MakefilePackage):
+    """SOAPindel is focusing on calling indels from the next-generation
+       paired-end sequencing data."""
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "http://soap.genomics.org.cn/soapindel.html"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    version('2.1.7.17', '317ef494173969cdc6a8244dd87d06bd',
+            url='http://soap.genomics.org.cn/down/SOAPindel_20130918_2.1.7.17.zip')
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
+    depends_on('perl', type=('build', 'run'))
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
+    build_directory = 'indel_detection.release'
 
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
+    def install(self, spec, prefix):
+        with working_dir('indel_detection.release'):
+            install_tree('tools', prefix.tools)
+            mkdirp(prefix.lib)
+            install('affine_align.pm', prefix.lib)
+            install('indel_lib.pm', prefix.lib)
+            mkdirp(prefix.bin)
+            install('assemble_align', prefix.bin)
+            install('cluster_reads', prefix.bin)
 
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PERL5LIB', self.prefix.lib)
+        run_env.prepend_path('PATH', self.prefix.tools)

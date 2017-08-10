@@ -22,46 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack import *
 
 
-class Cce(Compiler):
-    """Cray compiler environment compiler."""
-    # Subclasses use possible names of C compiler
-    cc_names = ['cc']
+class Soapsnp(MakefilePackage):
+    """SOAPsnp uses a method based on Bayes' theorem (the reverse probability
+       model) to call consensus genotype by carefully considering the data
+       quality, alignment, and recurring experimental errors."""
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['CC']
+    homepage = "http://soap.genomics.org.cn/soapsnp.html"
+    url      = "http://soap.genomics.org.cn/down/SOAPsnp-v1.03.tar.gz"
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ftn']
+    version('1.03', '8d69e196013657357ff840b611762ebc')
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ftn']
+    depends_on('boost')
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
-
-    PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'cce'
-
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
-
-    @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
-
-    @property
-    def openmp_flag(self):
-        return "-h omp"
-
-    @property
-    def cxx11_flag(self):
-        return "-h std=c++11"
-
-    @property
-    def pic_flag(self):
-        return "-h PIC"
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('soapsnp', prefix.bin)

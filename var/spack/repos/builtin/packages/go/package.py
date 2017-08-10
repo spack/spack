@@ -106,6 +106,10 @@ class Go(Package):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
+        # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
+        # internal Spack wrappers and fail.
+        spack_env.set('CC_FOR_TARGET', self.compiler.cc)
+        spack_env.set('CXX_FOR_TARGET', self.compiler.cxx)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before go modules' install() methods.
