@@ -48,19 +48,19 @@ class Amg2013(MakefilePackage):
     def build_targets(self):
         targets = []
 
-        include_cflags = '-DTIMER_USE_MPI'
-        include_lflags = '-lm '
+        include_cflags = ' -DTIMER_USE_MPI '
+        include_lflags = ' -lm '
 
         if '+assumepartition' in self.spec:
-            include_cflags += '-DHYPRE_NO_GLOBAL_PARTITION' + ' '
+            include_cflags += ' -DHYPRE_NO_GLOBAL_PARTITION '
 
         if '+openmp' in self.spec:
-            include_cflags += '-DHYPRE_USING_OPENMP '
+            include_cflags += ' -DHYPRE_USING_OPENMP '
             include_cflags += self.compiler.openmp_flag
             include_lflags += ' ' + self.compiler.openmp_flag
 
-        targets.append('INCLUDE_CFLAGS={0}'.format(include_cflags))
-        targets.append('INCLUDE_LFLAGS={0}'.format(include_lflags))
+        targets.append('INCLUDE_CFLAGS={0}'.format(' '.join(include_cflags)))
+        targets.append('INCLUDE_LFLAGS={0}'.format(' '.join(include_lflags)))
         targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
 
         return targets
