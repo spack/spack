@@ -35,6 +35,11 @@ import llnl.util.tty as tty
 
 
 def get_patchelf():
+    """
+    Builds and installs spack patchelf package on linux platforms
+    using the first concretized spec.
+    Returns the full patchelf binary path.
+    """
     # as we may need patchelf, find out where it is
     if platform.system() == 'Darwin':
         return None
@@ -48,7 +53,8 @@ def get_patchelf():
 
 def get_existing_elf_rpaths(path_name):
     """
-    Return the RPATHS in given elf file as a list of strings.
+    Return the RPATHS returned by patchelf --print-rpath path_name
+    as a list of strings.
     """
     if platform.system() == 'Linux':
         command = Executable(get_patchelf())
@@ -61,6 +67,11 @@ def get_existing_elf_rpaths(path_name):
 
 
 def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
+    """
+    Replaces orig_dir with relative path from dirname(path_name) to
+    orig_dir if rpath in orig_rpaths contains orig_path. Prefixes $ORIGIN
+    to relative paths and returns update rpaths.
+    """
     rel_rpaths = []
     for rpath in orig_rpaths:
         if re.match(orig_dir, rpath):
@@ -72,6 +83,12 @@ def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
 
 
 def macho_get_paths(path_name):
+    """
+    Examines the output of otool -l path_name for these three fields:
+    LC_ID_DYLIB, LC_LOAD_DYLIB, LC_RPATH and parses out the rpaths,
+    dependiencies and library id.
+    Returns these values.
+    """
     otool = Executable('otool')
     output = otool("-l", path_name, output=str, err=str)
     last_cmd = None
@@ -98,6 +115,10 @@ def macho_get_paths(path_name):
 
 
 def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
+    """
+    Replace old_dir with relative path from dirname(path_name) to old_dir
+    in rpaths, deps and idpaths and return replacements
+    """
     id = None
     nrpaths = []
     ndeps = []
@@ -119,6 +140,10 @@ def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
 
 
 def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
+    """
+    Replace old_dir with new_dir in rpaths, deps and idpath
+    and return replacements
+    """
     id = None
     nrpaths = []
     ndeps = []
@@ -135,9 +160,8 @@ def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
 
 def modify_macho_object(path_name, old_dir, new_dir, relative):
     """
-    Modify MachO binaries by changing rpaths,and id and dependency lib paths.
-    Examines the output of otool -l for these three fields:
-    LC_ID_DYLIB, LC_LOAD_DYLIB, LC_RPATH
+    Modify MachO binary path_name by replacing old_dir with new_dir
+    or the relative path to spack install root.
     The old install dir in LC_ID_DYLIB is replaced with the new install dir
     using install_name_tool -id newid binary
     The old install dir in LC_LOAD_DYLIB is replaced with the new install dir
@@ -159,8 +183,6 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
     else:
         nrpaths, ndeps, id = macho_replace_paths(old_dir, new_dir, rpaths,
                                                  deps, idpath)
-    st = os.stat(path_name)
-    # some installs create read-only binaries
     install_name_tool = Executable('install_name_tool')
     if id:
         install_name_tool('-id', id, path_name, output=str, err=str)
@@ -170,13 +192,12 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
 
     for orig, new in zip(rpaths, nrpaths):
         install_name_tool('-rpath', orig, new, path_name)
-        os.chmod(path_name, st.st_mode)
     return
 
 
 def get_filetype(path_name):
     """
-    Check the output of the file command for given string.
+    Return the output of file path_name as a string to identify file type.
     """
     file = Executable('file')
     file.add_default_env('LC_ALL', 'C')
@@ -187,9 +208,8 @@ def get_filetype(path_name):
 
 def modify_elf_object(path_name, orig_rpath, new_rpath):
     """
-    Replace RPATH's in given elf object
+    Replace orig_rpath with new_rpath in RPATH of elf object path_name
     """
-    st = os.stat(path_name)
     wmode = os.access(path_name, os.W_OK)
     if not wmode:
         os.chmod(path_name, st.st_mode | stat.S_IWUSR)
@@ -221,14 +241,14 @@ def needs_binary_relocation(filetype):
 
 def needs_text_relocation(filetype):
     """
-    Check whether the given filetype needs relocation.
+    Check whether the given filetype is text that may need relocation.
     """
     return ("text" in filetype)
 
 
 def relocate_binary(path_name, old_dir, new_dir):
     """
-    Change RPATHs in given elf or mach-o file
+    Change old_dir to new_dir in RPATHs of elf or mach-o file path_name
     """
     if platform.system() == 'Darwin':
         modify_macho_object(path_name, old_dir, new_dir, relative=False)
@@ -242,7 +262,7 @@ def relocate_binary(path_name, old_dir, new_dir):
 
 def make_binary_relative(path_name, old_dir):
     """
-    Change RPATHs in given elf or mach-o file to relative
+    Make RPATHs relative to old_dir in given elf or mach-o file path_name
     """
     if platform.system() == 'Darwin':
         new_dir = ''
@@ -257,14 +277,14 @@ def make_binary_relative(path_name, old_dir):
 
 def relocate_text(path_name, old_dir, new_dir):
     """
-    Replace old path with new path in text files
+    Replace old path with new path in text file path_name
     """
     filter_file("r'%s'" % old_dir, "r'%s'" % new_dir, path_name)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
     """
-    Replace
+    Replace topdir with new_root_path RPATH list orig_rpath
     """
     new_rpaths = []
     for path in orig_rpath:

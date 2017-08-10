@@ -47,7 +47,7 @@ def has_gnupg2():
     try:
         gpg_util.Gpg.gpg()('--version', output=os.devnull)
         return True
-    except Exception:
+    except ProcessError:
         return False
 
 
