@@ -40,6 +40,4 @@ class Spades(CMakePackage):
 
     conflicts('%gcc@7.1.0:')
 
-    @property
-    def root_cmakelists_dir(self):
-        return join_path(self.stage.source_path, 'src')
+    root_cmakelists_dir = 'src'
