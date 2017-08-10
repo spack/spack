@@ -117,11 +117,6 @@ echo $PATH"""
     args = parser.parse_args(['create', '-d', mirror_path, '-y', str(spec)])
     buildcache.buildcache(parser, args)
 
-    # Try creating the same build cache
-    try:
-        buildcache.buildcache(parser, args)
-    except:
-        pass
     # Create a build cache without signing, making rpaths relative first
     # overwriting previous build cache
     args = parser.parse_args(

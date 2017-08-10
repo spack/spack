@@ -44,27 +44,28 @@ from spack.util.executable import ProcessError
 import spack.relocate as relocate
 
 
-class NoOverwriteException(Exception):
+class NoOverwriteException:
+    def __init__(self, arg):
+        self.args = arg
+
+
+class NoGpgException:
     pass
 
 
-class NoGpgException(Exception):
+class PickKeyException:
     pass
 
 
-class PickKeyException(Exception):
+class NoKeyException:
     pass
 
 
-class NoKeyException(Exception):
+class NoVerifyException:
     pass
 
 
-class NoVerifyException(Exception):
-    pass
-
-
-class NoChecksumException(Exception):
+class NoChecksumException:
     pass
 
 
@@ -174,21 +175,21 @@ def checksum_tarball(file):
 def sign_tarball(yes_to_all, key, force, specfile_path):
     # Sign the packages if keys available
     if not has_gnupg2():
-        return NoGpgExeption()
+        raise NoGpgException()
     else:
         if key is None:
             keys = Gpg.signing_keys()
             if len(keys) == 1:
                 key = keys[0]
             if len(keys) > 1:
-                return PickKeyException()
+                raise PickKeyException()
             if len(keys) == 0:
-                return NoKeyException()
+                raise NoKeyException()
     if os.path.exists('%s.asc' % specfile_path):
         if force:
             os.remove('%s.asc' % specfile_path)
         else:
-            return NoOverwriteException('%s.asc' % specfile_path)
+            raise NoOverwriteException('%s.asc' % specfile_path)
     Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
@@ -225,7 +226,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         if force:
             os.remove(spackfile_path)
         else:
-            return NoOverwriteException, spackfile_path
+            raise NoOverwriteException(spackfile_path)
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
     # and preferences
@@ -240,7 +241,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         if force:
             os.remove(specfile_path)
         else:
-            return NoOverwriteException(specfile_path)
+            raise NoOverwriteException(specfile_path)
     # make a copy of the install directory to work with
     prefix = join_path(outdir, os.path.basename(spec.prefix))
     if os.path.exists(prefix):
@@ -281,8 +282,12 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         try:
             sign_tarball(yes_to_all, key, force, specfile_path)
             signed = True
-        except (NoGpgException, PickKeyException, NoKeyException) as e:
-            return e
+        except NoGpgException:
+            raise NoGpgException()
+        except PickKeyException:
+            raise PickKeyException()
+        except NoKeyException():
+            raise NoLeyException()
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
@@ -363,10 +368,11 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     extract binary tarball for given package into install area
     """
     installpath = spec.prefix
-    if os.path.exists(installpath) and force:
-        shutil.rmtree(installpath)
-    else:
-        return NoOverwriteException(installpath)
+    if os.path.exists(installpath):
+        if force:
+            shutil.rmtree(installpath)
+        else:
+            raise NoOverwriteException(installpath)
     mkdirp(installpath)
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')
@@ -383,7 +389,8 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
         Gpg.verify('%s.asc' % specfile_path, specfile_path)
         os.remove(tarfile_path + '.asc')
     else:
-        return NoVerifyException()
+        if not yes_to_all:
+            raise NoVerifyException()
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
@@ -397,7 +404,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
 
     # if the checksums don't match don't install
     if bchecksum['hash'] != checksum:
-        return NoChecksumException()
+        raise NoChecksumException()
 
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
         tar.extractall(path=join_path(installpath, '..'))
