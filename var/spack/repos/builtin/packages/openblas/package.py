@@ -84,8 +84,8 @@ class Openblas(MakefilePackage):
                 'OpenBLAS requires both C and Fortran compilers!'
             )
         # Add support for OpenMP
-        if (('+openmp' in self.spec) and self.spec.satisfies('%clang')
-            and ('@:0.2.19' in self.spec)):
+        if (('+openmp' in self.spec) and self.spec.satisfies('%clang') and
+            ('@:0.2.19' in self.spec)):
             # Openblas (as of 0.2.18) hardcoded that OpenMP cannot
             # be used with any (!) compiler named clang, bummer.
             raise InstallError(
