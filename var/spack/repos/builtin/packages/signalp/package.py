@@ -37,7 +37,7 @@ class Signalp(Package):
        For instructions on how to set up a mirror, see
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://www.example.com"
+    homepage = "http://www.cbs.dtu.dk/services/SignalP/"
 
     version('4.1f', 'a9aeb66259202649c959846f3f4d9744')
 
