@@ -72,7 +72,7 @@ class CbtfArgonavisGui(QMakePackage):
         spack_env.set('BOOSTROOT', self.spec['boost'].prefix)
         spack_env.set('CBTF_ROOT', self.spec['cbtf'].prefix)
         spack_env.set('CBTF_KRELL_ROOT', self.spec['cbtf-krell'].prefix)
-        spack_env.set('CBTF_ARGONAVIS_ROOT', 
+        spack_env.set('CBTF_ARGONAVIS_ROOT',
                       self.spec['cbtf-argonavis'].prefix)
         spack_env.set('OSS_CBTF_ROOT', self.spec['openspeedshop'].prefix)
         spack_env.set('GRAPHVIZ_ROOT', self.spec['graphviz'].prefix)
