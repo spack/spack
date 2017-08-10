@@ -196,7 +196,7 @@ _separators = '[%s]' % ''.join(color_formats.keys())
 _any_version = VersionList([':'])
 
 """Types of dependencies that Spack understands."""
-alldeps = ('build', 'link', 'run')
+alldeps = ('build', 'link', 'run', 'test')
 
 """Max integer helps avoid passing too large a value to cyaml."""
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
@@ -2024,7 +2024,8 @@ class Spec(object):
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
                 deptypes = pkg.dependency_types[dep_name]
                 # If pkg_dep is a dependency, merge it.
-                if pkg_dep:
+                if pkg_dep and (spack.concretizer.test(pkg_dep.name) or
+                                set(deptypes) - set(['test'])):
                     changed |= self._merge_dependency(
                         pkg_dep, deptypes, visited, spec_deps, provider_index)
             any_change |= changed

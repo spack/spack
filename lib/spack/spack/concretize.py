@@ -53,6 +53,13 @@ class DefaultConcretizer(object):
        concretization.  You can subclass it to override just some of the
        default concretization strategies, or you can override all of them.
     """
+    def __init__(self):
+        self.test_all = False
+
+    def test(self, pkg_name):
+        if pkg_name == 'libpsl':
+            return True
+
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
            packages that coiuld be used to concretize a spec.

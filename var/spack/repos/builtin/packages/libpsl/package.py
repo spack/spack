@@ -40,7 +40,7 @@ class Libpsl(AutotoolsPackage):
     depends_on('python@2.7:', type='build')
 
     # TODO: Add a 'test' deptype
-    # depends_on('valgrind', type='test')
+    depends_on('valgrind', type='test')
 
     def configure_args(self):
         spec = self.spec

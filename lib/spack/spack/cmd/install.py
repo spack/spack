@@ -322,6 +322,9 @@ def install(parser, args, **kwargs):
         'dirty': args.dirty
     })
 
+    if args.run_tests:
+        spack.concretizer.test_all = True
+
     # Spec from cli
     specs = []
     if args.file:
