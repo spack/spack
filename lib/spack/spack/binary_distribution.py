@@ -41,6 +41,7 @@ import spack.relocate
 from contextlib import closing
 import spack.util.gpg as gpg_util
 import hashlib
+from spack.util.executable import ProcessError
 
 
 def has_gnupg2():
