@@ -52,7 +52,7 @@ class Lulesh(MakefilePackage):
         ldflags = ' -g -O3 '
         if '~mpi' in self.spec:
             targets.append('CXX = {0} {1}'.format(spack_cxx, ' -DUSE_MPI=0 '))
-        if '+mpi' in self.spec:
+        else:
             targets.append(
                 'CXX = {0} {1}'.format(self.spec['mpi'].mpicxx,
                                        ' -DUSE_MPI=1'))
@@ -65,7 +65,7 @@ class Lulesh(MakefilePackage):
             targets.append(
                 'SILO_LIBDIR = {0}'.format(self.spec['silo'].prefix.lib))
             cxxflag = ' -g -DVIZ_MESH -I${SILO_INCDIR} '
-            ldflags = ' -g -L${SILO_LIBDIR} -Wl,-rpath -Wl,'
+            ldflags = ' -g -L${SILO_LIBDIR} -Wl,-rpath -Wl, '
             ldflags += '${SILO_LIBDIR} -lsiloh5 -lhdf5 '
 
         if '+openmp' in self.spec:
