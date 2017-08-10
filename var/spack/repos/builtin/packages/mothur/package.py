@@ -35,7 +35,9 @@ class Mothur(MakefilePackage):
 
     version('1.39.5', '1f826ea4420e6822fc0db002c5940b92')
 
-    depends_on('openmpi@2:')
+    variant('mpi', default=True, description='Enable MPI parallel support')
+
+    depends_on('mpi', when='+mpi')
     depends_on('boost')
     depends_on('readline')
 
