@@ -168,7 +168,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir   = kwargs.get('metadata_dir', '.spack')
         self.hash_len       = kwargs.get('hash_len')
         self.path_scheme    = kwargs.get('path_scheme') or (
-            "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}")  # NOQA: E501
+            "${ARCHITECTURE}/"
+            "${COMPILERNAME}-${COMPILERVER}/"
+            "${PACKAGE}-${VERSION}-${HASH}")
         if self.hash_len is not None:
             if re.search('\${HASH:\d+}', self.path_scheme):
                 raise InvalidDirectoryLayoutParametersError(

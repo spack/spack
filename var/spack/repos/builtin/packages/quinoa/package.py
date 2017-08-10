@@ -38,8 +38,6 @@ class Quinoa(CMakePackage):
 
     version('develop', git='https://github.com/quinoacomputing/quinoa', branch='master')
 
-    variant('debug', default=False, description='Build debug version')
-
     depends_on('hdf5+mpi')
     depends_on("charm backend=mpi")
     depends_on("trilinos+exodus")
@@ -55,11 +53,4 @@ class Quinoa(CMakePackage):
     depends_on("pstreams")
     depends_on("pegtl")
 
-    root_cmakelists_dir = '../src'
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
+    root_cmakelists_dir = 'src'

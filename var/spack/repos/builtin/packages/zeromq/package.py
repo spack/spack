@@ -30,6 +30,10 @@ class Zeromq(AutotoolsPackage):
     homepage = "http://zguide.zeromq.org/"
     url      = "http://download.zeromq.org/zeromq-4.1.2.tar.gz"
 
+    version('develop', branch='master',
+            git='https://github.com/zeromq/libzmq.git')
+    version('4.2.2', '52499909b29604c1e47a86f1cb6a9115',
+            url='https://github.com/zeromq/libzmq/releases/download/v4.2.2/zeromq-4.2.2.tar.gz')
     version('4.1.4', 'a611ecc93fffeb6d058c0e6edf4ad4fb')
     version('4.1.2', '159c0c56a895472f02668e692d122685')
     version('4.1.1', '0a4b44aa085644f25c177f79dc13f253')
@@ -39,6 +43,16 @@ class Zeromq(AutotoolsPackage):
 
     depends_on("libsodium")
     depends_on("libsodium@:1.0.3", when='@:4.1.2')
+
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool', type='build', when='@develop')
+    depends_on('pkg-config', type='build', when='@develop')
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        bash('./autogen.sh')
 
     def configure_args(self):
         config_args = ['--with-libsodium']

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Pidx(Package):
+class Pidx(CMakePackage):
     """PIDX Parallel I/O Library.
 
     PIDX is an efficient parallel I/O library that reads and writes
@@ -37,11 +37,5 @@ class Pidx(Package):
     version('1.0', git='https://github.com/sci-visus/PIDX.git',
             commit='6afa1cf71d1c41263296dc049c8fabaf73c296da')
 
-    depends_on('cmake', type='build')
-    depends_on("mpi")
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
-            make()
-            make("install")
+    depends_on('cmake@2.8.4:', type='build')
+    depends_on('mpi')
