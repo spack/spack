@@ -95,7 +95,7 @@ class Mesa(AutotoolsPackage):
         exclude drivers for embedded systems.
         """
         spec = self.spec
-        args = []
+        args = ['--enable-glx', '--enable-glx-tls']
         drivers = []
 
         if '+swrender' in spec:
@@ -122,7 +122,6 @@ class Mesa(AutotoolsPackage):
         if '+hwrender' in spec:
             args.extend([
                 '--enable-xa',
-                '--enable-glx-tls',
                 '--with-egl-platforms=x11,drm'
             ])
             drivers.extend([
@@ -140,8 +139,6 @@ class Mesa(AutotoolsPackage):
                 '--disable-dri3',
                 '--disable-egl',
                 '--disable-gbm',
-                '--disable-gles1',
-                '--disable-glx',
                 '--disable-xvmc',
             ])
 
