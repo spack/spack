@@ -7,7 +7,7 @@ Some sites may encourage users to set up their own test environments
 before carrying out central installations, or some users prefer to set
 up these environments on their own motivation. To reduce the load of
 recompiling otherwise identical package specs in different installations,
-created build artifacts can be put into build cache tarballs, uploaded to 
+installed packages can be put into build cache tarballs, uploaded to 
 your spack mirror and then downloaded and installed by others.
 
 
@@ -62,8 +62,11 @@ Usage
 -----
 spack buildcache create <>
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Create tarball of installed spack package, checksum tarball and 
-sign tarball if gpg2 is available.
+Create tarball of installed spack package and all dependencies. 
+Tarballs is checksummed and signed if gpg2 is available.
+Places them in a directory build_cache that can be copied to a mirror.
+Commands like "spack buildcache install" will search it for pre-compiled packages.
+ 
 
 options:
 
@@ -76,6 +79,8 @@ options:
 
 spack buildcache list <>
 ^^^^^^^^^^^^^^^^^^^^^^^^
+Retrieves all specs for build caches available on a spack mirror.
+
 options:
 
 <> string to be matched to matched to begining of listed concretized short 
@@ -84,7 +89,8 @@ package(s)
 
 spack buildcache install <>
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Install "build_cache" available on spack mirror.
+Retrieves all specs for build caches available on a spack mirror and installs build caches 
+with specs matching the specs or hashes input. 
 
 options:
 

@@ -67,9 +67,9 @@ def get_existing_elf_rpaths(path_name):
 
 def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
     """
-    Replaces orig_dir with relative path from dirname(path_name) to
-    orig_dir if rpath in orig_rpaths contains orig_path. Prefixes $ORIGIN
-    to relative paths and returns update rpaths.
+    Replaces orig_dir with relative path from dirname(path_name) if an rpath
+    in orig_rpaths contains orig_path. Prefixes $ORIGIN
+    to relative paths and returns replacement rpaths.
     """
     rel_rpaths = []
     for rpath in orig_rpaths:
@@ -115,8 +115,9 @@ def macho_get_paths(path_name):
 
 def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
     """
-    Replace old_dir with relative path from dirname(path_name) to old_dir
-    in rpaths, deps and idpaths and return replacements
+    Replace old_dir with relative path from dirname(path_name)
+    in rpaths and deps; idpaths are replaced with @rpath/basebane(path_name);
+    replacement are returned.
     """
     id = None
     nrpaths = []
