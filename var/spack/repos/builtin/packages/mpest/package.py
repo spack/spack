@@ -39,7 +39,7 @@ class Mpest(MakefilePackage):
         return join_path('mpest_{0}'.format(self.version), 'src')
 
     def install(self, spec, prefix):
-        with working_dir(join_path('mpest_{0}'.format(self.version), 'src')):
+        with working_dir(self.build_directory):
             mkdirp(prefix.bin)
             install('mpest', prefix.bin)
 
