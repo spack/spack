@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
 class Mpest(MakefilePackage):
@@ -37,14 +36,13 @@ class Mpest(MakefilePackage):
 
     build_directory = join_path('mpest_1.5', 'src')
 
-    @run_before('build')
-    def set_platform(self):
-        if self.spec.satisfies('platform=darwin'):
-            os.environ['ARCHITECTURE'] = "mac"
-        else:
-            os.environ['ARCHITECTURE'] = "unix"
-
     def install(self, spec, prefix):
         with working_dir(join_path('mpest_{0}'.format(self.version), 'src')):
             mkdirp(prefix.bin)
             install('mpest', prefix.bin)
+
+    def setup_environment(self, spack_env, run_env):
+        if self.spec.satisfies('platform=darwin'):
+            spack_env.set('ARCHITECTURE', 'mac')
+        else:
+            spack_env.set('ARCHITECTURE', 'unix')
