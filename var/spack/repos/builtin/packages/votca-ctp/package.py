@@ -39,16 +39,7 @@ class VotcaCtp(CMakePackage):
 
     version('develop', git='https://github.com/votca/ctp', branch='master')
 
-    variant('debug', default=False, description='Build debug version')
-
     depends_on("cmake@2.8:", type='build')
     depends_on("votca-tools@develop", when='@develop')
     depends_on("votca-csg@develop", when='@develop')
     depends_on("votca-moo@develop", when='@develop')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'

@@ -24,11 +24,12 @@
 ##############################################################################
 
 import inspect
+import os
 import platform
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
-from spack.directives import depends_on
+from spack.directives import depends_on, variant
 from spack.package import PackageBase, run_after
 
 
@@ -48,11 +49,6 @@ class CMakePackage(PackageBase):
         +-----------------------------------------------+--------------------+
         | **Method**                                    | **Purpose**        |
         +===============================================+====================+
-        | :py:meth:`~.CMakePackage.build_type`          | Specify the value  |
-        |                                               | for the            |
-        |                                               | CMAKE_BUILD_TYPE   |
-        |                                               | variable           |
-        +-----------------------------------------------+--------------------+
         | :py:meth:`~.CMakePackage.root_cmakelists_dir` | Location of the    |
         |                                               | root CMakeLists.txt|
         +-----------------------------------------------+--------------------+
@@ -73,20 +69,21 @@ class CMakePackage(PackageBase):
 
     build_time_test_callbacks = ['check']
 
+    # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
     depends_on('cmake', type='build')
-
-    def build_type(self):
-        """Returns the correct value for the ``CMAKE_BUILD_TYPE`` variable
-
-        :return: value for ``CMAKE_BUILD_TYPE``
-        """
-        return 'RelWithDebInfo'
 
     @property
     def root_cmakelists_dir(self):
-        """Returns the location of the root CMakeLists.txt
+        """The relative path to the directory containing CMakeLists.txt
 
-        :return: directory containing the root CMakeLists.txt
+        This path is relative to the root of the extracted tarball,
+        not to the ``build_directory``. Defaults to the current directory.
+
+        :return: directory containing CMakeLists.txt
         """
         return self.stage.source_path
 
@@ -104,8 +101,8 @@ class CMakePackage(PackageBase):
     def _std_args(pkg):
         """Computes the standard cmake arguments for a generic package"""
         try:
-            build_type = pkg.build_type()
-        except AttributeError:
+            build_type = pkg.spec.variants['build_type'].value
+        except KeyError:
             build_type = 'RelWithDebInfo'
 
         args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
@@ -128,6 +125,15 @@ class CMakePackage(PackageBase):
         """
         return join_path(self.stage.source_path, 'spack-build')
 
+    def default_flag_handler(self, spack_env, flag_val):
+        # Relies on being the first thing that can affect the spack_env
+        # EnvironmentModification after it is instantiated or no other
+        # method trying to affect these variables. Currently both are true
+        # flag_val is a tuple (flag, value_list)
+        spack_env.set(flag_val[0].upper(),
+                      ' '.join(flag_val[1]))
+        return []
+
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to
         cmake, except:
@@ -143,8 +149,9 @@ class CMakePackage(PackageBase):
 
     def cmake(self, spec, prefix):
         """Runs ``cmake`` in the build directory"""
-        options = [self.root_cmakelists_dir] + self.std_cmake_args + \
-            self.cmake_args()
+        options = [os.path.abspath(self.root_cmakelists_dir)]
+        options += self.std_cmake_args
+        options += self.cmake_args()
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).cmake(*options)
 
