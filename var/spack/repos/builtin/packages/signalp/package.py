@@ -46,8 +46,8 @@ class Signalp(Package):
 
     def patch(self):
         edit = FileFilter('signalp')
-        edit.filter('ENV{SIGNALP} = \'/usr/cbs/bio/src/signalp-4.1\'',
-                    'ENV{SIGNALP} = \'%s\'' % self.prefix)
+        edit.filter("ENV{SIGNALP} = '/usr/cbs/bio/src/signalp-4.1'",
+                    "ENV{SIGNALP} = '%s'" % self.prefix)
 
     def install(self, spec, prefix):
         mkdirp(prefix.share.man)
