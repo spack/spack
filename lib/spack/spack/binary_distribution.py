@@ -175,7 +175,7 @@ def checksum_tarball(file):
 def sign_tarball(yes_to_all, key, force, specfile_path):
     # Sign the packages if keys available
     if not has_gnupg2():
-        raise NoGpgExeption()
+        raise NoGpgException()
     else:
         if key is None:
             keys = Gpg.signing_keys()
@@ -271,7 +271,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         content = inputfile.read()
         spec_dict = yaml.load(content)
     bchecksum = {}
-    bchecksum['algo'] = 'sha256'
+    bchecksum['hash_algorithm'] = 'sha256'
     bchecksum['hash'] = checksum
     spec_dict['binary_cache_checksum'] = bchecksum
     with open(specfile_path, 'w') as outfile:
@@ -287,7 +287,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         except PickKeyException:
             raise PickKeyException()
         except NoKeyException():
-            raise NoLeyException()
+            raise NoKeyException()
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
@@ -322,7 +322,6 @@ def download_tarball(spec):
         url = mirrors[key] + "/build_cache/" + tarball
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
-        stage.create()
         try:
             stage.fetch()
             return stage.save_filename
@@ -387,7 +386,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
 
     if os.path.exists('%s.asc' % specfile_path):
         Gpg.verify('%s.asc' % specfile_path, specfile_path)
-        os.remove(tarfile_path + '.asc')
+        os.remove(specfile_path + '.asc')
     else:
         if not yes_to_all:
             raise NoVerifyException()

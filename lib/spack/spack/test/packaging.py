@@ -39,6 +39,7 @@ import os
 import stat
 import sys
 import shutil
+from spack.util.executable import ProcessError
 
 
 @pytest.fixture(scope='function')
@@ -53,7 +54,7 @@ def has_gnupg2():
     try:
         spack.util.gpg.Gpg.gpg()('--version', output=os.devnull)
         return True
-    except Exception:
+    except ProcessError:
         return False
 
 
@@ -103,45 +104,85 @@ echo $PATH"""
         mirror_path, specs, no_checksum=True
     )
 
+    # register mirror with spack config
+    mirrors = {'spack-mirror-test': 'file://' + mirror_path}
+    spack.config.update_config('mirrors', mirrors)
+
+    stage = spack.stage.Stage(
+        mirrors['spack-mirror-test'], name="build_cache", keep=True)
+    stage.create()
+    # setup argument parser
     parser = argparse.ArgumentParser()
     buildcache.setup_parser(parser)
-    # Copy a key to the mirror to have something to download
-    shutil.copyfile(spack.mock_gpg_keys_path + '/external.key',
-                    'external.key')
+
     # Create a private key to sign package with if gpg2 available
     if has_gnupg2():
         spack.util.gpg.Gpg.create(name='test key 1', expires='0',
                                   email='spack@googlegroups.com',
                                   comment='Spack test key')
-    # Create a build cache with signing
-    args = parser.parse_args(['create', '-d', mirror_path, '-y', str(spec)])
-    buildcache.buildcache(parser, args)
+        # Create build cache with signing
+        args = parser.parse_args(['create', '-d', mirror_path, str(spec)])
+        buildcache.buildcache(parser, args)
 
-    # Create a build cache without signing, making rpaths relative first
-    # overwriting previous build cache
-    args = parser.parse_args(
-        ['create', '-d', mirror_path, '-f', '-r', '-y', str(spec)])
-    buildcache.buildcache(parser, args)
+        # Uninstall the package
+        pkg.do_uninstall(force=True)
 
-    # register mirror with spack config
-    mirrors = {'spack-mirror-test': 'file://' + mirror_path}
-    spack.config.update_config('mirrors', mirrors)
+        # test overwrite install
+        args = parser.parse_args(['install', '-f', str(spec)])
+        buildcache.buildcache(parser, args)
 
-    # Uninstall the package
-    pkg.do_uninstall(force=True)
+        # create build cache with relative path and signing
+        args = parser.parse_args(
+            ['create', '-d', mirror_path, '-f', '-r', str(spec)])
+        buildcache.buildcache(parser, args)
 
-    # download and install tarball
-    file = bindist.download_tarball(spec)
-    bindist.extract_tarball(spec, file, True, True)
-    spack.store.db.reindex(spack.store.layout)
+        # Uninstall the package
+        pkg.do_uninstall(force=True)
+
+        # install build cache with verification
+        args = parser.parse_args(['install', str(spec)])
+        buildcache.install_tarball(spec, args)
+
+        # test overwrite install
+        args = parser.parse_args(['install', '-f', str(spec)])
+        buildcache.buildcache(parser, args)
+
+    else:
+        # create build cache without signing
+        args = parser.parse_args(
+            ['create', '-d', mirror_path, '-y', str(spec)])
+        buildcache.buildcache(parser, args)
+
+        # Uninstall the package
+        pkg.do_uninstall(force=True)
+
+        # install build cache without verification
+        args = parser.parse_args(['install', '-y', str(spec)])
+        buildcache.install_tarball(spec, args)
+
+        # test overwrite install without verification
+        args = parser.parse_args(['install', '-f', '-y', str(spec)])
+        buildcache.buildcache(parser, args)
+
+        # create build cache with relative path
+        args = parser.parse_args(
+            ['create', '-d', mirror_path, '-f', '-r', '-y', str(spec)])
+        buildcache.buildcache(parser, args)
+
+        # Uninstall the package
+        pkg.do_uninstall(force=True)
+
+        # install build cache
+        args = parser.parse_args(['install', '-y', str(spec)])
+        buildcache.install_tarball(spec, args)
+
+        # test overwrite install
+        args = parser.parse_args(['install', '-f', '-y', str(spec)])
+        buildcache.buildcache(parser, args)
 
     # Validate the relocation information
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
     assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
-
-    args = parser.parse_args(['install', '-f', '-y', str(spec)])
-    buildcache.install_tarball(spec, args)
-    buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
@@ -149,8 +190,18 @@ echo $PATH"""
     args = parser.parse_args(['list', 'trivial'])
     buildcache.buildcache(parser, args)
 
+    # Copy a key to the mirror to have something to download
+    shutil.copyfile(spack.mock_gpg_keys_path + '/external.key',
+                    mirror_path + '/external.key')
+
     args = parser.parse_args(['keys'])
     buildcache.buildcache(parser, args)
+
+    # unregister mirror with spack config
+    mirrors = {}
+    spack.config.update_config('mirrors', mirrors)
+    shutil.rmtree(mirror_path)
+    stage.destroy()
 
 
 def test_relocate():
