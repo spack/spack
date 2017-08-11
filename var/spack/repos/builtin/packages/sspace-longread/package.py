@@ -40,11 +40,11 @@ class SspaceLongread(Package):
 
     version('1.1', '0bb5d8603d7ead4ff1596135a520cc26')
 
+    depends_on('perl', type=('build', 'run'))
+
     def url_for_version(self, version):
         return "file://{0}/40SSPACE-LongRead_v{1}.tar.gz".format(
                 os.getcwd(), version.dashed)
-
-    depends_on('perl', type=('build', 'run'))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
