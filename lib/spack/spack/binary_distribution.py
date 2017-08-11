@@ -232,10 +232,8 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # and preferences
     spec_file = join_path(spec.prefix, ".spack", "spec.yaml")
     specfile_name = tarball_name(spec, '.spec.yaml')
-    print specfile_name
     specfile_path = os.path.realpath(
         join_path(outdir, "build_cache", specfile_name))
-    print specfile_path
     indexfile_path = join_path(outdir, "build_cache", "index.html")
     if os.path.exists(specfile_path):
         if force:
