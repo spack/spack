@@ -49,7 +49,7 @@ class SspaceStandard(Package):
         install_tree('bwa', prefix.bwa)
         install_tree('dotlib', prefix.dotlib)
         install_tree('tools', prefix.tools)
-        install('SSPACE_Standard_v3.0.pl', prefix)
+        install('SSPACE_Standard_v{0}.pl'.format(self.version), prefix)
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('SSPACE_HOME', prefix)
