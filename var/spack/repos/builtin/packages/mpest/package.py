@@ -34,7 +34,9 @@ class Mpest(MakefilePackage):
 
     version('1.5', 'f176d5301aa26567918664e5e30027d1')
 
-    build_directory = join_path('mpest_1.5', 'src')
+    @property
+    def build_directory(self):
+        return join_path('mpest_{0}'.format(self.version), 'src')
 
     def install(self, spec, prefix):
         with working_dir(join_path('mpest_{0}'.format(self.version), 'src')):
