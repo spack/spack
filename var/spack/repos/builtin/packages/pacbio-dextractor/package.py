@@ -37,6 +37,7 @@ class PacbioDextractor(MakefilePackage):
             commit='89726800346d0bed15d98dcc577f4c7733aab4b1')
 
     depends_on('hdf5')
+    depends_on('gmake', type='build')
 
     def edit(self, spec, prefix):
         mkdirp(prefix.bin)

@@ -36,6 +36,8 @@ class PacbioDamasker(MakefilePackage):
             git='https://github.com/PacificBiosciences/DAMASKER.git',
             commit='144244b77d52cb785cb1b3b8ae3ab6f3f0c63264')
 
+    depends_on('gmake', type='build')
+
     def edit(self, spec, prefix):
         mkdirp(prefix.bin)
         makefile = FileFilter('Makefile')

@@ -36,6 +36,7 @@ class PacbioDaligner(MakefilePackage):
             git='https://github.com/PacificBiosciences/DALIGNER.git',
             commit='0fe5240d2cc6b55bf9e04465b700b76110749c9d')
 
+    depends_on('gmake', type='build')
     depends_on('pacbio-dazz-db')
 
     def edit(self, spec, prefix):
