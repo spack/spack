@@ -160,7 +160,7 @@ class IntelParallelStudio(IntelPackage):
 
         mkl_threading = ['libmkl_sequential']
 
-        omp_libs = LibraryList()
+        omp_libs = LibraryList([])
 
         if '+openmp' in spec:
             if '%intel' in spec:
