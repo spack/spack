@@ -44,7 +44,7 @@ class Falcon(PythonPackage):
 
     depends_on('py-setuptools', type='run')
     depends_on('py-pypeflow', type='run')
-    depends_on('py-networkx@1.10', type='run')
+    depends_on('py-networkx@1.7:1.10', type=['build', 'run'])
     depends_on('pacbio-dazz-db', type='run')
     depends_on('pacbio-daligner', type='run')
     depends_on('pacbio-dextractor', type='run')
