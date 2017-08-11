@@ -176,7 +176,7 @@ class IntelParallelStudio(IntelPackage):
                 gcc = Executable(self.compiler.cc)
                 omp_libs = gcc('--print-file-name', 'libgomp.{0}'.format(
                     dso_suffix), output=str)
-                omp_libs = LibrayList(omp_libs)
+                omp_libs = LibraryList(omp_libs)
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
