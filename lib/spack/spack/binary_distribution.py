@@ -47,6 +47,7 @@ import spack.relocate as relocate
 class NoOverwriteException(Exception):
     pass
 
+
 class NoGpgException(Exception):
     pass
 
