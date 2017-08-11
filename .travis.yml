@@ -25,7 +25,7 @@ matrix:
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=hypre^mpich' ]
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
     - python: '3.3'
       os: linux
       language: python
@@ -45,7 +45,7 @@ matrix:
     - python: '3.6'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=hypre^mpich' ]
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
     - python: '2.7'
       os: linux
       language: python
