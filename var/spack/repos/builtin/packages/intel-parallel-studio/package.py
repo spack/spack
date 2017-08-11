@@ -147,11 +147,6 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+itac',      when='@composer.0:composer.9999')
     conflicts('+vtune',     when='@composer.0:composer.9999')
 
-    # FIXME: `intel-parallel-studio%gcc+mkl+openmp` requires the libgomp
-    # library. Since it isn't currently possible to access the GCC
-    # installation directory from the spec, we mark this spec as conflicting.
-    conflicts('%gcc+mkl+openmp')
-
     @property
     def blas_libs(self):
         spec = self.spec
@@ -164,27 +159,34 @@ class IntelParallelStudio(IntelPackage):
             mkl_integer = ['libmkl_intel_lp64']
 
         mkl_threading = ['libmkl_sequential']
-        omp_threading = []
+
+        omp_libs = LibraryList()
 
         if '+openmp' in spec:
             if '%intel' in spec:
                 mkl_threading = ['libmkl_intel_thread']
                 omp_threading = ['libiomp5']
-            else:
+
+                omp_root = prefix.compilers_and_libraries.linux.lib.intel64
+                omp_libs = find_libraries(
+                    omp_threading, root=omp_root, shared=shared)
+            elif '%gcc' in spec:
                 mkl_threading = ['libmkl_gnu_thread']
+
+                gcc = Executable(self.compiler.cc)
+                omp_libs = gcc('--print-file-name', 'libgomp.{0}'.format(
+                    dso_suffix), output=str)
+                omp_libs = LibrayList(omp_libs)
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
         mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
-        omp_root = prefix.compilers_and_libraries.linux.lib.intel64
 
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
             root=mkl_root,
             shared=shared
         )
-
-        omp_libs = find_libraries(omp_threading, root=omp_root, shared=shared)
 
         # Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(
