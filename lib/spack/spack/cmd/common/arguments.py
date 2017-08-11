@@ -94,11 +94,13 @@ _arguments['recurse_dependencies'] = Args(
 
 _arguments['clean'] = Args(
     '--clean', action='store_false', dest='dirty',
-    help='clean environment before installing package')
+    help='clean environment before installing package',
+    default=None)
 
 _arguments['dirty'] = Args(
     '--dirty', action='store_true', dest='dirty',
-    help='do NOT clean environment before installing')
+    help='do NOT clean environment before installing',
+    default=None)
 
 _arguments['long'] = Args(
     '-l', '--long', action='store_true',
