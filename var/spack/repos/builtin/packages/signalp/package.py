@@ -38,16 +38,12 @@ class Signalp(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.cbs.dtu.dk/services/SignalP/"
+    url =      "file://{0}/singalp-4.1f.Linux.tar.gz".format(os.getcwd())
 
     version('4.1f', 'a9aeb66259202649c959846f3f4d9744')
 
-    def url_for_version(self, version):
-        return "file://{0}/signalp-{1}.Linux.tar.gz".format(os.getcwd(), version)
-
     depends_on('perl', type=('build', 'run'))
     depends_on('gnuplot')
-
-    phases = ['edit', 'install']
 
     def edit(self, spec, prefix):
         edit = FileFilter('signalp')
