@@ -84,6 +84,7 @@ class Magics(CMakePackage):
             filter_file('#!/usr/bin/python', '#!/usr/bin/env python', pyfile)
 
     def cmake_args(self):
+        spec = self.spec
         args = [
             '-DENABLE_ODB=OFF',
             '-DENABLE_PYTHON=OFF',
