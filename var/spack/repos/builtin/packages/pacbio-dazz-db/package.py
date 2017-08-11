@@ -22,17 +22,34 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class PacbioDazzDb(MakefilePackage):
+    """The Dazzler Database Library. This version is a special fork
+       required for some pacbio utilities."""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "https://github.com/PacificBiosciences/DAZZ_DB"
+    url      = "https://github.com/PacificBiosciences/DAZZ_DB"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('2017-04-10',
+            git='https://github.com/PacificBiosciences/DAZZ_DB.git',
+            commit='f29d27d51f460563481cd227d17f4bdc5e288365')
+
+    depends_on('gmake', type='build')
+
+    def edit(self, spec, prefix):
+        mkdirp(prefix.bin)
+        mkdirp(prefix.lib)
+        mkdirp(prefix.include)
+        makefile = FileFilter('Makefile')
+        makefile.filter('DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
+        gmf = FileFilter('GNUmakefile')
+        gmf.filter('rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
+                   'cp ${ALL} ' + prefix.bin)
+        gmf.filter('rsync\s*-av\s*libdazzdb.*\s*\$\{PREFIX\}/lib',
+                   'cp libdazzdb.* ' + prefix.lib)
+        gmf.filter(('rsync\s*-av\s*\$\(wildcard\s*\$\{THISDIR\}/\*.h'
+                    '\)\s*\$\{PREFIX\}/include'),
+                   'cp *.h ' + prefix.include)

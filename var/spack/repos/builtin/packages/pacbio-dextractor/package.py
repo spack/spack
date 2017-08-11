@@ -25,14 +25,27 @@
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class PacbioDextractor(MakefilePackage):
+    """The Dextractor and Compression Command Library. This is a special
+       fork required by some pacbio utilities."""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "https://github.com/PacificBiosciences/DEXTRACTOR"
+    url      = "https://github.com/PacificBiosciences/DEXTRACTOR"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('2016-08-09',
+            git='https://github.com/PacificBiosciences/DEXTRACTOR.git',
+            commit='89726800346d0bed15d98dcc577f4c7733aab4b1')
+
+    depends_on('hdf5')
+    depends_on('gmake', type='build')
+
+    def edit(self, spec, prefix):
+        mkdirp(prefix.bin)
+        makefile = FileFilter('Makefile')
+        makefile.filter('PATH_HDF5\s*=\s*/sw/apps/hdf5/current',
+                        'PATH_HDF5 = ' + spec['hdf5'].prefix)
+        makefile.filter('PATH_HDF5\*s=\s*/usr/local/hdf5', '')
+        makefile.filter('DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
+        gmf = FileFilter('GNUmakefile')
+        gmf.filter('rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
+                   'cp ${ALL} ' + prefix.bin)

@@ -22,17 +22,30 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class Falcon(PythonPackage):
+    """Falcon: a set of tools for fast aligning long reads for consensus
+    and assembly.
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    The Falcon tool kit is a set of simple code collection which I use
+    for studying efficient assembly algorithm for haploid and diploid genomes.
+    It has some back-end code implemented in C for speed and some simple
+    front-end written in Python for convenience."""
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    homepage = "https://github.com/PacificBiosciences/FALCON"
+    url      = "https://github.com/PacificBiosciences/FALCON.git"
+
+    version('2017-05-30',
+            git='https://github.com/PacificBiosciences/FALCON.git',
+            commit='86cec6157291679095ea6080b0cde6561eccc041')
+
+    depends_on('py-setuptools', type='run')
+    depends_on('py-pypeflow', type='run')
+    depends_on('py-networkx@1.7:1.10', type=['build', 'run'])
+    depends_on('pacbio-dazz-db', type='run')
+    depends_on('pacbio-daligner', type='run')
+    depends_on('pacbio-dextractor', type='run')
+    depends_on('pacbio-damasker', type='run')

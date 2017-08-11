@@ -25,14 +25,23 @@
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class PacbioDamasker(MakefilePackage):
+    """Damasker: The Dazzler Repeat Masking Suite. This is a special fork
+       required for some pacbio utilities."""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "https://github.com/PacificBiosciences/DAMASKER"
+    url      = "https://github.com/PacificBiosciences/DAMASKER"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('2017-02-11',
+            git='https://github.com/PacificBiosciences/DAMASKER.git',
+            commit='144244b77d52cb785cb1b3b8ae3ab6f3f0c63264')
+
+    depends_on('gmake', type='build')
+
+    def edit(self, spec, prefix):
+        mkdirp(prefix.bin)
+        makefile = FileFilter('Makefile')
+        makefile.filter('DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
+        gmf = FileFilter('GNUmakefile')
+        gmf.filter('rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
+                   'cp ${ALL} ' + prefix.bin)
