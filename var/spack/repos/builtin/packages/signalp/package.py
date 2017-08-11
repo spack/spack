@@ -30,7 +30,6 @@ class Signalp(Package):
     """SignalP predicts the presence and location of signal peptide cleavage
        sites in amino acid sequences from different organisms: Gram-positive
        bacteria, Gram-negative bacteria, and eukaryotes.
-
        Note: A manual download is required for SignalP.
        Spack will search your current directory for the download file.
        Alternatively, add this file to a mirror so that Spack can find it.
@@ -38,17 +37,17 @@ class Signalp(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.cbs.dtu.dk/services/SignalP/"
-    url =      "file://{0}/singalp-4.1f.Linux.tar.gz".format(os.getcwd())
+    url      = "file://{0}/signalp-4.1f.Linux.tar.gz".format(os.getcwd())
 
     version('4.1f', 'a9aeb66259202649c959846f3f4d9744')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('gnuplot')
 
-    def edit(self, spec, prefix):
+    def patch(self):
         edit = FileFilter('signalp')
         edit.filter('ENV{SIGNALP} = \'/usr/cbs/bio/src/signalp-4.1\'',
-                    'ENV{SIGNALP} = \'%s\'' % prefix)
+                    'ENV{SIGNALP} = \'%s\'' % self.prefix)
 
     def install(self, spec, prefix):
         mkdirp(prefix.share.man)
