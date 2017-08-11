@@ -25,14 +25,24 @@
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class PacbioDaligner(MakefilePackage):
+    """Daligner: The Dazzler "Overlap" Module. This is a special fork
+       required for some pacbio utilities."""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "https://github.com/PacificBiosciences/DALIGNER"
+    url      = "https://github.com/PacificBiosciences/DALIGNER"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('2017-08-05',
+            git='https://github.com/PacificBiosciences/DALIGNER.git',
+            commit='0fe5240d2cc6b55bf9e04465b700b76110749c9d')
+
+    depends_on('gmake', type='build')
+    depends_on('pacbio-dazz-db')
+
+    def edit(self, spec, prefix):
+        mkdir(prefix.bin)
+        makefile = FileFilter('Makefile')
+        makefile.filter('DEST_DIR\s*=\s*~/bin', 'DEST_DIR = ' + prefix.bin)
+        gmf = FileFilter('GNUmakefile')
+        gmf.filter('rsync\s*-av\s*\$\{ALL\}\s*\$\{PREFIX\}/bin',
+                   'cp ${ALL} ' + prefix.bin)
