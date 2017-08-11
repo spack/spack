@@ -55,6 +55,11 @@ class IntelMkl(IntelPackage):
     provides('scalapack')
     provides('mkl')
 
+    # FIXME: `intel-mkl%gcc+openmp` requires the libgomp library. Since it
+    # isn't currently possible to access the GCC installation directory from
+    # the spec, we mark this spec as conflicting.
+    conflicts('%gcc+openmp')
+
     @property
     def license_required(self):
         # The Intel libraries are provided without requiring a license as of

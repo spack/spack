@@ -147,6 +147,11 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+itac',      when='@composer.0:composer.9999')
     conflicts('+vtune',     when='@composer.0:composer.9999')
 
+    # FIXME: `intel-parallel-studio%gcc+mkl+openmp` requires the libgomp
+    # library. Since it isn't currently possible to access the GCC
+    # installation directory from the spec, we mark this spec as conflicting.
+    conflicts('%gcc+mkl+openmp')
+
     @property
     def blas_libs(self):
         spec = self.spec
@@ -427,6 +432,13 @@ class IntelParallelStudio(IntelPackage):
             spack_env.set('I_MPI_F77', spack_fc)
             spack_env.set('I_MPI_F90', spack_f77)
             spack_env.set('I_MPI_FC',  spack_fc)
+
+        # set up MKLROOT for everyone using MKL package
+        if '+mkl' in self.spec:
+            mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64  # noqa
+
+            spack_env.set('MKLROOT', self.prefix)
+            spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_root)
 
     def setup_dependent_package(self, module, dep_spec):
         if '+mpi' in self.spec:
