@@ -44,28 +44,26 @@ from spack.util.executable import ProcessError
 import spack.relocate as relocate
 
 
-class NoOverwriteException:
-    def __init__(self, arg):
-        self.args = arg
+class NoOverwriteException(Exception):
+    pass
 
-
-class NoGpgException:
+class NoGpgException(Exception):
     pass
 
 
-class PickKeyException:
+class PickKeyException(Exception):
     pass
 
 
-class NoKeyException:
+class NoKeyException(Exception):
     pass
 
 
-class NoVerifyException:
+class NoVerifyException(Exception):
     pass
 
 
-class NoChecksumException:
+class NoChecksumException(Exception):
     pass
 
 
@@ -226,7 +224,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         if force:
             os.remove(spackfile_path)
         else:
-            raise NoOverwriteException(spackfile_path)
+            raise NoOverwriteException(str(spackfile_path))
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
     # and preferences
@@ -239,7 +237,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         if force:
             os.remove(specfile_path)
         else:
-            raise NoOverwriteException(specfile_path)
+            raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
     prefix = join_path(outdir, os.path.basename(spec.prefix))
     if os.path.exists(prefix):
@@ -369,7 +367,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
         if force:
             shutil.rmtree(installpath)
         else:
-            raise NoOverwriteException(installpath)
+            raise NoOverwriteException(str(installpath))
     mkdirp(installpath)
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')

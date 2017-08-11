@@ -129,7 +129,7 @@ def createtarball(args):
             bindist.build_tarball(spec, outdir, force,
                                   relative, yes_to_all, signkey)
         except NoOverwriteException as e:
-            tty.warn("%s exists, use -f to force overwrite." % e.args)
+            tty.warn("%s exists, use -f to force overwrite." % e)
         except NoGpgException:
             tty.warn("gpg2 is not available,"
                      " use -y to create unsigned build caches")
