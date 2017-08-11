@@ -30,7 +30,7 @@ class SspaceLongread(Package):
     """SSPACE-LongRead is a stand-alone program for scaffolding pre-assembled
        contigs using long reads
 
-       Note: A manual download is required for SignalP.
+       Note: A manual download is required for SSPACE-LongRead.
        Spack will search your current directory for the download file.
        Alternatively, add this file to a mirror so that Spack can find it.
        For instructions on how to set up a mirror, see
