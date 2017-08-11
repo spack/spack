@@ -36,7 +36,7 @@ class PacbioDextractor(MakefilePackage):
             git='https://github.com/PacificBiosciences/DEXTRACTOR.git',
             commit='89726800346d0bed15d98dcc577f4c7733aab4b1')
 
-    depends_on('hdf5~mpi')
+    depends_on('hdf5')
 
     def edit(self, spec, prefix):
         mkdirp(prefix.bin)
