@@ -66,6 +66,8 @@ class Matlab(Package):
     license_vars     = ['LM_LICENSE_FILE']
     license_url      = 'https://www.mathworks.com/help/install/index.html'
 
+    extendable = True
+
     def url_for_version(self, version):
         return "file://{0}/matlab_{1}_glnxa64.zip".format(os.getcwd(), version)
 

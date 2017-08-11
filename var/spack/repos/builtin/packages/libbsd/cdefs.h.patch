@@ -1,0 +1,15 @@
+--- a/nclude/bsd/sys/cdefs.h.orig	2017-08-04 16:34:56.404995800 -0700
++++ b/include/bsd/sys/cdefs.h	2017-08-04 16:35:19.345043883 -0700
+@@ -25,10 +25,10 @@
+  */
+ 
+ #ifndef __has_include
+-#define __has_include 1
++#define __has_include(X) 1
+ #endif
+ #ifndef __has_include_next
+-#define __has_include_next 1
++#define __has_include_next(X) 1
+ #endif
+ 
+ #ifdef LIBBSD_OVERLAY
