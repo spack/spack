@@ -22,34 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Comd(MakefilePackage):
-    """CoMD is a reference implementation of classical molecular dynamics
-    algorithms and workloads as used in materials science. It is created and
-    maintained by The Exascale Co-Design Center for Materials in Extreme
-    Environments (ExMatEx). The code is intended to serve as a vehicle for
-    co-design by allowing others to extend and/or reimplement it as needed to
-    test performance of new architectures, programming models, etc. New
-    versions of CoMD will be released to incorporate the lessons learned from
-    the co-design process."""
+class Impute2(Package):
+    """IMPUTE2 is a genotype imputation and haplotype phasing program based on
+       ideas from Howie et al. 2009."""
 
-    homepage = "http://exmatex.github.io/CoMD/"
+    homepage = "https://mathgen.stats.ox.ac.uk/impute/impute_v2.html#home"
+    url      = "https://mathgen.stats.ox.ac.uk/impute/impute_v2.3.2_x86_64_dynamic.tgz"
 
-    version('master', git='https://github.com/exmatex/CoMD.git',
-            branch='master')
-
-    depends_on('mpi')
-
-    build_directory = 'src-mpi'
-
-    def edit(self, spec, prefix):
-        with working_dir('src-mpi'):
-            filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                        'Makefile.vanilla')
-            install('Makefile.vanilla', 'Makefile')
+    version('2.3.2', '0e1bafb8f63eb5cf9ae02ab761af58aa')
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin)
+        mkdirp(prefix.bin)
+        install('impute2', prefix.bin)

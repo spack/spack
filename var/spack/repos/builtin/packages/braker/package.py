@@ -22,34 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Comd(MakefilePackage):
-    """CoMD is a reference implementation of classical molecular dynamics
-    algorithms and workloads as used in materials science. It is created and
-    maintained by The Exascale Co-Design Center for Materials in Extreme
-    Environments (ExMatEx). The code is intended to serve as a vehicle for
-    co-design by allowing others to extend and/or reimplement it as needed to
-    test performance of new architectures, programming models, etc. New
-    versions of CoMD will be released to incorporate the lessons learned from
-    the co-design process."""
+class Braker(Package):
+    """BRAKER is a pipeline for unsupervised RNA-Seq-based genome annotation
+       that combines the advantages of GeneMark-ET and AUGUSTUS"""
 
-    homepage = "http://exmatex.github.io/CoMD/"
+    homepage = "http://exon.gatech.edu/braker1.html"
+    url      = "http://bioinf.uni-greifswald.de/augustus/binaries/BRAKER1_v1.11.tar.gz"
 
-    version('master', git='https://github.com/exmatex/CoMD.git',
-            branch='master')
+    version('1.11', '297efe4cabdd239b710ac2c45d81f6a5')
 
-    depends_on('mpi')
-
-    build_directory = 'src-mpi'
-
-    def edit(self, spec, prefix):
-        with working_dir('src-mpi'):
-            filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                        'Makefile.vanilla')
-            install('Makefile.vanilla', 'Makefile')
+    depends_on('perl', type=('build', 'run'))
+    depends_on('augustus')
+    depends_on('genemark-et')
+    depends_on('bamtools')
+    depends_on('samtools')
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin)
+        mkdirp(prefix.bin)
+        mkdirp(prefix.lib)
+        install('braker.pl', prefix.bin)
+        install('filterGenemark.pl', prefix.bin)
+        install('filterIntronsFindStrand.pl', prefix.bin)
+        install('helpMod.pm', prefix.lib)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PERL5LIB', prefix.lib)

@@ -22,34 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Comd(MakefilePackage):
-    """CoMD is a reference implementation of classical molecular dynamics
-    algorithms and workloads as used in materials science. It is created and
-    maintained by The Exascale Co-Design Center for Materials in Extreme
-    Environments (ExMatEx). The code is intended to serve as a vehicle for
-    co-design by allowing others to extend and/or reimplement it as needed to
-    test performance of new architectures, programming models, etc. New
-    versions of CoMD will be released to incorporate the lessons learned from
-    the co-design process."""
+class Fimpute(Package):
+    """FImpute uses an overlapping sliding window approach to efficiently
+       exploit relationships or haplotype similarities between target and
+       reference individuals."""
 
-    homepage = "http://exmatex.github.io/CoMD/"
+    homepage = "http://www.aps.uoguelph.ca/~msargol/fimpute/"
+    url      = "http://www.aps.uoguelph.ca/~msargol/fimpute/FImpute_Linux.zip"
 
-    version('master', git='https://github.com/exmatex/CoMD.git',
-            branch='master')
-
-    depends_on('mpi')
-
-    build_directory = 'src-mpi'
-
-    def edit(self, spec, prefix):
-        with working_dir('src-mpi'):
-            filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                        'Makefile.vanilla')
-            install('Makefile.vanilla', 'Makefile')
+    version('2014-01', 'df934a25c76dabef7d7afcb5b8058d98')
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin)
+        mkdirp(prefix.bin)
+        install('FImpute', prefix.bin)
