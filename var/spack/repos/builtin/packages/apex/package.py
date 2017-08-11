@@ -38,6 +38,7 @@ class Apex(CMakePackage):
     depends_on("ompt-openmp")
 
     def cmake_args(self):
+        spec = self.spec
         return [
             '-DBOOST_ROOT=%s' % spec['boost'].prefix,
             '-DUSE_BFD=TRUE',
