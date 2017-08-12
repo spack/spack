@@ -1244,7 +1244,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         tty.msg('Installing %s' % self.name)
 
         # Set run_tests flag before starting build.
-        self.run_tests = run_tests
+        self.run_tests = spack.concretizer.test(self.name)
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
