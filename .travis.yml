@@ -42,6 +42,10 @@ matrix:
       os: linux
       language: python
       env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=perl-dbi' ]
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=openjpeg' ]
     - python: '3.3'
       os: linux
       language: python
@@ -88,6 +92,7 @@ addons:
       - mercurial
       - graphviz
       - gnupg2
+      - cmake
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
@@ -114,6 +119,9 @@ before_script:
 
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
+
+  # Set up external dependencies for build tests, because the take too long to compile
+  - if [[ "$TEST_SUITE" == "build" ]]; then cp share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml; fi
 
 #=============================================================================
 # Building

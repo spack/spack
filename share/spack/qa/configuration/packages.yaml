@@ -1,0 +1,5 @@
+packages:
+  cmake:
+    buildable: False
+    paths:
+      cmake@2.8.12.2: /usr
