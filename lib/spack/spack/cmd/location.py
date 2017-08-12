@@ -79,7 +79,7 @@ def location(parser, args):
         print(spack.prefix)
 
     elif args.packages:
-        print(spack.repo.first_repo().root)
+        print(spack.repo[0].root)
 
     elif args.stages:
         print(spack.stage_path)

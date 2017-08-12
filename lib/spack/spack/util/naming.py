@@ -209,6 +209,11 @@ class NamespaceTrie(object):
         self._value = None
         self._sep = separator
 
+    def _check_value_or_raise(self, fullname):
+        if not self._value:
+            msg = "Can't find namespace '{0}' in trie"
+            raise KeyError(msg.format(fullname))
+
     def __setitem__(self, namespace, value):
         first, sep, rest = namespace.partition(self._sep)
 
@@ -221,11 +226,31 @@ class NamespaceTrie(object):
 
         self._subspaces[first][rest] = value
 
+    def __delitem__(self, key):
+        first, sep, rest = key.partition(self._sep)
+
+        # Base case we arrived at the end of the namespace
+        # and we want to reset the value
+        if not first:
+
+            # If the namespace doesn't exist, then raise
+            self._check_value_or_raise(key)
+
+            # If it exists, set the value to None and return
+            self._value = None
+            return
+
+        subspace = self._subspaces[first]
+
+        del subspace[rest]
+
+        if len(subspace._subspaces) == 0 and not subspace._value:
+            del self._subspaces[first]
+
     def _get_helper(self, namespace, full_name):
         first, sep, rest = namespace.partition(self._sep)
         if not first:
-            if not self._value:
-                raise KeyError("Can't find namespace '%s' in trie" % full_name)
+            self._check_value_or_raise(full_name)
             return self._value.value
         elif first not in self._subspaces:
             raise KeyError("Can't find namespace '%s' in trie" % full_name)

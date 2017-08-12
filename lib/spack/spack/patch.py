@@ -22,13 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import inspect
 import os
+import os.path
 
 import spack
 import spack.error
-import spack.stage
 import spack.fetch_strategy as fs
-
+import spack.stage
 from llnl.util.filesystem import join_path
 from spack.util.executable import which
 
@@ -90,7 +91,8 @@ class FilePatch(Patch):
     def __init__(self, pkg, path_or_url, level):
         super(FilePatch, self).__init__(pkg, path_or_url, level)
 
-        pkg_dir = spack.repo.dirname_for_package_name(pkg.name)
+        m = inspect.getmodule(pkg)
+        pkg_dir = os.path.dirname(m.__file__)
         self.path = join_path(pkg_dir, path_or_url)
         if not os.path.isfile(self.path):
             raise NoSuchPatchFileError(pkg.name, self.path)

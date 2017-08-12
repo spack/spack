@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,45 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""This test does sanity checks on Spack's builtin package database."""
+"""Creates various objects that are part of Spack Core according to the
+options specified in the configuration files.
 
-import re
+This module has been created to have a single place in which we mix the
+information stemming from the yaml configuration files with the business
+logic coded in other parts of Spack's core.
+"""
 
-import spack
-
-
-def check_db():
-    """Get all packages in a DB to make sure they work."""
-    for name in spack.repo.all_package_names():
-        spack.repo.get(name)
-
-
-def test_get_all_packages():
-    """Get all packages once and make sure that works."""
-    check_db()
+import llnl.util.tty as tty
+import spack.config
+import spack.repository
 
 
-def test_get_all_mock_packages():
-    """Get the mock packages once each too."""
+def make_repo_path_from_config():
+    """Creates an instance of RepoPath reading the directories where the
+    repositories are located from Spack configuration files.
+    """
 
-    # Plugin the mock repository
-    cache = spack.repo[:]
-    spack.repo.clear()
-    spack.repo.append_from_path(spack.mock_packages_path)
+    repo_dirs = spack.config.get_config('repos')
 
-    check_db()
+    msg = '[REPOSITORY] Creating RepoPath from configuration files: {0}'
+    tty.debug(msg.format(repo_dirs))
 
-    # Restore the real one
-    spack.repo.clear()
-    for x in cache:
-        spack.repo.append(x)
+    if not repo_dirs:
+        msg = 'Spack configuration contains no package repositories.'
+        raise spack.repository.NoRepoConfiguredError(msg)
 
-
-def test_all_versions_are_lowercase():
-    """Spack package names must be lowercase, and use `-` instead of `_`."""
-    errors = []
-    for name in spack.repo.all_package_names():
-        if re.search(r'[_A-Z]', name):
-            errors.append(name)
-
-    assert len(errors) == 0
+    return spack.repository.RepoPath(*repo_dirs)
