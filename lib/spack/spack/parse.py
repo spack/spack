@@ -24,6 +24,7 @@
 ##############################################################################
 import re
 import shlex
+import sys
 import itertools
 from six import string_types
 
@@ -161,7 +162,10 @@ class Parser(object):
 
     def setup(self, text):
         if isinstance(text, string_types):
-            text = shlex.split(text)
+            if sys.version_info >= (2, 7, 9):
+                text = shlex.split(text)
+            else:
+                text = shlex.split(text.encode('utf-8'))
         self.text = text
         self.push_tokens(self.lexer.lex(text))
 
