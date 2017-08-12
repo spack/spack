@@ -168,12 +168,15 @@ class Executable(object):
         tty.debug(cmd_line)
 
         try:
+            # We set universal_newlines=True to tell Python3
+            # to return a string instead of bytes.
             proc = subprocess.Popen(
                 cmd,
                 stdin=istream,
                 stderr=estream,
                 stdout=ostream,
-                env=env)
+                env=env,
+                universal_newlines=True)
             out, err = proc.communicate()
 
             rc = self.returncode = proc.returncode
@@ -184,9 +187,9 @@ class Executable(object):
             if output is str or error is str:
                 result = ''
                 if output is str:
-                    result += out.decode('utf-8')
+                    result += out
                 if error is str:
-                    result += err.decode('utf-8')
+                    result += err
                 return result
 
         except OSError as e:
