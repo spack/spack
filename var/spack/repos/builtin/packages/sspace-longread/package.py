@@ -23,16 +23,30 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class SspaceLongread(Package):
+    """SSPACE-LongRead is a stand-alone program for scaffolding pre-assembled
+       contigs using long reads
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+       Note: A manual download is required for SSPACE-LongRead.
+       Spack will search your current directory for the download file.
+       Alternatively, add this file to a mirror so that Spack can find it.
+       For instructions on how to set up a mirror, see
+       http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    homepage = "https://www.baseclear.com/genomics/bioinformatics/basetools/SSPACE-longread"
+
+    version('1.1', '0bb5d8603d7ead4ff1596135a520cc26')
+
+    depends_on('perl', type=('build', 'run'))
+
+    def url_for_version(self, version):
+        return "file://{0}/40SSPACE-LongRead_v{1}.tar.gz".format(
+                os.getcwd(), version.dashed)
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('blasr', prefix.bin)
+        install('SSPACE-LongRead.pl', prefix.bin)
