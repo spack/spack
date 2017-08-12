@@ -3,3 +3,7 @@ packages:
     buildable: False
     paths:
       cmake@2.8.12.2: /usr
+  r:
+    buildable: False
+    paths:
+      r@3.0.2: /usr
