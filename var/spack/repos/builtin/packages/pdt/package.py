@@ -39,6 +39,7 @@ class Pdt(AutotoolsPackage):
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
     url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.22.1.tar.gz"
 
+    version('3.24',   'b8fa5189e5602276ce225ba497b617e4')
     version('3.22.1', 'b56b9b3e621161c7fd9e4908b944840d')
     version('3.22',   '982d667617802962a1f7fe6c4c31184f')
     version('3.21',   '3092ca0d8833b69992c17e63ae66c263')
