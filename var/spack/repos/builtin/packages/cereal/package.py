@@ -62,4 +62,3 @@ class Cereal(CMakePackage):
             '-DCMAKE_DISABLE_FIND_PACKAGE_Boost=TRUE',
             '-DSKIP_PORTABILITY_TEST=TRUE',
         ]
-
