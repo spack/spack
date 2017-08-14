@@ -51,7 +51,7 @@ class Openblas(MakefilePackage):
     variant('pic', default=True, description='Build position independent code')
 
     variant('cpu_target', default='',
-	    description='Set CPU target architecture (leave empty for '
+                    description='Set CPU target architecture (leave empty for '
                         'autodetection; GENERIC, SSE_GENERIC, NEHALEM, ...)')
 
     # virtual dependency
