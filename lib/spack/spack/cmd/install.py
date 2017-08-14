@@ -83,6 +83,7 @@ the dependencies"""
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
+    subparser.set_defaults(dirty=False)
 
     subparser.add_argument(
         'package',
