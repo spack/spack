@@ -50,6 +50,7 @@ class Neuron(Package):
     variant('static',        default=True,  description='Build static libraries')
     variant('cross-compile', default=False, description='Build for cross-compile environment')
     variant('multisend',     default=True,  description="Enable multi-send spike exchange")
+    variant('rx3d',          default=False, description="Enable cython translated 3-d rxd")
 
     depends_on('automake',   type='build')
     depends_on('autoconf',   type='build')
@@ -205,12 +206,14 @@ class Neuron(Package):
                    '--without-iv',
                    '--without-x',
                    '--without-readline',
-                   '--disable-rx3d',
                    'CC=%s' % c_compiler,
                    'CXX=%s' % cxx_compiler]
 
         if spec.satisfies('+multisend'):
             options.append('--with-multisend')
+
+        if spec.satisfies('~rx3d'):
+            options.append('--disable-rx3d')
 
         if spec.satisfies('+mpi'):
             options.extend(['MPICC=%s' % spec['mpi'].mpicc,
