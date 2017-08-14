@@ -84,13 +84,16 @@ class Openblas(MakefilePackage):
                 'OpenBLAS requires both C and Fortran compilers!'
             )
         # Add support for OpenMP
-        if (('+openmp' in self.spec) and self.spec.satisfies('%clang') and
-            (('@:0.2.19' in self.spec) or ('platform=darwin' in self.spec))):
-            # Openblas (as of 0.2.18) hardcoded that OpenMP cannot
-            # be used with any (!) compiler named clang, bummer.
-            raise InstallError(
-                'OpenBLAS does not support OpenMP with clang!'
-            )
+        if (('+openmp' in self.spec) and self.spec.satisfies('%clang')):
+            if str(self.spec.compiler.version).endswith('-apple'):
+                raise InstallError("Apple's clang does not support OpenMP")
+            if '@:0.2.19' in self.spec:
+                # Openblas (as of 0.2.19) hardcoded that OpenMP cannot
+                # be used with any (!) compiler named clang, bummer.
+                raise InstallError(
+                    'OpenBLAS @:0.2.19 does not support OpenMP with clang!'
+                )
+
 
     @property
     def make_defs(self):
