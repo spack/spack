@@ -49,7 +49,7 @@ class Neuron(Package):
     variant('python',        default=True,  description='Enable python')
     variant('static',        default=True,  description='Build static libraries')
     variant('cross-compile', default=False, description='Build for cross-compile environment')
-    variant('multisend',     default=True, description="Enable multi-send spike exchange")
+    variant('multisend',     default=True,  description="Enable multi-send spike exchange")
 
     depends_on('automake',   type='build')
     depends_on('autoconf',   type='build')
@@ -69,10 +69,10 @@ class Neuron(Package):
         return url.format(version, version)
 
     def patch(self):
-        # neuron use aclocal which need complete include path especially on os x
-        pkgconfig_inc = '-I %s/share/aclocal/' % (self.spec['pkg-config'].prefix)
+        # aclocal need complete include path especially on os x
+        pkgconf_inc = '-I %s/share/aclocal/' % (self.spec['pkg-config'].prefix)
         libtool_inc = '-I %s/share/aclocal/' % (self.spec['libtool'].prefix)
-        newpath = 'aclocal -I m4 %s %s' % (pkgconfig_inc, libtool_inc)
+        newpath = 'aclocal -I m4 %s %s' % (pkgconf_inc, libtool_inc)
         filter_file(r'aclocal -I m4', r'%s' % newpath, "build.sh")
 
     def get_arch_options(self, spec):
@@ -226,7 +226,8 @@ class Neuron(Package):
         with working_dir('build', create=True):
             if spec.satisfies('+cross-compile'):
                 self.build_nmodl(spec, prefix)
-            configure = Executable(join_path(self.stage.source_path, 'configure'))
+            srcpath = self.stage.source_path
+            configure = Executable(join_path(srcpath, 'configure'))
             configure(*options)
             make()
             make('install')
