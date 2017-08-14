@@ -46,6 +46,6 @@ class PyPybind11(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s/bin/python'\
-                % self.spec['python'].prefix)
+        args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s/bin/python'
+                    % self.spec['python'].prefix)
         return args
