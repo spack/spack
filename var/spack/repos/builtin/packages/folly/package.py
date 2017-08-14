@@ -45,6 +45,7 @@ class Folly(AutotoolsPackage):
     version('2016.10.31.00', 'ab3049302792f8470cef64f3a29eedec')
     version('2016.10.24.00', '0445efb7c16b5c32dfbb173157e54866')
     version('2016.10.17.00', 'b7e01934a45c5036fab8fdc70e9eaf4d')
+
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
