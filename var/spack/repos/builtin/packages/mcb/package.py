@@ -42,32 +42,47 @@ class Mcb(MakefilePackage):
     depends_on('mpi')
     depends_on('boost')
 
+
+    parallel = False
+    
     build_directory = 'src'
-    def edit(self, spec, prefix):
+    @property
+    def build_targets(self):
+        targets = []
+        targets.append('BOOST_INCLUDE = -I{0} '.format(self.spec['boost'].prefix.include.boost))
+        targets.append('BOOST_LIB = -L{0} -Wl,-rpath {0}'.format(self.spec['boost'].prefix.lib))
+        targets.append('CXX = %s' % self.spec['mpi'].mpicc)
+        targets.append('OPENMPFLAG = %s' % self.compiler.openmp_flag)
+        targets.append('MPI_INCLUDE = -I%s' % self.spec['mpi'].prefix.include)
+        targets.append('CXXFLAGS = -O2 -xHost $(CXXDEFINES) $(OPENMPFLAG)')
+        return targets
+        
+###
+#    def edit(self, spec, prefix):
 #        for fname in glob.glob('*.*'):
 #            if (fname.endswith("tgz")):
 #                tar = tarfile.open(fname, "r:gz")
 #                tar.extractall()
 #                tar.close()
-        with working_dir('src'):
-            filter_file(r'^BOOST_INCLUDE\s*=.*',
-                        'BOOST_INCLUDE = -I{0} '.format(self.spec['boost'].prefix.include.boost),
-                        'Makefile')
-            filter_file(r'^BOOST_LIB\s*=.*',
-                        'BOOST_LIB = -L{0} -Wl,-rpath {0}'.format(self.spec['boost'].prefix.lib),
-                        'Makefile')
-            filter_file(r'^CXX\s*=.*', 'CXX = %s' % self.spec['mpi'].mpicc,
-                        'Makefile')
-            filter_file(r'^OPENMPFLAG\s*=.*',
-                        'OPENMPFLAG = %s' % self.compiler.openmp_flag,
-                        'Makefile')
-            filter_file(r'^MPI_INCLUDE\s*=.*',
-                        'MPI_INCLUDE = -I%s' % self.spec['mpi'].prefix.include,
-                        'Makefile')
-            filter_file(r'^CXXFLAGS\s*=.*',
-                        'CXXFLAGS = -O2 -xHost $(CXXDEFINES) $(OPENMPFLAG)',
-                        'Makefile')
-
+#        with working_dir('src'):
+#            filter_file(r'^BOOST_INCLUDE\s*=.*',
+#                        'BOOST_INCLUDE = -I{0} '.format(self.spec['boost'].prefix.include.boost),
+#                        'Makefile')
+#            filter_file(r'^BOOST_LIB\s*=.*',
+#                        'BOOST_LIB = -L{0} -Wl,-rpath {0}'.format(self.spec['boost'].prefix.lib),
+#                        'Makefile')
+#            filter_file(r'^CXX\s*=.*', 'CXX = %s' % self.spec['mpi'].mpicc,
+#                        'Makefile')
+#            filter_file(r'^OPENMPFLAG\s*=.*',
+#                        'OPENMPFLAG = %s' % self.compiler.openmp_flag,
+#                        'Makefile')
+#            filter_file(r'^MPI_INCLUDE\s*=.*',
+#                        'MPI_INCLUDE = -I%s' % self.spec['mpi'].prefix.include,
+#                        'Makefile')
+#            filter_file(r'^CXXFLAGS\s*=.*',
+#                        'CXXFLAGS = -O2 -xHost $(CXXDEFINES) $(OPENMPFLAG)',
+#                        'Makefile')
+###
 
     def install(self, spec, prefix):
         install_tree('src/Documentation', prefix.doc)
