@@ -116,7 +116,7 @@ class Openblas(MakefilePackage):
             ]
         if self.spec.variants['cpu_target'].value:
             make_defs += [
-                'TARGET={}'.format(self.spec.variants['cpu_target'].value)
+                'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
             ]
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs += ['NO_AVX2=1']
