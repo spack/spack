@@ -45,8 +45,8 @@ class Zfp(MakefilePackage):
         default='64',
         values=('8', '16', '32', '64'),
         multi=False,
-        description='Bit stream word size: use smaller for finer \
-            rate granularity. Use 8 for H5Z-ZFP filter.')
+        description='Bit stream word size: use smaller for finer ' \
+            'rate granularity. Use 8 for H5Z-ZFP filter.')
 
     def edit(self, spec, prefix):
         config_file = FileFilter('Config')
