@@ -24,7 +24,6 @@
 ##############################################################################
 from __future__ import print_function
 
-import os
 import sys
 
 import llnl.util.tty as tty
@@ -54,7 +53,8 @@ class SpackError(Exception):
         # basic debug message
         tty.error(self.message)
         if self.long_message:
-            print(self.long_message)
+            sys.stderr.write(self.long_message)
+            sys.stderr.write('\n')
 
         # stack trace, etc. in debug mode.
         if spack.debug:
@@ -66,7 +66,7 @@ class SpackError(Exception):
                 # run parent exception hook.
                 sys.excepthook(*sys.exc_info())
 
-        os._exit(1)
+        sys.exit(1)
 
     def __str__(self):
         msg = self.message
