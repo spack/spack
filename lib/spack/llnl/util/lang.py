@@ -391,19 +391,6 @@ class RequiredAttributeError(ValueError):
         super(RequiredAttributeError, self).__init__(message)
 
 
-def duplicate_stream(original):
-    """Duplicates a stream  at the os level.
-
-    Args:
-        original (stream): original stream to be duplicated. Must have a
-            ``fileno`` callable attribute.
-
-    Returns:
-        file like object: duplicate of the original stream
-    """
-    return os.fdopen(os.dup(original.fileno()))
-
-
 class ObjectWrapper(object):
     """Base class that wraps an object. Derived classes can add new behavior
     while staying undercover.
