@@ -63,7 +63,3 @@ class Cereal(CMakePackage):
             '-DSKIP_PORTABILITY_TEST=TRUE',
         ]
 
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            install_tree('doc', prefix.doc)
-            install_tree('include', prefix.include)
