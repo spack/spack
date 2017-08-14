@@ -1797,9 +1797,9 @@ class Spec(object):
         for x in self.traverse():
             for conflict_spec, when_list in x.package.conflicts.items():
                 if x.satisfies(conflict_spec):
-                    for when_spec in when_list:
+                    for when_spec, msg in when_list:
                         if x.satisfies(when_spec):
-                            matches.append((x, conflict_spec, when_spec))
+                            matches.append((x, conflict_spec, when_spec, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
 
@@ -3437,8 +3437,24 @@ class ConflictsInSpecError(SpecError, RuntimeError):
         message = 'Conflicts in concretized spec "{0}"\n'.format(
             spec.short_spec
         )
-        long_message = 'List of matching conflicts:\n\n'
-        match_fmt = '{0}. "{1}" conflicts with "{2}" in spec "{3}"\n'
-        for idx, (s, c, w) in enumerate(matches):
-            long_message += match_fmt.format(idx + 1, c, w, s)
+
+        visited = set()
+
+        long_message = ''
+
+        match_fmt_default = '{0}. "{1}" conflicts with "{2}"\n'
+        match_fmt_custom = '{0}. "{1}" conflicts with "{2}" [{3}]\n'
+
+        for idx, (s, c, w, msg) in enumerate(matches):
+
+            if s not in visited:
+                visited.add(s)
+                long_message += 'List of matching conflicts for spec:\n\n'
+                long_message += s.tree(indent=4) + '\n'
+
+            if msg is None:
+                long_message += match_fmt_default.format(idx + 1, c, w)
+            else:
+                long_message += match_fmt_custom.format(idx + 1, c, w, msg)
+
         super(ConflictsInSpecError, self).__init__(message, long_message)
