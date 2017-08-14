@@ -1,0 +1,16 @@
+variables:
+  GIT_STRATEGY: clone
+
+stages:
+  - build
+
+build:
+  stage: build
+  tags:
+    - linux
+    - shared
+  script:
+    - echo "Project $CI_PROJECT_NAME, branch $CI_COMMIT_REF_NAME"
+    - echo "About to run spack"
+    - spack --help
+    - echo "...did that work...?"
