@@ -7,8 +7,8 @@ stages:
 build:
   stage: build
   tags:
-    - linux
-    - shared
+    - nersc
+    - edison
   script:
     - echo "Project $CI_PROJECT_NAME, branch $CI_COMMIT_REF_NAME"
     - echo "About to run spack"
