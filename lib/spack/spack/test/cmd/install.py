@@ -22,10 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import argparse
+
+import pytest
+
+import spack.cmd.install
 from spack.main import SpackCommand
 
-
 install = SpackCommand('install')
+
+
+@pytest.fixture(scope='module')
+def parser():
+    """Returns the parser for the module command"""
+    parser = argparse.ArgumentParser()
+    spack.cmd.install.setup_parser(parser)
+    return parser
 
 
 def _install_package_and_dependency(
@@ -64,3 +76,13 @@ def test_install_package_already_installed(
 
     skipped = [line for line in content.split('\n') if 'skipped' in line]
     assert len(skipped) == 2
+
+
+@pytest.mark.parametrize('arguments,expected', [
+    ([], spack.dirty),  # The default read from configuration file
+    (['--clean'], False),
+    (['--dirty'], True),
+])
+def test_install_dirty_flag(parser, arguments, expected):
+    args = parser.parse_args(arguments)
+    assert args.dirty == expected

@@ -1218,10 +1218,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 rec = spack.store.db.get_record(self.spec)
                 return self._update_explicit_entry_in_db(rec, explicit)
 
-        # Dirty argument takes precedence over dirty config setting.
-        if dirty is None:
-            dirty = spack.dirty
-
         self._do_install_pop_kwargs(kwargs)
 
         # First, install dependencies recursively.
