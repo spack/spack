@@ -25,14 +25,15 @@
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class Fastphase(Package):
+    """Software for haplotype reconstruction, and estimating missing genotypes
+       from population data."""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "http://stephenslab.uchicago.edu/software.html"
+    url      = "http://scheet.org/code/Linuxfp.tar.gz"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('2016-03-30', 'b48731eed9b8d0a5a321f970c5c20d8c')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('fastPHASE', prefix.bin)

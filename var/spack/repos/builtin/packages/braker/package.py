@@ -25,14 +25,28 @@
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class Braker(Package):
+    """BRAKER is a pipeline for unsupervised RNA-Seq-based genome annotation
+       that combines the advantages of GeneMark-ET and AUGUSTUS"""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "http://exon.gatech.edu/braker1.html"
+    url      = "http://bioinf.uni-greifswald.de/augustus/binaries/BRAKER1_v1.11.tar.gz"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('1.11', '297efe4cabdd239b710ac2c45d81f6a5')
+
+    depends_on('perl', type=('build', 'run'))
+    depends_on('augustus')
+    depends_on('genemark-et')
+    depends_on('bamtools')
+    depends_on('samtools')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        mkdirp(prefix.lib)
+        install('braker.pl', prefix.bin)
+        install('filterGenemark.pl', prefix.bin)
+        install('filterIntronsFindStrand.pl', prefix.bin)
+        install('helpMod.pm', prefix.lib)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PERL5LIB', prefix.lib)

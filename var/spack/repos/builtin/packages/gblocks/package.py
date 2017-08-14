@@ -25,14 +25,16 @@
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class Gblocks(Package):
+    """Gblocks is a computer program written in ANSI C language that eliminates
+       poorly aligned positions and divergent regions of an alignment of DNA or
+       protein sequences"""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "http://molevol.cmima.csic.es/castresana/Gblocks.html"
+    url      = "http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux64_0.91b.tar.Z"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('0.91b', 'c2c752ae4cbfda0b8bf09e6662585252')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('Gblocks', prefix.bin)

@@ -25,14 +25,15 @@
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class Impute2(Package):
+    """IMPUTE2 is a genotype imputation and haplotype phasing program based on
+       ideas from Howie et al. 2009."""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "https://mathgen.stats.ox.ac.uk/impute/impute_v2.html#home"
+    url      = "https://mathgen.stats.ox.ac.uk/impute/impute_v2.3.2_x86_64_dynamic.tgz"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('2.3.2', '0e1bafb8f63eb5cf9ae02ab761af58aa')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('impute2', prefix.bin)

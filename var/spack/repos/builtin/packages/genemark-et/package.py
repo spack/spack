@@ -23,16 +23,31 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
+import glob
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class GenemarkEt(Package):
+    """Gene Prediction in Bacteria, archaea, Metagenomes and
+       Metatranscriptomes."""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "http://topaz.gatech.edu/GeneMark"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('4.33', '4ab7d7d3277a685dfb49e11bc5b493c3')
+
+    depends_on('perl', type=('build', 'run'))
+
+    def url_for_version(self, version):
+        return "file://{0}/gm_et_linux_64.tar.gz".format(os.getcwd())
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        with working_dir('gmes_petap'):
+            install_tree('lib', prefix.lib)
+            files = glob.iglob('*')
+            for file in files:
+                if os.path.isfile(file):
+                    install(file, prefix.bin)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PERL5LIB', prefix.lib)

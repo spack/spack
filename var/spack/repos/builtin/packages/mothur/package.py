@@ -22,34 +22,38 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Comd(MakefilePackage):
-    """CoMD is a reference implementation of classical molecular dynamics
-    algorithms and workloads as used in materials science. It is created and
-    maintained by The Exascale Co-Design Center for Materials in Extreme
-    Environments (ExMatEx). The code is intended to serve as a vehicle for
-    co-design by allowing others to extend and/or reimplement it as needed to
-    test performance of new architectures, programming models, etc. New
-    versions of CoMD will be released to incorporate the lessons learned from
-    the co-design process."""
+class Mothur(MakefilePackage):
+    """This project seeks to develop a single piece of open-source, expandable
+       software to fill the bioinformatics needs of the microbial ecology
+       community."""
 
-    homepage = "http://exmatex.github.io/CoMD/"
+    homepage = "https://github.com/mothur/mothur"
+    url      = "https://github.com/mothur/mothur/archive/v1.39.5.tar.gz"
 
-    version('master', git='https://github.com/exmatex/CoMD.git',
-            branch='master')
+    version('1.39.5', '1f826ea4420e6822fc0db002c5940b92')
 
-    depends_on('mpi')
+    variant('mpi', default=True, description='Enable MPI parallel support')
 
-    build_directory = 'src-mpi'
+    depends_on('mpi', when='+mpi')
+    depends_on('boost')
+    depends_on('readline')
 
     def edit(self, spec, prefix):
-        with working_dir('src-mpi'):
-            filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                        'Makefile.vanilla')
-            install('Makefile.vanilla', 'Makefile')
+        makefile = FileFilter('Makefile')
+        makefile.filter('BOOST_LIBRARY_DIR=\"\\\"Enter_your_boost_library_path'
+                        '_here\\\"\"', 'BOOST_LIBRARY_DIR=%s' %
+                        self.spec['boost'].prefix.lib)
+        makefile.filter('BOOST_INCLUDE_DIR=\"\\\"Enter_your_boost_include_path'
+                        '_here\\\"\"', 'BOOST_INCLUDE_DIR=%s' %
+                        self.spec['boost'].prefix.include)
+        makefile.filter('MOTHUR_FILES=\"\\\"Enter_your_default_path_'
+                        'here\\\"\"', 'MOTHUR_FILES=%s' % prefix)
 
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin)
+        mkdirp(prefix.bin)
+        install('mothur', prefix.bin)
+        install('uchime', prefix.bin)
+        install_tree('source', prefix.include)

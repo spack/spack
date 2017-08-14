@@ -25,14 +25,16 @@
 from spack import *
 
 
-class PyNetworkx(PythonPackage):
-    """NetworkX is a Python package for the creation, manipulation, and study
-    of the structure, dynamics, and functions of complex networks."""
-    homepage = "http://networkx.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkx/networkx-1.11.tar.gz"
+class Fimpute(Package):
+    """FImpute uses an overlapping sliding window approach to efficiently
+       exploit relationships or haplotype similarities between target and
+       reference individuals."""
 
-    version('1.11', '6ef584a879e9163013e9a762e1cf7cd1')
-    version('1.10', 'eb7a065e37250a4cc009919dacfe7a9d')
+    homepage = "http://www.aps.uoguelph.ca/~msargol/fimpute/"
+    url      = "http://www.aps.uoguelph.ca/~msargol/fimpute/FImpute_Linux.zip"
 
-    depends_on('py-decorator', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    version('2014-01', 'df934a25c76dabef7d7afcb5b8058d98')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('FImpute', prefix.bin)

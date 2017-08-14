@@ -22,34 +22,40 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
+import os
 
 
-class Comd(MakefilePackage):
-    """CoMD is a reference implementation of classical molecular dynamics
-    algorithms and workloads as used in materials science. It is created and
-    maintained by The Exascale Co-Design Center for Materials in Extreme
-    Environments (ExMatEx). The code is intended to serve as a vehicle for
-    co-design by allowing others to extend and/or reimplement it as needed to
-    test performance of new architectures, programming models, etc. New
-    versions of CoMD will be released to incorporate the lessons learned from
-    the co-design process."""
+class Signalp(Package):
+    """SignalP predicts the presence and location of signal peptide cleavage
+       sites in amino acid sequences from different organisms: Gram-positive
+       bacteria, Gram-negative bacteria, and eukaryotes.
+       Note: A manual download is required for SignalP.
+       Spack will search your current directory for the download file.
+       Alternatively, add this file to a mirror so that Spack can find it.
+       For instructions on how to set up a mirror, see
+       http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "http://exmatex.github.io/CoMD/"
+    homepage = "http://www.cbs.dtu.dk/services/SignalP/"
+    url      = "file://{0}/signalp-4.1f.Linux.tar.gz".format(os.getcwd())
 
-    version('master', git='https://github.com/exmatex/CoMD.git',
-            branch='master')
+    version('4.1f', 'a9aeb66259202649c959846f3f4d9744')
 
-    depends_on('mpi')
+    depends_on('perl', type=('build', 'run'))
+    depends_on('gnuplot')
 
-    build_directory = 'src-mpi'
-
-    def edit(self, spec, prefix):
-        with working_dir('src-mpi'):
-            filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                        'Makefile.vanilla')
-            install('Makefile.vanilla', 'Makefile')
+    def patch(self):
+        edit = FileFilter('signalp')
+        edit.filter("ENV{SIGNALP} = .*",
+                    "ENV{SIGNALP} = '%s'" % self.prefix)
 
     def install(self, spec, prefix):
+        mkdirp(prefix.share.man)
+        install('signalp', prefix)
+        install('signalp.1', prefix.share.man)
         install_tree('bin', prefix.bin)
+        install_tree('lib', prefix.lib)
+        install_tree('syn', prefix.syn)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', prefix)
