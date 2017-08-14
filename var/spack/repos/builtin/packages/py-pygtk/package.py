@@ -46,8 +46,6 @@ class PyPygtk(AutotoolsPackage):
     depends_on('gtkplus+X@2.24:2.99')
     depends_on('py-pygobject@2.28:2.99', type=('build', 'run'))
     depends_on('py-py2cairo', type=('build', 'run'))
-    depends_on('py-py2cairo+X', when='+X')
-    depends_on('py-py2cairo~X', when='~X')
 
     def install(self, spec, prefix):
         make('install', parallel=False)
