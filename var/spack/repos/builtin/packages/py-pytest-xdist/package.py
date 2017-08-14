@@ -26,7 +26,7 @@ from spack import *
 
 
 class PyPytestXdist(PythonPackage):
-    """py.test xdist plugin for distributed testing and loop-on-failing modes"""
+    """py.test xdist plugin for distributed testing and loop-on-failing mode"""
 
     homepage = "https://github.com/pytest-dev/pytest-xdist"
     url      = "https://pypi.io/packages/source/p/pytest-xdist/pytest-xdist-1.16.0.tar.gz"
