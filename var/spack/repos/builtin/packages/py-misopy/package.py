@@ -34,6 +34,7 @@ class PyMisopy(PythonPackage):
     homepage = "http://miso.readthedocs.io/en/fastmiso/"
     url      = "http://pypi.python.org/packages/source/m/misopy/misopy-0.5.4.tar.gz"
 
+    # checksum and url are not correct due to download link above not working
     version('0.5.4', 'fe0c9c2613304defbdead12ea99e4194')
 
     depends_on('py-setuptools', type='build')
