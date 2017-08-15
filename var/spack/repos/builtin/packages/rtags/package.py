@@ -22,27 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
-class Rtags(Package):
-    """client/server c/c++/objc[++] indexer based on clang"""
-    homepage = "http://www.rtags.net/"
-    url      = "https://github.com/Andersbakken/rtags/archive/v2.3.tar.gz"
 
-    version('dev', git='https://github.com/Andersbakken/rtags.git')
-    version('2.3', '33ac107d3767ac2dd5c1bd2143a0d0da')
-    version('2.2', '34ec2aaeecd5910ce630fd3bbb0d5a29')
-    version('2.1', 'a59ef304802f1a4406f4c84cf3823f98')
+class Rtags(CMakePackage):
+    """RTags is a client/server application that indexes C/C++ code"""
 
-    depends_on("llvm +clang")
-    depends_on("cmake")
+    homepage = "https://github.com/Andersbakken/rtags/"
+    url      = "https://andersbakken.github.io/rtags-releases/rtags-2.12.tar.gz"
+
+    version('2.12', '84988aaff27915a79d4b4b57299f9a51')
+
+    depends_on("llvm@3.3: +clang")
     depends_on("zlib")
+    depends_on("openssl")
+    depends_on("lua@5.3:")
+    depends_on("pkg-config")    # bash-completion
+    depends_on("bash-completion")
+    depends_on("git", type='build')
 
-    def install(self, spec, prefix):
-        git = which('git', required=True)
-        git('submodule', 'update', '--init', '--recursive')
-        cmake('.', '-DRTAGS_NO_ELISP_FILES=1', '-DRTAGS_NO_LUA_FILES=1', *std_cmake_args)
-
-        make()
-        make("install")
+    def cmake_args(self):
+        args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=1', 
+                '-DRTAGS_NO_ELISP_FILES=1', 
+                ]
+        return args
