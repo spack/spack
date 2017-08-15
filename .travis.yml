@@ -111,6 +111,10 @@ addons:
       - r-base
       - r-base-core
       - r-base-dev
+      - perl
+      - perl-base
+
+cache: pip
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
