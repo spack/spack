@@ -41,6 +41,9 @@ class Nco(AutotoolsPackage):
     version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
     version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
 
+    # https://github.com/nco/nco/issues/43
+    patch('NUL-0-NULL.patch')
+
     variant('doc', default=False, description='Build/install NCO TexInfo-based documentation')
 
     # See "Compilation Requirements" at:
