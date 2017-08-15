@@ -37,6 +37,8 @@ class Ffmpeg(AutotoolsPackage):
     variant('shared', default=True,
             description='build shared libraries')
 
+    depends_on('yasm@1.2.0:')
+
     def configure_args(self):
         spec = self.spec
         config_args = ['--enable-pic']
