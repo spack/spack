@@ -44,7 +44,7 @@ class Rtags(CMakePackage):
     patch("add_string_iterator_erase_compile_check.patch", when='@2.12')
 
     def cmake_args(self):
-        args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=1', 
-                '-DRTAGS_NO_ELISP_FILES=1', 
+        args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=1',
+                '-DRTAGS_NO_ELISP_FILES=1',
                 ]
         return args
