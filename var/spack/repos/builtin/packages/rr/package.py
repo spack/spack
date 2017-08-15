@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
+
 
 class Rr(CMakePackage):
     """application execution recorder, player and debugger"""
@@ -47,7 +47,8 @@ class Rr(CMakePackage):
             values=('Release'))
 
     def patch(self):
-        # because otherwise CMake would try and fail to set RPATH of rr_exec_stub
+        # because otherwise CMake would try and fail to set RPATH of 
+        # rr_exec_stub
         filter_file(
             r'^(install\(TARGETS .*)\s*rr_exec_stub', r'\1', 'CMakeLists.txt')
 
