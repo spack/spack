@@ -221,7 +221,7 @@ fi;
 #
 if [ "${need_module}" = "yes" ]; then
     #check if environment-modules~X is installed
-    module_prefix="$(spack location -i "environment-modules~X" 2>&1 || :)"
+    module_prefix="$(spack location -i "environment-modules~X" 2>&1)"
     if [ $? -eq 0 ]; then
         #activate it!
         export MODULE_PREFIX=${module_prefix}
