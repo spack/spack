@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,15 +25,17 @@
 from spack import *
 
 
-class PyLazyarray(PythonPackage):
-    """a Python package that provides a lazily-evaluated numerical array class,
-    larray, based on and compatible with NumPy arrays."""
+class Patchelf(AutotoolsPackage):
+    """
+    PatchELF is a small utility to modify the
+    dynamic linker and RPATH of ELF executables.
+    """
 
-    homepage = "http://bitbucket.org/apdavison/lazyarray/"
-    url      = "https://pypi.io/packages/source/l/lazyarray/lazyarray-0.2.8.tar.gz"
+    homepage = "https://nixos.org/patchelf.html"
+    url = "http://nixos.org/releases/patchelf/patchelf-0.8/patchelf-0.8.tar.gz"
 
-    version('0.2.10', '336033357459e66cbca5543bf003a2ba')
-    version('0.2.8',  '8e0072f0892b9fc0516e7048f96e9d74')
+    list_url = "http://nixos.org/releases/patchelf/"
+    list_depth = 1
 
-    depends_on('py-numpy@1.3:', type=('build', 'run'))
-    depends_on('py-numpy@1.5:', type=('build', 'run'), when='^python@3:')
+    version('0.9', '3c265508526760f233620f35d79c79fc')
+    version('0.8', '407b229e6a681ffb0e2cdd5915cb2d01')
