@@ -50,7 +50,6 @@ class Clhep(CMakePackage):
     version('2.2.0.5', '1584e8ce6ebf395821aed377df315c7c')
     version('2.2.0.4', '71d2c7c2e39d86a0262e555148de01c1')
 
-    variant('debug', default=False, description="Switch to the debug version of CLHEP.")
     variant('cxx11', default=True, description="Compile using c++11 dialect.")
     variant('cxx14', default=False, description="Compile using c++14 dialect.")
 
@@ -64,14 +63,6 @@ class Clhep(CMakePackage):
                     % (self.stage.path, self.spec.version))
 
     root_cmakelists_dir = 'CLHEP'
-
-    def build_type(self):
-        spec = self.spec
-
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'MinSizeRel'
 
     def cmake_args(self):
         spec = self.spec

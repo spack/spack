@@ -46,8 +46,6 @@ class Gmsh(CMakePackage):
 
     variant('shared',      default=True,
             description='Enables the build of shared libraries')
-    variant('debug',       default=False,
-            description='Builds the library in debug mode')
     variant('mpi',         default=True,
             description='Builds MPI support for parser and solver')
     variant('fltk',        default=False,
@@ -127,9 +125,6 @@ class Gmsh(CMakePackage):
         else:
             # Builds and installs static library
             options.append('-DENABLE_BUILD_LIB:BOOL=ON')
-
-        if '+debug' in spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
 
         if '+mpi' in spec:
             options.append('-DENABLE_MPI:BOOL=ON')

@@ -40,10 +40,3 @@ class Hpx(CMakePackage):
     def cmake_args(self):
         args = ['-DHPX_BUILD_EXAMPLES=OFF', '-DHPX_MALLOC=system']
         return args
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'

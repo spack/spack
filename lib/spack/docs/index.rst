@@ -65,6 +65,7 @@ or refer to the full manual below.
    repositories
    command_index
    package_list
+   binary_caches
 
 .. toctree::
    :maxdepth: 2
