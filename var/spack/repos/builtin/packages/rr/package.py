@@ -26,7 +26,7 @@ from spack import *
 
 
 class Rr(CMakePackage):
-    """application execution recorder, player and debugger"""
+    """Application execution recorder, player and debugger"""
     homepage = "http://rr-project.org/"
     url      = "https://github.com/mozilla/rr/archive/4.5.0.tar.gz"
 
@@ -34,12 +34,16 @@ class Rr(CMakePackage):
     version('4.4.0', '6d1cbb4fafbf6711114369907cf1efb1')
     version('4.3.0', '31470564e8b7eb317f619e4ef2244082')
 
-    depends_on('cmake')
     depends_on('gdb')
     depends_on('git')
-    depends_on('pkg-config')
-    depends_on('py-pexpect')
     depends_on('zlib')
+    # depends_on('capnproto', when='@4.6:')  # not yet in spack
+    # depends_on('libcapnp')    # needed for future releases
+    depends_on('pkg-config', type='build')
+    depends_on('py-pexpect', type='build')  # actually tests
+
+    # rr needs architecture Nehalem and beyond, how can spack
+    # test this?
 
     # Only 'Release' is supported at the moment
     variant('build_type', default='Release',
@@ -55,9 +59,8 @@ class Rr(CMakePackage):
     def cmake_args(self):
         return ['-Ddisable32bit=ON']
 
-    def install(self, spec, prefix):
-        super(Rr, self).install(spec, prefix)
-
+    @run_after('install')
+    def install_stub(self):
         with working_dir(self.build_directory):
             mkdirp(prefix.bin)
             install('bin/rr_exec_stub', prefix.bin)
