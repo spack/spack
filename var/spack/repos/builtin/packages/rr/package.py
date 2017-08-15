@@ -47,7 +47,7 @@ class Rr(CMakePackage):
             values=('Release'))
 
     def patch(self):
-        # because otherwise CMake would try and fail to set RPATH of 
+        # because otherwise CMake would try and fail to set RPATH of
         # rr_exec_stub
         filter_file(
             r'^(install\(TARGETS .*)\s*rr_exec_stub', r'\1', 'CMakeLists.txt')
