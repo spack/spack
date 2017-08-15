@@ -94,7 +94,6 @@ class Openblas(MakefilePackage):
                     'OpenBLAS @:0.2.19 does not support OpenMP with clang!'
                 )
 
-
     @property
     def make_defs(self):
         # Configure fails to pick up fortran from FC=/abs/path/to/f77, but
