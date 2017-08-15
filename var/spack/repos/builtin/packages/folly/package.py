@@ -40,6 +40,11 @@ class Folly(AutotoolsPackage):
     url = "https://github.com/facebook/folly/archive/v2017.06.05.00.tar.gz"
 
     version('2017.06.05.00', 'a25e8d646702c3e0c1400f591e485a33')
+    version('2016.11.14.00', '88550acdb4d4b331c0ca9922039c8727')
+    version('2016.11.07.00', '2f605b20ad539bccdbfd361daa92081e')
+    version('2016.10.31.00', 'ab3049302792f8470cef64f3a29eedec')
+    version('2016.10.24.00', '0445efb7c16b5c32dfbb173157e54866')
+    version('2016.10.17.00', 'b7e01934a45c5036fab8fdc70e9eaf4d')
 
     depends_on('m4', type='build')
     depends_on('autoconf', type='build')
