@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,10 +31,13 @@ import sys
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
     homepage = 'http://qt.io'
+    # Alternative location 'http://download.qt.io/official_releases/qt/'
     url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
 
+    version('5.9.1',  '77b4af61c49a09833d4df824c806acaf')
+    version('5.9.0',  '9c8bc8b828c2b56721980368266df9d9')
     version('5.8.0',  'a9f2494f75f966e2f22358ec367d8f41')
     version('5.7.1',  '031fb3fd0c3cc0f1082644492683f18d')
     version('5.7.0',  '9a46cce61fc64c20c3ac0a0e0fa41b42')
@@ -50,8 +53,6 @@ class Qt(Package):
     # OpenSpeedShop project
     variant('krellpatch', default=False,
             description="Build with openspeedshop based patch.")
-    variant('mesa',       default=False,
-            description="Depend on mesa.")
     variant('gtk',        default=False,
             description="Build with gtkplus.")
     variant('webkit',     default=False,
@@ -62,6 +63,8 @@ class Qt(Package):
             description="Build with D-Bus support.")
     variant('phonon',     default=False,
             description="Build with phonon support.")
+    variant('opengl',     default=False,
+            description="Build with OpenGL support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
@@ -72,6 +75,9 @@ class Qt(Package):
 
     # https://github.com/xboxdrv/xboxdrv/issues/188
     patch('btn_trigger_happy.patch', when='@5.7.0:')
+
+    # https://github.com/LLNL/spack/issues/1517
+    patch('qt5-pcre.patch', when='@5:')
 
     patch('qt4-corewlan-new-osx.patch', when='@4')
     patch('qt4-pcre-include-conflict.patch', when='@4')
@@ -90,6 +96,8 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
     depends_on("icu4c")
+    depends_on("fontconfig")
+    depends_on("freetype")
     # FIXME:
     # depends_on("freetype", when='@5.8:') and '-system-freetype'
     # -system-harfbuzz
@@ -99,14 +107,14 @@ class Qt(Package):
     depends_on("python", when='@5.7.0:', type='build')
 
     # OpenGL hardware acceleration
-    depends_on("mesa", when='@4:+mesa')
+    depends_on("mesa", when='@4:+opengl')
     depends_on("libxcb", when=sys.platform != 'darwin')
+    depends_on("libx11", when=sys.platform != 'darwin')
 
     # Webkit
     depends_on("flex", when='+webkit', type='build')
     depends_on("bison", when='+webkit', type='build')
     depends_on("gperf", when='+webkit')
-    depends_on("fontconfig", when='+webkit')
 
     # Multimedia
     # depends_on("gstreamer", when='+multimedia')
@@ -121,9 +129,9 @@ class Qt(Package):
         url = self.list_url
 
         if version >= Version('4.0'):
-            url += version.up_to(2) + '/'
+            url += str(version.up_to(2)) + '/'
         else:
-            url += version.up_to(1) + '/'
+            url += str(version.up_to(1)) + '/'
 
         if version >= Version('4.8'):
             url += str(version) + '/'
@@ -143,11 +151,16 @@ class Qt(Package):
         elif version >= Version('3'):
             url += 'free-'
 
-        url += str(version) + '.tar.gz'
+        # 5.9 only has xz format. From 5.2.1 -> 5.8.0 .gz or .xz were possible
+        if version >= Version('5.9'):
+            url += str(version) + '.tar.xz'
+        else:
+            url += str(version) + '.tar.gz'
 
         return url
 
     def setup_environment(self, spack_env, run_env):
+        spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
         run_env.set('QTDIR', self.prefix)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -189,12 +202,15 @@ class Qt(Package):
             '-prefix', self.prefix,
             '-v',
             '-opensource',
-            '-opengl',
+            '-{0}opengl'.format('' if '+opengl' in self.spec else 'no-'),
             '-release',
             '-shared',
             '-confirm-license',
             '-openssl-linked',
             '-optimized-qmake',
+            '-fontconfig',
+            '-system-freetype',
+            '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include),
             '-no-pch'
         ]
 

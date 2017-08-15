@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,7 +36,6 @@ from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 from spack.spec import CompilerSpec, ArchSpec
-from spack.util.environment import get_path
 
 description = "manage compilers"
 section = "system"
@@ -89,8 +88,6 @@ def compiler_find(args):
 
     """
     paths = args.add_paths
-    if not paths:
-        paths = get_path('PATH')
 
     # Don't initialize compilers config via compilers.get_compiler_config.
     # Just let compiler_find do the

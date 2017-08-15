@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -148,6 +148,12 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
+    patch('call_once_variadic.patch', when='@:1.56.0%gcc@5:')
+
+    # Patch fix for PGI compiler
+    patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
+    patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
+
     def url_for_version(self, version):
         url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
         return url.format(version.dotted, version.underscored)
@@ -160,7 +166,8 @@ class Boost(Package):
                     'icpc': 'intel',
                     'clang++': 'clang',
                     'xlc++': 'xlcpp',
-                    'xlc++_r': 'xlcpp'}
+                    'xlc++_r': 'xlcpp',
+                    'pgc++': 'pgi'}
 
         if spec.satisfies('@1.47:'):
             toolsets['icpc'] += '-linux'
@@ -200,8 +207,21 @@ class Boost(Package):
                                                        spack_cxx))
 
             if '+mpi' in spec:
-                f.write('using mpi : %s ;\n' %
-                        join_path(spec['mpi'].prefix.bin, 'mpicxx'))
+
+                # Use the correct mpi compiler.  If the compiler options are
+                # empty or undefined, Boost will attempt to figure out the
+                # correct options by running "${mpicxx} -show" or something
+                # similar, but that doesn't work with the Cray compiler
+                # wrappers.  Since Boost doesn't use the MPI C++ bindings,
+                # that can be used as a compiler option instead.
+
+                mpi_line = 'using mpi : %s' % spec['mpi'].mpicxx
+
+                if 'platform=cray' in spec:
+                    mpi_line += ' : <define>MPICH_SKIP_MPICXX'
+
+                f.write(mpi_line + ' ;\n')
+
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
 
@@ -321,7 +341,11 @@ class Boost(Package):
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
 
         b2 = Executable(b2name)
-        b2_options = ['-j', '%s' % make_jobs]
+        jobs = make_jobs
+        # in 1.59 max jobs became dynamic
+        if jobs > 64 and spec.satisfies('@:1.58'):
+            jobs = 64
+        b2_options = ['-j', '%s' % jobs]
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 

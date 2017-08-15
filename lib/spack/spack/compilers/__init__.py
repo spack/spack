@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -100,7 +100,8 @@ def get_compiler_config(scope=None, init_config=True):
             # Check the site config and update the user config if
             # nothing is configured at the site level.
             site_config = spack.config.get_config('compilers', scope='site')
-            if not site_config:
+            sys_config = spack.config.get_config('compilers', scope='system')
+            if not site_config and not sys_config:
                 init_compiler_config()
                 config = spack.config.get_config('compilers', scope=scope)
         return config
@@ -181,7 +182,7 @@ def all_compiler_specs(scope=None, init_config=True):
 
 
 def find_compilers(*paths):
-    """Return a list of compilers found in the suppied paths.
+    """Return a list of compilers found in the supplied paths.
        This invokes the find_compilers() method for each operating
        system associated with the host platform, and appends
        the compilers detected to a list.

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,8 +34,9 @@ class Fastqc(Package):
     url = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip"
 
     version('0.11.5', '3524f101c0ab0bae77c7595983170a76')
+    version('0.11.4', '104ff2e0e9aebf5bee1f6b068a059b0d')
 
-    depends_on('jdk', type='run')
+    depends_on('java', type='run')
     depends_on('perl')          # for fastqc "script", any perl will do
 
     patch('fastqc.patch', level=0)
@@ -57,4 +58,5 @@ class Fastqc(Package):
         """Add <prefix> to the path; the package has a script at the
            top level.
         """
-        run_env.prepend_path('PATH', join_path(self.spec['jdk'].prefix, 'bin'))
+        run_env.prepend_path('PATH', join_path(self.spec['java'].prefix,
+                             'bin'))

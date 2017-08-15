@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ class PyTappy(PythonPackage):
     """Python TAP interface module for unit tests"""
     homepage = "https://github.com/mblayman/tappy"
     # base https://pypi.python.org/pypi/cffi
-    url      = "https://pypi.python.org/packages/source/t/tap.py/tap.py-1.6.tar.gz"
+    url      = "https://pypi.io/packages/source/t/tap.py/tap.py-1.6.tar.gz"
 
     version('1.6', 'c8bdb93ad66e05f939905172a301bedf')
 

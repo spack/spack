@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -254,7 +254,7 @@ class OperatingSystem(object):
 
     def find_compilers(self, *paths):
         """
-        Return a list of compilers found in the suppied paths.
+        Return a list of compilers found in the supplied paths.
         This invokes the find() method for each Compiler class,
         and appends the compilers detected to a list.
         """

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,7 @@ class PyReadmeRenderer(PythonPackage):
     for Warehouse."""
 
     homepage = "https://github.com/pypa/readme_renderer"
-    url      = "https://pypi.python.org/packages/f2/6e/ef1bc3a24eb14e14574aba9dc1bd50bc9a5e7cc880e8ff9cadd385b4fb37/readme_renderer-16.0.tar.gz"
+    url      = "https://pypi.io/packages/source/r/readme_renderer/readme_renderer-16.0.tar.gz"
 
     version('16.0', '70321cea986956bcf2deef9981569f39')
 

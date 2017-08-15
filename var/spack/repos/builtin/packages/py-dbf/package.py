@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,6 +30,6 @@ class PyDbf(PythonPackage):
     .dbf files (including memos)"""
 
     homepage = 'https://pypi.python.org/pypi/dbf'
-    url      = "https://pypi.python.org/packages/source/d/dbf/dbf-0.96.005.tar.gz"
+    url      = "https://pypi.io/packages/source/d/dbf/dbf-0.96.005.tar.gz"
 
     version('0.96.005', 'bce1a1ed8b454a30606e7e18dd2f8277')

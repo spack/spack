@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -54,7 +54,7 @@ package_template = '''\
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -193,18 +193,29 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class QMakePackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for QMake-based packages"""
+
+    base_class_name = 'QMakePackage'
+
+    body = """\
+    def qmake_args(self):
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
-    dependencies = """\
-    # FIXME: Add additional dependencies if required.
-    depends_on('scons', type='build')"""
+    base_class_name = 'SConsPackage'
 
     body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        scons('prefix={0}'.format(prefix))
-        scons('install')"""
+    def build_args(self, spec, prefix):
+        # FIXME: Add arguments to pass to build.
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
 
 class WafPackageTemplate(PackageTemplate):
@@ -265,7 +276,11 @@ class RPackageTemplate(PackageTemplate):
     # depends_on('r-foo', type=('build', 'run'))"""
 
     body = """\
-    # FIXME: Override install() if necessary."""
+    def configure_args(self, spec, prefix):
+        # FIXME: Add arguments to pass to install via --configure-args
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
     def __init__(self, name, *args):
         # If the user provided `--name r-rcpp`, don't rename it r-r-rcpp
@@ -359,6 +374,7 @@ templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
     'cmake':      CMakePackageTemplate,
+    'qmake':      QMakePackageTemplate,
     'scons':      SconsPackageTemplate,
     'waf':        WafPackageTemplate,
     'bazel':      BazelPackageTemplate,
@@ -421,19 +437,22 @@ class BuildSystemGuesser:
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
         # archive, the corresponding build system is assumed.
+        # NOTE: Order is important here. If a package supports multiple
+        # build systems, we choose the first match in this list.
         clues = [
-            ('/configure$',         'autotools'),
-            ('/configure.(in|ac)$', 'autoreconf'),
-            ('/Makefile.am$',       'autoreconf'),
-            ('/CMakeLists.txt$',    'cmake'),
-            ('/SConstruct$',        'scons'),
-            ('/waf$',               'waf'),
-            ('/setup.py$',          'python'),
-            ('/NAMESPACE$',         'r'),
-            ('/WORKSPACE$',         'bazel'),
-            ('/Build.PL$',          'perlbuild'),
-            ('/Makefile.PL$',       'perlmake'),
-            ('/(GNU)?[Mm]akefile$', 'makefile'),
+            (r'/CMakeLists\.txt$',    'cmake'),
+            (r'/configure$',          'autotools'),
+            (r'/configure\.(in|ac)$', 'autoreconf'),
+            (r'/Makefile\.am$',       'autoreconf'),
+            (r'/SConstruct$',         'scons'),
+            (r'/waf$',                'waf'),
+            (r'/setup\.py$',          'python'),
+            (r'/NAMESPACE$',          'r'),
+            (r'/WORKSPACE$',          'bazel'),
+            (r'/Build\.PL$',          'perlbuild'),
+            (r'/Makefile\.PL$',       'perlmake'),
+            (r'/.*\.pro$',            'qmake'),
+            (r'/(GNU)?[Mm]akefile$',  'makefile'),
         ]
 
         # Peek inside the compressed file.

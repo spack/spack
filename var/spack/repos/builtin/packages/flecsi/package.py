@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -41,20 +41,12 @@ class Flecsi(CMakePackage):
 
     version('develop', git='https://github.com/laristra/flecsi', branch='master', submodules=True)
 
-    variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
 
     depends_on("cmake@3.1:", type='build')
     depends_on("legion+shared", when='~mpi')
     depends_on("legion+shared+mpi", when='+mpi')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         options = ['-DENABLE_UNIT_TESTS=ON']

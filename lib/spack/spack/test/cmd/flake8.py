@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -81,15 +81,13 @@ def test_changed_files(parser, flake8_package):
     sys.version_info[:2] <= (2, 6) or
     (3, 0) <= sys.version_info[:2] <= (3, 3),
     reason='flake8 no longer supports Python 2.6 or 3.3 and older')
+@pytest.mark.skipif(not which('flake8'), reason='flake8 is not installed.')
 def test_flake8(parser, flake8_package):
     # Only test the flake8_package that we modified
     # Otherwise, the unit tests would fail every time
     # the flake8 tests fail
     args = parser.parse_args([flake8_package])
-
     flake8(parser, args)
-
     # Get even more coverage
     args = parser.parse_args(['--output', '--root-relative', flake8_package])
-
     flake8(parser, args)

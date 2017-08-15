@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,7 +40,7 @@ class Nextflow(Package):
     version('0.17.3', '5df00105fb1ce6fd0ba019ae735d9617',
             expand=False)
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

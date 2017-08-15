@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,6 +34,7 @@ class Scorep(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-2.0.2.tar.gz"
 
+    version('3.1',   '065bf8eb08398e8146c895718ddb9145')
     version('3.0',   '44da8beaa3f71436a5f6fe51938aab2f')
     version('2.0.2', '8f00e79e1b5b96e511c5ebecd10b2888')
     version('1.4.2', '3b9a042b13bdd5836452354e6567f71e')
@@ -87,5 +88,8 @@ class Scorep(AutotoolsPackage):
         if '~shmem' in spec:
             config_args.append("--without-shmem")
 
-        config_args.extend(["CFLAGS=-fPIC", "CXXFLAGS=-fPIC"])
+        config_args.extend([
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+        ])
         return config_args

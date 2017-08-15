@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,7 +34,7 @@ class Maven(Package):
 
     version('3.3.9', '516923b3955b6035ba6b0a5b031fbd8b')
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
         # install pre-built distribution

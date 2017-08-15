@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -133,7 +133,7 @@ class Netcdf(AutotoolsPackage):
             config_args.append('--disable-shared')
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
-            CFLAGS.append('-fPIC')
+            CFLAGS.append(self.compiler.pic_flag)
 
         if '+dap' in spec:
             config_args.append('--enable-dap')

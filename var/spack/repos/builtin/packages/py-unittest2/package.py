@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,7 @@ class PyUnittest2(PythonPackage):
     testing framework in Python 2.7 and onwards."""
 
     homepage = "https://pypi.python.org/pypi/unittest2"
-    url      = "https://pypi.python.org/packages/source/u/unittest2/unittest2-1.1.0.tar.gz"
+    url      = "https://pypi.io/packages/source/u/unittest2/unittest2-1.1.0.tar.gz"
 
     version('1.1.0', 'f72dae5d44f091df36b6b513305ea000')
 

@@ -443,26 +443,31 @@ Version URLs
 By default, each version's URL is extrapolated from the ``url`` field
 in the package.  For example, Spack is smart enough to download
 version ``8.2.1.`` of the ``Foo`` package above from
-``http://example.com/foo-8.2.1.tar.gz``.
+http://example.com/foo-8.2.1.tar.gz.
 
 If the URL is particularly complicated or changes based on the release,
 you can override the default URL generation algorithm by defining your
-own ``url_for_version()`` function. For example, the developers of HDF5
-keep changing the archive layout, so the ``url_for_version()`` function
-looks like:
+own ``url_for_version()`` function. For example, the download URL for
+OpenMPI contains the major.minor version in one spot and the
+major.minor.patch version in another:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/hdf5/package.py
-   :pyobject: Hdf5.url_for_version
+https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 
-With the use of this ``url_for_version()``, Spack knows to download HDF5 ``1.8.16``
-from ``http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.16/src/hdf5-1.8.16.tar.gz``
-but download HDF5 ``1.10.0`` from ``http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0/src/hdf5-1.10.0.tar.gz``.
+In order to handle this, you can define a ``url_for_version()`` function
+like so:
 
-You'll notice that HDF5's ``url_for_version()`` function makes use of a special
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/openmpi/package.py
+   :pyobject: Openmpi.url_for_version
+
+With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.1.1``
+from http://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
+but download OpenMPI ``1.10.7`` from http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.7.tar.bz2.
+
+You'll notice that OpenMPI's ``url_for_version()`` function makes use of a special
 ``Version`` function called ``up_to()``. When you call ``version.up_to(2)`` on a
 version like ``1.10.0``, it returns ``1.10``. ``version.up_to(1)`` would return
 ``1``. This can be very useful for packages that place all ``X.Y.*`` versions in
-a single directory and then places all ``X.Y.Z`` versions in a subdirectory.
+a single directory and then places all ``X.Y.Z`` versions in a sub-directory.
 
 There are a few ``Version`` properties you should be aware of. We generally
 prefer numeric versions to be separated by dots for uniformity, but not all
@@ -485,6 +490,21 @@ version.joined       123
    Python properties don't need parentheses. ``version.dashed`` is correct.
    ``version.dashed()`` is incorrect.
 
+In addition, these version properties can be combined with ``up_to()``.
+For example:
+
+.. code-block:: python
+
+   >>> version = Version('1.2.3')
+   >>> version.up_to(2).dashed
+   Version('1-2')
+   >>> version.underscored.up_to(2)
+   Version('1_2')
+
+
+As you can see, order is not important. Just keep in mind that ``up_to()`` and
+the other version properties return ``Version`` objects, not strings.
+
 If a URL cannot be derived systematically, or there is a special URL for one
 of its versions, you can add an explicit URL for a particular version:
 
@@ -493,9 +513,6 @@ of its versions, you can add an explicit URL for a particular version:
    version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
            url='http://example.com/foo-8.2.1-special-version.tar.gz')
 
-This is common for Python packages that download from PyPi. Since newer
-download URLs often contain a unique hash for each version, there is no
-way to guess the URL systematically.
 
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
@@ -923,7 +940,7 @@ Submodules
   .. code-block:: python
 
      version('1.0.1', git='https://github.com/example-project/example.git',
-             tag='v1.0.1', submdoules=True)
+             tag='v1.0.1', submodules=True)
 
 
 .. _github-fetch:
@@ -2101,7 +2118,13 @@ The classes that are currently provided by Spack are:
     | :py:class:`.CMakePackage`     | Specialized class for packages   |
     |                               | built using CMake                |
     +-------------------------------+----------------------------------+
-    | :py:class:`.WafPackage`       | Specialize class for packages    |
+    | :py:class:`.QMakePackage`     | Specialized class for packages   |
+    |                               | build using QMake                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.SConsPackage`     | Specialized class for packages   |
+    |                               | built using SCons                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.WafPackage`       | Specialized class for packages   |
     |                               | built using Waf                  |
     +-------------------------------+----------------------------------+
     | :py:class:`.RPackage`         | Specialized class for            |
@@ -2388,6 +2411,94 @@ build system.
 Compiler flags
 ^^^^^^^^^^^^^^
 
+Compiler flags set by the user through the Spec object can be passed to
+the build in one of two ways. For packages inheriting from the
+``CmakePackage`` or ``AutotoolsPackage`` classes, the build environment
+passes those flags to the relevant environment variables (``CFLAGS``,
+``CXXFLAGS``, etc) that are respected by the build system. For all other
+packages, the default behavior is to inject the flags directly into the
+compiler commands using Spack's compiler wrappers.
+
+Individual packages can override the default behavior for the flag
+handling.  Packages can define a ``default_flag_handler`` method that
+applies to all sets of flags handled by Spack, or may define
+individual methods ``cflags_handler``, ``cxxflags_handler``,
+etc. Spack will apply the individual method for a flag set if it
+exists, otherwise the ``default_flag_handler`` method if it exists,
+and fall back on the default for that package class if neither exists.
+
+These methods are defined on the package class, and take two
+parameters in addition to the packages itself. The ``env`` parameter
+is an ``EnvironmentModifications`` object that can be used to change
+the build environment. The ``flag_val`` parameter is a tuple. Its
+first entry is the name of the flag (``cflags``, ``cxxflags``, etc.)
+and its second entry is a list of the values for that flag.
+
+There are three primary idioms that can be combined to create whatever
+behavior the package requires.
+
+1. The default behavior for packages inheriting from
+``AutotoolsPackage`` or ``CmakePackage``.
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
+        return []
+
+2. The default behavior for other packages
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        return flag_val[1]
+
+
+3. Packages may have additional flags to add to the build. These flags
+can be added to either idiom above. For example:
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        flags = flag_val[1]
+        flags.append('-flag')
+        return flags
+
+or
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
+        env.append_flags(flag_val[0].upper(), '-flag')
+        return []
+
+Packages may also opt for methods that include aspects of any of the
+idioms above. E.g.
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        flags = []
+        if len(flag_val[1]) > 3:
+            env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1][3:]))
+            flags = flag_val[1][:3]
+        else:
+            flags = flag_val[1]
+        flags.append('-flag')
+        return flags
+
+Because these methods can pass values through environment variables,
+it is important not to override these variables unnecessarily in other
+package methods. In the ``setup_environment`` and
+``setup_dependent_environment`` methods, use the ``append_flags``
+method of the ``EnvironmentModifications`` class to append values to a
+list of flags whenever there is no good reason to override the
+existing value. In the ``install`` method and other methods that can
+operate on the build environment directly through the ``env``
+variable, test for environment variable existance before overriding
+values to add compiler flags.
+
 In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
 flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
@@ -2408,15 +2519,21 @@ is handy when a package supports additional variants like
 Blas and Lapack libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Different packages provide implementation of ``Blas`` and ``Lapack``
+Multiple packages provide implementations of ``Blas`` and ``Lapack``
 routines.  The names of the resulting static and/or shared libraries
 differ from package to package. In order to make the ``install()`` method
 independent of the choice of ``Blas`` implementation, each package which
 provides it sets up ``self.spec.blas_libs`` to point to the correct
 ``Blas`` libraries.  The same applies to packages which provide
 ``Lapack``. Package developers are advised to use these variables, for
-example ``spec['blas'].blas_libs.joined()`` instead of hard-coding
-``join_path(spec['blas'].prefix.lib, 'libopenblas.so')``.
+example ``spec['blas'].blas_libs.joined()`` instead of hard-coding them:
+
+.. code-block:: python
+
+   if 'openblas' in spec:
+       libs = join_path(spec['blas'].prefix.lib, 'libopenblas.so')
+   elif 'intel-mkl' in spec:
+       ...
 
 .. _prefix-objects:
 
@@ -2430,7 +2547,7 @@ e.g.:
 
 .. code-block:: python
 
-   configure('--prefix=' + prefix)
+   configure('--prefix={0}'.format(prefix))
 
 For the most part, prefix objects behave exactly like strings.  For
 packages that do not have their own install target, or for those that
@@ -2451,29 +2568,27 @@ yourself, e.g.:
        mkdirp(prefix.lib)
        install('libfoo.a', prefix.lib)
 
-Most of the standard UNIX directory names are attributes on the
-``prefix`` object.  Here is a full list:
 
-  =========================  ================================================
-  Prefix Attribute           Location
-  =========================  ================================================
-  ``prefix.bin``             ``$prefix/bin``
-  ``prefix.sbin``            ``$prefix/sbin``
-  ``prefix.etc``             ``$prefix/etc``
-  ``prefix.include``         ``$prefix/include``
-  ``prefix.lib``             ``$prefix/lib``
-  ``prefix.lib64``           ``$prefix/lib64``
-  ``prefix.libexec``         ``$prefix/libexec``
-  ``prefix.share``           ``$prefix/share``
-  ``prefix.doc``             ``$prefix/doc``
-  ``prefix.info``            ``$prefix/info``
+Attributes of this object are created on the fly when you request them,
+so any of the following will work:
 
-  ``prefix.man``             ``$prefix/man``
-  ``prefix.man[1-8]``        ``$prefix/man/man[1-8]``
+======================  =======================
+Prefix Attribute        Location
+======================  =======================
+``prefix.bin``          ``$prefix/bin``
+``prefix.lib64``        ``$prefix/lib64``
+``prefix.share.man``    ``$prefix/share/man``
+``prefix.foo.bar.baz``  ``$prefix/foo/bar/baz``
+======================  =======================
 
-  ``prefix.share_man``       ``$prefix/share/man``
-  ``prefix.share_man[1-8]``  ``$prefix/share/man[1-8]``
-  =========================  ================================================
+Of course, this only works if your file or directory is a valid Python
+variable name. If your file or directory contains dashes or dots, use
+``join_path`` instead:
+
+.. code-block:: python
+
+   join_path(prefix.lib, 'libz.a')
+
 
 .. _spec-objects:
 
@@ -2572,23 +2687,25 @@ of its dependencies satisfy the provided spec.
 Accessing Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^
 
-You may need to get at some file or binary that's in the prefix of one
-of your dependencies.  You can do that by sub-scripting the spec:
+You may need to get at some file or binary that's in the installation
+prefix of one of your dependencies. You can do that by sub-scripting
+the spec:
 
 .. code-block:: python
 
-   my_mpi = spec['mpi']
+   spec['mpi']
 
 The value in the brackets needs to be some package name, and spec
 needs to depend on that package, or the operation will fail.  For
 example, the above code will fail if the ``spec`` doesn't depend on
-``mpi``.  The value returned and assigned to ``my_mpi``, is itself
-just another ``Spec`` object, so you can do all the same things you
-would do with the package's own spec:
+``mpi``.  The value returned is itself just another ``Spec`` object,
+so you can do all the same things you would do with the package's
+own spec:
 
 .. code-block:: python
 
-   mpicc = join_path(my_mpi.prefix.bin, 'mpicc')
+   spec['mpi'].prefix.bin
+   spec['mpi'].version
 
 .. _multimethods:
 
@@ -3086,7 +3203,7 @@ Filtering functions
      .. code-block:: python
 
         filter_file(r'#!/usr/bin/perl',
-                    '#!/usr/bin/env perl', join_path(prefix.bin, 'bib2xhtml'))
+                    '#!/usr/bin/env perl', prefix.bin.bib2xhtml)
 
   #. Switching the compilers used by ``mpich``'s MPI wrapper scripts from
      ``cc``, etc. to the compilers used by the Spack build:
@@ -3094,10 +3211,10 @@ Filtering functions
      .. code-block:: python
 
         filter_file('CC="cc"', 'CC="%s"' % self.compiler.cc,
-                    join_path(prefix.bin, 'mpicc'))
+                    prefix.bin.mpicc)
 
         filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx,
-                    join_path(prefix.bin, 'mpicxx'))
+                    prefix.bin.mpicxx)
 
 :py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.change_sed_delim>`
     Some packages, like TAU, have a build system that can't install
@@ -3134,12 +3251,10 @@ File functions
 
   .. code-block:: python
 
-     install('my-header.h', join_path(prefix.include))
+     install('my-header.h', prefix.include)
 
-:py:func:`join_path(prefix, *args) <spack.join_path>`
-  Like ``os.path.join``, this joins paths using the OS path separator.
-  However, this version allows an arbitrary number of arguments, so
-  you can string together many path components.
+:py:func:`join_path(*paths) <spack.join_path>`
+  An alias for ``os.path.join``. This joins paths using the OS path separator.
 
 :py:func:`mkdirp(*paths) <spack.mkdirp>`
   Create each of the directories in ``paths``, creating any parent
@@ -3317,24 +3432,12 @@ Does this in one of two ways:
 ``spack clean``
 ^^^^^^^^^^^^^^^
 
-Cleans up temporary files for a particular package, by deleting the
-expanded/checked out source code *and* any downloaded archive.  If
-``fetch``, ``stage``, or ``install`` are run again after this, Spack's
-build process will start from scratch.
-
-.. _cmd-spack-purge:
-
-^^^^^^^^^^^^^^^
-``spack purge``
-^^^^^^^^^^^^^^^
-
 Cleans up all of Spack's temporary and cached files.  This can be used to
 recover disk space if temporary files from interrupted or failed installs
 accumulate in the staging area.
 
 When called with ``--stage`` or without arguments this removes all staged
-files and will be equivalent to running ``spack clean`` for every package
-you have fetched or staged.
+files.
 
 When called with ``--downloads`` this will clear all resources
 :ref:`cached <caching>` during installs.
@@ -3343,6 +3446,11 @@ When called with ``--user-cache`` this will remove caches in the user home
 directory, including cached virtual indices.
 
 To remove all of the above, the command can be called with ``--all``.
+
+When called with positional arguments, cleans up temporary files only
+for a particular package. If ``fetch``, ``stage``, or ``install``
+are run again after this, Spack's build process will start from scratch.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the stage directory on success
@@ -3357,7 +3465,7 @@ package has been successfully built and installed.  Use
    $ spack install --keep-stage <spec>
 
 This allows you to inspect the build directory and potentially debug
-the build.  You can use ``purge`` or ``clean`` later to get rid of the
+the build.  You can use ``clean`` later to get rid of the
 unwanted temporary files.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

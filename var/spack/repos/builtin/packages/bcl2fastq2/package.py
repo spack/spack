@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -37,9 +37,13 @@ class Bcl2fastq2(Package):
        files."""
 
     homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-18.html"
-    url      = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v2-18-0-12-tar.zip"
 
-    version('2-18-0-12', 'fbe06492117f65609c41be0c27e3215c')
+    version('2.19.1.403', 'baba7a02767fd868e87cb36781d2be26')
+    version('2.18.0.12', 'fbe06492117f65609c41be0c27e3215c')
+    # 2.17.1.14 is no longer distributed.  If you have a copy of the
+    # source tarball, you can drop it into a local mirror w/ the name
+    # mirror/bcl2fastq2/bcl2fastq2-2.17.1.14.zip and go from there.
+    version('2.17.1.14', '7426226c6db095862e636b95c38608d3')
 
     depends_on('boost@1.54.0')
     depends_on('cmake@2.8.9:')
@@ -55,11 +59,18 @@ class Bcl2fastq2(Package):
     # libexslt bits.
     patch('cxxConfigure-cmake.patch')
 
-    root_cmakelists_dir = '../src'
+    root_cmakelists_dir = 'src'
 
+    # v2.17.1.14 and v2.18.0.12 were available via HTTP.
+    # v2.19.1.403 is only available via ftp.
+    # who knows what the future will hold.
     def url_for_version(self, version):
-        url = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
-        return url.format(version.dashed)
+        if version.string == '2.19.1.403':
+            return "ftp://webdata2:webdata2@ussd-ftp.illumina.com/downloads/software/bcl2fastq/bcl2fastq2-v2.19.1-tar.zip"
+        else:
+            url = "https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v{0}-tar.zip"
+            # - required to change the version from dots to dashes.
+            return url.format(version.dashed)
 
     # Illumina tucks the source inside a gzipped tarball inside a zip
     # file.  We let the normal Spack expansion bit unzip the zip file,

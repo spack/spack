@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Fenics(Package):
+class Fenics(CMakePackage):
     """FEniCS is organized as a collection of interoperable components
     that together form the FEniCS Project. These components include
     the problem-solving environment DOLFIN, the form compiler FFC, the
@@ -35,8 +35,9 @@ class Fenics(Package):
 
     homepage = "http://fenicsproject.org/"
     url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-1.6.0.tar.gz"
-
     base_url = "https://bitbucket.org/fenics-project/{pkg}/downloads/{pkg}-{version}.tar.gz"
+
+    python_components = ['ufl', 'ffc', 'fiat', 'instant']
 
     variant('hdf5',         default=True,  description='Compile with HDF5')
     variant('parmetis',     default=True,  description='Compile with ParMETIS')
@@ -54,8 +55,12 @@ class Fenics(Package):
             description='Enables the shared memory support')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
-    variant('debug',        default=False,
-            description='Builds a debug version of the libraries')
+    variant('doc',          default=False,
+            description='Builds the documentation')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'MinSizeRel', 'Developer'))
 
     # not part of spack list for now
     # variant('petsc4py',     default=True,  description='Uses PETSc4py')
@@ -68,7 +73,7 @@ class Fenics(Package):
 
     extends('python')
 
-    depends_on('eigen@3.2.0:', type='build')
+    depends_on('eigen@3.2.0:')
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
 
     depends_on('mpi', when='+mpi')
@@ -88,7 +93,7 @@ class Fenics(Package):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-sympy', type=('build', 'run'))
     depends_on('swig@3.0.3:', type=('build', 'run'))
-    depends_on('cmake@2.8.12:', type=('build', 'run'))
+    depends_on('cmake@2.8.12:', type='build')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
@@ -140,14 +145,10 @@ class Fenics(Package):
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'
 
-    def install(self, spec, prefix):
-        for package in ['ufl', 'ffc', 'fiat', 'instant']:
-            with working_dir(join_path('depends', package)):
-                setup_py('install', '--prefix=%s' % prefix)
-
-        cmake_args = [
-            '-DCMAKE_BUILD_TYPE:STRING={0}'.format(
-                'Debug' if '+debug' in spec else 'RelWithDebInfo'),
+    def cmake_args(self):
+        return [
+            '-DDOLFIN_ENABLE_DOCS:BOOL={0}'.format(
+                self.cmake_is_on('+doc')),
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 self.cmake_is_on('+shared')),
             '-DDOLFIN_SKIP_BUILD_TESTS:BOOL=ON',
@@ -189,10 +190,14 @@ class Fenics(Package):
                 self.cmake_is_on('zlib')),
         ]
 
-        cmake_args.extend(std_cmake_args)
+    @run_after('build')
+    def build_python_components(self):
+        for package in self.python_components:
+            with working_dir(join_path('depends', package)):
+                setup_py('build')
 
-        with working_dir('build', create=True):
-            cmake('..', *cmake_args)
-
-            make()
-            make('install')
+    @run_after('install')
+    def install_python_components(self):
+        for package in self.python_components:
+            with working_dir(join_path('depends', package)):
+                setup_py('install', '--prefix={0}'.format(self.prefix))

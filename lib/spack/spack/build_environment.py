@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -54,6 +54,7 @@ calls you can make from within the install() function.
 import inspect
 import multiprocessing
 import os
+import errno
 import shutil
 import sys
 import traceback
@@ -67,8 +68,8 @@ import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
-from spack.util.executable import Executable, which
-
+from spack.util.executable import Executable
+from spack.util.module_cmd import load_module, get_path_from_module
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -118,67 +119,6 @@ class MakeExecutable(Executable):
             args = (jobs,) + args
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
-
-
-def load_module(mod):
-    """Takes a module name and removes modules until it is possible to
-    load that module. It then loads the provided module. Depends on the
-    modulecmd implementation of modules used in cray and lmod.
-    """
-    # Create an executable of the module command that will output python code
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
-
-    # Read the module and remove any conflicting modules
-    # We do this without checking that they are already installed
-    # for ease of programming because unloading a module that is not
-    # loaded does nothing.
-    text = modulecmd('show', mod, output=str, error=str).split()
-    for i, word in enumerate(text):
-        if word == 'conflict':
-            exec(compile(modulecmd('unload', text[i + 1], output=str,
-                                   error=str), '<string>', 'exec'))
-    # Load the module now that there are no conflicts
-    load = modulecmd('load', mod, output=str, error=str)
-    exec(compile(load, '<string>', 'exec'))
-
-
-def get_path_from_module(mod):
-    """Inspects a TCL module for entries that indicate the absolute path
-    at which the library supported by said module can be found.
-    """
-    # Create a modulecmd executable
-    modulecmd = which('modulecmd')
-    modulecmd.add_default_arg('python')
-
-    # Read the module
-    text = modulecmd('show', mod, output=str, error=str).split('\n')
-    # If it lists its package directory, return that
-    for line in text:
-        if line.find(mod.upper() + '_DIR') >= 0:
-            words = line.split()
-            return words[2]
-
-    # If it lists a -rpath instruction, use that
-    for line in text:
-        rpath = line.find('-rpath/')
-        if rpath >= 0:
-            return line[rpath + 6:line.find('/lib')]
-
-    # If it lists a -L instruction, use that
-    for line in text:
-        L = line.find('-L/')
-        if L >= 0:
-            return line[L + 2:line.find('/lib')]
-
-    # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
-    for line in text:
-        if line.find('LD_LIBRARY_PATH') >= 0:
-            words = line.split()
-            path = words[2]
-            return path[:path.find('/lib')]
-    # Unable to find module path
-    return None
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -393,6 +333,7 @@ def set_module_variables_for_package(pkg, module):
     m.make = MakeExecutable('make', jobs)
     m.gmake = MakeExecutable('gmake', jobs)
     m.scons = MakeExecutable('scons', jobs)
+    m.ninja = MakeExecutable('ninja', jobs)
 
     # easy shortcut to os.environ
     m.env = os.environ
@@ -528,6 +469,19 @@ def setup_package(pkg, dirty=False):
     for s in pkg.spec.traverse():
         s.package.spec = s
 
+    # Trap spack-tracked compiler flags as appropriate.
+    # Must be before set_compiler_environment_variables
+    # Current implementation of default flag handler relies on this being
+    # the first thing to affect the spack_env (so there is no appending), or
+    # on no other build_environment methods trying to affect these variables
+    # (CFLAGS, CXXFLAGS, etc). Currently both are true, either is sufficient.
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
+        trap_func = getattr(pkg, flag + '_handler',
+                            getattr(pkg, 'default_flag_handler',
+                                    lambda x, y: y[1]))
+        flag_val = pkg.spec.compiler_flags[flag]
+        pkg.spec.compiler_flags[flag] = trap_func(spack_env, (flag, flag_val))
+
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
@@ -625,8 +579,15 @@ def fork(pkg, function, dirty=False):
     parent_connection, child_connection = multiprocessing.Pipe()
     try:
         # Forward sys.stdin to be able to activate / deactivate
-        # verbosity pressing a key at run-time
-        input_stream = lang.duplicate_stream(sys.stdin)
+        # verbosity pressing a key at run-time.  When sys.stdin can't
+        # be duplicated (e.g. running under nohup, which results in an
+        # '[Errno 22] Invalid argument') then just use os.devnull
+        try:
+            input_stream = lang.duplicate_stream(sys.stdin)
+        except OSError as e:
+            if e.errno == errno.EINVAL:
+                tty.debug("Using devnull as input_stream")
+                input_stream = open(os.devnull)
         p = multiprocessing.Process(
             target=child_execution,
             args=(child_connection, input_stream)

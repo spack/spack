@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -90,7 +90,8 @@ def graph(parser, args):
     deptype = alldeps
     if args.deptype:
         deptype = tuple(args.deptype.split(','))
-        validate_deptype(deptype)
+        if deptype == ('all',):
+            deptype = 'all'
         deptype = canonical_deptype(deptype)
 
     if args.dot:  # Dot graph only if asked for.

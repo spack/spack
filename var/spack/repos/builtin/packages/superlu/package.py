@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,8 +38,8 @@ class Superlu(Package):
     version('5.2.1', '3a1a9bff20cb06b7d97c46d337504447')
     version('4.3', 'b72c6309f25e9660133007b82621ba7c')
 
-    variant('fpic',    default=False,
-            description='Build with position independent code') 
+    variant('pic',    default=True,
+            description='Build with position independent code')
 
     depends_on('cmake', when='@5.2.1:', type='build')
     depends_on('blas')
@@ -51,7 +51,7 @@ class Superlu(Package):
             '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].libs.joined())
         ]
 
-        if '+fpic' in spec:
+        if '+pic' in spec:
             cmake_args.extend([
                 '-DCMAKE_POSITION_INDEPENDENT_CODE=ON'
             ])
@@ -89,7 +89,7 @@ class Superlu(Package):
             'CDEFS      = -DAdd_'
         ])
 
-        if '+fpic' in spec:
+        if '+pic' in spec:
             config.extend([
                 # Use these lines instead when pic_flag capability arrives
                 'CFLAGS     = -O3 {0}'.format(self.compiler.pic_flag),
@@ -117,4 +117,4 @@ class Superlu(Package):
         headers = glob.glob(join_path('SRC', '*.h'))
         mkdir(prefix.include)
         for h in headers:
-            install(h, prefix.include) 
+            install(h, prefix.include)
