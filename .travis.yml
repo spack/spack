@@ -11,10 +11,16 @@ branches:
 #=============================================================================
 # Build matrix
 #=============================================================================
-matrix:
+jobs:
   fast_finish: true
   include:
-    - python: '2.6'
+    - stage: 'flake8'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=flake8
+    - stage: 'unit tests + documentation'
+      python: '2.6'
       os: linux
       language: python
       env: TEST_SUITE=unit
@@ -22,8 +28,32 @@ matrix:
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-# mpich (AutotoolsPackage)
+    - python: '3.3'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.4'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.5'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.6'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
+    - os: osx
+      language: generic
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
     - python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
+# mpich (AutotoolsPackage)
+    - stage: 'build tests'
+      python: '2.7'
       os: linux
       language: python
       env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
@@ -57,38 +87,11 @@ matrix:
       os: linux
       language: python
       env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=r-rcpp' ]
-    - python: '3.3'
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
-    - python: '3.4'
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
-    - python: '3.5'
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
-    - python: '3.6'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true ]
 # mpich (AutotoolsPackage)
     - python: '3.6'
       os: linux
       language: python
       env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
-    - python: '2.7'
-      os: linux
-      language: python
-      env: TEST_SUITE=flake8
-    - python: '2.7'
-      os: linux
-      language: python
-      env: TEST_SUITE=doc
-    - os: osx
-      language: generic
-      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
 
 #=============================================================================
 # Environment
