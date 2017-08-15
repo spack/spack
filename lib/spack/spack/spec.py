@@ -2024,7 +2024,7 @@ class Spec(object):
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
                 deptypes = pkg.dependency_types[dep_name]
                 # If pkg_dep is a dependency, merge it.
-                if pkg_dep and (spack.concretizer.test(pkg_dep.name) or
+                if pkg_dep and (spack.package_testing.check(pkg_dep.name) or
                                 set(deptypes) - set(['test'])):
                     changed |= self._merge_dependency(
                         pkg_dep, deptypes, visited, spec_deps, provider_index)

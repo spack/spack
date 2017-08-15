@@ -94,6 +94,11 @@ the dependencies"""
         help="run package level tests during installation"
     )
     subparser.add_argument(
+        '--test-root', action='store_true', dest='test_root',
+        help="""run package level tests during installation for packages that
+are explicitly-mentioned by the user"""
+    )
+    subparser.add_argument(
         '--log-format',
         default=None,
         choices=['junit'],
@@ -322,8 +327,12 @@ def install(parser, args, **kwargs):
         'dirty': args.dirty
     })
 
+    specs = spack.cmd.parse_specs(args.package)
     if args.run_tests:
-        spack.concretizer.test_all = True
+        spack.package_testing.test_all()
+    elif args.test_root:
+        for spec in specs:
+            spack.package_testing.test(spec.name)
 
     # Spec from cli
     specs = []
