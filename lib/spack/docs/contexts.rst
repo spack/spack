@@ -37,26 +37,26 @@ which are needed to expose the packages in the context to the user:
 Usage 
 -----
 spack context create <context name>
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create a new context to group a set of specs.
 
 spack context add <context name> <spec>
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Add ``spec`` to ``context name``. This does not concretize the spec
 and so does not detect whether it is possible to concretize. It does
 check whether the spec is properly-formatted.
 
 spack context concretize <context name>
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Concretize each spec added to the context with ``spack context add``.
 This does not install any concretized specs, but it does update the
 saved context object.
 
 spack context list-modules <context name>
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 List the locations of all module files associated with all link and
 run dependencies of packages that have been added to the specified
