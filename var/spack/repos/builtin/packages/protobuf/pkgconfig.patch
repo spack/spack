@@ -1,0 +1,58 @@
+diff --git a/cmake/install.cmake b/cmake/install.cmake
+index 28dc90d..441bf55 100644
+--- a/cmake/install.cmake
++++ b/cmake/install.cmake
+@@ -1,5 +1,10 @@
+ include(GNUInstallDirs)
+ 
++configure_file(${CMAKE_CURRENT_SOURCE_DIR}/protobuf.pc.cmake
++               ${CMAKE_CURRENT_BINARY_DIR}/protobuf.pc @ONLY)
++configure_file(${CMAKE_CURRENT_SOURCE_DIR}/protobuf-lite.pc.cmake
++               ${CMAKE_CURRENT_BINARY_DIR}/protobuf-lite.pc @ONLY)
++
+ foreach(_library
+   libprotobuf-lite
+   libprotobuf
+@@ -17,6 +22,8 @@ endforeach()
+ install(TARGETS protoc EXPORT protobuf-targets
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT protoc)
+ 
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/protobuf.pc ${CMAKE_CURRENT_BINARY_DIR}/protobuf-lite.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
++
+ file(STRINGS extract_includes.bat.in _extract_strings
+   REGEX "^copy")
+ foreach(_extract_string ${_extract_strings})
+diff --git a/cmake/protobuf-lite.pc.cmake b/cmake/protobuf-lite.pc.cmake
+new file mode 100644
+index 0000000..cbe5426
+--- /dev/null
++++ b/cmake/protobuf-lite.pc.cmake
+@@ -0,0 +1,11 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++exec_prefix=@CMAKE_INSTALL_PREFIX@
++libdir=@CMAKE_INSTALL_FULL_LIBDIR@
++includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
++
++Name: Protocol Buffers
++Description: Google's Data Interchange Format
++Version: @protobuf_VERSION@
++Libs: -L${libdir} -lprotobuf-lite @CMAKE_THREAD_LIBS_INIT@
++Cflags: -I${includedir} @CMAKE_THREAD_LIBS_INIT@
++Conflicts: protobuf
+diff --git a/cmake/protobuf.pc.cmake b/cmake/protobuf.pc.cmake
+new file mode 100644
+index 0000000..2e30763
+--- /dev/null
++++ b/cmake/protobuf.pc.cmake
+@@ -0,0 +1,11 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++exec_prefix=@CMAKE_INSTALL_PREFIX@
++libdir=@CMAKE_INSTALL_FULL_LIBDIR@
++includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
++
++Name: Protocol Buffers
++Description: Google's Data Interchange Format
++Version: @protobuf_VERSION@
++Libs: -L${libdir} -lprotobuf @CMAKE_THREAD_LIBS_INIT@
++Cflags: -I${includedir} @CMAKE_THREAD_LIBS_INIT@
++Conflicts: protobuf-lite

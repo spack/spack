@@ -60,7 +60,7 @@ class Rose(Package):
     variant('fortran', default=False, description='Enable fortran language support')
 
     variant('java', default=False, description='Enable java language support')
-    depends_on('jdk', when='+java')
+    depends_on('java', when='+java')
 
     variant('z3', default=False, description='Enable z3 theorem prover')
     depends_on('z3', when='+z3')

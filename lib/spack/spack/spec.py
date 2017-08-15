@@ -108,6 +108,10 @@ from six import StringIO
 from six import string_types
 from six import iteritems
 
+from llnl.util.filesystem import find_headers, find_libraries, is_exe
+from llnl.util.lang import *
+from llnl.util.tty.color import *
+
 import spack
 import spack.architecture
 import spack.compilers as compilers
@@ -117,9 +121,6 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 
-from llnl.util.filesystem import find_headers, find_libraries, is_exe
-from llnl.util.lang import *
-from llnl.util.tty.color import *
 from spack.util.module_cmd import get_path_from_module, load_module
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
@@ -136,7 +137,6 @@ __all__ = [
     'Spec',
     'alldeps',
     'canonical_deptype',
-    'validate_deptype',
     'parse',
     'parse_anonymous_spec',
     'SpecError',
@@ -149,7 +149,6 @@ __all__ = [
     'DuplicateArchitectureError',
     'InconsistentSpecError',
     'InvalidDependencyError',
-    'InvalidDependencyTypeError',
     'NoProviderError',
     'MultipleProviderError',
     'UnsatisfiableSpecError',
@@ -196,44 +195,27 @@ _separators = '[%s]' % ''.join(color_formats.keys())
    every time we call str()"""
 _any_version = VersionList([':'])
 
-# Special types of dependencies.
+"""Types of dependencies that Spack understands."""
 alldeps = ('build', 'link', 'run')
-norun   = ('link', 'build')
-special_types = {
-    'alldeps': alldeps,
-    'all': alldeps,  # allow "all" as string but not symbol.
-    'norun': norun,
-}
-
-legal_deps = tuple(special_types) + alldeps
 
 """Max integer helps avoid passing too large a value to cyaml."""
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
 
-def validate_deptype(deptype):
-    if isinstance(deptype, str):
-        if deptype not in legal_deps:
-            raise InvalidDependencyTypeError(
-                "Invalid dependency type: %s" % deptype)
-
-    elif isinstance(deptype, (list, tuple)):
-        for t in deptype:
-            validate_deptype(t)
-
-    elif deptype is None:
-        raise InvalidDependencyTypeError("deptype cannot be None!")
-
-
 def canonical_deptype(deptype):
-    if deptype is None:
+    if deptype in (None, 'all', all):
         return alldeps
 
     elif isinstance(deptype, string_types):
-        return special_types.get(deptype, (deptype,))
+        if deptype not in alldeps:
+            raise ValueError('Invalid dependency type: %s' % deptype)
+        return (deptype,)
 
     elif isinstance(deptype, (tuple, list)):
-        return (sum((canonical_deptype(d) for d in deptype), ()))
+        invalid = next((d for d in deptype if d not in alldeps), None)
+        if invalid:
+            raise ValueError('Invalid dependency type: %s' % invalid)
+        return tuple(sorted(deptype))
 
     return deptype
 
@@ -820,7 +802,18 @@ def _libs_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If no libraries are found
     """
-    name = 'lib' + spec.name
+
+    # Variable 'name' is passed to function 'find_libraries', which supports
+    # glob characters. For example, we have a package with a name 'abc-abc'.
+    # Now, we don't know if the original name of the package is 'abc_abc'
+    # (and it generates a library 'libabc_abc.so') or 'abc-abc' (and it
+    # generates a library 'libabc-abc.so'). So, we tell the function
+    # 'find_libraries' to give us anything that matches 'libabc?abc' and it
+    # gives us either 'libabc-abc.so' or 'libabc_abc.so' (or an error)
+    # depending on which one exists (there is a possibility, of course, to
+    # get something like 'libabcXabc.so, but for now we consider this
+    # unlikely).
+    name = 'lib' + spec.name.replace('-', '?')
 
     if '+shared' in spec:
         libs = find_libraries(
@@ -1363,9 +1356,8 @@ class Spec(object):
 
     @property
     def cshort_spec(self):
-        """Returns a version of the spec with the dependencies hashed
-           instead of completely enumerated."""
-        return self.format('$_$@$%@$+$=$/', color=True)
+        """Returns an auto-colorized version of ``self.short_spec``."""
+        return self.cformat('$_$@$%@$+$=$/')
 
     @property
     def prefix(self):
@@ -1887,6 +1879,7 @@ class Spec(object):
         pkg = spack.repo.get(self.fullname)
         conditions = pkg.dependencies[name]
 
+        substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
         for when_spec, dep_spec in conditions.items():
@@ -2728,11 +2721,8 @@ class Spec(object):
         named_str = fmt = ''
 
         def write(s, c):
-            if color:
-                f = color_formats[c] + cescape(s) + '@.'
-                cwrite(f, stream=out, color=color)
-            else:
-                out.write(s)
+            f = color_formats[c] + cescape(s) + '@.'
+            cwrite(f, stream=out, color=color)
 
         iterator = enumerate(format_string)
         for i, c in iterator:
@@ -2848,7 +2838,7 @@ class Spec(object):
                         write(fmt % str(spec.variants), '+')
                 elif attr_id == 'ARCHITECTURE':
                     if spec.architecture and str(spec.architecture):
-                        write(fmt % str(spec.architecture), ' arch=')
+                        write(fmt % str(self.architecture), '=')
                 elif attr_id == 'SHA1':
                     if spec.dependencies:
                         out.write(fmt % str(spec.dag_hash(7)))
@@ -2883,6 +2873,12 @@ class Spec(object):
         result = out.getvalue()
         return result
 
+    def cformat(self, *args, **kwargs):
+        """Same as format, but color defaults to auto instead of False."""
+        kwargs = kwargs.copy()
+        kwargs.setdefault('color', None)
+        return self.format(*args, **kwargs)
+
     def dep_string(self):
         return ''.join("^" + dep.format() for dep in self.sorted_deps())
 
@@ -2913,7 +2909,7 @@ class Spec(object):
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
-        color = kwargs.pop('color', False)
+        color = kwargs.pop('color', get_color_when())
         depth = kwargs.pop('depth', False)
         hashes = kwargs.pop('hashes', False)
         hlen = kwargs.pop('hashlen', None)
@@ -3361,10 +3357,6 @@ class InconsistentSpecError(SpecError):
 class InvalidDependencyError(SpecError):
     """Raised when a dependency in a spec is not actually a dependency
        of the package."""
-
-
-class InvalidDependencyTypeError(SpecError):
-    """Raised when a dependency type is not a legal Spack dep type."""
 
 
 class NoProviderError(SpecError):

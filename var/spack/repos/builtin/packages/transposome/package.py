@@ -25,26 +25,13 @@
 from spack import *
 
 
-class Szip(AutotoolsPackage):
-    """Szip is an implementation of the extended-Rice lossless
-     compression algorithm.
+class Transposome(PerlPackage):
+    """A toolkit for annotation of transposable element families from
+       unassembled sequence reads."""
 
-    It provides lossless compression of scientific data, and is
-    provided with HDF software products.
-    """
+    homepage = "https://sestaton.github.io/Transposome/"
+    url      = "https://github.com/sestaton/Transposome/archive/v0.11.2.tar.gz"
 
-    homepage = "https://support.hdfgroup.org/doc_resource/SZIP/"
-    url      = "https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz"
-    list_url = "https://support.hdfgroup.org/ftp/lib-external/szip"
-    list_depth = 2
+    version('0.11.2', '157c1fc090b0aa30050d03df885dcde0')
 
-    version('2.1.1', 'dd579cf0f26d44afd10a0ad7291fc282')
-    version('2.1',   '902f831bcefb69c6b635374424acbead')
-
-    def configure_args(self):
-        return [
-            '--enable-production',
-            '--enable-shared',
-            '--enable-static',
-            '--enable-encoding',
-        ]
+    depends_on('blast-plus')

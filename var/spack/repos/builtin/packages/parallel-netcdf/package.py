@@ -40,7 +40,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
     variant('cxx', default=True, description='Build the C++ Interface')
     variant('fortran', default=True, description='Build the Fortran Interface')
-    variant('fpic', default=True,
+    variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
     depends_on('mpi')
@@ -53,12 +53,18 @@ class ParallelNetcdf(AutotoolsPackage):
         spec = self.spec
 
         args = ['--with-mpi={0}'.format(spec['mpi'].prefix)]
-        args.append('SEQ_CC=%s' % spack_cc)
+        args.append('SEQ_CC={0}'.format(spack_cc))
 
-        if '+fpic' in spec:
-            args.extend(['CFLAGS=-fPIC', 'CXXFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+        if '+pic' in spec:
+            args.extend([
+                'CFLAGS={0}'.format(self.compiler.pic_flag),
+                'CXXFLAGS={0}'.format(self.compiler.pic_flag),
+                'FFLAGS={0}'.format(self.compiler.pic_flag)
+            ])
+
         if '~cxx' in spec:
             args.append('--disable-cxx')
+
         if '~fortran' in spec:
             args.append('--disable-fortran')
 

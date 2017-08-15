@@ -30,7 +30,7 @@ class PyScikitImage(PythonPackage):
     filtering, warping, color manipulation, object detection, etc."""
 
     homepage = "http://scikit-image.org/"
-    url      = "https://pypi.python.org/packages/source/s/scikit-image/scikit-image-0.12.3.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scikit-image/scikit-image-0.12.3.tar.gz"
 
     version('0.12.3', '04ea833383e0b6ad5f65da21292c25e1')
 

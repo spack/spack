@@ -35,7 +35,7 @@ class Jmol(Package):
 
     version('14.8.0', '3c9f4004b9e617ea3ea0b78ab32397ea')
 
-    depends_on('jdk', type='run')
+    depends_on('java', type='run')
 
     def install(self, spec, prefix):
         copy_tree('jmol-{0}'.format(self.version), prefix)
