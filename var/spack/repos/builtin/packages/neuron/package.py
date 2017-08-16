@@ -43,11 +43,11 @@ class Neuron(Package):
     version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
     version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
     version('7.2', '5486709b6366add932e3a6d141c4f7ad')
-    version('develop', git=github, preferred=True)
+    version('develop', git=github)
 
     variant('mpi',           default=True,  description='Enable MPI parallelism')
     variant('python',        default=True,  description='Enable python')
-    variant('static',        default=True,  description='Build static libraries')
+    variant('shared',        default=False, description='Build shared libraries')
     variant('cross-compile', default=False, description='Build for cross-compile environment')
     variant('multisend',     default=True,  description="Enable multi-send spike exchange")
     variant('rx3d',          default=False, description="Enable cython translated 3-d rxd")
@@ -63,7 +63,7 @@ class Neuron(Package):
     conflicts('~mpi', when='platform=bgq')
 
     # pgi compiler can't build static libraries
-    conflicts('%pgi', when='+static')
+    conflicts('%pgi', when='~shared')
 
     def patch(self):
         # aclocal need complete include path especially on os x
@@ -149,19 +149,17 @@ class Neuron(Package):
         # need to add fpic and enabled-shared
         if spec.satisfies('%pgi'):
             flags += ' ' + self.compiler.pic_flag
-            options.extend(['CFLAGS=%s' % flags,
-                            'CXXFLAGS=%s' % flags,
-                            '--enable-shared'])
-        else:
-            options.extend(['CFLAGS=%s' % flags,
-                            'CXXFLAGS=%s' % flags])
+            options.append('--enable-shared')
+
+        options.extend(['CFLAGS=%s' % flags,
+                        'CXXFLAGS=%s' % flags])
 
         return options
 
     def get_configure_options(self, spec):
         options = []
 
-        if spec.satisfies('+static'):
+        if spec.satisfies('~shared'):
             options.extend(['--disable-shared',
                             'linux_nrnmech=no'])
 
