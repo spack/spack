@@ -121,8 +121,9 @@ class CMakePackage(PackageBase):
         # Make sure a valid generator was chosen
         valid_generators = ['Unix Makefiles', 'Ninja']
         if generator not in valid_generators:
-            msg  = "The following CMake generator is not yet supported "
-            msg += "by Spack: '{0}'".format(generator)
+            msg  = "Invalid CMake generator: '{0}'\n".format(generator)
+            msg += "CMakePackage currently supports the following "
+            msg += "generators: '{0}'".format("', '".join(valid_generators))
             raise InstallError(msg)
 
         try:
