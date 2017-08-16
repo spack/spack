@@ -321,7 +321,6 @@ def install(parser, args, **kwargs):
         'restage': args.restage,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,
-        'run_tests': args.test_all,
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty

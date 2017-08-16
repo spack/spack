@@ -1164,7 +1164,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
-                   run_tests=False,
                    fake=False,
                    explicit=False,
                    dirty=None,
@@ -1187,7 +1186,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 suppresses it)
             make_jobs (int): Number of make jobs to use for install. Default
                 is ncpus
-            run_tests (bool): Run tests within the package's install()
             fake (bool): Don't really build; install fake stub files instead.
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
@@ -1236,7 +1234,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
-                    run_tests=run_tests,
                     dirty=dirty,
                     **kwargs
                 )
