@@ -65,10 +65,6 @@ class Neuron(Package):
     # pgi compiler can't build static libraries
     conflicts('%pgi', when='+static')
 
-    def url_for_version(self, version):
-        url = "http://www.neuron.yale.edu/ftp/neuron/versions/v{0}/nrn-{0}.tar.gz"
-        return url.format(version, version)
-
     def patch(self):
         # aclocal need complete include path especially on os x
         pkgconf_inc = '-I %s/share/aclocal/' % (self.spec['pkg-config'].prefix)
@@ -92,7 +88,7 @@ class Neuron(Package):
             # TODO: on cray systems we get an error while linking even if
             # we use cc wrapper. Hence add explicitly add mpi library
             if spec.satisfies('+mpi'):
-                options.append('LIBS=-lmpich')
+                options.append('LIBS=%s' % spec['mpi'].libs.link_flags)
 
             # TODO: -pthread is not a valid pthread option for cray compiler.
             # for now disable use of pthread with cray compiler.
@@ -121,9 +117,8 @@ class Neuron(Package):
         options = []
 
         if spec.satisfies('+python'):
-            py_prefix = spec['python'].prefix
             py_version = 'python{0}'.format(spec['python'].version.up_to(2))
-            python_exec = '%s/bin/%s' % (py_prefix, py_version)
+            python_exec = spec['python'].command.path
 
             options.append('--with-nrnpython=%s' % python_exec)
             options.append('--disable-pysetup')
@@ -133,7 +128,7 @@ class Neuron(Package):
                 # PYINCDIR, PYLIB, PYLIBDIR etc
 
                 py_lib = spec['python'].prefix.lib
-                py_inc = '%s/include/%s' % (py_prefix, py_version)
+                py_inc = spec['python'].headers.directories[0]
 
                 if not os.path.isdir(py_lib):
                     py_lib = spec['python'].prefix.lib64
@@ -153,8 +148,9 @@ class Neuron(Package):
         # TODO: issue with static build and pgi compiler.
         # need to add fpic and enabled-shared
         if spec.satisfies('%pgi'):
-            options.extend(['CFLAGS=-fPIC %s' % flags,
-                            'CXXFLAGS=-fPIC %s' % flags,
+            flags += ' ' + self.compiler.pic_flag
+            options.extend(['CFLAGS=%s' % flags,
+                            'CXXFLAGS=%s' % flags,
                             '--enable-shared'])
         else:
             options.extend(['CFLAGS=%s' % flags,
@@ -170,8 +166,8 @@ class Neuron(Package):
                             'linux_nrnmech=no'])
 
         # on os-x disable building carbon 'click' utility (deprecated)
-        if(sys.platform == 'darwin'):
-            options.extend(['macdarwin=no'])
+        if (sys.platform == 'darwin'):
+            options.append('macdarwin=no')
 
         options.extend(self.get_arch_options(spec))
         options.extend(self.get_python_options(spec))
