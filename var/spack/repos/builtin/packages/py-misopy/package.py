@@ -38,9 +38,9 @@ class PyMisopy(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.6:', type=('build', 'run'))
-    depends_on('py-numpy@1.6:', type=('build', 'run'))
-    depends_on('py-scipy', type=('build', 'run'))
-    depends_on('py-pysam', type=('build', 'run'))
+    depends_on('py-numpy@1.5.0:', type=('build', 'run'))
+    depends_on('py-scipy@0.9.0:', type=('build', 'run'))
+    depends_on('py-pysam@0.6.0:', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('samtools')
     depends_on('bedtools2')
