@@ -712,8 +712,8 @@ class HeaderList(FileList):
         for x in self.basenames:
             name = x
 
-            # Valid extensions include: ['.hpp', '.hh', '.h']
-            for ext in ['.hpp', '.hh', '.h']:
+            # Valid extensions include: ['.cuh', '.hpp', '.hh', '.h']
+            for ext in ['.cuh', '.hpp', '.hh', '.h']:
                 i = name.rfind(ext)
                 if i != -1:
                     names.append(name[:i])
