@@ -62,5 +62,5 @@ class Rr(CMakePackage):
     @run_after('install')
     def install_stub(self):
         with working_dir(self.build_directory):
-            mkdirp(prefix.bin)
-            install('bin/rr_exec_stub', prefix.bin)
+            mkdirp(self.prefix.bin)
+            install('bin/rr_exec_stub', self.prefix.bin)
