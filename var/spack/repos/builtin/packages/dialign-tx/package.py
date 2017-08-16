@@ -39,7 +39,7 @@ class DialignTx(MakefilePackage):
     conflicts('%gcc@6:')
 
     def edit(self, spec, prefix):
-        with working_dir('source'):
+        with working_dir(self.build_directory):
             makefile = FileFilter('Makefile')
             makefile.filter(' -march=i686 ', ' ')
             makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
