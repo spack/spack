@@ -46,5 +46,5 @@ class DialignTx(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with working_dir('source'):
+        with working_dir(self.build_directory):
             install('dialign-tx', prefix.bin)
