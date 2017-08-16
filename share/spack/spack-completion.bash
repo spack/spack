@@ -152,6 +152,50 @@ function _spack_build {
     fi
 }
 
+function _spack_buildcache {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "create install keys list" -- "$cur"
+    fi
+}
+
+function _spack_buildcache_create {
+    if $list_options
+    then
+        compgen -W "-h --help -r --rel -f --force -y --yes-to-all -k --key
+                    -d --directory" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
+function _spack_buildcache_install {
+    if $list_options
+    then
+        compgen -W "-h --help -f --force -y --yes-to-all" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
+function _spack_buildcache_keys {
+    if $list_options
+    then
+        compgen -W "-h --help -i --install -y --yes-to-all" -- "$cur"
+    fi
+}
+
+function _spack_buildcache_list {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
 function _spack_cd {
     if $list_options
     then
