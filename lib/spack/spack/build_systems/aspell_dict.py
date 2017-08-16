@@ -22,13 +22,34 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+# Why doesn't this work for me?
+# from spack import *
+from llnl.util.filesystem import filter_file
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.directives import extends
+from spack.util.executable import which
 
 
-class Aspell6En(AspellDictPackage):
-    """English (en) dictionary for aspell."""
+#
+# Aspell dictionaries install their bits into their prefix.lib
+# and when activated they'll get symlinked into the appropriate aspell's
+# dict dir (see aspell's {de,}activate methods.
+#
+class AspellDictPackage(AutotoolsPackage):
+    """Specialized class for builing aspell dictionairies."""
 
-    homepage = "http://aspell.net/"
-    url      = "ftp://ftp.gnu.org/gnu/aspell/dict/en/aspell6-en-2017.01.22-0.tar.bz2"
+    extends('aspell')
 
-    version('2017.01.22-0', 'a6e002076574de9dc4915967032a1dab')
+    def patch(self):
+        filter_file(r'^dictdir=.*$', 'dictdir=/lib', 'configure')
+        filter_file(r'^datadir=.*$', 'datadir=/lib', 'configure')
+
+    def configure(self, spec, prefix):
+        aspell = spec['aspell'].prefix.bin.aspell
+        prezip = spec['aspell'].prefix.bin.prezip
+        destdir = prefix
+
+        sh = which('sh')
+        sh('./configure', '--vars', "ASPELL={0}".format(aspell),
+           "PREZIP={0}".format(prezip),
+           "DESTDIR={0}".format(destdir))
