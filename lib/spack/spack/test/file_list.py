@@ -36,12 +36,13 @@ from llnl.util.filesystem import find_libraries, find_headers
 @pytest.fixture()
 def library_list():
     """Returns an instance of LibraryList."""
+    # Test all valid extensions: ['.a', '.dylib', '.so']
     l = [
         '/dir1/liblapack.a',
-        '/dir2/libfoo.dylib',
+        '/dir2/libpython3.6.dylib',  # name may contain periods
         '/dir1/libblas.a',
-        '/dir3/libbar.so',
-        'libbaz.so'
+        '/dir3/libz.so',
+        'libmpi.so.20.10.1',  # shared object libraries may be versioned
     ]
 
     return LibraryList(l)
@@ -50,12 +51,13 @@ def library_list():
 @pytest.fixture()
 def header_list():
     """Returns an instance of header list"""
+    # Test all valid extensions: ['.h', '.hpp', '.hh']
     h = [
         '/dir1/Python.h',
-        '/dir2/datetime.h',
-        '/dir1/pyconfig.h',
-        '/dir3/core.h',
-        'pymem.h'
+        '/dir2/date.time.h',
+        '/dir1/pyconfig.hpp',
+        '/dir3/core.hh',
+        'pymem.h',
     ]
     h = HeaderList(h)
     h.add_macro('-DBOOST_LIB_NAME=boost_regex')
@@ -72,14 +74,14 @@ class TestLibraryList(object):
     def test_joined_and_str(self, library_list):
 
         s1 = library_list.joined()
-        expected = '/dir1/liblapack.a /dir2/libfoo.dylib /dir1/libblas.a /dir3/libbar.so libbaz.so'  # noqa: E501
+        expected = '/dir1/liblapack.a /dir2/libpython3.6.dylib /dir1/libblas.a /dir3/libz.so libmpi.so.20.10.1'  # noqa: E501
         assert s1 == expected
 
         s2 = str(library_list)
         assert s1 == s2
 
         s3 = library_list.joined(';')
-        expected = '/dir1/liblapack.a;/dir2/libfoo.dylib;/dir1/libblas.a;/dir3/libbar.so;libbaz.so'  # noqa: E501
+        expected = '/dir1/liblapack.a;/dir2/libpython3.6.dylib;/dir1/libblas.a;/dir3/libz.so;libmpi.so.20.10.1'  # noqa: E501
         assert s3 == expected
 
     def test_flags(self, library_list):
@@ -93,12 +95,12 @@ class TestLibraryList(object):
 
         link_flags = library_list.link_flags
         assert '-llapack' in link_flags
-        assert '-lfoo' in link_flags
+        assert '-lpython3.6' in link_flags
         assert '-lblas' in link_flags
-        assert '-lbar' in link_flags
-        assert '-lbaz' in link_flags
+        assert '-lz' in link_flags
+        assert '-lmpi' in link_flags
         assert isinstance(link_flags, str)
-        assert link_flags == '-llapack -lfoo -lblas -lbar -lbaz'
+        assert link_flags == '-llapack -lpython3.6 -lblas -lz -lmpi'
 
         ld_flags = library_list.ld_flags
         assert isinstance(ld_flags, str)
@@ -106,7 +108,7 @@ class TestLibraryList(object):
 
     def test_paths_manipulation(self, library_list):
         names = library_list.names
-        assert names == ['lapack', 'foo', 'blas', 'bar', 'baz']
+        assert names == ['lapack', 'python3.6', 'blas', 'z', 'mpi']
 
         directories = library_list.directories
         assert directories == ['/dir1', '/dir2', '/dir3']
@@ -123,7 +125,7 @@ class TestLibraryList(object):
     def test_add(self, library_list):
         pylist = [
             '/dir1/liblapack.a',  # removed from the final list
-            '/dir2/libbaz.so',
+            '/dir2/libmpi.so',
             '/dir4/libnew.a'
         ]
         another = LibraryList(pylist)
@@ -146,14 +148,14 @@ class TestHeaderList(object):
 
     def test_joined_and_str(self, header_list):
         s1 = header_list.joined()
-        expected = '/dir1/Python.h /dir2/datetime.h /dir1/pyconfig.h /dir3/core.h pymem.h'  # noqa: E501
+        expected = '/dir1/Python.h /dir2/date.time.h /dir1/pyconfig.hpp /dir3/core.hh pymem.h'  # noqa: E501
         assert s1 == expected
 
         s2 = str(header_list)
         assert s1 == s2
 
         s3 = header_list.joined(';')
-        expected = '/dir1/Python.h;/dir2/datetime.h;/dir1/pyconfig.h;/dir3/core.h;pymem.h'  # noqa: E501
+        expected = '/dir1/Python.h;/dir2/date.time.h;/dir1/pyconfig.hpp;/dir3/core.hh;pymem.h'  # noqa: E501
         assert s3 == expected
 
     def test_flags(self, header_list):
@@ -176,7 +178,7 @@ class TestHeaderList(object):
 
     def test_paths_manipulation(self, header_list):
         names = header_list.names
-        assert names == ['Python', 'datetime', 'pyconfig', 'core', 'pymem']
+        assert names == ['Python', 'date.time', 'pyconfig', 'core', 'pymem']
 
         directories = header_list.directories
         assert directories == ['/dir1', '/dir2', '/dir3']
@@ -193,8 +195,8 @@ class TestHeaderList(object):
     def test_add(self, header_list):
         pylist = [
             '/dir1/Python.h',  # removed from the final list
-            '/dir2/pyconfig.h',
-            '/dir4/datetime.h'
+            '/dir2/pyconfig.hpp',
+            '/dir4/date.time.h'
         ]
         another = HeaderList(pylist)
         h = header_list + another
