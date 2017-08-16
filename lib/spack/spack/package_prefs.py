@@ -207,16 +207,16 @@ class PackagePrefs(object):
 class PackageTesting(object):
     def __init__(self):
         self.packages_to_test = set()
-        self.test_all = False
+        self._test_all = False
 
     def test(self, package_name):
         self.packages_to_test.add(package_name)
 
     def test_all(self):
-        self.test_all = True
+        self._test_all = True
 
     def check(self, package_name):
-        return self.test_all or (package_name in self.packages_to_test)
+        return self._test_all or (package_name in self.packages_to_test)
 
 
 def spec_externals(spec):
