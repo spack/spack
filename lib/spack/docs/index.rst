@@ -63,9 +63,9 @@ or refer to the full manual below.
    mirrors
    module_file_support
    repositories
+   binary_caches
    command_index
    package_list
-   binary_caches
 
 .. toctree::
    :maxdepth: 2
