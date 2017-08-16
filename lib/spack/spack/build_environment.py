@@ -229,7 +229,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     # Install root prefix
     env.set(SPACK_INSTALL, spack.store.root)
 
-    # Stuff in here sanitizes the build environemnt to eliminate
+    # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere.
     if not dirty:
         # Remove these vars from the environment during build because they
@@ -518,7 +518,7 @@ def fork(pkg, function, dirty=False):
 
     Args:
 
-        pkg (PackageBase): package whose environemnt we should set up the
+        pkg (PackageBase): package whose environment we should set up the
             forked process for.
         function (callable): argless function to run in the child
             process.

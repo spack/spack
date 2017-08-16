@@ -25,26 +25,15 @@
 from spack import *
 
 
-class Apex(CMakePackage):
-    homepage = "http://github.com/khuck/xpress-apex"
-    url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
+class PyExecnet(PythonPackage):
+    """execnet provides a share-nothing model with channel-send/receive
+    communication for distributing execution across many Python interpreters
+    across version, platform and network barriers."""
 
-    version('0.1', 'e224a0b9033e23a9697ce2a3c307a0a3')
+    homepage = "http://codespeak.net/execnet"
+    url      = "https://pypi.io/packages/source/e/execnet/execnet-1.4.1.tar.gz"
 
-    depends_on("binutils+libiberty")
-    depends_on("boost@1.54:")
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on("activeharmony@4.5:")
-    depends_on("ompt-openmp")
+    version('1.4.1', '0ff84b6c79d0dafb7e2971629c4d127a')
 
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBOOST_ROOT=%s' % spec['boost'].prefix,
-            '-DUSE_BFD=TRUE',
-            '-DBFD_ROOT=%s' % spec['binutils'].prefix,
-            '-DUSE_ACTIVEHARMONY=TRUE',
-            '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
-            '-DUSE_OMPT=TRUE',
-            '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
-        ]
+    depends_on('py-setuptools',  type='build')
+    depends_on('py-apipkg@1.4:', type=('build', 'run'))

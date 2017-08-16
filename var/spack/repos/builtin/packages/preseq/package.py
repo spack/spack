@@ -25,26 +25,20 @@
 from spack import *
 
 
-class Apex(CMakePackage):
-    homepage = "http://github.com/khuck/xpress-apex"
-    url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
+class Preseq(MakefilePackage):
+    """The preseq package is aimed at predicting and estimating the complexity
+       of a genomic sequencing library, equivalent to predicting and
+       estimating the number of redundant reads from a given sequencing depth
+       and how many will be expected from additional sequencing using an
+       initial sequencing experiment."""
 
-    version('0.1', 'e224a0b9033e23a9697ce2a3c307a0a3')
+    homepage = "https://github.com/smithlabcode/preseq"
+    url      = "https://github.com/smithlabcode/preseq/releases/download/v2.0.2/preseq_v2.0.2.tar.bz2"
 
-    depends_on("binutils+libiberty")
-    depends_on("boost@1.54:")
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on("activeharmony@4.5:")
-    depends_on("ompt-openmp")
+    version('2.0.2', '9f2a7b597c9f08b821db6ee55e2ea39c')
 
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBOOST_ROOT=%s' % spec['boost'].prefix,
-            '-DUSE_BFD=TRUE',
-            '-DBFD_ROOT=%s' % spec['binutils'].prefix,
-            '-DUSE_ACTIVEHARMONY=TRUE',
-            '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
-            '-DUSE_OMPT=TRUE',
-            '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
-        ]
+    depends_on('samtools')
+    depends_on('gsl')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('PREFIX', self.prefix)

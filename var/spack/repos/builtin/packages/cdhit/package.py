@@ -25,26 +25,25 @@
 from spack import *
 
 
-class Apex(CMakePackage):
-    homepage = "http://github.com/khuck/xpress-apex"
-    url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
+class Cdhit(MakefilePackage):
+    """CD-HIT is a very widely used program for clustering and comparing
+       protein or nucleotide sequences."""
 
-    version('0.1', 'e224a0b9033e23a9697ce2a3c307a0a3')
+    homepage = "http://cd-hit.org/"
+    url      = "https://github.com/weizhongli/cdhit/archive/V4.6.8.tar.gz"
 
-    depends_on("binutils+libiberty")
-    depends_on("boost@1.54:")
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on("activeharmony@4.5:")
-    depends_on("ompt-openmp")
+    version('4.6.8', 'bdd73ec0cceab6653aab7b31b57c5a8b')
 
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBOOST_ROOT=%s' % spec['boost'].prefix,
-            '-DUSE_BFD=TRUE',
-            '-DBFD_ROOT=%s' % spec['binutils'].prefix,
-            '-DUSE_ACTIVEHARMONY=TRUE',
-            '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
-            '-DUSE_OMPT=TRUE',
-            '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
-        ]
+    variant('openmp', default=True, description='Compile with multi-threading support')
+
+    depends_on('perl', type=('build', 'run'))
+
+    def build(self, spec, prefix):
+        mkdirp(prefix.bin)
+        if '~openmp' in spec:
+            make('openmp=no')
+        else:
+            make()
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('PREFIX', prefix.bin)

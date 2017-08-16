@@ -25,26 +25,27 @@
 from spack import *
 
 
-class Apex(CMakePackage):
-    homepage = "http://github.com/khuck/xpress-apex"
-    url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
+class PyPybind11(CMakePackage):
+    """pybind11 -- Seamless operability between C++11 and Python.
+    pybind11 is a lightweight header-only library that exposes C++ types in
+    Python and vice versa, mainly to create Python bindings of existing C++
+    code. Its goals and syntax are similar to the excellent Boost.Python
+    library by David Abrahams: to minimize boilerplate code in traditional
+    extension modules by inferring type information using compile-time
+    introspection."""
 
-    version('0.1', 'e224a0b9033e23a9697ce2a3c307a0a3')
+    homepage = "https://pybind11.readthedocs.io"
+    url      = "https://github.com/pybind/pybind11/archive/v2.1.0.tar.gz"
 
-    depends_on("binutils+libiberty")
-    depends_on("boost@1.54:")
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on("activeharmony@4.5:")
-    depends_on("ompt-openmp")
+    version('2.1.1', '5518988698df937ccee53fb6ba91d12a')
+    version('2.1.0', '3cf07043d677d200720c928569635e12')
+
+    depends_on('py-pytest', type=('build'))
+
+    extends('python')
 
     def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBOOST_ROOT=%s' % spec['boost'].prefix,
-            '-DUSE_BFD=TRUE',
-            '-DBFD_ROOT=%s' % spec['binutils'].prefix,
-            '-DUSE_ACTIVEHARMONY=TRUE',
-            '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
-            '-DUSE_OMPT=TRUE',
-            '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
-        ]
+        args = []
+        args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
+                    % self.spec['python'].command.path)
+        return args

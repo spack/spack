@@ -25,26 +25,25 @@
 from spack import *
 
 
-class Apex(CMakePackage):
-    homepage = "http://github.com/khuck/xpress-apex"
-    url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
+class Rtags(CMakePackage):
+    """RTags is a client/server application that indexes C/C++ code"""
 
-    version('0.1', 'e224a0b9033e23a9697ce2a3c307a0a3')
+    homepage = "https://github.com/Andersbakken/rtags/"
+    url      = "https://andersbakken.github.io/rtags-releases/rtags-2.12.tar.gz"
 
-    depends_on("binutils+libiberty")
-    depends_on("boost@1.54:")
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on("activeharmony@4.5:")
-    depends_on("ompt-openmp")
+    version('2.12', '84988aaff27915a79d4b4b57299f9a51')
+
+    depends_on("llvm@3.3: +clang")
+    depends_on("zlib")
+    depends_on("openssl")
+    depends_on("lua@5.3:")
+    depends_on("bash-completion")
+    depends_on("pkg-config", type='build')
+
+    patch("add_string_iterator_erase_compile_check.patch", when='@2.12')
 
     def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBOOST_ROOT=%s' % spec['boost'].prefix,
-            '-DUSE_BFD=TRUE',
-            '-DBFD_ROOT=%s' % spec['binutils'].prefix,
-            '-DUSE_ACTIVEHARMONY=TRUE',
-            '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
-            '-DUSE_OMPT=TRUE',
-            '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
-        ]
+        args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=1',
+                '-DRTAGS_NO_ELISP_FILES=1',
+                ]
+        return args

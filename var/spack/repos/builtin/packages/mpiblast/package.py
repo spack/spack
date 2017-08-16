@@ -25,26 +25,27 @@
 from spack import *
 
 
-class Apex(CMakePackage):
-    homepage = "http://github.com/khuck/xpress-apex"
-    url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
+class Mpiblast(AutotoolsPackage):
+    """mpiBLAST is a freely available, open-source, parallel implementation of
+       NCBI BLAST"""
 
-    version('0.1', 'e224a0b9033e23a9697ce2a3c307a0a3')
+    homepage = "http://www.mpiblast.org/"
+    url      = "http://www.mpiblast.org/downloads/files/mpiBLAST-1.6.0.tgz"
 
-    depends_on("binutils+libiberty")
-    depends_on("boost@1.54:")
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on("activeharmony@4.5:")
-    depends_on("ompt-openmp")
+    version('1.6.0', '707105ccd56825db776b50bfd81cecd5')
 
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBOOST_ROOT=%s' % spec['boost'].prefix,
-            '-DUSE_BFD=TRUE',
-            '-DBFD_ROOT=%s' % spec['binutils'].prefix,
-            '-DUSE_ACTIVEHARMONY=TRUE',
-            '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
-            '-DUSE_OMPT=TRUE',
-            '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
-        ]
+    patch('mpiBLAST-1.6.0-patch-110806')
+
+    depends_on('mpi')
+
+    def configure_args(self):
+        args = ['--with-mpi=%s' % self.spec['mpi'].prefix]
+        return args
+
+    def build(self, spec, prefix):
+        make('ncbi')
+        make()
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('ac_cv_path_CC', self.spec['mpi'].mpicc)
+        spack_env.set('ac_cv_path_CXX', self.spec['mpi'].mpicxx)

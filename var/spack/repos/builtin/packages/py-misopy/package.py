@@ -25,26 +25,22 @@
 from spack import *
 
 
-class Apex(CMakePackage):
-    homepage = "http://github.com/khuck/xpress-apex"
-    url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
+class PyMisopy(PythonPackage):
+    """MISO (Mixture of Isoforms) is a probabilistic framework that
+       quantitates the expression level of alternatively spliced genes from
+       RNA-Seq data, and identifies differentially regulated isoforms or exons
+       across samples."""
 
-    version('0.1', 'e224a0b9033e23a9697ce2a3c307a0a3')
+    homepage = "http://miso.readthedocs.io/en/fastmiso/"
+    url      = "https://pypi.io/packages/source/m/misopy/misopy-0.5.4.tar.gz"
 
-    depends_on("binutils+libiberty")
-    depends_on("boost@1.54:")
-    depends_on('cmake@2.8.12:', type='build')
-    depends_on("activeharmony@4.5:")
-    depends_on("ompt-openmp")
+    version('0.5.4', 'fe0c9c2613304defbdead12ea99e4194')
 
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBOOST_ROOT=%s' % spec['boost'].prefix,
-            '-DUSE_BFD=TRUE',
-            '-DBFD_ROOT=%s' % spec['binutils'].prefix,
-            '-DUSE_ACTIVEHARMONY=TRUE',
-            '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
-            '-DUSE_OMPT=TRUE',
-            '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
-        ]
+    depends_on('py-setuptools', type='build')
+    depends_on('python@2.6:', type=('build', 'run'))
+    depends_on('py-numpy@1.5.0:', type=('build', 'run'))
+    depends_on('py-scipy@0.9.0:', type=('build', 'run'))
+    depends_on('py-pysam@0.6.0:', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('samtools')
+    depends_on('bedtools2')
