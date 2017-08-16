@@ -39,6 +39,8 @@ class Scorep(AutotoolsPackage):
     version('1.4.2', '3b9a042b13bdd5836452354e6567f71e')
     version('1.3',   '9db6f957b7f51fa01377a9537867a55c')
 
+    patch('gcc7.patch')
+
     ##########
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information.
