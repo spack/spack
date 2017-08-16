@@ -1985,7 +1985,8 @@ class Spec(object):
             try:
                 changed |= spec_deps[dep.name].constrain(dep)
             except UnsatisfiableSpecError as e:
-                fmt = 'An unsatisfiable constraint has been detected for spec:'
+                fmt = 'An unsatisfiable {0}'.format(e.constraint_type)
+                fmt += ' constraint has been detected for spec:'
                 fmt += '\n\n{0}\n\n'.format(spec_deps[dep.name].tree(indent=4))
                 fmt += 'while trying to concretize the partial spec:'
                 fmt += '\n\n{0}\n\n'.format(self.tree(indent=4))
