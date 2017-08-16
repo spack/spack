@@ -37,9 +37,8 @@ class Rtags(CMakePackage):
     depends_on("zlib")
     depends_on("openssl")
     depends_on("lua@5.3:")
-    depends_on("pkg-config")    # bash-completion
     depends_on("bash-completion")
-    depends_on("git", type='build')
+    depends_on("pkg-config", type='build')
 
     patch("add_string_iterator_erase_compile_check.patch", when='@2.12')
 
