@@ -22,30 +22,29 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+import glob
 import os
-import re
 
-from spack.pkg.builtin.intel import IntelInstaller, filter_pick, \
-    get_all_components
+from spack import *
+from spack.environment import EnvironmentModifications
 
 
-class IntelParallelStudio(IntelInstaller):
+class IntelParallelStudio(IntelPackage):
     """Intel Parallel Studio."""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
     version('professional.2017.4', '27398416078e1e4005afced3e9a6df7e',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
-    version('cluster.2017.4', '27398416078e1e4005afced3e9a6df7e',
+    version('cluster.2017.4',      '27398416078e1e4005afced3e9a6df7e',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
-    version('composer.2017.4', 'd03d351809e182c481dc65e07376d9a2',
+    version('composer.2017.4',     'd03d351809e182c481dc65e07376d9a2',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
     version('professional.2017.3', '691874735458d3e88fe0bcca4438b2a9',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
-    version('cluster.2017.3', '691874735458d3e88fe0bcca4438b2a9',
+    version('cluster.2017.3',      '691874735458d3e88fe0bcca4438b2a9',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
-    version('composer.2017.3', '52344df122c17ddff3687f84ceb21623',
+    version('composer.2017.3',     '52344df122c17ddff3687f84ceb21623',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
     version('professional.2017.2', '70e54b33d940a1609ff1d35d3c56e3b3',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
@@ -90,33 +89,63 @@ class IntelParallelStudio(IntelInstaller):
     version('composer.2015.6',      'da9f8600c18d43d58fba0488844f79c9',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
 
-    variant('rpath', default=True, description="Add rpath to .cfg files")
+    # Generic Variants
+    variant('rpath',    default=True,
+            description='Add rpath to .cfg files')
     variant('newdtags', default=False,
-            description="Allow use of --enable-new-dtags in MPI wrappers")
-    variant('all', default=False,
-            description="Install all files with the requested edition")
-    variant('mpi', default=True,
-            description="Install the Intel MPI library and ITAC tool")
-    variant('mkl', default=True, description="Install the Intel MKL library")
-    variant('daal',
-            default=True, description="Install the Intel DAAL libraries")
-    variant('ipp', default=True, description="Install the Intel IPP libraries")
-    variant('tools', default=True, description="Install the Intel Advisor, "
-            "VTune Amplifier, and Inspector tools")
+            description='Allow use of --enable-new-dtags in MPI wrappers')
+    variant('shared',   default=True,
+            description='Builds shared library')
+    variant('ilp64',    default=False,
+            description='64 bit integers')
+    variant('openmp',   default=False,
+            description='OpenMP multithreading layer')
 
-    variant('shared', default=True, description='Builds shared library')
-    variant('ilp64', default=False, description='64 bit integers')
-    variant('openmp', default=False, description='OpenMP multithreading layer')
+    # Components available in all editions
+    variant('daal', default=True,
+            description='Install the Intel DAAL libraries')
+    variant('gdb',  default=False,
+            description='Install the Intel Debugger for Heterogeneous Compute')
+    variant('ipp',  default=True,
+            description='Install the Intel IPP libraries')
+    variant('mkl',  default=True,
+            description='Install the Intel MKL library')
+    variant('mpi',  default=True,
+            description='Install the Intel MPI library')
+    variant('tbb',  default=True,
+            description='Install the Intel TBB libraries')
 
-    provides('mpi', when='@cluster.0:cluster.9999+mpi')
-    provides('mkl', when='+mkl')
+    # Components only available in the Professional and Cluster Editions
+    variant('advisor',   default=False,
+            description='Install the Intel Advisor')
+    variant('clck',      default=False,
+            description='Install the Intel Cluster Checker')
+    variant('inspector', default=False,
+            description='Install the Intel Inspector')
+    variant('itac',      default=False,
+            description='Install the Intel Trace Analyzer and Collector')
+    variant('vtune',     default=False,
+            description='Install the Intel VTune Amplifier XE')
+
     provides('daal', when='+daal')
+
     provides('ipp', when='+ipp')
 
-    # virtual dependency
-    provides('blas', when='+mkl')
-    provides('lapack', when='+mkl')
+    provides('mkl',       when='+mkl')
+    provides('blas',      when='+mkl')
+    provides('lapack',    when='+mkl')
     provides('scalapack', when='+mkl')
+
+    provides('mpi', when='+mpi')
+
+    provides('tbb', when='+tbb')
+
+    # The following components are not available in the Composer Edition
+    conflicts('+advisor',   when='@composer.0:composer.9999')
+    conflicts('+clck',      when='@composer.0:composer.9999')
+    conflicts('+inspector', when='@composer.0:composer.9999')
+    conflicts('+itac',      when='@composer.0:composer.9999')
+    conflicts('+vtune',     when='@composer.0:composer.9999')
 
     @property
     def blas_libs(self):
@@ -131,15 +160,27 @@ class IntelParallelStudio(IntelInstaller):
 
         mkl_threading = ['libmkl_sequential']
 
+        omp_libs = LibraryList([])
+
         if '+openmp' in spec:
             if '%intel' in spec:
-                mkl_threading = ['libmkl_intel_thread', 'libiomp5']
-            else:
+                mkl_threading = ['libmkl_intel_thread']
+                omp_threading = ['libiomp5']
+
+                omp_root = prefix.compilers_and_libraries.linux.lib.intel64
+                omp_libs = find_libraries(
+                    omp_threading, root=omp_root, shared=shared)
+            elif '%gcc' in spec:
                 mkl_threading = ['libmkl_gnu_thread']
+
+                gcc = Executable(self.compiler.cc)
+                omp_libs = gcc('--print-file-name', 'libgomp.{0}'.format(
+                    dso_suffix), output=str)
+                omp_libs = LibraryList(omp_libs)
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
-        mkl_root = join_path(prefix, 'mkl', 'lib', 'intel64')
+        mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
 
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
@@ -153,7 +194,7 @@ class IntelParallelStudio(IntelInstaller):
             shared=shared
         )
 
-        return mkl_libs + system_libs
+        return mkl_libs + omp_libs + system_libs
 
     @property
     def lapack_libs(self):
@@ -176,109 +217,182 @@ class IntelParallelStudio(IntelInstaller):
         # elif self.spec.satisfies('^intel-parallel-studio'):
         #     libnames.append('libmkl_blacs_intelmpi')
         else:
-            raise InstallError("No MPI found for scalapack")
+            raise InstallError('No MPI found for scalapack')
 
-        shared = True if '+shared' in self.spec else False
         integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
+        mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        shared = True if '+shared' in self.spec else False
+
         libs = find_libraries(
             ['{0}_{1}'.format(l, integer) for l in libnames],
-            root=join_path(self.prefix, 'mkl', 'lib', 'intel64'),
+            root=mkl_root,
             shared=shared
         )
         return libs
 
-    def install(self, spec, prefix):
-        base_components = "ALL"  # when in doubt, install everything
-        mpi_components = ""
-        mkl_components = ""
-        daal_components = ""
-        ipp_components = ""
+    @property
+    def mpi_libs(self):
+        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.lib64
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpifort', 'libmpi']
 
-        if not spec.satisfies('+all'):
-            all_components = get_all_components()
-            regex = '(comp|openmp|intel-tbb|icc|ifort|psxe)'
-            base_components = \
-                filter_pick(all_components, re.compile(regex).search)
-            regex = '(icsxe|imb|mpi|itac|intel-ta|intel-tc|clck)'
-            mpi_components = \
-                filter_pick(all_components, re.compile(regex).search)
-            mkl_components = \
-                filter_pick(all_components, re.compile('(mkl)').search)
-            daal_components = \
-                filter_pick(all_components, re.compile('(daal)').search)
-            ipp_components = \
-                filter_pick(all_components, re.compile('(ipp)').search)
-            regex = '(gdb|vtune|inspector|advisor)'
-            tool_components = \
-                filter_pick(all_components, re.compile(regex).search)
-            components = base_components
+        if 'cxx' in query_parameters:
+            libraries = ['libmpicxx'] + libraries
 
-        if not spec.satisfies('+all'):
-            if spec.satisfies('+mpi'):
-                components += mpi_components
-            if spec.satisfies('+mkl'):
-                components += mkl_components
-            if spec.satisfies('+daal'):
-                components += daal_components
-            if spec.satisfies('+ipp'):
-                components += ipp_components
-            if spec.satisfies('+tools') and (spec.satisfies('@cluster') or
-                                             spec.satisfies('@professional')):
-                components += tool_components
+        return find_libraries(
+            libraries, root=mpi_root, shared=True, recurse=True
+        )
 
-        if spec.satisfies('+all'):
-            self.intel_components = 'ALL'
-        else:
-            self.intel_components = ';'.join(components)
-        IntelInstaller.install(self, spec, prefix)
+    @property
+    def mpi_headers(self):
+        # recurse from self.prefix will find too many things for all the
+        # supported sub-architectures like 'mic'
+        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
+        return find_headers('mpi', root=mpi_root, recurse=False)
 
-        absbindir = os.path.dirname(
-            os.path.realpath(os.path.join(self.prefix.bin, "icc")))
-        abslibdir = os.path.dirname(
-            os.path.realpath(os.path.join(
-                self.prefix.lib, "intel64", "libimf.a")))
+    @property
+    def components(self):
+        spec = self.spec
+        edition = self.version[0]
 
-        os.symlink(self.global_license_file, os.path.join(absbindir,
-                                                          "license.lic"))
-        if spec.satisfies('+tools') and (spec.satisfies('@cluster') or
-                                         spec.satisfies('@professional')):
-            inspector_dir = "inspector_xe/licenses"
-            advisor_dir = "advisor_xe/licenses"
-            vtune_amplifier_dir = "vtune_amplifier_xe/licenses"
+        # Intel(R) Compilers
+        components = [
+            # Common files
+            'intel-comp-',
+            'intel-openmp',
 
-            year = int(str(self.version).split('.')[1])
+            # C/C++
+            'intel-icc',
+
+            # Fortran
+            'intel-ifort',
+
+            # Parallel Studio Documentation and Licensing Files
+            'intel-psxe',
+        ]
+
+        # Intel(R) Parallel Studio XE Suite Files and Documentation
+        if edition == 'cluster':
+            components.append('intel-icsxe')
+        elif edition == 'professional':
+            components.extend(['intel-ips', 'intel-ipsc', 'intel-ipsf'])
+        elif edition == 'composer':
+            components.extend([
+                'intel-compxe', 'intel-ccompxe', 'intel-fcompxe'
+            ])
+
+        # Intel(R) Data Analytics Acceleration Library
+        if '+daal' in spec:
+            components.append('intel-daal')
+
+        # Intel(R) Debugger for Heterogeneous Compute
+        if '+gdb' in spec:
+            components.append('intel-gdb')
+
+        # Intel(R) Integrated Performance Primitives
+        if '+ipp' in spec:
+            components.extend(['intel-ipp', 'intel-crypto-ipp'])
+
+        # Intel(R) Math Kernel Library
+        if '+mkl' in spec:
+            components.append('intel-mkl')
+
+        # Intel(R) MPI Library
+        if '+mpi' in spec:
+            components.extend(['intel-mpi', 'intel-mpirt', 'intel-imb'])
+
+        # Intel(R) Threading Building Blocks
+        if '+tbb' in spec:
+            components.append('intel-tbb')
+
+        # Intel(R) Advisor
+        if '+advisor' in spec:
+            components.append('intel-advisor')
+
+        # Intel(R) Cluster Checker
+        if '+clck' in spec:
+            components.append('intel_clck')
+
+        # Intel(R) Inspector
+        if '+inspector' in spec:
+            components.append('intel-inspector')
+
+        # Intel(R) Trace Analyzer and Collector
+        if '+itac' in spec:
+            components.extend(['intel-itac', 'intel-ta', 'intel-tc'])
+
+        # Intel(R) VTune(TM) Amplifier XE
+        if '+vtune' in spec:
+            components.append('intel-vtune-amplifier-xe')
+
+        return components
+
+    @property
+    def bin_dir(self):
+        """The relative path to the bin directory with symlinks resolved."""
+
+        bin_path = os.path.join(self.prefix.bin, 'icc')
+        absolute_path = os.path.realpath(bin_path)  # resolve symlinks
+        relative_path = os.path.relpath(absolute_path, self.prefix)
+        return os.path.dirname(relative_path)
+
+    @property
+    def lib_dir(self):
+        """The relative path to the lib directory with symlinks resolved."""
+
+        lib_path = os.path.join(self.prefix.lib, 'intel64', 'libimf.a')
+        absolute_path = os.path.realpath(lib_path)  # resolve symlinks
+        relative_path = os.path.relpath(absolute_path, self.prefix)
+        return os.path.dirname(relative_path)
+
+    @property
+    def license_files(self):
+        spec = self.spec
+        year = self.version[1]
+
+        directories = [
+            'Licenses',
+            self.bin_dir
+        ]
+
+        if '+advisor' in spec:
+            advisor_dir = 'advisor_xe/licenses'
+
             if year >= 2017:
-                inspector_dir = "inspector/licenses"
-                advisor_dir = "advisor/licenses"
+                advisor_dir = 'advisor/licenses'
 
-            os.mkdir(os.path.join(self.prefix, inspector_dir))
-            os.symlink(self.global_license_file, os.path.join(
-                self.prefix, inspector_dir, "license.lic"))
-            os.mkdir(os.path.join(self.prefix, advisor_dir))
-            os.symlink(self.global_license_file, os.path.join(
-                self.prefix, advisor_dir, "license.lic"))
-            os.mkdir(os.path.join(self.prefix, vtune_amplifier_dir))
-            os.symlink(self.global_license_file, os.path.join(
-                self.prefix, vtune_amplifier_dir, "license.lic"))
+            directories.append(advisor_dir)
 
-        if (spec.satisfies('+all') or spec.satisfies('+mpi')) and \
-                spec.satisfies('@cluster'):
-            for ifile in os.listdir(os.path.join(self.prefix, "itac")):
-                if os.path.isdir(os.path.join(self.prefix, "itac", ifile)):
-                    os.symlink(self.global_license_file,
-                               os.path.join(self.prefix, "itac", ifile,
-                                            "license.lic"))
-                if os.path.isdir(os.path.join(self.prefix, "itac",
-                                              ifile, "intel64")):
-                    os.symlink(self.global_license_file,
-                               os.path.join(self.prefix, "itac",
-                                            ifile, "intel64",
-                                            "license.lic"))
-            if spec.satisfies('~newdtags'):
-                wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
-                            "mpigcc", "mpigcc", "mpigxx", "mpigxx",
-                            "mpiicc", "mpiicc", "mpiicpc", "mpiicpc",
-                            "mpiifort", "mpiifort"]
+        if '+inspector' in spec:
+            inspector_dir = 'inspector_xe/licenses'
+
+            if year >= 2017:
+                inspector_dir = 'inspector/licenses'
+
+            directories.append(inspector_dir)
+
+        if '+itac' in spec:
+            itac_dir = 'itac_{0}'.format(year)
+
+            directories.append(itac_dir)
+
+        if '+vtune' in spec:
+            vtune_dir = 'vtune_amplifier_xe/licenses'
+
+            directories.append(vtune_dir)
+
+        return [os.path.join(dir, 'license.lic') for dir in directories]
+
+    @run_after('install')
+    def filter_compiler_wrappers(self):
+        spec = self.spec
+
+        if '+mpi' in spec:
+            if '~newdtags' in spec:
+                wrappers = [
+                    'mpif77', 'mpif90', 'mpigcc', 'mpigxx',
+                    'mpiicc', 'mpiicpc', 'mpiifort'
+                ]
                 wrapper_paths = []
                 for root, dirs, files in os.walk(spec.prefix):
                     for name in files:
@@ -286,153 +400,95 @@ class IntelParallelStudio(IntelInstaller):
                             wrapper_paths.append(os.path.join(spec.prefix,
                                                               root, name))
                 for wrapper in wrapper_paths:
-                    filter_file(r'-Xlinker --enable-new-dtags', r' ',
-                                wrapper)
+                    filter_file('-Xlinker --enable-new-dtags', ' ',
+                                wrapper, string=True)
 
-        if spec.satisfies('+rpath'):
-            for compiler_command in ["icc", "icpc", "ifort"]:
-                cfgfilename = os.path.join(absbindir, "%s.cfg" %
-                                           compiler_command)
-                with open(cfgfilename, "w") as f:
-                    f.write('-Xlinker -rpath -Xlinker %s\n' % abslibdir)
+    @run_after('install')
+    def rpath_configuration(self):
+        spec = self.spec
 
-        os.symlink(os.path.join(self.prefix.man, "common", "man1"),
-                   os.path.join(self.prefix.man, "man1"))
+        if '+rpath' in spec:
+            lib_dir = os.path.join(self.prefix, self.lib_dir)
+            for compiler in ['icc', 'icpc', 'ifort']:
+                cfgfilename = os.path.join(
+                    self.prefix, self.bin_dir, '{0}.cfg'.format(compiler))
+                with open(cfgfilename, 'w') as f:
+                    f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
-    def setup_environment(self, spack_env, run_env):
-        # TODO: Determine variables needed for the professional edition.
+    @run_after('install')
+    def fix_psxevars(self):
+        """Newer versions of Intel Parallel Studio have a bug in the
+        ``psxevars.sh`` script."""
 
-        major_ver = self.version[1]
+        bindir = glob.glob(join_path(
+            self.prefix, 'parallel_studio*', 'bin'))[0]
 
-        # Remove paths that were guessed but are incorrect for this package.
-        run_env.remove_path('LIBRARY_PATH',
-                            join_path(self.prefix, 'lib'))
-        run_env.remove_path('LD_LIBRARY_PATH',
-                            join_path(self.prefix, 'lib'))
-        run_env.remove_path('CPATH',
-                            join_path(self.prefix, 'include'))
-
-        # Add the default set of variables
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'intel64'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'intel64'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib',
-                                       'intel64', 'gcc4.4'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib',
-                                       'intel64', 'gcc4.4'))
-        run_env.prepend_path('CPATH',
-                             join_path(self.prefix, 'tbb', 'include'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'mic'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'mic'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
-
-        if self.spec.satisfies('+all'):
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix,
-                                           'debugger_{0}'.format(major_ver),
-                                           'libipt', 'intel64', 'lib'))
-            run_env.set('GDBSERVER_MIC',
-                        join_path(self.prefix,
-                                  'debugger_{0}'.format(major_ver), 'gdb',
-                                  'targets', 'mic', 'bin', 'gdbserver'))
-            run_env.set('GDB_CROSS',
-                        join_path(self.prefix,
-                                  'debugger_{0}'.format(major_ver),
-                                  'gdb', 'intel64_mic', 'bin', 'gdb-mic'))
-            run_env.set('MPM_LAUNCHER',
-                        join_path(self.prefix,
-                                  'debugger_{0}'.format(major_ver), 'mpm',
-                                  'mic',
-                                  'bin', 'start_mpm.sh'))
-            run_env.set('INTEL_PYTHONHOME',
-                        join_path(self.prefix,
-                                  'debugger_{0}'.format(major_ver), 'python',
-                                  'intel64'))
-
-        if (self.spec.satisfies('+all') or self.spec.satisfies('+mpi')):
-            # Only I_MPI_ROOT is set here because setting the various PATH
-            # variables will potentially be in conflict with other MPI
-            # environment modules. The I_MPI_ROOT environment variable can be
-            # used as a base to set necessary PATH variables for using Intel
-            # MPI. It is also possible to set the variables in the modules.yaml
-            # file if Intel MPI is the dominant, or only, MPI on a system.
-            run_env.set('I_MPI_ROOT', join_path(self.prefix, 'impi'))
-
-        if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
-            spack_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
-
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mkl', 'lib',
-                                           'intel64'))
-            run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'mkl', 'lib',
-                                           'intel64'))
-            run_env.prepend_path('CPATH',
-                                 join_path(self.prefix, 'mkl', 'include'))
-            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mkl', 'lib', 'mic'))
-            run_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
-
-        if self.spec.satisfies('+all') or self.spec.satisfies('+daal'):
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'daal', 'lib',
-                                           'intel64_lin'))
-            run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'daal', 'lib',
-                                           'intel64_lin'))
-            run_env.prepend_path('CPATH',
-                                 join_path(self.prefix, 'daal', 'include'))
-            run_env.prepend_path('CLASSPATH',
-                                 join_path(self.prefix, 'daal', 'lib',
-                                           'daal.jar'))
-            run_env.set('DAALROOT', join_path(self.prefix, 'daal'))
-
-        if self.spec.satisfies('+all') or self.spec.satisfies('+ipp'):
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'ipp', 'lib',
-                                           'intel64'))
-            run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'ipp', 'lib',
-                                           'intel64'))
-            run_env.prepend_path('CPATH',
-                                 join_path(self.prefix, 'ipp', 'include'))
-            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'ipp', 'lib', 'mic'))
-            run_env.set('IPPROOT', join_path(self.prefix, 'ipp'))
-
-        if self.spec.satisfies('+all') or self.spec.satisfies('+tools'):
-            run_env.prepend_path('PATH',
-                                 join_path(self.prefix, 'vtune_amplifier_xe',
-                                           'bin64'))
-            run_env.prepend_path('VTUNE_AMPLIFIER_XE_{0}_DIR'.format(
-                                 major_ver),
-                                 join_path(self.prefix, 'vtune_amplifier_xe'))
+        filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
+                    os.path.join(bindir, 'psxevars.sh'),
+                    os.path.join(bindir, 'psxevars.csh'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('I_MPI_CC', spack_cc)
-        spack_env.set('I_MPI_CXX', spack_cxx)
-        spack_env.set('I_MPI_F77', spack_fc)
-        spack_env.set('I_MPI_F90', spack_f77)
-        spack_env.set('I_MPI_FC', spack_fc)
+        if '+mpi' in self.spec:
+            spack_env.set('I_MPI_CC',  spack_cc)
+            spack_env.set('I_MPI_CXX', spack_cxx)
+            spack_env.set('I_MPI_F77', spack_fc)
+            spack_env.set('I_MPI_F90', spack_f77)
+            spack_env.set('I_MPI_FC',  spack_fc)
+
+        # set up MKLROOT for everyone using MKL package
+        if '+mkl' in self.spec:
+            mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64  # noqa
+
+            spack_env.set('MKLROOT', self.prefix)
+            spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_root)
 
     def setup_dependent_package(self, module, dep_spec):
-        # Check for presence of bin64 or bin directory
-        if os.path.isdir(self.prefix.bin):
-            bindir = self.prefix.bin
-        elif os.path.isdir(self.prefix.bin64):
-            bindir = self.prefix.bin64
-        else:
-            raise RuntimeError('No suitable bindir found')
+        if '+mpi' in self.spec:
+            # Intel comes with 2 different flavors of MPI wrappers:
+            #
+            # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
+            #   the Intel compilers.
+            # * mpicc, mpicxx, mpif90, and mpif77 allow you to set which
+            #   compilers to wrap using I_MPI_CC and friends. By default,
+            #   wraps around the GCC compilers.
+            #
+            # In theory, these should be equivalent as long as I_MPI_CC
+            # and friends are set to point to the Intel compilers, but in
+            # practice, mpicc fails to compile some applications while
+            # mpiicc works.
+            bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
 
-        self.spec.mpicc = join_path(bindir, 'mpicc')
-        self.spec.mpicxx = join_path(bindir, 'mpic++')
-        self.spec.mpifc = join_path(bindir, 'mpif90')
-        self.spec.mpif77 = join_path(bindir, 'mpif77')
+            if self.compiler.name == 'intel':
+                self.spec.mpicc  = bindir.mpiicc
+                self.spec.mpicxx = bindir.mpiicpc
+                self.spec.mpifc  = bindir.mpiifort
+                self.spec.mpif77 = bindir.mpiifort
+            else:
+                self.spec.mpicc  = bindir.mpicc
+                self.spec.mpicxx = bindir.mpicxx
+                self.spec.mpifc  = bindir.mpif90
+                self.spec.mpif77 = bindir.mpif77
+
+    def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
+        """
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        psxevars = glob.glob(join_path(
+            self.prefix, 'parallel_studio*', 'bin', 'psxevars.sh'))
+
+        if psxevars:
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                psxevars[0], 'intel64'))

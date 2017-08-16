@@ -2136,6 +2136,9 @@ The classes that are currently provided by Spack are:
     | :py:class:`.PerlPackage`      | Specialized class for            |
     |                               | :py:class:`.Perl` extensions     |
     +-------------------------------+----------------------------------+
+    | :py:class:`.IntelPackage`     | Specialized class for licensed   |
+    |                               | Intel software                   |
+    +-------------------------------+----------------------------------+
 
 
 .. note::

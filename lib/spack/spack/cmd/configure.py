@@ -41,6 +41,7 @@ build_system_to_phase = {
     QMakePackage: 'qmake',
     WafPackage: 'configure',
     PerlPackage: 'configure',
+    IntelPackage: 'configure',
 }
 
 
