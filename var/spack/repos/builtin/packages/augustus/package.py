@@ -32,6 +32,7 @@ class Augustus(MakefilePackage):
     homepage = "http://bioinf.uni-greifswald.de/augustus/"
     url      = "http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.2.3.tar.gz"
 
+    version('3.3',   '9ebe494df78ebf6a43091cfc8551050c')
     version('3.2.3', 'b8c47ea8d0c45aa7bb9a82626c8ff830')
 
     depends_on('bamtools')

@@ -31,14 +31,11 @@ class Isaac(CMakePackage):
     homepage = "http://computationalradiationphysics.github.io/isaac/"
     url      = "https://github.com/ComputationalRadiationPhysics/isaac/archive/v1.3.0.tar.gz"
 
-    @property
-    def root_cmakelists_dir(self):
-        return join_path(self.stage.source_path, 'lib')
-
     version('develop', branch='dev',
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')
     version('master', branch='master',
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')
+    version('1.3.1', '7fe075f9af68d05355eaba0e224f20ca')
     version('1.3.0', 'c8a794da9bb998ef0e75449bfece1a12')
 
     variant('cuda', default=True,
@@ -54,3 +51,5 @@ class Isaac(CMakePackage):
     # depends_on('alpaka', when='+alpaka')
     depends_on('icet', type='link')
     depends_on('mpi', type='link')
+
+    root_cmakelists_dir = 'lib'

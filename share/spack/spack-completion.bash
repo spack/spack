@@ -115,7 +115,8 @@ function _spack {
     if $list_options
     then
         compgen -W "-h --help -d --debug -D --pdb -k --insecure -m --mock -p
-                    --profile -v --verbose -s --stacktrace -V --version" -- "$cur"
+                    --profile -v --verbose -s --stacktrace -V --version
+                    --color --color=always --color=auto --color=never" -- "$cur"
     else
         compgen -W "$(_subcommands)" -- "$cur"
     fi
@@ -174,7 +175,8 @@ function _spack_checksum {
 function _spack_clean {
     if $list_options
     then
-        compgen -W "-h --help" -- "$cur"
+        compgen -W "-h --help -s --stage -d --downloads
+                   -m --misc-cache -a --all" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -595,11 +597,6 @@ function _spack_providers {
         compgen -W "awk blas daal elf golang ipp lapack mkl
                     mpe mpi opencl openfoam pil scalapack" -- "$cur"
     fi
-}
-
-function _spack_purge {
-    compgen -W "-h --help -s --stage -d --downloads
-                -m --misc-cache -a --all" -- "$cur"
 }
 
 function _spack_python {

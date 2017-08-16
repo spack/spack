@@ -58,6 +58,7 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
+import spack.multimethod
 
 from llnl.util.filesystem import *
 from llnl.util.lang import *
@@ -593,17 +594,31 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         self.extra_args = {}
 
-    def possible_dependencies(self, visited=None):
-        """Return set of possible transitive dependencies of this package."""
+    def possible_dependencies(self, transitive=True, visited=None):
+        """Return set of possible transitive dependencies of this package.
+
+        Args:
+            transitive (bool): include all transitive dependencies if True,
+                only direct dependencies if False.
+        """
         if visited is None:
             visited = set()
 
         visited.add(self.name)
         for name in self.dependencies:
-            if name not in visited and not spack.spec.Spec(name).virtual:
-                pkg = spack.repo.get(name)
-                for name in pkg.possible_dependencies(visited):
-                    visited.add(name)
+            spec = spack.spec.Spec(name)
+
+            if not spec.virtual:
+                visited.add(name)
+                if transitive:
+                    pkg = spack.repo.get(name)
+                    pkg.possible_dependencies(transitive, visited)
+            else:
+                for provider in spack.repo.providers_for(spec):
+                    visited.add(provider.name)
+                    if transitive:
+                        pkg = spack.repo.get(provider.name)
+                        pkg.possible_dependencies(transitive, visited)
 
         return visited
 
@@ -904,7 +919,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         start_time = time.time()
         if spack.do_checksum and self.version not in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely." %
-                     self.spec.format('$_$@'))
+                     self.spec.cformat('$_$@'))
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
@@ -938,10 +953,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.do_fetch(mirror_only)
         self.stage.expand_archive()
         self.stage.chdir_to_source()
-
-    def patch(self):
-        """Default patch implementation is a no-op."""
-        pass
 
     def do_patch(self):
         """Calls do_stage(), then applied patches to the expanded tarball if they
@@ -1003,6 +1014,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 self.patch()
                 tty.msg("Ran patch() for %s" % self.name)
                 patched = True
+            except spack.multimethod.NoSuchMethodError:
+                # We are running a multimethod without a default case.
+                # If there's no default it means we don't need to patch.
+                tty.msg("No patches needed for %s" % self.name)
             except:
                 tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
@@ -1202,10 +1217,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 tty.msg(msg.format(self))
                 rec = spack.store.db.get_record(self.spec)
                 return self._update_explicit_entry_in_db(rec, explicit)
-
-        # Dirty argument takes precedence over dirty config setting.
-        if dirty is None:
-            dirty = spack.dirty
 
         self._do_install_pop_kwargs(kwargs)
 
@@ -1572,7 +1583,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 raise InstallError(str(spec) + " is not installed.")
 
         if not force:
-            dependents = spack.store.db.installed_dependents(spec)
+            dependents = spack.store.db.installed_relatives(
+                spec, 'parents', True)
             if dependents:
                 raise PackageStillNeededError(spec, dependents)
 
@@ -1648,8 +1660,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.store.layout.add_extension(self.extendee_spec, self.spec)
-        tty.msg("Activated extension %s for %s" %
-                (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+        tty.msg(
+            "Activated extension %s for %s" %
+            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -1707,8 +1720,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.store.layout.remove_extension(
                 self.extendee_spec, self.spec)
 
-        tty.msg("Deactivated extension %s for %s" %
-                (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+        tty.msg(
+            "Deactivated extension %s for %s" %
+            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
 
     def deactivate(self, extension, **kwargs):
         """Unlinks all files from extension out of this package's install dir.

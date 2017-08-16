@@ -42,6 +42,11 @@ class Opencoarrays(CMakePackage):
     version('1.7.4', '85ba87def461e3ff5a164de2e6482930')
     version('1.6.2', '5a4da993794f3e04ea7855a6678981ba')
 
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'MinSizeRel', 'CodeCoverage'))
+
     depends_on('mpi')
 
     def cmake_args(self):

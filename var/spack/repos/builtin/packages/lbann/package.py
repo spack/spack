@@ -36,48 +36,52 @@ class Lbann(CMakePackage):
     version('develop', git='https://github.com/LLNL/lbann.git', branch="develop")
     version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')
 
-    variant('debug', default=False, description='Builds a debug version of the libraries')
     variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
     variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
     variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
+    variant('dtype', default=4, description='Size (bits) of floating point representation for weights')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
-    depends_on('elemental +openmp_blas +scalapack +shared +int64')
-    depends_on('elemental +openmp_blas +scalapack +shared +int64 +debug', when='+debug')
+    depends_on('elemental +openmp_blas +shared +int64')
+    depends_on('elemental +openmp_blas +shared +int64 build_type=Debug', 
+               when=('build_type=Debug'))
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
-    depends_on('opencv@3.2.0', when='+opencv')
+    depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib', when='+opencv')
     depends_on('protobuf@3.0.2:')
-
-    def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
+    depends_on('cnpy')
 
     def cmake_args(self):
         spec = self.spec
         # Environment variables
         CPPFLAGS = []
         CPPFLAGS.append('-DLBANN_SET_EL_RNG')
-        if '~seq_init' in spec:
-            CPPFLAGS.append('-DLBANN_PARALLEL_RANDOM_MATRICES')
+
+        CPPFLAGS.append('-DLBANN_DATATYPE={0}'.format(
+            int(spec.variants['dtype'].value)))
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
             '-DWITH_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DWITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
+            '-DELEMENTAL_USE_CUBLAS:BOOL=%s' % (
+                '+cublas' in spec['elemental']),
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
-            '-DElemental_DIR={0}'.format(self.spec['elemental'].prefix),
+            '-DElemental_DIR={0}'.format(spec['elemental'].prefix),
+            '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
             '-DELEMENTAL_MATH_LIBS={0}'.format(
-                self.spec['elemental'].libs),
+                spec['elemental'].libs),
+            '-DSEQ_INIT:BOOL=%s' % ('+seq_init' in spec),
             '-DVERBOSE=0',
             '-DLBANN_HOME=.',
             '-DLBANN_VER=spack']
 
-        if '+opencv' in self.spec:
+        if '+opencv' in spec:
             args.extend(['-DOpenCV_DIR:STRING={0}'.format(
-                self.spec['opencv'].prefix)])
+                spec['opencv'].prefix)])
 
         return args

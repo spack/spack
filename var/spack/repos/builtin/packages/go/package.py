@@ -56,6 +56,7 @@ class Go(Package):
 
     extendable = True
 
+    version('1.8.3', '64e9380e07bba907e26a00cf5fcbe77e')
     version('1.8.1', '409dd21e7347dd1ea9efe64a700073cc')
     version('1.8',   '7743960c968760437b6e39093cfe6f67')
     version('1.7.5', '506de2d870409e9003e1440bcfeb3a65')
@@ -105,6 +106,10 @@ class Go(Package):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
+        # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
+        # internal Spack wrappers and fail.
+        spack_env.set('CC_FOR_TARGET', self.compiler.cc)
+        spack_env.set('CXX_FOR_TARGET', self.compiler.cxx)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before go modules' install() methods.

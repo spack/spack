@@ -31,14 +31,11 @@ class IsaacServer(CMakePackage):
     homepage = "http://computationalradiationphysics.github.io/isaac/"
     url      = "https://github.com/ComputationalRadiationPhysics/isaac/archive/v1.3.0.tar.gz"
 
-    @property
-    def root_cmakelists_dir(self):
-        return join_path(self.stage.source_path, 'server')
-
     version('develop', branch='dev',
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')
     version('master', branch='master',
             git='https://github.com/ComputationalRadiationPhysics/isaac.git')
+    version('1.3.1', '7fe075f9af68d05355eaba0e224f20ca')
     version('1.3.0', 'c8a794da9bb998ef0e75449bfece1a12')
 
     # variant('gstreamer', default=False, description= \
@@ -48,5 +45,7 @@ class IsaacServer(CMakePackage):
     depends_on('libjpeg-turbo', type='link')
     depends_on('jansson', type='link')
     depends_on('boost@1.56:', type='link')
-    depends_on('libwebsockets', type='link')
+    depends_on('libwebsockets@2.1.1:', type='link')
     # depends_on('gstreamer@1.0', when='+gstreamer')
+
+    root_cmakelists_dir = 'server'
