@@ -34,6 +34,6 @@ class PyPytestXdist(PythonPackage):
     version('1.16.0', '68dabf856981ad93b14960b098b05bff')
 
     depends_on('py-setuptools',    type='build')
-    depends_on('py-execnet@1.1:',  type='run')
-    depends_on('py-pytest@2.7.0:', type='run')
-    depends_on('py-py@1.4.22:',    type='run')
+    depends_on('py-execnet@1.1:',  type=('build', 'run'))
+    depends_on('py-pytest@2.7.0:', type=('build', 'run'))
+    depends_on('py-py@1.4.22:',    type=('build', 'run'))

@@ -36,4 +36,4 @@ class PyExecnet(PythonPackage):
     version('1.4.1', '0ff84b6c79d0dafb7e2971629c4d127a')
 
     depends_on('py-setuptools',  type='build')
-    depends_on('py-apipkg@1.4:', type='run')
+    depends_on('py-apipkg@1.4:', type=('build', 'run'))
