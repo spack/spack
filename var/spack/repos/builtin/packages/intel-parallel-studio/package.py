@@ -29,6 +29,7 @@ import re
 from spack.pkg.builtin.intel import IntelInstaller, filter_pick, \
     get_all_components
 
+from llnl.util.filesystem import mkdirp
 
 class IntelParallelStudio(IntelInstaller):
     """Intel Parallel Studio."""
@@ -251,13 +252,13 @@ class IntelParallelStudio(IntelInstaller):
                 inspector_dir = "inspector/licenses"
                 advisor_dir = "advisor/licenses"
 
-            os.mkdir(os.path.join(self.prefix, inspector_dir))
+            mkdirp(os.path.join(self.prefix, inspector_dir))
             os.symlink(self.global_license_file, os.path.join(
                 self.prefix, inspector_dir, "license.lic"))
-            os.mkdir(os.path.join(self.prefix, advisor_dir))
+            mkdirp(os.path.join(self.prefix, advisor_dir))
             os.symlink(self.global_license_file, os.path.join(
                 self.prefix, advisor_dir, "license.lic"))
-            os.mkdir(os.path.join(self.prefix, vtune_amplifier_dir))
+            mkdirp(os.path.join(self.prefix, vtune_amplifier_dir))
             os.symlink(self.global_license_file, os.path.join(
                 self.prefix, vtune_amplifier_dir, "license.lic"))
 
