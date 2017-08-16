@@ -192,7 +192,7 @@ class Neuron(Package):
         cxx_compiler = spack_cxx
 
         # for bg-q we can't set XL as CC and CXX compiler
-        if 'bgq' in self.spec.architecture:
+        if 'bgq' in self.spec.architecture and self.spec.satisfies('+mpi'):
             c_compiler = spec['mpi'].mpicc
             cxx_compiler = spec['mpi'].mpicxx
 
