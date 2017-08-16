@@ -1091,11 +1091,29 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             matches = [line for line in f.readlines() if regex.match(line)]
 
         if not matches:
-            tty.msg('Target \'' + target + ':\' not found in Makefile')
+            tty.msg("Target '" + target + ":' not found in Makefile")
             return
 
         # Execute target
         inspect.getmodule(self).make(target)
+
+    def _if_ninja_target_execute(self, target):
+        # Check if we have a ninja build script
+        if not os.path.exists('build.ninja'):
+            tty.msg('No ninja build script found in the build directory')
+            return
+
+        # Check if 'target' is in the ninja build script
+        regex = re.compile('^build ' + target + ':')
+        with open('build.ninja', 'r') as f:
+            matches = [line for line in f.readlines() if regex.match(line)]
+
+        if not matches:
+            tty.msg("Target 'build " + target + ":' not found in build.ninja")
+            return
+
+        # Execute target
+        inspect.getmodule(self).ninja(target)
 
     def _get_needed_resources(self):
         resources = []
