@@ -1990,7 +1990,7 @@ class Spec(object):
                 fmt += '\n\n{0}\n\n'.format(spec_deps[dep.name].tree(indent=4))
                 fmt += 'while trying to concretize the partial spec:'
                 fmt += '\n\n{0}\n\n'.format(self.tree(indent=4))
-                fmt += '{0} requires for {1} {2} {3}, but spec asked for {4}'
+                fmt += '{0} requires {1} {2} {3}, but spec asked for {4}'
                 e.message = fmt.format(
                     self.name,
                     dep.name,
