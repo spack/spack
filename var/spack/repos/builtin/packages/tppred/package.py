@@ -39,7 +39,7 @@ class Tppred(Package):
     depends_on('emboss')
 
     def url_for_version(self, version):
-        url = 'http://biocomp.unibo.it/savojard/tppred{}.tar.gz'
+        url = 'http://biocomp.unibo.it/savojard/tppred{0}.tar.gz'
         return url.format(version.up_to(1))
 
     def install(self, spec, prefix):
