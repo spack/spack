@@ -25,18 +25,30 @@
 from spack import *
 
 
-class PyScikitLearn(PythonPackage):
-    """A set of python modules for machine learning and data mining."""
+class Tppred(Package):
+    """TPPRED is a software package for the prediction of mitochondrial
+       targeting peptides from protein primary sequence."""
 
-    homepage = "https://pypi.python.org/pypi/scikit-learn"
-    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.18.1.tar.gz"
+    homepage = "https://tppred2.biocomp.unibo.it/tppred2/default/software"
+    url      = "http://biocomp.unibo.it/savojard/tppred2.tar.gz"
 
-    version('0.18.1', '6b0ff1eaa5010043895dd63d1e3c60c9')
-    version('0.15.2', 'd9822ad0238e17b382a3c756ea94fe0d')
-    version('0.16.1', '363ddda501e3b6b61726aa40b8dbdb7e')
-    version('0.17.1', 'a2f8b877e6d99b1ed737144f5a478dfc')
-    version('0.13.1', 'acba398e1d46274b8470f40d0926e6a4')
+    version('2.0', 'cd848569f6a8aa51d18fbe55fe45d624')
 
-    depends_on('python@2.6:2.8,3.3:')
-    depends_on('py-numpy@1.6.1:', type=('build', 'run'))
-    depends_on('py-scipy@0.9:',   type=('build', 'run'))
+    depends_on('python@2.7:2.999', type='run')
+    depends_on('py-scikit-learn@0.13.1', type='run')
+    depends_on('emboss')
+
+    def url_for_version(self, version):
+        url = 'http://biocomp.unibo.it/savojard/tppred{0}.tar.gz'
+        return url.format(version.up_to(1))
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        with working_dir('bin'):
+            install('tppred2.py', prefix.bin)
+        install_tree('data', prefix.data)
+        install_tree('example', prefix.example)
+        install_tree('tppred2modules', prefix.modules)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('TPPRED_ROOT', prefix)
