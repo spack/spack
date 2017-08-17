@@ -35,12 +35,30 @@ class Gaussian(Package):
     version('g09', '7d4c95b535e68e48af183920df427e4e')
 
     def install(self, spec, prefix):
-        shutil.copytree(os.getcwd(), refix.bin)
-        
+        shutil.copytree(os.getcwd(), prefix.bin)
+        patch_install_files = ['flc',
+                               'linda8.2/opteron-linux/bin/flc',
+                               'linda8.2/opteron-linux/bin/LindaLauncher',
+                               'linda8.2/opteron-linux/bin/ntsnet',
+                               'linda8.2/opteron-linux/bin/pmbuild',
+                               'linda8.2/opteron-linux/bin/vntsnet',
+                               'ntsnet'
+                               ]
+        for filename in patch_install_files:
+            if os.path.isfile(filename):
+                filter_file('\/mf\/frisch\/g09', self.spec.prefix.bin,
+                            join_path(self.spec.prefix.bin, filename))
+        patch_install_files = ['linda8.2/opteron-linux/bin/ntsnet',
+                               'linda8.2/opteron-linux/bin/vntsnet',
+                               ]
+        for filename in patch_install_files:
+            if os.path.isfile(filename):
+                filter_file('\/usr\/bin\/linda', self.spec.prefix.bin,
+                            join_path(self.spec.prefix.bin, filename))
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('GAUSS_LEXEDIR', join_path(self.spec.prefix.bin, 
+        run_env.set('GAUSS_LEXEDIR', join_path(self.spec.prefix.bin,
                     'linda-exe'))
         run_env.set('GAUSS_ARCHDIR', join_path(self.spec.prefix.bin, 'arch'))
-        run_env.set('GAUSS_BSDDIR',join_path(self.spec.prefix.bin, 'bsd'))
+        run_env.set('GAUSS_BSDDIR', join_path(self.spec.prefix.bin, 'bsd'))
         run_env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.bin)
