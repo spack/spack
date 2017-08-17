@@ -194,15 +194,15 @@ def sign_tarball(yes_to_all, key, force, specfile_path):
 
 def generate_index(outdir, indexfile_path):
     f = open(indexfile_path, 'w')
-    header = """<html>
-<head></head>
-<list>"""
-    footer = "</list></html>"
+    header = """<html>\n
+<head>\n</head>\n
+<list>\n"""
+    footer = "</list>\n</html>\n"
     paths = os.listdir(outdir + '/build_cache')
     f.write(header)
     for path in paths:
         rel = os.path.basename(path)
-        f.write('<li><a href="%s" %s</a>' % (rel, rel))
+        f.write('<li><a href="%s"> %s</a>\n' % (rel, rel))
     f.write(footer)
     f.close()
 
@@ -381,26 +381,27 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extractall(stagepath)
 
-    if os.path.exists('%s.asc' % specfile_path):
-        Gpg.verify('%s.asc' % specfile_path, specfile_path)
-        os.remove(specfile_path + '.asc')
-    else:
-        if not yes_to_all:
+    if not yes_to_all:
+        if os.path.exists('%s.asc' % specfile_path):
+            Gpg.verify('%s.asc' % specfile_path, specfile_path)
+            os.remove(specfile_path + '.asc')
+        else:
             raise NoVerifyException()
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
 
-    # get the sha256 checksum recorded at creation
-    spec_dict = {}
-    with open(specfile_path, 'r') as inputfile:
-        content = inputfile.read()
-        spec_dict = yaml.load(content)
-    bchecksum = spec_dict['binary_cache_checksum']
+    if not yes_to_all:
+        # get the sha256 checksum recorded at creation
+        spec_dict = {}
+        with open(specfile_path, 'r') as inputfile:
+            content = inputfile.read()
+            spec_dict = yaml.load(content)
+        bchecksum = spec_dict['binary_cache_checksum']
 
-    # if the checksums don't match don't install
-    if bchecksum['hash'] != checksum:
-        raise NoChecksumException()
+        # if the checksums don't match don't install
+        if bchecksum['hash'] != checksum:
+            raise NoChecksumException()
 
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
         tar.extractall(path=join_path(installpath, '..'))
