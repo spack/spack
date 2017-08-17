@@ -26,6 +26,7 @@ from spack import *
 import os
 import shutil
 
+
 class Gaussian(Package):
     """Gaussian  is a computer program for computational chemistry"""
 
