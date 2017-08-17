@@ -37,6 +37,8 @@ class Parsimonator(MakefilePackage):
     variant('sse', default=True, description='Enable SSE in order to substantially speed up execution')
     variant('avx', default=False, description='Enable AVX in order to substantially speed up execution')
 
+    conflicts('+avx', when='+sse')
+
     @property
     def makefile_file(self):
         if '+sse' in self.spec:
