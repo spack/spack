@@ -56,15 +56,11 @@ class Pdt(AutotoolsPackage):
         if(sys.platform == 'darwin'):
             filter_file(r'typedef __gnuc_va_list ', r'typedef __darwin_va_list ', 'include/kai/stdarg.h')
 
-    def install(self, spec, prefix):
+    def configure(self, spec, prefix):
         options = ['-prefix=%s' % prefix]
-
         if self.compiler.name == 'xl':
             options.append('-XLC')
-
         configure(*options)
-        make()
-        make('install')
 
     @run_after('install')
     def link_arch_dirs(self):
