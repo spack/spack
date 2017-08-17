@@ -1032,12 +1032,12 @@ or filesystem views.  However, it has some drawbacks:
 Using Spack on Travis-CI
 ------------------------
 
-Spack can be deployed as provider for userland software in
+Spack can be deployed as a provider for userland software in
 `Travis-CI <https://http://travis-ci.org>`_.
 
 A starting-point for a ``.travis.yml`` file can look as follows.
 It uses `caching <https://docs.travis-ci.com/user/caching/>`_ for
-already build environments, so make sure to clean the Travis cache if
+already built environments, so make sure to clean the Travis cache if
 you run into problems.
 
 The main points that are implemented below:
@@ -1086,8 +1086,7 @@ The main points that are implemented below:
      - export CXXFLAGS="-std=c++11"
 
    install:
-     - SPACK_FOUND=$(which spack >/dev/null && { echo 0; } || { echo 1; })
-     - if [ $SPACK_FOUND -ne 0 ]; then
+     - if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
          git clone --depth 50 https://github.com/llnl/spack.git $SPACK_ROOT &&
          echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
