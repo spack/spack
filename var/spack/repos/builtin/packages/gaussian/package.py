@@ -34,6 +34,8 @@ class Gaussian(Package):
 
     version('g09', '7d4c95b535e68e48af183920df427e4e')
 
+    provides('linda')
+
     def install(self, spec, prefix):
         shutil.copytree(os.getcwd(), prefix.bin)
         patch_install_files = ['flc',
