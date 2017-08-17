@@ -328,61 +328,96 @@ class TestConcretize(object):
         assert spec['externaltool'].compiler.satisfies('gcc')
         assert spec['stuff'].compiler.satisfies('gcc')
 
-    def test_find_spec_parents(self):
+    def test_find_spec_parents(self, spec_from_dict):
         """Tests the spec finding logic used by concretization. """
-        s = Spec('a +foo',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d +foo')),
-                 Spec('e +foo'))
+        s = spec_from_dict({
+            'a +foo': {
+                'b +foo': {
+                    'c': None,
+                    'd+foo': None
+                },
+                'e +foo': None
+            }
+        })
 
         assert 'a' == find_spec(s['b'], lambda s: '+foo' in s).name
 
-    def test_find_spec_children(self):
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d +foo')),
-                 Spec('e +foo'))
+    def test_find_spec_children(self, spec_from_dict):
+        s = spec_from_dict({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd+foo': None
+                },
+                'e +foo': None
+            }
+        })
+
         assert 'd' == find_spec(s['b'], lambda s: '+foo' in s).name
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c +foo'),
-                      Spec('d')),
-                 Spec('e +foo'))
+
+        s = spec_from_dict({
+            'a': {
+                'b +foo': {
+                    'c+foo': None,
+                    'd': None
+                },
+                'e +foo': None
+            }
+        })
+
         assert 'c' == find_spec(s['b'], lambda s: '+foo' in s).name
 
-    def test_find_spec_sibling(self):
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e +foo'))
+    def test_find_spec_sibling(self, spec_from_dict):
+
+        s = spec_from_dict({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd': None
+                },
+                'e +foo': None
+            }
+        })
+
         assert 'e' == find_spec(s['b'], lambda s: '+foo' in s).name
         assert 'b' == find_spec(s['e'], lambda s: '+foo' in s).name
 
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e',
-                      Spec('f +foo')))
+        s = spec_from_dict({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd': None
+                },
+                'e': {
+                    'f +foo': None
+                }
+            }
+        })
+
         assert 'f' == find_spec(s['b'], lambda s: '+foo' in s).name
 
-    def test_find_spec_self(self):
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e'))
+    def test_find_spec_self(self, spec_from_dict):
+        s = spec_from_dict({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd': None
+                },
+                'e': None
+            }
+        })
         assert 'b' == find_spec(s['b'], lambda s: '+foo' in s).name
 
-    def test_find_spec_none(self):
-        s = Spec('a',
-                 Spec('b',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e'))
+    def test_find_spec_none(self, spec_from_dict):
+        s = spec_from_dict({
+            'a': {
+                'b': {
+                    'c': None,
+                    'd': None
+                },
+                'e': None
+            }
+        })
         assert find_spec(s['b'], lambda s: '+foo' in s) is None
 
     def test_compiler_child(self):

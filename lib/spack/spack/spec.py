@@ -970,7 +970,7 @@ class SpecBuildInterface(ObjectWrapper):
 @key_ordering
 class Spec(object):
 
-    def __init__(self, spec_like, *dep_like, **kwargs):
+    def __init__(self, spec_like, **kwargs):
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
             self._dup(spec_like)
@@ -1012,22 +1012,6 @@ class Spec(object):
         # Allow a spec to be constructed with an external path.
         self.external_path = kwargs.get('external_path', None)
         self.external_module = kwargs.get('external_module', None)
-
-        # This allows users to construct a spec DAG with literals.
-        # Note that given two specs a and b, Spec(a) copies a, but
-        # Spec(a, b) will copy a but just add b as a dep.
-        deptypes = ()
-        for dep in dep_like:
-
-            if isinstance(dep, (list, tuple)):
-                # Literals can be deptypes -- if there are tuples in the
-                # list, they will be used as deptypes for the following Spec.
-                deptypes = tuple(dep)
-                continue
-
-            spec = dep if isinstance(dep, Spec) else Spec(dep)
-            self._add_dependency(spec, deptypes)
-            deptypes = ()
 
     @property
     def external(self):
