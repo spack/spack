@@ -65,5 +65,4 @@ class Pagit(Package):
         run_env.prepend_path('PATH', self.prefix.ABACAS)
         run_env.prepend_path('PATH', self.prefix.ICORN)
         run_env.prepend_path('PATH', self.prefix.RATT)
-        run_env.prepend_path('PATH', self.prefix.bin)
         run_env.prepend_path('PERL5LIB', self.prefix.lib)
