@@ -32,7 +32,7 @@ class Vegas2(Package):
     homepage = "https://vegas2.qimrberghofer.edu.au/"
     url      = "https://vegas2.qimrberghofer.edu.au/vegas2v2"
 
-    version('v2', '815d80b86e9e294f99332bb5181e897a', expand=False)
+    version('2', '815d80b86e9e294f99332bb5181e897a', expand=False)
 
     depends_on('perl', type='run')
     depends_on('r', type='run')
@@ -41,9 +41,9 @@ class Vegas2(Package):
     depends_on('r-corpcor', type='run')
 
     def url_for_version(self, version):
-        url = 'https://vegas2.qimrberghofer.edu.au/vegas2{0}'
+        url = 'https://vegas2.qimrberghofer.edu.au/vegas2v{0}'
         return url.format(version)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('vegas2{0}'.format(self.version), prefix.bin)
+        install('vegas2v{0}'.format(self.version), prefix.bin)
