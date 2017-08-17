@@ -57,8 +57,14 @@ class Gaussian(Package):
                             join_path(self.spec.prefix.bin, filename))
 
     def setup_environment(self, spack_env, run_env):
+        run_env.set('g09root', self.spec.prefix)
+        run_env.set('GAUSSIANHOME', self.spec.prefix)
+        run_env.set('GAUSS_EXEDIR', self.spec.prefix.bin)
+        run_env.set('G09_BASIS', join_path(self.spec.prefix.bin, 'basis'))
         run_env.set('GAUSS_LEXEDIR', join_path(self.spec.prefix.bin,
                     'linda-exe'))
         run_env.set('GAUSS_ARCHDIR', join_path(self.spec.prefix.bin, 'arch'))
         run_env.set('GAUSS_BSDDIR', join_path(self.spec.prefix.bin, 'bsd'))
+        run_env.prepend_path('LD_LIBRARY_PATH', join_path(self.spec.prefix.bin,
+                             'linda8.2/opteron-linux/lib'))
         run_env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.bin)
