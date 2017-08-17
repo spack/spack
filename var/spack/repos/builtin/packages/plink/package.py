@@ -25,11 +25,17 @@
 from spack import *
 
 
-class RMvtnorm(RPackage):
-    """Computes multivariate normal and t probabilities, quantiles, random
-    deviates and densities."""
+class Plink(Package):
+    """PLINK is a free, open-source whole genome association analysis toolset,
+       designed to perform a range of basic, large-scale analyses in a
+       computationally efficient manner."""
 
-    homepage = "http://mvtnorm.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
+    homepage = "https://www.cog-genomics.org/plink/1.9/"
 
-    version('1.0-6', 'cb69426868fd3e330412b8491901d9d4')
+    version('1.9', 'a2325881594856c0f1b7523290d1e04f',
+            url='https://www.cog-genomics.org/static/bin/plink170815/plink_linux_x86_64.zip')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('plink', prefix.bin)
+        install('prettify', prefix.bin)

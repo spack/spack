@@ -25,11 +25,10 @@
 from spack import *
 
 
-class RMvtnorm(RPackage):
-    """Computes multivariate normal and t probabilities, quantiles, random
-    deviates and densities."""
+class RCorpcor(RPackage):
+    """Efficient Estimation of Covariance and (Partial) Correlation"""
 
-    homepage = "http://mvtnorm.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
+    homepage = "https://cran.r-project.org/package=corpcor"
+    url      = "https://cran.r-project.org/src/contrib/corpcor_1.6.9.tar.gz"
 
-    version('1.0-6', 'cb69426868fd3e330412b8491901d9d4')
+    version('1.6.9', '7f447d9f389e5d7dedb5fe5baedca925')
