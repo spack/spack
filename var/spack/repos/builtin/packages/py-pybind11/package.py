@@ -22,39 +22,30 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-import spack.stage as stage
-
-description = "remove temporary build files and/or downloaded archives"
-section = "admin"
-level = "long"
+from spack import *
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        '-s', '--stage', action='store_true', default=True,
-        help="remove all temporary build stages (default)")
-    subparser.add_argument(
-        '-d', '--downloads', action='store_true',
-        help="remove cached downloads")
-    subparser.add_argument(
-        '-m', '--misc-cache', action='store_true',
-        help="remove long-lived caches, like the virtual package index")
-    subparser.add_argument(
-        '-a', '--all', action='store_true',
-        help="remove all of the above")
+class PyPybind11(CMakePackage):
+    """pybind11 -- Seamless operability between C++11 and Python.
+    pybind11 is a lightweight header-only library that exposes C++ types in
+    Python and vice versa, mainly to create Python bindings of existing C++
+    code. Its goals and syntax are similar to the excellent Boost.Python
+    library by David Abrahams: to minimize boilerplate code in traditional
+    extension modules by inferring type information using compile-time
+    introspection."""
 
+    homepage = "https://pybind11.readthedocs.io"
+    url      = "https://github.com/pybind/pybind11/archive/v2.1.0.tar.gz"
 
-def purge(parser, args):
-    # Special case: no flags.
-    if not any((args.stage, args.downloads, args.misc_cache, args.all)):
-        stage.purge()
-        return
+    version('2.1.1', '5518988698df937ccee53fb6ba91d12a')
+    version('2.1.0', '3cf07043d677d200720c928569635e12')
 
-    # handle other flags with fall through.
-    if args.stage or args.all:
-        stage.purge()
-    if args.downloads or args.all:
-        spack.fetch_cache.destroy()
-    if args.misc_cache or args.all:
-        spack.misc_cache.destroy()
+    depends_on('py-pytest', type=('build'))
+
+    extends('python')
+
+    def cmake_args(self):
+        args = []
+        args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
+                    % self.spec['python'].command.path)
+        return args

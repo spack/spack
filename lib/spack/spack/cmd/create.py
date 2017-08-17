@@ -370,6 +370,15 @@ class MakefilePackageTemplate(PackageTemplate):
         # makefile.filter('CC = .*', 'CC = cc')"""
 
 
+class IntelPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for licensed Intel software"""
+
+    base_class_name = 'IntelPackage'
+
+    body = """\
+    # FIXME: Override `setup_environment` if necessary."""
+
+
 templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
@@ -384,6 +393,7 @@ templates = {
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
+    'intel':      IntelPackageTemplate,
     'generic':    PackageTemplate,
 }
 
