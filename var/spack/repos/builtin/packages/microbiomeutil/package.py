@@ -39,7 +39,7 @@ class Microbiomeutil(MakefilePackage):
 
     def install(self, spec, prefix):
         install_tree('ChimeraSlayer', prefix.ChimeraSlayer)
-        install_tree('NAST-iEr', join_path(self.prefix, 'NAST-iEr'))
+        install_tree('NAST-iEr', join_path(prefix, 'NAST-iEr'))
         install_tree('TreeChopper', prefix.TreeChopper)
         install_tree('WigeoN', prefix.WigeoN)
         install_tree('docs', prefix.docs)
@@ -47,7 +47,7 @@ class Microbiomeutil(MakefilePackage):
         install_tree('AmosCmp16Spipeline', prefix.AmosCmp16Spipeline)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix.ChimeraSlayer)
-        run_env.prepend_path('PATH', join_path(self.prefix, 'NAST-iEr'))
-        run_env.prepend_path('PATH', self.prefix.TreeChopper)
-        run_env.prepend_path('PATH', self.prefix.WigeoN)
+        run_env.prepend_path('PATH', prefix.ChimeraSlayer)
+        run_env.prepend_path('PATH', join_path(prefix, 'NAST-iEr'))
+        run_env.prepend_path('PATH', prefix.TreeChopper)
+        run_env.prepend_path('PATH', prefix.WigeoN)
