@@ -25,12 +25,25 @@
 from spack import *
 
 
-class RMvtnorm(RPackage):
-    """Computes multivariate normal and t probabilities, quantiles, random
-    deviates and densities."""
+class Vegas2(Package):
+    """"VEGAS2 is an extension that uses 1,000 Genomes data to model SNP
+        correlations across the autosomes and chromosome X"""
 
-    homepage = "http://mvtnorm.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
+    homepage = "https://vegas2.qimrberghofer.edu.au/"
+    url      = "https://vegas2.qimrberghofer.edu.au/vegas2v2"
 
-    version('1.0-6', 'cb69426868fd3e330412b8491901d9d4')
-    version('1.0-5', '5894dd3969bbfa26f4862c45f9a48a52')
+    version('2', '815d80b86e9e294f99332bb5181e897a', expand=False)
+
+    depends_on('perl', type='run')
+    depends_on('r', type='run')
+    depends_on('plink')
+    depends_on('r-mvtnorm', type='run')
+    depends_on('r-corpcor', type='run')
+
+    def url_for_version(self, version):
+        url = 'https://vegas2.qimrberghofer.edu.au/vegas2v{0}'
+        return url.format(version)
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('vegas2v{0}'.format(self.version), prefix.bin)
