@@ -55,6 +55,21 @@ class Emacs(AutotoolsPackage):
     depends_on('libxaw', when='+X toolkit=athena')
     depends_on('gtkplus+X', when='+X toolkit=gtk')
 
+    def setup_environment(self, spack_env, run_env):
+        # building emacs requires c11 - gcc supports it with -std=c11
+        # icc probably supports it with -std=c++11 (not exactly the same,
+        # but should work)
+        # NOTE: this is the wrong way to acheive this: (see
+        # http://spack.readthedocs.io/en/latest/packaging_guide.html?highlight=CFLAGS#compiler-flags )
+        # but it worked, I got emacs to build, and after 3 days of fighting 
+        # in rabbit holes to acheive that, I'm scared to change it. So leaving
+        # the proven solution as a comment: 
+        #if self.compiler.name == 'gcc':
+        #    spack_env.set('CFLAGS','-std=c11')
+        # Now here's a more "correct" solution:
+        spack_env.append_flags('CFLAGS','-std=c11')
+
+
     def configure_args(self):
         spec = self.spec
 
@@ -66,5 +81,14 @@ class Emacs(AutotoolsPackage):
             ]
         else:
             args = ['--without-x']
+
+        # building emacs requires c++11. how to tell spack to add the 
+        # appropriate flag depending on the compiler used? dammit why 
+        # must everything be "guess the magic incantation"?!?!?
+        # something like this from fftw might work:
+        #   options.insert(0, 'CFLAGS=' + self.compiler.openmp_flag)
+        # .. except for -std=c11 (for gnu - or whatever the compiler c11
+        # flag is. Just hardcode it for now
+        #    options.insert(0, 'CFLAGS=-std=c11')
 
         return args
