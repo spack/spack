@@ -158,6 +158,16 @@ class TestConcretize(object):
         concrete = check_concretize('mpileaks   ^mpich2@1.3.1:1.4')
         assert concrete['mpich2'].satisfies('mpich2@1.3.1:1.4')
 
+    def test_concretize_disable_compiler_existence_check(self):
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            check_concretize('python %gcc@100.100')
+
+        try:
+            spack.concretizer.disable_compiler_existence_check()
+            check_concretize('python %gcc@100.100')
+        finally:
+            spack.concretizer.enable_compiler_existence_check()
+
     def test_concretize_with_provides_when(self):
         """Make sure insufficient versions of MPI are not in providers list when
         we ask for some advanced version.

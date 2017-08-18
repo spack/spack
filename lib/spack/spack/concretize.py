@@ -58,6 +58,9 @@ class DefaultConcretizer(object):
     def disable_compiler_existence_check(self):
         self.check_for_compiler_existence = False
 
+    def enable_compiler_existence_check(self):
+        self.check_for_compiler_existence = True
+
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
            packages that coiuld be used to concretize a spec.
