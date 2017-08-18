@@ -53,3 +53,8 @@ class Tk(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib)]
+
+    @run_after('install')
+    def symlink_wish(self):
+        with working_dir(self.prefix.bin):
+            symlink('wish{0}'.format(self.version.up_to(2)), 'wish')
