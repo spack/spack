@@ -262,22 +262,22 @@ The merged configuration would look like this:
        - ~/mystage
    $ _
 
+.. _config-file-variables:
+
 ------------------------------
 Config file variables
 ------------------------------
 
 Spack understands several variables which can be used in config file paths
-where ever they appear. There are three sets of these variables, Special 
-variables, environment variables, and user path variables. Special variables
-and environment variables both are indicated by prefixing the variable name with
-``$``. User path variables are indicated at the start of the path with ``~`` or
-``~user``. A configuration path is modified first to add in any special
-variables, then user variables, then environment variables. Let's discuss each
-in turn.
+where ever they appear. There are three sets of these variables, Spack specific 
+variables, environment variables, and user path variables. Spack specific
+variables and environment variables both are indicated by prefixing the variable
+name with ``$``. User path variables are indicated at the start of the path with
+``~`` or ``~user``. Let's discuss each in turn.
 
-^^^^^^^^^^^^^^^^^
-Special Variables
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+Spack Specific Variables
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spack understands several special variables. These are:
 
@@ -295,6 +295,13 @@ works just as well as ``$spack``. These special variables are also
 substituted first, so any environment variables with the same name will not
 be used.
 
+^^^^^^^^^^^^^^^^^^^^^
+Environment Variables
+^^^^^^^^^^^^^^^^^^^^^
+
+Spack then uses ``os.path.expandvars`` to expand any remaining environment
+variables.
+
 ^^^^^^^^^^^^^^
 User Variables
 ^^^^^^^^^^^^^^
@@ -303,10 +310,3 @@ Spack also uses the ``os.path.expanduser`` function on the path to expand
 any user tilde paths such as ``~`` or ``~user``. These tilde paths must appear
 at the beginning of the path or ``os.path.expanduser`` will not properly
 expand them.
-
-^^^^^^^^^^^^^^^^^^^^^
-Environment Variables
-^^^^^^^^^^^^^^^^^^^^^
-
-Spack then uses ``os.path.expandvars`` to expand any remaining environment
-variables.

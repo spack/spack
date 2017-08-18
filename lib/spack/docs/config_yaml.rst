@@ -14,8 +14,6 @@ see the default settings by looking at
 These settings can be overridden in ``etc/spack/config.yaml`` or
 ``~/.spack/config.yaml``.  See :ref:`configuration-scopes` for details.
 
-.. _config-file-variables:
-
 --------------------
 ``install_tree``
 --------------------
