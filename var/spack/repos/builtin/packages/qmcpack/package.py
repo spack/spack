@@ -162,5 +162,5 @@ class Qmcpack(CMakePackage):
         Use 'spack install --run-tests qmcpack'.
         It can take 24 hours to run all the regression tests.
         We only run the unit tests and short tests."""
-        ctest('-L unit')
-        ctest('-R short')
+        ctest('-L', 'unit')
+        ctest('-R', 'short')
