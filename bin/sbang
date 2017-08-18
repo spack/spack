@@ -104,6 +104,8 @@ lines=0
 while read line && ((lines < 2)) ; do
     if [[ "$line" = '#!'* ]]; then
         interpreter="${line#\#!}"
+    elif [[ "$line" = '//!'*node* ]]; then
+        interpreter="${line#//!}"
     elif [[ "$line" = '--!'*lua* ]]; then
         interpreter="${line#--!}"
     fi
