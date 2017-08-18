@@ -291,12 +291,7 @@ class DefaultConcretizer(object):
         def _proper_compiler_style(cspec, aspec):
             return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
 
-        all_compiler_specs = spack.compilers.all_compiler_specs()
-        if self.check_for_compiler_existence and not all_compiler_specs:
-            raise spack.compilers.NoCompilersError()
-
-        if (spec.compiler and
-                spec.compiler.concrete):
+        if spec.compiler and spec.compiler.concrete:
             if (self.check_for_compiler_existence and not
                     _proper_compiler_style(spec.compiler, spec.architecture)):
                 _compiler_concretization_failure(
@@ -315,11 +310,15 @@ class DefaultConcretizer(object):
             spec.compiler = other_compiler.copy()
             return True
 
+        all_compiler_specs = spack.compilers.all_compiler_specs()
         if not all_compiler_specs:
-            # At this point we know we don't have sufficient hints to form
-            # a full compiler spec so we must choose among the available
-            # compilers. Therefore even if the compiler existence check is
-            # disabled, compilers must be available at this point
+            # If compiler existence checking is disabled, then we would have
+            # exited by now if there were sufficient hints to form a full
+            # compiler spec. Therefore even if compiler existence checking is
+            # disabled, compilers must be available at this point because the
+            # available compilers are used to choose a compiler. If compiler
+            # existence checking is enabled then some compiler must exist in
+            # order to complete the spec.
             raise spack.compilers.NoCompilersError()
 
         if other_compiler in all_compiler_specs:
