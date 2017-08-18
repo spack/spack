@@ -324,7 +324,6 @@ class Boost(Package):
         if not spec.satisfies('@1.43.0:'):
             withLibs.remove('random')
         if '+graph' in spec and '+mpi' in spec:
-            withLibs.remove('graph')
             withLibs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
