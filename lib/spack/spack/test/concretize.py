@@ -328,9 +328,9 @@ class TestConcretize(object):
         assert spec['externaltool'].compiler.satisfies('gcc')
         assert spec['stuff'].compiler.satisfies('gcc')
 
-    def test_find_spec_parents(self, spec_from_dict):
+    def test_find_spec_parents(self):
         """Tests the spec finding logic used by concretization. """
-        s = spec_from_dict({
+        s = Spec.from_literal({
             'a +foo': {
                 'b +foo': {
                     'c': None,
@@ -342,8 +342,8 @@ class TestConcretize(object):
 
         assert 'a' == find_spec(s['b'], lambda s: '+foo' in s).name
 
-    def test_find_spec_children(self, spec_from_dict):
-        s = spec_from_dict({
+    def test_find_spec_children(self):
+        s = Spec.from_literal({
             'a': {
                 'b +foo': {
                     'c': None,
@@ -355,7 +355,7 @@ class TestConcretize(object):
 
         assert 'd' == find_spec(s['b'], lambda s: '+foo' in s).name
 
-        s = spec_from_dict({
+        s = Spec.from_literal({
             'a': {
                 'b +foo': {
                     'c+foo': None,
@@ -367,9 +367,9 @@ class TestConcretize(object):
 
         assert 'c' == find_spec(s['b'], lambda s: '+foo' in s).name
 
-    def test_find_spec_sibling(self, spec_from_dict):
+    def test_find_spec_sibling(self):
 
-        s = spec_from_dict({
+        s = Spec.from_literal({
             'a': {
                 'b +foo': {
                     'c': None,
@@ -382,7 +382,7 @@ class TestConcretize(object):
         assert 'e' == find_spec(s['b'], lambda s: '+foo' in s).name
         assert 'b' == find_spec(s['e'], lambda s: '+foo' in s).name
 
-        s = spec_from_dict({
+        s = Spec.from_literal({
             'a': {
                 'b +foo': {
                     'c': None,
@@ -396,8 +396,8 @@ class TestConcretize(object):
 
         assert 'f' == find_spec(s['b'], lambda s: '+foo' in s).name
 
-    def test_find_spec_self(self, spec_from_dict):
-        s = spec_from_dict({
+    def test_find_spec_self(self):
+        s = Spec.from_literal({
             'a': {
                 'b +foo': {
                     'c': None,
@@ -408,8 +408,8 @@ class TestConcretize(object):
         })
         assert 'b' == find_spec(s['b'], lambda s: '+foo' in s).name
 
-    def test_find_spec_none(self, spec_from_dict):
-        s = spec_from_dict({
+    def test_find_spec_none(self):
+        s = Spec.from_literal({
             'a': {
                 'b': {
                     'c': None,

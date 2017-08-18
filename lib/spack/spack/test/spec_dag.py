@@ -197,8 +197,8 @@ class TestSpecDag(object):
         spec.normalize()
         spec.normalize()
 
-    def test_normalize_with_virtual_spec(self, spec_from_dict):
-        dag = {
+    def test_normalize_with_virtual_spec(self, ):
+        dag = Spec.from_literal({
             'mpileaks': {
                 'callpath': {
                     'dyninst': {
@@ -209,8 +209,7 @@ class TestSpecDag(object):
                 },
                 'mpi': None
             }
-        }
-        dag = spec_from_dict(dag)
+        })
         dag.normalize()
 
         # make sure nothing with the same name occurs twice
@@ -223,8 +222,8 @@ class TestSpecDag(object):
         for name in counts:
             assert counts[name] == 1
 
-    def test_dependents_and_dependencies_are_correct(self, spec_from_dict):
-        spec = {
+    def test_dependents_and_dependencies_are_correct(self):
+        spec = Spec.from_literal({
             'mpileaks': {
                 'callpath': {
                     'dyninst': {
@@ -235,8 +234,7 @@ class TestSpecDag(object):
                 },
                 'mpi': None
             }
-        }
-        spec = spec_from_dict(spec)
+        })
 
         check_links(spec)
         spec.normalize()
@@ -282,11 +280,13 @@ class TestSpecDag(object):
         with pytest.raises(spack.spec.InvalidDependencyError):
             spec.normalize()
 
-    def test_equal(self, spec_from_dict):
+    def test_equal(self):
         # Different spec structures to test for equality
-        flat = spec_from_dict({'mpileaks ^callpath ^libelf ^libdwarf': None})
+        flat = Spec.from_literal(
+            {'mpileaks ^callpath ^libelf ^libdwarf': None}
+        )
 
-        flat_init = spec_from_dict({
+        flat_init = Spec.from_literal({
             'mpileaks': {
                 'callpath': None,
                 'libdwarf': None,
@@ -294,7 +294,7 @@ class TestSpecDag(object):
             }
         })
 
-        flip_flat = spec_from_dict({
+        flip_flat = Spec.from_literal({
             'mpileaks': {
                 'libelf': None,
                 'libdwarf': None,
@@ -302,7 +302,7 @@ class TestSpecDag(object):
             }
         })
 
-        dag = spec_from_dict({
+        dag = Spec.from_literal({
             'mpileaks': {
                 'callpath': {
                     'libdwarf': {
@@ -312,7 +312,7 @@ class TestSpecDag(object):
             }
         })
 
-        flip_dag = spec_from_dict({
+        flip_dag = Spec.from_literal({
             'mpileaks': {
                 'callpath': {
                     'libelf': {
@@ -341,14 +341,14 @@ class TestSpecDag(object):
         assert not flip_flat.eq_dag(flip_dag)
         assert not dag.eq_dag(flip_dag)
 
-    def test_normalize_mpileaks(self, spec_from_dict):
+    def test_normalize_mpileaks(self):
         # Spec parsed in from a string
-        spec = spec_from_dict({
+        spec = Spec.from_literal({
             'mpileaks ^mpich ^callpath ^dyninst ^libelf@1.8.11 ^libdwarf': None
         })
 
         # What that spec should look like after parsing
-        expected_flat = spec_from_dict({
+        expected_flat = Spec.from_literal({
             'mpileaks': {
                 'mpich': None,
                 'callpath': None,
@@ -359,9 +359,9 @@ class TestSpecDag(object):
         })
 
         # What it should look like after normalization
-        mpich = Spec('mpich')
-        libelf = Spec('libelf@1.8.11')
-        expected_normalized = spec_from_dict({
+        mpich = 'mpich'
+        libelf = 'libelf@1.8.11'
+        expected_normalized = Spec.from_literal({
             'mpileaks': {
                 'callpath': {
                     'dyninst': {
@@ -377,7 +377,7 @@ class TestSpecDag(object):
         # Similar to normalized spec, but now with copies of the same
         # libelf node.  Normalization should result in a single unique
         # node for each package, so this is the wrong DAG.
-        non_unique_nodes = spec_from_dict({
+        non_unique_nodes = Spec.from_literal({
             'mpileaks': {
                 'callpath': {
                     'dyninst': {
@@ -386,9 +386,9 @@ class TestSpecDag(object):
                     },
                     mpich: None
                 },
-                'mpich': None
+                mpich: None
             }
-        })
+        }, unique=False)
 
         # All specs here should be equal under regular equality
         specs = (spec, expected_flat, expected_normalized, non_unique_nodes)
@@ -421,11 +421,11 @@ class TestSpecDag(object):
         assert not spec.eq_dag(expected_normalized, deptypes=True)
         assert not spec.eq_dag(non_unique_nodes, deptypes=True)
 
-    def test_normalize_with_virtual_package(self, spec_from_dict):
+    def test_normalize_with_virtual_package(self):
         spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
         spec.normalize()
 
-        expected_normalized = spec_from_dict({
+        expected_normalized = Spec.from_literal({
             'mpileaks': {
                 'callpath': {
                     'dyninst': {
@@ -599,20 +599,17 @@ class TestSpecDag(object):
             with pytest.raises(ValueError):
                 spack.spec.base32_prefix_bits(test_hash, 256)
 
-    def test_traversal_directions(self, spec_from_dict):
+    def test_traversal_directions(self):
         """Make sure child and parent traversals of specs work."""
-        # We'll use d for a diamond dependency
-        d = Spec('d')
-
-        # Mock spec.
-        spec = spec_from_dict({
+        # Mock spec - d is used for a diamond dependency
+        spec = Spec.from_literal({
             'a': {
                 'b': {
-                    'c': {d: None},
+                    'c': {'d': None},
                     'e': None
                 },
                 'f': {
-                    'g': {d: None}
+                    'g': {'d': None}
                 }
             }
         })
@@ -629,20 +626,17 @@ class TestSpecDag(object):
             ['d', 'c', 'b', 'a', 'g', 'f'] ==
             [s.name for s in spec['d'].traverse(direction='parents')])
 
-    def test_edge_traversals(self, spec_from_dict):
+    def test_edge_traversals(self):
         """Make sure child and parent traversals of specs work."""
-        # We'll use d for a diamond dependency
-        d = Spec('d')
-
-        # Mock spec.
-        spec = spec_from_dict({
+        # Mock spec - d is used for a diamond dependency
+        spec = Spec.from_literal({
             'a': {
                 'b': {
-                    'c': {d: None},
+                    'c': {'d': None},
                     'e': None
                 },
                 'f': {
-                    'g': {d: None}
+                    'g': {'d': None}
                 }
             }
         })
@@ -666,10 +660,10 @@ class TestSpecDag(object):
         assert '^mpich2@1.1' in s2
         assert '^mpich2' in s2
 
-    def test_construct_spec_with_deptypes(self, spec_from_dict):
+    def test_construct_spec_with_deptypes(self):
         """Ensure that it is possible to construct a spec with explicit
            dependency types."""
-        s = spec_from_dict({
+        s = Spec.from_literal({
             'a': {
                 'b': {'c:build': None},
                 'd': {
@@ -714,17 +708,18 @@ class TestSpecDag(object):
             'dt-diamond-bottom'].deptypes == ('build', 'link', 'run')
 
     def check_diamond_normalized_dag(self, spec):
-        bottom = Spec('dt-diamond-bottom')
 
-        left = Spec('dt-diamond-left')
-        left._add_dependency(bottom, ('build',))
+        dag = Spec.from_literal({
+            'dt-diamond': {
+                'dt-diamond-left:build,link': {
+                    'dt-diamond-bottom:build': None
+                },
+                'dt-diamond-right:build,link': {
+                    'dt-diamond-bottom:build,link,run': None
+                },
 
-        right = Spec('dt-diamond-right')
-        right._add_dependency(bottom, ('build', 'link', 'run'))
-
-        dag = Spec('dt-diamond')
-        dag._add_dependency(left, ('build', 'link'))
-        dag._add_dependency(right, ('build', 'link'))
+            }
+        })
 
         assert spec.eq_dag(dag)
 
@@ -855,3 +850,13 @@ class TestSpecDag(object):
             canonical_deptype(('foo', 'bar'))
         with pytest.raises(ValueError):
             canonical_deptype(('foo',))
+
+    def test_invalid_literal_spec(self):
+
+        # Can't give type 'build' to a top-level spec
+        with pytest.raises(spack.spec.SpecParseError):
+            Spec.from_literal({'foo:build': None})
+
+        # Can't use more than one ':' separator
+        with pytest.raises(KeyError):
+            Spec.from_literal({'foo': {'bar:build:link': None}})

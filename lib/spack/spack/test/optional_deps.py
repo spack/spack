@@ -101,10 +101,10 @@ from spack.spec import Spec
             }})
     ]
 )
-def spec_and_expected(request, spec_from_dict):
+def spec_and_expected(request):
     """Parameters for the normalization test."""
     spec, d = request.param
-    return spec, spec_from_dict(d)
+    return spec, Spec.from_literal(d)
 
 
 def test_normalize(spec_and_expected, config, builtin_mock):

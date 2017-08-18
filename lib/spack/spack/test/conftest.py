@@ -42,7 +42,6 @@ import spack.database
 import spack.directory_layout
 import spack.platforms.test
 import spack.repository
-import spack.spec
 import spack.stage
 import spack.util.executable
 import spack.util.pattern
@@ -62,59 +61,6 @@ def no_stdin_duplication(monkeypatch):
     """
     monkeypatch.setattr(llnl.util.lang, 'duplicate_stream',
                         lambda x: StringIO())
-
-
-@pytest.fixture()
-def spec_from_dict():
-    """Returns a factory that builds a Spec from a dictionary. This allows
-    the construction of a DAG with literals in tests.
-
-    The dictionary must have a single top level key, representing the root,
-    and as many secondary level keys as needed in the spec. The definition
-    is recursive.
-
-    Examples:
-        A simple spec ``foo`` with no dependencies:
-
-            {'foo': None}
-
-        A spec ``foo`` with a ``(build, link)`` dependency ``bar``:
-
-            {'foo':
-                {'bar:build,link': None}}
-
-    """
-    def _impl(spec_dict):
-
-        # The invariant is that the top level dictionary must have
-        # only one key
-        assert len(spec_dict) == 1
-
-        # Construct the top-level spec
-        spec_like, dep_like = next(iter(spec_dict.items()))
-        spec = spack.spec.Spec(spec_like)
-
-        if dep_like is None:
-            return spec
-
-        # If there are dependencies, recurse
-        for s, dependencies in dep_like.items():
-
-            if isinstance(s, spack.spec.Spec):
-                # If it is a spec, just add it
-                spec._add_dependency(s, ())
-                continue
-
-            name, dep_types = s.split(':')[0], tuple(s.split(':')[1:])
-            if dep_types:
-                dep_types = tuple(dep_types[0].split(','))
-
-            dependency_spec = _impl({name: dependencies})
-            spec._add_dependency(dependency_spec, dep_types)
-
-        return spec
-
-    return _impl
 
 
 @pytest.fixture(autouse=True)
