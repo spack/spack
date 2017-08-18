@@ -2004,10 +2004,19 @@ class Spec(object):
                 dep_constraints.update(pre_existing)
                 resolved = pre_existing
             except UnsatisfiableSpecError as e:
-                e.message = "Invalid spec: '%s'. "
-                e.message += "Package %s requires %s %s, but spec asked for %s"
-                e.message %= (pre_existing, dep.name,
-                              e.constraint_type, e.required, e.provided)
+                fmt = 'An unsatisfiable {0}'.format(e.constraint_type)
+                fmt += ' constraint has been detected for spec:'
+                fmt += '\n\n{0}\n\n'.format(pre_existing.tree(indent=4))
+                fmt += 'while trying to concretize the partial spec:'
+                fmt += '\n\n{0}\n\n'.format(self.tree(indent=4))
+                fmt += '{0} requires {1} {2} {3}, but spec asked for {4}'
+                e.message = fmt.format(
+                    self.name,
+                    dep.name,
+                    e.constraint_type,
+                    e.required,
+                    e.provided
+                )
                 raise e
         else:
             dep_constraints.update(dep)
