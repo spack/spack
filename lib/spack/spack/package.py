@@ -484,37 +484,64 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #
     # These are default values for instance variables.
     #
-    """By default we build in parallel.  Subclasses can override this."""
+
+    #: By default we build in parallel.  Subclasses can override this.
     parallel = True
 
-    """# jobs to use for parallel make. If set, overrides default of ncpus."""
+    #: # jobs to use for parallel make. If set, overrides default of ncpus.
     make_jobs = spack.build_jobs
 
-    """By default do not run tests within package's install()"""
+    #: By default do not run tests within package's install()
     run_tests = False
 
     # FIXME: this is a bad object-oriented design, should be moved to Clang.
-    """By default do not setup mockup XCode on macOS with Clang"""
+    #: By default do not setup mockup XCode on macOS with Clang
     use_xcode = False
 
-    """Most packages are NOT extendable. Set to True if you want extensions."""
+    #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
 
-    """When True, add RPATHs for the entire DAG. When False, add RPATHs only
-       for immediate dependencies."""
+    #: When True, add RPATHs for the entire DAG. When False, add RPATHs only
+    #: for immediate dependencies.
     transitive_rpaths = True
 
-    """List of prefix-relative file paths (or a single path). If these do
-       not exist after install, or if they exist but are not files,
-       sanity checks fail.
-    """
+    #: List of prefix-relative file paths (or a single path). If these do
+    #: not exist after install, or if they exist but are not files,
+    #: sanity checks fail.
     sanity_check_is_file = []
 
-    """List of prefix-relative directory paths (or a single path). If
-       these do not exist after install, or if they exist but are not
-       directories, sanity checks will fail.
-    """
+    #: List of prefix-relative directory paths (or a single path). If
+    #: these do not exist after install, or if they exist but are not
+    #: directories, sanity checks will fail.
     sanity_check_is_dir = []
+
+    #
+    # Set default licensing information
+    #
+
+    #: Boolean. If set to ``True``, this software requires a license.
+    #: If set to ``False``, all of the ``license_*`` attributes will
+    #: be ignored. Defaults to ``False``.
+    license_required = False
+
+    #: String. Contains the symbol used by the license manager to denote
+    #: a comment. Defaults to ``#``.
+    license_comment = '#'
+
+    #: List of strings. These are files that the software searches for when
+    #: looking for a license. All file paths must be relative to the
+    #: installation directory. More complex packages like Intel may require
+    #: multiple licenses for individual components. Defaults to the empty list.
+    license_files = []
+
+    #: List of strings. Environment variables that can be set to tell the
+    #: software where to look for a license if it is not in the usual location.
+    #: Defaults to the empty list.
+    license_vars = []
+
+    #: String. A URL pointing to license setup instructions for the software.
+    #: Defaults to the empty string.
+    license_url = ''
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -569,22 +596,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if not hasattr(self, 'list_depth'):
             self.list_depth = 0
 
-        # Set default licensing information
-        if not hasattr(self, 'license_required'):
-            self.license_required = False
-
-        if not hasattr(self, 'license_comment'):
-            self.license_comment = '#'
-
-        if not hasattr(self, 'license_files'):
-            self.license_files = []
-
-        if not hasattr(self, 'license_vars'):
-            self.license_vars = []
-
-        if not hasattr(self, 'license_url'):
-            self.license_url = None
-
         # Set up some internal variables for timing.
         self._fetch_time = 0.0
         self._total_time = 0.0
@@ -594,17 +605,31 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         self.extra_args = {}
 
-    def possible_dependencies(self, visited=None):
-        """Return set of possible transitive dependencies of this package."""
+    def possible_dependencies(self, transitive=True, visited=None):
+        """Return set of possible transitive dependencies of this package.
+
+        Args:
+            transitive (bool): include all transitive dependencies if True,
+                only direct dependencies if False.
+        """
         if visited is None:
             visited = set()
 
         visited.add(self.name)
         for name in self.dependencies:
-            if name not in visited and not spack.spec.Spec(name).virtual:
-                pkg = spack.repo.get(name)
-                for name in pkg.possible_dependencies(visited):
-                    visited.add(name)
+            spec = spack.spec.Spec(name)
+
+            if not spec.virtual:
+                visited.add(name)
+                if transitive:
+                    pkg = spack.repo.get(name)
+                    pkg.possible_dependencies(transitive, visited)
+            else:
+                for provider in spack.repo.providers_for(spec):
+                    visited.add(provider.name)
+                    if transitive:
+                        pkg = spack.repo.get(provider.name)
+                        pkg.possible_dependencies(transitive, visited)
 
         return visited
 
@@ -905,7 +930,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         start_time = time.time()
         if spack.do_checksum and self.version not in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely." %
-                     self.spec.format('$_$@'))
+                     self.spec.cformat('$_$@'))
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
@@ -1066,11 +1091,29 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             matches = [line for line in f.readlines() if regex.match(line)]
 
         if not matches:
-            tty.msg('Target \'' + target + ':\' not found in Makefile')
+            tty.msg("Target '" + target + ":' not found in Makefile")
             return
 
         # Execute target
         inspect.getmodule(self).make(target)
+
+    def _if_ninja_target_execute(self, target):
+        # Check if we have a ninja build script
+        if not os.path.exists('build.ninja'):
+            tty.msg('No ninja build script found in the build directory')
+            return
+
+        # Check if 'target' is in the ninja build script
+        regex = re.compile('^build ' + target + ':')
+        with open('build.ninja', 'r') as f:
+            matches = [line for line in f.readlines() if regex.match(line)]
+
+        if not matches:
+            tty.msg("Target 'build " + target + ":' not found in build.ninja")
+            return
+
+        # Execute target
+        inspect.getmodule(self).ninja(target)
 
     def _get_needed_resources(self):
         resources = []
@@ -1203,10 +1246,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 tty.msg(msg.format(self))
                 rec = spack.store.db.get_record(self.spec)
                 return self._update_explicit_entry_in_db(rec, explicit)
-
-        # Dirty argument takes precedence over dirty config setting.
-        if dirty is None:
-            dirty = spack.dirty
 
         self._do_install_pop_kwargs(kwargs)
 
@@ -1573,7 +1612,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 raise InstallError(str(spec) + " is not installed.")
 
         if not force:
-            dependents = spack.store.db.installed_dependents(spec)
+            dependents = spack.store.db.installed_relatives(
+                spec, 'parents', True)
             if dependents:
                 raise PackageStillNeededError(spec, dependents)
 
@@ -1649,8 +1689,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.store.layout.add_extension(self.extendee_spec, self.spec)
-        tty.msg("Activated extension %s for %s" %
-                (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+        tty.msg(
+            "Activated extension %s for %s" %
+            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -1708,8 +1749,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.store.layout.remove_extension(
                 self.extendee_spec, self.spec)
 
-        tty.msg("Deactivated extension %s for %s" %
-                (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+        tty.msg(
+            "Deactivated extension %s for %s" %
+            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
 
     def deactivate(self, extension, **kwargs):
         """Unlinks all files from extension out of this package's install dir.

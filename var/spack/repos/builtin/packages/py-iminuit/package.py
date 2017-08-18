@@ -29,7 +29,7 @@ class PyIminuit(PythonPackage):
     """Interactive IPython-Friendly Minimizer based on SEAL Minuit2."""
 
     homepage = "https://pypi.python.org/pypi/iminuit"
-    url      = "https://pypi.python.org/packages/source/i/iminuit/iminuit-1.2.tar.gz"
+    url      = "https://pypi.io/packages/source/i/iminuit/iminuit-1.2.tar.gz"
 
     version('1.2', '4701ec472cae42015e26251703e6e984')
 

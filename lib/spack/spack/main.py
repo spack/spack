@@ -58,7 +58,7 @@ intro_by_level = {
 
 # control top-level spack options shown in basic vs. advanced help
 options_by_level = {
-    'short': 'hkV',
+    'short': ['h', 'k', 'V', 'color'],
     'long': 'all'
 }
 
@@ -280,6 +280,9 @@ def make_argument_parser():
 
     parser.add_argument('-h', '--help', action='store_true',
                         help="show this help message and exit")
+    parser.add_argument('--color', action='store', default='auto',
+                        choices=('always', 'never', 'auto'),
+                        help="when to colorize output; default is auto")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="write out debug logs during compile")
     parser.add_argument('-D', '--pdb', action='store_true',
@@ -324,6 +327,9 @@ def setup_main_options(args):
     if args.insecure:
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
         spack.insecure = True
+
+    # when to use color (takes always, auto, or never)
+    tty.color.set_color_when(args.color)
 
 
 def allows_unknown_args(command):
@@ -371,11 +377,14 @@ class SpackCommand(object):
         self.command = spack.cmd.get_command(command)
         self.fail_on_error = fail_on_error
 
-    def __call__(self, *argv):
+    def __call__(self, *argv, **kwargs):
         """Invoke this SpackCommand.
 
         Args:
             argv (list of str): command line arguments.
+
+        Keyword Args:
+            color (optional bool): force-disable or force-enable color
 
         Returns:
             (str, str): output and error as a strings

@@ -193,18 +193,29 @@ class CMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class QMakePackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for QMake-based packages"""
+
+    base_class_name = 'QMakePackage'
+
+    body = """\
+    def qmake_args(self):
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
+
+
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
-    dependencies = """\
-    # FIXME: Add additional dependencies if required.
-    depends_on('scons', type='build')"""
+    base_class_name = 'SConsPackage'
 
     body = """\
-    def install(self, spec, prefix):
-        # FIXME: Add logic to build and install here.
-        scons('prefix={0}'.format(prefix))
-        scons('install')"""
+    def build_args(self, spec, prefix):
+        # FIXME: Add arguments to pass to build.
+        # FIXME: If not needed delete this function
+        args = []
+        return args"""
 
 
 class WafPackageTemplate(PackageTemplate):
@@ -359,10 +370,20 @@ class MakefilePackageTemplate(PackageTemplate):
         # makefile.filter('CC = .*', 'CC = cc')"""
 
 
+class IntelPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for licensed Intel software"""
+
+    base_class_name = 'IntelPackage'
+
+    body = """\
+    # FIXME: Override `setup_environment` if necessary."""
+
+
 templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
     'cmake':      CMakePackageTemplate,
+    'qmake':      QMakePackageTemplate,
     'scons':      SconsPackageTemplate,
     'waf':        WafPackageTemplate,
     'bazel':      BazelPackageTemplate,
@@ -372,6 +393,7 @@ templates = {
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
+    'intel':      IntelPackageTemplate,
     'generic':    PackageTemplate,
 }
 
@@ -425,19 +447,22 @@ class BuildSystemGuesser:
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
         # archive, the corresponding build system is assumed.
+        # NOTE: Order is important here. If a package supports multiple
+        # build systems, we choose the first match in this list.
         clues = [
-            ('/configure$',         'autotools'),
-            ('/configure.(in|ac)$', 'autoreconf'),
-            ('/Makefile.am$',       'autoreconf'),
-            ('/CMakeLists.txt$',    'cmake'),
-            ('/SConstruct$',        'scons'),
-            ('/waf$',               'waf'),
-            ('/setup.py$',          'python'),
-            ('/NAMESPACE$',         'r'),
-            ('/WORKSPACE$',         'bazel'),
-            ('/Build.PL$',          'perlbuild'),
-            ('/Makefile.PL$',       'perlmake'),
-            ('/(GNU)?[Mm]akefile$', 'makefile'),
+            (r'/CMakeLists\.txt$',    'cmake'),
+            (r'/configure$',          'autotools'),
+            (r'/configure\.(in|ac)$', 'autoreconf'),
+            (r'/Makefile\.am$',       'autoreconf'),
+            (r'/SConstruct$',         'scons'),
+            (r'/waf$',                'waf'),
+            (r'/setup\.py$',          'python'),
+            (r'/NAMESPACE$',          'r'),
+            (r'/WORKSPACE$',          'bazel'),
+            (r'/Build\.PL$',          'perlbuild'),
+            (r'/Makefile\.PL$',       'perlmake'),
+            (r'/.*\.pro$',            'qmake'),
+            (r'/(GNU)?[Mm]akefile$',  'makefile'),
         ]
 
         # Peek inside the compressed file.

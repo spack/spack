@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Callpath(Package):
+class Callpath(CMakePackage):
     """Library for representing callpaths consistently in
        distributed-memory performance tools."""
 
@@ -35,20 +35,20 @@ class Callpath(Package):
     version('1.0.2', 'b1994d5ee7c7db9d27586fc2dcf8f373')
     version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on('cmake', type='build')
+    depends_on('elf', type='link')
+    depends_on('libdwarf')
+    depends_on('dyninst')
+    depends_on('adept-utils')
+    depends_on('mpi')
+    depends_on('cmake@2.8:', type='build')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
         # TODO: offer options for the walker used.
-        cmake_args = std_cmake_args
-        if spec.satisfies("^dyninst@9.3.0:"):
+        args = ["-DCALLPATH_WALKER=dyninst"]
+
+        if self.spec.satisfies("^dyninst@9.3.0:"):
             std_flag = self.compiler.cxx11_flag
-            cmake_args.append("-DCMAKE_CXX_FLAGS='{0} -fpermissive'".format(
+            args.append("-DCMAKE_CXX_FLAGS='{0} -fpermissive'".format(
                 std_flag))
-        cmake('.', "-DCALLPATH_WALKER=dyninst", *cmake_args)
-        make()
-        make("install")
+
+        return args

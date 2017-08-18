@@ -57,9 +57,14 @@ class Openblas(MakefilePackage):
     patch('make.patch', when='@0.2.16:')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
-    patch('openblas_icc.patch', when='%intel')
+    #  UPD: the patch has been merged starting version 0.2.20
+    patch('openblas_icc.patch', when='@:0.2.19%intel')
     patch('openblas_icc_openmp.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
+
+    # Fixes compilation error on POWER8 with GCC 7
+    # https://github.com/xianyi/OpenBLAS/pull/1098
+    patch('power8.patch', when='@0.2.18:0.2.19 %gcc@7.1.0: target=ppc64')
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982
@@ -79,12 +84,15 @@ class Openblas(MakefilePackage):
                 'OpenBLAS requires both C and Fortran compilers!'
             )
         # Add support for OpenMP
-        if '+openmp' in self.spec and self.spec.satisfies('%clang'):
-            # Openblas (as of 0.2.18) hardcoded that OpenMP cannot
-            # be used with any (!) compiler named clang, bummer.
-            raise InstallError(
-                'OpenBLAS does not support OpenMP with clang!'
-            )
+        if (('+openmp' in self.spec) and self.spec.satisfies('%clang')):
+            if str(self.spec.compiler.version).endswith('-apple'):
+                raise InstallError("Apple's clang does not support OpenMP")
+            if '@:0.2.19' in self.spec:
+                # Openblas (as of 0.2.19) hardcoded that OpenMP cannot
+                # be used with any (!) compiler named clang, bummer.
+                raise InstallError(
+                    'OpenBLAS @:0.2.19 does not support OpenMP with clang!'
+                )
 
     @property
     def make_defs(self):
