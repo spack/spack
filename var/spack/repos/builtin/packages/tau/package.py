@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import sys
 import glob
 from llnl.util.filesystem import join_path
 
@@ -164,6 +165,10 @@ class Tau(Package):
 
         if 'bgq' in spec.architecture:
             options.extend(['-arch=bgq', '-BGQTIMERS'])
+
+        # latest 2.26.2 version doesnt build on osx with plugins
+        if(sys.platform == 'darwin' and spec.satisfies('@2.26.2')):
+            options.append('-noplugins')
 
         compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
