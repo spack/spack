@@ -1,0 +1,51 @@
+From fec59e92795bfac5779d09cd5d96f10cd1c3e6af Mon Sep 17 00:00:00 2001
+From: Charlie Zender <zender@uci.edu>
+Date: Thu, 1 Jun 2017 20:18:02 -0700
+Subject: [PATCH] Patch for NUL = '\0' != NULL errors in ncap2 supplied by
+ Manfred Schwarb
+
+---
+ src/nco++/fmc_all_cls.cc | 8 ++++----
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/src/nco++/fmc_all_cls.cc b/src/nco++/fmc_all_cls.cc
+index 3cccc17..79e3240 100644
+--- a/src/nco++/fmc_all_cls.cc
++++ b/src/nco++/fmc_all_cls.cc
+@@ -4796,14 +4796,14 @@ var_sct *vlist_cls::push_fnd(bool &is_mtd, std::vector<RefAST> &vtr_args, fmc_cl
+   {
+      case PATOI: 
+        {          
+-         char *pend='\0';
++         char *pend=NULL;
+          nco_int iout;
+          iout=0; 
+ 
+ 	 // allows whites space prefix & suffix                                                                                                                                
+          iout=(nco_int)std::strtol(buffer,&pend,10);
+ 
+-         if( pend !=buffer  && (*pend=='\0'|| *pend==' ') )
++         if(pend != buffer && (*pend == '\0'|| *pend == ' '))
+             ierr=0;
+          else
+             ierr=errno;
+@@ -4817,14 +4817,14 @@ var_sct *vlist_cls::push_fnd(bool &is_mtd, std::vector<RefAST> &vtr_args, fmc_cl
+ 
+      case PATOL: 
+        {          
+-         char *pend='\0';
++         char *pend=NULL;
+          nco_int64 lout;
+          lout=0; 
+ 
+ 	      // allows whites space prefix & suffix
+          lout=(nco_int64)std::strtoll(buffer,&pend,10);
+ 
+-         if( pend !=buffer  && (*pend=='\0'|| *pend==' ') )
++         if( pend !=buffer && (*pend == '\0' || *pend == ' '))
+             ierr=0;
+          else
+ 	        ierr=errno;
+-- 
+2.7.4
+
