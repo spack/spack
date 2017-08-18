@@ -60,7 +60,7 @@ def setup_parser(subparser):
                            action='store_true',
                            dest='show_flags',
                            help='show spec compiler flags')
-    subparser.add_argument('-F', '--show-full-compiler',
+    subparser.add_argument('--show-compiler-version',
                            action='store_true',
                            dest='show_full_compiler',
                            help='show full compiler specs')

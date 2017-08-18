@@ -225,8 +225,7 @@ def display_specs(specs, args=None, **kwargs):
         ffmt += '$%'
         if full_compiler:
             ffmt += '@'
-        if flags:
-            ffmt += '+'
+        ffmt += '+'
     vfmt = '$+' if variants else ''
     format_string = '$%s$@%s%s' % (nfmt, ffmt, vfmt)
 
