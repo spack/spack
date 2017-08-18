@@ -52,6 +52,7 @@ class Lbann(CMakePackage):
     depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib', when='+opencv')
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
+    depends_on('hwloc')
 
     def cmake_args(self):
         spec = self.spec
