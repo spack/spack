@@ -22,10 +22,41 @@ matrix:
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
+# mpich (AutotoolsPackage)
     - python: '2.7'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=hypre^mpich' ]
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+# astyle (MakefilePackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=astyle' ]
+# tut (WafPackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=tut' ]
+# py-setuptools (PythonPackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=py-setuptools' ]
+# perl-dbi (PerlPackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=perl-dbi' ]
+# openjpeg (CMakePackage + external cmake)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=openjpeg' ]
+# r-rcpp (RPackage + external R)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=r-rcpp' ]
     - python: '3.3'
       os: linux
       language: python
@@ -42,10 +73,11 @@ matrix:
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
+# mpich (AutotoolsPackage)
     - python: '3.6'
       os: linux
       language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=hypre^mpich' ]
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
     - python: '2.7'
       os: linux
       language: python
@@ -72,6 +104,10 @@ addons:
       - mercurial
       - graphviz
       - gnupg2
+      - cmake
+      - r-base
+      - r-base-core
+      - r-base-dev
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
@@ -98,6 +134,9 @@ before_script:
 
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
+
+  # Set up external dependencies for build tests, because the take too long to compile
+  - if [[ "$TEST_SUITE" == "build" ]]; then cp share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml; fi
 
 #=============================================================================
 # Building
