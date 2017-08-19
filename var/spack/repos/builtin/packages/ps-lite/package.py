@@ -34,7 +34,7 @@ class PsLite(CMakePackage):
 
     version('master', git='https://github.com/dmlc/ps-lite.git', branch='master')
     version('acdb698', git='https://github.com/dmlc/ps-lite.git',
-   	    commit='acdb698fa3bb80929ef83bb37c705f025e119b82')
+            commit='acdb698fa3bb80929ef83bb37c705f025e119b82')
 
     depends_on('protobuf@3:')
     depends_on('zeromq')

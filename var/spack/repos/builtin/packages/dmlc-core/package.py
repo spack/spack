@@ -40,7 +40,9 @@ class DmlcCore(CMakePackage):
     patch('makefile.patch')
 
     def patch(self):
-    	filter_file('export CC = gcc', '', 'make/config.mk', string=True)
-    	filter_file('export CXX = g++', '', 'make/config.mk', string=True)
-    	filter_file('export MPICXX = mpicxx', '', 'make/config.mk', string=True)
-    	filter_file('USE_OPENMP = 0', 'USE_OPENMP = 1', 'make/config.mk', string=True)
+        filter_file('export CC = gcc', '', 'make/config.mk', string=True)
+        filter_file('export CXX = g++', '', 'make/config.mk', string=True)
+        filter_file('export MPICXX = mpicxx', '',
+                    'make/config.mk', string=True)
+        filter_file('USE_OPENMP = 0', 'USE_OPENMP = 1',
+                    'make/config.mk', string=True)

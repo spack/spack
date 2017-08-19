@@ -26,7 +26,7 @@ from spack import *
 
 
 class Dlpack(Package):
-    """DLPack is an RFC for common tensor and operator guidelines 
+    """DLPack is an RFC for common tensor and operator guidelines
     in deep learning systems."""
 
     homepage = "https://github.com/sjtuhpcc/dlpack"
@@ -34,4 +34,4 @@ class Dlpack(Package):
     version('master', git='https://github.com/dmlc/dlpack.git', branch='master')
 
     def install(self, spec, prefix):
-	install_tree('include', prefix.include)
+        install_tree('include', prefix.include)

@@ -30,14 +30,14 @@ class PyMxnet(PythonPackage):
     """Python binding for DMLC/MXNet."""
 
     homepage = "http://mxnet.io"
-    url      = "https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz"                             
+    url      = "https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz"
 
     version('0.10.0.post2', '7819d511cf4a6efad681e6662fa966e4',
             url='https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz')
     version('0.10.0.post1',  '16d540f407cd22285555b3ab22040032',
-    	    url='https://github.com/apache/incubator-mxnet/archive/v0.10.0.post1.tar.gz')
+            url='https://github.com/apache/incubator-mxnet/archive/v0.10.0.post1.tar.gz')
     version('0.10.0', '2d0c83c33eda729932d620cca3078826',
-            url='https://github.com/apache/incubator-mxnet/archive/v0.10.0.tar.gz')   
+            url='https://github.com/apache/incubator-mxnet/archive/v0.10.0.tar.gz')
 
     # TODO
     # install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -53,11 +53,13 @@ class PyMxnet(PythonPackage):
     build_directory = 'python'
 
     def build(self, spec, prefix):
-	# py-mxnet doesn't need build
-	pass
+        # py-mxnet doesn't need build
+        pass
 
-    def install(self, spec, prefix):	
-	with working_dir('python'):
-	        filter_file('../../../', spec['mxnet'].prefix.lib, 'mxnet/libinfo.py', string=True)	
-		pip = which('pip') 
-	        pip('install', '-e', '.') 
+    def install(self, spec, prefix):
+        with working_dir('python'):
+            filter_file('../../../',
+                        spec['mxnet'].prefix.lib,
+                        'mxnet/libinfo.py', string=True)
+            pip = which('pip')
+            pip('install', '-e', '.')

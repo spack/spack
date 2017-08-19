@@ -34,7 +34,7 @@ class Mshadow(Package):
 
     version('master', git='https://github.com/dmlc/mshadow.git', branch='master')
     version('c037b06', git='https://github.com/dmlc/mshadow.git',
-   	    commit='c037b06ddd810d39322cd056650f8b1f4763dd9d')
+            commit='c037b06ddd810d39322cd056650f8b1f4763dd9d')
 
     def install(self, spec, prefix):
         install_tree('mshadow', join_path(prefix.include, 'mshadow'))

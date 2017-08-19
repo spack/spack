@@ -34,7 +34,7 @@ class Nnvm(CMakePackage):
 
     version('master', git='https://github.com/dmlc/nnvm.git', branch='master')
     version('b279286', git='https://github.com/dmlc/nnvm.git',
-       	    commit='b279286304ac954098d94a2695bca599e832effb')
+            commit='b279286304ac954098d94a2695bca599e832effb')
 
     depends_on('dmlc-core')
 
