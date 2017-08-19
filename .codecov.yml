@@ -13,6 +13,10 @@ coverage:
         threshold: 0.5
         paths:
           - lib/spack/spack/cmd
+      build_systems:
+        threshold: 0.5
+        paths:
+          - lib/spack/spack/build_systems
       core:
         threshold: 0.5
         paths:

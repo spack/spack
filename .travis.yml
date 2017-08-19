@@ -11,10 +11,16 @@ branches:
 #=============================================================================
 # Build matrix
 #=============================================================================
-matrix:
+jobs:
   fast_finish: true
   include:
-    - python: '2.6'
+    - stage: 'flake8'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=flake8
+    - stage: 'unit tests + documentation'
+      python: '2.6'
       os: linux
       language: python
       env: TEST_SUITE=unit
@@ -22,10 +28,6 @@ matrix:
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=hypre^mpich' ]
     - python: '3.3'
       os: linux
       language: python
@@ -42,21 +44,54 @@ matrix:
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '3.6'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=hypre^mpich' ]
-    - python: '2.7'
-      os: linux
-      language: python
-      env: TEST_SUITE=flake8
+    - os: osx
+      language: generic
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
     - python: '2.7'
       os: linux
       language: python
       env: TEST_SUITE=doc
-    - os: osx
-      language: generic
-      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
+# mpich (AutotoolsPackage)
+    - stage: 'build tests'
+      python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+# astyle (MakefilePackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=astyle' ]
+# tut (WafPackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=tut' ]
+# py-setuptools (PythonPackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=py-setuptools' ]
+# perl-dbi (PerlPackage)
+#    - python: '2.7'
+#      os: linux
+#      language: python
+#      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=perl-dbi' ]
+# openjpeg (CMakePackage + external cmake)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=openjpeg' ]
+# r-rcpp (RPackage + external R)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=r-rcpp' ]
+# mpich (AutotoolsPackage)
+    - python: '3.6'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
 
 #=============================================================================
 # Environment
@@ -72,6 +107,14 @@ addons:
       - mercurial
       - graphviz
       - gnupg2
+      - cmake
+      - r-base
+      - r-base-core
+      - r-base-dev
+      - perl
+      - perl-base
+
+cache: pip
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
@@ -98,6 +141,9 @@ before_script:
 
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
+
+  # Set up external dependencies for build tests, because the take too long to compile
+  - if [[ "$TEST_SUITE" == "build" ]]; then cp share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml; fi
 
 #=============================================================================
 # Building
