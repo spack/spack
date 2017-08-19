@@ -30,6 +30,7 @@ import stat
 import pytest
 import tempfile
 import shutil
+import filecmp
 
 from llnl.util.filesystem import *
 
@@ -38,12 +39,16 @@ from spack.hooks.sbang import *
 from spack.util.executable import which
 
 
-short_line       = "#!/this/is/short/bin/bash\n"
-long_line        = "#!/this/" + ('x' * 200) + "/is/long\n"
-lua_line         = "#!/this/" + ('x' * 200) + "/is/lua\n"
-lua_line_patched = "--!/this/" + ('x' * 200) + "/is/lua\n"
-sbang_line       = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
-last_line        = "last!\n"
+short_line        = "#!/this/is/short/bin/bash\n"
+long_line         = "#!/this/" + ('x' * 200) + "/is/long\n"
+lua_line          = "#!/this/" + ('x' * 200) + "/is/lua\n"
+lua_in_text       = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
+lua_line_patched  = "--!/this/" + ('x' * 200) + "/is/lua\n"
+node_line         = "#!/this/" + ('x' * 200) + "/is/node\n"
+node_in_text      = ("line\n") * 100 + "lua\n" + ("line\n" * 100)
+node_line_patched = "//!/this/" + ('x' * 200) + "/is/node\n"
+sbang_line        = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
+last_line         = "last!\n"
 
 
 class ScriptDirectory(object):
@@ -70,6 +75,26 @@ class ScriptDirectory(object):
         self.lua_shebang = os.path.join(self.tempdir, 'lua')
         with open(self.lua_shebang, 'w') as f:
             f.write(lua_line)
+            f.write(last_line)
+
+        # Lua script with long shebang
+        self.lua_textbang = os.path.join(self.tempdir, 'lua_in_text')
+        with open(self.lua_textbang, 'w') as f:
+            f.write(short_line)
+            f.write(lua_in_text)
+            f.write(last_line)
+
+        # Node script with long shebang
+        self.node_shebang = os.path.join(self.tempdir, 'node')
+        with open(self.node_shebang, 'w') as f:
+            f.write(node_line)
+            f.write(last_line)
+
+        # Node script with long shebang
+        self.node_textbang = os.path.join(self.tempdir, 'node_in_text')
+        with open(self.node_textbang, 'w') as f:
+            f.write(short_line)
+            f.write(node_in_text)
             f.write(last_line)
 
         # Script already using sbang.
@@ -122,6 +147,17 @@ def test_shebang_handling(script_dir):
         assert f.readline() == sbang_line
         assert f.readline() == lua_line_patched
         assert f.readline() == last_line
+
+    # Make sure this got patched.
+    with open(script_dir.node_shebang, 'r') as f:
+        assert f.readline() == sbang_line
+        assert f.readline() == node_line_patched
+        assert f.readline() == last_line
+
+    assert filecmp.cmp(script_dir.lua_textbang,
+                        os.path.join(script_dir.tempdir, 'lua_in_text') )
+    assert filecmp.cmp(script_dir.node_textbang,
+                        os.path.join(script_dir.tempdir, 'node_in_text') )
 
     # Make sure this is untouched
     with open(script_dir.has_sbang, 'r') as f:
