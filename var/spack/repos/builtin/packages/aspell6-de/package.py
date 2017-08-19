@@ -27,26 +27,10 @@ from spack import *
 
 # This isn't really an Autotools package, but it's close enough
 # that this works if we override configure().
-class Aspell6De(AutotoolsPackage):
+class Aspell6De(AspellDictPackage):
     """German (de) dictionary for aspell."""
-
-    extends('aspell')
 
     homepage = "http://aspell.net/"
     url      = "ftp://ftp.gnu.org/gnu/aspell/dict/de/aspell6-de-20030222-1.tar.bz2"
 
     version('6-de-20030222-1', '5950c5c8a36fc93d4d7616591bace6a6')
-
-    def patch(self):
-        filter_file(r'^dictdir=.*$', 'dictdir=/lib', 'configure')
-        filter_file(r'^datadir=.*$', 'datadir=/lib', 'configure')
-
-    def configure(self, spec, prefix):
-        aspell = spec['aspell'].prefix.bin.aspell
-        prezip = spec['aspell'].prefix.bin.prezip
-        destdir = prefix
-
-        sh = which('sh')
-        sh('./configure', '--vars', "ASPELL={0}".format(aspell),
-           "PREZIP={0}".format(prezip),
-           "DESTDIR={0}".format(destdir))
