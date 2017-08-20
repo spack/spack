@@ -28,7 +28,7 @@ import spack.store
 from spack.package import ExtensionConflictError
 
 
-# See also: AspellDictPakcage
+# See also: AspellDictPackage
 class Aspell(AutotoolsPackage):
     """GNU Aspell is a Free and Open Source spell checker designed to
     eventually replace Ispell."""
