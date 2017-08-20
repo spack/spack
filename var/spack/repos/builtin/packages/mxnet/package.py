@@ -34,10 +34,10 @@ class Mxnet(MakefilePackage):
 
     version('0.10.0.post2',  '7819d511cf4a6efad681e6662fa966e4',
             url="https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz")
-    # version('0.10.0.post1',  '16d540f407cd22285555b3ab22040032',
-    #    	    url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.post1.tar.gz")
-    # version('0.10.0', '2d0c83c33eda729932d620cca3078826',
-    #    	    url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.tar.gz")
+    version('0.10.0.post1',  '16d540f407cd22285555b3ab22040032',
+       	    url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.post1.tar.gz")
+    version('0.10.0', '2d0c83c33eda729932d620cca3078826',
+       	    url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.tar.gz")
 
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencv', default=True, description='Enable OpenCV support')
