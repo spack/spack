@@ -165,21 +165,20 @@ __all__ = [
     'NoSuchHashError',
     'RedundantSpecError']
 
-# Valid pattern for an identifier in Spack
+#: Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
 
-# Convenient names for color formats so that other things can use them
-compiler_color = '@g'
-version_color = '@c'
-architecture_color = '@m'
-enabled_variant_color = '@B'
-disabled_variant_color = '@r'
-dependency_color = '@.'
-hash_color = '@K'
+compiler_color = '@g'          #: color for highlighting compilers
+version_color = '@c'           #: color for highlighting versions
+architecture_color = '@m'      #: color for highlighting architectures
+enabled_variant_color = '@B'   #: color for highlighting enabled variants
+disabled_variant_color = '@r'  #: color for highlighting disabled varaints
+dependency_color = '@.'        #: color for highlighting dependencies
+hash_color = '@K'              #: color for highlighting package hashes
 
-"""This map determines the coloring of specs when using color output.
-   We make the fields different colors to enhance readability.
-   See spack.color for descriptions of the color codes. """
+#: This map determines the coloring of specs when using color output.
+#: We make the fields different colors to enhance readability.
+#: See spack.color for descriptions of the color codes.
 color_formats = {'%': compiler_color,
                  '@': version_color,
                  '=': architecture_color,
@@ -188,17 +187,19 @@ color_formats = {'%': compiler_color,
                  '^': dependency_color,
                  '#': hash_color}
 
-"""Regex used for splitting by spec field separators."""
-_separators = '[%s]' % ''.join(color_formats.keys())
+#: Regex used for splitting by spec field separators.
+#: These need to be escaped to avoid metacharacters in
+#: ``color_formats.keys()``.
+_separators = '[\\%s]' % '\\'.join(color_formats.keys())
 
-"""Versionlist constant so we don't have to build a list
-   every time we call str()"""
+#: Versionlist constant so we don't have to build a list
+#: every time we call str()
 _any_version = VersionList([':'])
 
-"""Types of dependencies that Spack understands."""
+#: Types of dependencies that Spack understands.
 alldeps = ('build', 'link', 'run')
 
-"""Max integer helps avoid passing too large a value to cyaml."""
+#: Max integer helps avoid passing too large a value to cyaml.
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
 
