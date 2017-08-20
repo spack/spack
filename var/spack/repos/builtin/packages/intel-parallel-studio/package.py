@@ -447,6 +447,13 @@ class IntelParallelStudio(IntelPackage):
             spack_env.set('I_MPI_F90', spack_f77)
             spack_env.set('I_MPI_FC',  spack_fc)
 
+            # Make sure the mpicc executable appears in the path
+            if self.prefix == self.intel_prefix:  # composer 2015
+                bindir = self.intel_prefix.impi_latest.intel64.bin
+            else:
+                bindir = self.intel_prefix.mpi.intel64.bin
+            spack_env.prepend_path('PATH', bindir)
+
         # set up MKLROOT for everyone using MKL package
         if '+mkl' in self.spec:
             mkl_root = self.intel_prefix.mkl.lib.intel64  # noqa
