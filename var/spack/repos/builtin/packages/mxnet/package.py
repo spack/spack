@@ -42,6 +42,7 @@ class Mxnet(MakefilePackage):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencv', default=True, description='Enable OpenCV support')
 
+    # TODO: Lock version for the stable release 0.10.0, 0.10.0.post1 and 0.10.0.post2
     depends_on('dmlc-core@a6c5701')
     depends_on('mshadow@c037b06')
     depends_on('ps-lite@acdb698')
@@ -51,12 +52,6 @@ class Mxnet(MakefilePackage):
     depends_on('cudnn', when='+cuda')
     depends_on('cub', when='+cuda')
     depends_on('opencv+core+imgproc+highgui+jpeg+png+tiff~eigen~ipp@3.0:', when='+opencv')
-
-    # Lock version for the stable release 0.10.0
-    # depends_on('dmlc-core@a6c5701', when='@0.10.0')
-    # depends_on('mshadow@c037b06', when='@0.10.0')
-    # depends_on('ps-lite@acdb698', when='@0.10.0')
-    # depends_on('nnvm@b279286', when='@0.10.0')
 
     patch('makefile.patch', when='@0.10:0.11')
 
