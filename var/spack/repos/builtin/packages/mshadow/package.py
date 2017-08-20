@@ -33,7 +33,7 @@ class Mshadow(Package):
     url      = "https://github.com/dmlc/mshadow/archive/v1.1.tar.gz"
 
     version('master', git='https://github.com/dmlc/mshadow.git', branch='master')
-    version('c037b06', git='https://github.com/dmlc/mshadow.git',
+    version('20170516', git='https://github.com/dmlc/mshadow.git',
             commit='c037b06ddd810d39322cd056650f8b1f4763dd9d')
 
     def install(self, spec, prefix):

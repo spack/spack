@@ -43,10 +43,10 @@ class Mxnet(MakefilePackage):
     variant('opencv', default=True, description='Enable OpenCV support')
 
     # TODO: Lock version for the stable release 0.10.0, 0.10.0.post1 and 0.10.0.post2
-    depends_on('dmlc-core@a6c5701')
-    depends_on('mshadow@c037b06')
-    depends_on('ps-lite@acdb698')
-    depends_on('nnvm@b279286')
+    depends_on('dmlc-core@20170508')
+    depends_on('mshadow@20170516')
+    depends_on('ps-lite@20170328')
+    depends_on('nnvm@20170418')
     depends_on('openblas')
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn', when='+cuda')

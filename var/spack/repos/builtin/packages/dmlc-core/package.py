@@ -34,7 +34,7 @@ class DmlcCore(CMakePackage):
     url      = "https://github.com/dmlc/dmlc-core.git"
 
     version('master', git='https://github.com/dmlc/dmlc-core.git')
-    version('a6c5701', git='https://github.com/dmlc/dmlc-core.git',
+    version('20170508', git='https://github.com/dmlc/dmlc-core.git',
     commit='a6c5701219e635fea808d264aefc5b03c3aec314')
 
     patch('makefile.patch')

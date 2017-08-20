@@ -33,7 +33,7 @@ class PsLite(CMakePackage):
     url      = "https://github.com/dmlc/ps-lite.git"
 
     version('master', git='https://github.com/dmlc/ps-lite.git', branch='master')
-    version('acdb698', git='https://github.com/dmlc/ps-lite.git',
+    version('20170328', git='https://github.com/dmlc/ps-lite.git',
             commit='acdb698fa3bb80929ef83bb37c705f025e119b82')
 
     depends_on('protobuf@3:')
