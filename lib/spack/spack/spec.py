@@ -975,8 +975,10 @@ class Spec(object):
         """Builds a Spec from a dictionary containing the spec literal.
 
         The dictionary must have a single top level key, representing the root,
-        and as many secondary level keys as needed in the spec. The definition
-        is recursive.
+        and as many secondary level keys as needed in the spec.
+
+        The keys can be either a string or a Spec or a tuple containing the
+        Spec and the dependency types.
 
         Args:
             spec_dict (dict): the dictionary containing the spec literal
@@ -1023,6 +1025,26 @@ class Spec(object):
                         'dt-diamond-bottom:build,link,run': None
                     }
                 }, normal=False}
+
+            Constructing a spec using a Spec object as key:
+
+            .. code-block:: python
+
+                mpich = Spec('mpich')
+                libelf = Spec('libelf@1.8.11')
+                expected_normalized = Spec.from_literal({
+                    'mpileaks': {
+                        'callpath': {
+                            'dyninst': {
+                                'libdwarf': {libelf: None},
+                                libelf: None
+                            },
+                            mpich: None
+                        },
+                        mpich: None
+                    },
+                })
+
         """
 
         # Maps a literal to a Spec, to be sure we are reusing the same object
@@ -1039,7 +1061,10 @@ class Spec(object):
             # If the requirements was for unique nodes (default)
             # then re-use keys from the local cache. Otherwise build
             # a new node every time.
-            spec = spec_cache[spec_like] if normal else Spec(spec_like)
+            if not isinstance(spec_like, Spec):
+                spec = spec_cache[spec_like] if normal else Spec(spec_like)
+            else:
+                spec = spec_like
 
             if dep_like is None:
                 return spec
@@ -1066,10 +1091,31 @@ class Spec(object):
 
                 return n, dtypes
 
+            def spec_and_dependency_types(s):
+                """Given a non-string key in the literal, extracts the spec
+                and its dependency types.
+
+                Args:
+                    s (spec or tuple): either a Spec object or a tuple
+                        composed of a Spec object and a string with the
+                        dependency types
+
+                """
+                if isinstance(s, Spec):
+                    return s, ()
+
+                spec_obj, dtypes = s
+                return spec_obj, tuple(dt.strip() for dt in dtypes.split(','))
+
             # Recurse on dependencies
             for s, s_dependencies in dep_like.items():
-                name, dependency_types = name_and_dependency_types(s)
-                dependency_spec = spec_builder({name: s_dependencies})
+
+                if isinstance(s, string_types):
+                    dag_node, dependency_types = name_and_dependency_types(s)
+                else:
+                    dag_node, dependency_types = spec_and_dependency_types(s)
+
+                dependency_spec = spec_builder({dag_node: s_dependencies})
                 spec._add_dependency(dependency_spec, dependency_types)
 
             return spec

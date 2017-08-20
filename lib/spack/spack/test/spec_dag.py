@@ -359,8 +359,8 @@ class TestSpecDag(object):
         })
 
         # What it should look like after normalization
-        mpich = 'mpich'
-        libelf = 'libelf@1.8.11'
+        mpich = Spec('mpich')
+        libelf = Spec('libelf@1.8.11')
         expected_normalized = Spec.from_literal({
             'mpileaks': {
                 'callpath': {
