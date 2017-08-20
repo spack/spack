@@ -115,6 +115,13 @@ class Fftw(AutotoolsPackage):
             float_options.append('--enable-sse2')
             double_options.append('--enable-sse2')
 
+        # Support for Intel compiler:
+        # https://software.intel.com/en-us/articles/performance-tools-for-software-developers-building-fftw-with-the-intel-compilers
+        if '%intel' in spec:
+            options.append(
+                "CFLAGS=-gcc --with-our-malloc16 --with-combined-threads"
+            )
+
         configure = Executable('../configure')
 
         # Build double/float/long double/quad variants
