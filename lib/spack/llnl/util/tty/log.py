@@ -124,6 +124,26 @@ class keyboard_input(object):
                 self.stream.fileno(), termios.TCSADRAIN, self.old_cfg)
 
 
+class Unbuffered(object):
+    """Wrapper for Python streams that forces them to be unbuffered.
+
+    This is implemented by forcing a flush after each write.
+    """
+    def __init__(self, stream):
+        self.stream = stream
+
+    def write(self, data):
+        self.stream.write(data)
+        self.stream.flush()
+
+    def writelines(self, datas):
+        self.stream.writelines(datas)
+        self.stream.flush()
+
+    def __getattr__(self, attr):
+        return getattr(self.stream, attr)
+
+
 def _file_descriptors_work():
     """Whether we can get file descriptors for stdout and stderr.
 
@@ -184,18 +204,32 @@ class log_output(object):
     work within test frameworks like nose and pytest.
     """
 
-    def __init__(self, filename=None, echo=False, debug=False):
+    def __init__(self, filename=None, echo=False, debug=False, buffer=False):
         """Create a new output log context manager.
 
+        Args:
+            filename (str): name of file where output should be logged
+            echo (bool): whether to echo output in addition to logging it
+            debug (bool): whether to enable tty debug mode during logging
+            buffer (bool): pass buffer=True to skip unbuffering output; note
+                this doesn't set up any *new* buffering
+
+        By default, we unbuffer sys.stdout and sys.stderr because the
+        logger will include output from executed programs and from python
+        calls.  If stdout and stderr are buffered, their output won't be
+        printed in the right place w.r.t. output from commands.
+
         Logger daemon is not started until ``__enter__()``.
+
         """
         self.filename = filename
         self.echo = echo
         self.debug = debug
+        self.buffer = buffer
 
         self._active = False  # used to prevent re-entry
 
-    def __call__(self, filename=None, echo=None, debug=None):
+    def __call__(self, filename=None, echo=None, debug=None, buffer=None):
         """Thie behaves the same as init. It allows a logger to be reused.
 
         With the ``__call__`` function, you can save state between uses
@@ -217,6 +251,8 @@ class log_output(object):
             self.echo = echo
         if debug is not None:
             self.debug = debug
+        if buffer is not None:
+            self.buffer = buffer
         return self
 
     def __enter__(self):
@@ -296,6 +332,11 @@ class log_output(object):
             pipe_fd_out = os.fdopen(self.write_fd, 'w')
             sys.stdout = pipe_fd_out
             sys.stderr = pipe_fd_out
+
+        # Unbuffer stdout and stderr at the Python level
+        if not self.buffer:
+            sys.stdout = Unbuffered(sys.stdout)
+            sys.stderr = Unbuffered(sys.stderr)
 
         # Force color and debug settings now that we have redirected.
         tty.color.set_color_when(forced_color)
@@ -399,6 +440,7 @@ class log_output(object):
                             # Echo to stdout if requested or forced
                             if echo or force_echo:
                                 sys.stdout.write(line)
+                                sys.stdout.flush()
 
                             # Stripped output to log file.
                             log_file.write(_strip(line))
