@@ -188,8 +188,10 @@ color_formats = {'%': compiler_color,
                  '^': dependency_color,
                  '#': hash_color}
 
-"""Regex used for splitting by spec field separators."""
-_separators = '[%s]' % ''.join(color_formats.keys())
+"""Regex used for splitting by spec field separators.
+These need to be escaped to avoid metacharacters in color_formats.keys().
+"""
+_separators = '[\\%s]' % '\\'.join(color_formats.keys())
 
 """Versionlist constant so we don't have to build a list
    every time we call str()"""
