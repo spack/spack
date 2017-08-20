@@ -388,7 +388,7 @@ class TestSpecDag(object):
                 },
                 mpich: None
             }
-        }, unique=False)
+        }, normal=False)
 
         # All specs here should be equal under regular equality
         specs = (spec, expected_flat, expected_normalized, non_unique_nodes)

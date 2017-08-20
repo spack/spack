@@ -971,7 +971,7 @@ class SpecBuildInterface(ObjectWrapper):
 class Spec(object):
 
     @staticmethod
-    def from_literal(spec_dict, unique=True):
+    def from_literal(spec_dict, normal=True):
         """Builds a Spec from a dictionary containing the spec literal.
 
         The dictionary must have a single top level key, representing the root,
@@ -980,7 +980,7 @@ class Spec(object):
 
         Args:
             spec_dict (dict): the dictionary containing the spec literal
-            unique (bool): if True the same key appearing at different levels
+            normal (bool): if True the same key appearing at different levels
                 of the ``spec_dict`` will map to the same object in memory.
 
         Examples:
@@ -1022,11 +1022,11 @@ class Spec(object):
                     'dt-diamond-right:build,link': {
                         'dt-diamond-bottom:build,link,run': None
                     }
-                }, unique=False}
+                }, normal=False}
         """
 
         # Maps a literal to a Spec, to be sure we are reusing the same object
-        spec_cache = {}
+        spec_cache = LazySpecCache()
 
         def spec_builder(d):
             # The invariant is that the top level dictionary must have
@@ -1039,9 +1039,7 @@ class Spec(object):
             # If the requirements was for unique nodes (default)
             # then re-use keys from the local cache. Otherwise build
             # a new node every time.
-            spec = spec_cache.setdefault(
-                spec_like, Spec(spec_like)
-            ) if unique else Spec(spec_like)
+            spec = spec_cache[spec_like] if normal else Spec(spec_like)
 
             if dep_like is None:
                 return spec
@@ -1061,9 +1059,9 @@ class Spec(object):
                     raise KeyError(msg.format(s))
 
                 n = t[0]
-                try:
-                    dtypes = tuple(t[1].split(','))
-                except IndexError:
+                if len(t) == 2:
+                    dtypes = tuple(dt.strip() for dt in t[1].split(','))
+                else:
                     dtypes = ()
 
                 return n, dtypes
@@ -3033,6 +3031,19 @@ class Spec(object):
 
     def __repr__(self):
         return str(self)
+
+
+class LazySpecCache(collections.defaultdict):
+    """Cache for Specs that uses a spec_like as key, and computes lazily
+    the corresponding value ``Spec(spec_like``.
+    """
+    def __init__(self):
+        super(LazySpecCache, self).__init__(Spec)
+
+    def __missing__(self, key):
+        value = self.default_factory(key)
+        self[key] = value
+        return value
 
 
 #
