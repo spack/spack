@@ -29,6 +29,7 @@ import os
 import re
 import select
 import sys
+import traceback
 from contextlib import contextmanager
 
 import llnl.util.tty as tty
@@ -43,6 +44,7 @@ _escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
 # one per line the following newline is ignored in output.
 xon, xoff = '\x11\n', '\x13\n'
 control = re.compile('(\x11\n|\x13\n)')
+
 
 def _strip(line):
     """Strip color and control characters from a line."""
@@ -76,6 +78,9 @@ class keyboard_input(object):
 
         Args:
             stream (file-like): stream on which to accept keyboard input
+
+        Note that stream can be None, in which case ``keyboard_input``
+        will do nothing.
         """
         self.stream = stream
 
@@ -88,7 +93,7 @@ class keyboard_input(object):
         self.old_cfg = None
 
         # Ignore all this if the input stream is not a tty.
-        if not self.stream.isatty():
+        if not self.stream or not self.stream.isatty():
             return
 
         try:
@@ -119,6 +124,30 @@ class keyboard_input(object):
                 self.stream.fileno(), termios.TCSADRAIN, self.old_cfg)
 
 
+def _file_descriptors_work():
+    """Whether we can get file descriptors for stdout and stderr.
+
+    This tries to call ``fileno()`` on ``sys.stdout`` and ``sys.stderr``
+    and returns ``False`` if anything goes wrong.
+
+    This can happen, when, e.g., the test framework replaces stdout with
+    a ``StringIO`` object.
+
+    We have to actually try this to see whether it works, rather than
+    checking for the fileno attribute, beacuse frameworks like pytest add
+    dummy fileno methods on their dummy file objects that return
+    ``UnsupportedOperationErrors``.
+
+    """
+    # test whether we can get fds for out and error
+    try:
+        sys.stdout.fileno()
+        sys.stderr.fileno()
+        return True
+    except:
+        return False
+
+
 class log_output(object):
     """Context manager that logs its output to a file.
 
@@ -135,7 +164,7 @@ class log_output(object):
             # do things ... output will be logged and printed out
 
     And, if you just want to echo *some* stuff from the parent, use
-    ``force_echo``:
+    ``force_echo``::
 
         with log_output('logfile.txt', echo=False) as logger:
             # do things ... output will be logged
@@ -155,7 +184,7 @@ class log_output(object):
     work within test frameworks like nose and pytest.
     """
 
-    def __init__(self, filename, echo=False, debug=False):
+    def __init__(self, filename=None, echo=False, debug=False):
         """Create a new output log context manager.
 
         Logger daemon is not started until ``__enter__()``.
@@ -166,9 +195,37 @@ class log_output(object):
 
         self._active = False  # used to prevent re-entry
 
+    def __call__(self, filename=None, echo=None, debug=None):
+        """Thie behaves the same as init. It allows a logger to be reused.
+
+        With the ``__call__`` function, you can save state between uses
+        of a single logger.  This is useful if you want to remember,
+        e.g., the echo settings for a prior ``with log_output()``::
+
+            logger = log_output()
+
+            with logger('foo.txt'):
+                # log things; user can change echo settings with 'v'
+
+            with logger('bar.txt'):
+                # log things; logger remembers prior echo settings.
+
+        """
+        if filename is not None:
+            self.filename = filename
+        if echo is not None:
+            self.echo = echo
+        if debug is not None:
+            self.debug = debug
+        return self
+
     def __enter__(self):
         if self._active:
             raise RuntimeError("Can't re-enter the same log_output!")
+
+        if self.filename is None:
+            raise RuntimeError(
+                "filename must be set by either __init__ or __call__")
 
         # record parent color settings before redirecting.  We do this
         # because color output depends on whether the *original* stdout
@@ -183,10 +240,17 @@ class log_output(object):
         # OS-level pipe for redirecting output to logger
         self.read_fd, self.write_fd = os.pipe()
 
+        # Multiprocessing pipe for communication back from the daemon
+        # Currently only used to save echo value between uses
+        self.parent, self.child = multiprocessing.Pipe()
+
         # Sets a daemon that writes to file what it reads from a pipe
         try:
             # need to pass this b/c multiprocessing closes stdin in child.
-            input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+            try:
+                input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+            except:
+                input_stream = None  # just don't forward input if this fails
 
             self.process = multiprocessing.Process(
                 target=self._writer_daemon, args=(input_stream,))
@@ -195,7 +259,8 @@ class log_output(object):
             os.close(self.read_fd)  # close in the parent process
 
         finally:
-            input_stream.close()
+            if input_stream:
+                input_stream.close()
 
         # Flush immediately before redirecting so that anything buffered
         # goes to the original stream
@@ -203,8 +268,8 @@ class log_output(object):
         sys.stderr.flush()
 
         # Now do the actual output rediction.
-        self.use_fds = True
-        try:
+        self.use_fds = _file_descriptors_work()
+        if self.use_fds:
             # We try first to use OS-level file descriptors, as this
             # redirects output for subprocesses and system calls.
 
@@ -217,13 +282,11 @@ class log_output(object):
             os.dup2(self.write_fd, sys.stderr.fileno())
             os.close(self.write_fd)
 
-        except AttributeError:
-            # Using file descriptors can fail if stdout and stderr don't
-            # have a fileno attribute. This can happen, when, e.g., the
-            # test framework replaces stdout with a StringIO object.  We
-            # handle thi the Python way. This won't redirect lower-level
-            # output, but it's the best we can do.
-            self.use_fds = False
+        else:
+            # Handle I/O the Python way. This won't redirect lower-level
+            # output, but it's the best we can do, and the caller
+            # shouldn't expect any better, since *they* have apparently
+            # redirected I/O the Python way.
 
             # Save old stdout and stderr file objects
             self._saved_stdout = sys.stdout
@@ -262,6 +325,9 @@ class log_output(object):
             sys.stdout = self._saved_stdout
             sys.stderr = self._saved_stderr
 
+        # recover and store echo settings from the child before it dies
+        self.echo = self.parent.recv()
+
         # join the daemon process. The daemon will quit automatically
         # when the write pipe is closed; we just wait for it here.
         self.process.join()
@@ -299,43 +365,53 @@ class log_output(object):
         echo = self.echo        # initial echo setting, user-controllable
         force_echo = False      # parent can force echo for certain output
 
-        with open(self.filename, 'w') as log_file:
-            with keyboard_input(stdin):
-                while True:
-                    # Without the last parameter (timeout) select will
-                    # wait until at least one of the two streams are
-                    # ready. This may cause the function to hang.
-                    rlist, _, xlist = select.select(
-                        [in_pipe, stdin], [], [], 0)
+        # list of streams to select from
+        istreams = [in_pipe, stdin] if stdin else [in_pipe]
 
-                    # Allow user to toggle echo with 'v' key.
-                    # Currently ignores other chars.
-                    if stdin in rlist:
-                        if stdin.read(1) == 'v':
-                            echo = not echo
+        try:
+            with open(self.filename, 'w') as log_file:
+                with keyboard_input(stdin):
+                    while True:
+                        # Without the last parameter (timeout) select will
+                        # wait until at least one of the two streams are
+                        # ready. This may cause the function to hang.
+                        rlist, _, xlist = select.select(istreams, [], [], 0)
 
-                    # Handle output from the with block process.
-                    if in_pipe in rlist:
-                        # If we arrive here it means that in_pipe was
-                        # ready for reading : it should never happen that
-                        # line is false-ish
-                        line = in_pipe.readline()
-                        if not line:
-                            break  # EOF
+                        # Allow user to toggle echo with 'v' key.
+                        # Currently ignores other chars.
+                        if stdin in rlist:
+                            if stdin.read(1) == 'v':
+                                echo = not echo
 
-                        # find control characters and strip them.
-                        controls = control.findall(line)
-                        line = re.sub(control, '', line)
+                        # Handle output from the with block process.
+                        if in_pipe in rlist:
+                            # If we arrive here it means that in_pipe was
+                            # ready for reading : it should never happen that
+                            # line is false-ish
+                            line = in_pipe.readline()
+                            if not line:
+                                break  # EOF
 
-                        # Echo to stdout if requested or forced
-                        if echo or force_echo:
-                            sys.stdout.write(line)
+                            # find control characters and strip them.
+                            controls = control.findall(line)
+                            line = re.sub(control, '', line)
 
-                        # Stripped output to log file.
-                        log_file.write(_strip(line))
-                        log_file.flush()
+                            # Echo to stdout if requested or forced
+                            if echo or force_echo:
+                                sys.stdout.write(line)
 
-                        if xon in controls:
-                            force_echo = True
-                        if xoff in controls:
-                            force_echo = False
+                            # Stripped output to log file.
+                            log_file.write(_strip(line))
+                            log_file.flush()
+
+                            if xon in controls:
+                                force_echo = True
+                            if xoff in controls:
+                                force_echo = False
+
+        except:
+            tty.error("Exception occurred in writer daemon!")
+            traceback.print_exc()
+
+        # send echo value back to the parent so it can be preserved.
+        self.child.send(echo)

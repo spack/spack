@@ -550,8 +550,8 @@ def fork(pkg, function, dirty=False):
 
         try:
             setup_package(pkg, dirty=dirty)
-            function()
-            child_pipe.send(None)
+            return_value = function()
+            child_pipe.send(return_value)
         except StopIteration as e:
             # StopIteration is used to stop installations
             # before the final stage, mainly for debug purposes
@@ -598,11 +598,12 @@ def fork(pkg, function, dirty=False):
         if input_stream is not None:
             input_stream.close()
 
-    child_exc = parent_pipe.recv()
+    child_result = parent_pipe.recv()
     p.join()
 
-    if child_exc is not None:
-        raise child_exc
+    if isinstance(child_result, ChildError):
+        raise child_result
+    return child_result
 
 
 def get_package_context(traceback):

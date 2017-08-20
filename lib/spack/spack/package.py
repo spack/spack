@@ -542,6 +542,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: Defaults to the empty string.
     license_url = ''
 
+    # Verbosity level, preserved across installs.
+    _verbose = None
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -1275,8 +1278,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Then install the package itself.
         def build_process():
-            """Forked for each build. Has its own process and python
-               module space set up by build_environment.fork()."""
+            """This implements the process forked for each build.
+
+            Has its own process and python module space set up by
+            build_environment.fork().
+
+            This function's return value is returned to the parent process.
+            """
 
             start_time = time.time()
             if not fake:
@@ -1288,6 +1296,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             tty.msg(
                 'Building {0} [{1}]'.format(self.name, self.build_system_class)
             )
+
+            # get verbosity from do_install() parameter or saved value
+            echo = verbose
+            if PackageBase._verbose is not None:
+                echo = PackageBase._verbose
 
             self.stage.keep = keep_stage
             with self._stage_and_write_lock():
@@ -1314,10 +1327,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
                     # Spawn a daemon that reads from a pipe and redirects
                     # everything to log_path
-                    with log_output(log_path,
-                                    echo=verbose,
-                                    debug=True) as logger:
-
+                    with log_output(log_path, echo, True) as logger:
                         for phase_name, phase_attr in zip(
                                 self.phases, self._InstallPhase_phases):
 
@@ -1328,6 +1338,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                             phase = getattr(self, phase_attr)
                             phase(self.spec, self.prefix)
 
+                    echo = logger.echo
                     self.log()
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self.spec)
@@ -1342,13 +1353,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                      _hms(self._total_time)))
             print_pkg(self.prefix)
 
+            # preserve verbosity across runs
+            return echo
+
         try:
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):
                 spack.store.layout.create_install_directory(self.spec)
 
             # Fork a child to do the actual installation
-            spack.build_environment.fork(self, build_process, dirty=dirty)
+            # we preserve verbosity settings across installs.
+            PackageBase._verbose = spack.build_environment.fork(
+                self, build_process, dirty=dirty)
 
             # If we installed then we should keep the prefix
             keep_prefix = self.last_phase is None or keep_prefix
