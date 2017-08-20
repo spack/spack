@@ -157,7 +157,6 @@ class IntelParallelStudio(IntelPackage):
     @property
     def blas_libs(self):
         spec = self.spec
-        prefix = self.prefix
         shared = '+shared' in spec
 
         if '+ilp64' in spec:
@@ -452,7 +451,7 @@ class IntelParallelStudio(IntelPackage):
         if '+mkl' in self.spec:
             mkl_root = self.intel_prefix.mkl.lib.intel64  # noqa
 
-            spack_env.set('MKLROOT', mkl_root)
+            spack_env.set('MKLROOT', self.prefix)
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_root)
 
     def setup_dependent_package(self, module, dep_spec):
