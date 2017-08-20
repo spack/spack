@@ -148,6 +148,13 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+vtune',     when='@composer.0:composer.9999')
 
     @property
+    def intel_prefix(self):
+        if self.version[0] == "composer" and self.version[1] == 2015:
+            return self.prefix
+        else:
+            return self.prefix.compilers_and_libraries.linux
+
+    @property
     def blas_libs(self):
         spec = self.spec
         prefix = self.prefix
@@ -167,7 +174,7 @@ class IntelParallelStudio(IntelPackage):
                 mkl_threading = ['libmkl_intel_thread']
                 omp_threading = ['libiomp5']
 
-                omp_root = prefix.compilers_and_libraries.linux.lib.intel64
+                omp_root = self.intel_prefix.lib.intel64
                 omp_libs = find_libraries(
                     omp_threading, root=omp_root, shared=shared)
             elif '%gcc' in spec:
@@ -180,7 +187,7 @@ class IntelParallelStudio(IntelPackage):
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
-        mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        mkl_root = self.intel_prefix.mkl.lib.intel64
 
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
@@ -220,7 +227,7 @@ class IntelParallelStudio(IntelPackage):
             raise InstallError('No MPI found for scalapack')
 
         integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
-        mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        mkl_root = self.intel_prefix.mkl.lib.intel64
         shared = True if '+shared' in self.spec else False
 
         libs = find_libraries(
@@ -232,7 +239,10 @@ class IntelParallelStudio(IntelPackage):
 
     @property
     def mpi_libs(self):
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.lib64
+        if self.prefx == self.intel_prefix:  # composer 2015
+            mpi_root = self.intel_prefix.impi_latest.intel64.lib
+        else:
+            mpi_root = self.intel_prefix.mpi.lib64
         query_parameters = self.spec.last_query.extra_parameters
         libraries = ['libmpifort', 'libmpi']
 
@@ -247,7 +257,10 @@ class IntelParallelStudio(IntelPackage):
     def mpi_headers(self):
         # recurse from self.prefix will find too many things for all the
         # supported sub-architectures like 'mic'
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
+        if self.prefix == self.intel_prefix:  # composer 2015
+            mpi_root = self.intel_prefix.impi_latest.include64
+        else:
+            mpi_root = self.intel_prefix.mpi.include64
         return find_headers('mpi', root=mpi_root, recurse=False)
 
     @property
@@ -437,9 +450,9 @@ class IntelParallelStudio(IntelPackage):
 
         # set up MKLROOT for everyone using MKL package
         if '+mkl' in self.spec:
-            mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64  # noqa
+            mkl_root = self.intel_prefix.mkl.lib.intel64  # noqa
 
-            spack_env.set('MKLROOT', self.prefix)
+            spack_env.set('MKLROOT', mkl_root)
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_root)
 
     def setup_dependent_package(self, module, dep_spec):
@@ -456,7 +469,10 @@ class IntelParallelStudio(IntelPackage):
             # and friends are set to point to the Intel compilers, but in
             # practice, mpicc fails to compile some applications while
             # mpiicc works.
-            bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
+            if self.prefix == self.intel_prefix:  # composer 2015
+                bindir = self.intel_prefix.impi_latest.intel64.bin
+            else:
+                bindir = self.intel_prefix.mpi.intel64.bin
 
             if self.compiler.name == 'intel':
                 self.spec.mpicc  = bindir.mpiicc
