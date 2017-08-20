@@ -68,10 +68,18 @@ class Sundials(Package):
             return 'ON' if varstr in self.spec else 'OFF'
 
         cmake_args = std_cmake_args[:]
+
+        fortran_flag = '{0}'.format(self.compiler.pic_flag)
+        if spec.satisfies('%clang') and (sys.platform == 'darwin'):
+            libgfortran = os.path.dirname(os.popen(
+                '%s --print-file-name libgfortran.a' %
+                self.spec['mpi'].mpif77).read())
+            fortran_flag += ' -L%s/ -lgfortran' % libgfortran
+
         cmake_args.extend([
             '-DBUILD_SHARED_LIBS=ON',
             '-DCMAKE_C_FLAGS={0}'.format(self.compiler.pic_flag),
-            '-DCMAKE_Fortran_FLAGS={0}'.format(self.compiler.pic_flag),
+            '-DCMAKE_Fortran_FLAGS={0}'.format(fortran_flag),
             '-DEXAMPLES_ENABLE=ON',
             '-DEXAMPLES_INSTALL=ON',
             '-DFCMIX_ENABLE=ON',
