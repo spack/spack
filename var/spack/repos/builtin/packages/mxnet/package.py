@@ -32,30 +32,31 @@ class Mxnet(MakefilePackage):
     homepage = "http://mxnet.io"
     url      = "https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz"
 
-    version('0.10.0.post2',  '7819d511cf4a6efad681e6662fa966e4')
-    version('0.10.0.post1',  '16d540f407cd22285555b3ab22040032',
-       	    url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.post1.tar.gz")
-    version('0.10.0', '2d0c83c33eda729932d620cca3078826',
-       	    url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.tar.gz")
+    version('0.10.0.post2',  '7819d511cf4a6efad681e6662fa966e4',
+            url="https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz")
+    # version('0.10.0.post1',  '16d540f407cd22285555b3ab22040032',
+    #    	    url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.post1.tar.gz")
+    # version('0.10.0', '2d0c83c33eda729932d620cca3078826',
+    #    	    url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.tar.gz")
 
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencv', default=True, description='Enable OpenCV support')
 
-    depends_on('dmlc-core')
-    depends_on('mshadow')
-    depends_on('ps-lite')
-    depends_on('nnvm')
+    depends_on('dmlc-core@a6c5701')
+    depends_on('mshadow@c037b06')
+    depends_on('ps-lite@acdb698')
+    depends_on('nnvm@b279286')
     depends_on('openblas')
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn', when='+cuda')
     depends_on('cub', when='+cuda')
-    depends_on('opencv+imgproc+highgui+jpeg+png+tiff~eigen~ipp@3.0:', when='+opencv')
+    depends_on('opencv+core+imgproc+highgui+jpeg+png+tiff~eigen~ipp@3.0:', when='+opencv')
 
     # Lock version for the stable release 0.10.0
-    depends_on('dmlc-core@a6c5701', when='@0.10.0')
-    depends_on('mshadow@c037b06', when='@0.10.0')
-    depends_on('ps-lite@acdb698', when='@0.10.0')
-    depends_on('nnvm@b279286', when='@0.10.0')
+    # depends_on('dmlc-core@a6c5701', when='@0.10.0')
+    # depends_on('mshadow@c037b06', when='@0.10.0')
+    # depends_on('ps-lite@acdb698', when='@0.10.0')
+    # depends_on('nnvm@b279286', when='@0.10.0')
 
     patch('makefile.patch', when='@0.10:0.11')
 

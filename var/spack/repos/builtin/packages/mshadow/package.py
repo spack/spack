@@ -30,6 +30,7 @@ class Mshadow(Package):
     in C++/CUDA."""
 
     homepage = "https://github.com/dmlc/mshadow"
+    url      = "https://github.com/dmlc/mshadow/archive/v1.1.tar.gz"
 
     version('master', git='https://github.com/dmlc/mshadow.git', branch='master')
     version('c037b06', git='https://github.com/dmlc/mshadow.git',
