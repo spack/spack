@@ -15,6 +15,9 @@ check_dependencies ${coverage} git hg svn
 # Allows script to be run from anywhere
 cd "$SPACK_ROOT"
 
+# If there are no changes in core exit early
+share/spack/qa/changes_in_core.py || exit 0
+
 # Make sure we have a spec to build.
 if [ -z "$SPEC" ]; then
     echo "Error: run-build-tests requires the $SPEC to build to be set."
