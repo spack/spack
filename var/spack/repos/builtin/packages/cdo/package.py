@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Cdo(Package):
+class Cdo(AutotoolsPackage):
     """CDO is a collection of command line Operators to manipulate and analyse
        Climate and NWP model Data.
     """
@@ -60,62 +60,59 @@ class Cdo(Package):
     depends_on('fftw', when='+fftw')
     depends_on('magics', when='+magics')
 
-    def install(self, spec, prefix):
-        config_args = ["--prefix=" + prefix,
-                       "--enable-shared",
-                       "--enable-static"]
+    def configure_args(self):
+        config_args = ['--enable-shared', '--enable-static']
 
-        if '+szip' in spec:
-            config_args.append('--with-szlib=' + spec['szip'].prefix)
+        if '+szip' in self.spec:
+            config_args.append('--with-szlib=' + self.spec['szip'].prefix)
         else:
             config_args.append('--without-szlib')
 
-        if '+hdf5' in spec:
-            config_args.append('--with-hdf5=' + spec['hdf5'].prefix)
+        if '+hdf5' in self.spec:
+            config_args.append('--with-hdf5=' + self.spec['hdf5'].prefix)
         else:
             config_args.append('--without-hdf5')
 
-        if '+netcdf' in spec:
-            config_args.append('--with-netcdf=' + spec['netcdf'].prefix)
+        if '+netcdf' in self.spec:
+            config_args.append('--with-netcdf=' + self.spec['netcdf'].prefix)
         else:
             config_args.append('--without-netcdf')
 
-        if '+udunits2' in spec:
-            config_args.append('--with-udunits2=' + spec['udunits2'].prefix)
+        if '+udunits2' in self.spec:
+            config_args.append('--with-udunits2=' +
+                               self.spec['udunits2'].prefix)
         else:
             config_args.append('--without-udunits2')
 
-        if '+grib' in spec:
-            config_args.append('--with-grib_api=' + spec['grib-api'].prefix)
+        if '+grib' in self.spec:
+            config_args.append('--with-grib_api=' +
+                               self.spec['grib-api'].prefix)
         else:
             config_args.append('--without-grib_api')
 
-        if '+libxml2' in spec:
-            config_args.append('--with-libxml2=' + spec['libxml2'].prefix)
+        if '+libxml2' in self.spec:
+            config_args.append('--with-libxml2=' + self.spec['libxml2'].prefix)
         else:
             config_args.append('--without-libxml2')
 
-        if '+proj' in spec:
-            config_args.append('--with-proj=' + spec['proj'].prefix)
+        if '+proj' in self.spec:
+            config_args.append('--with-proj=' + self.spec['proj'].prefix)
         else:
             config_args.append('--without-proj')
 
-        if '+curl' in spec:
-            config_args.append('--with-curl=' + spec['curl'].prefix)
+        if '+curl' in self.spec:
+            config_args.append('--with-curl=' + self.spec['curl'].prefix)
         else:
             config_args.append('--without-curl')
 
-        if '+fftw' in spec:
+        if '+fftw' in self.spec:
             config_args.append('--with-fftw3')
         else:
             config_args.append('--without-fftw3')
 
-        if '+magics' in spec:
-            config_args.append('--with-magics=' + spec['magics'].prefix)
+        if '+magics' in self.spec:
+            config_args.append('--with-magics=' + self.spec['magics'].prefix)
         else:
             config_args.append('--without-magics')
 
-        configure(*config_args)
-
-        make()
-        make('install')
+        return config_args
