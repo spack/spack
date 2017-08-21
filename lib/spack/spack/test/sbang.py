@@ -155,9 +155,9 @@ def test_shebang_handling(script_dir):
         assert f.readline() == last_line
 
     assert filecmp.cmp(script_dir.lua_textbang,
-                        os.path.join(script_dir.tempdir, 'lua_in_text') )
+                       os.path.join(script_dir.tempdir, 'lua_in_text'))
     assert filecmp.cmp(script_dir.node_textbang,
-                        os.path.join(script_dir.tempdir, 'node_in_text') )
+                       os.path.join(script_dir.tempdir, 'node_in_text'))
 
     # Make sure this is untouched
     with open(script_dir.has_sbang, 'r') as f:
