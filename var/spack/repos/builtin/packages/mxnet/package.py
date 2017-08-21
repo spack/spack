@@ -68,26 +68,24 @@ class Mxnet(MakefilePackage):
             'PS_PATH=%s' % spec['ps-lite'].prefix,
             'NNVM_PATH=%s' % spec['nnvm'].prefix,
             'USE_OPENMP=%s' % ('1' if '+openmp' in spec else '0'),
+            'USE_CUDA=%s' % ('1' if '+cuda' in spec else '0'),
+            'USE_CUDNN=%s' % ('1' if '+cuda' in spec else '0'),
+            'USE_OPENCV=%s' % ('1' if '+opencv' in spec else '0'),
         ]
 
         if '+opencv' in spec:
             filter_file('$(shell pkg-config --cflags opencv)',
                         '-I%s' % spec['opencv'].prefix.include,
                         'Makefile', string=True)
-            filter_file('$(shell pkg-config --libs opencv)',
+            filter_file('$(filter-out -lopencv_ts, $(shell pkg-config --libs opencv))',
                         '-lopencv_core -lopencv_imgproc -lopencv_imgcodecs',
                         'Makefile', string=True)
-            args.append('USE_OPENCV=1')
-        else:
-            args.append('USE_OPENCV=0')
 
         # TODO: Add more BLAS support
         args.append('USE_BLAS=openblas')
 
         if '+cuda' in spec:
-            args.extend(['USE_CUDA=1',
-                         'USE_CUDNN=1',
-                         'USE_CUDA_PATH=%s' % spec['cuda'].prefix,
+            args.extend(['USE_CUDA_PATH=%s' % spec['cuda'].prefix,
                          'CUDNN_PATH=%s' % spec['cudnn'].prefix])
 
         make(*args)
