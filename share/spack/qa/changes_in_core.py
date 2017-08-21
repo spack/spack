@@ -22,8 +22,8 @@ core_path = os.path.join('lib', 'spack')
 changes_in_core = any(core_path in x for x in files)
 
 # Exit early because polling the repo may be slow
-# if changes_in_core:
-#    sys.exit(0)
+if changes_in_core:
+    sys.exit(0)
 
 # If we changed any of the packages that are under build tests
 # we consider it a change in core
