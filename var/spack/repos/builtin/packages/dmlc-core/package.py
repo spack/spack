@@ -47,5 +47,5 @@ class DmlcCore(CMakePackage):
         filter_file('export MPICXX = mpicxx', '',
                     'make/config.mk', string=True)
         filter_file(r'^USE_OPENMP\s*=.*',
-                    'USE_OPENMP = %s' % ('1' if '+openmp' in self.spec else '0'),
+                    'USE_OPENMP=%s' % ('1' if '+openmp' in self.spec else '0'),
                     'make/config.mk')

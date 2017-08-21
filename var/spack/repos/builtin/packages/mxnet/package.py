@@ -77,7 +77,8 @@ class Mxnet(MakefilePackage):
             filter_file('$(shell pkg-config --cflags opencv)',
                         '-I%s' % spec['opencv'].prefix.include,
                         'Makefile', string=True)
-            filter_file('$(filter-out -lopencv_ts, $(shell pkg-config --libs opencv))',
+            filter_file('$(filter-out -lopencv_ts, '\
+                        '$(shell pkg-config --libs opencv))',
                         '-lopencv_core -lopencv_imgproc -lopencv_imgcodecs',
                         'Makefile', string=True)
 
