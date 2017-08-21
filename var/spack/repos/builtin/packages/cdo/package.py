@@ -30,14 +30,14 @@ class Cdo(Package):
     Climate and NWP model Data.
     """
 
-    homepage = "https://code.zmaw.de/projects/cdo"
-    url      = "https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz"
-    list_url = "https://code.zmaw.de/projects/cdo/files"
+    homepage = "https://code.mpimet.mpg.de/projects/cdo/"
+    url      = "https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz"
+    list_url = "https://code.mpimet.mpg.de/projects/cdo/files"
 
     version('1.8.2', '6a2e2f99b7c67ee9a512c40a8d4a7121',
-            url='https://code.zmaw.de/attachments/download/14686/cdo-1.8.2.tar.gz')
+            url='https://code.mpimet.mpg.de/attachments/download/14686/cdo-1.8.2.tar.gz')
     version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31',
-            url='https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz')
+            url='https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz')
 
     variant('szip', default=True, description='Enable szip compression for GRIB1')
     variant('hdf5', default=False, description='Enable HDF5 support')
