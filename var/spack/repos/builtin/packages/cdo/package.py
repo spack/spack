@@ -48,6 +48,7 @@ class Cdo(AutotoolsPackage):
     variant('curl', default=True, description='Enable curl support')
     variant('fftw', default=True, description='Enable support for fftw3')
     variant('magics', default=True, description='Enable Magics library support')
+    variant('openmp', default=True, description='Enable OpenMP support')
 
     depends_on('szip', when='+szip')
     depends_on('netcdf', when='+netcdf')
@@ -114,5 +115,10 @@ class Cdo(AutotoolsPackage):
             config_args.append('--with-magics=' + self.spec['magics'].prefix)
         else:
             config_args.append('--without-magics')
+
+        if '+openmp' in self.spec:
+            config_args.append('--enable-openmp')
+        else:
+            config_args.append('--disable-openmp')
 
         return config_args
