@@ -37,6 +37,8 @@ class DmlcCore(CMakePackage):
     version('20170508', git='https://github.com/dmlc/dmlc-core.git',
     commit='a6c5701219e635fea808d264aefc5b03c3aec314')
 
+    variant('openmp', default=True, description='Enable OpenMP support')
+
     patch('makefile.patch')
 
     def patch(self):
@@ -44,5 +46,4 @@ class DmlcCore(CMakePackage):
         filter_file('export CXX = g++', '', 'make/config.mk', string=True)
         filter_file('export MPICXX = mpicxx', '',
                     'make/config.mk', string=True)
-        filter_file('USE_OPENMP = 0', 'USE_OPENMP = 1',
-                    'make/config.mk', string=True)
+        filter_file(r'^USE_OPENMP\s*=.*', ('1' if '+openmp' in self.spec else '0'))

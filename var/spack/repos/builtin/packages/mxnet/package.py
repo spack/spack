@@ -41,8 +41,10 @@ class Mxnet(MakefilePackage):
 
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencv', default=True, description='Enable OpenCV support')
+    variant('openmp', default=True, description='Enable OpenMP support')
 
     depends_on('dmlc-core@20170508')
+    depends_on('dmlc-core+openmp', when='+openmp')
     depends_on('mshadow@20170721')
     depends_on('ps-lite@20170328')
     depends_on('nnvm@20170418')
@@ -65,6 +67,7 @@ class Mxnet(MakefilePackage):
             'MSHADOW_PATH=%s' % spec['mshadow'].prefix,
             'PS_PATH=%s' % spec['ps-lite'].prefix,
             'NNVM_PATH=%s' % spec['nnvm'].prefix,
+            'USE_OPENMP=%s' % ('1' if '+openmp' in spec else '0'),
         ]
 
         if '+opencv' in spec:
