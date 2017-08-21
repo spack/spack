@@ -33,9 +33,9 @@ class Mshadow(Package):
     url      = "https://github.com/dmlc/mshadow/archive/v1.1.tar.gz"
 
     version('master', git='https://github.com/dmlc/mshadow.git', branch='master')
-    version('20170516', git='https://github.com/dmlc/mshadow.git',
-            commit='c037b06ddd810d39322cd056650f8b1f4763dd9d')
+    version('20170721', git='https://github.com/dmlc/mshadow.git',
+            commit='20b54f068c1035f0319fa5e5bbfb129c450a5256')
 
     def install(self, spec, prefix):
-        install_tree('mshadow', join_path(prefix.include, 'mshadow'))
-        install_tree('make', join_path(prefix, 'make'))
+        install_tree('mshadow', prefix.include.mshadow)
+        install_tree('make', prefix.make)
