@@ -45,9 +45,9 @@ class Cdo(AutotoolsPackage):
     variant('grib', default=True, description='Enable GRIB_API support')
     variant('libxml2', default=True, description='Enable libxml2 support')
     variant('proj', default=True, description='Enable PROJ library for cartographic projections')
-    variant('curl', default=True, description='Enable curl support')
+    variant('curl', default=False, description='Enable curl support')
     variant('fftw', default=True, description='Enable support for fftw3')
-    variant('magics', default=True, description='Enable Magics library support')
+    variant('magics', default=False, description='Enable Magics library support')
     variant('openmp', default=True, description='Enable OpenMP support')
 
     depends_on('szip', when='+szip')
