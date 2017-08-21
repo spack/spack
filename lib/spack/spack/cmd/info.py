@@ -156,19 +156,19 @@ def print_text_info(pkg):
     color.cprint('')
     color.cprint(section_title('Description:'))
     if pkg.__doc__:
-        print(pkg.format_doc(indent=4))
+        color.cprint(pkg.format_doc(indent=4))
     else:
-        print("    None")
+        color.cprint("    None")
 
     color.cprint(section_title('Homepage: ') + pkg.homepage)
 
-    print()
-    print("Tags: ")
+    color.cprint('')
+    color.cprint(section_title("Tags: "))
     if hasattr(pkg, 'tags'):
         tags = sorted(pkg.tags)
         colify(tags, indent=4)
     else:
-        print("    None")
+        color.cprint("    None")
 
     color.cprint('')
     color.cprint(section_title('Preferred version:  '))
@@ -223,7 +223,7 @@ def print_text_info(pkg):
         if deps:
             colify(deps, indent=4)
         else:
-            print('    None')
+            color.cprint('    None')
 
     color.cprint('')
     color.cprint(section_title('Virtual Packages: '))
@@ -241,9 +241,9 @@ def print_text_info(pkg):
             print(line)
 
     else:
-        print("    None")
+        color.cprint("    None")
 
-    print()
+    color.cprint('')
 
 
 def info(parser, args):

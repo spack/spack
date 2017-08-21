@@ -31,6 +31,7 @@ from spack.main import SpackCommand
 
 info = SpackCommand('info')
 
+
 @pytest.fixture(scope='module')
 def parser():
     """Returns the parser for the module command"""
@@ -51,7 +52,7 @@ def mock_print(monkeypatch, info_lines):
     def _print(*args):
         info_lines.extend(args)
 
-    monkeypatch.setattr(spack.cmd.info, 'print', _print, raising=False)
+    monkeypatch.setattr(spack.cmd.info.color, 'cprint', _print, raising=False)
 
 
 @pytest.mark.parametrize('pkg', [
