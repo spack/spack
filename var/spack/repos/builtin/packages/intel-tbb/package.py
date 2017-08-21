@@ -26,7 +26,7 @@ from spack import *
 import glob
 
 
-class Tbb(Package):
+class IntelTbb(Package):
     """Widely used C++ template library for task parallelism.
     Intel Threading Building Blocks (Intel TBB) lets you easily write parallel
     C++ programs that take full advantage of multicore performance, that are
@@ -46,6 +46,8 @@ class Tbb(Package):
             url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160413oss_src.tgz')
     version('4.4.3', '80707e277f69d9b20eeebdd7a5f5331137868ce1',
             url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160128oss_src_0.tgz')
+
+    provides('tbb')
 
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:

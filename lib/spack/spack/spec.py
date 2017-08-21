@@ -165,21 +165,20 @@ __all__ = [
     'NoSuchHashError',
     'RedundantSpecError']
 
-# Valid pattern for an identifier in Spack
+#: Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
 
-# Convenient names for color formats so that other things can use them
-compiler_color = '@g'
-version_color = '@c'
-architecture_color = '@m'
-enabled_variant_color = '@B'
-disabled_variant_color = '@r'
-dependency_color = '@.'
-hash_color = '@K'
+compiler_color = '@g'          #: color for highlighting compilers
+version_color = '@c'           #: color for highlighting versions
+architecture_color = '@m'      #: color for highlighting architectures
+enabled_variant_color = '@B'   #: color for highlighting enabled variants
+disabled_variant_color = '@r'  #: color for highlighting disabled varaints
+dependency_color = '@.'        #: color for highlighting dependencies
+hash_color = '@K'              #: color for highlighting package hashes
 
-"""This map determines the coloring of specs when using color output.
-   We make the fields different colors to enhance readability.
-   See spack.color for descriptions of the color codes. """
+#: This map determines the coloring of specs when using color output.
+#: We make the fields different colors to enhance readability.
+#: See spack.color for descriptions of the color codes.
 color_formats = {'%': compiler_color,
                  '@': version_color,
                  '=': architecture_color,
@@ -188,17 +187,19 @@ color_formats = {'%': compiler_color,
                  '^': dependency_color,
                  '#': hash_color}
 
-"""Regex used for splitting by spec field separators."""
-_separators = '[%s]' % ''.join(color_formats.keys())
+#: Regex used for splitting by spec field separators.
+#: These need to be escaped to avoid metacharacters in
+#: ``color_formats.keys()``.
+_separators = '[\\%s]' % '\\'.join(color_formats.keys())
 
-"""Versionlist constant so we don't have to build a list
-   every time we call str()"""
+#: Versionlist constant so we don't have to build a list
+#: every time we call str()
 _any_version = VersionList([':'])
 
-"""Types of dependencies that Spack understands."""
+#: Types of dependencies that Spack understands.
 alldeps = ('build', 'link', 'run', 'test')
 
-"""Max integer helps avoid passing too large a value to cyaml."""
+#: Max integer helps avoid passing too large a value to cyaml.
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
 
@@ -1797,9 +1798,9 @@ class Spec(object):
         for x in self.traverse():
             for conflict_spec, when_list in x.package.conflicts.items():
                 if x.satisfies(conflict_spec):
-                    for when_spec in when_list:
+                    for when_spec, msg in when_list:
                         if x.satisfies(when_spec):
-                            matches.append((x, conflict_spec, when_spec))
+                            matches.append((x, conflict_spec, when_spec, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
 
@@ -1985,10 +1986,19 @@ class Spec(object):
             try:
                 changed |= spec_deps[dep.name].constrain(dep)
             except UnsatisfiableSpecError as e:
-                e.message = "Invalid spec: '%s'. "
-                e.message += "Package %s requires %s %s, but spec asked for %s"
-                e.message %= (spec_deps[dep.name], dep.name,
-                              e.constraint_type, e.required, e.provided)
+                fmt = 'An unsatisfiable {0}'.format(e.constraint_type)
+                fmt += ' constraint has been detected for spec:'
+                fmt += '\n\n{0}\n\n'.format(spec_deps[dep.name].tree(indent=4))
+                fmt += 'while trying to concretize the partial spec:'
+                fmt += '\n\n{0}\n\n'.format(self.tree(indent=4))
+                fmt += '{0} requires {1} {2} {3}, but spec asked for {4}'
+                e.message = fmt.format(
+                    self.name,
+                    dep.name,
+                    e.constraint_type,
+                    e.required,
+                    e.provided
+                )
                 raise e
 
         # Add merged spec to my deps and recurse
@@ -3438,8 +3448,24 @@ class ConflictsInSpecError(SpecError, RuntimeError):
         message = 'Conflicts in concretized spec "{0}"\n'.format(
             spec.short_spec
         )
-        long_message = 'List of matching conflicts:\n\n'
-        match_fmt = '{0}. "{1}" conflicts with "{2}" in spec "{3}"\n'
-        for idx, (s, c, w) in enumerate(matches):
-            long_message += match_fmt.format(idx + 1, c, w, s)
+
+        visited = set()
+
+        long_message = ''
+
+        match_fmt_default = '{0}. "{1}" conflicts with "{2}"\n'
+        match_fmt_custom = '{0}. "{1}" conflicts with "{2}" [{3}]\n'
+
+        for idx, (s, c, w, msg) in enumerate(matches):
+
+            if s not in visited:
+                visited.add(s)
+                long_message += 'List of matching conflicts for spec:\n\n'
+                long_message += s.tree(indent=4) + '\n'
+
+            if msg is None:
+                long_message += match_fmt_default.format(idx + 1, c, w)
+            else:
+                long_message += match_fmt_custom.format(idx + 1, c, w, msg)
+
         super(ConflictsInSpecError, self).__init__(message, long_message)
