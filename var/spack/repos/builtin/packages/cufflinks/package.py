@@ -25,21 +25,22 @@
 from spack import *
 
 
-class Muscle(MakefilePackage):
-    """MUSCLE is one of the best-performing multiple alignment programs
-       according to published benchmark tests, with accuracy and speed
-       that are consistently better than CLUSTALW."""
+class Cufflinks(Package):
+    """Cufflinks assembles transcripts, estimates their abundances, and tests
+       for differential expression and regulation in RNA-Seq samples."""
 
-    homepage = "http://drive5.com/muscle/"
-    url      = "http://www.drive5.com/muscle/muscle_src_3.8.1551.tar.gz"
+    homepage = "http://cole-trapnell-lab.github.io/cufflinks"
+    url      = "http://cole-trapnell-lab.github.io/cufflinks/assets/downloads/cufflinks-2.2.1.Linux_x86_64.tar.gz"
 
-    version('3.8.1551', '1b7c9661f275a82d3cf708f923736bf8')
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('-static', '')
-        makefile.filter('-funroll-loops', '')
+    version('2.2.1', '7e693d182dcfda8aeef8523219ea9ea7')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('muscle', prefix.bin)
+        install('cuffcompare', prefix.bin)
+        install('cuffdiff', prefix.bin)
+        install('cufflinks', prefix.bin)
+        install('cuffmerge', prefix.bin)
+        install('cuffnorm', prefix.bin)
+        install('cuffquant', prefix.bin)
+        install('gffread', prefix.bin)
+        install('gtf_to_sam', prefix.bin)

@@ -25,21 +25,20 @@
 from spack import *
 
 
-class Muscle(MakefilePackage):
-    """MUSCLE is one of the best-performing multiple alignment programs
-       according to published benchmark tests, with accuracy and speed
-       that are consistently better than CLUSTALW."""
+class Corset(Package):
+    """Corset is a command-line software program to go from a de novo
+       transcriptome assembly to gene-level counts."""
 
-    homepage = "http://drive5.com/muscle/"
-    url      = "http://www.drive5.com/muscle/muscle_src_3.8.1551.tar.gz"
+    homepage = "https://github.com/Oshlack/Corset/wiki"
+    url      = "https://github.com/Oshlack/Corset/releases/download/version-1.06/corset-1.06-linux64.tar.gz"
 
-    version('3.8.1551', '1b7c9661f275a82d3cf708f923736bf8')
+    version('1.06', '0a6d0bb1f2d1bdbcb8b47656a7f12f23')
 
-    def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('-static', '')
-        makefile.filter('-funroll-loops', '')
+    def url_for_version(self, version):
+        url = 'https://github.com/Oshlack/Corset/releases/download/version-{0}/corset-{0}-linux64.tar.gz'
+        return url.format(version)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('muscle', prefix.bin)
+        install('corset', prefix.bin)
+        install('corset_fasta_ID_changer', prefix.bin)
