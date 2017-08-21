@@ -153,6 +153,7 @@ script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
   # Require coverage only if there have been changes in core
+  - . share/spack/setup-env.sh
   - share/spack/qa/changes_in_core.py && codecov --env PY_VERSION
 
 #=============================================================================
