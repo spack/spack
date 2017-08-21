@@ -24,6 +24,7 @@
 ##############################################################################
 import re
 import os
+import ssl
 import sys
 import traceback
 
@@ -105,6 +106,12 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         root = re.sub('/index.html$', '', root)
 
     try:
+        # Disable certificate verification if required.
+        # https://www.python.org/dev/peps/pep-0476
+        context = ssl._create_unverified_context() \
+            if spack.insecure and hasattr(ssl, '_create_unverified_context') \
+            else None
+
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
         # It would be nice to do this with the HTTP Accept header to avoid
@@ -112,7 +119,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         # if you ask for a tarball with Accept: text/html.
         req = Request(url)
         req.get_method = lambda: "HEAD"
-        resp = urlopen(req, timeout=TIMEOUT)
+        resp = urlopen(req, timeout=TIMEOUT, context=context)
 
         if "Content-type" not in resp.headers:
             tty.debug("ignoring page " + url)
@@ -125,7 +132,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
         # Do the real GET request when we know it's just HTML.
         req.get_method = lambda: "GET"
-        response = urlopen(req, timeout=TIMEOUT)
+        response = urlopen(req, timeout=TIMEOUT, context=context)
         response_url = response.geturl()
 
         # Read the page and and stick it in the map we'll return
@@ -176,6 +183,13 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
     except URLError as e:
         tty.debug(e)
+
+        if isinstance(e.reason, ssl.SSLError):
+            tty.warn("Spack was unable to fetch url list due to a certificate "
+                     "verification problem. You can try running spack -k, "
+                     "which will not check SSL certificates. Use this at your "
+                     "own risk.")
+
         if raise_on_error:
             raise spack.error.NoNetworkConnectionError(str(e), url)
 
