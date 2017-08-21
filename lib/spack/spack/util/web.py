@@ -109,7 +109,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         # Disable certificate verification if required.
         # https://www.python.org/dev/peps/pep-0476
         context = ssl._create_unverified_context() \
-            if spack.insecure and hasattr(ssl, '_create_unverified_context') \
+            if spack.insecure and sys.version_info >= (2, 7, 9) \
             else None
 
         # Make a HEAD request first to check the content type.  This lets
@@ -119,7 +119,9 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         # if you ask for a tarball with Accept: text/html.
         req = Request(url)
         req.get_method = lambda: "HEAD"
-        resp = urlopen(req, timeout=TIMEOUT, context=context)
+        resp = urlopen(req, timeout=TIMEOUT) \
+            if context is None \
+            else urlopen(req, timeout=TIMEOUT, context=context)
 
         if "Content-type" not in resp.headers:
             tty.debug("ignoring page " + url)
@@ -132,7 +134,9 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
         # Do the real GET request when we know it's just HTML.
         req.get_method = lambda: "GET"
-        response = urlopen(req, timeout=TIMEOUT, context=context)
+        response = urlopen(req, timeout=TIMEOUT) \
+            if context is None \
+            else urlopen(req, timeout=TIMEOUT, context=context)
         response_url = response.geturl()
 
         # Read the page and and stick it in the map we'll return
