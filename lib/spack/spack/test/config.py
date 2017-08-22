@@ -369,3 +369,31 @@ class TestConfig(object):
             'install_tree': 'install_tree_path',
             'build_stage': ['patha', 'pathb']
         }
+
+
+def test_keys_are_ordered():
+
+    expected_order = (
+        'bin',
+        'man',
+        'share/man',
+        'share/aclocal',
+        'lib',
+        'lib64',
+        'include',
+        'lib/pkgconfig',
+        'lib64/pkgconfig',
+        ''
+    )
+
+    config_scope = spack.config.ConfigScope(
+        'modules',
+        os.path.join(spack.test_path, 'data', 'config')
+    )
+
+    data = config_scope.get_section('modules')
+
+    prefix_inspections = data['modules']['prefix_inspections']
+
+    for actual, expected in zip(prefix_inspections, expected_order):
+        assert actual == expected
