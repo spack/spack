@@ -14,7 +14,8 @@ from spack.cmd.context import (Context, prepare_repository,
                                _context_create)
 from spack.version import Version
 
-from spack.test.modules import lmod_factory
+from spack.test.modules import lmod_factory  # NOQA: ignore=F401
+
 
 class TestContext(unittest.TestCase):
     def setUp(self):
