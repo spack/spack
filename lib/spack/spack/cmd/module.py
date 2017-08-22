@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -274,6 +274,9 @@ def refresh(module_types, specs, args):
             cls(spec) for spec in specs if spack.repo.exists(spec.name)
         ]  # skip unknown packages.
 
+        # Filter blacklisted packages early
+        writers = [x for x in writers if not x.conf.blacklisted]
+
         # Detect name clashes in module files
         file2writer = collections.defaultdict(list)
         for item in writers:
@@ -292,6 +295,11 @@ def refresh(module_types, specs, args):
             tty.error('Operation aborted')
             raise SystemExit(1)
 
+        if len(writers) == 0:
+            msg = 'Nothing to be done for {0} module files.'
+            tty.msg(msg.format(module_type))
+            continue
+
         # If we arrived here we have at least one writer
         module_type_root = writers[0].layout.dirname()
         # Proceed regenerating module files
@@ -300,7 +308,11 @@ def refresh(module_types, specs, args):
             shutil.rmtree(module_type_root, ignore_errors=False)
         filesystem.mkdirp(module_type_root)
         for x in writers:
-            x.write(overwrite=True)
+            try:
+                x.write(overwrite=True)
+            except Exception as e:
+                msg = 'Could not write module file because of {0}: [{1}]'
+                tty.warn(msg.format(str(e), x.layout.filename))
 
 
 def module(parser, args):
