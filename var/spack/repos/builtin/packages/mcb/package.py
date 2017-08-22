@@ -54,7 +54,7 @@ class Mcb(MakefilePackage):
         targets.append('CXX = %s' % self.spec['mpi'].mpicc)
         targets.append('OPENMPFLAG = %s' % self.compiler.openmp_flag)
         targets.append('MPI_INCLUDE = -I%s' % self.spec['mpi'].prefix.include)
-        targets.append('CXXFLAGS = -O2 -xHost $(CXXDEFINES) $(OPENMPFLAG)')
+        targets.append('CXXFLAGS = -O2 $(CXXDEFINES) $(OPENMPFLAG)')
         return targets
 
     def install(self, spec, prefix):
