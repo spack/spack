@@ -25,8 +25,6 @@
 from spack import *
 
 
-# This isn't really an Autotools package, but it's close enough
-# that this works if we override configure().
 class Aspell6De(AspellDictPackage):
     """German (de) dictionary for aspell."""
 

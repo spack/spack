@@ -33,8 +33,10 @@ from spack.util.executable import which
 #
 # Aspell dictionaries install their bits into their prefix.lib
 # and when activated they'll get symlinked into the appropriate aspell's
-# dict dir (see aspell's {de,}activate methods.
+# dict dir (see aspell's {de,}activate methods).
 #
+# They aren't really an Autotools package, but it's close enough
+# that this works if we override configure().
 class AspellDictPackage(AutotoolsPackage):
     """Specialized class for builing aspell dictionairies."""
 
