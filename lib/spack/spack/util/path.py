@@ -68,8 +68,10 @@ def substitute_config_variables(path):
 
 
 def canonicalize_path(path):
-    """Substitute config vars, expand user home, take abspath."""
+    """Substitute config vars, expand environment vars,
+       expand user home, take abspath."""
     path = substitute_config_variables(path)
+    path = os.path.expandvars(path)
     path = os.path.expanduser(path)
     path = os.path.abspath(path)
     return path

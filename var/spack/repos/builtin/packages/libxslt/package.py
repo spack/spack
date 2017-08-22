@@ -45,6 +45,7 @@ class Libxslt(AutotoolsPackage):
     variant("shared", default=True,
             description="Enable shared libs")
 
+    depends_on("libiconv")
     depends_on("libxml2")
     depends_on("xz")
     depends_on("zlib")

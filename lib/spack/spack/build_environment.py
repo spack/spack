@@ -54,13 +54,11 @@ calls you can make from within the install() function.
 import inspect
 import multiprocessing
 import os
-import errno
 import shutil
 import sys
 import traceback
 from six import iteritems
 
-import llnl.util.lang as lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
@@ -230,7 +228,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     # Install root prefix
     env.set(SPACK_INSTALL, spack.store.root)
 
-    # Stuff in here sanitizes the build environemnt to eliminate
+    # Stuff in here sanitizes the build environment to eliminate
     # anything the user has set that may interfere.
     if not dirty:
         # Remove these vars from the environment during build because they
@@ -522,7 +520,7 @@ def fork(pkg, function, dirty=False):
 
     Args:
 
-        pkg (PackageBase): package whose environemnt we should set up the
+        pkg (PackageBase): package whose environment we should set up the
             forked process for.
         function (callable): argless function to run in the child
             process.
@@ -540,21 +538,30 @@ def fork(pkg, function, dirty=False):
     control over the environment, etc. without affecting other builds
     that might be executed in the same spack call.
 
-    If something goes wrong, the child process is expected to print the
-    error and the parent process will exit with error as well. If things
-    go well, the child exits and the parent carries on.
+    If something goes wrong, the child process catches the error and
+    passes it to the parent wrapped in a ChildError.  The parent is
+    expected to handle (or re-raise) the ChildError.
     """
 
-    def child_execution(child_connection, input_stream):
+    def child_process(child_pipe, input_stream):
+        # We are in the child process. Python sets sys.stdin to
+        # open(os.devnull) to prevent our process and its parent from
+        # simultaneously reading from the original stdin. But, we assume
+        # that the parent process is not going to read from it till we
+        # are done with the child, so we undo Python's precaution.
+        if input_stream is not None:
+            sys.stdin = input_stream
+
         try:
             setup_package(pkg, dirty=dirty)
-            function(input_stream)
-            child_connection.send(None)
+            return_value = function()
+            child_pipe.send(return_value)
         except StopIteration as e:
             # StopIteration is used to stop installations
             # before the final stage, mainly for debug purposes
             tty.msg(e.message)
-            child_connection.send(None)
+            child_pipe.send(None)
+
         except:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
@@ -573,38 +580,34 @@ def fork(pkg, function, dirty=False):
 
             # make a pickleable exception to send to parent.
             msg = "%s: %s" % (str(exc_type.__name__), str(exc))
-
             ce = ChildError(msg, tb_string, build_log, package_context)
-            child_connection.send(ce)
+            child_pipe.send(ce)
 
         finally:
-            child_connection.close()
+            child_pipe.close()
 
-    parent_connection, child_connection = multiprocessing.Pipe()
+    parent_pipe, child_pipe = multiprocessing.Pipe()
+    input_stream = None
     try:
-        # Forward sys.stdin to be able to activate / deactivate
-        # verbosity pressing a key at run-time.  When sys.stdin can't
-        # be duplicated (e.g. running under nohup, which results in an
-        # '[Errno 22] Invalid argument') then just use os.devnull
-        try:
-            input_stream = lang.duplicate_stream(sys.stdin)
-        except OSError as e:
-            if e.errno == errno.EINVAL:
-                tty.debug("Using devnull as input_stream")
-                input_stream = open(os.devnull)
+        # Forward sys.stdin when appropriate, to allow toggling verbosity
+        if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
+            input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+
         p = multiprocessing.Process(
-            target=child_execution,
-            args=(child_connection, input_stream)
-        )
+            target=child_process, args=(child_pipe, input_stream))
         p.start()
+
     finally:
         # Close the input stream in the parent process
-        input_stream.close()
-    child_exc = parent_connection.recv()
+        if input_stream is not None:
+            input_stream.close()
+
+    child_result = parent_pipe.recv()
     p.join()
 
-    if child_exc is not None:
-        raise child_exc
+    if isinstance(child_result, ChildError):
+        raise child_result
+    return child_result
 
 
 def get_package_context(traceback):

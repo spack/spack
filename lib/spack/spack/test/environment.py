@@ -91,7 +91,7 @@ def files_to_be_sourced():
     files = [
         os.path.join(datadir, 'sourceme_first.sh'),
         os.path.join(datadir, 'sourceme_second.sh'),
-        os.path.join(datadir, 'sourceme_parameters.sh intel64'),
+        os.path.join(datadir, 'sourceme_parameters.sh'),
         os.path.join(datadir, 'sourceme_unicode.sh')
     ]
 
@@ -233,7 +233,14 @@ def test_source_files(files_to_be_sourced):
     """Tests the construction of a list of environment modifications that are
     the result of sourcing a file.
     """
-    env = EnvironmentModifications.from_sourcing_files(*files_to_be_sourced)
+    env = EnvironmentModifications()
+    for filename in files_to_be_sourced:
+        if filename.endswith('sourceme_parameters.sh'):
+            env.extend(EnvironmentModifications.from_sourcing_file(
+                filename, 'intel64'))
+        else:
+            env.extend(EnvironmentModifications.from_sourcing_file(filename))
+
     modifications = env.group_by_name()
 
     # This is sensitive to the user's environment; can include
