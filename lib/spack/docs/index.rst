@@ -63,10 +63,10 @@ or refer to the full manual below.
    mirrors
    module_file_support
    repositories
-   command_index
-   package_list
    binary_caches
    contexts
+   command_index
+   package_list
 
 .. toctree::
    :maxdepth: 2

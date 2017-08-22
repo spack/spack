@@ -23,10 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
+import os
 
 import pytest
 
 import spack.cmd.install
+from spack.spec import Spec
 from spack.main import SpackCommand
 
 install = SpackCommand('install')
@@ -86,3 +88,22 @@ def test_install_package_already_installed(
 def test_install_dirty_flag(parser, arguments, expected):
     args = parser.parse_args(arguments)
     assert args.dirty == expected
+
+
+def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
+    """Ensure output printed from pkgs is captured by output redirection."""
+    # we can't use output capture here because it interferes with Spack's
+    # logging. TODO: see whether we can get multiple log_outputs to work
+    # when nested AND in pytest
+    spec = Spec('printing-package').concretized()
+    pkg = spec.package
+    pkg.do_install(verbose=True)
+
+    log_file = os.path.join(spec.prefix, '.spack', 'build.out')
+    with open(log_file) as f:
+        out = f.read()
+
+    # make sure that output from the actual package file appears in the
+    # right place in the build log.
+    assert "BEFORE INSTALL\n==> './configure'" in out
+    assert "'install'\nAFTER INSTALL" in out
