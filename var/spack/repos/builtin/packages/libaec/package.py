@@ -29,14 +29,14 @@ class Libaec(CMakePackage):
     """Libaec provides fast lossless compression of 1 up to 32 bit wide signed
        or unsigned integers (samples). It implements Golomb-Rice compression
        method under the BSD license and includes a free drop-in replacement for
-       the SZIP library."""
+       the SZIP library.
+    """
 
     homepage = 'https://gitlab.dkrz.de/k202009/libaec'
-
-    # We provide per version urls.
-    url = 'https://gitlab.dkrz.de/k202009/libaec/uploads/'
+    url = 'https://gitlab.dkrz.de/k202009/libaec/uploads/631e85bcf877c2dcaca9b2e6d6526339/libaec-1.0.0.tar.gz'
+    list_url = 'https://gitlab.dkrz.de/k202009/libaec/tags'
 
     provides('szip')
 
-    version('1.0.1', 'cdf70e2b8f9153ee644710bb441f9e1e', url=url + '926fe2b181865e38a236ad12bf053cfa/libaec-1.0.1.tar.gz')
-    version('1.0.0', 'a848b4e397ed210313183a5e92592e42', url=url + '631e85bcf877c2dcaca9b2e6d6526339/libaec-1.0.0.tar.gz')
+    version('1.0.1', 'cdf70e2b8f9153ee644710bb441f9e1e')
+    version('1.0.0', 'a848b4e397ed210313183a5e92592e42')
