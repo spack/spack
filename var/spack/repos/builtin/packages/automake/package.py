@@ -36,8 +36,16 @@ class Automake(AutotoolsPackage):
     version('1.11.6', '0286dc30295b62985ca51919202ecfcc')
 
     depends_on('autoconf', type='build')
+    depends_on('perl', type=('build', 'run'))
 
     build_directory = 'spack-build'
+
+    def patch(self):
+        # The full perl shebang might be too long
+        for file in ('aclocal', 'automake'):
+            filter_file('^#!@PERL@ -w',
+                        '#!/usr/bin/env perl',
+                        't/wrap/{0}.in'.format(file))
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
