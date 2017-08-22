@@ -274,31 +274,43 @@ def refresh(module_types, specs, args):
             cls(spec) for spec in specs if spack.repo.exists(spec.name)
         ]  # skip unknown packages.
 
+        # Filter blacklisted packages early
+        writers = [x for x in writers if not x.conf.blacklisted]
+
         # Detect name clashes in module files
         file2writer = collections.defaultdict(list)
         for item in writers:
             file2writer[item.layout.filename].append(item)
 
-    if len(file2writer) != len(writers):
-        message = 'Name clashes detected in module files:\n'
-        for filename, writer_list in file2writer.items():
-            if len(writer_list) > 1:
-                message += '\nfile: {0}\n'.format(filename)
-                for x in writer_list:
-                    message += 'spec: {0}\n'.format(x.spec.format())
-        tty.error(message)
-        tty.error('Operation aborted')
-        raise SystemExit(1)
+        if len(file2writer) != len(writers):
+            message = 'Name clashes detected in module files:\n'
+            for filename, writer_list in file2writer.items():
+                if len(writer_list) > 1:
+                    message += '\nfile: {0}\n'.format(filename)
+                    for x in writer_list:
+                        message += 'spec: {0}\n'.format(x.spec.format())
+            tty.error(message)
+            tty.error('Operation aborted')
+            raise SystemExit(1)
 
-    # If we arrived here we have at least one writer
-    module_type_root = writers[0].layout.dirname()
-    # Proceed regenerating module files
-    tty.msg('Regenerating {name} module files'.format(name=module_type))
-    if os.path.isdir(module_type_root) and args.delete_tree:
-        shutil.rmtree(module_type_root, ignore_errors=False)
-    filesystem.mkdirp(module_type_root)
-    for x in writers:
-        x.write(overwrite=True)
+        if len(writers) == 0:
+            msg = 'Nothing to be done for {0} module files.'
+            tty.msg(msg.format(module_type))
+            continue
+
+        # If we arrived here we have at least one writer
+        module_type_root = writers[0].layout.dirname()
+        # Proceed regenerating module files
+        tty.msg('Regenerating {name} module files'.format(name=module_type))
+        if os.path.isdir(module_type_root) and args.delete_tree:
+            shutil.rmtree(module_type_root, ignore_errors=False)
+        filesystem.mkdirp(module_type_root)
+        for x in writers:
+            try:
+                x.write(overwrite=True)
+            except Exception as e:
+                msg = 'Could not write module file because of {0}: [{1}]'
+                tty.warn(msg.format(str(e), x.layout.filename))
 
 
 def module(parser, args):
