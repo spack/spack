@@ -35,14 +35,14 @@ class Pgdspider(Package):
 
     version('2.1.1.2', '170e5b4a002277ff66866486da920693')
 
-    depends_on('java')
+    depends_on('java', type=('build', 'run'))
     depends_on('bcftools')
     depends_on('bwa')
     depends_on('samtools')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = 'PGDSpider{v}-cli.jar'.format(v=self.version.up_to(1))
+        jar_file = 'PGDSpider{0}-cli.jar'.format(self.version.up_to(1))
         install(jar_file, prefix.bin)
 
         script_sh = join_path(os.path.dirname(__file__), "pgdspider.sh")
