@@ -104,12 +104,10 @@ def get_command(name):
     return getattr(get_module(python_name), python_name)
 
 
-def parse_specs(args, **kwargs):
+def parse_specs(args, concretize=False, normalize=False, allow_multi=True):
     """Convenience function for parsing arguments from specs.  Handles common
        exceptions and dies if there are errors.
     """
-    concretize = kwargs.get('concretize', False)
-    normalize = kwargs.get('normalize', False)
 
     try:
         specs = spack.spec.parse(args)
@@ -119,15 +117,19 @@ def parse_specs(args, **kwargs):
             elif normalize:
                 spec.normalize()
 
-        return specs
-
     except spack.parse.ParseError as e:
-        tty.error(e.message, e.string, e.pos * " " + "^")
-        sys.exit(1)
+        tty.die(e.message, e.string, e.pos * " " + "^")
 
     except spack.spec.SpecError as e:
-        tty.error(e.message)
-        sys.exit(1)
+        tty.die(e.message)
+
+    if allow_multi:
+        return specs
+
+    if len(specs) != 1:
+        tty.die('only one spec can be installed at a time.')
+    spec = specs.pop()
+    return spec
 
 
 def elide_list(line_list, max_num=10):
