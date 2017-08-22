@@ -610,8 +610,14 @@ def fork(pkg, function, dirty=False):
     child_result = parent_pipe.recv()
     p.join()
 
+    # If the child process raised an error, print its output here rather
+    # than waiting until the call to SpackError.die() in main(). This
+    # allows exception handling output to be logged from within Spack.
+    # see spack.main.SpackCommand.
     if isinstance(child_result, ChildError):
+        child_result.print_context()
         raise child_result
+
     return child_result
 
 
@@ -752,6 +758,9 @@ class ChildError(spack.error.SpackError):
             out.write('  %s' % self.build_log)
 
         return out.getvalue()
+
+    def __str__(self):
+        return self.message + self.long_message + self.traceback
 
     def __reduce__(self):
         """__reduce__ is used to serialize (pickle) ChildErrors.
