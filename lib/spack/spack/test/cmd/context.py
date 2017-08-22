@@ -14,6 +14,7 @@ from spack.cmd.context import (Context, prepare_repository,
                                _context_create)
 from spack.version import Version
 
+from spack.test.modules import lmod_factory
 
 class TestContext(unittest.TestCase):
     def setUp(self):
@@ -38,7 +39,7 @@ class TestContext(unittest.TestCase):
         assert any(x.name == 'mpileaks' for x in env_specs)
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock',
-                             'install_mockery', 'mock_fetch')
+                             'install_mockery', 'mock_fetch', 'lmod_factory')
     def test_install(self):
         c = Context('test')
         c.add('cmake-client')
