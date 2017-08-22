@@ -37,6 +37,18 @@ class TestContext(unittest.TestCase):
         env_specs = c._get_environment_specs()
         assert any(x.name == 'mpileaks' for x in env_specs)
 
+    @pytest.mark.usefixtures('config', 'refresh_builtin_mock',
+                             'install_mockery', 'mock_fetch')
+    def test_install(self):
+        c = Context('test')
+        c.add('cmake-client')
+        c.concretize()
+        c.install()
+        env_specs = c._get_environment_specs()
+        spec = next(x for x in env_specs if x.name == 'cmake-client')
+        assert spec.package.installed
+        assert c.get_modules()
+
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_remove_after_concretize(self):
         c = Context('test')
