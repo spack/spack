@@ -42,6 +42,8 @@ class Xsdk(Package):
     version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
     version('xsdk-0.2.0', 'a52dc710c744afa0b71429b8ec9425bc')
 
+    variant('tpetra', default=False, description='Compile Trilinos with Tpetra')
+
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
     depends_on('hypre@develop~internal-superlu', when='@develop')
 
@@ -49,9 +51,13 @@ class Xsdk(Package):
     depends_on('superlu-dist@develop', when='@develop')
 
     depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
-               when='@xsdk-0.2.0')
+               when='@xsdk-0.2.0~tpetra')
     depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
-               when='@develop')
+               when='@develop~tpetra')
+    depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra~exodus',
+               when='@xsdk-0.2.0+tpetra')
+    depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse+tpetra~exodus',
+               when='@develop+tpetra')
 
     depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
                when='@xsdk-0.2.0')
@@ -66,8 +72,8 @@ class Xsdk(Package):
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
-    # depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
-    # depends_on('xsdktrilinos@develop', when='@develop')
+    depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0+tpetra')
+    depends_on('xsdktrilinos@develop', when='@develop+tpetra')
 
     variant('debug', default=False, description='Compile in debug mode')
 
