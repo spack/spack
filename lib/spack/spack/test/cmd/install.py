@@ -83,7 +83,7 @@ def test_install_package_and_dependency(
 def test_install_runtests():
     install('--test-root', 'dttop')
     assert spack.package_prefs.PackageTesting.test.call_count == 1
-    
+
     install('--test-all', 'a')
     assert spack.package_prefs.PackageTesting.test_all.call_count == 1
 
