@@ -59,11 +59,16 @@ class Qbox(MakefilePackage):
     version('1.45.0', '2c5bfbadfffd330c8c2fe294a10a08e4')
     version('1.44.0', 'c46a2f0f68fe9229aa77779da188cea9')
 
+    variant('mkl', default=False, description="Use MKL for blas, scalapack and fftw")
+    variant('openmp', default=False, description="Build with OpenMP support")
+
     depends_on('mpi')
-    depends_on('blas')
-    depends_on('scalapack')
-    depends_on('fftw')
-    depends_on('xerces-c')
+    depends_on('mkl', when='+mkl') #sjl: how do i get the mkl fftw headers into the flags list?
+    depends_on('blas', when='-mkl')
+    depends_on('scalapack', when='-mkl')
+    depends_on('fftw@3', when='-mkl')
+    # depends_on xerces_c@2.8.0 or xerces_c@3 
+    depends_on('xerces-c@2.8.0:3')
 
     build_directory = 'src'
 
@@ -71,23 +76,60 @@ class Qbox(MakefilePackage):
         with open('src/spack.mk', 'w') as mkfile:
             mkfile.write('CXX = {0}\n'.format(spec['mpi'].mpicxx))
             mkfile.write('LD = $(CXX)\n')
-            qbox_libs = spec['fftw'].libs + spec['xerces-c'].libs + \
-                spec['scalapack'].libs + spec['blas'].libs
-            mkfile.write('LDFLAGS = {0}\n'.format(qbox_libs.ld_flags))
-            mkfile.write('DFLAGS = {0}\n'.format(' -D'.join((
-                '',
-                '_LARGEFILE_SOURCE', 'USE_MPI', 'USE_XERCES',
-                'XERCESC_3', 'MPICH_IGNORE_CXX_SEEK', 'SCALAPACK',
-                'USE_FFTW3', 'FFTWMEASURE', 'FFTW3_2D', 'ADD_',
-            ))))
-            mkfile.write('CXXFLAGS = {0}\n'.format(' '.join((
-                '-g', '-O3', '$(DFLAGS)',
-            ))))
+            flags = ['-g', '-O3']
+            dflags = ['', '_LARGEFILE_SOURCE', 'USE_MPI', 'USE_XERCES',
+                      'PARALLEL_FS', 'SCALAPACK', 'ADD_',
+                      'USE_FFTW3', 'FFTWMEASURE' ]
+            # other dflags that might appear in older versions:
+            # _FILE_OFFSET_BITS=64, MPICH_IGNORE_CXX_SEEK, 
+            # XML_USE_NO_THREADS, APP_NO_THREADS
+            libs = spec['xerces-c'].libs
+            ldflags = [''] # for mkl scalapack flags with static linking
+
+            # specifics:
+            if '%intel' in spec:
+                flags += ['', '-no-prec-div', '-fp-model fast=2', '-ipo']
+
+            if '+openmp' in spec:
+                flags += [self.compiler.openmp_flag]
+                dflags += ['USE_FFTW3_THREADS']
+            else:
+                dflags += ['USE_FFTW3_2D']
+
+            if 'xerces-c@3' in spec:
+                dflags += ['XERCESC_3']
+                
+            if '+mkl' in spec:
+                # why can't I just check for arch=cray?
+                if 'arch=cray-cnl6-haswell' in spec or 'arch=cray-cnl6-ivybridge' in spec:
+                    # the "static" here seems inelegant, shouldn't it happen 
+                    # automatically (at link time as well as compile time)?
+                    flags += ['-static', '-mkl']
+                # how to add -I${MKLROOT}/include/fftw ?
+                # I suspect it is something like:
+                flags += [ '-I{0}/fftw'.format(spec['mkl'].prefix.include) ]
+                dflags += ['USE_FFTW3MKL']
+                # this might only be for cray, with static linking:
+                libdir=spec['mkl'].prefix.lib + '/intel64'
+                ldflags += ['-mkl', '-Wl,--start-group', libdir+'/libmkl_scalapack_lp64.a',
+                            libdir+'/libmkl_core.a', libdir+'/libmkl_intel_thread.a',
+                            libdir+'/libmkl_blacs_intelmpi_lp64.a', '-Wl,--end-group'] 
+            else:
+                libs += spec['fftw'].libs + spec['scalapack'].libs + spec['blas'].libs
+
+            mkfile.write('# using spec: {0}\n'.format(spec))
+            mkfile.write('DFLAGS = {0}\n'.format(' -D'.join(dflags)))
+            mkfile.write('CXXFLAGS = {0}\n'.format(' '.join(flags+['$(DFLAGS)'])))
+            linkflags=' '.join(['$(CXXFLAGS)']+ldflags)
+            mkfile.write('LDFLAGS = {0} {1}\n'.format(libs.ld_flags, linkflags))
         filter_file('$(TARGET)', 'spack', 'src/Makefile', string=True)
 
     def install(self, spec, prefix):
-        mkdir(prefix.src)
-        install('src/qb', prefix.src)
+        #mkdir(prefix.src)
+        #install('src/qb', prefix.src)
+        # does installing the executable somewhere more predictable work?
+        mkdir(prefix.bin)
+        install('src/qb', prefix.bin)
         shutil.move('test', prefix)
         shutil.move('xml', prefix)
         shutil.move('util', prefix)
