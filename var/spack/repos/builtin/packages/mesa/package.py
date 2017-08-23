@@ -28,7 +28,6 @@
 ##############################################################################
 
 from spack import *
-import inspect
 
 
 class Mesa(AutotoolsPackage):
@@ -166,7 +165,6 @@ class Mesa(AutotoolsPackage):
         for DRI support on the build host.
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
-        configure = inspect.getmodule(self).configure
 
         with working_dir(self.build_directory, create=True):
             try:
