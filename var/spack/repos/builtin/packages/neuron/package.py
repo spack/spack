@@ -175,12 +175,16 @@ class Neuron(Package):
     def build_nmodl(self, spec, prefix):
         # TODO: NEURON has two stage compilation for systems
         # like cray and bg-q. On these platforms it's ok to
-        # use gcc and g++ as front-end compilers.
+        # use gcc and g++ as front-end compilers. Using
+        # --march=native is sufficnet to get front-end build
+        flags = "-march=native"
         options = ['--prefix=%s' % prefix,
                    '--with-nmodl-only',
                    '--without-x',
                    'CC=%s' % which("gcc"),
-                   'CXX=%s' % which("g++")]
+                   'CXX=%s' % which("g++"),
+                   'CFLAGS=%s' % flags,
+                   'CXXFLAGS=%s' % flags]
 
         configure = Executable(join_path(self.stage.source_path, 'configure'))
         configure(*options)
@@ -228,6 +232,22 @@ class Neuron(Package):
             configure(*options)
             make()
             make('install')
+
+    @run_after('install')
+    def filter_compilers(self):
+        """run after install to avoid spack compiler wrappers
+        getting embded into nrnivmodl script"""
+
+        arch = self.get_arch_dir()
+        nrnmakefile = join_path(self.prefix, arch, 'bin/nrniv_makefile')
+
+        kwargs = {
+            'backup': False,
+            'string': True
+        }
+
+        filter_file(env['CC'],  self.compiler.cc, nrnmakefile, **kwargs)
+        filter_file(env['CXX'], self.compiler.cxx, nrnmakefile, **kwargs)
 
     def setup_environment(self, spack_env, run_env):
         arch = self.get_arch_dir()
