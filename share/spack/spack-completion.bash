@@ -456,7 +456,7 @@ function _spack_install {
     then
         compgen -W "-h --help --only -j --jobs --keep-prefix --keep-stage
                     -n --no-checksum -v --verbose --fake --clean --dirty
-                    --run-tests --log-format --log-file" -- "$cur"
+                    --run-tests --log-format --log-file --source" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi

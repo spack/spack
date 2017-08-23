@@ -24,6 +24,7 @@
 ##############################################################################
 import argparse
 import os
+import filecmp
 
 import pytest
 
@@ -130,3 +131,14 @@ def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.name == 'InstallError'
     assert 'raise InstallError("Expected failure.")' in out
+
+
+def test_install_with_source(
+        builtin_mock, mock_archive, mock_fetch, config, install_mockery):
+    """Verify that source has been copied into place."""
+    install('--source', '--keep-stage', 'trivial-install-test-package')
+    spec = Spec('trivial-install-test-package').concretized()
+    src = os.path.join(
+        spec.prefix.share, 'trivial-install-test-package', 'src')
+    assert filecmp.cmp(os.path.join(mock_archive.path, 'configure'),
+                       os.path.join(src, 'configure'))
