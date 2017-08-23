@@ -760,10 +760,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Append the item to the composite
             composite_stage.append(stage)
 
-        # Create stage on first access.  Needed because fetch, stage,
-        # patch, and install can be called independently of each
-        # other, so `with self.stage:` in do_install isn't sufficient.
-        composite_stage.create()
         return composite_stage
 
     @property
@@ -772,6 +768,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ValueError("Can only get a stage for a concrete package.")
         if self._stage is None:
             self._stage = self._make_stage()
+
+        # Create stage on first access.  Needed because fetch, stage,
+        # patch, and install can be called independently of each
+        # other, so `with self.stage:` in do_install isn't sufficient.
+        self._stage.create()
+
         return self._stage
 
     @stage.setter
@@ -1386,6 +1388,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Remove the install prefix if anything went wrong during install.
             if not keep_prefix:
                 self.remove_prefix()
+
+            # The subprocess *may* have removed the build stage. Mark it
+            # not created so that the next time self.stage is invoked, we
+            # check the filesystem for it.
+            self.stage.created = False
 
     def check_for_unfinished_installation(
             self, keep_prefix=False, restage=False):
