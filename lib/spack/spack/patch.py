@@ -119,7 +119,8 @@ class UrlPatch(Patch):
             patch_stage.fetch()
             patch_stage.check()
             patch_stage.cache_local()
-            patch_stage.expand_archive()
+            if self.url.lower().endswith('.tar'):
+                patch_stage.expand_archive()
             self.path = os.path.abspath(
                 os.listdir(patch_stage.path).pop()
             )
