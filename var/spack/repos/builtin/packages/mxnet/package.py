@@ -70,6 +70,7 @@ class Mxnet(MakefilePackage):
             'USE_OPENMP=%s' % ('1' if '+openmp' in spec else '0'),
             'USE_CUDA=%s' % ('1' if '+cuda' in spec else '0'),
             'USE_CUDNN=%s' % ('1' if '+cuda' in spec else '0'),
+            'CUB_INCLUDE=%s' % spec['cub'].prefix.include,
             'USE_OPENCV=%s' % ('1' if '+opencv' in spec else '0'),
         ]
 
