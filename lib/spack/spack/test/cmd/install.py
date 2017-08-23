@@ -42,6 +42,22 @@ def parser():
     return parser
 
 
+@pytest.fixture()
+def mock_calls_for_install(monkeypatch):
+
+    class Counter(object):
+        def __init__(self):
+            self.call_count = 0
+
+        def __call__(self, *args, **kwargs):
+            self.call_count += 1
+
+    monkeypatch.setattr(spack.package.PackageBase, 'do_install', Counter())
+    monkeypatch.setattr(spack.package_prefs.PackageTesting, 'test', Counter())
+    monkeypatch.setattr(spack.package_prefs.PackageTesting,
+                        'test_all', Counter())
+
+
 def _install_package_and_dependency(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
@@ -57,6 +73,15 @@ def _install_package_and_dependency(
     assert 'tests="2"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content
+
+
+@pytest.mark.usefixtures('mock_calls_for_install', 'builtin_mock', 'config')
+def test_install_runtests():
+    install('--test-root', 'dttop')
+    assert spack.package_prefs.PackageTesting.test.call_count == 1
+    
+    install('--test-all', 'a')
+    assert spack.package_prefs.PackageTesting.test_all.call_count == 1
 
 
 def test_install_package_already_installed(

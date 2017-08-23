@@ -215,6 +215,10 @@ class PackageTesting(object):
     def test_all(self):
         self._test_all = True
 
+    def clear(self):
+        self._test_all = False
+        self.packages_to_test.clear()
+
     def check(self, package_name):
         return self._test_all or (package_name in self.packages_to_test)
 
