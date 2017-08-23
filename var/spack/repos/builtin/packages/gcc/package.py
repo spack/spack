@@ -40,6 +40,7 @@ class Gcc(AutotoolsPackage):
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
+    version('7.2.0', 'ff370482573133a7fcdd96cd2f552292')
     version('7.1.0', '6bf56a2bca9dac9dbbf8e8d1036964a8')
     version('6.4.0', '11ba51a0cfb8471927f387c8895fe232')
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
@@ -159,10 +160,10 @@ class Gcc(AutotoolsPackage):
 
     def url_for_version(self, version):
         url = 'http://ftp.gnu.org/gnu/gcc/gcc-{0}/gcc-{0}.tar.{1}'
-        suffix = 'bz2'
+        suffix = 'xz'
 
-        if version >= Version('6.4.0') and version < Version('7.1.0'):
-            suffix = 'xz'
+        if version < Version('6.4.0') or version == Version('7.1.0'):
+            suffix = 'bz2'
 
         return url.format(version, suffix)
 

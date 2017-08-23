@@ -38,7 +38,6 @@ schema = {
         'config': {
             'type': 'object',
             'default': {},
-            'additionalProperties': False,
             'properties': {
                 'install_tree': {'type': 'string'},
                 'install_hash_length': {'type': 'integer', 'minimum': 1},

@@ -22,39 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
-import spack.stage as stage
-
-description = "remove temporary build files and/or downloaded archives"
-section = "admin"
-level = "long"
+from spack import *
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        '-s', '--stage', action='store_true', default=True,
-        help="remove all temporary build stages (default)")
-    subparser.add_argument(
-        '-d', '--downloads', action='store_true',
-        help="remove cached downloads")
-    subparser.add_argument(
-        '-m', '--misc-cache', action='store_true',
-        help="remove long-lived caches, like the virtual package index")
-    subparser.add_argument(
-        '-a', '--all', action='store_true',
-        help="remove all of the above")
+class PyPyrad(PythonPackage):
+    """RADseq for phylogenetics & introgression analyses"""
 
+    homepage = "http://dereneaton.com/software/pyrad/"
+    url      = "https://github.com/dereneaton/pyrad/archive/3.0.66.tar.gz"
 
-def purge(parser, args):
-    # Special case: no flags.
-    if not any((args.stage, args.downloads, args.misc_cache, args.all)):
-        stage.purge()
-        return
+    version('3.0.66', '19b8bcd73a574f8a25582d6e8978f0aa')
 
-    # handle other flags with fall through.
-    if args.stage or args.all:
-        stage.purge()
-    if args.downloads or args.all:
-        spack.fetch_cache.destroy()
-    if args.misc_cache or args.all:
-        spack.misc_cache.destroy()
+    depends_on('python@:2.999', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('vsearch')
+    depends_on('muscle')

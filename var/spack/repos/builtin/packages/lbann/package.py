@@ -44,11 +44,12 @@ class Lbann(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
 
-    depends_on('elemental +openmp_blas +scalapack +shared +int64')
-    depends_on('elemental +openmp_blas +scalapack +shared +int64 build_type=Debug', 
+    depends_on('elemental +openmp_blas +shared +int64')
+    depends_on('elemental +openmp_blas +shared +int64 build_type=Debug', 
                when=('build_type=Debug'))
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
+    depends_on('hwloc')
     depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib', when='+opencv')
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
