@@ -156,7 +156,7 @@ class Mesa(AutotoolsPackage):
         # Avoid errors due to missing clock_gettime symbol:
         arch = spec.architecture
         if arch.platform == 'linux':
-            args.extend(['LIBS=-lrt'])
+            args.append('LIBS=-lrt')
 
         return args
 
@@ -173,7 +173,7 @@ class Mesa(AutotoolsPackage):
 	    if '+hwrender' in spec and not spec.satisfies('@13:'):
 		print('Configuring with libudev failed ... '
 		      ' trying libsysfs ...')
-		options.extend(['--enable-sysfs'])
+		options.append('--enable-sysfs')
 		configure(*options)
 	    else:
 		raise
