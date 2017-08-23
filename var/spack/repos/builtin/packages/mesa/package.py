@@ -84,10 +84,9 @@ class Mesa(AutotoolsPackage):
     depends_on('dri3proto@1.0:', type='build')
     depends_on('libdrm')
 
-    # Note: there must be a better way of selecting the preferred llvm
     depends_on('llvm@:3.8.1+link_dylib', when='@12:12.99+llvm')
     depends_on('llvm@:3.9.1+link_dylib', when='@13:13.99+llvm')
-    depends_on('llvm+link_dylib', when='@17:+llvm')
+    depends_on('llvm+link_dylib', when='+llvm')
     depends_on('libelf', when='+llvm')
 
     def configure_args(self):
