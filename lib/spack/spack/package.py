@@ -187,10 +187,9 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
                 # Clear the attribute for the next class
                 setattr(mcs, attr_name, {})
 
-        # Preconditions
         _flush_callbacks('run_before')
-        # Sanity checks
         _flush_callbacks('run_after')
+
         return super(PackageMeta, mcs).__new__(mcs, name, bases, attr_dict)
 
     @staticmethod
@@ -546,6 +545,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: Defaults to the empty string.
     license_url = ''
 
+    # Verbosity level, preserved across installs.
+    _verbose = None
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -761,10 +763,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Append the item to the composite
             composite_stage.append(stage)
 
-        # Create stage on first access.  Needed because fetch, stage,
-        # patch, and install can be called independently of each
-        # other, so `with self.stage:` in do_install isn't sufficient.
-        composite_stage.create()
         return composite_stage
 
     @property
@@ -773,6 +771,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ValueError("Can only get a stage for a concrete package.")
         if self._stage is None:
             self._stage = self._make_stage()
+
+        # Create stage on first access.  Needed because fetch, stage,
+        # patch, and install can be called independently of each
+        # other, so `with self.stage:` in do_install isn't sufficient.
+        self._stage.create()
+
         return self._stage
 
     @stage.setter
@@ -1291,22 +1295,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.make_jobs = make_jobs
 
         # Then install the package itself.
-        def build_process(input_stream):
-            """Forked for each build. Has its own process and python
-               module space set up by build_environment.fork()."""
+        def build_process():
+            """This implements the process forked for each build.
 
-            # We are in the child process. This means that our sys.stdin is
-            # equal to open(os.devnull). Python did this to prevent our process
-            # and the parent process from possible simultaneous reading from
-            # the original standard input. But we assume that the parent
-            # process is not going to read from it till we are done here,
-            # otherwise it should not have passed us the copy of the stream.
-            # Thus, we are free to work with the the copy (input_stream)
-            # however we want. For example, we might want to call functions
-            # (e.g. input()) that implicitly read from whatever stream is
-            # assigned to sys.stdin. Since we want them to work with the
-            # original input stream, we are making the following assignment:
-            sys.stdin = input_stream
+            Has its own process and python module space set up by
+            build_environment.fork().
+
+            This function's return value is returned to the parent process.
+            """
 
             start_time = time.time()
             if not fake:
@@ -1318,6 +1314,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             tty.msg(
                 'Building {0} [{1}]'.format(self.name, self.build_system_class)
             )
+
+            # get verbosity from do_install() parameter or saved value
+            echo = verbose
+            if PackageBase._verbose is not None:
+                echo = PackageBase._verbose
 
             self.stage.keep = keep_stage
             with self._stage_and_write_lock():
@@ -1344,23 +1345,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
                     # Spawn a daemon that reads from a pipe and redirects
                     # everything to log_path
-                    redirection_context = log_output(
-                        log_path,
-                        echo=verbose,
-                        force_color=sys.stdout.isatty(),
-                        debug=True,
-                        input_stream=input_stream
-                    )
-                    with redirection_context as log_redirection:
-                        for phase_name, phase in zip(
+                    with log_output(log_path, echo, True) as logger:
+                        for phase_name, phase_attr in zip(
                                 self.phases, self._InstallPhase_phases):
-                            tty.msg(
-                                'Executing phase : \'{0}\''.format(phase_name)
-                            )
+
+                            with logger.force_echo():
+                                tty.msg("Executing phase: '%s'" % phase_name)
+
                             # Redirect stdout and stderr to daemon pipe
-                            with log_redirection:
-                                getattr(self, phase)(
-                                    self.spec, self.prefix)
+                            phase = getattr(self, phase_attr)
+                            phase(self.spec, self.prefix)
+
+                    echo = logger.echo
                     self.log()
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self.spec)
@@ -1375,12 +1371,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                      _hms(self._total_time)))
             print_pkg(self.prefix)
 
+            # preserve verbosity across runs
+            return echo
+
         try:
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):
                 spack.store.layout.create_install_directory(self.spec)
+
             # Fork a child to do the actual installation
-            spack.build_environment.fork(self, build_process, dirty=dirty)
+            # we preserve verbosity settings across installs.
+            PackageBase._verbose = spack.build_environment.fork(
+                self, build_process, dirty=dirty)
+
             # If we installed then we should keep the prefix
             keep_prefix = self.last_phase is None or keep_prefix
             # note: PARENT of the build process adds the new package to
@@ -1404,6 +1407,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Remove the install prefix if anything went wrong during install.
             if not keep_prefix:
                 self.remove_prefix()
+
+            # The subprocess *may* have removed the build stage. Mark it
+            # not created so that the next time self.stage is invoked, we
+            # check the filesystem for it.
+            self.stage.created = False
 
     def check_for_unfinished_installation(
             self, keep_prefix=False, restage=False):
@@ -1455,12 +1463,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     def log(self):
         # Copy provenance into the install directory on success
-        log_install_path = spack.store.layout.build_log_path(
-            self.spec)
-        env_install_path = spack.store.layout.build_env_path(
-            self.spec)
-        packages_dir = spack.store.layout.build_packages_path(
-            self.spec)
+        log_install_path = spack.store.layout.build_log_path(self.spec)
+        env_install_path = spack.store.layout.build_env_path(self.spec)
+        packages_dir = spack.store.layout.build_packages_path(self.spec)
 
         # Remove first if we're overwriting another build
         # (can happen with spack setup)

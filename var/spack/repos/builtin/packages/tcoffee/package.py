@@ -25,28 +25,33 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class Tcoffee(MakefilePackage):
+    """T-Coffee is a multiple sequence alignment program."""
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "http://www.tcoffee.org/"
+    url      = "https://github.com/cbcrg/tcoffee"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('2017-08-17', git='https://github.com/cbcrg/tcoffee.git', commit='f389b558e91d0f82e7db934d9a79ce285f853a71')
 
-    build_directory = 'source'
+    depends_on('perl', type=('build', 'run'))
+    depends_on('blast-plus')
+    depends_on('dialign-tx')
+    depends_on('viennarna')
+    depends_on('clustalw')
+    depends_on('tmalign')
+    depends_on('muscle')
+    depends_on('mafft')
+    depends_on('pcma')
+    depends_on('poamsa')
+    depends_on('probconsrna')
 
-    conflicts('%gcc@6:')
+    build_directory = 'compile'
 
-    def edit(self, spec, prefix):
+    def build(self, spec, prefix):
         with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
+            make('t_coffee')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+            install('t_coffee', prefix.bin)
