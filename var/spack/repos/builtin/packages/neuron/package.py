@@ -43,7 +43,7 @@ class Neuron(Package):
     version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
     version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
     version('7.2', '5486709b6366add932e3a6d141c4f7ad')
-    version('develop', git=github)
+    version('develop', git=github, preferred=True)
 
     variant('mpi',           default=True,  description='Enable MPI parallelism')
     variant('python',        default=True,  description='Enable python')
