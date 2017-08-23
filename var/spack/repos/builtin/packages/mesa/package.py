@@ -169,7 +169,7 @@ class Mesa(AutotoolsPackage):
 	try:
 	    # First attempt uses libudev:
 	    configure(*options)
-	except:
+	except ProcessError:
 	    if '+hwrender' in spec and not spec.satisfies('@13:'):
 		print('Configuring with libudev failed ... '
 		      ' trying libsysfs ...')
