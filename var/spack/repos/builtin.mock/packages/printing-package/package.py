@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,28 +25,21 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class PrintingPackage(Package):
+    """This package prints some output from its install method.
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    We use this to test whether that output is properly logged.
+    """
+    homepage = "http://www.example.com/printing_package"
+    url      = "http://www.unit-test-should-replace-this-url/trivial_install-1.0.tar.gz"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
-
-    build_directory = 'source'
-
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
+    version('1.0', 'foobarbaz')
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+        print("BEFORE INSTALL")
+
+        configure('--prefix=%s' % prefix)
+        make()
+        make('install')
+
+        print("AFTER INSTALL")

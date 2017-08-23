@@ -25,28 +25,15 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class Tmalign(Package):
+    """TM-align is an algorithm for sequence-order independent protein
+       structure comparisons."""
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "http://zhanglab.ccmb.med.umich.edu/TM-align"
+    url      = "http://zhanglab.ccmb.med.umich.edu/TM-align/TM-align-C/TMalignc.tar.gz"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
-
-    build_directory = 'source'
-
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
+    version('2016-05-25', 'c1027e4b65c07d1c5df9717de7417118')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+        install('TMalign', prefix.bin)

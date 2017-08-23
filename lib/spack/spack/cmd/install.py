@@ -352,31 +352,41 @@ def install(parser, args, **kwargs):
         spack.store.layout.pkgToPath[spec.name] = args.install_path
 
     for spec in specs:
+        saved_do_install = PackageBase.do_install
+        decorator = lambda fn: fn
+
         # Check if we were asked to produce some log for dashboards
         if args.log_format is not None:
             # Compute the filename for logging
             log_filename = args.log_file
             if not log_filename:
                 log_filename = default_log_file(spec)
+
             # Create the test suite in which to log results
             test_suite = TestSuite(spec)
-            # Decorate PackageBase.do_install to get installation status
-            PackageBase.do_install = junit_output(
-                spec, test_suite
-            )(PackageBase.do_install)
+
+            # Temporarily decorate PackageBase.do_install to monitor
+            # recursive calls.
+            decorator = junit_output(spec, test_suite)
 
         # Do the actual installation
-        if args.things_to_install == 'dependencies':
-            # Install dependencies as-if they were installed
-            # for root (explicit=False in the DB)
-            kwargs['explicit'] = False
-            for s in spec.dependencies():
-                p = spack.repo.get(s)
-                p.do_install(**kwargs)
-        else:
-            package = spack.repo.get(spec)
-            kwargs['explicit'] = True
-            package.do_install(**kwargs)
+        try:
+            # decorate the install if necessary
+            PackageBase.do_install = decorator(PackageBase.do_install)
+
+            if args.things_to_install == 'dependencies':
+                # Install dependencies as-if they were installed
+                # for root (explicit=False in the DB)
+                kwargs['explicit'] = False
+                for s in spec.dependencies():
+                    p = spack.repo.get(s)
+                    p.do_install(**kwargs)
+            else:
+                package = spack.repo.get(spec)
+                kwargs['explicit'] = True
+                package.do_install(**kwargs)
+        finally:
+            PackageBase.do_install = saved_do_install
 
         # Dump log file if asked to
         if args.log_format is not None:
