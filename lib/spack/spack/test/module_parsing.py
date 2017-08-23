@@ -112,7 +112,7 @@ def test_get_module_cmd_from_bash_ticks(save_env):
 
 
 def test_get_module_cmd_from_bash_parens(save_env):
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
+    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill sh $*)\n}'
 
     module_cmd = get_module_cmd()
     module_cmd_list = module_cmd('list', output=str, error=str)

@@ -23,193 +23,110 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
-import codecs
-import collections
-import contextlib
-import unittest
-from six import StringIO
+import os
 
-import llnl.util.filesystem
+import pytest
+
 import spack
-import spack.cmd
-import spack.cmd.install as install
+import spack.cmd.install
+from spack.spec import Spec
+from spack.main import SpackCommand
 
-FILE_REGISTRY = collections.defaultdict(StringIO)
-
-
-# Monkey-patch open to write module files to a StringIO instance
-@contextlib.contextmanager
-def mock_open(filename, mode, *args):
-    if not mode == 'wb':
-        message = 'test.test_install : unexpected opening mode for mock_open'
-        raise RuntimeError(message)
-
-    FILE_REGISTRY[filename] = StringIO()
-
-    try:
-        yield FILE_REGISTRY[filename]
-    finally:
-        handle = FILE_REGISTRY[filename]
-        FILE_REGISTRY[filename] = handle.getvalue()
-        handle.close()
+install = SpackCommand('install')
 
 
-class MockSpec(object):
-
-    def __init__(self, name, version, hashStr=None):
-        self._dependencies = {}
-        self.name = name
-        self.version = version
-        self.hash = hashStr if hashStr else hash((name, version))
-
-    def _deptype_norm(self, deptype):
-        if deptype is None:
-            return spack.alldeps
-        # Force deptype to be a tuple so that we can do set intersections.
-        if isinstance(deptype, str):
-            return (deptype,)
-        return deptype
-
-    def _find_deps(self, where, deptype):
-        deptype = self._deptype_norm(deptype)
-
-        return [dep.spec
-                for dep in where.values()
-                if deptype and any(d in deptype for d in dep.deptypes)]
-
-    def dependencies(self, deptype=None):
-        return self._find_deps(self._dependencies, deptype)
-
-    def dependents(self, deptype=None):
-        return self._find_deps(self._dependents, deptype)
-
-    def traverse(self, order=None):
-        for _, spec in self._dependencies.items():
-            yield spec.spec
-        yield self
-
-    def dag_hash(self):
-        return self.hash
-
-    @property
-    def short_spec(self):
-        return '-'.join([self.name, str(self.version), str(self.hash)])
+@pytest.fixture(scope='module')
+def parser():
+    """Returns the parser for the module command"""
+    parser = argparse.ArgumentParser()
+    spack.cmd.install.setup_parser(parser)
+    return parser
 
 
-class MockPackage(object):
+def test_install_package_and_dependency(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery):
 
-    def __init__(self, spec, buildLogPath):
-        self.name = spec.name
-        self.spec = spec
-        self.installed = False
-        self.build_log_path = buildLogPath
+    tmpdir.chdir()
+    install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
-    def do_install(self, *args, **kwargs):
-        for x in self.spec.dependencies():
-            x.package.do_install(*args, **kwargs)
-        self.installed = True
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
 
+    content = filename.open().read()
+    assert 'tests="2"' in content
+    assert 'failures="0"' in content
+    assert 'errors="0"' in content
 
-class MockPackageDb(object):
-
-    def __init__(self, init=None):
-        self.specToPkg = {}
-        if init:
-            self.specToPkg.update(init)
-
-    def get(self, spec):
-        return self.specToPkg[spec]
+    s = Spec('libdwarf').concretized()
+    assert not spack.repo.get(s).stage.created
 
 
-def mock_fetch_log(path):
-    return []
+def test_install_package_already_installed(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery):
+
+    tmpdir.chdir()
+    install('libdwarf')
+    install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
+
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
+
+    content = filename.open().read()
+    assert 'tests="2"' in content
+    assert 'failures="0"' in content
+    assert 'errors="0"' in content
+
+    skipped = [line for line in content.split('\n') if 'skipped' in line]
+    assert len(skipped) == 2
 
 
-specX = MockSpec('X', '1.2.0')
-specY = MockSpec('Y', '2.3.8')
-specX._dependencies['Y'] = spack.spec.DependencySpec(
-    specX, specY, spack.alldeps)
-pkgX = MockPackage(specX, 'logX')
-pkgY = MockPackage(specY, 'logY')
-specX.package = pkgX
-specY.package = pkgY
+@pytest.mark.parametrize('arguments,expected', [
+    ([], spack.dirty),  # The default read from configuration file
+    (['--clean'], False),
+    (['--dirty'], True),
+])
+def test_install_dirty_flag(parser, arguments, expected):
+    args = parser.parse_args(arguments)
+    assert args.dirty == expected
 
 
-# TODO: add test(s) where Y fails to install
-class InstallTestJunitLog(unittest.TestCase):
-    """Tests test-install where X->Y"""
+def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
+    """Ensure output printed from pkgs is captured by output redirection."""
+    # we can't use output capture here because it interferes with Spack's
+    # logging. TODO: see whether we can get multiple log_outputs to work
+    # when nested AND in pytest
+    spec = Spec('printing-package').concretized()
+    pkg = spec.package
+    pkg.do_install(verbose=True)
 
-    def setUp(self):
-        super(InstallTestJunitLog, self).setUp()
-        install.PackageBase = MockPackage
-        # Monkey patch parse specs
+    log_file = os.path.join(spec.prefix, '.spack', 'build.out')
+    with open(log_file) as f:
+        out = f.read()
 
-        def monkey_parse_specs(x, concretize):
-            if x == ['X']:
-                return [specX]
-            elif x == ['Y']:
-                return [specY]
-            return []
+    # make sure that output from the actual package file appears in the
+    # right place in the build log.
+    assert "BEFORE INSTALL\n==> './configure'" in out
+    assert "'install'\nAFTER INSTALL" in out
 
-        self.parse_specs = spack.cmd.parse_specs
-        spack.cmd.parse_specs = monkey_parse_specs
 
-        # Monkey patch os.mkdirp
-        self.mkdirp = llnl.util.filesystem.mkdirp
-        llnl.util.filesystem.mkdirp = lambda x: True
+def _test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
+                                        config, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        out = install('build-error', fail_on_error=False)
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.name == 'ProcessError'
+    assert 'configure: error: in /path/to/some/file:' in out
+    assert 'configure: error: cannot run C compiled programs.' in out
 
-        # Monkey patch open
-        self.codecs_open = codecs.open
-        codecs.open = mock_open
 
-        # Clean FILE_REGISTRY
-        FILE_REGISTRY.clear()
-
-        pkgX.installed = False
-        pkgY.installed = False
-
-        # Monkey patch pkgDb
-        self.saved_db = spack.repo
-        pkgDb = MockPackageDb({specX: pkgX, specY: pkgY})
-        spack.repo = pkgDb
-
-    def tearDown(self):
-        # Remove the monkey patched test_install.open
-        codecs.open = self.codecs_open
-
-        # Remove the monkey patched os.mkdir
-        llnl.util.filesystem.mkdirp = self.mkdirp
-        del self.mkdirp
-
-        # Remove the monkey patched parse_specs
-        spack.cmd.parse_specs = self.parse_specs
-        del self.parse_specs
-        super(InstallTestJunitLog, self).tearDown()
-
-        spack.repo = self.saved_db
-
-    def test_installing_both(self):
-        parser = argparse.ArgumentParser()
-        install.setup_parser(parser)
-        args = parser.parse_args(['--log-format=junit', 'X'])
-        install.install(parser, args)
-        self.assertEqual(len(FILE_REGISTRY), 1)
-        for _, content in FILE_REGISTRY.items():
-            self.assertTrue('tests="2"' in content)
-            self.assertTrue('failures="0"' in content)
-            self.assertTrue('errors="0"' in content)
-
-    def test_dependency_already_installed(self):
-        pkgX.installed = True
-        pkgY.installed = True
-        parser = argparse.ArgumentParser()
-        install.setup_parser(parser)
-        args = parser.parse_args(['--log-format=junit', 'X'])
-        install.install(parser, args)
-        self.assertEqual(len(FILE_REGISTRY), 1)
-        for _, content in FILE_REGISTRY.items():
-            self.assertTrue('tests="2"' in content)
-            self.assertTrue('failures="0"' in content)
-            self.assertTrue('errors="0"' in content)
-            self.assertEqual(
-                sum('skipped' in line for line in content.split('\n')), 2)
+def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
+                                        config, install_mockery):
+    out = install('failing-build', fail_on_error=False)
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.name == 'InstallError'
+    assert 'raise InstallError("Expected failure.")' in out

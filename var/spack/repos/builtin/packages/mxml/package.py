@@ -48,5 +48,9 @@ class Mxml(AutotoolsPackage):
             return 'https://github.com/michaelrsweet/mxml/releases/download/release-{0}/mxml-{0}.tar.gz'.format(version)
 
     def configure_args(self):
-        # Default is non-shared, but avoid any future surprises
-        return ['--disable-shared']
+        return [
+            # ADIOS build with -fPIC, so we need it too (avoid linkage issue)
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            # Default is non-shared, but avoid any future surprises
+            '--disable-shared',
+        ]

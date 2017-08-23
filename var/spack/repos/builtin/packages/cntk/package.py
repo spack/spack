@@ -64,6 +64,8 @@ class Cntk(Package):
     patch('build.patch')
     # Patch to fix BLAS inconsistency between CNTK and KaldiReader
     patch('kaldireader-openblas.patch')
+    # Patch to change behaviour of lock file - https://github.com/Microsoft/CNTK/issues/62
+    patch('lock-file.patch')
 
     def install(self, spec, prefix):
         args = []

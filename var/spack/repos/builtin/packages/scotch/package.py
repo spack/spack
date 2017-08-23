@@ -81,6 +81,7 @@ class Scotch(Package):
 
         shared = '+shared' in self.spec
         libraries = ['libscotch', 'libscotcherr']
+        zlibs     = []
 
         if '+mpi' in self.spec:
             libraries = ['libptscotch', 'libptscotcherr'] + libraries
@@ -89,9 +90,13 @@ class Scotch(Package):
         elif '~mpi+esmumps' in self.spec:
             libraries = ['libesmumps'] + libraries
 
-        return find_libraries(
+        scotchlibs = find_libraries(
             libraries, root=self.prefix, recurse=True, shared=shared
         )
+        if '+compression' in self.spec:
+            zlibs = self.spec['zlib'].libs
+
+        return scotchlibs + zlibs
 
     def patch(self):
         self.configure()
@@ -124,7 +129,9 @@ class Scotch(Package):
             if self.spec.satisfies('platform=darwin'):
                 makefile_inc.extend([
                     'LIB       = .dylib',
-                    'CLIBFLAGS = -dynamiclib -fPIC',
+                    'CLIBFLAGS = -dynamiclib {0}'.format(
+                        self.compiler.pic_flag
+                    ),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
                     'ARFLAGS   = -dynamiclib $(LDFLAGS) -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % prefix.lib  # noqa
@@ -132,12 +139,12 @@ class Scotch(Package):
             else:
                 makefile_inc.extend([
                     'LIB       = .so',
-                    'CLIBFLAGS = -shared -fPIC',
+                    'CLIBFLAGS = -shared {0}'.format(self.compiler.pic_flag),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
                     'ARFLAGS   = -shared $(LDFLAGS) -o'
                 ])
-            cflags.append('-fPIC')
+            cflags.append(self.compiler.pic_flag)
         else:
             makefile_inc.extend([
                 'LIB       = .a',

@@ -43,6 +43,7 @@ class Libxslt(AutotoolsPackage):
     variant('crypto',  default=True,
             description='Build libexslt with crypto support')
 
+    depends_on("libiconv")
     depends_on("libxml2")
     depends_on("xz")
     depends_on("zlib")
