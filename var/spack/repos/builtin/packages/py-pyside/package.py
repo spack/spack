@@ -29,7 +29,7 @@ import os
 class PyPyside(PythonPackage):
     """Python bindings for Qt."""
     homepage = "https://pypi.python.org/pypi/pyside"
-    url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
+    url      = "https://pypi.io/packages/source/P/PySide/PySide-1.2.2.tar.gz"
 
     version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')  # rpath problems
     version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d', preferred=True)

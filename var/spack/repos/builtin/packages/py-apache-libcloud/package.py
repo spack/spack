@@ -29,7 +29,8 @@ class PyApacheLibcloud(PythonPackage):
     """Python library for multiple cloud provider APIs"""
 
     homepage = "http://libcloud.apache.org"
+    url      = "https://pypi.io/packages/source/a/apache-libcloud/apache-libcloud-1.2.1.tar.gz"
 
-    version('1.2.1', '912e6fb1f2d13f7d3b58ee982b9f9d1f', url="https://pypi.python.org/packages/dd/b5/7b8b5796177345b6a7c1f3d4fda9fbbe9aeef000ac33f3aac06f176845d0/apache-libcloud-1.2.1.tar.gz")
+    version('1.2.1', '912e6fb1f2d13f7d3b58ee982b9f9d1f')
 
     depends_on('py-setuptools', type='build')

@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Opencv(Package):
+class Opencv(CMakePackage):
     """OpenCV is released under a BSD license and hence it's free for both
     academic and commercial use. It has C++, C, Python and Java interfaces and
     supports Windows, Linux, Mac OS, iOS and Android. OpenCV was designed for
@@ -42,13 +42,19 @@ class Opencv(Package):
     homepage = 'http://opencv.org/'
     url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
 
-    version('3.2.0', 'a43b65488124ba33dde195fea9041b70')
-    version('3.1.0', '70e1dd07f0aa06606f1bc0e3fa15abd3')
+    version('master', git="https://github.com/opencv/opencv.git", branch="master")
+    version('3.3.0',    'eeedaec282a70aa2ea1d5152a372c990')
+    version('3.2.0',    'a43b65488124ba33dde195fea9041b70')
+    version('3.1.0',    '70e1dd07f0aa06606f1bc0e3fa15abd3')
+    version('2.4.13.2', 'fe52791ce523681a67036def4c25261b')
+    version('2.4.13.1', 'f6d354500d5013e60dc0fc44b07a63d1')
+    version('2.4.13',   '8feb45a71adad89b8017a777477c3eff')
+    version('2.4.12.3', '2496a4a4caf8fecfbfc294fbe6a814b0')
+    version('2.4.12.2', 'bc0c60c2ea1cf4078deef99569912fc7')
+    version('2.4.12.1', '7192f51434710904b5e3594872b897c3')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('debug', default=False,
-            description='Builds a debug version of the libraries')
 
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
@@ -61,32 +67,36 @@ class Opencv(Package):
             description='Enables the build of Python extensions')
     variant('java', default=False,
             description='Activates support for Java')
+    variant('openmp', default=False, description='Activates support for OpenMP threads')
+    variant('core', default=False, description='Include opencv_core module into the OpenCV build')
+    variant('highgui', default=False, description='Include opencv_highgui module into the OpenCV build')
+    variant('imgproc', default=False, description='Include opencv_imgproc module into the OpenCV build')
+    variant('jpeg', default=False, description='Include JPEG support')
+    variant('png', default=False, description='Include PNG support')
+    variant('tiff', default=False, description='Include TIFF support')
+    variant('zlib', default=False, description='Build zlib from source')
 
-    depends_on('cmake', type='build')
     depends_on('eigen', when='+eigen', type='build')
 
-    depends_on('zlib')
-    depends_on('libpng')
-    depends_on('libjpeg-turbo')
-    depends_on('libtiff')
+    depends_on('zlib', when='+zlib')
+    depends_on('libpng', when='+png')
+    depends_on('jpeg', when='+jpeg')
+    depends_on('libtiff', when='+tiff')
 
     depends_on('jasper', when='+jasper')
     depends_on('cuda', when='+cuda')
     depends_on('gtkplus', when='+gtk')
     depends_on('vtk', when='+vtk')
     depends_on('qt', when='+qt')
-    depends_on('jdk', when='+java')
+    depends_on('java', when='+java')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
 
     extends('python', when='+python')
 
-    def install(self, spec, prefix):
-        cmake_options = []
-        cmake_options.extend(std_cmake_args)
+    def cmake_args(self):
+        spec = self.spec
 
-        cmake_options.extend([
-            '-DCMAKE_BUILD_TYPE:STRING={0}'.format((
-                'Debug' if '+debug' in spec else 'Release')),
+        args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format((
                 'ON' if '+shared' in spec else 'OFF')),
             '-DENABLE_PRECOMPILED_HEADERS:BOOL=OFF',
@@ -100,66 +110,88 @@ class Opencv(Package):
                 'ON' if '+vtk' in spec else 'OFF')),
             '-DBUILD_opencv_java:BOOL={0}'.format((
                 'ON' if '+java' in spec else 'OFF')),
-        ])
+            '-DBUILD_opencv_core:BOOL={0}'.format((
+                'ON' if '+core' in spec else 'OFF')),
+            '-DBUILD_opencv_highgui:BOOL={0}'.format((
+                'ON' if '+highgui' in spec else 'OFF')),
+            '-DBUILD_opencv_imgproc:BOOL={0}'.format((
+                'ON' if '+imgproc' in spec else 'OFF')),
+            '-DWITH_JPEG:BOOL={0}'.format((
+                'ON' if '+jpeg' in spec else 'OFF')),
+            '-DWITH_PNG:BOOL={0}'.format((
+                'ON' if '+png' in spec else 'OFF')),
+            '-DWITH_TIFF:BOOL={0}'.format((
+                'ON' if '+tiff' in spec else 'OFF')),
+            '-DWITH_ZLIB:BOOL={0}'.format((
+                'ON' if '+zlib' in spec else 'OFF')),
+            '-DWITH_OPENMP:BOOL={0}'.format((
+                'ON' if '+openmp' in spec else 'OFF')),
+        ]
 
         # Media I/O
-        zlib = spec['zlib']
-        cmake_options.extend([
-            '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(zlib.prefix.lib,
-                          'libz.{0}'.format(dso_suffix))),
-            '-DZLIB_INCLUDE_DIR:PATH={0}'.format(zlib.prefix.include)
-        ])
+        if '+zlib' in spec:
+            zlib = spec['zlib']
+            args.extend([
+                '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(zlib.prefix.lib,
+                              'libz.{0}'.format(dso_suffix))),
+                '-DZLIB_INCLUDE_DIR:PATH={0}'.format(zlib.prefix.include)
+            ])
 
-        libpng = spec['libpng']
-        cmake_options.extend([
-            '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(libpng.prefix.lib,
-                          'libpng.{0}'.format(dso_suffix))),
-            '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
-        ])
+        if '+png' in spec:
+            libpng = spec['libpng']
+            args.extend([
+                '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(libpng.prefix.lib,
+                              'libpng.{0}'.format(dso_suffix))),
+                '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
+            ])
 
-        libjpeg = spec['libjpeg-turbo']
-        cmake_options.extend([
-            '-DJPEG_LIBRARY:FILEPATH={0}'.format(
-                join_path(libjpeg.prefix.lib,
-                          'libjpeg.{0}'.format(dso_suffix))),
-            '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
-        ])
+        if '+jpeg' in spec:
+            libjpeg = spec['jpeg']
+            args.extend([
+                '-DBUILD_JPEG:BOOL=OFF',
+                '-DJPEG_LIBRARY:FILEPATH={0}'.format(
+                    join_path(libjpeg.prefix.lib,
+                              'libjpeg.{0}'.format(dso_suffix))),
+                '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
+            ])
 
-        libtiff = spec['libtiff']
-        cmake_options.extend([
-            '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(libtiff.prefix.lib,
-                          'libtiff.{0}'.format(dso_suffix))),
-            '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
-        ])
+        if '+tiff' in spec:
+            libtiff = spec['libtiff']
+            args.extend([
+                '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(libtiff.prefix.lib,
+                              'libtiff.{0}'.format(dso_suffix))),
+                '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
+            ])
 
-        jasper = spec['jasper']
-        cmake_options.extend([
-            '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(jasper.prefix.lib,
-                          'libjasper.{0}'.format(dso_suffix))),
-            '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
-        ])
+        if '+jasper' in spec:
+            jasper = spec['jasper']
+            args.extend([
+                '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(jasper.prefix.lib,
+                              'libjasper.{0}'.format(dso_suffix))),
+                '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
+            ])
 
         # GUI
         if '+gtk' not in spec:
-            cmake_options.extend([
+            args.extend([
                 '-DWITH_GTK:BOOL=OFF',
                 '-DWITH_GTK_2_X:BOOL=OFF'
             ])
         elif '^gtkplus@3:' in spec:
-            cmake_options.extend([
+            args.extend([
                 '-DWITH_GTK:BOOL=ON',
                 '-DWITH_GTK_2_X:BOOL=OFF'
             ])
         elif '^gtkplus@2:3' in spec:
-            cmake_options.extend([
+            args.extend([
                 '-DWITH_GTK:BOOL=OFF',
                 '-DWITH_GTK_2_X:BOOL=ON'
             ])
@@ -171,7 +203,7 @@ class Opencv(Package):
             python_include_dir = spec['python'].headers.directories[0]
 
             if '^python@3:' in spec:
-                cmake_options.extend([
+                args.extend([
                     '-DBUILD_opencv_python3=ON',
                     '-DPYTHON3_EXECUTABLE={0}'.format(python_exe),
                     '-DPYTHON3_LIBRARY={0}'.format(python_lib),
@@ -179,7 +211,7 @@ class Opencv(Package):
                     '-DBUILD_opencv_python2=OFF',
                 ])
             elif '^python@2:3' in spec:
-                cmake_options.extend([
+                args.extend([
                     '-DBUILD_opencv_python2=ON',
                     '-DPYTHON2_EXECUTABLE={0}'.format(python_exe),
                     '-DPYTHON2_LIBRARY={0}'.format(python_lib),
@@ -187,12 +219,9 @@ class Opencv(Package):
                     '-DBUILD_opencv_python3=OFF',
                 ])
         else:
-            cmake_options.extend([
+            args.extend([
                 '-DBUILD_opencv_python2=OFF',
                 '-DBUILD_opencv_python3=OFF'
             ])
 
-        with working_dir('spack_build', create=True):
-            cmake('..', *cmake_options)
-            make('VERBOSE=1')
-            make("install")
+        return args
