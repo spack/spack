@@ -57,9 +57,10 @@ class Nauty(AutotoolsPackage):
     depends_on('automake',  type='build', when='@2.6r7')
     depends_on('libtool',  type='build', when='@2.6r7')
     depends_on('pkg-config',  type='build')
+    depends_on('zlib')
 
-    @property 
-    def force_autoreconf(self): 
+    @property
+    def force_autoreconf(self):
         return self.spec.satisfies('@2.6r7')
 
     def url_for_version(self, version):
@@ -67,8 +68,7 @@ class Nauty(AutotoolsPackage):
         return url.format(version.joined)
 
     def patch(self):
-        os.remove('makefile') 
-
-    def configure_args(self):
-        args = ['--disable-static']
-        return args
+        os.remove('makefile')
+        ver = str(self.version.dotted).replace('r', '.')
+        if spec.satisfies('@2.6r7'):
+            filter_file('@INJECTVER@', ver, "configure.ac")
