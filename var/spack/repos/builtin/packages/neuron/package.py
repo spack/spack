@@ -173,18 +173,22 @@ class Neuron(Package):
         return options
 
     def build_nmodl(self, spec, prefix):
-        # TODO: NEURON has two stage compilation for systems
-        # like cray and bg-q. On these platforms it's ok to
-        # use gcc and g++ as front-end compilers. Using
-        # --march=native is sufficnet to get front-end build
-        flags = "-march=native"
+        # build components for front-end arch in cross
+        # compiling architectures like bg-q, cray
         options = ['--prefix=%s' % prefix,
                    '--with-nmodl-only',
-                   '--without-x',
-                   'CC=%s' % which("gcc"),
-                   'CXX=%s' % which("g++"),
-                   'CFLAGS=%s' % flags,
-                   'CXXFLAGS=%s' % flags]
+                   '--without-x']
+
+        if 'bgq' in self.spec.architecture:
+            # generate code compatible for all powerpc64 arch
+            flags = '-qarch=ppc64'
+            options.extend(['CFLAGS=%s' % flags,
+                            'CXXFLAGS=%s' % flags])
+
+        if 'cray' in self.spec.architecture:
+            # cray wrappers provide a way for front-end build
+            options.extend(['CRAY_CPU_TARGET=x86_64',
+                            'CRAYPE_NETWORK_TARGET=none'])
 
         configure = Executable(join_path(self.stage.source_path, 'configure'))
         configure(*options)
