@@ -166,14 +166,14 @@ class Mesa(AutotoolsPackage):
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
 
-	try:
-	    # First attempt uses libudev:
-	    configure(*options)
-	except ProcessError:
-	    if '+hwrender' in spec and not spec.satisfies('@13:'):
-		print('Configuring with libudev failed ... '
-		      ' trying libsysfs ...')
-		options.append('--enable-sysfs')
-		configure(*options)
-	    else:
-		raise
+        try:
+            # First attempt uses libudev:
+            configure(*options)
+        except ProcessError:
+            if '+hwrender' in spec and not spec.satisfies('@13:'):
+                print('Configuring with libudev failed ... '
+                      ' trying libsysfs ...')
+                options.append('--enable-sysfs')
+                configure(*options)
+            else:
+                raise
