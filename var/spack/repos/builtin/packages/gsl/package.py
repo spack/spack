@@ -41,3 +41,8 @@ class Gsl(AutotoolsPackage):
     version('2.1',   'd8f70abafd3e9f0bae03c52d1f4e8de5')
     version('2.0',   'ae44cdfed78ece40e73411b63a78c375')
     version('1.16',  'e49a664db13d81c968415cd53f62bc8b')
+
+    def configure_args(self):
+        spec = self.spec
+        if 'bgq' in spec.architecture and spec.satisfies('%xl'):
+            return ['LDFLAGS=-qnostaticlink']
