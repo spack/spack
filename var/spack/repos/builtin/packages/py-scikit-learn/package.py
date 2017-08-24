@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,8 +35,8 @@ class PyScikitLearn(PythonPackage):
     version('0.15.2', 'd9822ad0238e17b382a3c756ea94fe0d')
     version('0.16.1', '363ddda501e3b6b61726aa40b8dbdb7e')
     version('0.17.1', 'a2f8b877e6d99b1ed737144f5a478dfc')
+    version('0.13.1', 'acba398e1d46274b8470f40d0926e6a4')
 
     depends_on('python@2.6:2.8,3.3:')
-    depends_on('py-setuptools',   type='build')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'))
     depends_on('py-scipy@0.9:',   type=('build', 'run'))

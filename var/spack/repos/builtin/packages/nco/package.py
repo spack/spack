@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,8 +30,9 @@ class Nco(AutotoolsPackage):
     netCDF-accessible formats"""
 
     homepage = "http://nco.sourceforge.net/"
-    url      = "https://github.com/nco/nco/archive/4.6.6.tar.gz"
+    url      = "https://github.com/nco/nco/archive/4.6.7.tar.gz"
 
+    version('4.6.7', 'b04c92aa715d3fad3ebebd1fd178ce32')
     version('4.6.6', 'df6fa47aaf6e41adfc0631912a7a341f')
     version('4.6.5', '2afd34a6bb5ff6c7ed39cf40c917b6e4')
     version('4.6.4', '22f4e779d0011a9c0db90fda416c8e45')
@@ -39,6 +40,9 @@ class Nco(AutotoolsPackage):
     version('4.6.2', 'b7471acf0cc100343392f4171fb56113')
     version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
     version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
+
+    # https://github.com/nco/nco/issues/43
+    patch('NUL-0-NULL.patch')
 
     variant('doc', default=False, description='Build/install NCO TexInfo-based documentation')
 

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -53,3 +53,8 @@ class Tk(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib)]
+
+    @run_after('install')
+    def symlink_wish(self):
+        with working_dir(self.prefix.bin):
+            symlink('wish{0}'.format(self.version.up_to(2)), 'wish')

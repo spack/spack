@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,6 @@ class RProdlim(RPackage):
 
     homepage = "https://cran.r-project.org/package=prodlim"
     url      = "https://cran.r-project.org/src/contrib/prodlim_1.5.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/prodlim"
 
     version('1.5.9', 'e0843053c9270e41b657a733d6675dc9')
 

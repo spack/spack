@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,7 +39,11 @@ def pre_run():
     if platform.system() != "Darwin":
         return
 
-    git_case_consistency_check(spack.repo.get_repo('builtin').packages_path)
+    try:
+        repo = spack.repo.get_repo('builtin')
+        git_case_consistency_check(repo.packages_path)
+    except spack.repository.UnknownNamespaceError:
+        pass
 
 
 def git_case_consistency_check(path):

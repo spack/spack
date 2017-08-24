@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,7 @@ class PyScipy(PythonPackage):
     as routines for numerical integration and optimization."""
 
     homepage = "http://www.scipy.org/"
-    url = "https://pypi.io/packages/source/s/scipy/scipy-0.18.1.tar.gz"
+    url = "https://pypi.io/packages/source/s/scipy/scipy-0.19.1.tar.gz"
 
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
@@ -49,6 +49,9 @@ class PyScipy(PythonPackage):
         'scipy.special._precompute'
     ]
 
+    # See https://github.com/LLNL/spack/issues/2737
+    version('0.19.1', '6b4d91b62f1926282b127194a06b72b3',
+            url="https://pypi.io/packages/source/s/scipy/scipy-0.19.1.tar.gz")
     version('0.19.0', '91b8396231eec780222a57703d3ec550',
             url="https://pypi.io/packages/source/s/scipy/scipy-0.19.0.zip")
     version('0.18.1', '5fb5fb7ccb113ab3a039702b6c2f3327')

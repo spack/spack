@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,16 +39,11 @@ class Binutils(AutotoolsPackage):
     version('2.23.2', '4f8fa651e35ef262edc01d60fb45702e')
     version('2.20.1', '2b9dc8f2b7dbd5ec5992c6e29de0b764')
 
-    # Add a patch that creates binutils libiberty_pic.a which is preferred by
-    # OpenSpeedShop and cbtf-krell
-    variant('krellpatch', default=False,
-            description="build with openspeedshop based patch.")
     variant('plugins', default=False,
             description="enable plugins, needed for gold linker")
     variant('gold', default=True, description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
 
-    patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
     patch('cr16.patch')
     patch('update_symbol-2.26.patch', when='@2.26')
 

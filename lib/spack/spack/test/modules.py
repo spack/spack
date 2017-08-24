@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,6 +27,7 @@ import contextlib
 from six import StringIO
 
 import pytest
+
 import spack.modules
 import spack.spec
 
@@ -105,8 +106,13 @@ def test_update_dictionary_extending_list():
     assert target['baz'] == 'foobaz'
 
 
-def test_inspect_path():
-    env = spack.modules.inspect_path('/usr')
+def test_inspect_path(tmpdir):
+    tmpdir.chdir()
+    tmpdir.mkdir('bin')
+    tmpdir.mkdir('lib')
+    tmpdir.mkdir('include')
+
+    env = spack.modules.inspect_path(str(tmpdir))
     names = [item.name for item in env]
     assert 'PATH' in names
     assert 'LIBRARY_PATH' in names

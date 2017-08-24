@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -227,14 +227,14 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                     # create a subdirectory for the current package@version
                     archive_path = os.path.abspath(join_path(
                         mirror_root, mirror_archive_path(spec, fetcher)))
-                    name = spec.format("$_$@")
+                    name = spec.cformat("$_$@")
                 else:
                     resource = stage.resource
                     archive_path = os.path.abspath(join_path(
                         mirror_root,
                         mirror_archive_path(spec, fetcher, resource.name)))
                     name = "{resource} ({pkg}).".format(
-                        resource=resource.name, pkg=spec.format("$_$@"))
+                        resource=resource.name, pkg=spec.cformat("$_$@"))
                 subdir = os.path.dirname(archive_path)
                 mkdirp(subdir)
 
@@ -261,8 +261,8 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
         if spack.debug:
             sys.excepthook(*sys.exc_info())
         else:
-            tty.warn("Error while fetching %s"
-                     % spec.format('$_$@'), e.message)
+            tty.warn(
+                "Error while fetching %s" % spec.cformat('$_$@'), e.message)
         categories['error'].append(spec)
 
 

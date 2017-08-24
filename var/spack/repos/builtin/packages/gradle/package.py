@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,11 +27,11 @@ from distutils.dir_util import copy_tree
 
 
 class Gradle(Package):
-    """Gradle is an open source build automation system that builds 
-    upon the concepts of Apache Ant and Apache Maven and introduces 
-    a Groovy-based domain-specific language (DSL) instead of the XML 
+    """Gradle is an open source build automation system that builds
+    upon the concepts of Apache Ant and Apache Maven and introduces
+    a Groovy-based domain-specific language (DSL) instead of the XML
     form used by Apache Maven for declaring the project configuration.
-    Gradle uses a directed acyclic graph ("DAG") to determine the 
+    Gradle uses a directed acyclic graph ("DAG") to determine the
     order in which tasks can be run."""
 
     homepage = "https://gradle.org"
@@ -77,7 +77,7 @@ class Gradle(Package):
     version('0.8',    '73a0ed51b6ec00a7d3a9d242d51aae60')
     version('0.7',    'a8417dbbd62f7013002cb55a44f12cc3')
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
         copy_tree('.', prefix)

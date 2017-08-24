@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,7 +26,8 @@ import pytest
 import spack
 import spack.architecture
 from spack.concretize import find_spec
-from spack.spec import Spec, CompilerSpec, ConflictsInSpecError, SpecError
+from spack.spec import Spec, CompilerSpec
+from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
 
 
@@ -329,59 +330,94 @@ class TestConcretize(object):
 
     def test_find_spec_parents(self):
         """Tests the spec finding logic used by concretization. """
-        s = Spec('a +foo',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d +foo')),
-                 Spec('e +foo'))
+        s = Spec.from_literal({
+            'a +foo': {
+                'b +foo': {
+                    'c': None,
+                    'd+foo': None
+                },
+                'e +foo': None
+            }
+        })
 
         assert 'a' == find_spec(s['b'], lambda s: '+foo' in s).name
 
     def test_find_spec_children(self):
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d +foo')),
-                 Spec('e +foo'))
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd+foo': None
+                },
+                'e +foo': None
+            }
+        })
+
         assert 'd' == find_spec(s['b'], lambda s: '+foo' in s).name
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c +foo'),
-                      Spec('d')),
-                 Spec('e +foo'))
+
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c+foo': None,
+                    'd': None
+                },
+                'e +foo': None
+            }
+        })
+
         assert 'c' == find_spec(s['b'], lambda s: '+foo' in s).name
 
     def test_find_spec_sibling(self):
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e +foo'))
+
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd': None
+                },
+                'e +foo': None
+            }
+        })
+
         assert 'e' == find_spec(s['b'], lambda s: '+foo' in s).name
         assert 'b' == find_spec(s['e'], lambda s: '+foo' in s).name
 
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e',
-                      Spec('f +foo')))
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd': None
+                },
+                'e': {
+                    'f +foo': None
+                }
+            }
+        })
+
         assert 'f' == find_spec(s['b'], lambda s: '+foo' in s).name
 
     def test_find_spec_self(self):
-        s = Spec('a',
-                 Spec('b +foo',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e'))
+        s = Spec.from_literal({
+            'a': {
+                'b +foo': {
+                    'c': None,
+                    'd': None
+                },
+                'e': None
+            }
+        })
         assert 'b' == find_spec(s['b'], lambda s: '+foo' in s).name
 
     def test_find_spec_none(self):
-        s = Spec('a',
-                 Spec('b',
-                      Spec('c'),
-                      Spec('d')),
-                 Spec('e'))
+        s = Spec.from_literal({
+            'a': {
+                'b': {
+                    'c': None,
+                    'd': None
+                },
+                'e': None
+            }
+        })
         assert find_spec(s['b'], lambda s: '+foo' in s) is None
 
     def test_compiler_child(self):
@@ -397,3 +433,21 @@ class TestConcretize(object):
             s = Spec(conflict_spec)
             with pytest.raises(exc_type):
                 s.concretize()
+
+    def test_regression_issue_4492(self):
+        # Constructing a spec which has no dependencies, but is otherwise
+        # concrete is kind of difficult. What we will do is to concretize
+        # a spec, and then modify it to have no dependency and reset the
+        # cache values.
+
+        s = Spec('mpileaks')
+        s.concretize()
+
+        # Check that now the Spec is concrete, store the hash
+        assert s.concrete
+
+        # Remove the dependencies and reset caches
+        s._dependencies.clear()
+        s._concrete = False
+
+        assert not s.concrete

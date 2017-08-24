@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -62,9 +62,16 @@ def filter_shebang(path):
     if original.startswith(new_sbang_line):
         return
 
+    # In the following, newlines have to be excluded in the regular expression
+    # else any mention of "lua" in the document will lead to spurious matches.
+
     # Use --! instead of #! on second line for lua.
-    if re.search(r'^#!(/[^/]*)*lua\b', original):
+    if re.search(r'^#!(/[^/\n]*)*lua\b', original):
         original = re.sub(r'^#', '--', original)
+
+    # Use //! instead of #! on second line for node.js.
+    if re.search(r'^#!(/[^/\n]*)*node\b', original):
+        original = re.sub(r'^#', '//', original)
 
     # Change non-writable files to be writable if needed.
     saved_mode = None

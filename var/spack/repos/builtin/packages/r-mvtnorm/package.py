@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,7 @@ class RMvtnorm(RPackage):
     deviates and densities."""
 
     homepage = "http://mvtnorm.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mvtnorm"
+    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
 
+    version('1.0-6', 'cb69426868fd3e330412b8491901d9d4')
     version('1.0-5', '5894dd3969bbfa26f4862c45f9a48a52')

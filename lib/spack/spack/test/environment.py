@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -89,7 +89,7 @@ def files_to_be_sourced():
     files = [
         os.path.join(datadir, 'sourceme_first.sh'),
         os.path.join(datadir, 'sourceme_second.sh'),
-        os.path.join(datadir, 'sourceme_parameters.sh intel64'),
+        os.path.join(datadir, 'sourceme_parameters.sh'),
         os.path.join(datadir, 'sourceme_unicode.sh')
     ]
 
@@ -108,6 +108,19 @@ def test_set(env):
 
     assert 'dummy value' == os.environ['A']
     assert str(3) == os.environ['B']
+
+
+def test_append_flags(env):
+    """Tests appending to a value in the environment."""
+
+    # Store a couple of commands
+    env.append_flags('APPEND_TO_ME', 'flag1')
+    env.append_flags('APPEND_TO_ME', 'flag2')
+
+    # ... execute the commands
+    env.apply_modifications()
+
+    assert 'flag1 flag2' == os.environ['APPEND_TO_ME']
 
 
 def test_unset(env):
@@ -211,7 +224,14 @@ def test_source_files(files_to_be_sourced):
     """Tests the construction of a list of environment modifications that are
     the result of sourcing a file.
     """
-    env = EnvironmentModifications.from_sourcing_files(*files_to_be_sourced)
+    env = EnvironmentModifications()
+    for filename in files_to_be_sourced:
+        if filename.endswith('sourceme_parameters.sh'):
+            env.extend(EnvironmentModifications.from_sourcing_file(
+                filename, 'intel64'))
+        else:
+            env.extend(EnvironmentModifications.from_sourcing_file(filename))
+
     modifications = env.group_by_name()
 
     # This is sensitive to the user's environment; can include

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,14 +24,16 @@
 ##############################################################################
 from spack import *
 from spack.package_test import *
+import spack.architecture
 import os
 
 
 class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
     homepage = 'http://www.openblas.net'
-    url = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz'
+    url = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
 
+    version('0.2.20', '48637eb29f5b492b91459175dcc574b1')
     version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
     version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
@@ -55,9 +57,14 @@ class Openblas(MakefilePackage):
     patch('make.patch', when='@0.2.16:')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
-    patch('openblas_icc.patch', when='%intel')
+    #  UPD: the patch has been merged starting version 0.2.20
+    patch('openblas_icc.patch', when='@:0.2.19%intel')
     patch('openblas_icc_openmp.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
+
+    # Fixes compilation error on POWER8 with GCC 7
+    # https://github.com/xianyi/OpenBLAS/pull/1098
+    patch('power8.patch', when='@0.2.18:0.2.19 %gcc@7.1.0: target=ppc64')
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/xianyi/OpenBLAS/pull/982
@@ -77,12 +84,15 @@ class Openblas(MakefilePackage):
                 'OpenBLAS requires both C and Fortran compilers!'
             )
         # Add support for OpenMP
-        if '+openmp' in self.spec and self.spec.satisfies('%clang'):
-            # Openblas (as of 0.2.18) hardcoded that OpenMP cannot
-            # be used with any (!) compiler named clang, bummer.
-            raise InstallError(
-                'OpenBLAS does not support OpenMP with clang!'
-            )
+        if (('+openmp' in self.spec) and self.spec.satisfies('%clang')):
+            if str(self.spec.compiler.version).endswith('-apple'):
+                raise InstallError("Apple's clang does not support OpenMP")
+            if '@:0.2.19' in self.spec:
+                # Openblas (as of 0.2.19) hardcoded that OpenMP cannot
+                # be used with any (!) compiler named clang, bummer.
+                raise InstallError(
+                    'OpenBLAS @:0.2.19 does not support OpenMP with clang!'
+                )
 
     @property
     def make_defs(self):
@@ -97,6 +107,12 @@ class Openblas(MakefilePackage):
             'FC={0}'.format(spack_f77),
             'MAKE_NO_J=1'
         ]
+        # invoke make with the correct TARGET for aarch64
+        if 'aarch64' in spack.architecture.sys_type():
+            make_defs += [
+                'TARGET=PILEDRIVER',
+                'TARGET=ARMV8'
+            ]
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs += ['NO_AVX2=1']
         if '~shared' in self.spec:

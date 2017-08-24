@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,28 +22,41 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
 
-from spack.pkg.builtin.intel import IntelInstaller
+from spack import *
+from spack.environment import EnvironmentModifications
 
 
-class IntelMpi(IntelInstaller):
+class IntelMpi(IntelPackage):
     """Intel MPI"""
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
-    version('2017.2', 'b6c2e62c3fb9b1558ede72ccf72cf1d6',
+    version('2017.3.196', '721ecd5f6afa385e038777e5b5361dfb',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11595/l_mpi_2017.3.196.tgz')
+    version('2017.2.174', 'b6c2e62c3fb9b1558ede72ccf72cf1d6',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11334/l_mpi_2017.2.174.tgz')
-    version('2017.1', 'd5e941ac2bcf7c5576f85f6bcfee4c18',
+    version('2017.1.132', 'd5e941ac2bcf7c5576f85f6bcfee4c18',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11014/l_mpi_2017.1.132.tgz')
-    version('5.1.3', '4316e78533a932081b1a86368e890800',
+    version('5.1.3.223',  '4316e78533a932081b1a86368e890800',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9278/l_mpi_p_5.1.3.223.tgz')
 
     provides('mpi')
 
     @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See:
+        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
+        if self.version >= Version('2017.2'):
+            return False
+        else:
+            return True
+
+    @property
     def mpi_libs(self):
+        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.lib64
         query_parameters = self.spec.last_query.extra_parameters
         libraries = ['libmpifort', 'libmpi']
 
@@ -51,12 +64,15 @@ class IntelMpi(IntelInstaller):
             libraries = ['libmpicxx'] + libraries
 
         return find_libraries(
-            libraries, root=self.prefix.lib64, shared=True, recurse=True
+            libraries, root=mpi_root, shared=True, recurse=True
         )
 
-    def install(self, spec, prefix):
-        self.intel_prefix = prefix
-        IntelInstaller.install(self, spec, prefix)
+    @property
+    def mpi_headers(self):
+        # recurse from self.prefix will find too many things for all the
+        # supported sub-architectures like 'mic'
+        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
+        return find_headers('mpi', root=mpi_root, recurse=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('I_MPI_CC', spack_cc)
@@ -66,15 +82,52 @@ class IntelMpi(IntelInstaller):
         spack_env.set('I_MPI_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
-        # Check for presence of bin64 or bin directory
-        if os.path.isdir(self.prefix.bin):
-            bindir = self.prefix.bin
-        elif os.path.isdir(self.prefix.bin64):
-            bindir = self.prefix.bin64
-        else:
-            raise RuntimeError('No suitable bindir found')
+        # Intel comes with 2 different flavors of MPI wrappers:
+        #
+        # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
+        #   the Intel compilers.
+        # * mpicc, mpicxx, mpif90, and mpif77 allow you to set which
+        #   compilers to wrap using I_MPI_CC and friends. By default,
+        #   wraps around the GCC compilers.
+        #
+        # In theory, these should be equivalent as long as I_MPI_CC
+        # and friends are set to point to the Intel compilers, but in
+        # practice, mpicc fails to compile some applications while
+        # mpiicc works.
+        bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
 
-        self.spec.mpicc = join_path(bindir, 'mpicc')
-        self.spec.mpicxx = join_path(bindir, 'mpicxx')
-        self.spec.mpifc = join_path(bindir, 'mpif90')
-        self.spec.mpif77 = join_path(bindir, 'mpif77')
+        if self.compiler.name == 'intel':
+            self.spec.mpicc  = bindir.mpiicc
+            self.spec.mpicxx = bindir.mpiicpc
+            self.spec.mpifc  = bindir.mpiifort
+            self.spec.mpif77 = bindir.mpiifort
+        else:
+            self.spec.mpicc  = bindir.mpicc
+            self.spec.mpicxx = bindir.mpicxx
+            self.spec.mpifc  = bindir.mpif90
+            self.spec.mpif77 = bindir.mpif77
+
+    def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
+        """
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        mpivars = os.path.join(
+            self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
+            'mpivars.sh')
+
+        if os.path.isfile(mpivars):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                mpivars))

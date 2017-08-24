@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,23 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
 
-from spack.pkg.builtin.intel import IntelInstaller
+from spack import *
+from spack.environment import EnvironmentModifications
 
 
-class IntelDaal(IntelInstaller):
-    """Intel Data Analytics Acceleration Library.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+class IntelDaal(IntelPackage):
+    """Intel Data Analytics Acceleration Library."""
 
     homepage = "https://software.intel.com/en-us/daal"
 
+    version('2017.3.196', '93221eaeb560917a129d42fb2cf02500',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11546/l_daal_2017.3.196.tgz")
     version('2017.2.174', 'f067d5d7b0f70914fba1f78da0361065',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11308/l_daal_2017.2.174.tgz")
+    version('2017.1.132', '56eef8cc45219f92a27de03ae914eba4',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10983/l_daal_2017.1.132.tgz")
     version('2017.0.098', 'b4eb234de12beff4a5cba4b81ea60673',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9664/l_daal_2017.0.098.tgz")
     version('2016.3.210', 'ad747c0dd97dace4cad03cf2266cad28',
@@ -48,11 +48,35 @@ class IntelDaal(IntelInstaller):
 
     provides('daal')
 
-    def install(self, spec, prefix):
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See:
+        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
+        if self.version >= Version('2017.2'):
+            return False
+        else:
+            return True
 
-        self.intel_prefix = os.path.join(prefix, "pkg")
-        IntelInstaller.install(self, spec, prefix)
+    def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
 
-        daal_dir = os.path.join(self.intel_prefix, "daal")
-        for f in os.listdir(daal_dir):
-            os.symlink(os.path.join(daal_dir, f), os.path.join(self.prefix, f))
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source daal/bin/daalvars.sh intel64
+        """
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        daalvars = os.path.join(self.prefix.daal.bin, 'daalvars.sh')
+
+        if os.path.isfile(daalvars):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                daalvars, 'intel64'))

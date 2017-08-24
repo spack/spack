@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,19 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
 
-from spack.pkg.builtin.intel import IntelInstaller
+from spack import *
+from spack.environment import EnvironmentModifications
 
 
-class IntelMkl(IntelInstaller):
+class IntelMkl(IntelPackage):
     """Intel Math Kernel Library."""
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2017.3.196', '4a2eb4bee789391d9c07d7c348a80702',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11544/l_mkl_2017.3.196.tgz")
     version('2017.2.174', 'ef39a12dcbffe5f4a0ef141b8759208c',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11306/l_mkl_2017.2.174.tgz")
+    version('2017.1.132', '7911c0f777c4cb04225bf4518088939e',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11024/l_mkl_2017.1.132.tgz")
     version('2017.0.098', '3cdcb739ab5ab1e047eb130b9ffdd8d0',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9662/l_mkl_2017.0.098.tgz")
     version('11.3.3.210', 'f72546df27f5ebb0941b5d21fd804e34',
@@ -46,11 +50,20 @@ class IntelMkl(IntelInstaller):
     variant('ilp64', default=False, description='64 bit integers')
     variant('openmp', default=False, description='OpenMP multithreading layer')
 
-    # virtual dependency
     provides('blas')
     provides('lapack')
     provides('scalapack')
     provides('mkl')
+
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See:
+        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
+        if self.version >= Version('2017.2'):
+            return False
+        else:
+            return True
 
     @property
     def blas_libs(self):
@@ -65,15 +78,27 @@ class IntelMkl(IntelInstaller):
 
         mkl_threading = ['libmkl_sequential']
 
+        omp_libs = LibraryList([])
+
         if '+openmp' in spec:
             if '%intel' in spec:
-                mkl_threading = ['libmkl_intel_thread', 'libiomp5']
-            else:
+                mkl_threading = ['libmkl_intel_thread']
+                omp_threading = ['libiomp5']
+
+                omp_root = prefix.compilers_and_libraries.linux.lib.intel64
+                omp_libs = find_libraries(
+                    omp_threading, root=omp_root, shared=shared)
+            elif '%gcc' in spec:
                 mkl_threading = ['libmkl_gnu_thread']
+
+                gcc = Executable(self.compiler.cc)
+                libgomp = gcc('--print-file-name', 'libgomp.{0}'.format(
+                    dso_suffix), output=str)
+                omp_libs = LibraryList(libgomp)
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
-        mkl_root = join_path(prefix.lib, 'intel64')
+        mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
 
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
@@ -87,7 +112,7 @@ class IntelMkl(IntelInstaller):
             shared=shared
         )
 
-        return mkl_libs + system_libs
+        return mkl_libs + omp_libs + system_libs
 
     @property
     def lapack_libs(self):
@@ -116,28 +141,46 @@ class IntelMkl(IntelInstaller):
         elif '^intel-mpi' in root:
             libnames.append('libmkl_blacs_intelmpi')
         else:
-            raise InstallError("No MPI found for scalapack")
+            raise InstallError('No MPI found for scalapack')
 
-        shared = True if '+shared' in self.spec else False
         integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
+        mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        shared = True if '+shared' in self.spec else False
+
         libs = find_libraries(
             ['{0}_{1}'.format(l, integer) for l in libnames],
-            root=join_path(self.prefix.lib, 'intel64'),
+            root=mkl_root,
             shared=shared
         )
+
         return libs
-
-    def install(self, spec, prefix):
-        self.intel_prefix = os.path.join(prefix, "pkg")
-        IntelInstaller.install(self, spec, prefix)
-
-        mkl_dir = os.path.join(self.intel_prefix, "mkl")
-        for f in os.listdir(mkl_dir):
-            os.symlink(os.path.join(mkl_dir, f), os.path.join(self.prefix, f))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package
+        mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+
         spack_env.set('MKLROOT', self.prefix)
+        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_root)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('MKLROOT', self.prefix)
+        """Adds environment variables to the generated module file.
+
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source mkl/bin/mklvars.sh intel64
+        """
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        mklvars = os.path.join(self.prefix.mkl.bin, 'mklvars.sh')
+
+        if os.path.isfile(mklvars):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                mklvars, 'intel64'))

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,6 +33,5 @@ class RLattice(RPackage):
 
     homepage = "http://lattice.r-forge.r-project.org/"
     url      = "https://cran.r-project.org/src/contrib/lattice_0.20-34.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lattice"
 
     version('0.20-34', 'c2a648b22d4206ae7526fb70b8e90fed')

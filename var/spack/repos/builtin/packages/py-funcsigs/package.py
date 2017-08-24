@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,7 +28,7 @@ from spack import *
 class PyFuncsigs(PythonPackage):
     """Python function signatures from PEP362 for Python 2.6, 2.7 and 3.2."""
     homepage = "https://pypi.python.org/pypi/funcsigs"
-    url      = "https://pypi.python.org/packages/source/f/funcsigs/funcsigs-0.4.tar.gz"
+    url      = "https://pypi.io/packages/source/f/funcsigs/funcsigs-0.4.tar.gz"
 
     version('0.4', 'fb1d031f284233e09701f6db1281c2a5')
 

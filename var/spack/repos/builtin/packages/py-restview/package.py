@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ class PyRestview(PythonPackage):
     """A viewer for ReStructuredText documents that renders them on the fly."""
 
     homepage = "https://mg.pov.lt/restview/"
-    url = "https://pypi.python.org/packages/source/r/restview/restview-2.6.1.tar.gz"
+    url = "https://pypi.io/packages/source/r/restview/restview-2.6.1.tar.gz"
 
     version('2.6.1', 'ac8b70e15b8f1732d1733d674813666b')
 

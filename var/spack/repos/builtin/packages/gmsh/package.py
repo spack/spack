@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -46,8 +46,6 @@ class Gmsh(CMakePackage):
 
     variant('shared',      default=True,
             description='Enables the build of shared libraries')
-    variant('debug',       default=False,
-            description='Builds the library in debug mode')
     variant('mpi',         default=True,
             description='Builds MPI support for parser and solver')
     variant('fltk',        default=False,
@@ -127,9 +125,6 @@ class Gmsh(CMakePackage):
         else:
             # Builds and installs static library
             options.append('-DENABLE_BUILD_LIB:BOOL=ON')
-
-        if '+debug' in spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
 
         if '+mpi' in spec:
             options.append('-DENABLE_MPI:BOOL=ON')

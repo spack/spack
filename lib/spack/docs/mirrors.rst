@@ -237,7 +237,7 @@ as other Spack mirrors (so it can be copied anywhere and referenced with a URL
 like other mirrors). The mirror is maintained locally (within the Spack
 installation directory) at :file:`var/spack/cache/`. It is always enabled (and
 is always searched first when attempting to retrieve files for an installation)
-but can be cleared with :ref:`purge <cmd-spack-purge>`; the cache directory can also
+but can be cleared with :ref:`clean <cmd-spack-clean>`; the cache directory can also
 be deleted manually without issue.
 
 Caching includes retrieved tarball archives and source control repositories, but

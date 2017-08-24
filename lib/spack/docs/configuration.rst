@@ -45,20 +45,27 @@ Configuration Scopes
 -------------------------
 
 Spack pulls configuration data from files in several directories. There
-are three configuration scopes.  From lowest to highest:
+are four configuration scopes.  From lowest to highest:
 
-1. **defaults**: Stored in ``$(prefix)/etc/spack/defaults/``. These are
+#. **defaults**: Stored in ``$(prefix)/etc/spack/defaults/``. These are
    the "factory" settings. Users should generally not modify the settings
    here, but should override them in other configuration scopes. The
    defaults here will change from version to version of Spack.
 
-2. **site**: Stored in ``$(prefix)/etc/spack/``.  Settings here affect
+#. **system**: Stored in ``/etc/spack``. These are settings for this
+   machine, or for all machines on which this file system is
+   mounted. The site scope can be used for settings idiosyncratic to a
+   particular machine, such as the locations of compilers or external
+   packages. These settings are presumably controlled by someone with
+   root access on the machine.
+
+#. **site**: Stored in ``$(prefix)/etc/spack/``.  Settings here affect
    only *this instance* of Spack, and they override defaults.  The site
    scope can can be used for per-project settings (one spack instance per
    project) or for site-wide settings on a multi-user machine (e.g., for
    a common spack instance).
 
-3. **user**: Stored in the home directory: ``~/.spack/``. These settings
+#. **user**: Stored in the home directory: ``~/.spack/``. These settings
    affect all instances of Spack and take the highest precedence.
 
 Each configuration directory may contain several configuration files,
@@ -78,22 +85,25 @@ Platform-specific scopes
 -------------------------
 
 For each scope above, there can *also* be platform-specific settings.
-For example, on Blue Gene/Q machines, Spack needs to know the location of
-cross-compilers for the compute nodes.  This configuration is in
-``etc/spack/defaults/bgq/compilers.yaml``.  It will take precedence over
-settings in the ``defaults`` scope, but can still be overridden by
-settings in ``site``, ``site/bgq``, ``user``, or ``user/bgq``. So, the
-full scope precedence is:
+For example, on Blue Gene/Q machines, Spack needs to know the location
+of cross-compilers for the compute nodes.  This configuration is in
+``etc/spack/defaults/bgq/compilers.yaml``.  It will take precedence
+over settings in the ``defaults`` scope, but can still be overridden
+by settings in ``system``, ``system/bgq``, ``site``, ``site/bgq``,
+``user``, or ``user/bgq``. So, the full scope precedence is:
 
 1. ``defaults``
 2. ``defaults/<platform>``
-3. ``site``
-4. ``site/<platform>``
-5. ``user``
-6. ``user/<platform>``
+3. ``system``
+4. ``system/<platform>``
+5. ``site``
+6. ``site/<platform>``
+7. ``user``
+8. ``user/<platform>``
 
 You can get the name to use for ``<platform>`` by running ``spack arch
---platform``.
+--platform``. The system config scope has a ``<platform>`` section for
+sites at which ``/etc`` is mounted on multiple heterogeneous machines.
 
 -------------------------
 Scope precedence
@@ -251,3 +261,52 @@ The merged configuration would look like this:
        - /lustre-scratch/$user
        - ~/mystage
    $ _
+
+.. _config-file-variables:
+
+------------------------------
+Config file variables
+------------------------------
+
+Spack understands several variables which can be used in config file paths
+where ever they appear. There are three sets of these variables, Spack specific 
+variables, environment variables, and user path variables. Spack specific
+variables and environment variables both are indicated by prefixing the variable
+name with ``$``. User path variables are indicated at the start of the path with
+``~`` or ``~user``. Let's discuss each in turn.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Spack Specific Variables
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack understands several special variables. These are:
+
+  * ``$spack``: path to the prefix of this spack installation
+  * ``$tempdir``: default system temporary directory (as specified in
+    Python's `tempfile.tempdir
+    <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
+    variable.
+  * ``$user``: name of the current user
+
+Note that, as with shell variables, you can write these as ``$varname``
+or with braces to distinguish the variable from surrounding characters:
+``${varname}``. Their names are also case insensitive meaning that ``$SPACK``
+works just as well as ``$spack``. These special variables are also
+substituted first, so any environment variables with the same name will not
+be used.
+
+^^^^^^^^^^^^^^^^^^^^^
+Environment Variables
+^^^^^^^^^^^^^^^^^^^^^
+
+Spack then uses ``os.path.expandvars`` to expand any remaining environment
+variables.
+
+^^^^^^^^^^^^^^
+User Variables
+^^^^^^^^^^^^^^
+
+Spack also uses the ``os.path.expanduser`` function on the path to expand
+any user tilde paths such as ``~`` or ``~user``. These tilde paths must appear
+at the beginning of the path or ``os.path.expanduser`` will not properly
+expand them.

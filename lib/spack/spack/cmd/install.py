@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -66,6 +66,12 @@ the dependencies"""
         '--keep-stage', action='store_true', dest='keep_stage',
         help="don't remove the build stage if installation succeeds")
     subparser.add_argument(
+        '--restage', action='store_true', dest='restage',
+        help="if a partial install is detected, delete prior state")
+    subparser.add_argument(
+        '--source', action='store_true', dest='install_source',
+        help="install source files in prefix")
+    subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="do not check packages against checksum")
     subparser.add_argument(
@@ -74,6 +80,9 @@ the dependencies"""
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
         help="fake install. just remove prefix and create a fake file")
+    subparser.add_argument(
+        '-f', '--file', action='store_true', dest='file',
+        help="install from file. Read specs to install from .yaml files")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -307,6 +316,8 @@ def install(parser, args, **kwargs):
     kwargs.update({
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
+        'restage': args.restage,
+        'install_source': args.install_source,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,
         'run_tests': args.run_tests,
@@ -316,36 +327,52 @@ def install(parser, args, **kwargs):
     })
 
     # Spec from cli
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    specs = []
+    if args.file:
+        for file in args.package:
+            with open(file, 'r') as f:
+                specs.append(spack.spec.Spec.from_yaml(f))
+    else:
+        specs = spack.cmd.parse_specs(args.package, concretize=True)
     if len(specs) == 0:
         tty.error('The `spack install` command requires a spec to install.')
 
     for spec in specs:
+        saved_do_install = PackageBase.do_install
+        decorator = lambda fn: fn
+
         # Check if we were asked to produce some log for dashboards
         if args.log_format is not None:
             # Compute the filename for logging
             log_filename = args.log_file
             if not log_filename:
                 log_filename = default_log_file(spec)
+
             # Create the test suite in which to log results
             test_suite = TestSuite(spec)
-            # Decorate PackageBase.do_install to get installation status
-            PackageBase.do_install = junit_output(
-                spec, test_suite
-            )(PackageBase.do_install)
+
+            # Temporarily decorate PackageBase.do_install to monitor
+            # recursive calls.
+            decorator = junit_output(spec, test_suite)
 
         # Do the actual installation
-        if args.things_to_install == 'dependencies':
-            # Install dependencies as-if they were installed
-            # for root (explicit=False in the DB)
-            kwargs['explicit'] = False
-            for s in spec.dependencies():
-                p = spack.repo.get(s)
-                p.do_install(**kwargs)
-        else:
-            package = spack.repo.get(spec)
-            kwargs['explicit'] = True
-            package.do_install(**kwargs)
+        try:
+            # decorate the install if necessary
+            PackageBase.do_install = decorator(PackageBase.do_install)
+
+            if args.things_to_install == 'dependencies':
+                # Install dependencies as-if they were installed
+                # for root (explicit=False in the DB)
+                kwargs['explicit'] = False
+                for s in spec.dependencies():
+                    p = spack.repo.get(s)
+                    p.do_install(**kwargs)
+            else:
+                package = spack.repo.get(spec)
+                kwargs['explicit'] = True
+                package.do_install(**kwargs)
+        finally:
+            PackageBase.do_install = saved_do_install
 
         # Dump log file if asked to
         if args.log_format is not None:

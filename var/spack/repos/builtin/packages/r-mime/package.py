@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,6 @@ class RMime(RPackage):
 
     homepage = "https://github.com/yihui/mime"
     url      = "https://cran.r-project.org/src/contrib/mime_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mime"
 
     version('0.5', '87e00b6d57b581465c19ae869a723c4d')
     version('0.4', '789cb33e41db2206c6fc7c3e9fbc2c02')

@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -46,9 +46,9 @@ class NetlibScalapack(CMakePackage):
         description='Build the shared library version'
     )
     variant(
-        'fpic',
+        'pic',
         default=False,
-        description='Build with -fpic compiler option'
+        description='Build position independent code'
     )
 
     provides('scalapack')
@@ -87,10 +87,10 @@ class NetlibScalapack(CMakePackage):
             '-DBLAS_LIBRARIES=%s' % (blas.joined(';'))
         ])
 
-        if '+fpic' in spec:
+        if '+pic' in spec:
             options.extend([
-                "-DCMAKE_C_FLAGS=-fPIC",
-                "-DCMAKE_Fortran_FLAGS=-fPIC"
+                "-DCMAKE_C_FLAGS=%s" % self.compiler.pic_flag,
+                "-DCMAKE_Fortran_FLAGS=%s" % self.compiler.pic_flag
             ])
 
         return options

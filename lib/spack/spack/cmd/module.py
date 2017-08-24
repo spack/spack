@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -236,7 +236,8 @@ def refresh(mtype, specs, args):
             if len(writer_list) > 1:
                 message += '\nfile: {0}\n'.format(filename)
                 for x in writer_list:
-                    message += 'spec: {0}\n'.format(x.spec.format(color=True))
+                    message += 'spec: {0}\n'.format(x.spec.format())
+
         tty.error(message)
         tty.error('Operation aborted')
         raise SystemExit(1)
@@ -269,7 +270,7 @@ def module(parser, args):
                    "and this is not allowed in this context")
         tty.error(message.format(query=constraint))
         for s in specs:
-            sys.stderr.write(s.format(color=True) + '\n')
+            sys.stderr.write(s.cformat() + '\n')
         raise SystemExit(1)
     except NoMatch:
         message = ("the constraint '{query}' matches no package, "

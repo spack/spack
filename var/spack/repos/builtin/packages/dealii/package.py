@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -71,6 +71,9 @@ class Dealii(CMakePackage):
             description='Compile with 64 bit indices support')
     variant('optflags', default=False,
             description='Compile using additional optimization flags')
+    variant('build_type', default='DebugRelease',
+            description='The build type to build',
+            values=('Debug', 'Release', 'DebugRelease'))
 
     # required dependencies, light version
     depends_on("blas")
@@ -113,8 +116,8 @@ class Dealii(CMakePackage):
     depends_on("hdf5+mpi",         when='+hdf5+mpi')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
-    depends_on("metis@5:+int64",   when='+metis+int64')
-    depends_on("metis@5:~int64",   when='+metis~int64')
+    depends_on("metis@5:+int64+real64",   when='+metis+int64')
+    depends_on("metis@5:~int64+real64",   when='+metis~int64')
     depends_on("netcdf+mpi",       when="+netcdf+mpi")
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
@@ -126,22 +129,17 @@ class Dealii(CMakePackage):
     depends_on("slepc",            when='+slepc+petsc+mpi')
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("slepc~arpack",     when='+slepc+petsc+mpi+int64')
-    depends_on("trilinos",         when='+trilinos+mpi~int64')
-    depends_on("trilinos~hypre",   when="+trilinos+mpi+int64")
+    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos",       when='+trilinos+mpi~int64')
+    depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre", when="+trilinos+mpi+int64")
 
     # check that the combination of variants makes sense
-    def variants_check(self):
-        for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
-                  '+slepc', '+trilinos']:
-            if p in self.spec and '+mpi' not in self.spec:
-                raise RuntimeError('The ' + p + ' variant requires +mpi')
-
-    def build_type(self):
-        # CMAKE_BUILD_TYPE should be DebugRelease | Debug | Release
-        return 'DebugRelease'
+    conflicts('+gsl',    when='@:8.4.2')
+    conflicts('+python', when='@:8.4.2')
+    for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
+              '+slepc', '+trilinos']:
+        conflicts(p, when='~mpi')
 
     def cmake_args(self):
-        self.variants_check()
         spec = self.spec
         options = []
         # release flags

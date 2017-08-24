@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,7 @@ class Cudnn(Package):
 
     homepage = "https://developer.nvidia.com/cudnn"
 
-    version('6.0', '4aacb7acb93c5e4dfa9db814df496219',
+    version('6.0', 'a08ca487f88774e39eb6b0ef6507451d',
             url='http://developer.download.nvidia.com/compute/redist/cudnn/v6.0/cudnn-8.0-linux-x64-v6.0.tgz')
     version('5.1', '406f4ac7f7ee8aa9e41304c143461a69',
             url='http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-linux-x64-v5.1.tgz')
