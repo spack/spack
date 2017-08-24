@@ -27,63 +27,48 @@ import shutil
 from spack import *
 
 
-class Nauty(Package):
+class Nauty(AutotoolsPackage):
     """nauty and Traces are programs for computing automorphism groups of
     graphsq and digraphs"""
     homepage = "http://pallini.di.uniroma1.it/index.html"
     url      = "http://pallini.di.uniroma1.it/nauty26r7.tar.gz"
 
     version('2.6r7', 'b2b18e03ea7698db3fbe06c5d76ad8fe')
-    version('2.6r5', '91b03a7b069962e94fc9aac8831ce8d2')
-    version('2.5r9', 'e8ecd08b0892a1fb13329c147f08de6d')
+
+    # Debian patch to fix the gt_numorbits declaration
+    patch('nauty-fix-gt_numorbits.patch', when='@2.6r7')
+    # Debian patch to add explicit extern declarations where needed
+    patch('nauty-fix-include-extern.patch', when='@2.6r7')
+    # Debian patch to use zlib instead of invoking zcat through a pipe
+    patch('nauty-zlib-blisstog.patch', when='@2.6r7')
+    # Debian patch to improve usage and help information
+    patch('nauty-help2man.patch', when='@2.6r7')
+    # Debian patch to add libtool support for building a shared library
+    patch('nauty-autotoolization.patch', when='@2.6r7')
+    # Debian patch to canonicalize header file usage
+    patch('nauty-includes.patch', when='@2.6r7')
+    # Debian patch to prefix "nauty-" to the names of the generic tools
+    patch('nauty-tool-prefix.patch', when='@2.6r7')
+    # Fedora patch to detect availability of the popcnt instruction at runtime
+    patch('nauty-popcnt.patch', when='@2.6r7')
+
+    depends_on('m4',  type='build', when='@2.6r7')
+    depends_on('autoconf',  type='build', when='@2.6r7')
+    depends_on('automake',  type='build', when='@2.6r7')
+    depends_on('libtool',  type='build', when='@2.6r7')
+
+    @property 
+    def force_autoreconf(self): 
+        return self.spec.satisfies('@2.6r7')
 
     def url_for_version(self, version):
         url = "http://pallini.di.uniroma1.it/nauty{0}.tar.gz"
         return url.format(version.joined)
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
+    def autoreconf(self, spec, prefix):
+        libtoolize("--install", "--copy", "--force", "--automake")
+        aclocal('-I', 'm4')
+        autoconf('--force')
 
-        exes = [
-            "NRswitchg",
-            "addedgeg",
-            "amtog",
-            "biplabg",
-            "catg",
-            "complg",
-            "converseg",
-            "copyg",
-            "countg",
-            "cubhamg",
-            "deledgeg",
-            "delptg",
-            "directg",
-            "dreadnaut",
-            "dretodot",
-            "dretog",
-            "genbg",
-            "genbgL",
-            "geng",
-            "genquarticg",
-            "genrang",
-            "genspecialg",
-            "gentourng",
-            "gentreeg",
-            "hamheuristic",
-            "labelg",
-            "linegraphg",
-            "listg",
-            "multig",
-            "newedgeg",
-            "pickg",
-            "planarg",
-            "ranlabg",
-            "shortg",
-            "subdivideg",
-            "twohamg",
-            "vcolg",
-            "watercluster2"]
-        mkdirp(prefix.bin)
-        for exe in exes:
-            shutil.copyfile(exe, join_path(prefix.bin, exe))
+
+
