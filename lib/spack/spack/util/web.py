@@ -106,11 +106,19 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         root = re.sub('/index.html$', '', root)
 
     try:
-        # Disable certificate verification if required.
-        # https://www.python.org/dev/peps/pep-0476
-        context = ssl._create_unverified_context() \
-            if spack.insecure and sys.version_info >= (2, 7, 9) \
-            else None
+        context = None
+        if sys.version_info < (2, 7, 9) or \
+                ((3,) < sys.version_info < (3, 4, 3)):
+            if not spack.insecure:
+                tty.warn("Spack will not check SSL certificates. You need to "
+                         "update your Python to enable certificate "
+                         "verification.")
+        else:
+            # We explicitly create default context to avoid error described in
+            # https://blog.sucuri.net/2016/03/beware-unverified-tls-certificates-php-python.html
+            context = ssl._create_unverified_context() \
+                if spack.insecure \
+                else ssl.create_default_context()
 
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
@@ -119,9 +127,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         # if you ask for a tarball with Accept: text/html.
         req = Request(url)
         req.get_method = lambda: "HEAD"
-        resp = urlopen(req, timeout=TIMEOUT) \
-            if context is None \
-            else urlopen(req, timeout=TIMEOUT, context=context)
+        resp = _urlopen(req, timeout=TIMEOUT, context=context)
 
         if "Content-type" not in resp.headers:
             tty.debug("ignoring page " + url)
@@ -134,9 +140,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
         # Do the real GET request when we know it's just HTML.
         req.get_method = lambda: "GET"
-        response = urlopen(req, timeout=TIMEOUT) \
-            if context is None \
-            else urlopen(req, timeout=TIMEOUT, context=context)
+        response = _urlopen(req, timeout=TIMEOUT, context=context)
         response_url = response.geturl()
 
         # Read the page and and stick it in the map we'll return
@@ -220,8 +224,16 @@ def _spider_wrapper(args):
     return _spider(*args)
 
 
-def spider(root_url, depth=0):
+def _urlopen(*args, **kwargs):
+    """Wrapper for compatibility with old versions of Python."""
+    # We don't pass 'context' parameter to urlopen because it
+    # was introduces only starting versions 2.7.9 and 3.4.3 of Python.
+    if 'context' in kwargs and kwargs['context'] is None:
+        del kwargs['context']
+    return urlopen(*args, **kwargs)
 
+
+def spider(root_url, depth=0):
     """Gets web pages from a root URL.
 
        If depth is specified (e.g., depth=2), then this will also follow
