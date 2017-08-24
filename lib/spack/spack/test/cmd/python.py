@@ -29,5 +29,5 @@ python = SpackCommand('python')
 
 
 def test_python():
-    out, err = python('-c', 'import spack; print(spack.spack_version)')
+    out = python('-c', 'import spack; print(spack.spack_version)')
     assert out.strip() == str(spack.spack_version)

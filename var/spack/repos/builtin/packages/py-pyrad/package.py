@@ -25,28 +25,17 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class PyPyrad(PythonPackage):
+    """RADseq for phylogenetics & introgression analyses"""
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "http://dereneaton.com/software/pyrad/"
+    url      = "https://github.com/dereneaton/pyrad/archive/3.0.66.tar.gz"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('3.0.66', '19b8bcd73a574f8a25582d6e8978f0aa')
 
-    build_directory = 'source'
-
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+    depends_on('python@:2.999', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('vsearch')
+    depends_on('muscle')

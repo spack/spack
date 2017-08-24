@@ -23,30 +23,35 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os.path
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class Pgdspider(Package):
+    """"PGDSpider is a powerful automated data conversion tool for population
+        genetic and genomics programs"""
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "http://www.cmpg.unibe.ch/software/PGDSpider"
+    url      = "http://www.cmpg.unibe.ch/software/PGDSpider/PGDSpider_2.1.1.2.zip"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('2.1.1.2', '170e5b4a002277ff66866486da920693')
 
-    build_directory = 'source'
-
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
+    depends_on('java', type=('build', 'run'))
+    depends_on('bcftools')
+    depends_on('bwa')
+    depends_on('samtools')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+        jar_file = 'PGDSpider{0}-cli.jar'.format(self.version.up_to(1))
+        install(jar_file, prefix.bin)
+
+        script_sh = join_path(os.path.dirname(__file__), "pgdspider.sh")
+        script = prefix.bin.pgdspider
+        install(script_sh, script)
+        set_executable(script)
+
+        java = self.spec['java'].prefix.bin.java
+        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+        filter_file('^java', java, script, **kwargs)
+        filter_file('pgdspider.jar', join_path(prefix.bin, jar_file),
+                    script, **kwargs)
