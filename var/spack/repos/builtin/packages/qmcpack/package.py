@@ -31,8 +31,9 @@ class Qmcpack(CMakePackage):
 
     # Package information
     homepage = "http://www.qmcpack.org/"
-    url      = "https://github.com/QMCPACK/qmcpack/archive/v3.1.0.tar.gz"
+    url      = "https://github.com/QMCPACK/qmcpack/archive/v3.1.1.tar.gz"
 
+    version('3.1.1', 'f088c479ae928c37320e717c96880974')
     version('3.1.0', 'bdf3acd090557acdb6cab5ddbf7c7960')
     version('3.0.0', '75f9cf70e6cc6d8b7ff11a86340da43d')
 
