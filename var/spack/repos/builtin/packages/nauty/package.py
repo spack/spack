@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import shutil
+import os
 from spack import *
 
 
@@ -56,6 +56,7 @@ class Nauty(AutotoolsPackage):
     depends_on('autoconf',  type='build', when='@2.6r7')
     depends_on('automake',  type='build', when='@2.6r7')
     depends_on('libtool',  type='build', when='@2.6r7')
+    depends_on('pkg-config',  type='build')
 
     @property 
     def force_autoreconf(self): 
@@ -65,10 +66,9 @@ class Nauty(AutotoolsPackage):
         url = "http://pallini.di.uniroma1.it/nauty{0}.tar.gz"
         return url.format(version.joined)
 
-    def autoreconf(self, spec, prefix):
-        libtoolize("--install", "--copy", "--force", "--automake")
-        aclocal('-I', 'm4')
-        autoconf('--force')
+    def patch(self):
+        os.remove('makefile') 
 
-
-
+    def configure_args(self):
+        args = ['--disable-static']
+        return args
