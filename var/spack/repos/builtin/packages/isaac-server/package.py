@@ -42,10 +42,13 @@ class IsaacServer(CMakePackage):
     #         'Support for RTP streams, e.g. to Twitch or Youtube')
 
     depends_on('cmake@3.3:', type='build')
-    depends_on('libjpeg-turbo', type='link')
+    depends_on('jpeg', type='link')
     depends_on('jansson', type='link')
     depends_on('boost@1.56:', type='link')
     depends_on('libwebsockets@2.1.1:', type='link')
     # depends_on('gstreamer@1.0', when='+gstreamer')
+
+    # Until the pull request is merged: https://github.com/ComputationalRadiationPhysics/isaac/pull/70
+    patch('jpeg.patch')
 
     root_cmakelists_dir = 'server'

@@ -80,8 +80,8 @@ class Opencv(CMakePackage):
 
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
-    depends_on('libjpeg-turbo', when='+jpeg')
-    depends_on('libtiff+turbo', when='+tiff')
+    depends_on('jpeg', when='+jpeg')
+    depends_on('libtiff', when='+tiff')
 
     depends_on('jasper', when='+jasper')
     depends_on('cuda', when='+cuda')
@@ -150,7 +150,7 @@ class Opencv(CMakePackage):
             ])
 
         if '+jpeg' in spec:
-            libjpeg = spec['libjpeg-turbo']
+            libjpeg = spec['jpeg']
             args.extend([
                 '-DBUILD_JPEG:BOOL=OFF',
                 '-DJPEG_LIBRARY:FILEPATH={0}'.format(

@@ -38,7 +38,7 @@ class Jasper(AutotoolsPackage):
     variant('debug', default=False,
             description='Builds debug versions of the libraries')
 
-    depends_on('libjpeg-turbo')
+    depends_on('jpeg')
 
     # Fixes a bug (still in upstream as of v.1.900.1) where an assertion fails
     # when certain JPEG-2000 files with an alpha channel are processed
