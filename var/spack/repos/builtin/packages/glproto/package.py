@@ -36,5 +36,5 @@ class Glproto(AutotoolsPackage):
 
     version('1.4.17', 'd69554c1b51a83f2c6976a640819911b')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

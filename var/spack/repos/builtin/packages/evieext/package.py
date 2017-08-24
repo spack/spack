@@ -36,5 +36,5 @@ class Evieext(AutotoolsPackage):
 
     version('1.1.1', '018a7d24d0c7926d594246320bcb6a86')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

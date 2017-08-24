@@ -62,7 +62,7 @@ class Pocl(CMakePackage):
     # enabled by default, and also because they fail to build for us
     # (see #1616)
     depends_on("llvm +clang")
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
 
     # These are the supported LLVM versions
     depends_on("llvm @3.7:3.9", when="@master")
