@@ -69,7 +69,7 @@ def test_gpg(gpg, tmpdir, testing_gpg_directory, mock_gpg_config):
         gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
 
     # Import the default key.
-    gpg('init')
+    gpg('init', spack.mock_gpg_keys_path)
 
     # List the keys.
     # TODO: Test the output here.

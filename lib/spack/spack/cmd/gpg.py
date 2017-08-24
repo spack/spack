@@ -25,6 +25,7 @@
 from spack.util.gpg import Gpg
 import spack
 import os
+import argparse
 
 description = "handle GPG actions for spack"
 section = "developer"
@@ -87,6 +88,8 @@ def setup_parser(subparser):
     list.set_defaults(func=gpg_list)
 
     init = subparsers.add_parser('init')
+    init.add_argument('import_dir', type=str,
+                      help=argparse.SUPPRESS)
     init.set_defaults(func=gpg_init)
     init.set_defaults(import_dir=spack.gpg_keys_path)
 
