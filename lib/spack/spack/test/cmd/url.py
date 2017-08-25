@@ -83,30 +83,30 @@ def test_url_with_no_version_fails():
 
 
 def test_url_list():
-    out, err = url('list')
+    out = url('list')
     total_urls = len(out.split('\n'))
 
     # The following two options should not change the number of URLs printed.
-    out, err = url('list', '--color', '--extrapolation')
+    out = url('list', '--color', '--extrapolation')
     colored_urls = len(out.split('\n'))
     assert colored_urls == total_urls
 
     # The following options should print fewer URLs than the default.
     # If they print the same number of URLs, something is horribly broken.
     # If they say we missed 0 URLs, something is probably broken too.
-    out, err = url('list', '--incorrect-name')
+    out = url('list', '--incorrect-name')
     incorrect_name_urls = len(out.split('\n'))
     assert 0 < incorrect_name_urls < total_urls
 
-    out, err = url('list', '--incorrect-version')
+    out = url('list', '--incorrect-version')
     incorrect_version_urls = len(out.split('\n'))
     assert 0 < incorrect_version_urls < total_urls
 
-    out, err = url('list', '--correct-name')
+    out = url('list', '--correct-name')
     correct_name_urls = len(out.split('\n'))
     assert 0 < correct_name_urls < total_urls
 
-    out, err = url('list', '--correct-version')
+    out = url('list', '--correct-version')
     correct_version_urls = len(out.split('\n'))
     assert 0 < correct_version_urls < total_urls
 
@@ -121,7 +121,7 @@ def test_url_summary():
     assert 0 < correct_versions <= sum(version_count_dict.values()) <= total_urls  # noqa
 
     # make sure it agrees with the actual command.
-    out, err = url('summary')
+    out = url('summary')
     out_total_urls = int(
         re.search(r'Total URLs found:\s*(\d+)', out).group(1))
     assert out_total_urls == total_urls
