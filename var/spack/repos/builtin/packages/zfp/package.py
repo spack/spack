@@ -68,12 +68,10 @@ class Zfp(MakefilePackage):
     def install(self, spec, prefix):
         incdir = 'include' if spec.satisfies('@0.5.1:') else 'inc'
 
-        if self.run_tests:
-            make('test')
-
-        # No install provided
+        # Note: ZFP package does not provide an install target
         mkdirp(prefix.lib)
         mkdirp(prefix.include)
+        # Note: ZFP package builds .so files even on OSX
         if '~shared' in spec:
             install('lib/libzfp.a', prefix.lib)
         else:
