@@ -401,32 +401,50 @@ class URLFetchStrategy(FetchStrategy):
             return "[no url]"
 
 
+class FileSystem(object):
+    def remove(self, *args):
+        os.remove(*args)
+
+    def symlink(self, *args):
+        os.symlink(*args)
+
+    def copy(self, *args):
+        shutil.copy(*args)
+
+    def file_exists(self, *args):
+        return os.path.exsts(*args)
+
+    def is_file(self, *args):
+        return os.path.isfile(*args)
+
+
 class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
 
     def __init__(self, *args, **kwargs):
         super(CacheURLFetchStrategy, self).__init__(*args, **kwargs)
+        self.filesystem = kwargs.get('filesystem', FileSystem())
 
     @_needs_stage
     def fetch(self):
         path = re.sub('^file://', '', self.url)
 
         # check whether the cache file exists.
-        if not os.path.isfile(path):
+        if not self.filesystem.is_file(path):
             raise NoCacheError('No cache of %s' % path)
 
         self.stage.chdir()
 
         # remove old symlink if one is there.
         filename = self.stage.save_filename
-        if os.path.exists(filename):
-            os.remove(filename)
+        if self.filesystem.file_exists(filename):
+            self.filesystem.remove(filename)
 
         if self.expand_archive:
             # Symlink to local cached archive.
-            os.symlink(path, filename)
+            self.filesystem.symlink(path, filename)
         else:
-            shutil.copy(path, filename)
+            self.filesystem.copy(path, filename)
 
         # Remove link if checksum fails, or subsequent fetchers
         # will assume they don't need to download.
@@ -434,7 +452,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             try:
                 self.check()
             except ChecksumError:
-                os.remove(self.archive_file)
+                self.filesystem.remove(self.archive_file)
                 raise
 
         # Notify the user how we fetched.
