@@ -23,33 +23,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Expat(AutotoolsPackage):
-    """Expat is an XML parser library written in C."""
+class Nanoflann(CMakePackage):
+    """a C++ header-only library for Nearest Neighbor (NN) search wih KD-trees.
+    """
 
-    homepage = "http://expat.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/expat/files/expat/2.2.2/expat-2.2.2.tar.bz2"
+    homepage = "https://github.com/jlblancoc/nanoflann"
+    url      = "https://github.com/jlblancoc/nanoflann/archive/v1.2.3.tar.gz"
 
-    # Version 2.2.2 introduced a requirement for a high quality
-    # entropy source.  "Older" linux systems (aka CentOS 7) do not
-    # support get_random so we'll provide a high quality source via
-    # libbsd.
-    # There's no need for it in earlier versions, so 'conflict' if
-    # someone's asking for an older version and also libbsd.
-    # In order to install an older version, you'll need to add
-    # `~libbsd`.
-    variant('libbsd', default=sys.platform != 'darwin',
-            description="Use libbsd (for high quality randomness)")
-    depends_on('libbsd', when="@2.2.1:+libbsd")
+    version('1.2.3', '92a0f44a631c41aa06f9716c51dcdb11')
 
-    version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
-    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
-
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '+libbsd' in spec and '@2.2.1:' in spec:
-            args = ['--with-libbsd']
+    def cmake_args(self):
+        args = ['-DBUILD_SHARED_LIBS=ON']
         return args
