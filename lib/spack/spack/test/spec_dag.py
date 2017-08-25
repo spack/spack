@@ -33,6 +33,8 @@ import spack.package
 from spack.version import Version
 from spack.spec import Spec, canonical_deptype, alldeps
 
+from spack.test.concretize_preferences import concretize_scope
+
 from ordereddict_backport import OrderedDict
 
 
@@ -244,6 +246,46 @@ spec, that the deptypes are preserved for it. Given the following DAG::
         assert spec._dependencies['z'].deptypes == wz_deptypes
         assert spec._dependencies['x'].deptypes == wx_deptypes
         assert spec['x']._dependencies['y'].deptypes == xy_deptypes
+    finally:
+        spack.repo = saved_repo
+
+
+@pytest.mark.usefixtures('config', 'concretize_scope')
+def test_non_buildable_build_dep_is_external():
+    """Test that x is concretized as an external when it is marked as
+not-buildable in the following DAG::
+
+    w
+    |
+    x
+    |
+    y
+
+"""
+    xy_deptypes = ('build', 'link')
+    wx_deptypes = ('build')
+
+    y = MockPackage('y', [], [])
+    x = MockPackage('x', [y], [xy_deptypes])
+    w = MockPackage('w', [x], [wx_deptypes])
+
+    mock_repo = MockPackageMultiRepo([w, x, y])
+    saved_repo = spack.repo
+    try:
+        spack.repo = mock_repo
+
+        conf = spack.util.spack_yaml.load("""\
+x:
+    buildable: false
+    paths:
+        x@2: /dummy/path
+""")
+        spack.config.update_config('packages', conf, 'concretize')
+
+        spec = Spec('w')
+        spec.concretize()
+
+        assert spec['x'].external
     finally:
         spack.repo = saved_repo
 
