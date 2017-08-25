@@ -59,6 +59,7 @@ import spack.repository
 import spack.url
 import spack.util.web
 import spack.multimethod
+import spack.binary_distribution as binary_distribution
 
 from llnl.util.filesystem import *
 from llnl.util.lang import *
@@ -1190,6 +1191,15 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 message = '{s.name}@{s.version} : marking the package explicit'
                 tty.msg(message.format(s=self))
 
+    def try_install_from_binary_cache(self):
+        specs, links = binary_distribution.get_specs()
+        if self.spec not in specs:
+            return False
+        tarball = binary_distribution.download_tarball(self.spec)
+        binary_distribution.extract_tarball(
+            self.spec, tarball, yes_to_all=False, force=False)
+        return True
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -1273,6 +1283,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     dirty=dirty,
                     **kwargs
                 )
+
+        if self.try_install_from_binary_cache():
+            tty.msg('Installed %s from binary cache' % self.name)
+            return
 
         tty.msg('Installing %s' % self.name)
 
