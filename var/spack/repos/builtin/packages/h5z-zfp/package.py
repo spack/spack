@@ -38,8 +38,7 @@ class H5zZfp(MakefilePackage):
     variant('fortran', default=True, description='Enable Fortran support')
 
     depends_on('hdf5')
-#    depends_on('zfp bsws=8')
-    depends_on('zfp')
+    depends_on('zfp bsws=8')
 
     @property
     def make_defs(self):

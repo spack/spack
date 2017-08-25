@@ -25,13 +25,17 @@
 from spack import *
 
 
-class Jpeg(AutotoolsPackage):
-    """libjpeg is a widely used free library with functions for handling the
-    JPEG image data format. It implements a JPEG codec (encoding and decoding)
-    alongside various utilities for handling JPEG data."""
+class PyPyrad(PythonPackage):
+    """RADseq for phylogenetics & introgression analyses"""
 
-    homepage = "http://www.ijg.org"
-    url      = "http://www.ijg.org/files/jpegsrc.v9b.tar.gz"
+    homepage = "http://dereneaton.com/software/pyrad/"
+    url      = "https://github.com/dereneaton/pyrad/archive/3.0.66.tar.gz"
 
-    version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
-    version('9a', '3353992aecaee1805ef4109aadd433e7')
+    version('3.0.66', '19b8bcd73a574f8a25582d6e8978f0aa')
+
+    depends_on('python@:2.999', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('vsearch')
+    depends_on('muscle')
