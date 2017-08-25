@@ -263,7 +263,7 @@ not-buildable in the following DAG::
 
 """
     xy_deptypes = ('build', 'link')
-    wx_deptypes = ('build')
+    wx_deptypes = ('build',)
 
     y = MockPackage('y', [], [])
     x = MockPackage('x', [y], [xy_deptypes])
