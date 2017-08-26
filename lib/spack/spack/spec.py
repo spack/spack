@@ -1961,7 +1961,11 @@ class Spec(object):
 
         changed = True
         while changed:
+            # In this second concretization phase, _expand_virtual_packages
+            # will only be doing replacement of externals (since build-only
+            # dependencies are disallowed from depending on virtuals)
             changes = (self._normalize(dep_constraints, force, all_deps=True),
+                       self._expand_virtual_packages(dep_constraints),
                        self._concretize_helper())
             changed = any(changes)
 
