@@ -98,7 +98,7 @@ class Espresso(Package):
     conflicts('+hdf5', when='@:5.4.0')
 
     # To build with QMCPACK's hdf5 interface we require QE 5.3.0
-    # and hdf5. 
+    # and hdf5.
     conflicts('+qmcpackconv', when='@5.3.1:')
     conflicts('+qmcpackconv', when='@:5.2.999')
     depends_on('hdf5', when='+qmcpackconv')
