@@ -178,7 +178,7 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def set_build_environment_variables(pkg, env, dirty=False):
+def set_build_environment_variables(pkg, env, dirty):
     """Ensure a clean install environment when we build packages.
 
     This involves unsetting pesky environment variables that may
@@ -450,7 +450,7 @@ def load_external_modules(pkg):
             load_module(dep.external_module)
 
 
-def setup_package(pkg, dirty=False):
+def setup_package(pkg, dirty):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
@@ -516,7 +516,7 @@ def setup_package(pkg, dirty=False):
     spack_env.apply_modifications()
 
 
-def fork(pkg, function, dirty=False):
+def fork(pkg, function, dirty):
     """Fork a child process to do part of a spack build.
 
     Args:
