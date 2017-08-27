@@ -1044,7 +1044,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
                 # If there's no default it means we don't need to patch.
-                tty.msg("No patches needed for %s" % self.name)
+                if not patched:
+                    # if we didn't apply a patch, AND the patch function
+                    # didn't apply, say no patches are needed.
+                    # Otherwise, we already said we applied each patch.
+                    tty.msg("No patches needed for %s" % self.name)
             except:
                 tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
