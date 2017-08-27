@@ -30,7 +30,7 @@ import spack
 import spack.error
 import spack.fetch_strategy as fs
 import spack.stage
-from llnl.util.filesystem import join_path
+from llnl.util.filesystem import working_dir
 from spack.util.executable import which
 
 
@@ -91,10 +91,11 @@ class Patch(object):
         Args:
             stage: stage for the package that needs to be patched
         """
-        stage.chdir_to_source()
-        # Use -N to allow the same patches to be applied multiple times.
-        _patch = which("patch", required=True)
-        _patch('-s', '-p', str(self.level), '-i', self.path)
+        patch = which("patch", required=True)
+        with working_dir(stage.source_path):
+            # Use -N to allow the same patches to be applied multiple times.
+            patch('-s', '-p', str(self.level), '-i', self.path)
+
 
 
 class FilePatch(Patch):
@@ -103,7 +104,7 @@ class FilePatch(Patch):
         super(FilePatch, self).__init__(pkg, path_or_url, level)
 
         pkg_dir = os.path.dirname(absolute_path_for_package(pkg))
-        self.path = join_path(pkg_dir, path_or_url)
+        self.path = os.path.join(pkg_dir, path_or_url)
         if not os.path.isfile(self.path):
             raise NoSuchPatchFileError(pkg.name, self.path)
 
@@ -123,10 +124,10 @@ class UrlPatch(Patch):
             stage: stage for the package that needs to be patched
         """
         fetcher = fs.URLFetchStrategy(self.url, digest=self.md5)
-        mirror = join_path(
+        mirror = os.path.join(
             os.path.dirname(stage.mirror_path),
-            os.path.basename(self.url)
-        )
+            os.path.basename(self.url))
+
         with spack.stage.Stage(fetcher, mirror_path=mirror) as patch_stage:
             patch_stage.fetch()
             patch_stage.check()
@@ -136,8 +137,8 @@ class UrlPatch(Patch):
                 patch_stage.expand_archive()
 
             self.path = os.path.abspath(
-                os.listdir(patch_stage.path).pop()
-            )
+                os.listdir(patch_stage.path).pop())
+
             super(UrlPatch, self).apply(stage)
 
 
