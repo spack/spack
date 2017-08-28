@@ -33,7 +33,7 @@ import spack.package
 from spack.version import Version
 from spack.spec import Spec, canonical_deptype, alldeps
 
-from spack.test.concretize_preferences import concretize_scope
+from spack.test.concretize_preferences import concretize_scope  # NOQA: ignore=F401
 
 from ordereddict_backport import OrderedDict
 
