@@ -60,6 +60,10 @@ def setup_parser(subparser):
                            action='store_true',
                            dest='show_flags',
                            help='show spec compiler flags')
+    subparser.add_argument('--show-full-compiler',
+                           action='store_true',
+                           dest='show_full_compiler',
+                           help='show full compiler specs')
     implicit_explicit = subparser.add_mutually_exclusive_group()
     implicit_explicit.add_argument(
         '-e', '--explicit',

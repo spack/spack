@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,28 +25,19 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class Pkgconf(AutotoolsPackage):
+    """pkgconf is a program which helps to configure compiler and linker
+    flags for development frameworks. It is similar to pkg-config from
+    freedesktop.org, providing additional functionality while also
+    maintaining compatibility."""
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "http://pkgconf.org/"
+    url      = "https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.8.tar.xz"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('1.3.8', '484ba3360d983ce07416843d5bc916a8')
 
-    build_directory = 'source'
-
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+    @run_after('install')
+    def link_pkg_config(self):
+        symlink('pkgconf', '{0}/pkg-config'.format(self.prefix.bin))
+        symlink('pkgconf.1',
+                '{0}/pkg-config.1'.format(self.prefix.share.man.man1))

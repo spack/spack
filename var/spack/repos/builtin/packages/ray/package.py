@@ -25,28 +25,20 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class Ray(CMakePackage):
+    """Parallel genome assemblies for parallel DNA sequencing"""
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "http://denovoassembler.sourceforge.net/"
+    url      = "https://downloads.sourceforge.net/project/denovoassembler/Ray-2.3.1.tar.bz2"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('2.3.1', '82f693c4db60af4328263c9279701009')
 
-    build_directory = 'source'
+    depends_on('mpi')
 
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
+    @run_after('build')
+    def make(self):
+        mkdirp(prefix.bin)
+        make('PREFIX=%s' % prefix.bin)
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+        make('install')

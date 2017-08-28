@@ -25,28 +25,20 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class Probconsrna(Package):
+    """Experimental version of PROBCONS with parameters estimated via
+       unsupervised training on BRAliBASE """
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "http://probcons.stanford.edu/"
+    url      = "http://probcons.stanford.edu/probconsRNA.tar.gz"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('2005-6-7', '2aa13012124208ca5dd6b0a1d508208d')
 
-    build_directory = 'source'
-
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
-
-    def install(self, spec, prefix):
+    def install(self, build, prefix):
         mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+        install('compare', prefix.bin)
+        install('makegnuplot', prefix.bin)
+        install('probcons', prefix.bin)
+        # needed for tcoffee
+        install('probcons', prefix.bin.probconsRNA)
+        install('project', prefix.bin)

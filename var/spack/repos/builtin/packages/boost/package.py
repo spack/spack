@@ -41,6 +41,14 @@ class Boost(Package):
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
 
+    version('develop',
+            git='https://github.com/boostorg/boost.git',
+            branch='develop',
+            submodules=True)
+
+    version('1.65.0', '5512d3809801b0a1b9dd58447b70915d',
+            url='https://dl.bintray.com/boostorg/release/1.65.0/source/boost_1_65_0.tar.bz2')
+
     # NOTE: 1.64.0 seems fine for *most* applications, but if you need
     #       +python and +mpi, there seem to be errors with out-of-date
     #       API calls from mpi/python.

@@ -25,28 +25,15 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class Libjpeg(AutotoolsPackage):
+    """libjpeg is a widely used free library with functions for handling the
+    JPEG image data format. It implements a JPEG codec (encoding and decoding)
+    alongside various utilities for handling JPEG data."""
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "http://www.ijg.org"
+    url      = "http://www.ijg.org/files/jpegsrc.v9b.tar.gz"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
+    version('9a', '3353992aecaee1805ef4109aadd433e7')
 
-    build_directory = 'source'
-
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+    provides('jpeg')

@@ -25,13 +25,33 @@
 from spack import *
 
 
-class Jpeg(AutotoolsPackage):
-    """libjpeg is a widely used free library with functions for handling the
-    JPEG image data format. It implements a JPEG codec (encoding and decoding)
-    alongside various utilities for handling JPEG data."""
+class Tcoffee(MakefilePackage):
+    """T-Coffee is a multiple sequence alignment program."""
 
-    homepage = "http://www.ijg.org"
-    url      = "http://www.ijg.org/files/jpegsrc.v9b.tar.gz"
+    homepage = "http://www.tcoffee.org/"
+    url      = "https://github.com/cbcrg/tcoffee"
 
-    version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
-    version('9a', '3353992aecaee1805ef4109aadd433e7')
+    version('2017-08-17', git='https://github.com/cbcrg/tcoffee.git', commit='f389b558e91d0f82e7db934d9a79ce285f853a71')
+
+    depends_on('perl', type=('build', 'run'))
+    depends_on('blast-plus')
+    depends_on('dialign-tx')
+    depends_on('viennarna')
+    depends_on('clustalw')
+    depends_on('tmalign')
+    depends_on('muscle')
+    depends_on('mafft')
+    depends_on('pcma')
+    depends_on('poamsa')
+    depends_on('probconsrna')
+
+    build_directory = 'compile'
+
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory):
+            make('t_coffee')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        with working_dir(self.build_directory):
+            install('t_coffee', prefix.bin)

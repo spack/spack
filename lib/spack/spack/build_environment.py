@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -58,8 +58,10 @@ import shutil
 import sys
 import traceback
 from six import iteritems
+from six import StringIO
 
 import llnl.util.tty as tty
+from llnl.util.tty.color import colorize
 from llnl.util.filesystem import *
 
 import spack
@@ -69,6 +71,7 @@ from spack.util.environment import *
 from spack.util.executable import Executable
 from spack.util.module_cmd import (load_module, get_path_from_module,
                                    unload_module)
+from spack.util.log_parse import *
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -174,7 +177,7 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def set_build_environment_variables(pkg, env, dirty=False):
+def set_build_environment_variables(pkg, env, dirty):
     """Ensure a clean install environment when we build packages.
 
     This involves unsetting pesky environment variables that may
@@ -449,7 +452,7 @@ def load_external_modules(pkg):
             load_module(dep.external_module)
 
 
-def setup_package(pkg, dirty=False):
+def setup_package(pkg, dirty):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
@@ -515,7 +518,7 @@ def setup_package(pkg, dirty=False):
     spack_env.apply_modifications()
 
 
-def fork(pkg, function, dirty=False):
+def fork(pkg, function, dirty):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -579,8 +582,12 @@ def fork(pkg, function, dirty=False):
                 build_log = pkg.log_path
 
             # make a pickleable exception to send to parent.
-            msg = "%s: %s" % (str(exc_type.__name__), str(exc))
-            ce = ChildError(msg, tb_string, build_log, package_context)
+            msg = "%s: %s" % (exc_type.__name__, str(exc))
+
+            ce = ChildError(msg,
+                            exc_type.__module__,
+                            exc_type.__name__,
+                            tb_string, build_log, package_context)
             child_pipe.send(ce)
 
         finally:
@@ -605,16 +612,25 @@ def fork(pkg, function, dirty=False):
     child_result = parent_pipe.recv()
     p.join()
 
+    # If the child process raised an error, print its output here rather
+    # than waiting until the call to SpackError.die() in main(). This
+    # allows exception handling output to be logged from within Spack.
+    # see spack.main.SpackCommand.
     if isinstance(child_result, ChildError):
+        child_result.print_context()
         raise child_result
+
     return child_result
 
 
-def get_package_context(traceback):
+def get_package_context(traceback, context=3):
     """Return some context for an error message when the build fails.
 
     Args:
-    traceback -- A traceback from some exception raised during install.
+        traceback (traceback): A traceback from some exception raised during
+            install
+        context (int): Lines of context to show before and after the line
+            where the error happened
 
     This function inspects the stack to find where we failed in the
     package file, and it adds detailed context to the long_message
@@ -650,9 +666,17 @@ def get_package_context(traceback):
 
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
+
+    l = frame.f_lineno - start
+    start_ctx = max(0, l - context)
+    sourcelines = sourcelines[start_ctx:l + context + 1]
     for i, line in enumerate(sourcelines):
-        mark = ">> " if start + i == frame.f_lineno else "   "
-        lines.append("  %s%-5d%s" % (mark, start + i, line.rstrip()))
+        is_error = start_ctx + i == l
+        mark = ">> " if is_error else "   "
+        marked = "  %s%-6d%s" % (mark, start_ctx + i, line.rstrip())
+        if is_error:
+            marked = colorize('@R{%s}' % marked)
+        lines.append(marked)
 
     return lines
 
@@ -675,40 +699,75 @@ class ChildError(spack.error.SpackError):
        failure in lieu of trying to run sys.excepthook on the parent
        process, so users will see the correct stack trace from a child.
 
-    3. They also contain package_context, which shows source code context
-       in the Package implementation where the error happened.  To get
-       this, Spack searches the stack trace for the deepest frame where
-       ``self`` is in scope and is an instance of PackageBase.  This will
-       generally find a useful spot in the ``package.py`` file.
+    3. They also contain context, which shows context in the Package
+       implementation where the error happened.  This helps people debug
+       Python code in their packages.  To get it, Spack searches the
+       stack trace for the deepest frame where ``self`` is in scope and
+       is an instance of PackageBase.  This will generally find a useful
+       spot in the ``package.py`` file.
 
-    The long_message of a ChildError displays all this stuff to the user,
-    and SpackError handles displaying the special traceback if we're in
-    debug mode with spack -d.
+    The long_message of a ChildError displays one of two things:
+
+      1. If the original error was a ProcessError, indicating a command
+         died during the build, we'll show context from the build log.
+
+      2. If the original error was any other type of error, we'll show
+         context from the Python code.
+
+    SpackError handles displaying the special traceback if we're in debug
+    mode with spack -d.
 
     """
-    def __init__(self, msg, traceback_string, build_log, package_context):
+    # List of errors considered "build errors", for which we'll show log
+    # context instead of Python context.
+    build_errors = [('spack.util.executable', 'ProcessError')]
+
+    def __init__(self, msg, module, classname, traceback_string, build_log,
+                 context):
         super(ChildError, self).__init__(msg)
+        self.module = module
+        self.name = classname
         self.traceback = traceback_string
         self.build_log = build_log
-        self.package_context = package_context
+        self.context = context
 
     @property
     def long_message(self):
-        msg = self._long_message if self._long_message else ''
+        out = StringIO()
+        out.write(self._long_message if self._long_message else '')
 
-        if self.package_context:
-            if msg:
-                msg += "\n\n"
-            msg += '\n'.join(self.package_context)
+        if (self.module, self.name) in ChildError.build_errors:
+            # The error happened in some external executed process. Show
+            # the build log with errors highlighted.
+            if self.build_log:
+                events = parse_log_events(self.build_log)
+                nerr = len(events)
+                if nerr > 0:
+                    if nerr == 1:
+                        out.write("\n1 error found in build log:\n")
+                    else:
+                        out.write("\n%d errors found in build log:\n" % nerr)
+                    out.write(make_log_context(events))
 
-        if msg:
-            msg += "\n\n"
+        else:
+            # The error happened in in the Python code, so try to show
+            # some context from the Package itself.
+            out.write('%s: %s\n\n' % (self.name, self.message))
+            if self.context:
+                out.write('\n'.join(self.context))
+                out.write('\n')
+
+        if out.getvalue():
+            out.write('\n')
 
         if self.build_log:
-            msg += "See build log for details:\n"
-            msg += "  %s" % self.build_log
+            out.write('See build log for details:\n')
+            out.write('  %s' % self.build_log)
 
-        return msg
+        return out.getvalue()
+
+    def __str__(self):
+        return self.message + self.long_message + self.traceback
 
     def __reduce__(self):
         """__reduce__ is used to serialize (pickle) ChildErrors.
@@ -718,11 +777,13 @@ class ChildError(spack.error.SpackError):
         """
         return _make_child_error, (
             self.message,
+            self.module,
+            self.name,
             self.traceback,
             self.build_log,
-            self.package_context)
+            self.context)
 
 
-def _make_child_error(msg, traceback, build_log, package_context):
+def _make_child_error(msg, module, name, traceback, build_log, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
-    return ChildError(msg, traceback, build_log, package_context)
+    return ChildError(msg, module, name, traceback, build_log, context)

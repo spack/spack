@@ -25,28 +25,15 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class Nanoflann(CMakePackage):
+    """a C++ header-only library for Nearest Neighbor (NN) search wih KD-trees.
+    """
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "https://github.com/jlblancoc/nanoflann"
+    url      = "https://github.com/jlblancoc/nanoflann/archive/v1.2.3.tar.gz"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('1.2.3', '92a0f44a631c41aa06f9716c51dcdb11')
 
-    build_directory = 'source'
-
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+    def cmake_args(self):
+        args = ['-DBUILD_SHARED_LIBS=ON']
+        return args

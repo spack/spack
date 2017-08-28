@@ -24,9 +24,11 @@
 ##############################################################################
 import argparse
 import os
+import filecmp
 
 import pytest
 
+import spack
 import spack.cmd.install
 from spack.spec import Spec
 from spack.main import SpackCommand
@@ -42,7 +44,7 @@ def parser():
     return parser
 
 
-def _install_package_and_dependency(
+def test_install_package_and_dependency(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
 
@@ -57,6 +59,9 @@ def _install_package_and_dependency(
     assert 'tests="2"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content
+
+    s = Spec('libdwarf').concretized()
+    assert not spack.repo.get(s).stage.created
 
 
 def test_install_package_already_installed(
@@ -107,3 +112,33 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     # right place in the build log.
     assert "BEFORE INSTALL\n==> './configure'" in out
     assert "'install'\nAFTER INSTALL" in out
+
+
+def _test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
+                                        config, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        out = install('build-error', fail_on_error=False)
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.name == 'ProcessError'
+    assert 'configure: error: in /path/to/some/file:' in out
+    assert 'configure: error: cannot run C compiled programs.' in out
+
+
+def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
+                                        config, install_mockery):
+    out = install('failing-build', fail_on_error=False)
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.name == 'InstallError'
+    assert 'raise InstallError("Expected failure.")' in out
+
+
+def test_install_with_source(
+        builtin_mock, mock_archive, mock_fetch, config, install_mockery):
+    """Verify that source has been copied into place."""
+    install('--source', '--keep-stage', 'trivial-install-test-package')
+    spec = Spec('trivial-install-test-package').concretized()
+    src = os.path.join(
+        spec.prefix.share, 'trivial-install-test-package', 'src')
+    assert filecmp.cmp(os.path.join(mock_archive.path, 'configure'),
+                       os.path.join(src, 'configure'))
