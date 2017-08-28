@@ -97,7 +97,6 @@ class Patch(object):
             patch('-s', '-p', str(self.level), '-i', self.path)
 
 
-
 class FilePatch(Patch):
     """Describes a patch that is retrieved from a file in the repository"""
     def __init__(self, pkg, path_or_url, level):
