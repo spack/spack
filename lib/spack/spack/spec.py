@@ -121,6 +121,7 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 
+from spack.dependency import *
 from spack.util.module_cmd import get_path_from_module, load_module
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
@@ -135,8 +136,6 @@ from yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',
-    'alldeps',
-    'canonical_deptype',
     'parse',
     'parse_anonymous_spec',
     'SpecError',
@@ -196,29 +195,8 @@ _separators = '[\\%s]' % '\\'.join(color_formats.keys())
 #: every time we call str()
 _any_version = VersionList([':'])
 
-#: Types of dependencies that Spack understands.
-alldeps = ('build', 'link', 'run', 'test')
-
 #: Max integer helps avoid passing too large a value to cyaml.
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
-
-
-def canonical_deptype(deptype):
-    if deptype in (None, 'all', all):
-        return alldeps
-
-    elif isinstance(deptype, string_types):
-        if deptype not in alldeps:
-            raise ValueError('Invalid dependency type: %s' % deptype)
-        return (deptype,)
-
-    elif isinstance(deptype, (tuple, list)):
-        invalid = next((d for d in deptype if d not in alldeps), None)
-        if invalid:
-            raise ValueError('Invalid dependency type: %s' % invalid)
-        return tuple(sorted(deptype))
-
-    return deptype
 
 
 def colorize_spec(spec):
@@ -1098,19 +1076,19 @@ class Spec(object):
                 if deptype and (not dep.deptypes or
                                 any(d in deptype for d in dep.deptypes))]
 
-    def dependencies(self, deptype=None):
+    def dependencies(self, deptype='all'):
         return [d.spec
                 for d in self._find_deps(self._dependencies, deptype)]
 
-    def dependents(self, deptype=None):
+    def dependents(self, deptype='all'):
         return [d.parent
                 for d in self._find_deps(self._dependents, deptype)]
 
-    def dependencies_dict(self, deptype=None):
+    def dependencies_dict(self, deptype='all'):
         return dict((d.spec.name, d)
                     for d in self._find_deps(self._dependencies, deptype))
 
-    def dependents_dict(self, deptype=None):
+    def dependents_dict(self, deptype='all'):
         return dict((d.parent.name, d)
                     for d in self._find_deps(self._dependents, deptype))
 
@@ -1271,8 +1249,8 @@ class Spec(object):
             for dspec in self.traverse_edges(**kwargs):
                 yield get_spec(dspec)
 
-    def traverse_edges(self, visited=None, d=0, deptype=None,
-                       deptype_query=None, dep_spec=None, **kwargs):
+    def traverse_edges(self, visited=None, d=0, deptype='all',
+                       deptype_query=default_deptype, dep_spec=None, **kwargs):
         """Generic traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
 
@@ -1325,8 +1303,7 @@ class Spec(object):
         order = kwargs.get('order', 'pre')
 
         deptype = canonical_deptype(deptype)
-        if deptype_query is None:
-            deptype_query = ('link', 'run')
+        deptype_query = canonical_deptype(deptype_query)
 
         # Make sure kwargs have legal values; raise ValueError if not.
         def validate(name, val, allowed_values):
@@ -1817,7 +1794,7 @@ class Spec(object):
             changed = any(changes)
             force = True
 
-        for s in self.traverse(deptype_query=alldeps):
+        for s in self.traverse(deptype_query=all):
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
             # configuration is constant throughout a spack run, and
@@ -1864,7 +1841,7 @@ class Spec(object):
         Only for internal use -- client code should use "concretize"
         unless there is a need to force a spec to be concrete.
         """
-        for s in self.traverse(deptype_query=alldeps):
+        for s in self.traverse(deptype_query=all):
             s._normal = value
             s._concrete = value
 
@@ -1887,7 +1864,7 @@ class Spec(object):
            returns them.
         """
         copy = kwargs.get('copy', True)
-        deptype_query = kwargs.get('deptype_query')
+        deptype_query = kwargs.get('deptype_query', 'all')
 
         flat_deps = {}
         try:
@@ -1916,7 +1893,7 @@ class Spec(object):
             # parser doesn't allow it. Spack must be broken!
             raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
 
-    def index(self, deptype=None):
+    def index(self, deptype='all'):
         """Return DependencyMap that points to all the dependencies in this
            spec."""
         dm = DependencyMap()
@@ -1927,28 +1904,39 @@ class Spec(object):
     def _evaluate_dependency_conditions(self, name):
         """Evaluate all the conditions on a dependency with this name.
 
-        If the package depends on <name> in this configuration, return
-        the dependency.  If no conditions are True (and we don't
-        depend on it), return None.
+        Args:
+            name (str): name of dependency to evaluate conditions on.
+
+        Returns:
+            (tuple): tuple of ``Spec`` and tuple of ``deptypes``.
+
+        If the package depends on <name> in the current spec
+        configuration, return the constrained dependency and
+        corresponding dependency types.
+
+        If no conditions are True (and we don't depend on it), return
+        ``(None, None)``.
         """
         pkg = spack.repo.get(self.fullname)
         conditions = pkg.dependencies[name]
 
         substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
-        dep = None
-        for when_spec, dep_spec in conditions.items():
-            sat = self.satisfies(when_spec, strict=True)
-            if sat:
+        dep, deptypes = None, None
+        for when_spec, dependency in conditions.items():
+            if self.satisfies(when_spec, strict=True):
                 if dep is None:
                     dep = Spec(name)
+                    deptypes = set()
                 try:
-                    dep.constrain(dep_spec)
+                    dep.constrain(dependency.spec)
+                    deptypes |= dependency.type
                 except UnsatisfiableSpecError as e:
                     e.message = ("Conflicting conditional dependencies on"
                                  "package %s for spec %s" % (self.name, self))
                     raise e
-        return dep
+
+        return dep, deptypes
 
     def _find_provider(self, vdep, provider_index):
         """Find provider for a virtual spec in the provider index.
@@ -2086,13 +2074,12 @@ class Spec(object):
             changed = False
             for dep_name in pkg.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
-                pkg_dep = self._evaluate_dependency_conditions(dep_name)
-                deptypes = pkg.dependency_types[dep_name]
-                # If pkg_dep is a dependency, merge it.
-                if pkg_dep and (spack.package_testing.check(self.name) or
-                                set(deptypes) - set(['test'])):
+                dep, deptypes = self._evaluate_dependency_conditions(dep_name)
+                # If dep is a needed dependency, merge it.
+                if dep and (spack.package_testing.check(self.name) or
+                            set(deptypes) - set(['test'])):
                     changed |= self._merge_dependency(
-                        pkg_dep, deptypes, visited, spec_deps, provider_index)
+                        dep, deptypes, visited, spec_deps, provider_index)
             any_change |= changed
 
         return any_change
@@ -2127,7 +2114,7 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
         # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies(copy=False, deptype_query=alldeps)
+        spec_deps = self.flat_dependencies(copy=False, deptype_query=all)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
@@ -2536,13 +2523,15 @@ class Spec(object):
         # If we preserved the original structure, we can copy them
         # safely. If not, they need to be recomputed.
         if caches is None:
-            caches = (deps is True or deps == alldeps)
+            caches = (deps is True or deps == all_deptypes)
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if deps:
             # If caller restricted deptypes to be copied, adjust that here.
             # By default, just copy all deptypes
-            deptypes = deps if isinstance(deps, (tuple, list)) else alldeps
+            deptypes = all_deptypes
+            if isinstance(deps, (tuple, list)):
+                deptypes = deps
             self._dup_deps(other, deptypes, caches)
 
         if caches:
@@ -3013,10 +3002,10 @@ class Spec(object):
             if show_types:
                 out += '['
                 if dep_spec.deptypes:
-                    for t in alldeps:
+                    for t in all_deptypes:
                         out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
                 else:
-                    out += ' ' * len(alldeps)
+                    out += ' ' * len(all_deptypes)
                 out += ']  '
 
             out += ("    " * d)

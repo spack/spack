@@ -42,6 +42,7 @@ import spack.repository
 import spack.stage
 import spack.util.executable
 import spack.util.pattern
+from spack.dependency import *
 from spack.package import PackageBase
 from spack.fetch_strategy import *
 from spack.spec import Spec
@@ -567,20 +568,22 @@ class MockPackage(object):
                  versions=None):
         self.name = name
         self.spec = None
-        dep_to_conditions = ordereddict_backport.OrderedDict()
-        for dep in dependencies:
+        self.dependencies = ordereddict_backport.OrderedDict()
+
+        assert len(dependencies) == len(dependency_types)
+        for dep, dtype in zip(dependencies, dependency_types):
+            d = Dependency(Spec(dep.name), type=dtype)
             if not conditions or dep.name not in conditions:
-                dep_to_conditions[dep.name] = {name: dep.name}
+                self.dependencies[dep.name] = {Spec(name): d}
             else:
-                dep_to_conditions[dep.name] = conditions[dep.name]
-        self.dependencies = dep_to_conditions
-        self.dependency_types = dict(
-            (x.name, y) for x, y in zip(dependencies, dependency_types))
+                self.dependencies[dep.name] = {Spec(conditions[dep.name]): d}
+
         if versions:
             self.versions = versions
         else:
             versions = list(Version(x) for x in [1, 2, 3])
             self.versions = dict((x, {'preferred': False}) for x in versions)
+
         self.variants = {}
         self.provided = {}
         self.conflicts = {}
@@ -589,18 +592,18 @@ class MockPackage(object):
 class MockPackageMultiRepo(object):
 
     def __init__(self, packages):
-        self.specToPkg = dict((x.name, x) for x in packages)
+        self.spec_to_pkg = dict((x.name, x) for x in packages)
 
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):
             spec = Spec(spec)
-        return self.specToPkg[spec.name]
+        return self.spec_to_pkg[spec.name]
 
     def get_pkg_class(self, name):
-        return self.specToPkg[name]
+        return self.spec_to_pkg[name]
 
     def exists(self, name):
-        return name in self.specToPkg
+        return name in self.spec_to_pkg
 
     def is_virtual(self, name):
         return False

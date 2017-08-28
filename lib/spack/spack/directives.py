@@ -54,11 +54,13 @@ import re
 from six import string_types
 
 import llnl.util.lang
+from llnl.util.filesystem import join_path
+
 import spack
 import spack.error
 import spack.spec
 import spack.url
-from llnl.util.filesystem import join_path
+from spack.dependency import *
 from spack.fetch_strategy import from_kwargs
 from spack.patch import Patch
 from spack.resource import Resource
@@ -67,6 +69,9 @@ from spack.variant import Variant
 from spack.version import Version
 
 __all__ = []
+
+#: These are variant names used by Spack internally; packages can't use them
+reserved_names = ['patches']
 
 
 class DirectiveMetaMixin(type):
@@ -224,7 +229,7 @@ def version(ver, checksum=None, **kwargs):
     return _execute
 
 
-def _depends_on(pkg, spec, when=None, type=None):
+def _depends_on(pkg, spec, when=None, type=default_deptype):
     # If when is False do nothing
     if when is False:
         return
@@ -233,33 +238,18 @@ def _depends_on(pkg, spec, when=None, type=None):
         when = pkg.name
     when_spec = parse_anonymous_spec(when, pkg.name)
 
-    if type is None:
-        # The default deptype is build and link because the common case is to
-        # build against a library which then turns into a runtime dependency
-        # due to the linker.
-        # XXX(deptype): Add 'run' to this? It's an uncommon dependency type,
-        #               but is most backwards-compatible.
-        type = ('build', 'link')
-
-    type = spack.spec.canonical_deptype(type)
-
-    for deptype in type:
-        if deptype not in spack.spec.alldeps:
-            raise UnknownDependencyTypeError('depends_on', pkg.name, deptype)
-
     dep_spec = Spec(spec)
     if pkg.name == dep_spec.name:
         raise CircularReferenceError('depends_on', pkg.name)
 
-    pkg_deptypes = pkg.dependency_types.setdefault(dep_spec.name, set())
-    for deptype in type:
-        pkg_deptypes.add(deptype)
-
+    type = canonical_deptype(type)
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
-    if when_spec in conditions:
-        conditions[when_spec].constrain(dep_spec, deps=False)
+    if when_spec not in conditions:
+        conditions[when_spec] = Dependency(dep_spec, type)
     else:
-        conditions[when_spec] = dep_spec
+        dependency = conditions[when_spec]
+        dependency.spec.constrain(dep_spec, deps=False)
+        dependency.type |= set(type)
 
 
 @directive('conflicts')
@@ -293,8 +283,8 @@ def conflicts(conflict_spec, when=None, msg=None):
     return _execute
 
 
-@directive(('dependencies', 'dependency_types'))
-def depends_on(spec, when=None, type=None):
+@directive(('dependencies'))
+def depends_on(spec, when=None, type=default_deptype):
     """Creates a dict of deps with specs defining when they apply.
     This directive is to be used inside a Package definition to declare
     that the package requires other packages to be built first.
@@ -304,7 +294,7 @@ def depends_on(spec, when=None, type=None):
     return _execute
 
 
-@directive(('extendees', 'dependencies', 'dependency_types'))
+@directive(('extendees', 'dependencies'))
 def extends(spec, **kwargs):
     """Same as depends_on, but dependency is symlinked into parent prefix.
 
@@ -372,10 +362,12 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
     def _execute(pkg):
         constraint = pkg.name if when is None else when
         when_spec = parse_anonymous_spec(constraint, pkg.name)
-        cur_patches = pkg.patches.setdefault(when_spec, [])
+
         # if this spec is identical to some other, then append this
         # patch to the existing list.
+        cur_patches = pkg.patches.setdefault(when_spec, [])
         cur_patches.append(Patch.create(pkg, url_or_filename, level, **kwargs))
+
     return _execute
 
 
@@ -406,6 +398,9 @@ def variant(
             logic. It receives a tuple of values and should raise an instance
             of SpackError if the group doesn't meet the additional constraints
     """
+    if name in reserved_names:
+        raise ValueError("The variant name '%s' is reserved by Spack" % name)
+
     if values is None:
         if default in (True, False) or (type(default) is str and
                                         default.upper() in ('TRUE', 'FALSE')):
