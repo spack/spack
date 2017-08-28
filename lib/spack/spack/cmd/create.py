@@ -46,7 +46,7 @@ level = "short"
 
 package_template = '''\
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -370,6 +370,15 @@ class MakefilePackageTemplate(PackageTemplate):
         # makefile.filter('CC = .*', 'CC = cc')"""
 
 
+class IntelPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for licensed Intel software"""
+
+    base_class_name = 'IntelPackage'
+
+    body = """\
+    # FIXME: Override `setup_environment` if necessary."""
+
+
 templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
@@ -384,6 +393,7 @@ templates = {
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
     'makefile':   MakefilePackageTemplate,
+    'intel':      IntelPackageTemplate,
     'generic':    PackageTemplate,
 }
 
