@@ -70,6 +70,11 @@ class Mpich(AutotoolsPackage):
         spack_env.set('MPICH_F90', spack_fc)
         spack_env.set('MPICH_FC', spack_fc)
 
+        spack_env.set('OMPI_CC', spack_cc)
+        spack_env.set('OMPI_CXX', spack_cxx)
+        spack_env.set('OMPI_FC', spack_fc)
+        spack_env.set('OMPI_F77', spack_f77)
+
     def setup_dependent_package(self, module, dependent_spec):
         if 'platform=cray' in self.spec:
             self.spec.mpicc = spack_cc
@@ -130,8 +135,11 @@ class Mpich(AutotoolsPackage):
         }
         filter_file(env['CC'],  self.compiler.cc,  mpicc,  **kwargs)
         filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
-        filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
-        filter_file(env['FC'],  self.compiler.fc,  mpif90, **kwargs)
+        if self.compiler.f77:
+            filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
+
+        if self.compiler.fc:
+            filter_file(env['FC'], self.compiler.fc,  mpif90, **kwargs)
 
         # Remove this linking flag if present
         # (it turns RPATH into RUNPATH)

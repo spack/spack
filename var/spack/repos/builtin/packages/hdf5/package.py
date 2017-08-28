@@ -173,6 +173,10 @@ class Hdf5(AutotoolsPackage):
         if '+shared' in spec:
             extra_args.append('--enable-shared')
         else:
+            # when we build neuron@hdf then autoconf tests
+            # doesn't run due to hdf5 library error. So just
+            # build static librarie when we say +static.
+            extra_args.append('--disable-shared')
             extra_args.append('--enable-static-exec')
 
         if '+cxx' in spec:

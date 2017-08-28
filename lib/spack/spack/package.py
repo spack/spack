@@ -1260,6 +1260,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if install_deps:
             tty.debug('Installing {0} dependencies'.format(self.name))
             for dep in self.spec.dependencies():
+                # temporary fix until we get some workaround for issue reported
+                # here : https://github.com/LLNL/spack/issues/2093
+                if 'mpi' in dep and dep.external:
+                    if not dep.package.spec.external:
+                        tty.msg("WARNING : FIXME : Using workaround for package %s due to issue #2093!" % dep)
+                        dep.package.spec.external = dep.external
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
