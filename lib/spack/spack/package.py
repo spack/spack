@@ -1191,13 +1191,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 message = '{s.name}@{s.version} : marking the package explicit'
                 tty.msg(message.format(s=self))
 
-    def try_install_from_binary_cache(self):
+    def try_install_from_binary_cache(self, explicit):
         specs, links = binary_distribution.get_specs()
         if self.spec not in specs:
             return False
         tarball = binary_distribution.download_tarball(self.spec)
         binary_distribution.extract_tarball(
             self.spec, tarball, yes_to_all=False, force=False)
+        spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
         return True
 
     def do_install(self,
@@ -1284,7 +1285,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     **kwargs
                 )
 
-        if self.try_install_from_binary_cache():
+        if self.try_install_from_binary_cache(explicit):
             tty.msg('Installed %s from binary cache' % self.name)
             return
 
