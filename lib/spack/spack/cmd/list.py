@@ -170,7 +170,7 @@ def rst(pkgs):
                                    reversed(sorted(pkg.versions))))
             print()
 
-        for deptype in spack.alldeps:
+        for deptype in spack.all_deptypes:
             deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print('%s Dependencies' % deptype.capitalize())

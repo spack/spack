@@ -30,8 +30,9 @@ import spack
 import spack.architecture
 import spack.package
 
+from spack.spec import Spec
+from spack.dependency import *
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
-from spack.spec import Spec, canonical_deptype, alldeps
 
 
 def check_links(spec_to_check):
@@ -54,7 +55,7 @@ def set_dependency(saved_deps):
     """Returns a function that alters the dependency information
     for a package.
     """
-    def _mock(pkg_name, spec, deptypes=spack.alldeps):
+    def _mock(pkg_name, spec, deptypes=all_deptypes):
         """Alters dependence information for a package.
 
         Adds a dependency on <spec> to pkg. Use this to mock up constraints.
@@ -65,8 +66,9 @@ def set_dependency(saved_deps):
         if pkg_name not in saved_deps:
             saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
 
-        pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
-        pkg.dependency_types[spec.name] = set(deptypes)
+        cond = Spec(pkg.name)
+        dependency = Dependency(spec, deptypes)
+        pkg.dependencies[spec.name] = {cond: dependency}
     return _mock
 
 
@@ -592,7 +594,7 @@ class TestSpecDag(object):
                  'dtlink1', 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5',
                  'dtrun3', 'dtbuild3']
 
-        traversal = dag.traverse(deptype=spack.alldeps)
+        traversal = dag.traverse(deptype=all)
         assert [x.name for x in traversal] == names
 
     def test_deptype_traversal_run(self):
@@ -841,12 +843,16 @@ class TestSpecDag(object):
 
     def test_canonical_deptype(self):
         # special values
-        assert canonical_deptype(all) == alldeps
-        assert canonical_deptype('all') == alldeps
-        assert canonical_deptype(None) == alldeps
+        assert canonical_deptype(all) == all_deptypes
+        assert canonical_deptype('all') == all_deptypes
 
-        # everything in alldeps is canonical
-        for v in alldeps:
+        with pytest.raises(ValueError):
+            canonical_deptype(None)
+        with pytest.raises(ValueError):
+            canonical_deptype([None])
+
+        # everything in all_deptypes is canonical
+        for v in all_deptypes:
             assert canonical_deptype(v) == (v,)
 
         # tuples
