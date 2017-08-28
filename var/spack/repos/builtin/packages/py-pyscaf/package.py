@@ -35,3 +35,4 @@ class PyPyscaf(PythonPackage):
     version('0.12a4', 'c67526747eb04d1e28279ac310916d40')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-fastaindex', type=('build', 'run'))

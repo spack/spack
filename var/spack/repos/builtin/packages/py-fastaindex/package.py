@@ -30,8 +30,8 @@ class PyFastaindex(PythonPackage):
        with 4 columns storing counts for A, C, G & T for each sequence.."""
 
     homepage = "https://github.com/lpryszcz/FastaIndex"
-    url      = "https://github.com/lpryszcz/FastaIndex/archive/0.11c.tar.gz"
+    url      = "https://pypi.io/packages/source/F/FastaIndex/FastaIndex-0.11rc7.tar.gz"
 
-    version('0.11c', 'c29476d62beec98006a64cd3bea307b6')
+    version('0.11rc7', '882c973d968d9db596edfd0fbb07e3a8')
 
     depends_on('py-setuptools', type='build')
