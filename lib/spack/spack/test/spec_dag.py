@@ -137,7 +137,9 @@ following spec DAG::
         |  \
         v   v
 
-All deptypes are (link, build) except for x dependency on p.
+All deptypes are (link, build) except for x dependency on p, which is
+build-only. Note that the y->v and p->v dependencies could use different
+instances of v if it were not for the q->v dependency.
 
 """
     saved_repo = spack.repo
