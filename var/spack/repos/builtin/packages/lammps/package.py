@@ -202,5 +202,6 @@ class Lammps(MakefilePackage):
                 install('liblammps_{0}.{1}'.format(self.target_name,
                                                    dso_suffix), prefix.lib)
 
-                # TODO: install the necessary headers
-                mkdirp(prefix.include)
+                mkdirp(os.path.join(prefix.include, 'lammps'))
+                install('library.h',
+                        os.path.join(prefix.include, 'lammps'))
