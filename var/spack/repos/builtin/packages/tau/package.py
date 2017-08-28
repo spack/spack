@@ -141,7 +141,7 @@ class Tau(Package):
             options.append("-scorep=%s" % spec['scorep'].prefix)
 
         if '+openmp' in spec:
-            options.append('-openmp')
+            options.extend(['-openmp', '-opari'])
 
         if '+pthread' in spec:
             options.append('-pthread')
