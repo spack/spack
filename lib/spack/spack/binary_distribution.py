@@ -415,6 +415,10 @@ def get_specs():
     """
     Get spec.yaml's for build caches available on mirror
     """
+    if spack.binary_cache_retrieved_specs:
+        tty.msg("Using previously-retrieved specs")
+        previously_retrieved = spack.binary_cache_retrieved_specs
+        return set(previously_retrieved), previously_retrieved
     mirrors = spack.config.get_config('mirrors')
     if len(mirrors) == 0:
         tty.die("Please add a spack mirror to allow " +
@@ -450,6 +454,7 @@ def get_specs():
                     spec = spack.spec.Spec.from_yaml(f)
                     specs.add(spec)
                     durls[spec].append(link)
+    spack.binary_cache_retrieved_specs = durls
     return specs, durls
 
 

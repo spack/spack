@@ -134,6 +134,9 @@ misc_cache_path = canonicalize_path(
 misc_cache = FileCache(misc_cache_path)
 
 
+binary_cache_retrieved_specs = set()
+
+
 # If this is enabled, tools that use SSL should not verify
 # certifiates. e.g., curl should use the -k option.
 insecure = not _config.get('verify_ssl', True)
