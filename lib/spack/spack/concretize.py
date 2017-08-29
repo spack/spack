@@ -204,25 +204,28 @@ class DefaultConcretizer(object):
         return True   # Things changed
 
     def concretize_architecture(self, spec):
-        """If the spec is empty provide the defaults of the platform. If the
-        architecture is not a string type, then check if either the platform,
-        target or operating system are concretized. If any of the fields are
-        changed then return True. If everything is concretized (i.e the
-        architecture attribute is a namedtuple of classes) then return False.
-        If the target is a string type, then convert the string into a
-        concretized architecture. If it has no architecture and the root of the
-        DAG has an architecture, then use the root otherwise use the defaults
-        on the platform.
-        """
+        """If the spec's architecture is already concrete then return False.
+        If the spec is missing the architecture portion of the spec then look
+        through the DAG and find a spec with an architecture. If such a spec
+        exists then assign it to the current spec, otherwise provide the
+        defaults for the system. If the architecture is a Arch object then
+        check if either the platform, target, or operating system are
+        concretized. If any of the fields are changed return True."""
         root_arch = spec.root.architecture
         sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
         spec_changed = False
 
-        if spec.architecture is None and root_arch is None:
+        # Case 1: The spec has an architecture and it is concrete
+        if spec.architecture and spec.architecture.concrete:
+            return False
+
+        # If the spec does not have an architecture find one that does
+        other_arch_spec = find_spec(spec, lambda x: x.architecture, None)
+        if not other_arch_spec:
             spec.architecture = spack.spec.ArchSpec(sys_arch)
+        else:
+            spec.architecture = other_arch_spec.architecture
             spec_changed = True
-        elif spec.architecture is None and root_arch:
-            spec.architecture = root_arch
 
         default_archs = list(x for x in [root_arch, sys_arch] if x)
         for arch in default_archs:

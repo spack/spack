@@ -426,6 +426,18 @@ class TestConcretize(object):
         assert s['mpileaks'].satisfies('%clang')
         assert s['dyninst'].satisfies('%gcc')
 
+    def test_architecture_child(self):
+        s = Spec("mpileaks  ^dyninst target=fe os=fe")
+        s.concretize()
+        assert s['mpileaks'].satisfies('os=redhat6 target=x86_32')
+        assert s['dyninst'].satisfies('os=redhat6 target=x86_32')
+
+    def test_different_arch_in_spec(self):
+        s = Spec("mpileaks%gcc target=be os=be ^dyninst%clang target=fe os=fe")
+        s.concretize()
+        assert s["dyninst"].satisfies("os=redhat6 target=x86_32")
+        assert s["mpileaks"].satisfies("os=debian6 target=x86_64")
+
     def test_conflicts_in_spec(self, conflict_spec):
         # Check that an exception is raised an caught by the appropriate
         # exception types.
