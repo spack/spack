@@ -437,9 +437,9 @@ class VariantMap(lang.HashableMap):
     if the key is not already present.
     """
 
-    def __init__(self, spec):
+    def __init__(self):
         super(VariantMap, self).__init__()
-        self.spec = spec
+        self.spec = None
 
     def __setitem__(self, name, vspec):
         # Raise a TypeError if vspec is not of the right type
@@ -547,7 +547,7 @@ class VariantMap(lang.HashableMap):
         Returns:
             VariantMap: a copy of self
         """
-        clone = VariantMap(self.spec)
+        clone = VariantMap()
         for name, variant in self.items():
             clone[name] = variant.copy()
         return clone

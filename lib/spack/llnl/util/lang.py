@@ -403,3 +403,92 @@ class ObjectWrapper(object):
         wrapped_name = wrapped_cls.__name__
         self.__class__ = type(wrapped_name, (type(self), wrapped_cls), {})
         self.__dict__ = wrapped_object.__dict__
+
+
+class OwnerReferencing(object):
+    """Updates the reference to the current owner on every assignment
+
+    This descriptor is useful to manage attributes that have a reference
+    back to their owner, as it mediates the assignment operation and
+    updates the owner field in the attribute.
+
+    Consider for instance this case:
+
+        .. code-block:: python
+
+            class A(object):
+
+                def __init__(self):
+                    self.owner = None
+
+            class B(object):
+
+                def __init__(self, a):
+                    self.a = a
+                    self.a.owner = self
+
+            foo = A()
+            bar = A()
+
+            b = B(foo)
+
+            # To assign a new b.a we need to perform 2 operations, forgetting
+            # the second will leave 'b' in an invalid state
+            b.a = bar
+            b.a.owner = b
+
+    Using the descriptor will make the 2 assignments above a unique operation:
+
+        .. code-block:: python
+
+            class A(object):
+
+                def __init__(self):
+                    self.owner = None
+
+            class B(object):
+
+                a = OwnerReferencing(
+                    private_name='_a',
+                    factory=A,
+                    owner_name='owner'
+                )
+
+            bar = A()
+
+            b = B()
+
+            # If no argument is present one gets created with the default
+            # factory, in this case 'A()'
+            assert b.a.owner == b
+
+            # The descriptor automatically updates the owner reference in bar
+            b.a = bar
+            assert b.a.owner == b
+            assert bar.owner == b
+
+    Args:
+        name (str): name that the owner will use to store the attribute
+        factory (callable): factory that generates a default object
+            for the attribute
+        owner_name (str): name used in the attribute to reference the owner
+    """
+    def __init__(self, name, factory, owner_name):
+        self.name = name
+        self.factory = factory
+        self.owner_name = owner_name
+
+    def __get__(self, instance, cls):
+        # Return the descriptor if we access through the class
+        if instance is None:
+            return self
+
+        # If the private attribute is not set, then create a default
+        if not hasattr(instance, self.name):
+            self.__set__(instance, self.factory())
+
+        return getattr(instance, self.name)
+
+    def __set__(self, instance, value):
+        setattr(instance, self.name, value)
+        setattr(value, self.owner_name, instance)
