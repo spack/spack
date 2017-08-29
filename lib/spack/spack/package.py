@@ -546,7 +546,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     _verbose = None
 
     # List of strings which contains GitHub usernames of package maintainers.
-    # Do not include @ here in order not to unnecessarily ping the users.
+    #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
     def __init__(self, spec):
