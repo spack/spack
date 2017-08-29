@@ -32,6 +32,8 @@ class Dealii(CMakePackage):
     homepage = "https://www.dealii.org"
     url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
 
+    maintainers = 'davydden, jppelteret'
+
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
     transitive_rpaths = False
