@@ -29,6 +29,7 @@ import pytest
 import sys
 
 import spack
+import spack.util.compression
 import spack.stage
 
 
@@ -42,15 +43,14 @@ def mock_apply(monkeypatch):
 
     def check_expand(self, *args, **kwargs):
         # Check tarball expansion
-        file = os.path.join(self.path, 'foo.txt')
-        if self.expand:
+        if spack.util.compression.allowed_archive(self.url):
+            file = os.path.join(self.path, 'foo.txt')
             assert os.path.exists(file)
-        else:
-            assert not os.path.exists(file)
 
         # Check tarball fetching
         dirname = os.path.dirname(self.path)
-        tarball = os.path.join(dirname, 'foo.tgz')
+        basename = os.path.basename(self.url)
+        tarball = os.path.join(dirname, basename)
         assert os.path.exists(tarball)
 
     monkeypatch.setattr(m.Patch, 'apply', check_expand)
@@ -68,15 +68,17 @@ def mock_stage(tmpdir, monkeypatch):
     return MockStage()
 
 
+data_path = os.path.join(spack.test_path, 'data', 'patch')
+
+
 @pytest.mark.usefixtures('mock_apply')
-@pytest.mark.parametrize('expand', [True, False])
-def test_url_patch_expansion(mock_stage, expand):
+@pytest.mark.parametrize('filename,md5', [
+    (os.path.join(data_path, 'foo.tgz'), 'bff717ca9cbbb293bdf188e44c540758'),
+    (os.path.join(data_path, 'bar.txt'), 'f98bf6f12e995a053b7647b10d937912')
+])
+def test_url_patch_expansion(mock_stage, filename, md5):
 
     m = sys.modules['spack.patch']
-    filename = os.path.join(spack.test_path, 'data', 'patch', 'foo.tgz')
     url = 'file://' + filename
-    patch = m.Patch.create(
-        None, url, 0, md5='bff717ca9cbbb293bdf188e44c540758', expand=expand
-    )
-
+    patch = m.Patch.create(None, url, 0, md5=md5)
     patch.apply(mock_stage)

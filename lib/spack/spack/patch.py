@@ -114,7 +114,6 @@ class UrlPatch(Patch):
         super(UrlPatch, self).__init__(pkg, path_or_url, level)
         self.url = path_or_url
         self.md5 = kwargs.get('md5')
-        self.expand = kwargs.get('expand', True)
 
     def apply(self, stage):
         """Retrieve the patch in a temporary stage, computes
@@ -123,9 +122,7 @@ class UrlPatch(Patch):
         Args:
             stage: stage for the package that needs to be patched
         """
-        fetcher = fs.URLFetchStrategy(
-            self.url, digest=self.md5, expand=self.expand
-        )
+        fetcher = fs.URLFetchStrategy(self.url, digest=self.md5)
         mirror = join_path(
             os.path.dirname(stage.mirror_path),
             os.path.basename(self.url)
@@ -134,7 +131,10 @@ class UrlPatch(Patch):
             patch_stage.fetch()
             patch_stage.check()
             patch_stage.cache_local()
-            patch_stage.expand_archive()
+
+            if spack.util.compression.allowed_archive(self.url):
+                patch_stage.expand_archive()
+
             self.path = os.path.abspath(
                 os.listdir(patch_stage.path).pop()
             )

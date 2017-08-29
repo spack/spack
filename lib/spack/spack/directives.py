@@ -367,7 +367,6 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
 
             - md5 (str): md5 sum of the patch (used to verify the file
                 if it comes from a url)
-            - expand (bool): try to expand the patch before applying it
 
     """
     def _execute(pkg):
