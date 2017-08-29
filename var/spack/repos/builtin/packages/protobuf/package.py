@@ -33,6 +33,10 @@ class Protobuf(CMakePackage):
     root_cmakelists_dir = "cmake"
 
     version('3.4.0', '4f47de212ef665ea619f5f97083c6781')
+    version('3.3.2', '19ed45d0cbbb88de2c4922978235d314')
+    version('3.3.1', '20c685147753b515ce380421442044b5')
+    version('3.3.0', '8b64807bc1fb52059873a31133ed71b2')
+    version('3.2.1', '94d3a8148c35cedd2db953245e057a67')
     version('3.2.0', '61d899b8369781f6dd1e62370813392d')
     version('3.1.0', '14a532a7538551d5def317bfca41dace')
     version('3.0.2', '845b39e4b7681a2ddfd8c7f528299fbb')
@@ -45,6 +49,8 @@ class Protobuf(CMakePackage):
 
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@:3.3.2')
+
+    patch('intel_inline.patch', when='@3.2.0:')
 
     def cmake_args(self):
         args = [
