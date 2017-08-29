@@ -103,7 +103,7 @@ class AutotoolsPackage(PackageBase):
         build date (automake 1.13.4)."""
 
         if not self.patch_config_guess or not self.spec.satisfies(
-                'arch=linux-rhel7-ppc64le'
+                'target=ppc64le'
         ):
             return
         my_config_guess = None

@@ -75,8 +75,17 @@ class Espresso(Package):
     patch('dspev_drv_elpa.patch', when='@6.1 ^elpa@2016.05.003')
 
     # We can't ask for scalapack or elpa if we don't want MPI
-    conflicts('+scalapack', when='~mpi')
-    conflicts('+elpa', when='~mpi')
+    conflicts(
+        '+scalapack',
+        when='~mpi',
+        msg='scalapack is a parallel library and needs MPI support'
+    )
+
+    conflicts(
+        '+elpa',
+        when='~mpi',
+        msg='elpa is a parallel library and needs MPI support'
+    )
 
     # Elpa is formally supported by @:5.4.0, but QE configure searches
     # for it in the wrong folders (or tries to download it within

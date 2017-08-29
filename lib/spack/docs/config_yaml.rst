@@ -14,27 +14,6 @@ see the default settings by looking at
 These settings can be overridden in ``etc/spack/config.yaml`` or
 ``~/.spack/config.yaml``.  See :ref:`configuration-scopes` for details.
 
-.. _config-file-variables:
-
-------------------------------
-Config file variables
-------------------------------
-
-You may notice some variables prefixed with ``$`` in the settings above.
-Spack understands several variables that can be used in values of
-configuration parameters.  They are:
-
-  * ``$spack``: path to the prefix of this spack installation
-  * ``$tempdir``: default system temporary directory (as specified in
-    Python's `tempfile.tempdir
-    <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
-    variable.
-  * ``$user``: name of the current user
-
-Note that, as with shell variables, you can write these as ``$varname``
-or with braces to distinguish the variable from surrounding characters:
-``${varname}``.
-
 --------------------
 ``install_tree``
 --------------------
