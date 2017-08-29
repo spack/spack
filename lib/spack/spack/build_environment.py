@@ -179,7 +179,7 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def set_build_environment_variables(pkg, env, dirty=False):
+def set_build_environment_variables(pkg, env, dirty):
     """Ensure a clean install environment when we build packages.
 
     This involves unsetting pesky environment variables that may
@@ -452,7 +452,7 @@ def load_external_modules(pkg):
             load_module(dep.external_module)
 
 
-def setup_package(pkg, dirty=False):
+def setup_package(pkg, dirty):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
@@ -518,7 +518,7 @@ def setup_package(pkg, dirty=False):
     spack_env.apply_modifications()
 
 
-def fork(pkg, function, dirty=False):
+def fork(pkg, function, dirty):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -741,8 +741,13 @@ class ChildError(spack.error.SpackError):
             # the build log with errors highlighted.
             if self.build_log:
                 events = parse_log_events(self.build_log)
-                out.write("\n%d errors in build log:\n" % len(events))
-                out.write(make_log_context(events))
+                nerr = len(events)
+                if nerr > 0:
+                    if nerr == 1:
+                        out.write("\n1 error found in build log:\n")
+                    else:
+                        out.write("\n%d errors found in build log:\n" % nerr)
+                    out.write(make_log_context(events))
 
         else:
             # The error happened in in the Python code, so try to show

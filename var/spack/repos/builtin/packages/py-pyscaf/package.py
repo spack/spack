@@ -25,16 +25,14 @@
 from spack import *
 
 
-class Libtiff(AutotoolsPackage):
-    """libtiff graphics format library"""
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz"
+class PyPyscaf(PythonPackage):
+    """pyScaf orders contigs from genome assemblies utilising several types of
+       information"""
 
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
+    homepage = "https://pypi.python.org/pypi/pyScaf"
+    url      = "https://pypi.io/packages/source/p/pyScaf/pyScaf-0.12a4.tar.gz"
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    version('0.12a4', 'c67526747eb04d1e28279ac310916d40')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-fastaindex', type=('build', 'run'))

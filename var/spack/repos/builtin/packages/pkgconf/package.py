@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,16 +25,19 @@
 from spack import *
 
 
-class Libtiff(AutotoolsPackage):
-    """libtiff graphics format library"""
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz"
+class Pkgconf(AutotoolsPackage):
+    """pkgconf is a program which helps to configure compiler and linker
+    flags for development frameworks. It is similar to pkg-config from
+    freedesktop.org, providing additional functionality while also
+    maintaining compatibility."""
 
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
+    homepage = "http://pkgconf.org/"
+    url      = "https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.8.tar.xz"
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    version('1.3.8', '484ba3360d983ce07416843d5bc916a8')
+
+    @run_after('install')
+    def link_pkg_config(self):
+        symlink('pkgconf', '{0}/pkg-config'.format(self.prefix.bin))
+        symlink('pkgconf.1',
+                '{0}/pkg-config.1'.format(self.prefix.share.man.man1))
