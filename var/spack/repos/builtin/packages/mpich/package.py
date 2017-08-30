@@ -51,6 +51,11 @@ class Mpich(AutotoolsPackage):
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
+    # fix MPI_Barrier segmentation fault
+    # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
+    # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
+    patch('mpich32_clang.patch', when='@3.2%clang')
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # On Cray, the regular compiler wrappers *are* the MPI wrappers.
         if 'platform=cray' in self.spec:
