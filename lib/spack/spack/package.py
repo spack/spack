@@ -545,6 +545,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     # Verbosity level, preserved across installs.
     _verbose = None
 
+    #: List of strings which contains GitHub usernames of package maintainers.
+    #: Do not include @ here in order not to unnecessarily ping the users.
+    maintainers = []
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec

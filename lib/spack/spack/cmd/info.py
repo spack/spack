@@ -162,6 +162,11 @@ def print_text_info(pkg):
 
     color.cprint(section_title('Homepage: ') + pkg.homepage)
 
+    if len(pkg.maintainers) > 0:
+        mnt = " ".join(['@@' + m for m in pkg.maintainers])
+        color.cprint('')
+        color.cprint(section_title('Maintainers: ') + mnt)
+
     color.cprint('')
     color.cprint(section_title('Preferred version:  '))
 
