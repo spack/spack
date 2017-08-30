@@ -29,7 +29,8 @@ from spack import *
 class Raft(CMakePackage):
     """RAFT: Reconstruct Algorithms for Tomography.
        Toolbox under development at Brazilian Synchrotron Light Source."""
-
+    
+    homepage = "https://bitbucket.org/gill_martinez/raft_aps"
     url = "https://bitbucket.org/gill_martinez/raft_aps/get/1.2.3.tar.gz"
 
     version('1.2.3', '4d1b106d9b3493e63dde96f7dd44b834')
