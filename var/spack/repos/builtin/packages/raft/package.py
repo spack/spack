@@ -29,7 +29,7 @@ from spack import *
 class Raft(CMakePackage):
     """RAFT: Reconstruct Algorithms for Tomography.
        Toolbox under development at Brazilian Synchrotron Light Source."""
-    
+
     homepage = "https://bitbucket.org/gill_martinez/raft_aps"
     url = "https://bitbucket.org/gill_martinez/raft_aps/get/1.2.3.tar.gz"
 
