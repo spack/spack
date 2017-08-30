@@ -50,8 +50,10 @@ class Rose(AutotoolsPackage):
     depends_on("libtool@2.4", type='build')
     depends_on("boost@1.56.0")
 
-    variant('debug', default=False, description='Enable compiler debugging symbols')
-    variant('optimized', default=False, description='Enable compiler optimizations')
+    variant('debug', default=False,
+            description='Enable compiler debugging symbols')
+    variant('optimized', default=False,
+            description='Enable compiler optimizations')
 
     variant('tests', default=False, description='Build the tests directory')
     variant('tutorial', default=False, description='Build the tutorial directory')
@@ -59,14 +61,16 @@ class Rose(AutotoolsPackage):
     variant('mvapich2_backend', default=False, description='Enable mvapich2 backend compiler')
     depends_on("mvapich2", when='+mvapich2_backend')
 
-    variant('binanalysis', default=False, description='Enable binary analysis tooling')
+    variant('binanalysis', default=False,
+            description='Enable binary analysis tooling')
     depends_on('libgcrypt', when='+binanalysis', type='build')
     depends_on('py-binwalk', when='+binanalysis', type='run')
 
     variant('c', default=True, description='Enable c language support')
     variant('cxx', default=True, description='Enable c++ language support')
 
-    variant('fortran', default=False, description='Enable fortran language support')
+    variant('fortran', default=False,
+            description='Enable fortran language support')
 
     variant('java', default=False, description='Enable java language support')
     depends_on('jdk', when='+java')
