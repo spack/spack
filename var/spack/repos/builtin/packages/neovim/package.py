@@ -24,7 +24,6 @@
 ##############################################################################
 
 from spack import *
-import os
 
 
 class Neovim(CMakePackage):

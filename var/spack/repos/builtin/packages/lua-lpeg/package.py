@@ -24,8 +24,6 @@
 ##############################################################################
 
 from spack import *
-import shutil
-import os
 
 
 class LuaLpeg(Package):
@@ -42,4 +40,3 @@ class LuaLpeg(Package):
 
     def install(self, spec, prefix):
         luarocks('--tree=' + prefix, 'install', 'lpeg-0.12-1.src.rock')
-

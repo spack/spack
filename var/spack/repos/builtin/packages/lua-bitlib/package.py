@@ -28,7 +28,7 @@ import os
 
 
 class LuaBitlib(Package):
-    """FIXME: Put a proper description of your package here."""
+    """Lua-jit-like bitwise operations for lua"""
 
     homepage = "http://luaforge.net/projects/bitlib"
     url      = "https://luarocks.org/bitlib-23-2.src.rock"
@@ -41,7 +41,7 @@ class LuaBitlib(Package):
 
     def install(self, spec, prefix):
         luarocks('unpack', "bitlib-23-2.src.rock")
-        os.chdir(os.path.join('bitlib-23-2','bitlib-23'))
+        os.chdir(os.path.join('bitlib-23-2', 'bitlib-23'))
         sed = which('sed')
         sed('-ie', 's/luaL_reg/luaL_Reg/', 'lbitlib.c')
         luarocks('--tree=' + prefix, 'make')
