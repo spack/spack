@@ -148,7 +148,7 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.packages)
-    specs, links = bindist.get_specs()
+    specs = bindist.get_specs()
     matches = set()
     for spec in specs:
         for pkg in pkgs:
@@ -198,7 +198,7 @@ def install_tarball(spec, args):
 
 
 def listspecs(args):
-    specs, links = bindist.get_specs()
+    specs = bindist.get_specs()
     if args.packages:
         pkgs = set(args.packages)
         for pkg in pkgs:

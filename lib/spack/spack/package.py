@@ -1192,7 +1192,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 tty.msg(message.format(s=self))
 
     def try_install_from_binary_cache(self, explicit):
-        specs, links = binary_distribution.get_specs()
+        specs = binary_distribution.get_specs()
         if self.spec not in specs:
             return False
         tarball = binary_distribution.download_tarball(self.spec)

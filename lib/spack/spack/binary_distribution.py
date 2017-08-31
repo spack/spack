@@ -29,6 +29,8 @@ import tarfile
 import yaml
 import shutil
 
+from collections import defaultdict
+
 import llnl.util.tty as tty
 from spack.util.gpg import Gpg
 from llnl.util.filesystem import mkdirp, join_path, install_tree
@@ -418,16 +420,15 @@ def get_specs():
     if spack.binary_cache_retrieved_specs:
         tty.msg("Using previously-retrieved specs")
         previously_retrieved = spack.binary_cache_retrieved_specs
-        return set(previously_retrieved), previously_retrieved
+        return previously_retrieved
+
     mirrors = spack.config.get_config('mirrors')
     if len(mirrors) == 0:
-        tty.die("Please add a spack mirror to allow " +
-                "download of build caches.")
+        tty.warn("No Spack mirrors are currently configured")
+        return {}
+
     path = str(spack.architecture.sys_type())
-    specs = set()
     urls = set()
-    from collections import defaultdict
-    durls = defaultdict(list)
     for key in mirrors:
         url = mirrors[key]
         if url.startswith('file'):
@@ -444,18 +445,20 @@ def get_specs():
             for link in links:
                 if re.search("spec.yaml", link) and re.search(path, link):
                     urls.add(link)
-        for link in urls:
-            with Stage(link, name="build_cache", keep=True) as stage:
-                try:
-                    stage.fetch()
-                except fs.FetchError:
-                    continue
-                with open(stage.save_filename, 'r') as f:
-                    spec = spack.spec.Spec.from_yaml(f)
-                    specs.add(spec)
-                    durls[spec].append(link)
+
+    durls = defaultdict(list)
+    for link in urls:
+        with Stage(link, name="build_cache", keep=True) as stage:
+            try:
+                stage.fetch()
+            except fs.FetchError:
+                continue
+            with open(stage.save_filename, 'r') as f:
+                spec = spack.spec.Spec.from_yaml(f)
+                durls[spec].append(link)
+
     spack.binary_cache_retrieved_specs = durls
-    return specs, durls
+    return durls
 
 
 def get_keys(install=False, yes_to_all=False):
