@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -36,9 +35,10 @@ class Jags(AutotoolsPackage):
 
     version('4.2.0', '9e521b3cfb23d3290a8c6bc0b79bf426')
 
-    depends_on('m4', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
+    depends_on('blas')
+    depends_on('lapack')
 
-    depends_on('atlas')
+    def configure_args(self):
+        args = ['--with-blas=-L%s' % self.spec['blas'].prefix.lib,
+                '--with-lapack=-L%s' % self.spec['lapack'].prefix.lib]
+        return args
