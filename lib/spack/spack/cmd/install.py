@@ -69,6 +69,9 @@ the dependencies"""
         '--restage', action='store_true', dest='restage',
         help="if a partial install is detected, delete prior state")
     subparser.add_argument(
+        '--source', action='store_true', dest='install_source',
+        help="install source files in prefix")
+    subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="do not check packages against checksum")
     subparser.add_argument(
@@ -329,6 +332,7 @@ def install(parser, args, **kwargs):
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'restage': args.restage,
+        'install_source': args.install_source,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,
         'run_tests': args.run_tests,

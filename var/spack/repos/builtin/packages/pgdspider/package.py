@@ -23,18 +23,35 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os.path
 
 
-class Libtiff(AutotoolsPackage):
-    """libtiff graphics format library"""
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz"
+class Pgdspider(Package):
+    """"PGDSpider is a powerful automated data conversion tool for population
+        genetic and genomics programs"""
 
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
+    homepage = "http://www.cmpg.unibe.ch/software/PGDSpider"
+    url      = "http://www.cmpg.unibe.ch/software/PGDSpider/PGDSpider_2.1.1.2.zip"
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    version('2.1.1.2', '170e5b4a002277ff66866486da920693')
+
+    depends_on('java', type=('build', 'run'))
+    depends_on('bcftools')
+    depends_on('bwa')
+    depends_on('samtools')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        jar_file = 'PGDSpider{0}-cli.jar'.format(self.version.up_to(1))
+        install(jar_file, prefix.bin)
+
+        script_sh = join_path(os.path.dirname(__file__), "pgdspider.sh")
+        script = prefix.bin.pgdspider
+        install(script_sh, script)
+        set_executable(script)
+
+        java = self.spec['java'].prefix.bin.java
+        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+        filter_file('^java', java, script, **kwargs)
+        filter_file('pgdspider.jar', join_path(prefix.bin, jar_file),
+                    script, **kwargs)

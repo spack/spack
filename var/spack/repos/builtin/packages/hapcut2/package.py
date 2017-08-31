@@ -25,16 +25,20 @@
 from spack import *
 
 
-class Libtiff(AutotoolsPackage):
-    """libtiff graphics format library"""
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz"
+class Hapcut2(MakefilePackage):
+    """HapCUT2 is a maximum-likelihood-based tool for assembling haplotypes
+       from DNA sequence reads, designed to 'just work' with excellent speed
+       and accuracy."""
 
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
+    homepage = "https://github.com/vibansal/HapCUT2"
+    url      = "https://github.com/vibansal/HapCUT2"
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    version('2017-07-10', git='https://github.com/vibansal/HapCUT2.git',
+            commit='2966b94c2c2f97813b757d4999b7a6471df1160e', submodules=True)
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        with working_dir('build'):
+            install('extractFOSMID', prefix.bin)
+            install('extractHAIRS', prefix.bin)
+            install('HAPCUT2', prefix.bin)

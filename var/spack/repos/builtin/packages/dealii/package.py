@@ -32,10 +32,13 @@ class Dealii(CMakePackage):
     homepage = "https://www.dealii.org"
     url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
 
+    maintainers = ['davydden', 'jppelteret']
+
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
     transitive_rpaths = False
 
+    version('8.5.1', '39b9ebd6ab083d63cfc9044319aaa2ee')
     version('8.5.0', 'ef999cc310b007559a6343bf5b1759bc')
     version('8.4.2', '84c6bd3f250d3e0681b645d24cb987a7')
     version('8.4.1', 'efbaf16f9ad59cfccad62302f36c3c1d')
@@ -48,12 +51,15 @@ class Dealii(CMakePackage):
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('arpack',   default=True,
             description='Compile with Arpack and PArpack (only with MPI)')
+    variant('adol-c',   default=False,
+            description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
+    variant('nanoflann', default=False, description='Compile with Nanoflann')
     variant('netcdf',   default=True,
             description='Compile with Netcdf (only with MPI)')
     variant('oce',      default=True,  description='Compile with OCE')
@@ -61,6 +67,8 @@ class Dealii(CMakePackage):
             description='Compile with P4est (only with MPI)')
     variant('petsc',    default=True,
             description='Compile with Petsc (only with MPI)')
+    variant('sundials', default=False,
+            description='Compile with Sundials')
     variant('slepc',    default=True,
             description='Compile with Slepc (only with Petsc and MPI)')
     variant('trilinos', default=True,
@@ -109,6 +117,7 @@ class Dealii(CMakePackage):
 
     # optional dependencies
     depends_on("mpi",              when="+mpi")
+    depends_on("adol-c@2.6.4:",    when='@9.0:+adol-c')
     depends_on("arpack-ng+mpi",    when='+arpack+mpi')
     depends_on("doxygen+graphviz", when='+doc')
     depends_on("graphviz",         when='+doc')
@@ -118,6 +127,7 @@ class Dealii(CMakePackage):
     # but we should not need it
     depends_on("metis@5:+int64+real64",   when='+metis+int64')
     depends_on("metis@5:~int64+real64",   when='+metis~int64')
+    depends_on("nanoflann",        when="@9.0:+nanoflann")
     depends_on("netcdf+mpi",       when="+netcdf+mpi")
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
@@ -129,10 +139,14 @@ class Dealii(CMakePackage):
     depends_on("slepc",            when='+slepc+petsc+mpi')
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("slepc~arpack",     when='+slepc+petsc+mpi+int64')
+    depends_on("sundials",         when='@9.0:+sundials')
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos",       when='+trilinos+mpi~int64')
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre", when="+trilinos+mpi+int64")
 
     # check that the combination of variants makes sense
+    conflicts('+nanoflann', when='@:8.5.1')
+    conflicts('+sundials', when='@:8.5.1')
+    conflicts('+adol-c', when='@:8.5.1')
     conflicts('+gsl',    when='@:8.4.2')
     conflicts('+python', when='@:8.4.2')
     for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
@@ -211,7 +225,8 @@ class Dealii(CMakePackage):
         # Optional dependencies for which library names are the same as CMake
         # variables:
         for library in (
-                'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis'):
+                'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
+                'sundials', 'nanoflann'):
             if library in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
@@ -221,6 +236,17 @@ class Dealii(CMakePackage):
                 options.extend([
                     '-DDEAL_II_WITH_%s:BOOL=OFF' % library.upper()
                 ])
+
+        # adol-c
+        if '+adol-c' in spec:
+            options.extend([
+                '-DADOLC_DIR=%s' % spec['adol-c'].prefix,
+                '-DDEAL_II_WITH_ADOLC=ON'
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_ADOLC=OFF'
+            ])
 
         # doxygen
         options.extend([
