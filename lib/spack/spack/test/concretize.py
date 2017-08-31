@@ -433,7 +433,7 @@ class TestConcretize(object):
         assert s['dyninst'].satisfies('os=redhat6 target=x86_32')
 
     def test_different_arch_in_spec(self):
-        s = Spec("mpileaks%gcc target=be os=be ^dyninst%clang target=fe os=fe")
+        s = Spec("mpileaks%gcc os=be ^dyninst%clang os=fe")
         s.concretize()
         assert s["dyninst"].satisfies("os=redhat6 target=x86_32")
         assert s["mpileaks"].satisfies("os=debian6 target=x86_64")

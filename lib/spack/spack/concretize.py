@@ -203,6 +203,37 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
+    def _concretize_operating_system(self, spec):
+        """Gather all the operating systems if it is set"""
+        platform = spec.architecture.platform
+        if spec.architecture.platform_os.concrete:
+            return False  # No change so we return False
+        default_back_end = True
+        if spec.architecture.target:
+            if str(spec.architecture.target) == str(platform.target("fe")):
+                default_back_end = False
+        if default_back_end:
+            speck.architecture.platform_os = platform.operating_system("be")
+        else:
+            spack.architecture.platform_os = platform.operating_system("fe")
+        return True
+
+    def _concretize_target(self, spec):
+        """ Concretize target"""
+        platform = spec.architecture.platform
+        if spec.architecture.target.concrete:
+            return False
+        default_back_end = True
+        if spec.architecture.platform_os:
+            if str(spec.architecture.platform_os) == str(platform.target("fe")):
+                default_back_end = False
+        if default_back_end:
+            spack.architecture.target = platform.target("default_target")
+        else:
+            spack.architecture.target = platform.target("fe")
+        return True
+
+
     def concretize_architecture(self, spec):
         """If the spec's architecture is already concrete then return False.
         If the spec is missing the architecture portion of the spec then look
@@ -211,32 +242,28 @@ class DefaultConcretizer(object):
         defaults for the system. If the architecture is a Arch object then
         check if either the platform, target, or operating system are
         concretized. If any of the fields are changed return True."""
-        root_arch = spec.root.architecture
         sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        front_arch = spack.spec.ArchSpec(spack.architecture.front_end())
         spec_changed = False
 
-        # Case 1: The spec has an architecture and it is concrete
+        # Case 1: If we have an already concrete arch on a spec return F
         if spec.architecture and spec.architecture.concrete:
             return False
 
-        # If the spec does not have an architecture find one that does
-        other_arch_spec = find_spec(spec, lambda x: x.architecture, None)
-        if not other_arch_spec:
+        # Case 2: If spec has no arch find a spec that does, if not assign
+        # the default.
+        other_arch_spec = find_spec(spec, lambda x: x.architecture, spec.root)
+        other_arch = other_arch_spec.architecture
+        if not other_arch:
             spec.architecture = spack.spec.ArchSpec(sys_arch)
-        else:
-            spec.architecture = other_arch_spec.architecture
+        elif not spec.architecture and other_arch:
+            # Only directly copy if the current spec is missing an architecture
+            spec.architecture = other_arch
             spec_changed = True
 
-        default_archs = list(x for x in [root_arch, sys_arch] if x)
-        for arch in default_archs:
-            if spec.architecture.concrete:
-                break
-
-            replacement_fields = [k for k, v in iteritems(arch.to_cmp_dict())
-                                  if v and not getattr(spec.architecture, k)]
-            for field in replacement_fields:
-                setattr(spec.architecture, field, getattr(arch, field))
-                spec_changed = True
+        # Do the intricate work of finding out what we're calling
+        spec_changed = self._concretize_operating_system(spec)
+        spec_changed = self._concretize_target(spec)
 
         if not spec.architecture.concrete:
             raise InsufficientArchitectureInfoError(spec, default_archs)
