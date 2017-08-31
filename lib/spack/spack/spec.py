@@ -2216,7 +2216,8 @@ class Spec(object):
         user_specified_deps = set(self.traverse(root=False))
         self._dependencies.clear()
         self._normalize(dep_constraints, force=True)
-        assert_user_deps_are_satisfied(user_specified_deps, self)
+        # Don't check if all user-specified deps are satisfied here because
+        # normalization doesn't always determine all transitive dependencies.
 
     def _normalize(self, dep_constraints, force=False, all_deps=False):
         """When specs are parsed, any dependencies specified are hanging off
