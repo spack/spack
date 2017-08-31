@@ -30,7 +30,10 @@ import spack
 import spack.architecture
 import spack.package
 
+from spack.version import Version
 from spack.spec import Spec, canonical_deptype, alldeps
+
+from ordereddict_backport import OrderedDict
 
 
 def check_links(spec_to_check):
@@ -67,6 +70,94 @@ def set_dependency(saved_deps):
         pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
         pkg.dependency_types[spec.name] = set(deptypes)
     return _mock
+
+
+class MockPackage(object):
+
+    def __init__(self, name, dependencies, dependency_types, conditions=None,
+                 versions=None):
+        self.name = name
+        self.spec = None
+        dep_to_conditions = OrderedDict()
+        for dep in dependencies:
+            if not conditions or dep.name not in conditions:
+                dep_to_conditions[dep.name] = {name: dep.name}
+            else:
+                dep_to_conditions[dep.name] = conditions[dep.name]
+        self.dependencies = dep_to_conditions
+        self.dependency_types = dict(
+            (x.name, y) for x, y in zip(dependencies, dependency_types))
+        if versions:
+            self.versions = versions
+        else:
+            versions = list(Version(x) for x in [1, 2, 3])
+            self.versions = dict((x, {'preferred': False}) for x in versions)
+        self.variants = {}
+        self.provided = {}
+        self.conflicts = {}
+
+
+class MockPackageMultiRepo(object):
+
+    def __init__(self, packages):
+        self.specToPkg = dict((x.name, x) for x in packages)
+
+    def get(self, spec):
+        if not isinstance(spec, spack.spec.Spec):
+            spec = Spec(spec)
+        return self.specToPkg[spec.name]
+
+    def get_pkg_class(self, name):
+        return self.specToPkg[name]
+
+    def exists(self, name):
+        return name in self.specToPkg
+
+    def is_virtual(self, name):
+        return False
+
+    def repo_for_pkg(self, name):
+        import collections
+        Repo = collections.namedtuple('Repo', ['namespace'])
+        return Repo('mockrepo')
+
+
+@pytest.mark.usefixtures('config')
+def test_test_deptype():
+    """Ensure that test-only dependencies are only included for specified
+packages in the following spec DAG::
+
+        w
+       /|
+      x y
+        |
+        z
+
+w->y deptypes are (link, build), w->x and y->z deptypes are (test)
+
+"""
+    saved_repo = spack.repo
+
+    default = ('build', 'link')
+    test_only = ('test',)
+
+    x = MockPackage('x', [], [])
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [test_only])
+    w = MockPackage('w', [x, y], [test_only, default])
+
+    mock_repo = MockPackageMultiRepo([w, x, y, z])
+    try:
+        spack.package_testing.test(w.name)
+        spack.repo = mock_repo
+        spec = Spec('w')
+        spec.concretize()
+
+        assert ('x' in spec)
+        assert ('z' not in spec)
+    finally:
+        spack.repo = saved_repo
+        spack.package_testing.clear()
 
 
 @pytest.mark.usefixtures('refresh_builtin_mock')

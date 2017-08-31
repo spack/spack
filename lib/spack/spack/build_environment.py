@@ -191,9 +191,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
         dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
-    build_deps      = pkg.spec.dependencies(deptype='build')
+    build_deps      = pkg.spec.dependencies(deptype=('build', 'test'))
     link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
-    build_link_deps = pkg.spec.traverse(root=False, deptype=('build', 'link'))
+    build_link_deps = list(build_deps) + list(link_deps)
     rpath_deps      = get_rpath_deps(pkg)
 
     build_prefixes      = [dep.prefix for dep in build_deps]

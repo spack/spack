@@ -93,8 +93,13 @@ the dependencies"""
         help="spec of the package to install"
     )
     subparser.add_argument(
-        '--run-tests', action='store_true', dest='run_tests',
+        '--test-all', action='store_true', dest='test_all',
         help="run package level tests during installation"
+    )
+    subparser.add_argument(
+        '--test-root', action='store_true', dest='test_root',
+        help="""run package level tests during installation for top-level
+packages (but skip tests for dependencies)"""
     )
     subparser.add_argument(
         '--log-format',
@@ -320,11 +325,17 @@ def install(parser, args, **kwargs):
         'install_source': args.install_source,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,
-        'run_tests': args.run_tests,
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty
     })
+
+    specs = spack.cmd.parse_specs(args.package)
+    if args.test_all:
+        spack.package_testing.test_all()
+    elif args.test_root:
+        for spec in specs:
+            spack.package_testing.test(spec.name)
 
     # Spec from cli
     specs = []
