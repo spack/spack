@@ -546,6 +546,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     # Verbosity level, preserved across installs.
     _verbose = None
 
+    #: List of strings which contains GitHub usernames of package maintainers.
+    #: Do not include @ here in order not to unnecessarily ping the users.
+    maintainers = []
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -1202,6 +1206,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
+                   install_source=False,
                    install_deps=True,
                    skip_patch=False,
                    verbose=False,
@@ -1222,6 +1227,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             keep_stage (bool): By default, stage is destroyed only if there
                 are no exceptions during build. Set to True to keep the stage
                 even with exceptions.
+            install_source (bool): By default, source is not installed, but
+                for debugging it might be useful to keep it around.
             install_deps (bool): Install dependencies before installing this
                 package
             skip_patch (bool): Skip patch stage of build if True.
@@ -1269,6 +1276,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
+                    install_source=install_source,
                     install_deps=install_deps,
                     fake=fake,
                     skip_patch=skip_patch,
@@ -1321,6 +1329,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 if fake:
                     self.do_fake_install()
                 else:
+                    source_path = self.stage.source_path
+                    if install_source and os.path.isdir(source_path):
+                        src_target = join_path(
+                            self.spec.prefix, 'share', self.name, 'src')
+                        tty.msg('Copying source to {0}'.format(src_target))
+                        install_tree(self.stage.source_path, src_target)
+
                     # Do the real install in the source directory.
                     self.stage.chdir_to_source()
 

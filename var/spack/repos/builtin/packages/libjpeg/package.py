@@ -25,16 +25,15 @@
 from spack import *
 
 
-class Libtiff(AutotoolsPackage):
-    """libtiff graphics format library"""
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz"
+class Libjpeg(AutotoolsPackage):
+    """libjpeg is a widely used free library with functions for handling the
+    JPEG image data format. It implements a JPEG codec (encoding and decoding)
+    alongside various utilities for handling JPEG data."""
 
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
+    homepage = "http://www.ijg.org"
+    url      = "http://www.ijg.org/files/jpegsrc.v9b.tar.gz"
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
+    version('9a', '3353992aecaee1805ef4109aadd433e7')
+
+    provides('jpeg')

@@ -25,16 +25,20 @@
 from spack import *
 
 
-class Libtiff(AutotoolsPackage):
-    """libtiff graphics format library"""
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz"
+class Ray(CMakePackage):
+    """Parallel genome assemblies for parallel DNA sequencing"""
 
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
+    homepage = "http://denovoassembler.sourceforge.net/"
+    url      = "https://downloads.sourceforge.net/project/denovoassembler/Ray-2.3.1.tar.bz2"
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    version('2.3.1', '82f693c4db60af4328263c9279701009')
+
+    depends_on('mpi')
+
+    @run_after('build')
+    def make(self):
+        mkdirp(prefix.bin)
+        make('PREFIX=%s' % prefix.bin)
+
+    def install(self, spec, prefix):
+        make('install')

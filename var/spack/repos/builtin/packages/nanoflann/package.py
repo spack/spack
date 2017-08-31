@@ -25,16 +25,15 @@
 from spack import *
 
 
-class Libtiff(AutotoolsPackage):
-    """libtiff graphics format library"""
-    homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz"
+class Nanoflann(CMakePackage):
+    """a C++ header-only library for Nearest Neighbor (NN) search wih KD-trees.
+    """
 
-    version('4.0.8', '2a7d1c1318416ddf36d5f6fa4600069b')
-    version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
-    version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
-    version('4.0.3', '051c1068e6a0627f461948c365290410')
+    homepage = "https://github.com/jlblancoc/nanoflann"
+    url      = "https://github.com/jlblancoc/nanoflann/archive/v1.2.3.tar.gz"
 
-    depends_on('jpeg')
-    depends_on('zlib')
-    depends_on('xz')
+    version('1.2.3', '92a0f44a631c41aa06f9716c51dcdb11')
+
+    def cmake_args(self):
+        args = ['-DBUILD_SHARED_LIBS=ON']
+        return args
