@@ -36,12 +36,8 @@ class Mlhka(Package):
     version('2.1', git='https://github.com/rossibarra/MLHKA.git',
             commit='e735ddd39073af58da21b00b27dea203736e5467')
 
-    def patch(self):
-        command_line = (spack_cxx, 'MLHKA_version{0}.cpp'.format(self.version),
-                        '-o', 'MLHKA')
-        subprocess.Popen(command_line)
-
     def install(self, spec, prefix):
+        cxx = which('c++')
+        cxx('MLHKA_version{0}.cpp'.format(self.version), '-o', 'MLHKA')
         mkdirp(prefix.bin)
-        with working_dir(self.stage.source_path):
-            install('MLHKA', prefix.bin)
+        install('MLHKA', prefix.bin)
