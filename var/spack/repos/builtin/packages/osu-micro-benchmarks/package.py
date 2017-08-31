@@ -47,8 +47,7 @@ class OsuMicroBenchmarks(AutotoolsPackage):
         spec = self.spec
         config_args = [
             'CC=%s'  % spec['mpi'].mpicc,
-            'CXX=%s' % spec['mpi'].mpicxx,
-            '--prefix=%s' % prefix
+            'CXX=%s' % spec['mpi'].mpicxx
         ]
 
         if '+cuda' in spec:
