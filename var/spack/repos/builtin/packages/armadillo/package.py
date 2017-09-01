@@ -84,7 +84,6 @@ class Armadillo(CMakePackage):
                 csf.write("#undef linux\n\n")
                 csf.write(contents)
 
-
     def cmake_args(self):
         spec = self.spec
 
