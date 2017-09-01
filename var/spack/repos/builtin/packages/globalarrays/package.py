@@ -26,14 +26,17 @@ from spack import *
 
 
 class Globalarrays(CMakePackage):
-    """The Global Arrays (GA) toolkit provides a shared memory style programming
-    environment in the context of distributed array data structures.
+    """The Global Arrays (GA) toolkit provides a shared memory style
+    programming environment in the context of distributed array data
+    structures.
     """
 
     homepage = "http://hpc.pnl.gov/globalarrays/"
-    url      = "https://github.com/GlobalArrays/ga"
+    url = "https://github.com/GlobalArrays/ga"
 
     version('master', git='https://github.com/GlobalArrays/ga', branch='master')
+
+    variant('i8', default=False, description='Build with 8 byte integers')
 
     depends_on('blas')
     depends_on('lapack')
@@ -56,5 +59,8 @@ class Globalarrays(CMakePackage):
                 '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77,
                 '-DCMAKE_Fortran_FLAGS=-qzerosize'
             ])
+
+        if "+i8" in self.spec:
+            options.extend(['-DENABLE_I8=ON'])
 
         return options
