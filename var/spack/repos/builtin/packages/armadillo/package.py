@@ -70,6 +70,7 @@ class Armadillo(CMakePackage):
                 "compiler_setup.hpp"
             )
 
+            # Make sure this path exists, extract_dir may not be correct
             if not os.path.isfile(compiler_setup):
                 raise RuntimeError(
                     "Could not find [{0}] to add #undef linux to.".format(
@@ -77,6 +78,11 @@ class Armadillo(CMakePackage):
                     )
                 )
 
+            # Open the file and read it in, then seek to the beginning
+            # and add two lines at the beginning of the file
+            #
+            #     // added by spack to prevent path mangling
+            #     #undef linux
             with open(compiler_setup, "r+") as csf:
                 contents = csf.read()
                 csf.seek(0, 0)
