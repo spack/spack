@@ -207,26 +207,6 @@ _any_version = VersionList([':'])
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
 
-def colorize_spec(spec):
-    """Returns a spec colorized according to the colors specified in
-       color_formats."""
-    class insert_color:
-
-        def __init__(self):
-            self.last = None
-
-        def __call__(self, match):
-            # ignore compiler versions (color same as compiler)
-            sep = match.group(0)
-            if self.last == '%' and sep == '@':
-                return cescape(sep)
-            self.last = sep
-
-            return '%s%s' % (color_formats[sep], cescape(sep))
-
-    return colorize(re.sub(_separators, insert_color(), str(spec)) + '@.')
-
-
 @key_ordering
 class ArchSpec(object):
     """ The ArchSpec class represents an abstract architecture specification
@@ -2894,9 +2874,6 @@ class Spec(object):
             self._cmp_key_cache = key
         return key
 
-    def colorized(self):
-        return colorize_spec(self)
-
     def format(self, format_string='$_$@$%@+$+$=', **kwargs):
         """Prints out particular pieces of a spec, depending on what is
         in the format string.
@@ -3266,6 +3243,33 @@ def constrained(spec, other, deps=True):
     clone = spec.copy(deps=deps)
     clone.constrain(other, deps)
     return clone
+
+
+def colorized(spec):
+    """Returns a spec colorized according to the colors specified in
+    color_formats.
+
+    Args:
+        spec (Spec): spec to be colorized
+
+    Returns:
+        colorized string representation of the spec
+    """
+    class insert_color:
+
+        def __init__(self):
+            self.last = None
+
+        def __call__(self, match):
+            # ignore compiler versions (color same as compiler)
+            sep = match.group(0)
+            if self.last == '%' and sep == '@':
+                return cescape(sep)
+            self.last = sep
+
+            return '%s%s' % (color_formats[sep], cescape(sep))
+
+    return colorize(re.sub(_separators, insert_color(), str(spec)) + '@.')
 
 
 #
