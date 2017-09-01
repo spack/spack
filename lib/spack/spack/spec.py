@@ -1094,13 +1094,6 @@ class Spec(object):
     def external(self):
         return bool(self.external_path) or bool(self.external_module)
 
-    def get_dependency(self, name):
-        dep = self._dependencies.get(name)
-        if dep is not None:
-            return dep
-        raise InvalidDependencyError(
-            self.name + " does not depend on " + comma_or(name))
-
     def _find_deps(self, where, deptype):
         deptype = canonical_deptype(deptype)
 
@@ -2406,7 +2399,7 @@ class Spec(object):
 
         # Update with additional constraints from other spec
         for name in other.dep_difference(self):
-            dep_spec_copy = other.get_dependency(name)
+            dep_spec_copy = other._dependencies[name]
             dep_copy = dep_spec_copy.spec
             deptypes = dep_spec_copy.deptypes
             self._add_dependency(dep_copy.copy(), deptypes)
