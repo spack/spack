@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Armadillo(CMakePackage):
@@ -33,6 +34,8 @@ class Armadillo(CMakePackage):
     homepage = "http://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-7.200.1.tar.xz"
 
+    version('7.950.1', 'c06eb38b12cae49cab0ce05f96147147')
+    # NOTE: v7.900.1 download url seems broken is no v7.950.1?
     version('7.900.1', '5ef71763bd429a3d481499878351f3be')
     version('7.500.0', '7d316fdf3c3c7ea92b64704180ae315d')
     version('7.200.2', 'b21585372d67a8876117fd515d8cf0a2')
@@ -47,11 +50,46 @@ class Armadillo(CMakePackage):
     depends_on('superlu@5.2:')
     depends_on('hdf5', when='+hdf5')
 
+    # Armadillo uses cmake to configure_file in conjunction with some include
+    # macros.  Spack will have `linux` in the path, and often times compilers
+    # will `#define linux 1`, resulting in the macro expansions for an arch
+    # of linux to result in bad paths.  #undef linux may have unintended
+    # consequences.
+    def patch(self):
+        if "linux" in self.spec.architecture:
+            # Get the path to where the stage is extracted to
+            extract_dir = os.path.basename(
+                self.stage[0].mirror_path
+            ).replace(".tar.xz", "")
+
+            compiler_setup = os.path.join(
+                self.stage[0].path,
+                extract_dir,
+                "include",
+                "armadillo_bits",
+                "compiler_setup.hpp"
+            )
+
+            if not os.path.isfile(compiler_setup):
+                raise RuntimeError(
+                    "Could not find [{0}] to add #undef linux to.".format(
+                        compiler_setup
+                    )
+                )
+
+            with open(compiler_setup, "r+") as csf:
+                contents = csf.read()
+                csf.seek(0, 0)
+                csf.write("// added by spack to prevent path mangling\n")
+                csf.write("#undef linux\n\n")
+                csf.write(contents)
+
+
     def cmake_args(self):
         spec = self.spec
 
         arpack = find_libraries('libarpack', root=spec[
-                                'arpack-ng'].prefix.lib, shared=True)
+                                'arpack-ng'].prefix.lib64, shared=True)
         superlu = find_libraries('libsuperlu', root=spec[
                                  'superlu'].prefix, shared=False, recurse=True)
         return [
