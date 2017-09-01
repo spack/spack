@@ -236,13 +236,13 @@ class collect_info(object):
 
             # The file 'junit.xml' is written when exiting
             # the context
-            specs = [Spec('hdf5').concretized()]
+            specs = [spack.spec.concretized(Spec('hdf5'))]
             with collect_info(specs, 'junit', 'junit.xml'):
                 # A report will be generated for these specs...
                 for spec in specs:
                     spec.do_install()
                 # ...but not for this one
-                Spec('zlib').concretized().do_install()
+                spack.spec.concretized(Spec('zlib')).do_install()
 
     Args:
         format_name (str or None): one of the supported formats

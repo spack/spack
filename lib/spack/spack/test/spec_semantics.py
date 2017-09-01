@@ -493,7 +493,7 @@ class TestSpecSematics(object):
 
     def test_satisfies_same_spec_with_different_hash(self):
         """Ensure that concrete specs are matched *exactly* by hash."""
-        s1 = Spec('mpileaks').concretized()
+        s1 = spack.spec.concretized(Spec('mpileaks'))
         s2 = s1.copy()
 
         assert s1.satisfies(s2)

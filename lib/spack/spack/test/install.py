@@ -88,7 +88,7 @@ class MockStage(object):
 
 
 def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
-    spec = Spec('canfail').concretized()
+    spec = spack.spec.concretized(Spec('canfail'))
     pkg = spack.repo.get(spec)
     remove_prefix = spack.package.Package.remove_prefix
     instance_rm_prefix = pkg.remove_prefix
@@ -146,7 +146,7 @@ def test_installed_dependency_request_conflicts(
 
 @pytest.mark.disable_clean_stage_check
 def test_partial_install_keep_prefix(install_mockery, mock_fetch):
-    spec = Spec('canfail').concretized()
+    spec = spack.spec.concretized(Spec('canfail'))
     pkg = spack.repo.get(spec)
 
     # Normally the stage should start unset, but other tests set it
@@ -172,7 +172,7 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch):
 
 
 def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
-    spec = Spec('canfail').concretized()
+    spec = spack.spec.concretized(Spec('canfail'))
     pkg = spack.repo.get(spec)
     remove_prefix = spack.package.Package.remove_prefix
     try:
@@ -191,14 +191,14 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
 
 
 def test_store(install_mockery, mock_fetch):
-    spec = Spec('cmake-client').concretized()
+    spec = spack.spec.concretized(Spec('cmake-client'))
     pkg = spec.package
     pkg.do_install()
 
 
 @pytest.mark.disable_clean_stage_check
 def test_failing_build(install_mockery, mock_fetch):
-    spec = Spec('failing-build').concretized()
+    spec = spack.spec.concretized(Spec('failing-build'))
     pkg = spec.package
 
     with pytest.raises(spack.build_environment.ChildError):

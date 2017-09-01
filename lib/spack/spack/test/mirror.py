@@ -83,7 +83,7 @@ def check_mirror():
 
             # Now try to fetch each package.
             for name, mock_repo in repos.items():
-                spec = Spec(name).concretized()
+                spec = spack.spec.concretized(Spec(name))
                 pkg = spec.package
 
                 with spack.config.override('config:checksum', False):
