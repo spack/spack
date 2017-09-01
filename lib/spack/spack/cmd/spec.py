@@ -77,10 +77,10 @@ def spec(parser, args):
         kwargs['hashes'] = False  # Always False for input spec
         print("Input spec")
         print("--------------------------------")
-        print(spec.tree(**kwargs))
+        print(spack.spec.tree(spec, **kwargs))
 
         kwargs['hashes'] = args.long or args.very_long
         print("Concretized")
         print("--------------------------------")
         spec.concretize()
-        print(spec.tree(**kwargs))
+        print(spack.spec.tree(spec, **kwargs))

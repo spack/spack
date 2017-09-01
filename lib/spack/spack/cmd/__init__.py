@@ -312,10 +312,13 @@ def display_specs(specs, args=None, **kwargs):
 
         elif mode == 'deps':
             for spec in specs:
-                print(spec.tree(
+                line = spack.spec.tree(
+                    spec,
                     format=format_string,
                     indent=4,
-                    prefix=(lambda s: gray_hash(s, hlen)) if hashes else None))
+                    prefix=(lambda s: gray_hash(s, hlen)) if hashes else None
+                )
+                print(line)
 
         elif mode == 'short':
             # Print columns of output if not printing flags
