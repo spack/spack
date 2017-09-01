@@ -70,6 +70,9 @@ class Llvm(CMakePackage):
     variant('all_targets', default=True,
             description="Build all supported targets, default targets "
             "<current arch>,NVPTX,AMDGPU,CppBackend")
+    variant('build_type', default='Release',
+            description='Cmake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     # Build dependency
     depends_on('cmake@3.4.3:', type='build')
