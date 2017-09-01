@@ -2408,12 +2408,6 @@ class Spec(object):
             s.name for s in other.traverse(root=False))
         return common
 
-    def constrained(self, other, deps=True):
-        """Return a constrained copy without modifying this spec."""
-        clone = self.copy(deps=deps)
-        clone.constrain(other, deps)
-        return clone
-
     def dep_difference(self, other):
         """Returns dependencies in self that are not in other."""
         mine = set(s.name for s in self.traverse(root=False))
@@ -3244,7 +3238,7 @@ class LazySpecCache(collections.defaultdict):
 
 
 def concretized(spec):
-    """Returns a concretized copy of the argument spec
+    """Returns a concretized copy of a spec
 
     Args:
         spec (Spec): spec to be copied and concretized
@@ -3254,6 +3248,23 @@ def concretized(spec):
     """
     clone = spec.copy(caches=False)
     clone.concretize()
+    return clone
+
+
+def constrained(spec, other, deps=True):
+    """Returns a constrained copy of a spec
+
+    Args:
+        spec (Spec): spec to be copied and constrained
+        other (Spec): spec containing the constraints
+        deps (bool or deptype): specifies which dependency types
+            should be copied
+
+    Returns:
+        constrained copy of ``spec``
+    """
+    clone = spec.copy(deps=deps)
+    clone.constrain(other, deps)
     return clone
 
 
