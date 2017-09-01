@@ -48,5 +48,5 @@ class AllineaForge(Package):
         return url + "allinea-forge-%s-Redhat-6.0-x86_64.tar" % version
 
     def install(self, spec, prefix):
-        textinstall = which('textinstall.sh')
+        textinstall = Executable('./textinstall.sh')
         textinstall('--accept-licence', prefix)
