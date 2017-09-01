@@ -2213,7 +2213,6 @@ class Spec(object):
 
     def normalize(self):
         dep_constraints = DependencyConstraints(self, copy=True)
-        user_specified_deps = set(self.traverse(root=False))
         self._dependencies.clear()
         self._normalize(dep_constraints, force=True)
         # Don't check if all user-specified deps are satisfied here because
