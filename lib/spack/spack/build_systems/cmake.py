@@ -84,7 +84,7 @@ class CMakePackage(PackageBase):
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
-            description='Cmake build type',
+            description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('cmake', type='build')
