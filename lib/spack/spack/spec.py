@@ -1941,12 +1941,16 @@ class Spec(object):
             changed = any(changes)
             force = True
 
+        remaining_user_specified = unsatisfied(user_specified_deps, self)
+
         changed = True
         while changed:
             # In this second concretization phase, _expand_virtual_packages
             # will only be doing replacement of externals (since build-only
             # dependencies are disallowed from depending on virtuals)
-            changes = (self._normalize(dep_constraints, force, all_deps=True),
+            changes = (self._normalize(
+                           dep_constraints, force, all_deps=True,
+                           user_build_constraints=remaining_user_specified),
                        self._expand_virtual_packages(dep_constraints),
                        self._concretize_helper())
             changed = any(changes)
@@ -2075,7 +2079,8 @@ class Spec(object):
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
     def _merge_dependency(self, dep, deptypes, dep_constraints, visited,
-                          provider_index, all_deps, in_build):
+                          provider_index, all_deps, in_build,
+                          user_build_constraints):
         """Merge the dependency into this spec.
 
         Caller should assume that this routine can owns the dep parameter
@@ -2157,11 +2162,13 @@ class Spec(object):
             raise ValueError(err_msg)
 
         changed |= resolved._normalize_helper(
-            dep_constraints, visited, provider_index, all_deps, in_build)
+            dep_constraints, visited, provider_index, all_deps, in_build,
+            user_build_constraints)
         return changed
 
     def _normalize_helper(self, dep_constraints, visited, provider_index,
-                          all_deps, in_build=False):
+                          all_deps, in_build=False,
+                          user_build_constraints=None):
         """Recursive helper function for _normalize."""
         if self in visited:
             dep_constraints.update_transitive(self)
@@ -2203,9 +2210,15 @@ class Spec(object):
                     child_constraints = dep_constraints
 
                 if pkg_dep and (all_deps or dep_name not in build_only):
+                    if user_build_constraints and dep_name in build_only:
+                        for constraint_spec in user_build_constraints:
+                            if constraint_spec.name == pkg_dep.name:
+                                pkg_dep.constrain(constraint_spec)
+
                     local_changed = self._merge_dependency(
                         pkg_dep, deptypes, child_constraints, visited,
-                        provider_index, all_deps, child_build)
+                        provider_index, all_deps, child_build,
+                        user_build_constraints)
                     changed |= local_changed
             any_change |= changed
 
@@ -2218,7 +2231,8 @@ class Spec(object):
         # Don't check if all user-specified deps are satisfied here because
         # normalization doesn't always determine all transitive dependencies.
 
-    def _normalize(self, dep_constraints, force=False, all_deps=False):
+    def _normalize(self, dep_constraints, force=False, all_deps=False,
+                   user_build_constraints=None):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -2258,7 +2272,8 @@ class Spec(object):
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         any_change = self._normalize_helper(
-            dep_constraints, visited, provider_index, all_deps)
+            dep_constraints, visited, provider_index, all_deps,
+            user_build_constraints=user_build_constraints)
 
         # Mark the spec as normal once done.
         self._normal = True
@@ -3158,7 +3173,7 @@ def assert_user_deps_are_satisfied(user_specified_deps, root):
 
 def unsatisfied(specs, root):
     remaining = set(specs)
-    for dep in root.traverse(deptype=('link', 'run', 'include')):
+    for dep in root.traverse():
         satisfied = set(spec for spec in specs if dep.satisfies(spec))
         remaining.difference_update(satisfied)
     return remaining
