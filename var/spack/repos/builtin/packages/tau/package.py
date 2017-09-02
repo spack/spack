@@ -167,7 +167,8 @@ class Tau(Package):
             options.extend(['-arch=bgq', '-BGQTIMERS'])
 
         # latest 2.26.2 version doesnt build on osx with plugins
-        if(sys.platform == 'darwin' and spec.satisfies('@2.26.2')):
+        # also seeing this issue on bg-q
+        if spec.satisfies('@2.26.2'):
             options.append('-noplugins')
 
         compiler_specific_options = self.set_compiler_options(spec)
