@@ -60,7 +60,7 @@ class Neuron(Package):
     depends_on('python@2.6:', when='+python')
     depends_on('mpi', when='+mpi')
 
-    # bg-q platform expects mpi enabled build
+    # bg-q platform build expects mpi enabled
     conflicts('~mpi', when='platform=bgq')
 
     # pgi builds only shared library
@@ -180,20 +180,11 @@ class Neuron(Package):
         make('install')
 
     def install(self, spec, prefix):
-        c_compiler = spack_cc
-        cxx_compiler = spack_cxx
-
-        # TODO: check if bg-q can't set XL as CC and CXX compiler
-        if 'bgq' in self.spec.architecture and self.spec.satisfies('+mpi'):
-            c_compiler = spec['mpi'].mpicc
-            cxx_compiler = spec['mpi'].mpicxx
 
         options = ['--prefix=%s' % prefix,
                    '--without-iv',
                    '--without-x',
-                   '--without-readline',
-                   'CC=%s' % c_compiler,
-                   'CXX=%s' % cxx_compiler]
+                   '--without-readline']
 
         if spec.satisfies('+multisend'):
             options.append('--with-multisend')
