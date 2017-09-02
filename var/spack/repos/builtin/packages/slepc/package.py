@@ -41,11 +41,15 @@ class Slepc(Package):
     version('3.6.2', '2ab4311bed26ccf7771818665991b2ea3a9b15f97e29fd13911ab1293e8e65df')
 
     variant('arpack', default=True, description='Enables Arpack wrappers')
+    variant('mpi', default=True, description='build with MPI support')
+    variant('complex', default=False, description='use complex as scalar type')
 
     # NOTE: make sure PETSc and SLEPc use the same python.
     depends_on('python@2.6:2.8', type='build')
     depends_on('petsc@3.7:', when='@3.7.1:')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
+    depends_on('petsc+mpi', when='+mpi')
+    depends_on('petsc+complex', when='+complex')
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi~int64')
     depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi~int64')
 
