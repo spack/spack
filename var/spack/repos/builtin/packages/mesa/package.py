@@ -73,9 +73,9 @@ class Mesa(AutotoolsPackage):
     depends_on('libxvmc')
 
     # For DRI and hardware acceleration
-    depends_on('dri2proto@2.6:', type='build')
-    depends_on('dri3proto@1.0:', type='build')
-    depends_on('libdrm')
+    depends_on('dri2proto@2.6:', type='build', when='+hwrender')
+    depends_on('dri3proto@1.0:', type='build', when='+hwrender')
+    depends_on('libdrm', when='+hwrender')
 
     depends_on('llvm@:3.8.1+link_dylib', when='@12:12.99+llvm')
     depends_on('llvm@:3.9.1+link_dylib', when='@13:13.99+llvm')
@@ -112,10 +112,11 @@ class Mesa(AutotoolsPackage):
                 args.append('--enable-osmesa')
 
         if '+hwrender' in spec:
-            args.extend([
-                '--enable-xa',
-                '--with-egl-platforms=x11,drm'
-            ])
+            args.append('--enable-xa')
+            if spec.version >= Version('17'):
+                args.append('--with-platforms=x11,drm')
+            else:
+                args.append('--with-egl-platforms=x11,drm')
             drivers.extend([
                 'svga', 'i915', 'r600', 'nouveau', 'virgl'
             ])
@@ -133,6 +134,8 @@ class Mesa(AutotoolsPackage):
                 '--disable-gbm',
                 '--disable-xvmc',
             ])
+            if spec.version >= Version('17'):
+                args.append('--with-platforms=x11')
 
         if '+llvm' in spec:
             if self.spec.version < Version('17'):
