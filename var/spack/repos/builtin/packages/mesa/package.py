@@ -148,7 +148,10 @@ class Mesa(AutotoolsPackage):
                 args.append('--disable-llvm-shared-libs')
             args.append('--with-llvm-prefix=%s' % spec['llvm'].prefix)
 
-        args.append('--with-gallium-drivers=' + ','.join(drivers))
+        if drivers:
+            args.append('--with-gallium-drivers=' + ','.join(drivers))
+        else:
+            args.append('--without-gallium-drivers')
 
         # Avoid errors due to missing clock_gettime symbol:
         arch = spec.architecture
