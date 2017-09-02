@@ -37,13 +37,14 @@ class Neuron(Package):
     interface is also available."""
 
     homepage = "https://www.neuron.yale.edu/"
-    url      = "http://www.neuron.yale.edu/ftp/neuron/versions/v7.4/nrn-7.4.tar.gz"
+    url      = "http://www.neuron.yale.edu/ftp/neuron/versions/v7.5/nrn-7.5.tar.gz"
     github   = "https://github.com/nrnhines/nrn"
 
+    version('7.5', '1641ae7a7cd02728e5ae4c8aa93b3749')
     version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
     version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
     version('7.2', '5486709b6366add932e3a6d141c4f7ad')
-    version('develop', git=github, preferred=True)
+    version('develop', git=github)
 
     variant('mpi',           default=True,  description='Enable MPI parallelism')
     variant('python',        default=True,  description='Enable python')
@@ -59,10 +60,10 @@ class Neuron(Package):
     depends_on('python@2.6:', when='+python')
     depends_on('mpi', when='+mpi')
 
-    # on bg-q mpi needs to be enabled : todo test this
+    # bg-q platform expects mpi enabled build
     conflicts('~mpi', when='platform=bgq')
 
-    # pgi compiler can't build static libraries
+    # pgi builds only shared library
     conflicts('%pgi', when='~shared')
 
     def patch(self):
@@ -73,28 +74,13 @@ class Neuron(Package):
         filter_file(r'aclocal -I m4', r'%s' % newpath, "build.sh")
 
     def get_arch_options(self, spec):
-        options = []
+        options = ['cross_compiling=yes',
+                   '--without-memacs',
+                   '--without-nmodl']
 
         if 'bgq' in self.spec.architecture:
             options.extend(['--enable-bluegeneQ',
-                            '--host=powerpc64',
-                            '--without-memacs'])
-
-        if 'cray' in self.spec.architecture:
-            options.extend(['--without-memacs',
-                            '--without-nmodl',
-                            'cross_compiling=yes'])
-
-            # TODO: on cray systems we get an error while linking even if
-            # we use cc wrapper. Hence add explicitly add mpi library
-            if spec.satisfies('+mpi'):
-                options.append('LIBS=%s' % spec['mpi'].libs.link_flags)
-
-            # TODO: -pthread is not a valid pthread option for cray compiler.
-            # for now disable use of pthread with cray compiler.
-            if spec.satisfies('%cce'):
-                options.append('use_pthread=no')
-
+                            '--host=powerpc64'])
         return options
 
     def get_opt_flags(self):
@@ -117,26 +103,24 @@ class Neuron(Package):
         options = []
 
         if spec.satisfies('+python'):
-            py_version = 'python{0}'.format(spec['python'].version.up_to(2))
+            #py_version = 'python{0}'.format(spec['python'].version.up_to(2))
             python_exec = spec['python'].command.path
-
             options.append('--with-nrnpython=%s' % python_exec)
             options.append('--disable-pysetup')
 
             if spec.satisfies('+cross-compile'):
-                # on cross compile builds we have to provide
-                # PYINCDIR, PYLIB, PYLIBDIR etc
-
-                py_lib = spec['python'].prefix.lib
+                # on cross compile builds provide PYINCDIR and PYLIBDIR
                 py_inc = spec['python'].headers.directories[0]
+                py_lib = spec['python'].prefix.lib
 
                 if not os.path.isdir(py_lib):
                     py_lib = spec['python'].prefix.lib64
 
                 options.extend(['PYINCDIR=%s' % (py_inc),
-                                'PYLIB=-L%s -l%s' % (py_lib, py_version),
+                                #'PYLIB=-L%s -l%s' % (py_lib, py_version),
                                 'PYLIBDIR=%s' % py_lib,
-                                'PYLIBLINK=-L%s -l%s' % (py_lib, py_version)])
+                                #'PYLIBLINK=-L%s -l%s' % (py_lib, py_version)
+                                ])
         else:
             options.append('--without-nrnpython')
         return options
@@ -147,9 +131,9 @@ class Neuron(Package):
 
         # TODO: issue with static build and pgi compiler.
         # need to add fpic and enabled-shared
-        if spec.satisfies('%pgi'):
-            flags += ' ' + self.compiler.pic_flag
-            options.append('--enable-shared')
+        #if spec.satisfies('%pgi'):
+        #    flags += ' ' + self.compiler.pic_flag
+            #options.append('--enable-shared')
 
         options.extend(['CFLAGS=%s' % flags,
                         'CXXFLAGS=%s' % flags])
@@ -170,6 +154,7 @@ class Neuron(Package):
         options.extend(self.get_arch_options(spec))
         options.extend(self.get_python_options(spec))
         options.extend(self.get_compiler_options(spec))
+
         return options
 
     def build_nmodl(self, spec, prefix):
@@ -180,15 +165,14 @@ class Neuron(Package):
                    '--without-x']
 
         if 'bgq' in self.spec.architecture:
-            # generate code compatible for all powerpc64 arch
             flags = '-qarch=ppc64'
             options.extend(['CFLAGS=%s' % flags,
                             'CXXFLAGS=%s' % flags])
 
         if 'cray' in self.spec.architecture:
-            # cray wrappers provide a way for front-end build
-            options.extend(['CRAY_CPU_TARGET=x86_64',
-                            'CRAYPE_NETWORK_TARGET=none'])
+            flags = '-target-cpu=x86_64 -target-network=none'
+            options.extend(['CFLAGS=%s' % flags,
+                            'CXXFLAGS=%s' % flags])
 
         configure = Executable(join_path(self.stage.source_path, 'configure'))
         configure(*options)
@@ -199,7 +183,7 @@ class Neuron(Package):
         c_compiler = spack_cc
         cxx_compiler = spack_cxx
 
-        # for bg-q we can't set XL as CC and CXX compiler
+        # TODO: check if bg-q can't set XL as CC and CXX compiler
         if 'bgq' in self.spec.architecture and self.spec.satisfies('+mpi'):
             c_compiler = spec['mpi'].mpicc
             cxx_compiler = spec['mpi'].mpicxx
@@ -234,7 +218,7 @@ class Neuron(Package):
             srcpath = self.stage.source_path
             configure = Executable(join_path(srcpath, 'configure'))
             configure(*options)
-            make()
+            make('VERBOSE=1')
             make('install')
 
     @run_after('install')
