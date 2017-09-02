@@ -115,5 +115,17 @@ class PerlPackage(PackageBase):
         """Installs a Perl package."""
         self.build_executable('install')
 
+    @run_after('install')
+    def allow_activation(self):
+        # Remove files that appear in multiple packages,
+        # preventing them from being activated together.
+        # The main culprits are:
+        #   perllocal.pod - list and description of non-core packages.
+        culprits = ['perllocal.pod']
+        for dirpath, dirnames, filenames in os.walk(self.prefix):
+            for culprit in culprits:
+                if culprit in filenames:
+                    os.remove(join_path(dirpath, culprit))
+
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
