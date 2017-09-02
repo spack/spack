@@ -166,113 +166,128 @@ class Llvm(CMakePackage):
                 'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+            }
+        },
+        {
+            'version': '4.0.1',
+            'md5': 'a818e70321b91e2bb2d47e60edd5408f',
+            'resources': {
+                'compiler-rt': '0227ac853ce422125f8bb08f6ad5c995',
+                'openmp': '23e5f720ae119165ba32627467fdc885',
+                'polly': '0d4a3fa2eb446a378bbf01b220851b1f',
+                'libcxx': 'c54f7938e2f393a2cead0af37ed99dfb',
+                'libcxxabi': '55ba0be7daf8bf25ab629a9cfd3022a4',
+                'cfe': 'a6c7b3e953f8b93e252af5917df7db97',
+                'clang-tools-extra': 'cfd46027a0ab7eed483dfcc803e86bd9',
+                'lldb': '908bdd777d3b527a914ba360477b8ab3',
+                'libunwind': 'b72ec95fb784e61f15d6196414b92f5e',
                 }
-            },
-            {
-                'version': '4.0.0',
-                'md5': 'ea9139a604be702454f6acf160b4f3a2',
-                'resources': {
-                    'compiler-rt': '2ec11fb7df827b086341131c5d7f1814',
-                    'openmp': '3d06d2801dd4808f551a1a70068e01f5',
-                    'polly': 'f36e4e7cf872f8b3bbb9cdcddc5fd964',
-                    'libcxx': '4cf7df466e6f803ec4611ee410ff6781',
-                    'libcxxabi': '8b5d7b9bfcf7dec2dc901c8a6746f97c',
-                    'cfe': '756e17349fdc708c62974b883bf72d37',
-                    'clang-tools-extra': '99e711337ec3e9a8bb36e8dd62b2cd6e',
-                    'lldb': 'bd41ba7fcca55d2a554409bbccd34d2d',
-                    'libunwind': '0c3534eaa11c0cae33a1dcf5f36ce287',
-                    }
-                },
-            {
-                'version': '3.9.1',
-                'md5': '3259018a7437e157f3642df80f1983ea',
-                'resources': {
-                    'compiler-rt': 'aadc76e7e180fafb10fb729444e287a3',
-                    'openmp': 'f076916bf2f49229b4df9fa0bb002599',
-                    'polly': '2cc7fe2bd9539775ba140abfd375bec6',
-                    'libcxx': '75a3214224301fc543fa6a38bdf7efe0',
-                    'libcxxabi': '62fd584b38cc502172c2ffab041b5fcc',
-                    'cfe': '45713ec5c417ed9cad614cd283d786a1',
-                    'clang-tools-extra': '1a01d545a064fcbc46a2f05f6880d3d7',
-                    'lldb': '91399402f287d3f637db1207113deecb',
-                    'libunwind': 'f273dd0ed638ad0601b23176a36f187b',
-                    }
-                },
-            {
-                'version': '3.9.0',
-                'md5': 'f2093e98060532449eb7d2fcfd0bc6c6',
-                'resources': {
-                    'compiler-rt': 'b7ea34c9d744da16ffc0217b6990d095',
-                    'openmp': '5390164f2374e1444e82393541ecf6c7',
-                    'polly': '1cf328cbae25267749b68cfa6f113674',
-                    'libcxx': '0a11efefd864ce6f321194e441f7e569',
-                    'libcxxabi': 'd02642308e22e614af6b061b9b4fedfa',
-                    'cfe': '29e1d86bee422ab5345f5e9fb808d2dc',
-                    'clang-tools-extra': 'f4f663068c77fc742113211841e94d5e',
-                    'lldb': '968d053c3c3d7297983589164c6999e9',
-                    'libunwind': '3e5c87c723a456be599727a444b1c166',
-                    }
-                },
-            {
-                'version': '3.8.1',
-                'md5': '538467e6028bbc9259b1e6e015d25845',
-                'resources': {
-                    'compiler-rt': 'f140db073d2453f854fbe01cc46f3110',
-                    'openmp': '078b8d4c51ad437a4f8b5989f5ec4156',
-                    'polly': '8a40e697a4ba1c8b640b85d074bd6e25',
-                    'libcxx': '1bc60150302ff76a0d79d6f9db22332e',
-                    'libcxxabi': '3c63b03ba2f30a01279ca63384a67773',
-                    'cfe': '4ff2f8844a786edb0220f490f7896080',
-                    'clang-tools-extra': '6e49f285d0b366cc3cab782d8c92d382',
-                    'lldb': '9e4787b71be8e432fffd31e13ac87623',
-                    'libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
-                    }
-                },
-            {
-                'version': '3.8.0',
-                'md5': '07a7a74f3c6bd65de4702bf941b511a0',
-                'resources': {
-                    'compiler-rt': 'd6fcbe14352ffb708e4d1ac2e48bb025',
-                    'openmp': '8fd7cc35d48051613cf1e750e9f22e40',
-                    'polly': '1b3b20f52d34a4024e21a4ea7112caa7',
-                    'libcxx': 'd6e0bdbbee39f7907ad74fd56d03b88a',
-                    'libcxxabi': 'bbe6b4d72c7c5978550d370af529bcf7',
-                    'cfe': 'cc99e7019bb74e6459e80863606250c5',
-                    'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
-                    'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
-                    'libunwind': '162ade468607f153cca12be90b5194fa',
-                    }
-                },
-            {
-                'version': '3.7.1',
-                'md5': 'bf8b3a2c79e61212c5409041dfdbd319',
-                'resources': {
-                    'compiler-rt': '1c6975daf30bb3b0473b53c3a1a6ff01',
-                    'openmp': 'b4ad08cda4e5c22e42b66062b140438e',
-                    'polly': '3a2a7367002740881637f4d47bca4dc3',
-                    'libcxx': 'f9c43fa552a10e14ff53b94d04bea140',
-                    'libcxxabi': '52d925afac9f97e9dcac90745255c169',
-                    'cfe': '0acd026b5529164197563d135a8fd83e',
-                    'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
-                    'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
-                    'libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
-                    }
-                },
-            {
-                'version': '3.7.0',
-                'md5': 'b98b9495e5655a672d6cb83e1a180f8e',
-                'resources': {
-                    'compiler-rt': '383c10affd513026f08936b5525523f5',
-                    'openmp': 'f482c86fdead50ba246a1a2b0bbf206f',
-                    'polly': '32f93ffc9cc7e042df22089761558f8b',
-                    'libcxx': '46aa5175cbe1ad42d6e9c995968e56dd',
-                    'libcxxabi': '5aa769e2fca79fa5335cfae8f6258772',
-                    'cfe': '8f9d27335e7331cf0a4711e952f21f01',
-                    'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
-                    'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
-                    'libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
-                    }
-                },
+        },
+        {
+            'version': '4.0.0',
+            'md5': 'ea9139a604be702454f6acf160b4f3a2',
+            'resources': {
+                'compiler-rt': '2ec11fb7df827b086341131c5d7f1814',
+                'openmp': '3d06d2801dd4808f551a1a70068e01f5',
+                'polly': 'f36e4e7cf872f8b3bbb9cdcddc5fd964',
+                'libcxx': '4cf7df466e6f803ec4611ee410ff6781',
+                'libcxxabi': '8b5d7b9bfcf7dec2dc901c8a6746f97c',
+                'cfe': '756e17349fdc708c62974b883bf72d37',
+                'clang-tools-extra': '99e711337ec3e9a8bb36e8dd62b2cd6e',
+                'lldb': 'bd41ba7fcca55d2a554409bbccd34d2d',
+                'libunwind': '0c3534eaa11c0cae33a1dcf5f36ce287',
+            }
+        },
+        {
+            'version': '3.9.1',
+            'md5': '3259018a7437e157f3642df80f1983ea',
+            'resources': {
+                'compiler-rt': 'aadc76e7e180fafb10fb729444e287a3',
+                'openmp': 'f076916bf2f49229b4df9fa0bb002599',
+                'polly': '2cc7fe2bd9539775ba140abfd375bec6',
+                'libcxx': '75a3214224301fc543fa6a38bdf7efe0',
+                'libcxxabi': '62fd584b38cc502172c2ffab041b5fcc',
+                'cfe': '45713ec5c417ed9cad614cd283d786a1',
+                'clang-tools-extra': '1a01d545a064fcbc46a2f05f6880d3d7',
+                'lldb': '91399402f287d3f637db1207113deecb',
+                'libunwind': 'f273dd0ed638ad0601b23176a36f187b',
+                }
+        },
+        {
+            'version': '3.9.0',
+            'md5': 'f2093e98060532449eb7d2fcfd0bc6c6',
+            'resources': {
+                'compiler-rt': 'b7ea34c9d744da16ffc0217b6990d095',
+                'openmp': '5390164f2374e1444e82393541ecf6c7',
+                'polly': '1cf328cbae25267749b68cfa6f113674',
+                'libcxx': '0a11efefd864ce6f321194e441f7e569',
+                'libcxxabi': 'd02642308e22e614af6b061b9b4fedfa',
+                'cfe': '29e1d86bee422ab5345f5e9fb808d2dc',
+                'clang-tools-extra': 'f4f663068c77fc742113211841e94d5e',
+                'lldb': '968d053c3c3d7297983589164c6999e9',
+                'libunwind': '3e5c87c723a456be599727a444b1c166',
+                }
+        },
+        {
+            'version': '3.8.1',
+            'md5': '538467e6028bbc9259b1e6e015d25845',
+            'resources': {
+                'compiler-rt': 'f140db073d2453f854fbe01cc46f3110',
+                'openmp': '078b8d4c51ad437a4f8b5989f5ec4156',
+                'polly': '8a40e697a4ba1c8b640b85d074bd6e25',
+                'libcxx': '1bc60150302ff76a0d79d6f9db22332e',
+                'libcxxabi': '3c63b03ba2f30a01279ca63384a67773',
+                'cfe': '4ff2f8844a786edb0220f490f7896080',
+                'clang-tools-extra': '6e49f285d0b366cc3cab782d8c92d382',
+                'lldb': '9e4787b71be8e432fffd31e13ac87623',
+                'libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
+                }
+        },
+        {
+            'version': '3.8.0',
+            'md5': '07a7a74f3c6bd65de4702bf941b511a0',
+            'resources': {
+                'compiler-rt': 'd6fcbe14352ffb708e4d1ac2e48bb025',
+                'openmp': '8fd7cc35d48051613cf1e750e9f22e40',
+                'polly': '1b3b20f52d34a4024e21a4ea7112caa7',
+                'libcxx': 'd6e0bdbbee39f7907ad74fd56d03b88a',
+                'libcxxabi': 'bbe6b4d72c7c5978550d370af529bcf7',
+                'cfe': 'cc99e7019bb74e6459e80863606250c5',
+                'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
+                'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
+                'libunwind': '162ade468607f153cca12be90b5194fa',
+                }
+        },
+        {
+            'version': '3.7.1',
+            'md5': 'bf8b3a2c79e61212c5409041dfdbd319',
+            'resources': {
+                'compiler-rt': '1c6975daf30bb3b0473b53c3a1a6ff01',
+                'openmp': 'b4ad08cda4e5c22e42b66062b140438e',
+                'polly': '3a2a7367002740881637f4d47bca4dc3',
+                'libcxx': 'f9c43fa552a10e14ff53b94d04bea140',
+                'libcxxabi': '52d925afac9f97e9dcac90745255c169',
+                'cfe': '0acd026b5529164197563d135a8fd83e',
+                'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
+                'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
+                'libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
+                }
+        },
+        {
+            'version': '3.7.0',
+            'md5': 'b98b9495e5655a672d6cb83e1a180f8e',
+            'resources': {
+                'compiler-rt': '383c10affd513026f08936b5525523f5',
+                'openmp': 'f482c86fdead50ba246a1a2b0bbf206f',
+                'polly': '32f93ffc9cc7e042df22089761558f8b',
+                'libcxx': '46aa5175cbe1ad42d6e9c995968e56dd',
+                'libcxxabi': '5aa769e2fca79fa5335cfae8f6258772',
+                'cfe': '8f9d27335e7331cf0a4711e952f21f01',
+                'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
+                'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
+                'libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
+                }
+        },
         {
             'version': '3.6.2',
             'md5': '0c1ee3597d75280dee603bae9cbf5cc2',
