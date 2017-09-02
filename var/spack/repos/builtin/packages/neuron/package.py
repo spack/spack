@@ -99,6 +99,8 @@ class Neuron(Package):
             arch = 'powerpc64'
         elif 'cray' in self.spec.architecture:
             arch = 'x86_64'
+        elif 'ppc64le' in self.spec.architecture:
+            arch = 'powerpc64le'
         else:
             arch = self.spec.architecture.target
 
