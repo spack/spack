@@ -53,12 +53,17 @@ class Neuron(Package):
     variant('multisend',     default=True,  description="Enable multi-send spike exchange")
     variant('rx3d',          default=False, description="Enable cython translated 3-d rxd")
 
+    depends_on('flex',       type='build')
+    depends_on('bison',      type='build')
+    depends_on('automake',   type='build')
     depends_on('automake',   type='build')
     depends_on('autoconf',   type='build')
     depends_on('libtool',    type='build')
     depends_on('pkg-config', type='build')
+
+    depends_on('mpi',         when='+mpi')
     depends_on('python@2.6:', when='+python')
-    depends_on('mpi', when='+mpi')
+    depends_on('ncurses',     when='~cross-compile')
 
     conflicts('~mpi', when='platform=bgq')
     conflicts('%pgi', when='~shared')
