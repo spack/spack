@@ -60,34 +60,34 @@ class Neuron(Package):
     depends_on('python@2.6:', when='+python')
     depends_on('mpi', when='+mpi')
 
-    # bg-q platform build expects mpi enabled
     conflicts('~mpi', when='platform=bgq')
-
-    # pgi builds only shared library
     conflicts('%pgi', when='~shared')
 
     def patch(self):
-        # aclocal need complete include path especially on os x
+        # aclocal need complete include path (especially on os x)
         pkgconf_inc = '-I %s/share/aclocal/' % (self.spec['pkg-config'].prefix)
         libtool_inc = '-I %s/share/aclocal/' % (self.spec['libtool'].prefix)
         newpath = 'aclocal -I m4 %s %s' % (pkgconf_inc, libtool_inc)
         filter_file(r'aclocal -I m4', r'%s' % newpath, "build.sh")
 
     def get_arch_options(self, spec):
-        options = ['cross_compiling=yes',
-                   '--without-memacs',
-                   '--without-nmodl']
+        options = []
 
+        if spec.satisfies('+cross-compile'):
+            options.extend(['cross_compiling=yes',
+                            '--without-memacs',
+                            '--without-nmodl'])
+
+        # need to enable bg-q arch
         if 'bgq' in self.spec.architecture:
             options.extend(['--enable-bluegeneQ',
                             '--host=powerpc64'])
-        return options
 
-    def get_opt_flags(self):
-        if 'bgq' in self.spec.architecture:
-            return '-O3 -qtune=qp -qarch=qp -q64 -qstrict -qnohot -g'
-        else:
-            return '-O2 -g'
+        # on os-x disable building carbon 'click' utility
+        if 'darwin' in self.spec.architecture:
+            options.append('macdarwin=no')
+
+        return options
 
     def get_arch_dir(self):
         if 'bgq' in self.spec.architecture:
@@ -103,63 +103,34 @@ class Neuron(Package):
         options = []
 
         if spec.satisfies('+python'):
-            #py_version = 'python{0}'.format(spec['python'].version.up_to(2))
-            python_exec = spec['python'].command.path
-            options.append('--with-nrnpython=%s' % python_exec)
+            options.append('--with-nrnpython=%s' % spec['python'].command.path)
             options.append('--disable-pysetup')
 
-            if spec.satisfies('+cross-compile'):
-                # on cross compile builds provide PYINCDIR and PYLIBDIR
-                py_inc = spec['python'].headers.directories[0]
-                py_lib = spec['python'].prefix.lib
+            # provide PYINCDIR and PYLIBDIR
+            py_inc = spec['python'].headers.directories[0]
+            py_lib = spec['python'].prefix.lib
 
-                if not os.path.isdir(py_lib):
-                    py_lib = spec['python'].prefix.lib64
+            if not os.path.isdir(py_lib):
+                py_lib = spec['python'].prefix.lib64
 
-                options.extend(['PYINCDIR=%s' % (py_inc),
-                                #'PYLIB=-L%s -l%s' % (py_lib, py_version),
-                                'PYLIBDIR=%s' % py_lib,
-                                #'PYLIBLINK=-L%s -l%s' % (py_lib, py_version)
-                                ])
+            options.extend(['PYINCDIR=%s' % py_inc,
+                            'PYLIBDIR=%s' % py_lib])
         else:
             options.append('--without-nrnpython')
+
         return options
 
     def get_compiler_options(self, spec):
-        options = []
-        flags = self.get_opt_flags()
+        flags = '-O2 -g'
 
-        # TODO: issue with static build and pgi compiler.
-        # need to add fpic and enabled-shared
-        #if spec.satisfies('%pgi'):
-        #    flags += ' ' + self.compiler.pic_flag
-            #options.append('--enable-shared')
+        if 'bgq' in self.spec.architecture:
+            flags = '-O3 -qtune=qp -qarch=qp -q64 -qstrict -qnohot -g'
 
-        options.extend(['CFLAGS=%s' % flags,
-                        'CXXFLAGS=%s' % flags])
-
-        return options
-
-    def get_configure_options(self, spec):
-        options = []
-
-        if spec.satisfies('~shared'):
-            options.extend(['--disable-shared',
-                            'linux_nrnmech=no'])
-
-        # on os-x disable building carbon 'click' utility (deprecated)
-        if (sys.platform == 'darwin'):
-            options.append('macdarwin=no')
-
-        options.extend(self.get_arch_options(spec))
-        options.extend(self.get_python_options(spec))
-        options.extend(self.get_compiler_options(spec))
-
-        return options
+        return ['CFLAGS=%s' % flags,
+                'CXXFLAGS=%s' % flags]
 
     def build_nmodl(self, spec, prefix):
-        # build components for front-end arch in cross
-        # compiling architectures like bg-q, cray
+        # build components for front-end arch in cross compiling environment
         options = ['--prefix=%s' % prefix,
                    '--with-nmodl-only',
                    '--without-x']
@@ -199,7 +170,14 @@ class Neuron(Package):
         else:
             options.append('--without-paranrn')
 
-        options.extend(self.get_configure_options(spec))
+        if spec.satisfies('~shared'):
+            options.extend(['--disable-shared',
+                            'linux_nrnmech=no'])
+
+        options.extend(self.get_arch_options(spec))
+        options.extend(self.get_python_options(spec))
+        options.extend(self.get_compiler_options(spec))
+
         build = Executable('./build.sh')
         build()
 
