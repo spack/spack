@@ -171,7 +171,7 @@ class Tau(Package):
 
         # latest 2.26.2 version doesnt build on osx with plugins
         # also seeing this issue on bg-q
-        if spec.satisfies('@2.26.2'):
+        if spec.satisfies('@2.26:'):
             options.append('-noplugins')
 
         compiler_specific_options = self.set_compiler_options(spec)
