@@ -64,9 +64,6 @@ class Neuron(Package):
     depends_on('python@2.6:', when='+python')
     depends_on('ncurses',     when='~cross-compile')
 
-    conflicts('~mpi', when='platform=bgq')
-    conflicts('%pgi', when='~shared')
-
     def patch(self):
         # aclocal need complete include path (especially on os x)
         pkgconf_inc = '-I %s/share/aclocal/' % (self.spec['pkg-config'].prefix)
@@ -134,6 +131,9 @@ class Neuron(Package):
 
         if 'bgq' in self.spec.architecture:
             flags = '-O3 -qtune=qp -qarch=qp -q64 -qstrict -qnohot -g'
+
+        if self.spec.satisfies('%pgi'):
+            flags += ' ' + self.compiler.pic_flag
 
         return ['CFLAGS=%s' % flags,
                 'CXXFLAGS=%s' % flags]
