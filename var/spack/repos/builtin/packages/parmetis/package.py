@@ -45,7 +45,8 @@ class Parmetis(Package):
 
     depends_on('cmake@2.8:', type='build')
     depends_on('mpi')
-    depends_on('metis@5:')
+    depends_on('metis@5:+shared', when='+shared')
+    depends_on('metis@5:~shared', when='~shared')
 
     patch('enable_external_metis.patch')
     # bug fixes from PETSc developers
