@@ -87,6 +87,9 @@ class Elemental(CMakePackage):
     depends_on('scalapack', when='+scalapack ~int64_blas')
     extends('python', when='+python')
     depends_on('python@:2.8', when='+python')
+    depends_on('gmp')
+    depends_on('mpc')
+    depends_on('mpfr')
 
     patch('elemental_cublas.patch', when='+cublas')
 

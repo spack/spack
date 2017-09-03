@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import sys
 import glob
 from llnl.util.filesystem import join_path
 
@@ -37,6 +38,7 @@ class Tau(Package):
     homepage = "http://www.cs.uoregon.edu/research/tau"
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.25.tar.gz"
 
+    version('2.26.3', '4ec14e85b8f3560b58628512c7b49e17')
     version('2.26.2',   '8a5908c35dac9406c9220b8098c70c1c')
     version('2.25.2', 'f5e542d41eb4a7daa6241e5472f49fd7')
     version('2.25.1.1', 'f2baae27c5c024937566f33339826d7c')
@@ -164,6 +166,13 @@ class Tau(Package):
 
         if 'bgq' in spec.architecture:
             options.extend(['-arch=bgq', '-BGQTIMERS'])
+        elif 'cray' in spec.architecture:
+            options.append('-arch=craycnl')
+
+        # latest 2.26.2 version doesnt build on osx with plugins
+        # also seeing this issue on bg-q
+        if spec.satisfies('@2.26:'):
+            options.append('-noplugins')
 
         compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
@@ -176,9 +185,6 @@ class Tau(Package):
 
         # create tau compiler wrappers
         self.create_tau_compiler_wrapper()
-
-        if 'bgq' in spec.architecture and spec.satisfies('%xl'):
-            self.fix_bgq_path()
 
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
@@ -232,14 +238,23 @@ class Tau(Package):
         files = self.get_makefiles()
         os.environ['TAU_MAKEFILE'] = files[0] if files else ''
 
-    def fix_bgq_path(self):
-        # tau links to some fortran libraries which are located in
-        # /opt/ibmcmp/xlf/bg/14.1/bglib64/. Spack set fortran wrappers
-        # which tau use. But Tau also use wrapper path to get path
-        # of /opt/ibmcmp/xlf/bg/14.1/bglib64. But it use wrappers
-        # path which obviously break the links. For now get path from
-        # SPACK_FC and patch Makefile.
-        fc = os.environ['SPACK_FC']
-        extra_dir = os.path.dirname(os.path.dirname(fc))
+    @run_after('install')
+    def filter_compilers(self):
+
         makefile = self.get_makefiles()[0]
-        filter_file(r'EXTRADIR=.*', r'EXTRADIR=%s' % extra_dir, makefile)
+
+        if 'bgq' in self.spec.architecture and self.spec.satisfies('%xl'):
+            # tau links to some fortran libraries which are located in
+            # /opt/ibmcmp/xlf/bg/14.1/bglib64/. Spack set fortran wrappers
+            # which tau use. But Tau also use wrapper path to get path
+            # of /opt/ibmcmp/xlf/bg/14.1/bglib64. But it use wrappers
+            # path which obviously break the links. For now get path from
+            # SPACK_FC and patch Makefile.
+            fc = os.environ['SPACK_FC']
+            extra_dir = os.path.dirname(os.path.dirname(fc))
+            filter_file(r'EXTRADIR=.*', r'EXTRADIR=%s' % extra_dir, makefile)
+
+        if 'cray' in self.spec.architecture:
+            makefile = self.get_makefiles()[0]
+            filter_file(r'FULL_CC=.*', r'FULL_CC=%s' % self.compiler.cc, makefile)
+            filter_file(r'FULL_CXX=.*', r'FULL_CXX=%s' % self.compiler.cxx, makefile)

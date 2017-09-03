@@ -22,18 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
 
-from spack.pkg.builtin.intel import IntelInstaller
+from spack import *
+from spack.environment import EnvironmentModifications
 
 
-class IntelIpp(IntelInstaller):
-    """Intel Integrated Performance Primitives.
-
-    Note: You will have to add the download file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
+class IntelIpp(IntelPackage):
+    """Intel Integrated Performance Primitives."""
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
@@ -50,11 +46,35 @@ class IntelIpp(IntelInstaller):
 
     provides('ipp')
 
-    def install(self, spec, prefix):
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See:
+        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
+        if self.version >= Version('2017.2'):
+            return False
+        else:
+            return True
 
-        self.intel_prefix = os.path.join(prefix, "pkg")
-        IntelInstaller.install(self, spec, prefix)
+    def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
 
-        ipp_dir = os.path.join(self.intel_prefix, "ipp")
-        for f in os.listdir(ipp_dir):
-            os.symlink(os.path.join(ipp_dir, f), os.path.join(self.prefix, f))
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ source ipp/bin/ippvars.sh intel64
+        """
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        ippvars = os.path.join(self.prefix.ipp.bin, 'ippvars.sh')
+
+        if os.path.isfile(ippvars):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                ippvars, 'intel64'))

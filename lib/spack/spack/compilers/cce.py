@@ -52,7 +52,7 @@ class Cce(Compiler):
 
     @classmethod
     def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*(\d+(\.\d+)+)')
+        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
 
     @property
     def openmp_flag(self):
