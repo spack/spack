@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
 class Armadillo(CMakePackage):
@@ -50,45 +49,11 @@ class Armadillo(CMakePackage):
     depends_on('superlu@5.2:')
     depends_on('hdf5', when='+hdf5')
 
-    # Armadillo uses cmake to configure_file in conjunction with some include
-    # macros.  Spack will have `linux` in the path, and often times compilers
-    # will `#define linux 1`, resulting in the macro expansions for an arch
-    # of linux to result in bad paths.  #undef linux may have unintended
-    # consequences.
-    def patch(self):
-        if "linux" in self.spec.architecture:
-            # Get the path to where the stage is extracted to
-            extract_dir = os.path.basename(
-                self.stage[0].mirror_path
-            ).replace(".tar.xz", "")
-
-            compiler_setup = os.path.join(
-                self.stage[0].path,
-                extract_dir,
-                "include",
-                "armadillo_bits",
-                "compiler_setup.hpp"
-            )
-
-            # Make sure this path exists, extract_dir may not be correct
-            if not os.path.isfile(compiler_setup):
-                raise RuntimeError(
-                    "Could not find [{0}] to add #undef linux to.".format(
-                        compiler_setup
-                    )
-                )
-
-            # Open the file and read it in, then seek to the beginning
-            # and add two lines at the beginning of the file
-            #
-            #     // added by spack to prevent path mangling
-            #     #undef linux
-            with open(compiler_setup, "r+") as csf:
-                contents = csf.read()
-                csf.seek(0, 0)
-                csf.write("// added by spack to prevent path mangling\n")
-                csf.write("#undef linux\n\n")
-                csf.write(contents)
+    # Adds an `#undef linux` to prevent preprocessor expansion of include
+    # directories with `linux` in them getting transformed into a 1.
+    # E.g. `/path/linux-x86_64/dir` -> `/path/1-x86_64/dir` if/when a linux
+    # platform's compiler is adding `#define linux 1`.
+    patch('undef_linux.patch', when='platform=linux')
 
     def cmake_args(self):
         spec = self.spec
