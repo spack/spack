@@ -22,31 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class AllineaForge(Package):
-    """Allinea Forge is the complete toolsuite for software development - with
-    everything needed to debug, profile, optimize, edit and build C, C++ and
-    Fortran applications on Linux for high performance - from single threads
-    through to complex parallel HPC codes with MPI, OpenMP, threads or CUDA."""
+class Raft(CMakePackage):
+    """RAFT: Reconstruct Algorithms for Tomography.
+       Toolbox under development at Brazilian Synchrotron Light Source."""
 
-    homepage = "http://www.allinea.com/products/develop-allinea-forge"
+    homepage = "https://bitbucket.org/gill_martinez/raft_aps"
+    url = "https://bitbucket.org/gill_martinez/raft_aps/get/1.2.3.tar.gz"
 
-    version('6.0.4', 'df7f769975048477a36f208d0cd57d7e')
+    version('1.2.3', '4d1b106d9b3493e63dde96f7dd44b834')
+    version('develop', git='https://bitbucket.org/gill_martinez/raft_aps.git')
 
-    # Licensing
-    license_required = True
-    license_comment = '#'
-    license_files = ['licences/Licence']
-    license_vars = ['ALLINEA_LICENCE_FILE', 'ALLINEA_LICENSE_FILE']
-    license_url = 'http://www.allinea.com/user-guide/forge/Installation.html'
-
-    def url_for_version(self, version):
-        # TODO: add support for other architectures/distributions
-        url = "http://content.allinea.com/downloads/"
-        return url + "allinea-forge-%s-Redhat-6.0-x86_64.tar" % version
+    depends_on('mpi')
+    depends_on('cmake', type='build')
+    depends_on('hdf5')
+    depends_on('fftw')
+    depends_on('cuda')
 
     def install(self, spec, prefix):
-        textinstall = Executable('./textinstall.sh')
-        textinstall('--accept-licence', prefix)
+        """RAFT lacks an install in its CMakeList"""
+
+        with working_dir(self.stage.source_path):
+            mkdirp(prefix)
+
+            # We only care about the binary
+            install_tree('bin', prefix.bin)

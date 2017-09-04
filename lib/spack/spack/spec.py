@@ -1133,34 +1133,19 @@ class Spec(object):
         if not isinstance(spec_like, string_types):
             raise TypeError("Can't make spec out of %s" % type(spec_like))
 
-        spec_list = SpecParser().parse(spec_like)
+        # parse string types *into* this spec
+        spec_list = SpecParser(self).parse(spec_like)
         if len(spec_list) > 1:
             raise ValueError("More than one spec in string: " + spec_like)
         if len(spec_list) < 1:
             raise ValueError("String contains no specs: " + spec_like)
 
-        # Take all the attributes from the first parsed spec without copying.
-        # This is safe b/c we throw out the parsed spec.  It's a bit nasty,
-        # but it's nastier to implement the constructor so that the parser
-        # writes directly into this Spec object.
-        other = spec_list[0]
-        self.name = other.name
-        self.versions = other.versions
-        self.architecture = other.architecture
-        self.compiler = other.compiler
-        self.compiler_flags = other.compiler_flags
-        self.compiler_flags.spec = self
-        self._dependencies = other._dependencies
-        self._dependents = other._dependents
-        self.variants = other.variants
-        self.variants.spec = self
-        self.namespace = other.namespace
-        self._hash = other._hash
-        self._cmp_key_cache = other._cmp_key_cache
-
-        # Specs are by default not assumed to be normal or concrete.
-        self._normal = False
-        self._concrete = False
+        # Specs are by default not assumed to be normal, but in some
+        # cases we've read them from a file want to assume normal.
+        # This allows us to manipulate specs that Spack doesn't have
+        # package.py files for.
+        self._normal = kwargs.get('normal', False)
+        self._concrete = kwargs.get('concrete', False)
 
         # Allow a spec to be constructed with an external path.
         self.external_path = kwargs.get('external_path', None)
@@ -2558,15 +2543,24 @@ class Spec(object):
 
     def _dup(self, other, deps=True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting
-           copy.  It does not copy any dependents (parents), but by default
-           copies dependencies.
+        copy.  It does not copy any dependents (parents), but by default
+        copies dependencies.
 
-           To duplicate an entire DAG, call _dup() on the root of the DAG.
+        To duplicate an entire DAG, call _dup() on the root of the DAG.
 
-           Options:
-           dependencies[=True]
-               Whether deps should be copied too.  Set to False to copy a
-               spec but not its dependencies.
+        Args:
+            other (Spec): spec to be copied onto ``self``
+            deps (bool or Sequence): if True copies all the dependencies. If
+                False copies None. If a sequence of dependency types copy
+                only those types.
+            cleardeps (bool): if True clears the dependencies of ``self``,
+                before possibly copying the dependencies of ``other`` onto
+                ``self``
+
+        Returns:
+            True if ``self`` changed because of the copy operation,
+            False otherwise.
+
         """
         # We don't count dependencies as changes here
         changed = True
@@ -2592,6 +2586,7 @@ class Spec(object):
             self._dependents = DependencyMap(self)
             self._dependencies = DependencyMap(self)
         self.compiler_flags = other.compiler_flags.copy()
+        self.compiler_flags.spec = self
         self.variants = other.variants.copy()
         self.variants.spec = self
         self.external_path = other.external_path
@@ -3131,9 +3126,17 @@ _lexer = SpecLexer()
 
 class SpecParser(spack.parse.Parser):
 
-    def __init__(self):
+    def __init__(self, initial_spec=None):
+        """Construct a new SpecParser.
+
+        Args:
+            initial_spec (Spec, optional): provide a Spec that we'll parse
+                directly into. This is used to avoid construction of a
+                superfluous Spec object in the Spec constructor.
+        """
         super(SpecParser, self).__init__(_lexer)
         self.previous = None
+        self._initial = initial_spec
 
     def do_parse(self):
         specs = []
@@ -3257,8 +3260,14 @@ class SpecParser(spack.parse.Parser):
             spec_namespace = None
             spec_name = None
 
-        # This will init the spec without calling __init__.
-        spec = Spec.__new__(Spec)
+        if self._initial is None:
+            # This will init the spec without calling Spec.__init__
+            spec = Spec.__new__(Spec)
+        else:
+            # this is used by Spec.__init__
+            spec = self._initial
+            self._initial = None
+
         spec.name = spec_name
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
@@ -3316,7 +3325,7 @@ class SpecParser(spack.parse.Parser):
                 # Get spec by hash and confirm it matches what we already have
                 hash_spec = self.spec_by_hash()
                 if hash_spec.satisfies(spec):
-                    spec = hash_spec
+                    spec._dup(hash_spec)
                     break
                 else:
                     raise InvalidHashError(spec, hash_spec.dag_hash())

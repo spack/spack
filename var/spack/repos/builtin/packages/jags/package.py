@@ -25,28 +25,20 @@
 from spack import *
 
 
-class AllineaForge(Package):
-    """Allinea Forge is the complete toolsuite for software development - with
-    everything needed to debug, profile, optimize, edit and build C, C++ and
-    Fortran applications on Linux for high performance - from single threads
-    through to complex parallel HPC codes with MPI, OpenMP, threads or CUDA."""
+class Jags(AutotoolsPackage):
+    """JAGS is Just Another Gibbs Sampler.  It is a program for analysis of
+       Bayesian hierarchical models using Markov Chain Monte Carlo (MCMC)
+       simulation not wholly unlike BUGS"""
 
-    homepage = "http://www.allinea.com/products/develop-allinea-forge"
+    homepage = "http://mcmc-jags.sourceforge.net/"
+    url = "https://downloads.sourceforge.net/project/mcmc-jags/JAGS/4.x/Source/JAGS-4.2.0.tar.gz"
 
-    version('6.0.4', 'df7f769975048477a36f208d0cd57d7e')
+    version('4.2.0', '9e521b3cfb23d3290a8c6bc0b79bf426')
 
-    # Licensing
-    license_required = True
-    license_comment = '#'
-    license_files = ['licences/Licence']
-    license_vars = ['ALLINEA_LICENCE_FILE', 'ALLINEA_LICENSE_FILE']
-    license_url = 'http://www.allinea.com/user-guide/forge/Installation.html'
+    depends_on('blas')
+    depends_on('lapack')
 
-    def url_for_version(self, version):
-        # TODO: add support for other architectures/distributions
-        url = "http://content.allinea.com/downloads/"
-        return url + "allinea-forge-%s-Redhat-6.0-x86_64.tar" % version
-
-    def install(self, spec, prefix):
-        textinstall = Executable('./textinstall.sh')
-        textinstall('--accept-licence', prefix)
+    def configure_args(self):
+        args = ['--with-blas=-L%s' % self.spec['blas'].prefix.lib,
+                '--with-lapack=-L%s' % self.spec['lapack'].prefix.lib]
+        return args

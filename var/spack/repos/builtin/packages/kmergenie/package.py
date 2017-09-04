@@ -25,28 +25,19 @@
 from spack import *
 
 
-class AllineaForge(Package):
-    """Allinea Forge is the complete toolsuite for software development - with
-    everything needed to debug, profile, optimize, edit and build C, C++ and
-    Fortran applications on Linux for high performance - from single threads
-    through to complex parallel HPC codes with MPI, OpenMP, threads or CUDA."""
+class Kmergenie(MakefilePackage):
+    """KmerGenie estimates the best k-mer length for genome de novo assembly.
+    """
 
-    homepage = "http://www.allinea.com/products/develop-allinea-forge"
+    homepage = "http://kmergenie.bx.psu.edu/"
+    url      = "http://kmergenie.bx.psu.edu/kmergenie-1.7044.tar.gz"
 
-    version('6.0.4', 'df7f769975048477a36f208d0cd57d7e')
+    version('1.7044', '407209c8181f1631ecb79b0ca735d18f')
 
-    # Licensing
-    license_required = True
-    license_comment = '#'
-    license_files = ['licences/Licence']
-    license_vars = ['ALLINEA_LICENCE_FILE', 'ALLINEA_LICENSE_FILE']
-    license_url = 'http://www.allinea.com/user-guide/forge/Installation.html'
-
-    def url_for_version(self, version):
-        # TODO: add support for other architectures/distributions
-        url = "http://content.allinea.com/downloads/"
-        return url + "allinea-forge-%s-Redhat-6.0-x86_64.tar" % version
+    depends_on('python', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('r', type=('build', 'run'))
+    depends_on('zlib')
 
     def install(self, spec, prefix):
-        textinstall = Executable('./textinstall.sh')
-        textinstall('--accept-licence', prefix)
+        install_tree(self.stage.source_path, prefix.bin)

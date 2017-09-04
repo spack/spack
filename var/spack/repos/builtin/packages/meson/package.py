@@ -22,31 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class AllineaForge(Package):
-    """Allinea Forge is the complete toolsuite for software development - with
-    everything needed to debug, profile, optimize, edit and build C, C++ and
-    Fortran applications on Linux for high performance - from single threads
-    through to complex parallel HPC codes with MPI, OpenMP, threads or CUDA."""
+class Meson(PythonPackage):
+    """Meson is a portable open source build system meant to be both
+       extremely fast, and as user friendly as possible."""
 
-    homepage = "http://www.allinea.com/products/develop-allinea-forge"
+    homepage = "http://mesonbuild.com/"
+    url      = "https://github.com/mesonbuild/meson/archive/0.42.0.tar.gz"
 
-    version('6.0.4', 'df7f769975048477a36f208d0cd57d7e')
+    version('0.42.0', '9e26bf154ca439b78b1b9366c8a89437')
+    version('0.41.2', 'aa9c69ced965e47f5c75a9257ee91ce3')
+    version('0.41.1', 'c6d285b35cfd7acc8517124d417efbdc')
 
-    # Licensing
-    license_required = True
-    license_comment = '#'
-    license_files = ['licences/Licence']
-    license_vars = ['ALLINEA_LICENCE_FILE', 'ALLINEA_LICENSE_FILE']
-    license_url = 'http://www.allinea.com/user-guide/forge/Installation.html'
+    variant('ninjabuild', default=True)
 
-    def url_for_version(self, version):
-        # TODO: add support for other architectures/distributions
-        url = "http://content.allinea.com/downloads/"
-        return url + "allinea-forge-%s-Redhat-6.0-x86_64.tar" % version
-
-    def install(self, spec, prefix):
-        textinstall = Executable('./textinstall.sh')
-        textinstall('--accept-licence', prefix)
+    depends_on('python@3:',        type=('build', 'run'))
+    depends_on('ninja', when='+ninjabuild', type=('build', 'run'))
