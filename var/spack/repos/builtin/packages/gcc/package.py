@@ -60,12 +60,17 @@ class Gcc(AutotoolsPackage):
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
-    # Builds all default languages by default.
-    # Ada, Go, Jit, and Objective-C++ are not default languages.
+    # We specifically do not add 'all' variant here because:
+    # (i) Ada, Go, Jit, and Objective-C++ are not default languages.
     # In that respect, the name 'all' is rather misleading.
+    # (ii) Languages other than c,c++,fortran are prone to configure bug in GCC
+    # For example, 'java' appears to ignore custom location of zlib
+    # (iii) meaning of 'all' changes with GCC version, i.e. 'java' is not part
+    # of gcc7. Correctly specifying conflicts() and depends_on() in such a
+    # case is a PITA.
     variant('languages',
-            default='all',
-            values=('all', 'ada', 'brig', 'c', 'c++', 'fortran',
+            default='c,c++,fortran',
+            values=('ada', 'brig', 'c', 'c++', 'fortran',
                     'go', 'java', 'jit', 'lto', 'objc', 'obj-c++'),
             multi=True,
             description='Compilers and runtime libraries to build')
@@ -89,7 +94,6 @@ class Gcc(AutotoolsPackage):
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
-    depends_on('zip', type='build', when='@:6 languages=all')
 
     # TODO: integrate these libraries.
     # depends_on('ppl')
