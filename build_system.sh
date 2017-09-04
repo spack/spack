@@ -52,6 +52,7 @@ s cuda@8.0.61   $cc
 s cuda@7.5.18   $cc
 s cuda@6.5.14   $cc
 s pgi@16.10     $cc
+s pgi@17.4      $cc
 s $jdk $cc
 s maven@3.3.9   ^$jdk $cc
 s gradle@3.4    ^$jdk $cc
