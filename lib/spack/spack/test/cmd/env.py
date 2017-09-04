@@ -24,14 +24,25 @@
 ##############################################################################
 import pytest
 
-from spack.main import SpackCommand
+from spack.main import SpackCommand, SpackCommandError
 
 info = SpackCommand('env')
 
 
 @pytest.mark.parametrize('pkg', [
-    'zlib'
+    ('zlib',),
+    ('zlib', '--')
 ])
 @pytest.mark.usefixtures('config')
 def test_it_just_runs(pkg):
-    info(pkg)
+    info(*pkg)
+
+
+@pytest.mark.parametrize('pkg,error_cls', [
+    ('zlib libszip', SpackCommandError),
+    ('', IndexError)
+])
+@pytest.mark.usefixtures('config')
+def test_it_just_fails(pkg, error_cls):
+    with pytest.raises(error_cls):
+        info(pkg)
