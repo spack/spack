@@ -33,6 +33,8 @@ class Likwid(Package):
     homepage = "https://github.com/RRZE-HPC/likwid"
     url      = "https://github.com/RRZE-HPC/likwid/archive/4.1.2.tar.gz"
 
+    maintainers = ['davydden']
+
     version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
