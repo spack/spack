@@ -35,6 +35,7 @@ class Googletest(CMakePackage):
     version('1.6.0', '90407321648ab25b067fcd798caf8c78')
 
     variant('gmock', default=False, description='Build with gmock')
+    conflicts('+gmock', when='@:1.7.0')
 
     def cmake_args(self):
         spec = self.spec
