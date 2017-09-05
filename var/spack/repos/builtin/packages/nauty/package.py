@@ -60,7 +60,7 @@ class Nauty(AutotoolsPackage):
     # Iterate over patches
     for condition, urls in urls_for_patches.items():
         for url, md5 in urls:
-            patch(url, when=condition, level=1, md5=md5, expand=None)
+            patch(url, when=condition, level=1, md5=md5)
 
     depends_on('m4',  type='build', when='@2.6r7')
     depends_on('autoconf',  type='build', when='@2.6r7')
