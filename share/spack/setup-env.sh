@@ -28,7 +28,7 @@
 # This file is part of Spack and sets up the spack environment for
 # bash and zsh.  This includes dotkit support, module support, and
 # it also puts spack in your path.  The script also checks that
-# at least module support exists, and builds and enables it if it
+# at least module support exists, and provides suggestions if it
 # doesn't. Source it like this:
 #
 #    . /path/to/spack/share/spack/setup-env.sh
@@ -171,6 +171,11 @@ function _spack_pathadd {
     fi
 }
 
+# Export spack function so it is available in subshells (only works with bash)
+if [ -n "${BASH_VERSION:-}" ]; then
+	export -f spack
+fi
+
 #
 # Figure out where this file is.  Below code needs to be portable to
 # bash and zsh.
@@ -194,7 +199,6 @@ _spack_pathadd PATH       "${_sp_prefix%/}/bin"
 export SPACK_ROOT=${_sp_prefix}
 
 #
-#
 # Determine which shell is being used
 #
 function _spack_determine_shell() {
@@ -203,17 +207,15 @@ function _spack_determine_shell() {
 export SPACK_SHELL=$(_spack_determine_shell)
 
 #
-# Check whether at least one of 'use' and 'module' exists
+# Check whether a shell function of the given name is defined
 #
 function _spack_fn_exists() {
 	type $1 2>&1 | grep -q 'shell function'
 }
 
 need_module="no"
-if [ ! $(_spack_fn_exists use) ]; then
-	if [ ! $(_spack_fn_exists module) ]; then
-		need_module="yes"
-	fi;
+if [ ! $(_spack_fn_exists use) ] && [ ! $(_spack_fn_exists module) ]; then
+	need_module="yes"
 fi;
 
 #
@@ -221,14 +223,25 @@ fi;
 #
 if [ "${need_module}" = "yes" ]; then
     #check if environment-modules~X is installed
-    module_prefix="$(spack location -i "environment-modules~X" 2>&1 || echo "not_installed")"
+    module_prefix="$(spack location -i "environment-modules" 2>&1 || echo "not_installed")"
     module_prefix=$(echo ${module_prefix} | tail -n 1)
     if [ "${module_prefix}" != "not_installed" ]; then
         #activate it!
         export MODULE_PREFIX=${module_prefix}
         _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
         module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+        echo "INFO: Using spack managed module system."
+    else
+        echo "WARNING: A method for managing modules does not currently exist."
+        echo ""
+        echo "To resolve this you may either:"
+        echo "1. Allow spack to handle this by running 'spack boostrap'"
+        echo "   and sourcing this script again."
+        echo "2. Install and activate a supported module managment engine manually"
+        echo "   Supported engines include: environment-modules and lmod"
     fi;
+else
+    echo "INFO: Using system available module system."
 fi;
 
 #
@@ -239,11 +252,6 @@ _sp_dotkit_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack
 _sp_tcl_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
-
-# Export spack function so it is available in subshells (only works with bash)
-if [ -n "${BASH_VERSION:-}" ]; then
-	export -f spack
-fi
 
 # Add programmable tab completion for Bash
 #
