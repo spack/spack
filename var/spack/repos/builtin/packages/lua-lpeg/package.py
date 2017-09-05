@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,39 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class P4est(AutotoolsPackage):
-    """Dynamic management of a collection (a forest) of adaptive octrees in
-    parallel"""
-    homepage = "http://www.p4est.org"
-    url      = "http://p4est.github.io/release/p4est-1.1.tar.gz"
+class LuaLpeg(Package):
+    """pattern-matching for lua"""
 
-    maintainers = ['davydden']
+    homepage = "http://www.inf.puc-rio.br/~roberto/lpeg/"
+    url      = "https://luarocks.org/manifests/luarocks/lpeg-0.12-1.src.rock"
 
-    version('2.0', 'c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
-    version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
+    version('0.12.1', 'b5778bfee67761fcbe7a2d23cb889ea8',
+            url='https://luarocks.org/manifests/luarocks/lpeg-0.12-1.src.rock',
+            expand=False)
 
-    # build dependencies
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool@2.4.2:', type='build')
+    extends("lua")
 
-    # other dependencies
-    depends_on('mpi')
-    depends_on('zlib')
-
-    def configure_args(self):
-        return [
-            '--enable-mpi',
-            '--enable-shared',
-            '--disable-vtk-binary',
-            '--without-blas',
-            'CPPFLAGS=-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL',
-            'CFLAGS=-O2',
-            'CC=%s'  % self.spec['mpi'].mpicc,
-            'CXX=%s' % self.spec['mpi'].mpicxx,
-            'FC=%s'  % self.spec['mpi'].mpifc,
-            'F77=%s' % self.spec['mpi'].mpif77
-        ]
+    def install(self, spec, prefix):
+        luarocks('--tree=' + prefix, 'install', 'lpeg-0.12-1.src.rock')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,39 +22,26 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
+import os
 
 
-class P4est(AutotoolsPackage):
-    """Dynamic management of a collection (a forest) of adaptive octrees in
-    parallel"""
-    homepage = "http://www.p4est.org"
-    url      = "http://p4est.github.io/release/p4est-1.1.tar.gz"
+class LuaBitlib(Package):
+    """Lua-jit-like bitwise operations for lua"""
 
-    maintainers = ['davydden']
+    homepage = "http://luaforge.net/projects/bitlib"
+    url      = "https://luarocks.org/bitlib-23-2.src.rock"
 
-    version('2.0', 'c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
-    version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
+    version('23', '9fee36a6e512c54bf6364dfe97d1d871',
+            url="https://luarocks.org/bitlib-23-2.src.rock",
+            expand=False)
 
-    # build dependencies
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool@2.4.2:', type='build')
+    extends('lua')
 
-    # other dependencies
-    depends_on('mpi')
-    depends_on('zlib')
-
-    def configure_args(self):
-        return [
-            '--enable-mpi',
-            '--enable-shared',
-            '--disable-vtk-binary',
-            '--without-blas',
-            'CPPFLAGS=-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL',
-            'CFLAGS=-O2',
-            'CC=%s'  % self.spec['mpi'].mpicc,
-            'CXX=%s' % self.spec['mpi'].mpicxx,
-            'FC=%s'  % self.spec['mpi'].mpifc,
-            'F77=%s' % self.spec['mpi'].mpif77
-        ]
+    def install(self, spec, prefix):
+        luarocks('unpack', "bitlib-23-2.src.rock")
+        os.chdir(os.path.join('bitlib-23-2', 'bitlib-23'))
+        sed = which('sed')
+        sed('-ie', 's/luaL_reg/luaL_Reg/', 'lbitlib.c')
+        luarocks('--tree=' + prefix, 'make')

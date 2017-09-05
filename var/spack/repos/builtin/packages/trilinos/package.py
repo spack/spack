@@ -46,6 +46,8 @@ class Trilinos(CMakePackage):
     homepage = "https://trilinos.org/"
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
 
+    maintainers = ['aprokop']
+
     # ###################### Versions ##########################
 
     version('xsdk-0.2.0',

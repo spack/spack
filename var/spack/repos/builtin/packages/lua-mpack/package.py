@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,39 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class P4est(AutotoolsPackage):
-    """Dynamic management of a collection (a forest) of adaptive octrees in
-    parallel"""
-    homepage = "http://www.p4est.org"
-    url      = "http://p4est.github.io/release/p4est-1.1.tar.gz"
+class LuaMpack(Package):
+    """lua bindings to libmpack"""
 
-    maintainers = ['davydden']
+    homepage = "https://luarocks.org/modules/tarruda/mpack"
+    url      = "https://luarocks.org/manifests/tarruda/mpack-1.0.6-0.src.rock"
 
-    version('2.0', 'c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
-    version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
+    depends_on('msgpack-c')
 
-    # build dependencies
-    depends_on('automake', type='build')
-    depends_on('autoconf', type='build')
-    depends_on('libtool@2.4.2:', type='build')
+    version('1.0.0-0', '9a7bd842753194124830bc7426e78c1b',
+            url='https://luarocks.org/manifests/tarruda/mpack-1.0.6-0.src.rock',
+            expand=False)
 
-    # other dependencies
-    depends_on('mpi')
-    depends_on('zlib')
+    extends('lua')
 
-    def configure_args(self):
-        return [
-            '--enable-mpi',
-            '--enable-shared',
-            '--disable-vtk-binary',
-            '--without-blas',
-            'CPPFLAGS=-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL',
-            'CFLAGS=-O2',
-            'CC=%s'  % self.spec['mpi'].mpicc,
-            'CXX=%s' % self.spec['mpi'].mpicxx,
-            'FC=%s'  % self.spec['mpi'].mpifc,
-            'F77=%s' % self.spec['mpi'].mpif77
-        ]
+    def install(self, spec, prefix):
+        luarocks('--tree=' + prefix, 'install', 'mpack-1.0.6-0.src.rock')
