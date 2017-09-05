@@ -33,6 +33,7 @@ class Armadillo(CMakePackage):
     homepage = "http://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-7.200.1.tar.xz"
 
+    version('8.100.1', 'd9762d6f097e0451d0cfadfbda295e7c')
     version('7.950.1', 'c06eb38b12cae49cab0ce05f96147147')
     # NOTE: v7.900.1 download url seems broken is no v7.950.1?
     version('7.900.1', '5ef71763bd429a3d481499878351f3be')
