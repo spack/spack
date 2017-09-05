@@ -50,7 +50,7 @@ class Protobuf(CMakePackage):
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@:3.3.2')
 
-    patch('intel_inline.patch', when='@3.2.0:')
+    patch('intel_inline.patch', when='@3.2.0: %intel')
 
     def cmake_args(self):
         args = [
