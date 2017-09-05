@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,33 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class AllineaReports(Package):
-    """Allinea Performance Reports are the most effective way to characterize
-    and understand the performance of HPC application runs. One single-page
-    HTML report elegantly answers a range of vital questions for any HPC site
-    """
+class LuaMpack(Package):
+    """lua bindings to libmpack"""
 
-    homepage = "http://www.allinea.com/products/allinea-performance-reports"
+    homepage = "https://luarocks.org/modules/tarruda/mpack"
+    url      = "https://luarocks.org/manifests/tarruda/mpack-1.0.6-0.src.rock"
 
-    version('7.0.5', '555d0d7d1b904a57d87352b5f5e1415b')
-    #version('6.0.4', '3f13b08a32682737bc05246fbb2fcc77')
+    depends_on('msgpack-c')
 
-    # Licensing
-    license_required = True
-    license_comment = '#'
-    license_files = ['licences/Licence']
-    license_vars = ['ALLINEA_LICENCE_FILE', 'ALLINEA_LICENSE_FILE']
-    license_url = 'http://www.allinea.com/user-guide/reports/Installation.html'
+    version('1.0.0-0', '9a7bd842753194124830bc7426e78c1b',
+            url='https://luarocks.org/manifests/tarruda/mpack-1.0.6-0.src.rock',
+            expand=False)
 
-    def url_for_version(self, version):
-        # TODO: add support for other architectures/distributions
-        url = "http://content.allinea.com/downloads/"
-        #return url + "allinea-reports-%s-Redhat-6.0-x86_64.tar" % version
-        return url + "allinea-reports-%s-Suse-12-x86_64.tar" % version
+    extends('lua')
 
     def install(self, spec, prefix):
-        textinstall = Executable('./textinstall.sh')
-        textinstall('--accept-licence', prefix)
+        luarocks('--tree=' + prefix, 'install', 'mpack-1.0.6-0.src.rock')

@@ -50,7 +50,5 @@ class AllineaForge(Package):
         return url + "allinea-forge-%s-Suse-12-x86_64.tar" % version
 
     def install(self, spec, prefix):
-        #textinstall = which('textinstall.sh')
-        #textinstall('--accept-licence', prefix)
-        textinstall = which('sh')
-        textinstall('./textinstall.sh', '--accept-licence', prefix)
+        textinstall = Executable('./textinstall.sh')
+        textinstall('--accept-licence', prefix)
