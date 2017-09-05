@@ -894,8 +894,11 @@ Environment Modules
 In order to use Spack's generated environment modules, you must have
 installed one of *Environment Modules* or *Lmod*.  On many Linux
 distributions, this can be installed from the vendor's repository.  For
-example: ``yum install environment-modules`` (Fedora/RHEL/CentOS).  If
-your Linux distribution does not have Environment Modules, Spack can build it for you!
+example: ``yum install environment-modules`` (Fedora/RHEL/CentOS). If
+your Linux distribution does not have Environment Modules, Spack can
+build it for you!
+
+What follows are three steps describing how to install and use environment-modules with spack.
 
 #. Install ``environment-modules``.
 
@@ -929,9 +932,10 @@ your Linux distribution does not have Environment Modules, Spack can build it fo
 #. Add ``modulecmd`` to ``PATH`` and create a ``module`` command. 
 
    * If you are using bash/zsh, Spack can currently do this for you as well.
-     Simply source Spack's shell integration script again. This will automatically
+     After installing ``environment-modules`` using spack following the step
+     above, source Spack's shell integration script. This will automatically
      detect the lack of ``modulecmd`` and ``module``, and use the installed
-     ``environment-modules`` from ``spack bootstrap``.
+     ``environment-modules`` from ``spack bootstrap`` or ``spack install``.
      
      .. code-block:: console
 

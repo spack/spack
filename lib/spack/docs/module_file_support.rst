@@ -44,6 +44,10 @@ For ``csh`` and ``tcsh`` instead:
 
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
+Executing ``spack bootstrap`` will install the ``environment-modules`` package
+and ``bash`` and ``ksh`` users sourcing the appropriate setup file will have
+this package activated and the ``module`` command will be available on the
+command line.
 
 .. note::
   You can put the source line in your ``.bashrc`` or ``.cshrc`` to
@@ -54,10 +58,11 @@ For ``csh`` and ``tcsh`` instead:
 Using module files via Spack
 ----------------------------
 
-If you have shell support enabled you should be able to run either
-``module avail`` or ``use -l spack`` to see what module/dotkit files have
-been installed.  Here is sample output of those programs, showing lots
-of installed packages.
+If you have installed a supported module system either manually or through
+``spack bootstrap`` and have enabled shell support, you should be able to
+run either ``module avail`` or ``use -l spack`` to see what module/dotkit
+files have been installed.  Here is sample output of those programs,
+showing lots of installed packages.
 
 .. code-block:: console
 
