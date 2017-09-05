@@ -31,6 +31,8 @@ class P4est(AutotoolsPackage):
     homepage = "http://www.p4est.org"
     url      = "http://p4est.github.io/release/p4est-1.1.tar.gz"
 
+    maintainers = ['davydden']
+
     version('2.0', 'c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
     version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
 

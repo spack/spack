@@ -25,13 +25,33 @@
 from spack import *
 
 
-class Jpeg(AutotoolsPackage):
-    """libjpeg is a widely used free library with functions for handling the
-    JPEG image data format. It implements a JPEG codec (encoding and decoding)
-    alongside various utilities for handling JPEG data."""
+class Redundans(Package):
+    """Redundans pipeline assists an assembly of heterozygous genomes."""
 
-    homepage = "http://www.ijg.org"
-    url      = "http://www.ijg.org/files/jpegsrc.v9b.tar.gz"
+    homepage = "https://github.com/Gabaldonlab/redundans"
+    url      = "https://github.com/Gabaldonlab/redundans/archive/v0.13c.tar.gz"
 
-    version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
-    version('9a', '3353992aecaee1805ef4109aadd433e7')
+    version('0.13c', '2003fb7c70521f5e430553686fd1a594')
+
+    depends_on('python', type=('build', 'run'))
+    depends_on('py-pyscaf', type=('build', 'run'))
+    depends_on('py-fastaindex', type=('build', 'run'))
+    depends_on('perl', type=('build', 'run'))
+    depends_on('sspace-standard')
+    depends_on('bwa')
+    depends_on('last')
+    depends_on('gapcloser')
+    depends_on('parallel')
+    depends_on('snap-berkeley')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('redundans.py', prefix.bin)
+        with working_dir('bin'):
+            install('fasta2homozygous.py', prefix.bin)
+            install('fasta2split.py', prefix.bin)
+            install('fastq2insert_size.py', prefix.bin)
+            install('fastq2mates.py', prefix.bin)
+            install('fastq2shuffled.py', prefix.bin)
+            install('fastq2sspace.py', prefix.bin)
+            install('filterReads.py', prefix.bin)

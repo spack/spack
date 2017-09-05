@@ -48,5 +48,5 @@ class AllineaReports(Package):
         return url + "allinea-reports-%s-Redhat-6.0-x86_64.tar" % version
 
     def install(self, spec, prefix):
-        textinstall = which('textinstall.sh')
+        textinstall = Executable('./textinstall.sh')
         textinstall('--accept-licence', prefix)

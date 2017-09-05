@@ -113,7 +113,8 @@ _arguments['clean'] = Args(
     '--clean',
     action=CleanOrDirtyAction,
     dest='dirty',
-    help='clean environment before installing package',
+    help='sanitize the environment from variables that can affect how ' +
+         ' packages find libraries or headers',
     nargs=0
 )
 
@@ -121,7 +122,7 @@ _arguments['dirty'] = Args(
     '--dirty',
     action=CleanOrDirtyAction,
     dest='dirty',
-    help='do NOT clean environment before installing',
+    help='maintain the current environment without trying to sanitize it',
     nargs=0
 )
 
