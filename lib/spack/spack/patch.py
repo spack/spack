@@ -51,7 +51,7 @@ class Patch(object):
     """
 
     @staticmethod
-    def create(pkg, path_or_url, level, **kwargs):
+    def create(pkg, path_or_url, level, expand=True, **kwargs):
         """
         Factory method that creates an instance of some class derived from
         Patch
@@ -60,13 +60,14 @@ class Patch(object):
             pkg: package that needs to be patched
             path_or_url: path or url where the patch is found
             level: patch level
+            expand: expand patches or not
 
         Returns:
             instance of some Patch class
         """
         # Check if we are dealing with a URL
         if '://' in path_or_url:
-            return UrlPatch(pkg, path_or_url, level, **kwargs)
+            return UrlPatch(pkg, path_or_url, level, expand, **kwargs)
         # Assume patches are stored in the repository
         return FilePatch(pkg, path_or_url, level)
 
@@ -110,10 +111,11 @@ class FilePatch(Patch):
 
 class UrlPatch(Patch):
     """Describes a patch that is retrieved from a URL"""
-    def __init__(self, pkg, path_or_url, level, **kwargs):
+    def __init__(self, pkg, path_or_url, level, expand, **kwargs):
         super(UrlPatch, self).__init__(pkg, path_or_url, level)
         self.url = path_or_url
         self.md5 = kwargs.get('md5')
+        self.expand = expand
 
     def apply(self, stage):
         """Retrieve the patch in a temporary stage, computes
@@ -131,7 +133,8 @@ class UrlPatch(Patch):
             patch_stage.fetch()
             patch_stage.check()
             patch_stage.cache_local()
-            patch_stage.expand_archive()
+            if (self.expand):
+                patch_stage.expand_archive()
             self.path = os.path.abspath(
                 os.listdir(patch_stage.path).pop()
             )
