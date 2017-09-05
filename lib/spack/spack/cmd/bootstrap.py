@@ -69,20 +69,31 @@ def bootstrap(parser, args, **kwargs):
         'dirty': args.dirty
     })
 
-    # Define list of specs which need to be installed
-    needed_specs = ['environment-modules~X']
+    # Define requirement dictionary defining specs which satisfy
+    # requirements
+    requirement_dict = {'environment-modules': ['environment-modules~X',
+                                                'environment-modules+X']}
 
-    for needed_spec in needed_specs:
-        tty.msg("Need %s" % needed_spec)
-        installed_specs = spack.store.db.query(needed_spec)
-        if(len(installed_specs) == 0):
-            possible_specs = spack.cmd.parse_specs(needed_spec,
-                                                   concretize=True)
-            spec = possible_specs[0]
-            tty.msg("Installing %s to satisfy need for %s" %
-                    (spec, needed_spec))
+    for requirement in requirement_dict:
+        requirement_list = requirement_dict[requirement]
+        tty.msg("Checking whether requirements are satisfied for %s"
+                % requirement)
+        req_satisfied = False
+        for req in requirement_list:
+            spec_req = spack.Spec(req)
+            spec_req.concretize()
+            installed_specs = spack.store.db.query(spec_req)
+            if(len(installed_specs) > 0):
+                req_satisfied = True
+                tty.msg("Requirement %s is satisfied with installed "
+                        "package %s" % (requirement, installed_specs[0]))
+                break
+        if not req_satisfied:
+            # Install first item in requirement list if none is installed.
+            spec_to_install = spack.Spec(requirement_list[0])
+            spec_to_install.concretize()
+            tty.msg("Installing %s to satisfy requirement for %s" %
+                    (spec_to_install, requirement))
             kwargs['explicit'] = True
-            package = spack.repo.get(spec)
+            package = spack.repo.get(spec_to_install)
             package.do_install(**kwargs)
-        else:
-            tty.msg("%s Already Installed" % needed_spec)
