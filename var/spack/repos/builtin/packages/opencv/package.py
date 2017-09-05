@@ -68,7 +68,7 @@ class Opencv(CMakePackage):
     variant('java', default=False,
             description='Activates support for Java')
     variant('openmp', default=False, description='Activates support for OpenMP threads')
-    variant('core', default=False, description='Include opencv_core module into the OpenCV build')
+    variant('core', default=True, description='Include opencv_core module into the OpenCV build')
     variant('highgui', default=False, description='Include opencv_highgui module into the OpenCV build')
     variant('imgproc', default=False, description='Include opencv_imgproc module into the OpenCV build')
     variant('jpeg', default=False, description='Include JPEG support')
