@@ -29,35 +29,48 @@
 from spack import *
 
 
-class Rose(Package):
+class Rose(AutotoolsPackage):
     """A compiler infrastructure to build source-to-source program
        transformation and analysis tools.
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url = "https://github.com/rose-compiler/rose/archive/v0.9.7.tar.gz"
 
-    version('0.9.7', 'e14ce5250078df4b09f4f40559d46c75')
-    version('master', branch='master',
+    version('0.9.7.0', commit='992c21ad06893bc1e9e7688afe0562eee0fda021',
             git='https://github.com/rose-compiler/rose.git')
-
-    patch('add_spack_compiler_recognition.patch')
-
+    version('0.9.9.0', commit='14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff',
+            git='https://github.com/rose-compiler/rose.git')
+    version('develop', branch='master',
+            git='https://github.com/rose-compiler/rose-develop.git')
+    version('0.9.9.83', commit='1742d1773da7525378f15e40dfa391a3a7ac67df',
+            git='rose-dev@rosecompiler1.llnl.gov:rose/scratch/rose.git')
+ 
     depends_on("autoconf@2.69", type='build')
     depends_on("automake@1.14", type='build')
     depends_on("libtool@2.4", type='build')
-    depends_on("boost@1.47.0:")
+    depends_on("boost@1.56.0")
+
+    variant('debug', default=False,
+            description='Enable compiler debugging symbols')
+    variant('optimized', default=False,
+            description='Enable compiler optimizations')
 
     variant('tests', default=False, description='Build the tests directory')
+    variant('tutorial', default=False, description='Build the tutorial directory')
 
-    variant('binanalysis', default=False, description='Enable binary analysis tooling')
+    variant('mvapich2_backend', default=False, description='Enable mvapich2 backend compiler')
+    depends_on("mvapich2", when='+mvapich2_backend')
+
+    variant('binanalysis', default=False,
+            description='Enable binary analysis tooling')
     depends_on('libgcrypt', when='+binanalysis', type='build')
     depends_on('py-binwalk', when='+binanalysis', type='run')
 
     variant('c', default=True, description='Enable c language support')
     variant('cxx', default=True, description='Enable c++ language support')
 
-    variant('fortran', default=False, description='Enable fortran language support')
+    variant('fortran', default=False,
+            description='Enable fortran language support')
 
     variant('java', default=False, description='Enable java language support')
     depends_on('java', when='+java')
@@ -65,7 +78,7 @@ class Rose(Package):
     variant('z3', default=False, description='Enable z3 theorem prover')
     depends_on('z3', when='+z3')
 
-    build_directory = 'spack-build'
+    build_directory = 'rose-build'
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
@@ -85,17 +98,74 @@ class Rose(Package):
 
     def configure_args(self):
         spec = self.spec
-        cc = self.compiler.cc
-        cxx = self.compiler.cxx
-        return [
+
+        if '+mvapich2_backend' in spec:
+            cc = spec['mvapich2'].mpicc
+            cxx = spec['mvapich2'].mpicxx
+        else:
+            cc = spack_cc
+            cxx = spack_cxx
+
+        if spec.satisfies('@0.9.8:'):
+            edg = "4.12"
+        else:
+            edg = "4.9"
+
+        args = [
             '--disable-boost-version-check',
+            '--enable-edg_version={0}'.format(edg),
             "--with-alternate_backend_C_compiler={0}".format(cc),
             "--with-alternate_backend_Cxx_compiler={0}".format(cxx),
             "--with-boost={0}".format(spec['boost'].prefix),
             "--enable-languages={0}".format(",".join(self.languages)),
-            "--with-z3={0}".format(spec['z3'].prefix) if '+z3' in spec else '',
-            '--disable-tests-directory' if '+tests' not in spec else '',
-            '--enable-tutorial-directory={0}'.format('no'),
         ]
 
-    install_targets = ["install-core"]
+        if '+z3' in spec:
+            args.append("--with-z3={0}".format(spec['z3'].prefix))
+        else:
+            args.append("--without-z3")
+
+        if '+tests' in spec:
+            args.append("--enable-tests-directory")
+        else:
+            args.append("--disable-tests-directory")
+
+        if '+tutorial' in spec:
+            args.append("--enable-tutorial-directory")
+        else:
+            args.append("--disable-tutorial-directory")
+
+        if '+java' in spec:
+            args.append("--with-java={0}".format(spec['java'].prefix))
+        else:
+            args.append("--without-java")
+
+        if '+debug' in spec:
+            args.append("--with-CXX_DEBUG=-g")
+        else:
+            args.append("--without-CXX_DEBUG")
+
+        if '+optimized' in spec:
+            args.append("--with-C_OPTIMIZE=-O0")
+            args.append("--with-CXX_OPTIMIZE=-O0")
+        else:
+            args.append("--without-C_OPTIMIZE")
+            args.append("--without-CXX_OPTIMIZE")
+
+        return args
+
+    def install(self, spec, prefix):
+        srun = which('srun')
+
+        with working_dir(self.build_directory):
+            if not srun:
+                # standard installation on dev machine
+                make('install-core')
+                with working_dir('tools'):
+                    make('install')
+            else:
+                # parallel installation on LC
+                srun('-ppdebug', 'make', '-j16', 'install-core')
+                with working_dir('tools'):
+                    srun('-ppdebug', 'make', '-j16', 'install')
+
