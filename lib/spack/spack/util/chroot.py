@@ -116,7 +116,7 @@ def isolate_environment():
     permanent = config['permanent']
 
     if not os.path.exists(lockFile) and not permanent:
-        build_chroot_enviroment(spack.spack_bootstrap_root, False)
+        build_chroot_environment(spack.spack_bootstrap_root, False)
         existed = False
 
     username, group = get_username_and_group()
@@ -129,4 +129,4 @@ def isolate_environment():
     #    % (username, group, spack.spack_bootstrap_root, ' '.join(sys.argv[1:])))
 
     if not existed:
-        remove_chroot_enviroment(spack.spack_bootstrap_root)
+        remove_chroot_environment(spack.spack_bootstrap_root)
