@@ -51,6 +51,10 @@ class LlvmOpenmpOmpt(CMakePackage):
             description="Build llvm openmpi ompt library as a \
                          stand alone entity.")
 
+    variant('build_type', default='Release',
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
     depends_on('cmake@2.8:', type='build')
     depends_on('llvm', when='~standalone')
     depends_on('ninja@1.5:', type='build')
@@ -59,7 +63,6 @@ class LlvmOpenmpOmpt(CMakePackage):
 
     def cmake_args(self):
         cmake_args = [
-            '-DCMAKE_BUILD_TYPE=Release',
             '-DLIBOMP_OMPT_SUPPORT=on',
             '-DLIBOMP_OMPT_BLAME=on',
             '-DLIBOMP_OMPT_TRACE=on'
