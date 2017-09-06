@@ -107,6 +107,12 @@ def get_username_and_group():
     username = whoami(output=str).replace('\n', '')
     return username, get_group(username)
 
+def run_command(command):
+    chrootCommand = "chroot %s %s" \
+        % (spack.spack_bootstrap_root, command)
+    os.system("unshare --user --map-root-user --mount-proc --pid --fork sh -c %s" %
+        chrootCommand)
+
 def isolate_environment():
     tty.msg("Isolate spack")
 
@@ -123,12 +129,13 @@ def isolate_environment():
     else: # copy necessary files
         copy_environment(spack.spack_bootstrap_root)
 
-    username, group = get_username_and_group()
-    #restart the command in the chroot jail
+    # username, group = get_username_and_group()
+    # restart the command in the chroot jail
 
     chrootCommand = "chroot %s /home/spack/bin/spack %s" \
         % (spack.spack_bootstrap_root, ' '.join(sys.argv[1:]))
-    os.system("unshare --user --map-root-user --mount-proc --pid --fork sh -c '%s'" % chrootCommand)
+    run_command('/home/spack/bin/spack %s' % (' '.join(sys.argv[1:])))
+    #os.system("unshare --user --map-root-user --mount-proc --pid --fork sh -c '%s'" % chrootCommand)
 
     if not existed:
         remove_chroot_environment(spack.spack_bootstrap_root, False)
