@@ -44,10 +44,7 @@ For ``csh`` and ``tcsh`` instead:
 
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
-Executing ``spack bootstrap`` will install the ``environment-modules`` package
-and ``bash`` and ``ksh`` users sourcing the appropriate setup file will have
-this package activated and the ``module`` command will be available on the
-command line.
+When ``bash`` and ``ksh`` users update their environment with ``setup-env.sh``, it will check for spack-installed environment modules and add the ``module`` command to their environment; This only occurs if the module command is not already available. You can install ``environment-modules`` with ``spack bootstrap`` as described in :ref:`InstallEnvironmentModules`.
 
 .. note::
   You can put the source line in your ``.bashrc`` or ``.cshrc`` to
