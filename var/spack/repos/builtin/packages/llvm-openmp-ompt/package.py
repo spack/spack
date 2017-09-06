@@ -51,16 +51,6 @@ class LlvmOpenmpOmpt(CMakePackage):
             description="Build llvm openmpi ompt library as a \
                          stand alone entity.")
 
-    # variant for building llvm-openmp-ompt using the toward_tr4 branch
-    variant('towardstr4', default=False,
-            description="Use towards_tr4 branch of llvm openmpi \
-                         ompt library for build.")
-
-    # variant for building llvm-openmp-ompt using the gnu compilers
-    variant('usegnu', default=False,
-            description="Use gnu compilers to build the llvm openmpi \
-                         ompt library.")
-
     depends_on('cmake@2.8:', type='build')
     depends_on('llvm', when='~standalone')
     depends_on('ninja@1.5:', type='build')
@@ -73,29 +63,23 @@ class LlvmOpenmpOmpt(CMakePackage):
             '-DLIBOMP_OMPT_SUPPORT=on',
             '-DLIBOMP_OMPT_BLAME=on',
             '-DLIBOMP_OMPT_TRACE=on'
+            '-DCMAKE_C_COMPILER=%s' % spack_cc,
+            '-DCMAKE_CXX_COMPILER=%s' % spack_cxx
         ]
 
         # Build llvm-openmp-ompt as a stand alone library
+        # CMAKE rpath variable prevents standalone error
+        # where this package wants the llvm tools path
         if '+standalone' in self.spec:
                 cmake_args.extend(
                     ['-DLIBOMP_STANDALONE_BUILD=true',
+                     '-DCMAKE_BUILD_WITH_INSTALL_RPATH=true',
                      '-DLIBOMP_USE_DEBUGGER=false'])
 
         # Build llvm-openmp-ompt using the toward_tr4 branch
         # This requires the version to be 5.0 (50)
-        if '+towardstr4' in self.spec:
+        if '@towards_tr4' in self.spec:
                 cmake_args.extend(
                     ['-DLIBOMP_OMP_VERSION=50'])
-
-        # Build llvm-openmp-ompt using the gnu compilers
-        # otherwise use the default build clang compilers
-        if '+usegnu' in self.spec:
-                cmake_args.extend(
-                    ['-DCMAKE_C_COMPILER=gcc',
-                     '-DCMAKE_CXX_COMPILER=g++'])
-        else:
-                cmake_args.extend(
-                    ['-DCMAKE_C_COMPILER=clang',
-                     '-DCMAKE_CXX_COMPILER=clang++'])
 
         return cmake_args

@@ -89,7 +89,7 @@ class CbtfKrell(CMakePackage):
     depends_on("libmonitor+krellpatch")
     depends_on("libunwind")
     depends_on("papi")
-    depends_on("llvm-openmp-ompt@towards_tr4+standalone+towardstr4+usegnu")
+    depends_on("llvm-openmp-ompt@towards_tr4+standalone")
 
     # MPI Installations
     # These have not worked either for build or execution, commenting out for
