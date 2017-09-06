@@ -108,9 +108,8 @@ def get_username_and_group():
     return username, get_group(username)
 
 def run_command(command):
-    chrootCommand = "chroot %s %s" \
-        % (spack.spack_bootstrap_root, command)
-    os.system("unshare --user --map-root-user --mount-proc --pid --fork sh -c %s" %
+    chrootCommand = "chroot %s %s" % (spack.spack_bootstrap_root, command)
+    os.system("unshare --user --map-root-user --mount-proc --pid --fork sh -c '%s'" %
         chrootCommand)
 
 def isolate_environment():
