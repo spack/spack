@@ -31,6 +31,8 @@ class Mpich2(Package):
     list_url   = "http://www.mpich.org/static/downloads/"
     list_depth = 2
 
+    tags = ['tag1', 'tag3']
+
     version('1.5', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
     version('1.4', 'foobarbaz')
     version('1.3', 'foobarbaz')

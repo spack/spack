@@ -31,6 +31,8 @@ class Mpich(Package):
     list_url   = "http://www.mpich.org/static/downloads/"
     list_depth = 2
 
+    tags = ['tag1', 'tag2']
+
     variant('debug', default=False,
             description="Compile MPICH with debug flags.")
 
