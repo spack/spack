@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,68 +25,49 @@
 import argparse
 
 import pytest
-import spack.cmd.info
-
-from spack.main import SpackCommand
-
-info = SpackCommand('info')
+import spack.cmd.list
 
 
 @pytest.fixture(scope='module')
 def parser():
     """Returns the parser for the module command"""
     prs = argparse.ArgumentParser()
-    spack.cmd.info.setup_parser(prs)
+    spack.cmd.list.setup_parser(prs)
     return prs
 
 
 @pytest.fixture()
-def info_lines():
-    lines = []
-    return lines
+def pkg_names():
+    pkg_names = []
+    return pkg_names
 
 
 @pytest.fixture()
-def mock_print(monkeypatch, info_lines):
+def mock_name_only(monkeypatch, pkg_names):
 
-    def _print(*args):
-        info_lines.extend(args)
+    def name_only(x):
+        pkg_names.extend(x)
 
-    monkeypatch.setattr(spack.cmd.info.color, 'cprint', _print, raising=False)
-
-
-@pytest.mark.parametrize('pkg', [
-    'openmpi',
-    'trilinos',
-    'boost',
-    'python',
-    'dealii'
-])
-def test_it_just_runs(pkg):
-    info(pkg)
+    monkeypatch.setattr(spack.cmd.list, 'name_only', name_only)
+    monkeypatch.setitem(spack.cmd.list.formatters, 'name_only', name_only)
 
 
-@pytest.mark.parametrize('pkg_query', [
-    'hdf5',
-    'cloverleaf3d',
-    'trilinos'
-])
-@pytest.mark.usefixtures('mock_print')
-def test_info_fields(pkg_query, parser, info_lines):
+@pytest.mark.usefixtures('mock_name_only')
+class TestListCommand(object):
 
-    expected_fields = (
-        'Description:',
-        'Homepage:',
-        'Safe versions:',
-        'Variants:',
-        'Installation Phases:',
-        'Virtual Packages:',
-        'Tags:'
-    )
+    def test_list_without_filters(self, parser, pkg_names):
 
-    args = parser.parse_args([pkg_query])
-    spack.cmd.info.info(parser, args)
+        args = parser.parse_args([])
+        spack.cmd.list.list(parser, args)
 
-    for text in expected_fields:
-        match = [x for x in info_lines if text in x]
-        assert match
+        assert pkg_names
+        assert 'cloverleaf3d' in pkg_names
+        assert 'hdf5' in pkg_names
+
+    def test_list_with_filters(self, parser, pkg_names):
+        args = parser.parse_args(['--tags', 'proxy-app'])
+        spack.cmd.list.list(parser, args)
+
+        assert pkg_names
+        assert 'cloverleaf3d' in pkg_names
+        assert 'hdf5' not in pkg_names
