@@ -80,9 +80,9 @@ def construct_environment(force, permanent):
         with open(lockFile, "w") as out:
             pass
 
-def destroy_environment(force)
+def destroy_environment(force):
+    lockFile = os.path.join(spack.spack_root, '.env')
     if os.path.exists(lockFile) or force:
-        lockFile = os.path.join(spack.spack_root, '.env')
         tty.msg("Shutdown bootstraped enviroment")
 
         config = spack.config.get_config("config", "site")
