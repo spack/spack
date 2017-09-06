@@ -30,7 +30,8 @@ import os
 from llnl.util.filesystem import join_path, mkdirp
 from spack.util.chroot import build_chroot_enviroment,  \
                               remove_chroot_enviroment, \
-                              isolate_enviroment
+                              isolate_enviroment,       \
+                              run_command
 
 description = "starts an isolated bash session for spack"
 
@@ -52,48 +53,60 @@ administrator rights when using spack as an user""")
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="start a local bash in the generated enviroment")
+    subparser.add_argument(
+        '--cli', action='store_true', dest='cli',
+        help="connect to a bash session in the generated environment"
+    )
 
+def construct_environment(force, permanent):
+    lockFile = os.path.join(spack.spack_root, '.env')
+    if not os.path.exists(lockFile) or force:
+        tty.msg("Startup bootstraped enviroment")
+
+        home = os.path.join(spack.spack_bootstrap_root, 'home')
+        tmp = os.path.join(spack.spack_bootstrap_root, 'tmp')
+        install_dir = os.path.join(home, 'spack')
+
+        mkdirp(home)
+        mkdirp(tmp)
+        mkdirp(install_dir)
+
+        build_chroot_environment(spack.spack_bootstrap_root, permanent)
+
+        #update the config to set the isolation mode active
+        config = spack.config.get_config("config", "site")
+        config['isolate'] = True
+        spack.config.update_config("config", config, "site")
+        with open(lockFile, "w") as out:
+            pass
+
+def destroy_environment(force)
+    if os.path.exists(lockFile) or force:
+        lockFile = os.path.join(spack.spack_root, '.env')
+        tty.msg("Shutdown bootstraped enviroment")
+
+        config = spack.config.get_config("config", "site")
+        config['isolate'] = False
+        wasPermanent = config['permanent']
+        config['permanent'] = False
+        spack.config.update_config("config", config, "site")
+
+        remove_chroot_environment(spack.spack_bootstrap_root, wasPermanent)
+        os.remove(lockFile)
 
 def isolate(parser, args):
-    lockFile = os.path.join(spack.spack_root, '.env')
-
     force = args.force
     build_enviroment = args.build_enviroment
     permanent = args.permanent
+    cli = args.cli
 
     if build_enviroment:
-        if not os.path.exists(lockFile) or force:
-            tty.msg("Startup bootstraped enviroment")
-
-            home = os.path.join(spack.spack_bootstrap_root, 'home')
-            tmp = os.path.join(spack.spack_bootstrap_root, 'tmp')
-            install_dir = os.path.join(home, 'spack')
-
-            mkdirp(home)
-            mkdirp(tmp)
-            mkdirp(install_dir)
-
-            build_chroot_enviroment(spack.spack_bootstrap_root, permanent)
-
-            #update the config to set the isolation mode active
-            config = spack.config.get_config("config", "site")
-            config['isolate'] = True
-            spack.config.update_config("config", config, "site")
-            with open(lockFile, "w") as out:
-                pass
+        construct_environment(force, permanent)
     else:
-        if os.path.exists(lockFile) or force:
-            tty.msg("Shutdown bootstraped enviroment")
-
-            config = spack.config.get_config("config", "site")
-            config['isolate'] = False
-            wasPermanent = config['permanent']
-            config['permanent'] = False
-            spack.config.update_config("config", config, "site")
-
-            remove_chroot_enviroment(spack.spack_bootstrap_root, wasPermanent)
-            os.remove(lockFile)
-
+        destroy_environment(force)
     if args.start_enviroment:
-        isolate_enviroment()
-        #os.system("sudo chroot %s /bin/bash" % (spack.spack_bootstrap_root))
+        isolate_environment()
+    if cli:
+        construct_environment(False, False)
+        run_command('bash')
+        destroy_environment(False)
