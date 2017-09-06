@@ -22,11 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.environment
 from spack import *
 
 
-class Ldc(CMakePackage):
+class LdcBootstrap(CMakePackage):
     """The LDC project aims to provide a portable D programming language
     compiler with modern optimization and code generation capabilities.
 
@@ -34,12 +33,15 @@ class Ldc(CMakePackage):
     other projects are BSD-licensed (see the LICENSE file for details).
 
     Consult the D wiki for further information: http://wiki.dlang.org/LDC
+
+    This old version of the compiler is needed to bootstrap newer ones.
     """
 
     homepage = "https://dlang.org/"
     url = "https://github.com/ldc-developers/ldc/releases/download/v0.17.4/ldc-0.17.4-src.tar.gz"
 
-    version('1.3.0', '537d992a361b0fd0440b24a5145c9107')
+    # This is the last version that does not require a D compiler to bootstrap
+    version('0.17.4', '000e006426d6094fabd2a2bdab0ff0b7')
 
     depends_on('llvm@3.7:')
     depends_on('zlib')
@@ -47,21 +49,8 @@ class Ldc(CMakePackage):
     depends_on('curl')
     depends_on('libedit')
     depends_on('binutils')
-    depends_on('ldc-bootstrap', type='build')
 
     def cmake_args(self):
-        args = [
+        return [
             '-DBUILD_SHARED_LIBS:BOOL=ON'
         ]
-
-        # We need libphobos in LD_LIBRARY_PATH
-        bootstrap = self.spec['ldc-bootstrap']
-        env = spack.environment.EnvironmentModifications()
-        env.prepend_path('LD_LIBRARY_PATH', bootstrap.prefix.lib)
-        env.apply_modifications()
-
-        ldmd2 = join_path(bootstrap.prefix.bin, 'ldmd2')
-
-        args.append('-DD_COMPILER:STRING={0}'.format(ldmd2))
-
-        return args
