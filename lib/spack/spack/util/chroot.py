@@ -37,7 +37,6 @@ from fstab import Fstab
 # Files or paths which need to be binded with mount --bind
 BIND_PATHS = [
     '/dev',
-    '/etc/resolv.conf'
 ]
 
 # Files or paths which need to be copied
@@ -81,15 +80,17 @@ def copy_path(realpath, chrootpath):
     if os.path.exists(realpath):
         os.system("cp %s %s" % (realpath, chrootpath))
 
+def copy_environment(dir):
+    for lib in COPY_PATHS:
+        copy_path(lib, os.path.join(dir, lib[1:]))
+
 def build_chroot_environment(dir, permanent):
     if os.path.ismount(dir):
         tty.die("The path is already a bootstraped enviroment")
 
     for lib in BIND_PATHS:
         mount_bind_path(lib, os.path.join(dir, lib[1:]), permanent)
-
-    for lib in COPY_PATHS:
-        copy_path(lib, os.path.join(dir, lib[1:]))
+    copy_environment(dir)
 
 def remove_chroot_environment(dir, permanent):
     for lib in BIND_PATHS:
@@ -119,6 +120,8 @@ def isolate_environment():
     if not os.path.exists(lockFile) and not permanent:
         build_chroot_environment(spack.spack_bootstrap_root, False)
         existed = False
+    else: # copy necessary files
+        copy_environment(spack.spack_bootstrap_root)
 
     username, group = get_username_and_group()
     #restart the command in the chroot jail
