@@ -37,6 +37,7 @@ from fstab import Fstab
 # Files or paths which need to be binded with mount --bind
 BIND_PATHS = [
     '/dev',
+    '/etc/resolv.conf'
 ]
 
 # Files or paths which need to be copied
@@ -125,8 +126,6 @@ def isolate_environment():
     chrootCommand = "chroot %s /home/spack/bin/spack %s" \
         % (spack.spack_bootstrap_root, ' '.join(sys.argv[1:]))
     os.system("unshare --user --map-root-user --mount-proc --pid --fork sh -c '%s'" % chrootCommand)
-    #os.system ("sudo chroot --userspec=%s:%s %s /home/spack/bin/spack %s"
-    #    % (username, group, spack.spack_bootstrap_root, ' '.join(sys.argv[1:])))
 
     if not existed:
-        remove_chroot_environment(spack.spack_bootstrap_root)
+        remove_chroot_environment(spack.spack_bootstrap_root, False)
