@@ -69,10 +69,10 @@ class LlvmOpenmpOmpt(CMakePackage):
 
     def cmake_args(self):
         cmake_args = [
-             '-DCMAKE_BUILD_TYPE=Release',
-             '-DLIBOMP_OMPT_SUPPORT=on',
-             '-DLIBOMP_OMPT_BLAME=on',
-             '-DLIBOMP_OMPT_TRACE=on'
+            '-DCMAKE_BUILD_TYPE=Release',
+            '-DLIBOMP_OMPT_SUPPORT=on',
+            '-DLIBOMP_OMPT_BLAME=on',
+            '-DLIBOMP_OMPT_TRACE=on'
         ]
 
         # Build llvm-openmp-ompt as a stand alone library
