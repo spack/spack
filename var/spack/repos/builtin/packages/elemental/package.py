@@ -33,7 +33,7 @@ class Elemental(CMakePackage):
     homepage = "http://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.6.tar.gz"
 
-    version('master', git='https://github.com/elemental/Elemental.git', branch='master')
+    version('develop', git='https://github.com/elemental/Elemental.git', branch='master')
     version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
 
@@ -110,9 +110,11 @@ class Elemental(CMakePackage):
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             '-DEL_PREFER_OPENBLAS:BOOL=TRUE',
             '-DEL_DISABLE_SCALAPACK:BOOL=%s'   % ('~scalapack' in spec),
-            '-DGFORTRAN_LIB=libgfortran.so',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DEL_HYBRID:BOOL=%s'              % ('+hybrid' in spec),
             '-DEL_C_INTERFACE:BOOL=%s'         % ('+c' in spec),
@@ -121,6 +123,13 @@ class Elemental(CMakePackage):
             '-DEL_DISABLE_QUAD:BOOL=%s'        % ('~quad' in spec),
             '-DEL_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
             '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec)]
+
+        # see <stage_folder>/debian/rules as an example:
+        mpif77 = Executable(spec['mpi'].mpif77)
+        libgfortran = LibraryList(mpif77('--print-file-name',
+                                         'libgfortran.%s' % dso_suffix,
+                                         output=str))
+        args.append('-DGFORTRAN_LIB=%s' % libgfortran.libraries[0])
 
         # If using 64bit int BLAS libraries, elemental has to build
         # them internally
