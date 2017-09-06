@@ -52,7 +52,7 @@ def setup_parser(subparser):
 administrator rights when using spack as an user""")
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
-        help="start a local bash in the generated enviroment")
+        help="force the command (use this with caution!)")
     subparser.add_argument(
         '--cli', action='store_true', dest='cli',
         help="connect to a bash session in the generated environment"
@@ -73,7 +73,7 @@ def construct_environment(force, permanent):
 
         build_chroot_environment(spack.spack_bootstrap_root, permanent)
 
-        #update the config to set the isolation mode active
+        # update the config to set the isolation mode active
         config = spack.config.get_config("config", "site")
         config['isolate'] = True
         spack.config.update_config("config", config, "site")
