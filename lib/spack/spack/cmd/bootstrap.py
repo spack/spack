@@ -69,28 +69,19 @@ def bootstrap(parser, args, **kwargs):
         'dirty': args.dirty
     })
 
-    # Define requirement dictionary defining specs which satisfy
-    # requirements
-    requirement_dict = {'environment-modules': ['environment-modules~X',
-                                                'environment-modules+X']}
+    # Define requirement dictionary defining general specs which need
+    # to be satisfied, and the specs to install when the general spec
+    # isn't satisfied.
+    requirement_dict = {'environment-modules': 'environment-modules~X'}
 
     for requirement in requirement_dict:
-        requirement_list = requirement_dict[requirement]
-        tty.msg("Checking whether requirements are satisfied for %s"
-                % requirement)
-        req_satisfied = False
-        for req in requirement_list:
-            spec_req = spack.Spec(req)
-            spec_req.concretize()
-            installed_specs = spack.store.db.query(spec_req)
-            if(len(installed_specs) > 0):
-                req_satisfied = True
-                tty.msg("Requirement %s is satisfied with installed "
-                        "package %s" % (requirement, installed_specs[0]))
-                break
-        if not req_satisfied:
-            # Install first item in requirement list if none is installed.
-            spec_to_install = spack.Spec(requirement_list[0])
+        installed_specs = spack.store.db.query(requirement)
+        if(len(installed_specs) > 0):
+            tty.msg("Requirement %s is satisfied with installed "
+                    "package %s" % (requirement, installed_specs[0]))
+        else:
+            # Install requirement
+            spec_to_install = spack.Spec(requirement_dict[requirement])
             spec_to_install.concretize()
             tty.msg("Installing %s to satisfy requirement for %s" %
                     (spec_to_install, requirement))
