@@ -89,6 +89,7 @@ class CbtfKrell(CMakePackage):
     depends_on("libmonitor+krellpatch")
     depends_on("libunwind")
     depends_on("papi")
+    depends_on("llvm-openmp-ompt@towards_tr4+standalone+towardstr4+usegnu")
 
     # MPI Installations
     # These have not worked either for build or execution, commenting out for
@@ -149,6 +150,7 @@ class CbtfKrell(CMakePackage):
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
             '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
             '-DDYNINST_DIR=%s' % spec['dyninst'].prefix,
+            '-DLIBIOMP_DIR=%s' % spec['llvm-openmp-ompt'].prefix,
             '-DXERCESC_DIR=%s' % spec['xerces-c'].prefix]
 
         # Add any MPI implementations coming from variant settings

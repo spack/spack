@@ -33,26 +33,69 @@ class LlvmOpenmpOmpt(CMakePackage):
 
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
 
-    # tr4-stable branch
+    # towards_tr4 branch
+    version('towards_tr4', branch='towards_tr4',
+            git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git')
+
     version('3.9.2b2',
             git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
             commit='5cdca5dd3c0c336d42a335ca7cff622e270c9d47')
+
     # align-to-tr-rebased branch
     version('3.9.2b',
             git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
             commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3')
 
+    # variant for building llvm-openmp-ompt as a stand alone library
+    variant('standalone', default=False,
+            description="Build llvm openmpi ompt library as a \
+                         stand alone entity.")
+
+    # variant for building llvm-openmp-ompt using the toward_tr4 branch
+    variant('towardstr4', default=False,
+            description="Use towards_tr4 branch of llvm openmpi \
+                         ompt library for build.")
+
+    # variant for building llvm-openmp-ompt using the gnu compilers
+    variant('usegnu', default=False,
+            description="Use gnu compilers to build the llvm openmpi \
+                         ompt library.")
+
     depends_on('cmake@2.8:', type='build')
-    depends_on('llvm')
+    depends_on('llvm', when='~standalone')
     depends_on('ninja@1.5:', type='build')
 
     generator = 'Ninja'
 
     def cmake_args(self):
-        return [
-            '-DCMAKE_C_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER=clang++',
-            '-DLIBOMP_OMPT_SUPPORT=on',
-            '-DLIBOMP_OMPT_BLAME=on',
-            '-DLIBOMP_OMPT_TRACE=on'
+        cmake_args = [
+	     '-DCMAKE_BUILD_TYPE=Release',
+	     '-DLIBOMP_OMPT_SUPPORT=on',
+	     '-DLIBOMP_OMPT_BLAME=on',
+	     '-DLIBOMP_OMPT_TRACE=on'
         ]
+
+        # Build llvm-openmp-ompt as a stand alone library
+        if  '+standalone' in self.spec: 
+                cmake_args.extend(
+                    ['-DLIBOMP_STANDALONE_BUILD=true',
+                     '-DLIBOMP_USE_DEBUGGER=false'])
+
+        # Build llvm-openmp-ompt using the toward_tr4 branch
+        # This requires the version to be 5.0 (50)
+        if  '+towardstr4' in self.spec: 
+                cmake_args.extend(
+                    ['-DLIBOMP_OMP_VERSION=50'])
+
+        # Build llvm-openmp-ompt using the gnu compilers
+        # otherwise use the default build clang compilers
+        if  '+usegnu' in self.spec: 
+                cmake_args.extend(
+	            ['-DCMAKE_C_COMPILER=gcc',
+        	     '-DCMAKE_CXX_COMPILER=g++'])
+        else:
+                cmake_args.extend(
+	            ['-DCMAKE_C_COMPILER=clang',
+        	     '-DCMAKE_CXX_COMPILER=clang++'])
+
+        return cmake_args
