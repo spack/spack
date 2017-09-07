@@ -949,6 +949,19 @@ What follows are three steps describing how to install and use environment-modul
       $ module avail
 
 
+If ``tcl`` 8.0 or later is installed on  your system, you can prevent
+spack from rebuilding ``tcl`` as part of the ``environment-modules`` dependency
+stack by adding the following to your ``~/.spack/packages.yaml`` replacing
+version 8.5 with whatever version is installed on your system:
+
+   .. code-block:: yaml
+
+      packages:
+          tcl:
+              paths:
+                  tcl@8.5: /usr
+              buildable: False
+
 ^^^^^^^^^^^^^^^^^
 Package Utilities
 ^^^^^^^^^^^^^^^^^
