@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.environment
 from spack import *
 
 
@@ -47,21 +46,14 @@ class Ldc(CMakePackage):
     depends_on('curl')
     depends_on('libedit')
     depends_on('binutils')
-    depends_on('ldc-bootstrap', type='build')
+    depends_on('ldc-bootstrap', type=('build', 'link'))
 
     def cmake_args(self):
+        ldmd2 = join_path(self.spec['ldc-bootstrap'].prefix.bin, 'ldmd2')
+
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL=ON'
+            '-DBUILD_SHARED_LIBS:BOOL=ON',
+            '-DD_COMPILER:STRING={0}'.format(ldmd2)
         ]
-
-        # We need libphobos in LD_LIBRARY_PATH
-        bootstrap = self.spec['ldc-bootstrap']
-        env = spack.environment.EnvironmentModifications()
-        env.prepend_path('LD_LIBRARY_PATH', bootstrap.prefix.lib)
-        env.apply_modifications()
-
-        ldmd2 = join_path(bootstrap.prefix.bin, 'ldmd2')
-
-        args.append('-DD_COMPILER:STRING={0}'.format(ldmd2))
 
         return args

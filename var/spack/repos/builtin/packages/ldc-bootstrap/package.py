@@ -50,6 +50,15 @@ class LdcBootstrap(CMakePackage):
     depends_on('libedit')
     depends_on('binutils')
 
+    def setup_dependent_environment(self, build_env, run_env, dep_spec):
+
+        # The code below relies on this function being executed after the
+        # environment has been sanitized (because LD_LIBRARY_PATH is among
+        # the variables that get unset)
+
+        # We need libphobos in LD_LIBRARY_PATH
+        build_env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+
     def cmake_args(self):
         return [
             '-DBUILD_SHARED_LIBS:BOOL=ON'
