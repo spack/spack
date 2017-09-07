@@ -33,7 +33,7 @@ class Sambamba(Package):
     version('0.6.6', git='https://github.com/lomereiter/sambamba.git',
             tag='v0.6.6', submodules=True)
 
-    depends_on('ldc~shared_libs', type=('build', 'link'))
+    depends_on('ldc~shared', type=('build', 'link'))
     depends_on('python', type='build')
 
     resource(
