@@ -203,33 +203,62 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
-    def _concretize_operating_system(self, platform, spec):
-        """Gather all the operating systems if it is set"""
-        if spec.architecture.concrete or spec.architecture.platform_os:
-            return False  # No change so we return False
-        default_back_end = True
-        if spec.architecture.target:
-            if spec.architecture.target == str(platform.target("fe")):
-                default_back_end = False
-        if default_back_end:
-            spec.architecture.platform_os = platform.operating_system("default_os")
-        else:
-            spec.architecture.platform_os = platform.operating_system("fe")
-        return True
+    def _concretize_arch_component(self, component, platform, spec):
+        """ Concretizes the specified component of the architecture in a
+        spec.
 
-    def _concretize_target(self, platform, spec):
-        """ Concretize target"""
-        if spec.architecture.concrete or spec.architecture.target:
-            return False
-        default_back_end = True
-        if spec.architecture and spec.architecture.platform_os:
-            if str(spec.architecture.platform_os) == str(platform.operating_system("fe")):
-                default_back_end = False
-        if default_back_end:
-            spec.architecture.target = platform.target("default_target")
+        On heterogeneous architectures it will look and see if the first
+        component will match the second component ie if the os is for the front
+        end then it will be sure to match the target with the front end. On
+        architectures with one single architecture it should work the same since
+        both front end and back end are the same.
+
+        Args:
+            component (str):      which component to check and set in arch spec
+            platform  (Platform): platform object to help set the attributes of
+                                  architecture
+            spec      (Spec):     spec object to set the architecture on.
+
+        Returns:
+            Returns True if any of the components were set. If all components
+            are present then return False. True represents a change happened
+            and False represents no change."""
+
+        architecture = spec.architecture
+        front_end = "fe" # represents whatever frontend exists 
+        # methods available to the platform class depends on component
+        methods = {"platform_os": "operating_system", "target": "target"}
+        this_component = getattr(architecture, component)
+
+        if component == "platform_os":
+            other_comp = "target"
+            default = "default_os"
         else:
-            spec.architecture.target = platform.target("fe")
-        return True
+            other_comp = "platform_os"
+            default = "default_target"
+
+        def is_front_end(arch_comp):
+            if (getattr(architecture, arch_comp)
+                == str(getattr(platform, methods[arch_comp])(front_end))):
+                return True
+            return False
+
+        if architecture.concrete or this_component:
+            return False
+
+        use_backend = True
+
+        if getattr(architecture, other_comp):
+            if is_front_end(other_comp):
+                use_backend = False
+        if use_backend:
+            setattr(architecture, component,
+                    getattr(platform, methods[component])(default))
+        else:
+            setattr(architecture, component,
+                    getattr(platform, methods[component])(front_end))
+
+        return True # spec changed
 
 
     def concretize_architecture(self, spec):
@@ -242,32 +271,31 @@ class DefaultConcretizer(object):
         concretized. If any of the fields are changed return True."""
         sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
         front_arch = spack.spec.ArchSpec(spack.architecture.front_end())
-        spec_changed = False
 
-        # Case 1: If we have an already concrete arch on a spec return F
         if spec.architecture and spec.architecture.concrete:
             return False
 
-        # Case 2: If spec has no arch find a spec that does, if not assign
-        # the default.
+        spec_changed = []
         other_arch_spec = find_spec(spec, lambda x: x.architecture, spec.root)
         other_arch = other_arch_spec.architecture
         if not other_arch:
             spec.architecture = spack.spec.ArchSpec(sys_arch)
         elif not spec.architecture and other_arch:
-            # Only directly copy if the current spec is missing an architecture
             spec.architecture = other_arch
-            spec_changed = True
+            spec_changed.append(True)
 
-        # Do the intricate work of finding out what we're calling
         platform = spack.architecture.get_platform(spec.architecture.platform)
-        spec_changed = self._concretize_operating_system(platform, spec)
-        spec_changed = self._concretize_target(platform, spec)
 
+        spec_changed.append(self._concretize_arch_component("platform_os",
+                                                        platform,
+                                                        spec))
+        spec_changed.append(self._concretize_arch_component("target",
+                                                        platform,
+                                                        spec))
         if not spec.architecture.concrete:
             raise InsufficientArchitectureInfoError(spec, [sys_arch, front_arch])
 
-        return spec_changed
+        return any(spec_changed)
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
