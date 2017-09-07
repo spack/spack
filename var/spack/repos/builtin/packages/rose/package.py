@@ -41,9 +41,7 @@ class Rose(AutotoolsPackage):
     version('0.9.7.0', commit='992c21ad06893bc1e9e7688afe0562eee0fda021',
             git='https://github.com/rose-compiler/rose.git')
     version('0.9.9.0', commit='14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff',
-            git='https://github.com/rose-compiler/rose.git')
-    version('0.9.9.83', commit='1742d1773da7525378f15e40dfa391a3a7ac67df',
-            git='rose-dev@rosecompiler1.llnl.gov:rose/scratch/rose.git')
+            git='https://github.com/rose-compiler/rose-develop.git')
 
     depends_on("autoconf@2.69", type='build')
     depends_on("automake@1.14", type='build')
