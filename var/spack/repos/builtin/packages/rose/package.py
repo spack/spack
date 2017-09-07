@@ -44,7 +44,7 @@ class Rose(AutotoolsPackage):
             git='https://github.com/rose-compiler/rose.git')
     version('0.9.9.83', commit='1742d1773da7525378f15e40dfa391a3a7ac67df',
             git='rose-dev@rosecompiler1.llnl.gov:rose/scratch/rose.git')
- 
+
     depends_on("autoconf@2.69", type='build')
     depends_on("automake@1.14", type='build')
     depends_on("libtool@2.4", type='build')
@@ -168,4 +168,3 @@ class Rose(AutotoolsPackage):
                 srun('-ppdebug', 'make', '-j16', 'install-core')
                 with working_dir('tools'):
                     srun('-ppdebug', 'make', '-j16', 'install')
-
