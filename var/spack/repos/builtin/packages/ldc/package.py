@@ -40,20 +40,32 @@ class Ldc(CMakePackage):
 
     version('1.3.0', '537d992a361b0fd0440b24a5145c9107')
 
-    depends_on('llvm@3.7:')
+    variant(
+        'shared',
+        default=True,
+        description='Build runtime and tooling as shared libs'
+    )
+
+    depends_on('llvm@3.9:')
     depends_on('zlib')
     depends_on('libconfig')
     depends_on('curl')
     depends_on('libedit')
-    depends_on('binutils')
+    depends_on('binutils', type=('build', 'link', 'run'))
     depends_on('ldc-bootstrap', type=('build', 'link'))
 
+    provides('D@2')
+
     def cmake_args(self):
-        ldmd2 = join_path(self.spec['ldc-bootstrap'].prefix.bin, 'ldmd2')
+        ldmd2 = self.spec['ldc-bootstrap'].prefix.bin.ldmd2
 
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL=ON',
-            '-DD_COMPILER:STRING={0}'.format(ldmd2)
+            '-DD_COMPILER:STRING={0}'.format(ldmd2),
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in self.spec else 'OFF'
+            ),
+            '-DLDC_INSTALL_LTOPLUGIN:BOOL=ON',
+            '-DLDC_BUILD_WITH_LTO:BOOL=OFF'
         ]
 
         return args
