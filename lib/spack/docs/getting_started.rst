@@ -902,9 +902,8 @@ What follows are three steps describing how to install and use environment-modul
 
 #. Install ``environment-modules``.
 
-   * Spack can build and install ``environment-modules`` for you.
-     Call ``spack bootstrap`` which will install ``environment-modules`` and it's 
-     dependencies.
+   * ``spack bootstrap`` will build ``environment-modules`` for you (and may build
+     other packages that are useful to the operation of Spack)
 
    * Install ``environment-modules`` using ``spack install`` with
      ``spack install environment-modules~X`` (The ``~X`` variant builds without Xorg
