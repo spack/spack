@@ -160,6 +160,6 @@ class Rose(AutotoolsPackage):
         #   $ srun -n1 spack install -j16 rose
         #
 	with working_dir(self.build_directory):
-	    make('install-core')
-	    with working_dir('tools'):
-		make('install')
+		make('install-core')
+		with working_dir('tools'):
+			make('install')
