@@ -203,34 +203,32 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
-    def _concretize_operating_system(self, spec):
+    def _concretize_operating_system(self, platform, spec):
         """Gather all the operating systems if it is set"""
-        platform = spec.architecture.platform
-        if spec.architecture.platform_os.concrete:
+        if spec.architecture.concrete or spec.architecture.platform_os:
             return False  # No change so we return False
         default_back_end = True
         if spec.architecture.target:
-            if str(spec.architecture.target) == str(platform.target("fe")):
+            if spec.architecture.target == str(platform.target("fe")):
                 default_back_end = False
         if default_back_end:
-            speck.architecture.platform_os = platform.operating_system("be")
+            spec.architecture.platform_os = platform.operating_system("default_os")
         else:
-            spack.architecture.platform_os = platform.operating_system("fe")
+            spec.architecture.platform_os = platform.operating_system("fe")
         return True
 
-    def _concretize_target(self, spec):
+    def _concretize_target(self, platform, spec):
         """ Concretize target"""
-        platform = spec.architecture.platform
-        if spec.architecture.target.concrete:
+        if spec.architecture.concrete or spec.architecture.target:
             return False
         default_back_end = True
-        if spec.architecture.platform_os:
-            if str(spec.architecture.platform_os) == str(platform.target("fe")):
+        if spec.architecture and spec.architecture.platform_os:
+            if str(spec.architecture.platform_os) == str(platform.operating_system("fe")):
                 default_back_end = False
         if default_back_end:
-            spack.architecture.target = platform.target("default_target")
+            spec.architecture.target = platform.target("default_target")
         else:
-            spack.architecture.target = platform.target("fe")
+            spec.architecture.target = platform.target("fe")
         return True
 
 
@@ -262,11 +260,12 @@ class DefaultConcretizer(object):
             spec_changed = True
 
         # Do the intricate work of finding out what we're calling
-        spec_changed = self._concretize_operating_system(spec)
-        spec_changed = self._concretize_target(spec)
+        platform = spack.architecture.get_platform(spec.architecture.platform)
+        spec_changed = self._concretize_operating_system(platform, spec)
+        spec_changed = self._concretize_target(platform, spec)
 
         if not spec.architecture.concrete:
-            raise InsufficientArchitectureInfoError(spec, default_archs)
+            raise InsufficientArchitectureInfoError(spec, [sys_arch, front_arch])
 
         return spec_changed
 
