@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -49,6 +49,7 @@ class Lbann(CMakePackage):
                when=('build_type=Debug'))
     depends_on('cuda', when='+gpu')
     depends_on('mpi')
+    depends_on('hwloc')
     depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib', when='+opencv')
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')

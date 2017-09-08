@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -235,6 +235,10 @@ class Stage(object):
                     stage_lock_path, lock_id, 1)
 
             self._lock = Stage.stage_locks[self.name]
+
+        # When stages are reused, we need to know whether to re-create
+        # it.  This marks whether it has been created/destroyed.
+        self.created = False
 
     def __enter__(self):
         """
@@ -521,6 +525,7 @@ class Stage(object):
                 mkdirp(self.path)
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
+        self.created = True
 
     def destroy(self):
         """Removes this stage directory."""
@@ -531,6 +536,9 @@ class Stage(object):
             os.getcwd()
         except OSError:
             os.chdir(os.path.dirname(self.path))
+
+        # mark as destroyed
+        self.created = False
 
 
 class ResourceStage(Stage):
@@ -573,8 +581,9 @@ class ResourceStage(Stage):
                 shutil.move(source_path, destination_path)
 
 
-@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',
-                                'restage', 'destroy', 'cache_local'])
+@pattern.composite(method_list=[
+    'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
+    'destroy', 'cache_local'])
 class StageComposite:
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
@@ -623,6 +632,7 @@ class DIYStage(object):
         self.archive_file = None
         self.path = path
         self.source_path = path
+        self.created = True
 
     def chdir(self):
         if os.path.isdir(self.path):

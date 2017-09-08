@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,6 +38,8 @@ class Thrift(Package):
     homepage = "http://thrift.apache.org"
     url      = "http://apache.mirrors.ionfish.org/thrift/0.9.2/thrift-0.9.2.tar.gz"
 
+    version('0.10.0', '795c5dd192e310ffff38cfd9430d6b29')
+    version('0.9.3', '88d667a8ae870d5adeca8cb7d6795442')
     version('0.9.2', '89f63cc4d0100912f4a1f8a9dee63678')
 
     # Currently only support for c-family and python

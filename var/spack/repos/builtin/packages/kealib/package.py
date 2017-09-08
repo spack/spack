@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -53,6 +53,6 @@ class Kealib(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DHDF5_INCLUDE_DIR=%s' % spec['hdf5'].prefix.include,
-            '-DHDF5_LIB_PATH=%s' % spec['hdf5'].prefix.lib,
+            '-DHDF5_INCLUDE_DIR=%s' % self.spec['hdf5'].prefix.include,
+            '-DHDF5_LIB_PATH=%s' % self.spec['hdf5'].prefix.lib,
         ]

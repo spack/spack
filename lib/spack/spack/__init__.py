@@ -1,6 +1,6 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -178,6 +178,7 @@ from spack.build_systems.waf import WafPackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
 from spack.build_systems.perl import PerlPackage
+from spack.build_systems.intel import IntelPackage
 
 __all__ += [
     'run_before',
@@ -193,6 +194,7 @@ __all__ += [
     'PythonPackage',
     'RPackage',
     'PerlPackage',
+    'IntelPackage',
 ]
 
 from spack.version import Version, ver

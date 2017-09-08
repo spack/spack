@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -284,132 +284,157 @@ class EnvironmentModifications(object):
                 x.execute()
 
     @staticmethod
-    def from_sourcing_files(*args, **kwargs):
-        """Returns modifications that would be made by sourcing files.
+    def from_sourcing_file(filename, *args, **kwargs):
+        """Returns modifications that would be made by sourcing a file.
 
-        Args:
-            *args (list of str): list of files to be sourced
+        Parameters:
+            filename (str): The file to source
+            *args (list of str): Arguments to pass on the command line
+
+        Keyword Arguments:
+            shell (str): The shell to use (default: ``bash``)
+            shell_options (str): Options passed to the shell (default: ``-c``)
+            source_command (str): The command to run (default: ``source``)
+            suppress_output (str): Redirect used to suppress output of command
+                (default: ``&> /dev/null``)
+            concatenate_on_success (str): Operator used to execute a command
+                only when the previous command succeeds (default: ``&&``)
 
         Returns:
             EnvironmentModifications: an object that, if executed, has
-                the same effect on the environment as sourcing the files
-                passed as parameters
+                the same effect on the environment as sourcing the file
         """
-        env = EnvironmentModifications()
+        # Check if the file actually exists
+        if not os.path.isfile(filename):
+            msg = 'Trying to source non-existing file: {0}'.format(filename)
+            raise RuntimeError(msg)
 
-        # Check if the files are actually there
-        files = [line.split(' ')[0] for line in args]
-        non_existing = [file for file in files if not os.path.isfile(file)]
-        if non_existing:
-            message = 'trying to source non-existing files\n'
-            message += '\n'.join(non_existing)
-            raise RuntimeError(message)
+        # Kwargs parsing and default values
+        shell                  = kwargs.get('shell', '/bin/bash')
+        shell_options          = kwargs.get('shell_options', '-c')
+        source_command         = kwargs.get('source_command', 'source')
+        suppress_output        = kwargs.get('suppress_output', '&> /dev/null')
+        concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
 
-        # Relevant kwd parameters and formats
-        info = dict(kwargs)
-        info.setdefault('shell', '/bin/bash')
-        info.setdefault('shell_options', '-c')
-        info.setdefault('source_command', 'source')
-        info.setdefault('suppress_output', '&> /dev/null')
-        info.setdefault('concatenate_on_success', '&&')
+        source_file = [source_command, filename]
+        source_file.extend(args)
+        source_file = ' '.join(source_file)
 
-        shell = '{shell}'.format(**info)
-        shell_options = '{shell_options}'.format(**info)
-        source_file = '{source_command} {file} {concatenate_on_success}'
-
-        dump_cmd = "import os, json; print(json.dumps(dict(os.environ)))"
-        dump_environment = 'python -c "%s"' % dump_cmd
+        dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
+        dump_environment = 'python -c "{0}"'.format(dump_cmd)
 
         # Construct the command that will be executed
-        command = [source_file.format(file=file, **info) for file in args]
-        command.append(dump_environment)
-        command = ' '.join(command)
         command = [
             shell,
             shell_options,
-            command
+            ' '.join([
+                source_file, suppress_output,
+                concatenate_on_success, dump_environment,
+            ]),
         ]
 
-        # Try to source all the files,
+        # Try to source the file
         proc = subprocess.Popen(
             command, stdout=subprocess.PIPE, env=os.environ)
         proc.wait()
+
         if proc.returncode != 0:
-            raise RuntimeError('sourcing files returned a non-zero exit code')
+            msg = 'Sourcing file {0} returned a non-zero exit code'.format(
+                filename)
+            raise RuntimeError(msg)
+
         output = ''.join([line.decode('utf-8') for line in proc.stdout])
 
-        # Construct a dictionaries of the environment before and after
-        # sourcing the files, so that we can diff them.
-        this_environment = dict(os.environ)
-        after_source_env = json.loads(output)
+        # Construct dictionaries of the environment before and after
+        # sourcing the file, so that we can diff them.
+        env_before = dict(os.environ)
+        env_after = json.loads(output)
 
         # If we're in python2, convert to str objects instead of unicode
         # like json gives us.  We can't put unicode in os.environ anyway.
         if sys.version_info[0] < 3:
-            after_source_env = dict((k.encode('utf-8'), v.encode('utf-8'))
-                                    for k, v in after_source_env.items())
+            env_after = dict((k.encode('utf-8'), v.encode('utf-8'))
+                             for k, v in env_after.items())
 
         # Filter variables that are not related to sourcing a file
-        to_be_filtered = 'SHLVL', '_', 'PWD', 'OLDPWD'
-        for d in after_source_env, this_environment:
+        to_be_filtered = 'SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'
+        for d in env_after, env_before:
             for name in to_be_filtered:
                 d.pop(name, None)
 
         # Fill the EnvironmentModifications instance
+        env = EnvironmentModifications()
 
         # New variables
-        new_variables = set(after_source_env) - set(this_environment)
-        for x in new_variables:
-            env.set(x, after_source_env[x])
+        new_variables = set(env_after) - set(env_before)
         # Variables that have been unset
-        unset_variables = set(this_environment) - set(after_source_env)
-        for x in unset_variables:
-            env.unset(x)
+        unset_variables = set(env_before) - set(env_after)
         # Variables that have been modified
         common_variables = set(
-            this_environment).intersection(set(after_source_env))
+            env_before).intersection(set(env_after))
         modified_variables = [x for x in common_variables
-                              if this_environment[x] != after_source_env[x]]
+                              if env_before[x] != env_after[x]]
 
-        def return_separator_if_any(first_value, second_value):
+        def return_separator_if_any(*args):
             separators = ':', ';'
             for separator in separators:
-                if separator in first_value and separator in second_value:
-                    return separator
+                for arg in args:
+                    if separator in arg:
+                        return separator
             return None
 
-        for x in modified_variables:
-            current = this_environment[x]
-            modified = after_source_env[x]
-            sep = return_separator_if_any(current, modified)
-            if sep is None:
-                # We just need to set the variable to the new value
-                env.set(x, after_source_env[x])
+        # Add variables to env.
+        # Assume that variables with 'PATH' in the name or that contain
+        # separators like ':' or ';' are more likely to be paths
+        for x in new_variables:
+            sep = return_separator_if_any(env_after[x])
+            if sep:
+                env.prepend_path(x, env_after[x], separator=sep)
+            elif 'PATH' in x:
+                env.prepend_path(x, env_after[x])
             else:
-                current_list = current.split(sep)
-                modified_list = modified.split(sep)
+                # We just need to set the variable to the new value
+                env.set(x, env_after[x])
+
+        for x in unset_variables:
+            env.unset(x)
+
+        for x in modified_variables:
+            before = env_before[x]
+            after = env_after[x]
+            sep = return_separator_if_any(before, after)
+            if sep:
+                before_list = before.split(sep)
+                after_list = after.split(sep)
+
+                # Filter out empty strings
+                before_list = list(filter(None, before_list))
+                after_list = list(filter(None, after_list))
+
                 # Paths that have been removed
                 remove_list = [
-                    ii for ii in current_list if ii not in modified_list]
-                # Check that nothing has been added in the middle of vurrent
-                # list
+                    ii for ii in before_list if ii not in after_list]
+                # Check that nothing has been added in the middle of
+                # before_list
                 remaining_list = [
-                    ii for ii in current_list if ii in modified_list]
-                start = modified_list.index(remaining_list[0])
-                end = modified_list.index(remaining_list[-1])
-                search = sep.join(modified_list[start:end + 1])
+                    ii for ii in before_list if ii in after_list]
+                try:
+                    start = after_list.index(remaining_list[0])
+                    end = after_list.index(remaining_list[-1])
+                    search = sep.join(after_list[start:end + 1])
+                except IndexError:
+                    env.prepend_path(x, env_after[x])
 
-                if search not in current:
+                if search not in before:
                     # We just need to set the variable to the new value
-                    env.set(x, after_source_env[x])
-                    break
+                    env.prepend_path(x, env_after[x])
                 else:
                     try:
-                        prepend_list = modified_list[:start]
+                        prepend_list = after_list[:start]
                     except KeyError:
                         prepend_list = []
                     try:
-                        append_list = modified_list[end + 1:]
+                        append_list = after_list[end + 1:]
                     except KeyError:
                         append_list = []
 
@@ -419,6 +444,9 @@ class EnvironmentModifications(object):
                         env.append_path(x, item)
                     for item in prepend_list:
                         env.prepend_path(x, item)
+            else:
+                # We just need to set the variable to the new value
+                env.set(x, env_after[x])
 
         return env
 

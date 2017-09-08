@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -202,5 +202,5 @@ class Lammps(MakefilePackage):
                 install('liblammps_{0}.{1}'.format(self.target_name,
                                                    dso_suffix), prefix.lib)
 
-                # TODO: install the necessary headers
-                mkdirp(prefix.include)
+                mkdirp(prefix.include.lammps)
+                install('library.h', prefix.include.lammps)

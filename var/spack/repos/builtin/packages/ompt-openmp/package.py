@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,7 +35,7 @@ class OmptOpenmp(CMakePackage):
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
     url      = "http://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz"
 
-    version('0.1', '2334e6a84b52da41b27afd9831ed5370')
+    version('0.1', '59d6933a2e9b7d1423fb9c7c77d5663f')
 
     depends_on('cmake@2.8:', type='build')
 

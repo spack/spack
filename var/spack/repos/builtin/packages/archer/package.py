@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,22 +36,14 @@ class Archer(CMakePackage):
 
     depends_on('cmake@3.4.3:', type='build')
     depends_on('llvm')
-    depends_on('ninja', type='build')
+    depends_on('ninja@1.5:', type='build')
     depends_on('llvm-openmp-ompt')
+
+    generator = 'Ninja'
 
     def cmake_args(self):
         return [
-            '-G', 'Ninja',
             '-DCMAKE_C_COMPILER=clang',
             '-DCMAKE_CXX_COMPILER=clang++',
             '-DOMP_PREFIX:PATH=%s' % self.spec['llvm-openmp-ompt'].prefix,
         ]
-
-    # TODO: Add better ninja support to CMakePackage
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja()
-
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            ninja('install')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -84,6 +84,7 @@ class Magics(CMakePackage):
             filter_file('#!/usr/bin/python', '#!/usr/bin/env python', pyfile)
 
     def cmake_args(self):
+        spec = self.spec
         args = [
             '-DENABLE_ODB=OFF',
             '-DENABLE_PYTHON=OFF',

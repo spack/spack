@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,6 +43,6 @@ class LlvmLld(CMakePackage):
             env['CXXFLAGS'] = self.compiler.cxx11_flag
 
         return [
-            '-DLLD_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
-            '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
+            '-DLLD_PATH_TO_LLVM_BUILD=%s' % self.spec['llvm'].prefix,
+            '-DLLVM_MAIN_SRC_DIR=%s' % self.spec['llvm'].prefix,
         ]

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,7 @@ class Otf2(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/otf2/otf2-1.4.tar.gz"
 
+    version('2.1',   'e2994e53d9b7c2cbd0c4f564d638751e')
     version('2.0',   '5b546188b25bc1c4e285e06dddf75dfc')
     version('1.5.1', '16a9df46e0da78e374f5d12c8cdc1109')
     version('1.4',   'a23c42e936eb9209c4e08b61c3cf5092')

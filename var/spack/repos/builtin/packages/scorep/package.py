@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,6 +39,8 @@ class Scorep(AutotoolsPackage):
     version('2.0.2', '8f00e79e1b5b96e511c5ebecd10b2888')
     version('1.4.2', '3b9a042b13bdd5836452354e6567f71e')
     version('1.3',   '9db6f957b7f51fa01377a9537867a55c')
+
+    patch('gcc7.patch')
 
     ##########
     # Dependencies for SCORE-P are quite tight. See the homepage for more

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -41,6 +41,7 @@ build_system_to_phase = {
     QMakePackage: 'qmake',
     WafPackage: 'configure',
     PerlPackage: 'configure',
+    IntelPackage: 'configure',
 }
 
 

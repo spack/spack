@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -186,10 +186,9 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
                 # Clear the attribute for the next class
                 setattr(mcs, attr_name, {})
 
-        # Preconditions
         _flush_callbacks('run_before')
-        # Sanity checks
         _flush_callbacks('run_after')
+
         return super(PackageMeta, mcs).__new__(mcs, name, bases, attr_dict)
 
     @staticmethod
@@ -484,37 +483,71 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #
     # These are default values for instance variables.
     #
-    """By default we build in parallel.  Subclasses can override this."""
+
+    #: By default we build in parallel.  Subclasses can override this.
     parallel = True
 
-    """# jobs to use for parallel make. If set, overrides default of ncpus."""
+    #: # jobs to use for parallel make. If set, overrides default of ncpus.
     make_jobs = spack.build_jobs
 
-    """By default do not run tests within package's install()"""
+    #: By default do not run tests within package's install()
     run_tests = False
 
     # FIXME: this is a bad object-oriented design, should be moved to Clang.
-    """By default do not setup mockup XCode on macOS with Clang"""
+    #: By default do not setup mockup XCode on macOS with Clang
     use_xcode = False
 
-    """Most packages are NOT extendable. Set to True if you want extensions."""
+    #: Most packages are NOT extendable. Set to True if you want extensions.
     extendable = False
 
-    """When True, add RPATHs for the entire DAG. When False, add RPATHs only
-       for immediate dependencies."""
+    #: When True, add RPATHs for the entire DAG. When False, add RPATHs only
+    #: for immediate dependencies.
     transitive_rpaths = True
 
-    """List of prefix-relative file paths (or a single path). If these do
-       not exist after install, or if they exist but are not files,
-       sanity checks fail.
-    """
+    #: List of prefix-relative file paths (or a single path). If these do
+    #: not exist after install, or if they exist but are not files,
+    #: sanity checks fail.
     sanity_check_is_file = []
 
-    """List of prefix-relative directory paths (or a single path). If
-       these do not exist after install, or if they exist but are not
-       directories, sanity checks will fail.
-    """
+    #: List of prefix-relative directory paths (or a single path). If
+    #: these do not exist after install, or if they exist but are not
+    #: directories, sanity checks will fail.
     sanity_check_is_dir = []
+
+    #
+    # Set default licensing information
+    #
+
+    #: Boolean. If set to ``True``, this software requires a license.
+    #: If set to ``False``, all of the ``license_*`` attributes will
+    #: be ignored. Defaults to ``False``.
+    license_required = False
+
+    #: String. Contains the symbol used by the license manager to denote
+    #: a comment. Defaults to ``#``.
+    license_comment = '#'
+
+    #: List of strings. These are files that the software searches for when
+    #: looking for a license. All file paths must be relative to the
+    #: installation directory. More complex packages like Intel may require
+    #: multiple licenses for individual components. Defaults to the empty list.
+    license_files = []
+
+    #: List of strings. Environment variables that can be set to tell the
+    #: software where to look for a license if it is not in the usual location.
+    #: Defaults to the empty list.
+    license_vars = []
+
+    #: String. A URL pointing to license setup instructions for the software.
+    #: Defaults to the empty string.
+    license_url = ''
+
+    # Verbosity level, preserved across installs.
+    _verbose = None
+
+    #: List of strings which contains GitHub usernames of package maintainers.
+    #: Do not include @ here in order not to unnecessarily ping the users.
+    maintainers = []
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -568,22 +601,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         if not hasattr(self, 'list_depth'):
             self.list_depth = 0
-
-        # Set default licensing information
-        if not hasattr(self, 'license_required'):
-            self.license_required = False
-
-        if not hasattr(self, 'license_comment'):
-            self.license_comment = '#'
-
-        if not hasattr(self, 'license_files'):
-            self.license_files = []
-
-        if not hasattr(self, 'license_vars'):
-            self.license_vars = []
-
-        if not hasattr(self, 'license_url'):
-            self.license_url = None
 
         # Set up some internal variables for timing.
         self._fetch_time = 0.0
@@ -747,10 +764,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Append the item to the composite
             composite_stage.append(stage)
 
-        # Create stage on first access.  Needed because fetch, stage,
-        # patch, and install can be called independently of each
-        # other, so `with self.stage:` in do_install isn't sufficient.
-        composite_stage.create()
         return composite_stage
 
     @property
@@ -759,6 +772,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ValueError("Can only get a stage for a concrete package.")
         if self._stage is None:
             self._stage = self._make_stage()
+
+        # Create stage on first access.  Needed because fetch, stage,
+        # patch, and install can be called independently of each
+        # other, so `with self.stage:` in do_install isn't sufficient.
+        self._stage.create()
+
         return self._stage
 
     @stage.setter
@@ -1080,11 +1099,29 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             matches = [line for line in f.readlines() if regex.match(line)]
 
         if not matches:
-            tty.msg('Target \'' + target + ':\' not found in Makefile')
+            tty.msg("Target '" + target + ":' not found in Makefile")
             return
 
         # Execute target
         inspect.getmodule(self).make(target)
+
+    def _if_ninja_target_execute(self, target):
+        # Check if we have a ninja build script
+        if not os.path.exists('build.ninja'):
+            tty.msg('No ninja build script found in the build directory')
+            return
+
+        # Check if 'target' is in the ninja build script
+        regex = re.compile('^build ' + target + ':')
+        with open('build.ninja', 'r') as f:
+            matches = [line for line in f.readlines() if regex.match(line)]
+
+        if not matches:
+            tty.msg("Target 'build " + target + ":' not found in build.ninja")
+            return
+
+        # Execute target
+        inspect.getmodule(self).ninja(target)
 
     def _get_needed_resources(self):
         resources = []
@@ -1160,6 +1197,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
+                   install_source=False,
                    install_deps=True,
                    skip_patch=False,
                    verbose=False,
@@ -1180,6 +1218,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             keep_stage (bool): By default, stage is destroyed only if there
                 are no exceptions during build. Set to True to keep the stage
                 even with exceptions.
+            install_source (bool): By default, source is not installed, but
+                for debugging it might be useful to keep it around.
             install_deps (bool): Install dependencies before installing this
                 package
             skip_patch (bool): Skip patch stage of build if True.
@@ -1218,10 +1258,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 rec = spack.store.db.get_record(self.spec)
                 return self._update_explicit_entry_in_db(rec, explicit)
 
-        # Dirty argument takes precedence over dirty config setting.
-        if dirty is None:
-            dirty = spack.dirty
-
         self._do_install_pop_kwargs(kwargs)
 
         # First, install dependencies recursively.
@@ -1231,6 +1267,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 dep.package.do_install(
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
+                    install_source=install_source,
                     install_deps=install_deps,
                     fake=fake,
                     skip_patch=skip_patch,
@@ -1250,22 +1287,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.make_jobs = make_jobs
 
         # Then install the package itself.
-        def build_process(input_stream):
-            """Forked for each build. Has its own process and python
-               module space set up by build_environment.fork()."""
+        def build_process():
+            """This implements the process forked for each build.
 
-            # We are in the child process. This means that our sys.stdin is
-            # equal to open(os.devnull). Python did this to prevent our process
-            # and the parent process from possible simultaneous reading from
-            # the original standard input. But we assume that the parent
-            # process is not going to read from it till we are done here,
-            # otherwise it should not have passed us the copy of the stream.
-            # Thus, we are free to work with the the copy (input_stream)
-            # however we want. For example, we might want to call functions
-            # (e.g. input()) that implicitly read from whatever stream is
-            # assigned to sys.stdin. Since we want them to work with the
-            # original input stream, we are making the following assignment:
-            sys.stdin = input_stream
+            Has its own process and python module space set up by
+            build_environment.fork().
+
+            This function's return value is returned to the parent process.
+            """
 
             start_time = time.time()
             if not fake:
@@ -1278,6 +1307,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 'Building {0} [{1}]'.format(self.name, self.build_system_class)
             )
 
+            # get verbosity from do_install() parameter or saved value
+            echo = verbose
+            if PackageBase._verbose is not None:
+                echo = PackageBase._verbose
+
             self.stage.keep = keep_stage
             with self._stage_and_write_lock():
                 # Run the pre-install hook in the child process after
@@ -1286,6 +1320,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 if fake:
                     self.do_fake_install()
                 else:
+                    source_path = self.stage.source_path
+                    if install_source and os.path.isdir(source_path):
+                        src_target = join_path(
+                            self.spec.prefix, 'share', self.name, 'src')
+                        tty.msg('Copying source to {0}'.format(src_target))
+                        install_tree(self.stage.source_path, src_target)
+
                     # Do the real install in the source directory.
                     self.stage.chdir_to_source()
 
@@ -1303,23 +1344,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
                     # Spawn a daemon that reads from a pipe and redirects
                     # everything to log_path
-                    redirection_context = log_output(
-                        log_path,
-                        echo=verbose,
-                        force_color=sys.stdout.isatty(),
-                        debug=True,
-                        input_stream=input_stream
-                    )
-                    with redirection_context as log_redirection:
-                        for phase_name, phase in zip(
+                    with log_output(log_path, echo, True) as logger:
+                        for phase_name, phase_attr in zip(
                                 self.phases, self._InstallPhase_phases):
-                            tty.msg(
-                                'Executing phase : \'{0}\''.format(phase_name)
-                            )
+
+                            with logger.force_echo():
+                                tty.msg("Executing phase: '%s'" % phase_name)
+
                             # Redirect stdout and stderr to daemon pipe
-                            with log_redirection:
-                                getattr(self, phase)(
-                                    self.spec, self.prefix)
+                            phase = getattr(self, phase_attr)
+                            phase(self.spec, self.prefix)
+
+                    echo = logger.echo
                     self.log()
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self.spec)
@@ -1334,12 +1370,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                      _hms(self._total_time)))
             print_pkg(self.prefix)
 
+            # preserve verbosity across runs
+            return echo
+
         try:
             # Create the install prefix and fork the build process.
             if not os.path.exists(self.prefix):
                 spack.store.layout.create_install_directory(self.spec)
+
             # Fork a child to do the actual installation
-            spack.build_environment.fork(self, build_process, dirty=dirty)
+            # we preserve verbosity settings across installs.
+            PackageBase._verbose = spack.build_environment.fork(
+                self, build_process, dirty=dirty)
+
             # If we installed then we should keep the prefix
             keep_prefix = self.last_phase is None or keep_prefix
             # note: PARENT of the build process adds the new package to
@@ -1363,6 +1406,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Remove the install prefix if anything went wrong during install.
             if not keep_prefix:
                 self.remove_prefix()
+
+            # The subprocess *may* have removed the build stage. Mark it
+            # not created so that the next time self.stage is invoked, we
+            # check the filesystem for it.
+            self.stage.created = False
 
     def check_for_unfinished_installation(
             self, keep_prefix=False, restage=False):
@@ -1414,12 +1462,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     def log(self):
         # Copy provenance into the install directory on success
-        log_install_path = spack.store.layout.build_log_path(
-            self.spec)
-        env_install_path = spack.store.layout.build_env_path(
-            self.spec)
-        packages_dir = spack.store.layout.build_packages_path(
-            self.spec)
+        log_install_path = spack.store.layout.build_log_path(self.spec)
+        env_install_path = spack.store.layout.build_env_path(self.spec)
+        packages_dir = spack.store.layout.build_packages_path(self.spec)
 
         # Remove first if we're overwriting another build
         # (can happen with spack setup)

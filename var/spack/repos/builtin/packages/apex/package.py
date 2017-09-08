@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class Apex(CMakePackage):
     homepage = "http://github.com/khuck/xpress-apex"
     url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
 
-    version('0.1', '8b95f0c0313da1575960d3ad69f18e75')
+    version('0.1', 'e224a0b9033e23a9697ce2a3c307a0a3')
 
     depends_on("binutils+libiberty")
     depends_on("boost@1.54:")
@@ -38,6 +38,7 @@ class Apex(CMakePackage):
     depends_on("ompt-openmp")
 
     def cmake_args(self):
+        spec = self.spec
         return [
             '-DBOOST_ROOT=%s' % spec['boost'].prefix,
             '-DUSE_BFD=TRUE',
