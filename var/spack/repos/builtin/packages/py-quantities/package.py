@@ -31,7 +31,10 @@ class PyQuantities(PythonPackage):
     homepage = "http://python-quantities.readthedocs.org"
     url      = "https://pypi.io/packages/source/q/quantities/quantities-0.11.1.zip"
 
+    version('0.12.1', 'f4c6287bfd2e93322b25a7c1311a0243')
     version('0.11.1', 'f4c6287bfd2e93322b25a7c1311a0243')
+
+    conflicts('py-numpy@1.13:', when='@:0.11.99')
 
     depends_on('python@2.6.0:')
     depends_on('py-numpy@1.4.0:', type=('build', 'run'))
