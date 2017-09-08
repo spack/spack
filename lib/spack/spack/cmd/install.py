@@ -90,13 +90,12 @@ the dependencies"""
         help="spec of the package to install"
     )
     subparser.add_argument(
-        '--test-all', action='store_true', dest='test_all',
-        help="run package level tests during installation"
-    )
-    subparser.add_argument(
-        '--test-root', action='store_true', dest='test_root',
-        help="""run package level tests during installation for top-level
-packages (but skip tests for dependencies)"""
+        '--test', dest='test', default=None,
+        choices=['root', 'all'],
+        help="""If 'root' is chosen, run package tests during
+installation for top-level packages (but skip tests for dependencies).
+if 'all' is chosen, run package tests during installation for all
+packages. If neither are chosen, don't run tests for any packages."""
     )
     subparser.add_argument(
         '--log-format',
@@ -327,9 +326,9 @@ def install(parser, args, **kwargs):
     })
 
     specs = spack.cmd.parse_specs(args.package)
-    if args.test_all:
+    if args.test == 'all':
         spack.package_testing.test_all()
-    elif args.test_root:
+    elif args.test == 'root':
         for spec in specs:
             spack.package_testing.test(spec.name)
 
