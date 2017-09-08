@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -707,3 +707,14 @@ class TestSpecSematics(object):
         check_constrain_not_changed(
             'libelf^foo target=' + default_target,
             'libelf^foo target=' + default_target)
+
+    def test_exceptional_paths_for_constructor(self):
+
+        with pytest.raises(TypeError):
+            Spec((1, 2))
+
+        with pytest.raises(ValueError):
+            Spec('')
+
+        with pytest.raises(ValueError):
+            Spec('libelf foo')
