@@ -39,6 +39,7 @@ class Elpa(AutotoolsPackage):
     version('2015.11.001', 'de0f35b7ee7c971fd0dca35c900b87e6')
 
     variant('openmp', default=False, description='Activates OpenMP support')
+    variant('optflags', default=True, description='Build with optimization flags')
 
     depends_on('mpi')
     depends_on('blas')
@@ -80,10 +81,12 @@ class Elpa(AutotoolsPackage):
         # also see:
         # https://src.fedoraproject.org/cgit/rpms/elpa.git/
         # https://packages.qa.debian.org/e/elpa.html
-        options = [
-            'FCFLAGS=-O3 -march=native -ffree-line-length-none',
-            'CFLAGS=-O3 -march=native'
-        ]
+        options = []
+        if '+optflags' in self.spec:
+            options.extend([
+                'FCFLAGS=-O3 -march=native -ffree-line-length-none',
+                'CFLAGS=-O3 -march=native'
+            ])
         if '+openmp' in self.spec:
             options.append("--enable-openmp")
         return options
