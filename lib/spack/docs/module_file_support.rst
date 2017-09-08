@@ -44,6 +44,7 @@ For ``csh`` and ``tcsh`` instead:
 
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
+When ``bash`` and ``ksh`` users update their environment with ``setup-env.sh``, it will check for spack-installed environment modules and add the ``module`` command to their environment; This only occurs if the module command is not already available. You can install ``environment-modules`` with ``spack bootstrap`` as described in :ref:`InstallEnvironmentModules`.
 
 .. note::
   You can put the source line in your ``.bashrc`` or ``.cshrc`` to
@@ -54,10 +55,11 @@ For ``csh`` and ``tcsh`` instead:
 Using module files via Spack
 ----------------------------
 
-If you have shell support enabled you should be able to run either
-``module avail`` or ``use -l spack`` to see what module/dotkit files have
-been installed.  Here is sample output of those programs, showing lots
-of installed packages.
+If you have installed a supported module system either manually or through
+``spack bootstrap`` and have enabled shell support, you should be able to
+run either ``module avail`` or ``use -l spack`` to see what module/dotkit
+files have been installed.  Here is sample output of those programs,
+showing lots of installed packages.
 
 .. code-block:: console
 
@@ -210,7 +212,7 @@ Scripts to load modules recursively may be made with the command:
 
     $ spack module loads --dependencies <spec>
 
-An equivalent alternative is:
+An equivalent alternative using `process substitution <http://tldp.org/LDP/abs/html/process-sub.html>`_ is:
 
 .. code-block :: console
 

@@ -52,7 +52,7 @@ For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
-   # For bash users
+   # For bash/zsh users
    $ export SPACK_ROOT=/path/to/spack
    $ . $SPACK_ROOT/share/spack/setup-env.sh
 
@@ -60,9 +60,14 @@ For a richer experience, use Spack's shell support:
    $ setenv SPACK_ROOT /path/to/spack
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
+
 This automatically adds Spack to your ``PATH`` and allows the ``spack``
-command to :ref:`load environment modules <shell-support>` and execute
+command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
+
+If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
+installed and available, the ``spack`` command can also load and unload
+:ref:`modules <modules>`.
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment
@@ -94,12 +99,12 @@ Optional: Alternate Prefix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You may want to run Spack out of a prefix other than the git repository
-you cloned.  The ``spack bootstrap`` command provides this
+you cloned.  The ``spack clone`` command provides this
 functionality.  To install spack in a new directory, simply type:
 
 .. code-block:: console
 
-   $ spack bootstrap /my/favorite/prefix
+   $ spack clone /my/favorite/prefix
 
 This will install a new spack script in ``/my/favorite/prefix/bin``,
 which you can use just like you would the regular spack script.  Each
@@ -849,6 +854,10 @@ well.  They can generally be activated as in the ``curl`` example above;
 or some systems might already have an appropriate hand-built
 environment module that may be loaded.  Either way works.
 
+If you find that you are missing some of these programs, ``spack`` can
+build some of them for you with ``spack bootstrap``. Currently supported
+programs are ``environment-modules``.
+
 A few notes on specific programs in this list:
 
 """"""""""""""""""""""""""
@@ -885,52 +894,72 @@ Environment Modules
 In order to use Spack's generated environment modules, you must have
 installed one of *Environment Modules* or *Lmod*.  On many Linux
 distributions, this can be installed from the vendor's repository.  For
-example: ``yum install environment-modules`` (Fedora/RHEL/CentOS).  If
-your Linux distribution does not have Environment Modules, you can get it
-with Spack:
+example: ``yum install environment-modules`` (Fedora/RHEL/CentOS). If
+your Linux distribution does not have Environment Modules, Spack can
+build it for you!
 
-#. Consider using system tcl (as long as your system has Tcl version 8.0 or later):
+What follows are three steps describing how to install and use environment-modules with spack.
 
-   #) Identify its location using ``which tclsh``
-   #) Identify its version using ``echo 'puts $tcl_version;exit 0' | tclsh``
-   #) Add to ``~/.spack/packages.yaml`` and modify as appropriate:
+#. Install ``environment-modules``.
 
-      .. code-block:: yaml
+   * ``spack bootstrap`` will build ``environment-modules`` for you (and may build
+     other packages that are useful to the operation of Spack)
 
-         packages:
-             tcl:
-                 paths:
-                     tcl@8.5: /usr
-                 buildable: False
+   * Install ``environment-modules`` using ``spack install`` with
+     ``spack install environment-modules~X`` (The ``~X`` variant builds without Xorg
+     dependencies, but ``environment-modules`` works fine too.)
 
-#. Install with:
+#. Add ``modulecmd`` to ``PATH`` and create a ``module`` command. 
+
+   * If you are using ``bash`` or ``ksh``, Spack can currently do this for you as well.
+     After installing ``environment-modules`` following the step
+     above, source Spack's shell integration script. This will automatically
+     detect the lack of ``modulecmd`` and ``module``, and use the installed
+     ``environment-modules`` from ``spack bootstrap`` or ``spack install``.
+     
+     .. code-block:: console
+
+        # For bash/zsh users
+        $ export SPACK_ROOT=/path/to/spack
+        $ . $SPACK_ROOT/share/spack/setup-env.sh
+
+
+   * If you prefer to do it manually,  you can activate with the following 
+     script (or apply the updates to your ``.bashrc`` file manually):
+
+         .. code-block:: sh
+
+            TMP=`tempfile`
+            echo >$TMP
+            MODULE_HOME=`spack location --install-dir environment-modules`
+            MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
+            ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
+            cp .bashrc $TMP
+            echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
+            cat $TMP >>.bashrc
+
+      This is added to your ``.bashrc`` (or similar) files, enabling Environment
+      Modules when you log in.
+        
+#. Test that the ``module`` command is found with:
 
    .. code-block:: console
 
-      $ spack install environment-modules
+      $ module avail
 
-#. Activate with the following script (or apply the updates to your
-   ``.bashrc`` file manually):
 
-   .. code-block:: sh
+If ``tcl`` 8.0 or later is installed on  your system, you can prevent
+spack from rebuilding ``tcl`` as part of the ``environment-modules`` dependency
+stack by adding the following to your ``~/.spack/packages.yaml`` replacing
+version 8.5 with whatever version is installed on your system:
 
-      TMP=`tempfile`
-      echo >$TMP
-      MODULE_HOME=`spack location --install-dir environment-modules`
-      MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
-      ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
-      cp .bashrc $TMP
-      echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
-      cat $TMP >>.bashrc
+   .. code-block:: yaml
 
-This adds to your ``.bashrc`` (or similar) files, enabling Environment
-Modules when you log in.  Re-load your .bashrc (or log out and in
-again), and then test that the ``module`` command is found with:
-
-.. code-block:: console
-
-   $ module avail
-
+      packages:
+          tcl:
+              paths:
+                  tcl@8.5: /usr
+              buildable: False
 
 ^^^^^^^^^^^^^^^^^
 Package Utilities
