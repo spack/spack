@@ -79,6 +79,7 @@ class Elpa(AutotoolsPackage):
         # https://github.com/hfp/xconfigure/tree/master/elpa
         # also see:
         # https://src.fedoraproject.org/cgit/rpms/elpa.git/
+        # https://packages.qa.debian.org/e/elpa.html
         options = [
             'FCFLAGS=-O3 -march=native -ffree-line-length-none',
             'CFLAGS=-O3 -march=native'
