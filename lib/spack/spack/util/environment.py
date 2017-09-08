@@ -72,4 +72,4 @@ def dump_environment(path):
     """Dump the current environment out to a file."""
     with open(path, 'w') as env_file:
         for key, val in sorted(os.environ.items()):
-            env_file.write("%s=%s\n" % (key, val))
+            env_file.write('export %s="%s"\n' % (key, val))
