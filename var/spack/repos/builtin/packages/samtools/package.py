@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 
 
 class Samtools(Package):
@@ -36,6 +37,11 @@ class Samtools(Package):
     version('1.4', '8cbd7d2a0ec16d834babcd6c6d85d691')
     version('1.3.1', 'a7471aa5a1eb7fc9cc4c6491d73c2d88')
     version('1.2', '988ec4c3058a6ceda36503eebecd4122')
+
+    # For older packages that depend on samtools, this variant includes
+    # libbam.a and header files in the installed package. This is similar to
+    # the package structure of samtools version 0.1.19 and below.
+    variant('old-structure', default=False, description='Enable include and lib directories')
 
     depends_on("ncurses")
     # htslib became standalone @1.3.1, must use corresponding version
@@ -52,3 +58,10 @@ class Samtools(Package):
         else:
             make("prefix=%s" % prefix)
             make("prefix=%s" % prefix, "install")
+        if '+old-structure' in spec:
+            mkdirp(prefix.include)
+            mkdirp(prefix.lib)
+            install('libbam.a', prefix.lib)
+            files = glob.iglob("*.h")
+            for file in files:
+                install(file, prefix.include)

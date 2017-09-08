@@ -23,30 +23,34 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Bamtools(CMakePackage):
-    """C++ API & command-line toolkit for working with BAM data."""
+class Bambam(MakefilePackage):
+    """Bambam is a tool used to facilitate NGS analysis."""
 
-    homepage = "https://github.com/pezmaster31/bamtools"
-    url      = "https://github.com/pezmaster31/bamtools/archive/v2.4.0.tar.gz"
+    homepage = "http://udall-lab.byu.edu/Research/Software/BamBam"
+    url      = "https://downloads.sourceforge.net/project/bambam/bambam-1.4.tgz"
 
-    version('2.4.1', '41cadf513f2744256851accac2bc7baa')
-    version('2.4.0', '6139d00c1b1fe88fe15d094d8a74d8b9')
-    version('2.3.0', 'd327df4ba037d6eb8beef65d7da75ebc')
-    version('2.2.3', '6eccd3e45e4ba12a68daa3298998e76d')
+    version('1.4', '4a8a70bd26a68170a97e32bbca15a89f')
 
-    depends_on('zlib', type='link')
+    depends_on('perl', type=('build', 'run'))
+    depends_on('samtools+old-structure')
+    depends_on('bamtools')
+    depends_on('htslib')
+    depends_on('zlib')
 
-    def cmake_args(self):
-        args = []
-        rpath = self.rpath
-        rpath.append(os.path.join(self.prefix.lib, "bamtools"))
-        args.append("-DCMAKE_INSTALL_RPATH=%s" % ':'.join(rpath))
-        return args
+    def edit(self, spec, prefix):
+        makefile = FileFilter('makefile')
+        makefile.filter('INC = *', 'INC = -I%s ' %
+                        self.spec['bamtools'].prefix.include)
 
-    @run_after('install')
-    def install_extra_lib(self):
-        with working_dir('lib'):
-            install('libbamtools-utils.a', prefix.lib.bamtools)
+    def install(self, spec, prefix):
+        install_tree('bin', prefix.bin)
+        install_tree('lib', prefix.lib)
+        install_tree('scripts', prefix.scripts)
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.prepend_path('LIBRARY_PATH',
+                               self.spec['samtools'].prefix.lib)
+        spack_env.prepend_path('LIBRARY_PATH',
+                               self.spec['bamtools'].prefix.lib.bamtools)
