@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -55,9 +54,7 @@ class Elpa(AutotoolsPackage):
     # override default implementation which returns static lib
     @property
     def libs(self):
-
         libname = 'libelpa_openmp' if '+openmp' in self.spec else 'libelpa'
-
         return find_libraries(
             libname, root=self.prefix, shared=True, recurse=True
         )
@@ -88,5 +85,5 @@ class Elpa(AutotoolsPackage):
                 'CFLAGS=-O3 -march=native'
             ])
         if '+openmp' in self.spec:
-            options.append("--enable-openmp")
+            options.append('--enable-openmp')
         return options
