@@ -480,11 +480,6 @@ def all_platforms():
 
     return classes
 
-@memoized
-def all_operating_systems():
-    """ Return all of the operating systems present on a platform"""
-    current_platform = platform()
-    return current_platform.operating_system.values()
 
 @memoized
 def platform():
@@ -503,10 +498,13 @@ def platform():
         if platform_cls.detect():
             return platform_cls()
 
+
 @memoized
 def front_end():
-    """Prints out the front-end architecture for a machine if one is present.
-    If a front_end is not present then it will return an empty tuple."""
+    """Detects the front end architecture of a machine.
+
+    On machines with a single architecture it will return that same arch str.
+    """
     arch = Arch(platform(), 'frontend', 'frontend')
     return str(arch)
 
