@@ -54,3 +54,4 @@ class Bambam(MakefilePackage):
                                self.spec['samtools'].prefix.lib)
         spack_env.prepend_path('LIBRARY_PATH',
                                self.spec['bamtools'].prefix.lib.bamtools)
+        run_env.prepend_path('PATH', prefix.scripts)
