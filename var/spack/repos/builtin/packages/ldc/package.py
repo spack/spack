@@ -69,3 +69,17 @@ class Ldc(CMakePackage):
         ]
 
         return args
+
+    @run_after('install')
+    def add_rpath_to_conf(self):
+
+        # Here we modify the configuration file for ldc2 to inject flags
+        # that will rpath the standard library location
+
+        config_file = join_path(self.prefix.etc, 'ldc2.conf')
+
+        search_for = 'switches = \['
+        substitute_with = 'switches = [\n' + \
+                          '        "-L-rpath={0}",'.format(self.prefix.lib)
+
+        filter_file(search_for, substitute_with, config_file)
