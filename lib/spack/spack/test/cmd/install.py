@@ -81,10 +81,10 @@ def test_install_package_and_dependency(
 
 @pytest.mark.usefixtures('mock_calls_for_install', 'builtin_mock', 'config')
 def test_install_runtests():
-    install('--test-root', 'dttop')
+    install('--test=root', 'dttop')
     assert spack.package_prefs.PackageTesting.test.call_count == 1
 
-    install('--test-all', 'a')
+    install('--test=all', 'a')
     assert spack.package_prefs.PackageTesting.test_all.call_count == 1
 
 
