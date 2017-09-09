@@ -47,7 +47,8 @@ class Pdt(AutotoolsPackage):
 
     def patch(self):
         if self.spec.satisfies('%clang'):
-            filter_file(r'PDT_GXX=g\+\+ ', r'PDT_GXX=clang++ ', 'ductape/Makefile')
+            filter_file(r'PDT_GXX=g\+\+ ',
+                        r'PDT_GXX=clang++ ', 'ductape/Makefile')
 
     def configure(self, spec, prefix):
         options = ['-prefix=%s' % prefix]
