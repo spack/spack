@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Glog(AutotoolsPackage):
+class Glog(CMakePackage):
     """C++ implementation of the Google logging module."""
 
     homepage = "https://github.com/google/glog"
@@ -35,3 +35,6 @@ class Glog(AutotoolsPackage):
     version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
 
     depends_on('gflags')
+
+    def cmake_args(self):
+        return ['-DBUILD_SHARED_LIBS=TRUE']
