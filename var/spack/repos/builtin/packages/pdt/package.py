@@ -45,8 +45,20 @@ class Pdt(AutotoolsPackage):
     version('3.19',   '5c5e1e6607086aa13bf4b1b9befc5864')
     version('3.18.1', 'e401534f5c476c3e77f05b7f73b6c4f2')
 
+    def patch(self):
+        if self.spec.satisfies('%clang'):
+            filter_file(r'PDT_GXX=g\+\+ ', r'PDT_GXX=clang++ ', 'ductape/Makefile')
+
     def configure(self, spec, prefix):
-        configure('-prefix={0}'.format(prefix))
+        options = ['-prefix=%s' % prefix]
+        if self.compiler.name == 'xl':
+            options.append('-XLC')
+        elif self.compiler.name == 'intel':
+            options.append('-icpc')
+        elif self.compiler.name == 'pgi':
+            options.append('-pgCC')
+
+        configure(*options)
 
     @run_after('install')
     def link_arch_dirs(self):
