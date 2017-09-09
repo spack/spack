@@ -84,4 +84,8 @@ class Caffe(CMakePackage):
                 '-DUSE_LEVELDB=%s' % ('+leveldb' in spec),
                 '-DUSE_LMDB=%s' % ('+lmdb' in spec)]
 
+        if spec.satisfies('+python'):
+            version = spec['python'].version.up_to(1)
+            args.append('-Dpython_version=%s' % version)
+
         return args
