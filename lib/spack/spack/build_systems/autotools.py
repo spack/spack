@@ -361,8 +361,8 @@ class AutotoolsPackage(PackageBase):
             msg = '"{0}" is not a variant of "{1}"'
             raise KeyError(msg.format(name, self.name))
 
-        # Construct a list of option names and option values to be
-        # substituted later
+        # Create a list of pairs. Each pair includes a configuration
+        # option and whether or not that option is activated
         if set(self.variants[name].values) == set((True, False)):
             # BoolValuedVariant carry information about a single option.
             # Nonetheless, for uniformity of treatment we'll package them
@@ -377,23 +377,25 @@ class AutotoolsPackage(PackageBase):
             ]
 
         # For each allowed value in the list of values
-        for option_name, activated in options:
+        for option_value, activated in options:
             # Search for an override in the package for this value
             override_name = '{0}_or_{1}_{2}'.format(
-                activation_word, deactivation_word, option_name
+                activation_word, deactivation_word, option_value
             )
             line_generator = getattr(self, override_name, None)
             # If not available use a sensible default
             if line_generator is None:
                 def _default_generator(is_activated):
                     if is_activated:
-                        line = '--{0}-{1}'.format(activation_word, option_name)
-                        if activation_value is not None and activation_value(option_name):  # NOQA=ignore=E501
+                        line = '--{0}-{1}'.format(
+                            activation_word, option_value
+                        )
+                        if activation_value is not None and activation_value(option_value):  # NOQA=ignore=E501
                             line += '={0}'.format(
-                                activation_value(option_name)
+                                activation_value(option_value)
                             )
                         return line
-                    return '--{0}-{1}'.format(deactivation_word, option_name)
+                    return '--{0}-{1}'.format(deactivation_word, option_value)
                 line_generator = _default_generator
             args.append(line_generator(activated))
         return args
@@ -407,9 +409,10 @@ class AutotoolsPackage(PackageBase):
         For other kinds of variants it will cycle over the allowed values and
         return either ``--with-{value}`` or ``--without-{value}``.
 
-        If activation is given it will be used to compute a return parameter
-        value of the form ``--with-{name}=activation(name)`` in case
-        the corresponding option needs to be activated.
+        If activation_value is given, then for each possible value of the
+        variant, the option ``--with-{value}=activation_value(value)`` or
+        ``--without-{value}`` will be added depending on whether or not
+        ``variant=value`` is in the spec.
 
         Args:
             name (str): name of a valid multi-valued variant
