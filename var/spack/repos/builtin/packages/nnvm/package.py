@@ -36,6 +36,15 @@ class Nnvm(CMakePackage):
     version('20170418', git='https://github.com/dmlc/nnvm.git',
             commit='b279286304ac954098d94a2695bca599e832effb')
 
+    variant('shared', default=True, description='Build a shared NNVM lib.')
+
     depends_on('dmlc-core')
 
     patch('cmake.patch')
+
+    def cmake_args(self):
+	spec = self.spec
+        return [
+           '-DUSE_SHARED_NNVM=%s' % ('ON' if '+shared' in spec else 'OFF'), 
+           '-DUSE_STATIC_NNVM=%s' % ('ON' if '~shared' in spec else 'OFF'),
+        ]

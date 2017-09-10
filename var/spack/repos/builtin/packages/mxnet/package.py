@@ -48,7 +48,7 @@ class Mxnet(MakefilePackage):
     depends_on('dmlc-core+openmp', when='+openmp')
     depends_on('mshadow@20170721')
     depends_on('ps-lite@20170328')
-    depends_on('nnvm@20170418')
+    depends_on('nnvm~shared@20170418')
     depends_on('openblas')
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn', when='+cuda')
