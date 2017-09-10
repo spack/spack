@@ -42,6 +42,7 @@ class Mxnet(MakefilePackage):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencv', default=True, description='Enable OpenCV support')
     variant('openmp', default=True, description='Enable OpenMP support')
+    variant('profiler', default=False, description='Enable Profiler (for verification and debug only).')
 
     depends_on('dmlc-core@20170508')
     depends_on('dmlc-core+openmp', when='+openmp')
@@ -72,6 +73,7 @@ class Mxnet(MakefilePackage):
             'USE_CUDNN=%s' % ('1' if '+cuda' in spec else '0'),
             'CUB_INCLUDE=%s' % spec['cub'].prefix.include,
             'USE_OPENCV=%s' % ('1' if '+opencv' in spec else '0'),
+            'USE_PROFILER=%s' % ('1' if '+profiler' in spec else '0'),
         ]
 
         if '+opencv' in spec:
