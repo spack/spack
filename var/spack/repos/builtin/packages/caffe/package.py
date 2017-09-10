@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -89,6 +89,12 @@ class Caffe(CMakePackage):
 
         if spec.satisfies('^openblas'):
             env['OpenBLAS_HOME'] = spec['openblas'].prefix
+
+        if spec.satisfies('+lmdb'):
+            env['LMDB_DIR'] = spec['lmdb'].prefix
+
+        if spec.satisfies('+leveldb'):
+            env['LEVELDB_ROOT'] = spec['leveldb'].prefix
 
         if spec.satisfies('+python'):
             version = spec['python'].version.up_to(1)
