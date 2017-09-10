@@ -93,7 +93,6 @@ packages:
 
     environment-modules:
         paths:
-            bazel@0.4.5%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/bazel-0.4.5-77xoftl7y43ru4sntgijkw4omn6furgc
             environment-modules@3.2.10%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/environment-modules-3.2.10-ee3xcafcyoyfewc4gt5ozcmjctnb4uzw
         version: [3.2.10]
         buildable: False
