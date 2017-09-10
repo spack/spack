@@ -2113,14 +2113,15 @@ class Spec(object):
                 fmt += 'while trying to concretize the partial spec:'
                 fmt += '\n\n{0}\n\n'.format(self.tree(indent=4))
                 fmt += '{0} requires {1} {2} {3}, but spec asked for {4}'
+
                 e.message = fmt.format(
                     self.name,
                     dep.name,
                     e.constraint_type,
                     e.required,
-                    e.provided
-                )
-                raise e
+                    e.provided)
+
+                raise
 
         # Add merged spec to my deps and recurse
         dependency = spec_deps[dep.name]
