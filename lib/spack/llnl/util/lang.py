@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -389,19 +389,6 @@ class RequiredAttributeError(ValueError):
 
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)
-
-
-def duplicate_stream(original):
-    """Duplicates a stream  at the os level.
-
-    Args:
-        original (stream): original stream to be duplicated. Must have a
-            ``fileno`` callable attribute.
-
-    Returns:
-        file like object: duplicate of the original stream
-    """
-    return os.fdopen(os.dup(original.fileno()))
 
 
 class ObjectWrapper(object):

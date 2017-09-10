@@ -34,3 +34,4 @@ packages:
       scalapack: [netlib-scalapack]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
+      jpeg: [libjpeg-turbo, libjpeg]

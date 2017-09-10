@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Jpeg(AutotoolsPackage):
+class Libjpeg(AutotoolsPackage):
     """libjpeg is a widely used free library with functions for handling the
     JPEG image data format. It implements a JPEG codec (encoding and decoding)
     alongside various utilities for handling JPEG data."""
@@ -35,3 +35,5 @@ class Jpeg(AutotoolsPackage):
 
     version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
     version('9a', '3353992aecaee1805ef4109aadd433e7')
+
+    provides('jpeg')

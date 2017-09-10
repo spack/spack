@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@ class Protobuf(CMakePackage):
     url      = "https://github.com/google/protobuf/archive/v3.2.0.tar.gz"
     root_cmakelists_dir = "cmake"
 
+    version('3.4.0', '4f47de212ef665ea619f5f97083c6781')
     version('3.2.0', '61d899b8369781f6dd1e62370813392d')
     version('3.1.0', '14a532a7538551d5def317bfca41dace')
     version('3.0.2', '845b39e4b7681a2ddfd8c7f528299fbb')

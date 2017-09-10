@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -68,6 +68,9 @@ the dependencies"""
     subparser.add_argument(
         '--restage', action='store_true', dest='restage',
         help="if a partial install is detected, delete prior state")
+    subparser.add_argument(
+        '--source', action='store_true', dest='install_source',
+        help="install source files in prefix")
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="do not check packages against checksum")
@@ -314,6 +317,7 @@ def install(parser, args, **kwargs):
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'restage': args.restage,
+        'install_source': args.install_source,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,
         'run_tests': args.run_tests,
@@ -334,31 +338,41 @@ def install(parser, args, **kwargs):
         tty.error('The `spack install` command requires a spec to install.')
 
     for spec in specs:
+        saved_do_install = PackageBase.do_install
+        decorator = lambda fn: fn
+
         # Check if we were asked to produce some log for dashboards
         if args.log_format is not None:
             # Compute the filename for logging
             log_filename = args.log_file
             if not log_filename:
                 log_filename = default_log_file(spec)
+
             # Create the test suite in which to log results
             test_suite = TestSuite(spec)
-            # Decorate PackageBase.do_install to get installation status
-            PackageBase.do_install = junit_output(
-                spec, test_suite
-            )(PackageBase.do_install)
+
+            # Temporarily decorate PackageBase.do_install to monitor
+            # recursive calls.
+            decorator = junit_output(spec, test_suite)
 
         # Do the actual installation
-        if args.things_to_install == 'dependencies':
-            # Install dependencies as-if they were installed
-            # for root (explicit=False in the DB)
-            kwargs['explicit'] = False
-            for s in spec.dependencies():
-                p = spack.repo.get(s)
-                p.do_install(**kwargs)
-        else:
-            package = spack.repo.get(spec)
-            kwargs['explicit'] = True
-            package.do_install(**kwargs)
+        try:
+            # decorate the install if necessary
+            PackageBase.do_install = decorator(PackageBase.do_install)
+
+            if args.things_to_install == 'dependencies':
+                # Install dependencies as-if they were installed
+                # for root (explicit=False in the DB)
+                kwargs['explicit'] = False
+                for s in spec.dependencies():
+                    p = spack.repo.get(s)
+                    p.do_install(**kwargs)
+            else:
+                package = spack.repo.get(spec)
+                kwargs['explicit'] = True
+                package.do_install(**kwargs)
+        finally:
+            PackageBase.do_install = saved_do_install
 
         # Dump log file if asked to
         if args.log_format is not None:

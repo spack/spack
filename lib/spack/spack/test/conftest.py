@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -27,10 +27,7 @@ import copy
 import os
 import re
 import shutil
-from six import StringIO
 
-import llnl.util.filesystem
-import llnl.util.lang
 import ordereddict_backport
 
 import py
@@ -52,17 +49,6 @@ from spack.fetch_strategy import *
 ##########
 # Monkey-patching that is applied to all tests
 ##########
-
-
-@pytest.fixture(autouse=True)
-def no_stdin_duplication(monkeypatch):
-    """Duplicating stdin (or any other stream) returns an empty
-    StringIO object.
-    """
-    monkeypatch.setattr(llnl.util.lang, 'duplicate_stream',
-                        lambda x: StringIO())
-
-
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
     """Substitutes spack.fetch_cache with a mock object that does nothing
