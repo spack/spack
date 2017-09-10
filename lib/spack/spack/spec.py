@@ -2183,12 +2183,12 @@ class Spec(object):
         if not self.name:
             raise SpecError("Attempting to normalize anonymous spec")
 
-        if self._normal and not force:
-            return False
-
-        # avoid any assumptions about concreteness when forced
+        # Set _normal and _concrete to False when forced
         if force:
             self._mark_concrete(False)
+
+        if self._normal:
+            return False
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
