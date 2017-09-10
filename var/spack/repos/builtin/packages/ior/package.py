@@ -38,6 +38,8 @@ class Ior(Package):
     variant('hdf5',  default=False, description='support IO with HDF5 backend')
     variant('ncmpi', default=False, description='support IO with NCMPI backend')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
     depends_on('mpi')
     depends_on('hdf5+mpi',   when='+hdf5')
     depends_on('parallel-netcdf', when='+ncmpi')
