@@ -43,7 +43,7 @@ buiddeps=(
 
 jdk='jdk@8u141-b15'
 
-# Compilers
+# Compilers and environment-modules
 s gcc@4.9.4~binutils    $cc
 s gcc@5.4.0~binutils    $cc
 s gcc@6.4.0~binutils    $cc
@@ -59,6 +59,7 @@ s gradle@3.4    ^$jdk $cc
 s ant@1.9.9     ^$jdk $cc
 s bazel@0.4.5   ^$jdk $cc
 s sbt@0.13.12   ^$jdk $cc
+s environment-modules $cc
 
 for ((i=0; i<${#intelsuites[@]}; ++i))
 do
