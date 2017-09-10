@@ -103,6 +103,11 @@ class PyMatplotlib(PythonPackage):
     # depends_on('ttconv')
     depends_on('py-six@1.9.0:', type=('build', 'run'))
 
+    @run_before('build')
+    def set_cc(self):
+        if self.spec.satisfies('%intel'):
+            env['CC'] = spack_cxx
+
     @run_after('install')
     def set_backend(self):
         spec = self.spec
