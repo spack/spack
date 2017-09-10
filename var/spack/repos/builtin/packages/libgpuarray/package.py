@@ -38,5 +38,6 @@ class Libgpuarray(CMakePackage):
     version('0.6.0', '98a4ec1b4c8f225f0b89c18b899a000b')
 
     depends_on('cuda')
+    depends_on('cmake@3:', type='build')
 
     extends('python')
