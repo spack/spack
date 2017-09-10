@@ -67,6 +67,7 @@ class Adios(AutotoolsPackage):
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
+    depends_on('m4', type='build')
     depends_on('libtool@:2.4.2', type='build')
     depends_on('python', type='build')
 
@@ -121,6 +122,8 @@ class Adios(AutotoolsPackage):
             extra_args.append('--enable-shared')
 
         if '+mpi' in spec:
+            env['MPICC'] = spec['mpi'].mpicc
+            env['MPICXX'] = spec['mpi'].mpicxx
             extra_args.append('--with-mpi=%s' % spec['mpi'].prefix)
         else:
             extra_args.append('--without-mpi')
