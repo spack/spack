@@ -40,6 +40,14 @@ class Bzip2(Package):
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
 
+    # override default implementation
+    @property
+    def libs(self):
+        shared = '+shared' in self.spec
+        return find_libraries(
+            'libbz2', root=self.prefix, shared=shared, recurse=True
+        )
+
     def patch(self):
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
