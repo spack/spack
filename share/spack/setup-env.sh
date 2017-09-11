@@ -207,14 +207,14 @@ function _spack_determine_shell() {
 export SPACK_SHELL=$(_spack_determine_shell)
 
 #
-# Check whether a shell function of the given name is defined
+# Check whether a function of the given name is defined
 #
 function _spack_fn_exists() {
-	type $1 2>&1 | grep -q 'shell function'
+	type $1 2>&1 | grep -q 'function'
 }
 
 need_module="no"
-if [ ! $(_spack_fn_exists use) ] && [ ! $(_spack_fn_exists module) ]; then
+if ! _spack_fn_exists use && ! _spack_fn_exists module; then
 	need_module="yes"
 fi;
 
@@ -222,9 +222,9 @@ fi;
 # build and make available environment-modules
 #
 if [ "${need_module}" = "yes" ]; then
-    #check if environment-modules~X is installed
+    #check if environment-modules is installed
     module_prefix="$(spack location -i "environment-modules" 2>&1 || echo "not_installed")"
-    module_prefix=$(echo ${module_prefix} | tail -n 1)
+    module_prefix=$(echo "${module_prefix}" | tail -n 1)
     if [ "${module_prefix}" != "not_installed" ]; then
         #activate it!
         export MODULE_PREFIX=${module_prefix}
@@ -235,7 +235,7 @@ if [ "${need_module}" = "yes" ]; then
         echo "WARNING: A method for managing modules does not currently exist."
         echo ""
         echo "To resolve this you may either:"
-        echo "1. Allow spack to handle this by running 'spack boostrap'"
+        echo "1. Allow spack to handle this by running 'spack bootstrap'"
         echo "   and sourcing this script again."
         echo "2. Install and activate a supported module managment engine manually"
         echo "   Supported engines include: environment-modules and lmod"
