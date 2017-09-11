@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -40,6 +40,14 @@ class Boost(Package):
     url      = "http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
+
+    version('develop',
+            git='https://github.com/boostorg/boost.git',
+            branch='develop',
+            submodules=True)
+
+    version('1.65.0', '5512d3809801b0a1b9dd58447b70915d',
+            url='https://dl.bintray.com/boostorg/release/1.65.0/source/boost_1_65_0.tar.bz2')
 
     # NOTE: 1.64.0 seems fine for *most* applications, but if you need
     #       +python and +mpi, there seem to be errors with out-of-date
@@ -207,8 +215,21 @@ class Boost(Package):
                                                        spack_cxx))
 
             if '+mpi' in spec:
-                f.write('using mpi : %s ;\n' %
-                        join_path(spec['mpi'].prefix.bin, 'mpicxx'))
+
+                # Use the correct mpi compiler.  If the compiler options are
+                # empty or undefined, Boost will attempt to figure out the
+                # correct options by running "${mpicxx} -show" or something
+                # similar, but that doesn't work with the Cray compiler
+                # wrappers.  Since Boost doesn't use the MPI C++ bindings,
+                # that can be used as a compiler option instead.
+
+                mpi_line = 'using mpi : %s' % spec['mpi'].mpicxx
+
+                if 'platform=cray' in spec:
+                    mpi_line += ' : <define>MPICH_SKIP_MPICXX'
+
+                f.write(mpi_line + ' ;\n')
+
             if '+python' in spec:
                 f.write(self.bjam_python_line(spec))
 
@@ -311,7 +332,6 @@ class Boost(Package):
         if not spec.satisfies('@1.43.0:'):
             withLibs.remove('random')
         if '+graph' in spec and '+mpi' in spec:
-            withLibs.remove('graph')
             withLibs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
@@ -328,7 +348,11 @@ class Boost(Package):
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
 
         b2 = Executable(b2name)
-        b2_options = ['-j', '%s' % make_jobs]
+        jobs = make_jobs
+        # in 1.59 max jobs became dynamic
+        if jobs > 64 and spec.satisfies('@:1.58'):
+            jobs = 64
+        b2_options = ['-j', '%s' % jobs]
 
         threadingOpts = self.determine_b2_options(spec, b2_options)
 

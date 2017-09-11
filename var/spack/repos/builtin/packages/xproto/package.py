@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,3 +43,8 @@ class Xproto(AutotoolsPackage):
 
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
+
+    def install(self, spec, prefix):
+        # Installation fails in parallel
+        # See https://github.com/LLNL/spack/issues/4805
+        make('install', parallel=False)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -90,7 +90,8 @@ def graph(parser, args):
     deptype = alldeps
     if args.deptype:
         deptype = tuple(args.deptype.split(','))
-        validate_deptype(deptype)
+        if deptype == ('all',):
+            deptype = 'all'
         deptype = canonical_deptype(deptype)
 
     if args.dot:  # Dot graph only if asked for.

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,14 +23,26 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import os.path
+import inspect
 
 import spack
 import spack.error
-import spack.stage
 import spack.fetch_strategy as fs
-
+import spack.stage
 from llnl.util.filesystem import join_path
 from spack.util.executable import which
+
+
+def absolute_path_for_package(pkg):
+    """Returns the absolute path to the ``package.py`` file implementing
+    the recipe for the package passed as argument.
+
+    Args:
+        pkg: a valid package object
+    """
+    m = inspect.getmodule(pkg)
+    return os.path.abspath(m.__file__)
 
 
 class Patch(object):
@@ -90,7 +102,7 @@ class FilePatch(Patch):
     def __init__(self, pkg, path_or_url, level):
         super(FilePatch, self).__init__(pkg, path_or_url, level)
 
-        pkg_dir = spack.repo.dirname_for_package_name(pkg.name)
+        pkg_dir = os.path.dirname(absolute_path_for_package(pkg))
         self.path = join_path(pkg_dir, path_or_url)
         if not os.path.isfile(self.path):
             raise NoSuchPatchFileError(pkg.name, self.path)
@@ -119,7 +131,10 @@ class UrlPatch(Patch):
             patch_stage.fetch()
             patch_stage.check()
             patch_stage.cache_local()
-            patch_stage.expand_archive()
+
+            if spack.util.compression.allowed_archive(self.url):
+                patch_stage.expand_archive()
+
             self.path = os.path.abspath(
                 os.listdir(patch_stage.path).pop()
             )

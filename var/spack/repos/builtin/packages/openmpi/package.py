@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -201,7 +201,7 @@ class Openmpi(AutotoolsPackage):
 
     depends_on('hwloc')
     depends_on('hwloc +cuda', when='+cuda')
-    depends_on('jdk', when='+java')
+    depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
@@ -308,7 +308,7 @@ class Openmpi(AutotoolsPackage):
                 config_args.extend([
                     '--enable-java',
                     '--enable-mpi-java',
-                    '--with-jdk-dir={0}'.format(spec['jdk'].prefix)
+                    '--with-jdk-dir={0}'.format(spec['java'].prefix)
                 ])
             else:
                 config_args.extend([

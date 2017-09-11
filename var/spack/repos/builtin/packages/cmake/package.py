@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,8 @@ class Cmake(Package):
     list_url = 'https://cmake.org/files/'
     list_depth = 1
 
+    version('3.9.0',    '180e23b4c9b55915d271b315297f6951')
+    version('3.8.2',    'b5dff61f6a7f1305271ab3f6ae261419')
     version('3.8.1',    'e8ef820ddf7a650845252bca846696e7')
     version('3.8.0',    'f28cba717ba38ad82a488daed8f45b5b')
     version('3.7.2',    '79bd7e65cd81ea3aa2619484ad6ff25a')
@@ -62,72 +64,74 @@ class Cmake(Package):
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
     depends_on('libarchive',     when='~ownlibs')
+    depends_on('libuv@1.0.0:',   when='~ownlibs')
+    depends_on('rhash',          when='@3.8.0:~ownlibs')
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx',      when='+doc', type='build')
-    depends_on("openssl", when='+openssl')
-    depends_on("openssl@:1.0.99", when='@:3.6.9+openssl')
+    depends_on('openssl', when='+openssl')
+    depends_on('openssl@:1.0.99', when='@:3.6.9+openssl')
     depends_on('ncurses',        when='+ncurses')
 
     # Cannot build with Intel, should be fixed in 3.6.2
     # https://gitlab.kitware.com/cmake/cmake/issues/16226
     patch('intel-c-gnu11.patch', when='@3.6.0:3.6.1')
 
+    conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
+
+    phases = ['bootstrap', 'build', 'install']
+
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""
-        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (
-            version.up_to(2), version)
+        url = 'https://cmake.org/files/v{0}/cmake-{1}.tar.gz'
+        return url.format(version.up_to(2), version)
 
-    def validate(self, spec):
-        """
-        Checks if incompatible versions of qt were specified
-
-        :param spec: spec of the package
-        :raises RuntimeError: in case of inconsistencies
-        """
-
-        if '+qt' in spec and spec.satisfies('^qt@5.4.0'):
-            msg = 'qt-5.4.0 has broken CMake modules.'
-            raise RuntimeError(msg)
-
-    def install(self, spec, prefix):
-        # Consistency check
-        self.validate(spec)
-
-        options = [
-            '--prefix={0}'.format(prefix),
-            '--parallel={0}'.format(make_jobs)]
-        if spec.satisfies("@3.2:"):
-            options.append(
-                # jsoncpp requires CMake to build
-                # use CMake-provided library to avoid circular dependency
-                '--no-system-jsoncpp'
-            )
+    def bootstrap_args(self):
+        spec = self.spec
+        args = [
+            '--prefix={0}'.format(self.prefix),
+            '--parallel={0}'.format(make_jobs)
+        ]
 
         if '+ownlibs' in spec:
             # Build and link to the CMake-provided third-party libraries
-            options.append('--no-system-libs')
+            args.append('--no-system-libs')
         else:
             # Build and link to the Spack-installed third-party libraries
-            options.append('--system-libs')
+            args.append('--system-libs')
+
+            if spec.satisfies('@3.2:'):
+                # jsoncpp requires CMake to build
+                # use CMake-provided library to avoid circular dependency
+                args.append('--no-system-jsoncpp')
 
         if '+qt' in spec:
-            options.append('--qt-gui')
+            args.append('--qt-gui')
         else:
-            options.append('--no-qt-gui')
+            args.append('--no-qt-gui')
 
         if '+doc' in spec:
-            options.append('--sphinx-html')
-            options.append('--sphinx-man')
+            args.append('--sphinx-html')
+            args.append('--sphinx-man')
 
         if '+openssl' in spec:
-            options.append('--')
-            options.append('-DCMAKE_USE_OPENSSL=ON')
+            args.append('--')
+            args.append('-DCMAKE_USE_OPENSSL=ON')
 
+        return args
+
+    def bootstrap(self, spec, prefix):
         bootstrap = Executable('./bootstrap')
-        bootstrap(*options)
+        bootstrap(*self.bootstrap_args())
 
+    def build(self, spec, prefix):
         make()
-        if self.run_tests:
-            make('test')  # some tests fail, takes forever
+
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        # Some tests fail, takes forever
+        make('test')
+
+    def install(self, spec, prefix):
         make('install')

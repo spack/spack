@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -101,6 +101,11 @@ class TestConcretizePreferences(object):
         update_packages('mpileaks', 'version', ['2.2'])
         spec = concretize('mpileaks')
         assert spec.version == spack.spec.Version('2.2')
+
+    def test_preferred_versions_mixed_version_types(self):
+        update_packages('mixedversions', 'version', ['2.0'])
+        spec = concretize('mixedversions')
+        assert spec.version == spack.spec.Version('2.0')
 
     def test_preferred_providers(self):
         """Test preferred providers of virtual packages are

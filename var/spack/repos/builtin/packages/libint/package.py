@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -85,6 +85,7 @@ class Libint(AutotoolsPackage):
     def configure_args(self):
 
         config_args = ['--enable-shared']
+
         optflags = self.optflags
 
         # Optimization flag names have changed in libint 2

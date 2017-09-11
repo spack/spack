@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,7 @@ class PyCsvkit(PythonPackage):
     formats"""
 
     homepage = 'http://csvkit.rtfd.org/'
-    url      = "https://pypi.python.org/packages/source/c/csvkit/csvkit-0.9.1.tar.gz"
+    url      = "https://pypi.io/packages/source/c/csvkit/csvkit-0.9.1.tar.gz"
 
     version('0.9.1', '48d78920019d18846933ee969502fff6')
 

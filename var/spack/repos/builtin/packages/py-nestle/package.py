@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class PyNestle(PythonPackage):
     """Nested sampling algorithms for evaluating Bayesian evidence."""
 
     homepage = "http://kbarbary.github.io/nestle/"
-    url = "https://pypi.python.org/packages/source/n/nestle/nestle-0.1.1.tar.gz"
+    url = "https://pypi.io/packages/source/n/nestle/nestle-0.1.1.tar.gz"
 
     version('0.1.1', '4875c0f9a0a8e263c1d7f5fa6ce604c5')
 

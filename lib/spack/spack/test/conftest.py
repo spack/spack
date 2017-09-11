@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -27,40 +27,28 @@ import copy
 import os
 import re
 import shutil
-from six import StringIO
 
-import llnl.util.filesystem
-import llnl.util.lang
 import ordereddict_backport
 
 import py
 import pytest
+
 import spack
 import spack.architecture
 import spack.database
 import spack.directory_layout
-import spack.fetch_strategy
 import spack.platforms.test
 import spack.repository
 import spack.stage
 import spack.util.executable
 import spack.util.pattern
+from spack.package import PackageBase
+from spack.fetch_strategy import *
 
 
 ##########
 # Monkey-patching that is applied to all tests
 ##########
-
-
-@pytest.fixture(autouse=True)
-def no_stdin_duplication(monkeypatch):
-    """Duplicating stdin (or any other stream) returns an empty
-    StringIO object.
-    """
-    monkeypatch.setattr(llnl.util.lang, 'duplicate_stream',
-                        lambda x: StringIO())
-
-
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
     """Substitutes spack.fetch_cache with a mock object that does nothing
@@ -78,12 +66,10 @@ def mock_fetch_cache(monkeypatch):
             pass
 
         def fetch(self):
-            raise spack.fetch_strategy.FetchError(
-                'Mock cache always fails for tests'
-            )
+            raise FetchError('Mock cache always fails for tests')
 
         def __str__(self):
-            return "[mock fetcher]"
+            return "[mock fetch cache]"
 
     monkeypatch.setattr(spack, 'fetch_cache', MockCache())
 
@@ -286,6 +272,43 @@ def refresh_db_on_exit(database):
     """"Restores the state of the database after a test."""
     yield
     database.refresh()
+
+
+@pytest.fixture()
+def install_mockery(tmpdir, config, builtin_mock):
+    """Hooks a fake install directory and a fake db into Spack."""
+    layout = spack.store.layout
+    db = spack.store.db
+    # Use a fake install directory to avoid conflicts bt/w
+    # installed pkgs and mock packages.
+    spack.store.layout = spack.directory_layout.YamlDirectoryLayout(
+        str(tmpdir))
+    spack.store.db = spack.database.Database(str(tmpdir))
+    # We use a fake package, so skip the checksum.
+    spack.do_checksum = False
+    yield
+    # Turn checksumming back on
+    spack.do_checksum = True
+    # Restore Spack's layout.
+    spack.store.layout = layout
+    spack.store.db = db
+
+
+@pytest.fixture()
+def mock_fetch(mock_archive):
+    """Fake the URL for a package so it downloads from a file."""
+    fetcher = FetchStrategyComposite()
+    fetcher.append(URLFetchStrategy(mock_archive.url))
+
+    @property
+    def fake_fn(self):
+        return fetcher
+
+    orig_fn = PackageBase.fetcher
+    PackageBase.fetcher = fake_fn
+    yield
+    PackageBase.fetcher = orig_fn
+
 
 ##########
 # Fake archives and repositories

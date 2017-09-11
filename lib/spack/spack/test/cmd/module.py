@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -70,15 +70,20 @@ def test_remove_and_add_tcl(database, parser):
     # Remove existing modules [tcl]
     args = parser.parse_args(['rm', '-y', 'mpileaks'])
     module_files = _get_module_files(args)
+
     for item in module_files:
         assert os.path.exists(item)
+
     module.module(parser, args)
+
     for item in module_files:
         assert not os.path.exists(item)
 
     # Add them back [tcl]
     args = parser.parse_args(['refresh', '-y', 'mpileaks'])
+
     module.module(parser, args)
+
     for item in module_files:
         assert os.path.exists(item)
 

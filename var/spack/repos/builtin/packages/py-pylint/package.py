@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -28,10 +28,11 @@ from spack import *
 class PyPylint(PythonPackage):
     """array processing for numbers, strings, records, and objects."""
     homepage = "https://pypi.python.org/pypi/pylint"
-    url      = "https://pypi.python.org/packages/source/p/pylint/pylint-1.4.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pylint/pylint-1.7.2.tar.gz"
 
-    version('1.4.1', 'df7c679bdcce5019389038847e4de622')
+    version('1.7.2', '27ee752cdcfacb05bf4940947e6b35c6')
     version('1.4.3', '5924c1c7ca5ca23647812f5971d0ea44')
+    version('1.4.1', 'df7c679bdcce5019389038847e4de622')
 
     extends('python', ignore=r'bin/pytest')
     depends_on('py-six', type=('build', 'run'))

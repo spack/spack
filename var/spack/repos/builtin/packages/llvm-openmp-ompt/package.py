@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,7 +26,7 @@
 from spack import *
 
 
-class LlvmOpenmpOmpt(Package):
+class LlvmOpenmpOmpt(CMakePackage):
     """The OpenMP subproject provides an OpenMP runtime for use with the
        OpenMP implementation in Clang. This branch includes experimental
        changes for OMPT, the OpenMP Tools interface"""
@@ -42,25 +42,17 @@ class LlvmOpenmpOmpt(Package):
             git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
             commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.8:', type='build')
     depends_on('llvm')
-    depends_on('ninja', type='build')
+    depends_on('ninja@1.5:', type='build')
 
-    def install(self, spec, prefix):
+    generator = 'Ninja'
 
-        with working_dir('spack-build', create=True):
-            cmake_args = std_cmake_args[:]
-            cmake_args.extend([
-                '-G', 'Ninja',
-                '-DCMAKE_C_COMPILER=clang',
-                '-DCMAKE_CXX_COMPILER=clang++',
-                '-DCMAKE_BUILD_TYPE=Release',
-                '-DLIBOMP_OMPT_SUPPORT=on',
-                '-DLIBOMP_OMPT_BLAME=on',
-                '-DLIBOMP_OMPT_TRACE=on'
-            ])
-
-            cmake('..', *cmake_args)
-            ninja = Executable('ninja')
-            ninja()
-            ninja('install')
+    def cmake_args(self):
+        return [
+            '-DCMAKE_C_COMPILER=clang',
+            '-DCMAKE_CXX_COMPILER=clang++',
+            '-DLIBOMP_OMPT_SUPPORT=on',
+            '-DLIBOMP_OMPT_BLAME=on',
+            '-DLIBOMP_OMPT_TRACE=on'
+        ]

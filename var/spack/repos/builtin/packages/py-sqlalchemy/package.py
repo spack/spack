@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,6 +29,6 @@ class PySqlalchemy(PythonPackage):
     """The Python SQL Toolkit and Object Relational Mapper"""
 
     homepage = 'http://www.sqlalchemy.org/'
-    url      = "https://pypi.python.org/packages/source/S/SQLAlchemy/SQLAlchemy-1.0.12.tar.gz"
+    url      = "https://pypi.io/packages/source/S/SQLAlchemy/SQLAlchemy-1.0.12.tar.gz"
 
     version('1.0.12', '6d19ef29883bbebdcac6613cf391cac4')

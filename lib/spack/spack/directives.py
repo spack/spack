@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -241,8 +241,7 @@ def _depends_on(pkg, spec, when=None, type=None):
         #               but is most backwards-compatible.
         type = ('build', 'link')
 
-    if isinstance(type, str):
-        type = spack.spec.special_types.get(type, (type,))
+    type = spack.spec.canonical_deptype(type)
 
     for deptype in type:
         if deptype not in spack.spec.alldeps:
@@ -264,7 +263,7 @@ def _depends_on(pkg, spec, when=None, type=None):
 
 
 @directive('conflicts')
-def conflicts(conflict_spec, when=None):
+def conflicts(conflict_spec, when=None, msg=None):
     """Allows a package to define a conflict.
 
     Currently, a "conflict" is a concretized configuration that is known
@@ -281,14 +280,16 @@ def conflicts(conflict_spec, when=None):
     Args:
         conflict_spec (Spec): constraint defining the known conflict
         when (Spec): optional constraint that triggers the conflict
+        msg (str): optional user defined message
     """
     def _execute(pkg):
         # If when is not specified the conflict always holds
         condition = pkg.name if when is None else when
         when_spec = parse_anonymous_spec(condition, pkg.name)
 
+        # Save in a list the conflicts and the associated custom messages
         when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
-        when_spec_list.append(when_spec)
+        when_spec_list.append((when_spec, msg))
     return _execute
 
 
@@ -356,6 +357,17 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
     optionally provide a when spec to indicate that a particular
     patch should only be applied when the package's spec meets
     certain conditions (e.g. a particular version).
+
+    Args:
+        url_or_filename (str): url or filename of the patch
+        level (int): patch level (as in the patch shell command)
+        when (Spec): optional anonymous spec that specifies when to apply
+            the patch
+        **kwargs: the following list of keywords is supported
+
+            - md5 (str): md5 sum of the patch (used to verify the file
+                if it comes from a url)
+
     """
     def _execute(pkg):
         constraint = pkg.name if when is None else when

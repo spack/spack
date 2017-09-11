@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -53,8 +53,6 @@ class Qt(Package):
     # OpenSpeedShop project
     variant('krellpatch', default=False,
             description="Build with openspeedshop based patch.")
-    variant('mesa',       default=False,
-            description="Depend on mesa.")
     variant('gtk',        default=False,
             description="Build with gtkplus.")
     variant('webkit',     default=False,
@@ -65,7 +63,7 @@ class Qt(Package):
             description="Build with D-Bus support.")
     variant('phonon',     default=False,
             description="Build with phonon support.")
-    variant('opengl',     default=True,
+    variant('opengl',     default=False,
             description="Build with OpenGL support.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
@@ -109,7 +107,7 @@ class Qt(Package):
     depends_on("python", when='@5.7.0:', type='build')
 
     # OpenGL hardware acceleration
-    depends_on("mesa", when='@4:+mesa')
+    depends_on("mesa", when='@4:+opengl')
     depends_on("libxcb", when=sys.platform != 'darwin')
     depends_on("libx11", when=sys.platform != 'darwin')
 
@@ -131,9 +129,9 @@ class Qt(Package):
         url = self.list_url
 
         if version >= Version('4.0'):
-            url += version.up_to(2) + '/'
+            url += str(version.up_to(2)) + '/'
         else:
-            url += version.up_to(1) + '/'
+            url += str(version.up_to(1)) + '/'
 
         if version >= Version('4.8'):
             url += str(version) + '/'

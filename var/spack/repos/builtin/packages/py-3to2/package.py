@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,6 +30,6 @@ class Py3to2(PythonPackage):
     for Python version 3.x into Python version 2.x."""
 
     homepage = "https://pypi.python.org/pypi/3to2"
-    url      = "https://pypi.python.org/packages/source/3/3to2/3to2-1.1.1.zip"
+    url      = "https://pypi.io/packages/source/3/3to2/3to2-1.1.1.zip"
 
     version('1.1.1', 'cbeed28e350dbdaef86111ace3052824')

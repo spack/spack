@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -112,7 +112,7 @@ def test_get_module_cmd_from_bash_ticks(save_env):
 
 
 def test_get_module_cmd_from_bash_parens(save_env):
-    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill bash $*)\n}'
+    os.environ['BASH_FUNC_module()'] = '() { eval $(echo fill sh $*)\n}'
 
     module_cmd = get_module_cmd()
     module_cmd_list = module_cmd('list', output=str, error=str)

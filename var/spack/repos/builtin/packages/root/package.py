@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -98,12 +98,6 @@ class Root(CMakePackage):
     # I was unable to build root with any Intel compiler
     # See https://sft.its.cern.ch/jira/browse/ROOT-7517
     conflicts('%intel')
-
-    def build_type(self):
-        if '+debug' in self.spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         args = [

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -53,9 +53,9 @@ class Xsdk(Package):
     depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
                when='@develop')
 
-    depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost',
+    depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
                when='@xsdk-0.2.0')
-    depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost',
+    depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
                when='@develop')
 
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')

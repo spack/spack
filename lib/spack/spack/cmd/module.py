@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -236,7 +236,8 @@ def refresh(mtype, specs, args):
             if len(writer_list) > 1:
                 message += '\nfile: {0}\n'.format(filename)
                 for x in writer_list:
-                    message += 'spec: {0}\n'.format(x.spec.format(color=True))
+                    message += 'spec: {0}\n'.format(x.spec.format())
+
         tty.error(message)
         tty.error('Operation aborted')
         raise SystemExit(1)
@@ -269,7 +270,7 @@ def module(parser, args):
                    "and this is not allowed in this context")
         tty.error(message.format(query=constraint))
         for s in specs:
-            sys.stderr.write(s.format(color=True) + '\n')
+            sys.stderr.write(s.cformat() + '\n')
         raise SystemExit(1)
     except NoMatch:
         message = ("the constraint '{query}' matches no package, "

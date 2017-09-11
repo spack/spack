@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,8 +38,7 @@ class H5zZfp(MakefilePackage):
     variant('fortran', default=True, description='Enable Fortran support')
 
     depends_on('hdf5')
-#    depends_on('zfp bsws=8')
-    depends_on('zfp')
+    depends_on('zfp bsws=8')
 
     @property
     def make_defs(self):

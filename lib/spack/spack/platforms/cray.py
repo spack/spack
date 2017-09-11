@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -28,7 +28,7 @@ import llnl.util.tty as tty
 from spack import build_env_path
 from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
-from spack.operating_systems.linux_distro import LinuxDistro
+from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.operating_systems.cnl import Cnl
 from llnl.util.filesystem import join_path
 from spack.util.module_cmd import get_module_cmd
@@ -88,7 +88,7 @@ class Cray(Platform):
         else:
             raise NoPlatformError()
 
-        front_distro = LinuxDistro()
+        front_distro = CrayFrontend()
         back_distro = Cnl()
 
         self.default_os = str(back_distro)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Doxygen(Package):
+class Doxygen(CMakePackage):
     """Doxygen is the de facto standard tool for generating documentation
     from annotated C++ sources, but it also supports other popular programming
     languages such as C, Objective-C, C#, PHP, Java, Python, IDL (Corba,
@@ -49,9 +49,3 @@ class Doxygen(Package):
 
     # optional dependencies
     depends_on("graphviz", when="+graphviz", type='run')
-
-    def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
-
-        make()
-        make("install")

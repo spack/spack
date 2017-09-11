@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Paradiseo(Package):
+class Paradiseo(CMakePackage):
     """A C++ white-box object-oriented framework dedicated to the reusable
        design of metaheuristics."""
     homepage = "http://paradiseo.gforge.inria.fr/"
@@ -51,13 +51,11 @@ class Paradiseo(Package):
             description='Compile with (Experimental) EDO module')
 
     # variant('doc', default=False, description='Compile with documentation')
-    variant('debug',    default=False,
-            description='Builds a debug version of the libraries')
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('gnuplot',  default=False, description='Enable GnuPlot support')
 
     # Required dependencies
-    depends_on("cmake", type='build')
+    depends_on("cmake@2.8:", type='build')
 
     # Optional dependencies
     depends_on("mpi", when="+mpi")
@@ -73,13 +71,10 @@ class Paradiseo(Package):
     patch('fix_tests.patch')
     patch('fix_tutorials.patch')
 
-    def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
+    def cmake_args(self):
+        spec = self.spec
 
-        options.extend([
-            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
-                'Debug' if '+debug' in spec else 'Release'),
+        return [
             '-DINSTALL_TYPE:STRING=MIN',
             '-DMPI:BOOL=%s' % ('TRUE' if '+mpi' in spec else 'FALSE'),
             # Note: This requires a C++11 compatible compiler
@@ -91,14 +86,4 @@ class Paradiseo(Package):
                 'TRUE' if '+openmp' in spec else 'FALSE'),
             '-DENABLE_GNUPLOT:BOOL=%s' % (
                 'TRUE' if '+gnuplot' in spec else 'FALSE')
-        ])
-
-        with working_dir('spack-build', create=True):
-            # Configure
-            cmake('..', *options)
-
-            # Build, test and install
-            make("VERBOSE=1")
-            if self.run_tests:
-                make("test")
-            make("install")
+        ]
