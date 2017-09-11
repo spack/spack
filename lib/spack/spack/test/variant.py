@@ -623,7 +623,7 @@ class TestVariantMapTest(object):
 
     def test_invalid_values(self):
         # Value with invalid type
-        a = VariantMap(None)
+        a = VariantMap()
         with pytest.raises(TypeError):
             a['foo'] = 2
 
@@ -644,7 +644,7 @@ class TestVariantMapTest(object):
 
     def test_set_item(self):
         # Check that all the three types of variants are accepted
-        a = VariantMap(None)
+        a = VariantMap()
 
         a['foo'] = BoolValuedVariant('foo', True)
         a['bar'] = SingleValuedVariant('bar', 'baz')
@@ -652,7 +652,7 @@ class TestVariantMapTest(object):
 
     def test_substitute(self):
         # Check substitution of a key that exists
-        a = VariantMap(None)
+        a = VariantMap()
         a['foo'] = BoolValuedVariant('foo', True)
         a.substitute(SingleValuedVariant('foo', 'bar'))
 
@@ -663,13 +663,13 @@ class TestVariantMapTest(object):
 
     def test_satisfies_and_constrain(self):
         # foo=bar foobar=fee feebar=foo
-        a = VariantMap(None)
+        a = VariantMap()
         a['foo'] = MultiValuedVariant('foo', 'bar')
         a['foobar'] = SingleValuedVariant('foobar', 'fee')
         a['feebar'] = SingleValuedVariant('feebar', 'foo')
 
         # foo=bar,baz foobar=fee shared=True
-        b = VariantMap(None)
+        b = VariantMap()
         b['foo'] = MultiValuedVariant('foo', 'bar, baz')
         b['foobar'] = SingleValuedVariant('foobar', 'fee')
         b['shared'] = BoolValuedVariant('shared', True)
@@ -681,7 +681,7 @@ class TestVariantMapTest(object):
         assert not b.satisfies(a, strict=True)
 
         # foo=bar,baz foobar=fee feebar=foo shared=True
-        c = VariantMap(None)
+        c = VariantMap()
         c['foo'] = MultiValuedVariant('foo', 'bar, baz')
         c['foobar'] = SingleValuedVariant('foobar', 'fee')
         c['feebar'] = SingleValuedVariant('feebar', 'foo')
@@ -691,7 +691,7 @@ class TestVariantMapTest(object):
         assert a == c
 
     def test_copy(self):
-        a = VariantMap(None)
+        a = VariantMap()
         a['foo'] = BoolValuedVariant('foo', True)
         a['bar'] = SingleValuedVariant('bar', 'baz')
         a['foobar'] = MultiValuedVariant('foobar', 'a, b, c, d, e')
@@ -700,7 +700,7 @@ class TestVariantMapTest(object):
         assert a == c
 
     def test_str(self):
-        c = VariantMap(None)
+        c = VariantMap()
         c['foo'] = MultiValuedVariant('foo', 'bar, baz')
         c['foobar'] = SingleValuedVariant('foobar', 'fee')
         c['feebar'] = SingleValuedVariant('feebar', 'foo')

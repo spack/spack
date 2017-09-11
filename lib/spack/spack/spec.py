@@ -597,9 +597,9 @@ _valid_compiler_flags = [
 
 class FlagMap(HashableMap):
 
-    def __init__(self, spec):
+    def __init__(self):
         super(FlagMap, self).__init__()
-        self.spec = spec
+        self.spec = None
 
     def satisfies(self, other, strict=False):
         if strict or (self.spec and self.spec._concrete):
@@ -640,7 +640,7 @@ class FlagMap(HashableMap):
         return all(flag in self for flag in _valid_compiler_flags)
 
     def copy(self):
-        clone = FlagMap(None)
+        clone = FlagMap()
         for name, value in self.items():
             clone[name] = value
         return clone
@@ -661,11 +661,11 @@ class DependencyMap(HashableMap):
     """Each spec has a DependencyMap containing specs for its dependencies.
        The DependencyMap is keyed by name. """
 
-    def __init__(self, owner):
+    def __init__(self):
         super(DependencyMap, self).__init__()
 
         # Owner Spec for the current map
-        self.owner = owner
+        self.owner = None
 
     @property
     def concrete(self):
@@ -970,6 +970,22 @@ class SpecBuildInterface(ObjectWrapper):
 
 @key_ordering
 class Spec(object):
+
+    compiler_flags = OwnerReferencing(
+        name='_compiler_flags', factory=FlagMap, owner_name='spec'
+    )
+
+    _dependents = OwnerReferencing(
+        name='_dependents_p', factory=DependencyMap, owner_name='owner'
+    )
+
+    _dependencies = OwnerReferencing(
+        name='_dependencies_p', factory=DependencyMap, owner_name='owner'
+    )
+
+    variants = OwnerReferencing(
+        name='_variants', factory=VariantMap, owner_name='spec'
+    )
 
     @staticmethod
     def from_literal(spec_dict, normal=True):
@@ -1825,8 +1841,8 @@ class Spec(object):
                 if replacement.external:
                     if (spec._dependencies):
                         changed = True
-                        spec._dependencies = DependencyMap(spec)
-                    replacement._dependencies = DependencyMap(replacement)
+                        spec._dependencies = DependencyMap()
+                    replacement._dependencies = DependencyMap()
                     replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
@@ -1986,7 +2002,7 @@ class Spec(object):
     def index(self, deptype=None):
         """Return DependencyMap that points to all the dependencies in this
            spec."""
-        dm = DependencyMap(None)
+        dm = DependencyMap()
         for spec in self.traverse(deptype=deptype):
             dm[spec.name] = spec
         return dm
@@ -2583,12 +2599,10 @@ class Spec(object):
             else None
         self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
-            self._dependents = DependencyMap(self)
-            self._dependencies = DependencyMap(self)
+            self._dependents = DependencyMap()
+            self._dependencies = DependencyMap()
         self.compiler_flags = other.compiler_flags.copy()
-        self.compiler_flags.spec = self
         self.variants = other.variants.copy()
-        self.variants.spec = self
         self.external_path = other.external_path
         self.external_module = other.external_module
         self.namespace = other.namespace
@@ -3270,14 +3284,10 @@ class SpecParser(spack.parse.Parser):
 
         spec.name = spec_name
         spec.versions = VersionList()
-        spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
         spec.external_path = None
         spec.external_module = None
-        spec.compiler_flags = FlagMap(spec)
-        spec._dependents = DependencyMap(spec)
-        spec._dependencies = DependencyMap(spec)
         spec.namespace = spec_namespace
         spec._hash = None
         spec._cmp_key_cache = None
