@@ -35,12 +35,11 @@ class Rose(AutotoolsPackage):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
+    url = "https://github.com/rose-compiler/rose/archive/v0.9.7.0.tar.gz"
 
+    version('0.9.9.0', '131356e5f12ddc232ad90cfc25f8bfb7')
+    version('0.9.7.0', 'be0d0941ba4c0349a20d6394c20d16d7')
     version('develop', branch='master',
-            git='https://github.com/rose-compiler/rose-develop.git')
-    version('0.9.7.0', commit='992c21ad06893bc1e9e7688afe0562eee0fda021',
-            git='https://github.com/rose-compiler/rose.git')
-    version('0.9.9.0', commit='14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff',
             git='https://github.com/rose-compiler/rose-develop.git')
 
     depends_on("autoconf@2.69", type='build')
@@ -78,9 +77,23 @@ class Rose(AutotoolsPackage):
 
     build_directory = 'rose-build'
 
+    def patch(self):
+        spec = self.spec
+
+        # ROSE needs its <VERSION> <TIMESTAMP> to compute its EDG
+        # binary compatibility signature for C/C++ and for its
+        # --version information.
+        with open('VERSION', 'w') as f:
+            if '@0.9.9.0:' in spec:
+                # EDG: 46306e9f73d3ccd690be300aefdaf766a9ba3f70
+                f.write('14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff 1492716108')
+            elif '@0.9.7.0:' in spec:
+                # EDG: 8e63f421f9107ef6c7882b57f9c83e3878623ffa
+                f.write('992c21ad06893bc1e9e7688afe0562eee0fda021 1460595442')
+
     def autoreconf(self, spec, prefix):
         bash = which('bash')
-        bash('build')
+        #bash('build')
 
     @property
     def languages(self):
@@ -152,14 +165,26 @@ class Rose(AutotoolsPackage):
 
         return args
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         # Spack will automatically pass ncpus as the number of make jobs.
         #
         # If you really want to srun this on a separate node, you can do this:
         #
         #   $ srun -n1 spack install -j16 rose
         #
-	with working_dir(self.build_directory):
-		make('install-core')
-		with working_dir('tools'):
-			make('install')
+        with working_dir(self.build_directory):
+            # ROSE needs the EDG version for C/C++
+            with open('src/frontend/CxxFrontend/EDG-submodule-sha1', 'w') as f:
+                if '@0.9.9.0' in spec:
+                    f.write('46306e9f73d3ccd690be300aefdaf766a9ba3f70')
+                elif '@0.9.7.0' in spec:
+                    f.write('8e63f421f9107ef6c7882b57f9c83e3878623ffa')
+                else:
+                    raise InstallError('Unknown ROSE version for EDG!')
+
+            # Install librose and identityTranslator
+            make('install-core')
+
+            # Install "official" ROSE-based tools
+            with working_dir('tools'):
+                make('install')
