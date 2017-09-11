@@ -43,8 +43,8 @@ class Nnvm(CMakePackage):
     patch('cmake.patch')
 
     def cmake_args(self):
-	spec = self.spec
+        spec = self.spec
         return [
-           '-DUSE_SHARED_NNVM=%s' % ('ON' if '+shared' in spec else 'OFF'), 
-           '-DUSE_STATIC_NNVM=%s' % ('ON' if '~shared' in spec else 'OFF'),
+            '-DUSE_SHARED_NNVM=%s' % ('ON' if '+shared' in spec else 'OFF'), 
+            '-DUSE_STATIC_NNVM=%s' % ('ON' if '~shared' in spec else 'OFF'),
         ]
