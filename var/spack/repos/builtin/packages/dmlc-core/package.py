@@ -53,5 +53,5 @@ class DmlcCore(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         return [
-            '-DUSE_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'), 
+            '-DUSE_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
         ]
