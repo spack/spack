@@ -635,10 +635,6 @@ class FlagMap(HashableMap):
     def valid_compiler_flags():
         return _valid_compiler_flags
 
-    @property
-    def concrete(self):
-        return all(flag in self for flag in _valid_compiler_flags)
-
     def copy(self):
         clone = FlagMap(None)
         for name, value in self.items():
@@ -660,73 +656,6 @@ class FlagMap(HashableMap):
 class DependencyMap(HashableMap):
     """Each spec has a DependencyMap containing specs for its dependencies.
        The DependencyMap is keyed by name. """
-
-    def __init__(self, owner):
-        super(DependencyMap, self).__init__()
-
-        # Owner Spec for the current map
-        self.owner = owner
-
-    @property
-    def concrete(self):
-
-        # Check if the dependencies are concrete and of the correct type
-        dependencies_are_concrete = all(
-            (d.spec.concrete and d.deptypes) for d in self.values()
-        )
-
-        if not dependencies_are_concrete:
-            return False
-
-        # If we are dealing with an external spec, it clearly has no
-        # dependencies managed by spack
-        if self.owner.external:
-            return True
-
-        # Now check we have every dependency we need
-        pkg = self.owner.package
-        for dependency in pkg.dependencies.values():
-            # Check that for every condition we satisfy we satisfy also
-            # the associated constraint
-            for condition, constraint in dependency.items():
-                # WARNING: This part relies on the fact that dependencies are
-                # the last item to be checked when computing if a spec is
-                # concrete. This means that we are ensured that all variants,
-                # versions, compilers, etc. are there with their final value
-                # when we call 'Spec.satisfies(..., strict=True)'
-
-                # FIXME: at the moment check only for non conditional
-                # FIXME: dependencies, to avoid infinite recursion
-
-                # satisfy_condition = self.owner.satisfies(
-                #     condition, strict=True
-                # )
-
-                satisfy_condition = str(condition) == self.owner.name
-
-                if not satisfy_condition:
-                    continue
-
-                dependency_name = constraint.name
-
-                # We don't want to check build dependencies
-                if pkg.dependency_types[dependency_name] == set(['build']):
-                    continue
-
-                try:
-                    dependency = self.owner[dependency_name]
-                    satisfy_constraint = dependency.satisfies(
-                        constraint, strict=True
-                    )
-                except KeyError:
-                    # If the dependency is not there we don't
-                    # satisfy the constraint
-                    satisfy_constraint = False
-
-                if satisfy_condition and not satisfy_constraint:
-                    return False
-
-        return True
 
     def __str__(self):
         return "{deps: %s}" % ', '.join(str(d) for d in sorted(self.values()))
@@ -1315,26 +1244,16 @@ class Spec(object):
 
     @property
     def concrete(self):
-        """A spec is concrete if it can describe only ONE build of a package.
-           If any of the name, version, architecture, compiler,
-           variants, or depdenencies are ambiguous,then it is not concrete.
-        """
-        # If we have cached that the spec is concrete, then it's concrete
-        if self._concrete:
-            return True
+        """A spec is concrete if it describes a single build of a package.
 
-        # Otherwise check if the various parts of the spec are concrete.
-        # It's crucial to have the check on dependencies last, as it relies
-        # on all the other parts to be already checked for concreteness.
-        self._concrete = bool(not self.virtual and
-                              self.namespace is not None and
-                              self.versions.concrete and
-                              self.variants.concrete and
-                              self.architecture and
-                              self.architecture.concrete and
-                              self.compiler and self.compiler.concrete and
-                              self.compiler_flags.concrete and
-                              self._dependencies.concrete)
+        More formally, a spec is concrete if concretize() has been called
+        on it and it has been marked `_concrete`.
+
+        Concrete specs either can be or have been built. All constraints
+        have been resolved, optional dependencies have been added or
+        removed, a compiler has been chosen, and all variants have
+        values.
+        """
         return self._concrete
 
     def traverse(self, **kwargs):
@@ -1825,8 +1744,8 @@ class Spec(object):
                 if replacement.external:
                     if (spec._dependencies):
                         changed = True
-                        spec._dependencies = DependencyMap(spec)
-                    replacement._dependencies = DependencyMap(replacement)
+                        spec._dependencies = DependencyMap()
+                    replacement._dependencies = DependencyMap()
                     replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
@@ -1986,7 +1905,7 @@ class Spec(object):
     def index(self, deptype=None):
         """Return DependencyMap that points to all the dependencies in this
            spec."""
-        dm = DependencyMap(None)
+        dm = DependencyMap()
         for spec in self.traverse(deptype=deptype):
             dm[spec.name] = spec
         return dm
@@ -2588,8 +2507,8 @@ class Spec(object):
             else None
         self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
-            self._dependents = DependencyMap(self)
-            self._dependencies = DependencyMap(self)
+            self._dependents = DependencyMap()
+            self._dependencies = DependencyMap()
         self.compiler_flags = other.compiler_flags.copy()
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
@@ -3296,8 +3215,8 @@ class SpecParser(spack.parse.Parser):
         spec.external_path = None
         spec.external_module = None
         spec.compiler_flags = FlagMap(spec)
-        spec._dependents = DependencyMap(spec)
-        spec._dependencies = DependencyMap(spec)
+        spec._dependents = DependencyMap()
+        spec._dependencies = DependencyMap()
         spec.namespace = spec_namespace
         spec._hash = None
         spec._cmp_key_cache = None
