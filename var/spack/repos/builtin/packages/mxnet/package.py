@@ -41,11 +41,12 @@ class Mxnet(MakefilePackage):
 
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencv', default=True, description='Enable OpenCV support')
-    variant('openmp', default=True, description='Enable OpenMP support')
+    variant('openmp', default=False, description='Enable OpenMP support')
     variant('profiler', default=False, description='Enable Profiler (for verification and debug only).')
 
     depends_on('dmlc-core@20170508')
     depends_on('dmlc-core+openmp', when='+openmp')
+    depends_on('dmlc-core~openmp', when='~openmp')
     depends_on('mshadow@20170721')
     depends_on('ps-lite@20170328')
     depends_on('nnvm~shared@20170418')
