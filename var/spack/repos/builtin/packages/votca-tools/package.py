@@ -38,6 +38,7 @@ class VotcaTools(CMakePackage):
 
     version('develop', git='https://github.com/votca/tools', branch='master')
     version('1.4', 'cd47868e9f28e2c7b9d01f95aa0185ca')
+    version('1.4.1', '3176b72f8a41ec053cc740a5398e7dc4')
 
     depends_on("cmake@2.8:", type='build')
     depends_on("expat")
