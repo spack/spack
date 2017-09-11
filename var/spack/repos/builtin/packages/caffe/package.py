@@ -62,7 +62,7 @@ class Caffe(CMakePackage):
     depends_on('hdf5')
 
     # Optional dependencies
-    depends_on('opencv@3.2.0', when='+opencv')
+    depends_on('opencv@3.2.0+core+highgui+imgproc', when='+opencv')
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
     depends_on('python@2.7:', when='+python')
