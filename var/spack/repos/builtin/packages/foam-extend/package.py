@@ -106,6 +106,7 @@ class FoamExtend(Package):
     depends_on('zlib')
     depends_on('flex@:2.6.1')  # <- restriction due to scotch
     depends_on('cmake', type='build')
+    depends_on('binutils', type='build')
 
     depends_on('scotch~metis',     when='~ptscotch+scotch')
     depends_on('scotch~metis+mpi', when='+ptscotch')
@@ -202,6 +203,9 @@ class FoamExtend(Package):
         # spec.architecture.target is like `uname -m`
         target   = self.spec.architecture.target
 
+        # \WARNING this is a ugly hack for our specific configuration at SCITAS
+        target = 'x86_64'
+
         if platform == 'linux':
             if target == 'i686':
                 self.foam_cfg['WM_ARCH_OPTION'] = '32'  # Force consistency
@@ -212,9 +216,9 @@ class FoamExtend(Package):
                 platform += 'ia64'
             elif target == 'armv7l':
                 platform += 'ARM7'
-            elif target == ppc64:
+            elif target == 'ppc64':
                 platform += 'PPC64'
-            elif target == ppc64le:
+            elif target == 'ppc64le':
                 platform += 'PPC64le'
         elif platform == 'darwin':
             if target == 'x86_64':
@@ -356,8 +360,8 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
                 'CMAKE_BIN_DIR': spec['cmake'].prefix.bin,
             },
             'python': {
-                'PYTHON_DIR':     spec['python'].home,
-                'PYTHON_BIN_DIR': spec['python'].home.bin,
+                'PYTHON_DIR':     spec['python'].prefix,
+                'PYTHON_BIN_DIR': spec['python'].prefix.bin,
             },
             'flex': {
                 'FLEX_SYSTEM': 1,

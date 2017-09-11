@@ -205,9 +205,9 @@ class OpenfoamOrg(Package):
                 platform += 'ia64'
             elif target == 'armv7l':
                 platform += 'ARM7'
-            elif target == ppc64:
+            elif target == 'ppc64':
                 platform += 'PPC64'
-            elif target == ppc64le:
+            elif target == 'ppc64le':
                 platform += 'PPC64le'
         elif platform == 'darwin':
             if target == 'x86_64':

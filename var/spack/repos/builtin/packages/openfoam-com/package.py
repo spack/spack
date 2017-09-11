@@ -164,32 +164,19 @@ def pkglib(package):
     return package.prefix.lib
 
 
-def mplib_content(spec, pre=None):
+def mplib_content(spec):
     """The mpi settings to have wmake
     use spack information with minimum modifications to OpenFOAM.
-
-    Optional parameter 'pre' to provid alternative prefix
     """
-    mpi_spec = spec['mpi']
-    bin = mpi_spec.prefix.bin
-    inc = mpi_spec.prefix.include
-    lib = pkglib(mpi_spec)
-    if pre:
-        bin = join_path(pre, os.path.basename(bin))
-        inc = join_path(pre, os.path.basename(inc))
-        lib = join_path(pre, os.path.basename(lib))
-    else:
-        pre = mpi_spec.prefix
-
     info = {
-        'name':   '{0}-{1}'.format(mpi_spec.name, mpi_spec.version),
-        'prefix':  pre,
-        'include': inc,
-        'bindir':  bin,
-        'libdir':  lib,
-        'FLAGS':  '-DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK',
-        'PINC':   '-I{0}'.format(inc),
-        'PLIBS':  '-L{0} -lmpi'.format(lib),
+        'name':   '{0}-{1}'.format(spec['mpi'].name, spec['mpi'].version),
+        'prefix':  spec['mpi'].prefix,
+        'include': spec['mpi'].headers,
+        'bindir':  spec['mpi'].prefix.bin,
+        'libdir':  spec['mpi'].libs,
+        'FLAGS':  '-DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK -DMPICH_SKIP_MPICXX',
+        'PINC':    spec['mpi'].headers.include_flags,
+        'PLIBS':   spec['mpi'].libs.ld_flags
     }
     return info
 
@@ -200,11 +187,10 @@ def generate_mplib_rules(directory, spec):
     with working_dir(directory):
         for mplib in ['mplibUSER', 'mplibUSERMPI']:
             with open(mplib, 'w') as out:
-                out.write("""# Use mpi from spack ({name})\n
-PFLAGS  = {FLAGS}
-PINC    = {PINC}
-PLIBS   = {PLIBS}
-""".format(**content))
+                out.write("\n".join(["# Use mpi from spack ({name})",
+                                     "PFLAGS  = {FLAGS}",
+                                     "PINC    = {PINC}",
+                                     "PLIBS   = {PLIBS}"]).format(**content))
 
 
 def generate_compiler_rules(directory, compOpt, value):
@@ -274,9 +260,12 @@ class OpenfoamCom(Package):
     depends_on('flex@:2.6.1')  # <- restriction due to scotch
     depends_on('cmake', type='build')
 
+    depends_on('binutils', type='build')
+
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
-    depends_on('scotch~int64+mpi', when='+scotch~int64')
-    depends_on('scotch+int64+mpi', when='+scotch+int64')
+    # scotch+metix conflicts with metis itself due to the order of detection of the headers
+    depends_on('scotch~int64~metis+mpi', when='+scotch~int64')
+    depends_on('scotch+int64~metis+mpi', when='+scotch+int64')
     depends_on('metis@5:',     when='+metis')
     depends_on('metis+int64',  when='+metis+int64')
     depends_on('parmgridgen',  when='+parmgridgen')
@@ -394,6 +383,9 @@ class OpenfoamCom(Package):
         # spec.architecture.target is like `uname -m`
         target   = self.spec.architecture.target
 
+        # \WARNING this is a ugly hack for our specific configuration at SCITAS
+        target = 'x86_64'
+
         if platform == 'linux':
             if target == 'i686':
                 self.foam_cfg['WM_ARCH_OPTION'] = '32'  # Force consistency
@@ -404,9 +396,9 @@ class OpenfoamCom(Package):
                 platform += 'ia64'
             elif target == 'armv7l':
                 platform += 'ARM7'
-            elif target == ppc64:
+            elif target == 'ppc64':
                 platform += 'PPC64'
-            elif target == ppc64le:
+            elif target == 'ppc64le':
                 platform += 'PPC64le'
         elif platform == 'darwin':
             if target == 'x86_64':
@@ -550,9 +542,6 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
             # 'ZLIB_ARCH_PATH':  spec['zlib'].prefix,
         }
 
-        # MPI content, using MPI_ARCH_PATH
-        content = mplib_content(spec, '${MPI_ARCH_PATH}')
-
         # Content for etc/config.{csh,sh}/ files
         self.etc_config = {
             'CGAL': {
@@ -566,8 +555,8 @@ echo WM_PROJECT_DIR = $WM_PROJECT_DIR
             'mpi-user': [
                 ('MPI_ARCH_PATH', spec['mpi'].prefix),  # Absolute
                 ('LD_LIBRARY_PATH',
-                 '"%s:${LD_LIBRARY_PATH}"' % content['libdir']),
-                ('PATH', '"%s:${PATH}"' % content['bindir']),
+                 '"%s:${LD_LIBRARY_PATH}"' % ':'.join(spec['mpi'].libs.directories)),
+                ('PATH', '"%s:${PATH}"' % spec['mpi'].prefix.bin),
             ],
             'scotch': {},
             'metis': {},
