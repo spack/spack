@@ -2542,7 +2542,7 @@ class Spec(object):
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
-    def _dup(self, other, deps=True, cleardeps=True):
+    def _dup(self, other, deps=True, cleardeps=True, caches=None):
         """Copy the spec other into self.  This is an overwriting
         copy.  It does not copy any dependents (parents), but by default
         copies dependencies.
@@ -2557,6 +2557,10 @@ class Spec(object):
             cleardeps (bool): if True clears the dependencies of ``self``,
                 before possibly copying the dependencies of ``other`` onto
                 ``self``
+            caches (bool or None): preserve cached fields such as
+                ``_normal``, ``_concrete``, and ``_cmp_key_cache``. By
+                default this is ``False`` if DAG structure would be
+                changed by the copy, ``True`` if it's an exact copy.
 
         Returns:
             True if ``self`` changed because of the copy operation,
@@ -2594,21 +2598,20 @@ class Spec(object):
         self.external_module = other.external_module
         self.namespace = other.namespace
 
-        # If we copy dependencies, preserve DAG structure in the new spec
-        if deps:
-            deptypes = alldeps  # by default copy all deptypes
-
-            # if caller restricted deptypes to be copied, adjust that here.
-            if isinstance(deps, (tuple, list)):
-                deptypes = deps
-
-            self._dup_deps(other, deptypes)
-
-        # These fields are all cached results of expensive operations.
+        # Cached fields are results of expensive operations.
         # If we preserved the original structure, we can copy them
         # safely. If not, they need to be recomputed.
-        # TODO: dependency hashes can be copied more aggressively.
-        if deps is True or deps == alldeps:
+        if caches is None:
+            caches = (deps is True or deps == alldeps)
+
+        # If we copy dependencies, preserve DAG structure in the new spec
+        if deps:
+            # If caller restricted deptypes to be copied, adjust that here.
+            # By default, just copy all deptypes
+            deptypes = deps if isinstance(deps, (tuple, list)) else alldeps
+            self._dup_deps(other, deptypes, caches)
+
+        if caches:
             self._hash = other._hash
             self._cmp_key_cache = other._cmp_key_cache
             self._normal = other._normal
@@ -2621,7 +2624,7 @@ class Spec(object):
 
         return changed
 
-    def _dup_deps(self, other, deptypes):
+    def _dup_deps(self, other, deptypes, caches):
         new_specs = {self.name: self}
         for dspec in other.traverse_edges(cover='edges', root=False):
             if (dspec.deptypes and
@@ -2629,29 +2632,45 @@ class Spec(object):
                 continue
 
             if dspec.parent.name not in new_specs:
-                new_specs[dspec.parent.name] = dspec.parent.copy(deps=False)
+                new_specs[dspec.parent.name] = dspec.parent.copy(
+                    deps=False, caches=caches)
             if dspec.spec.name not in new_specs:
-                new_specs[dspec.spec.name] = dspec.spec.copy(deps=False)
+                new_specs[dspec.spec.name] = dspec.spec.copy(
+                    deps=False, caches=caches)
 
             new_specs[dspec.parent.name]._add_dependency(
                 new_specs[dspec.spec.name], dspec.deptypes)
 
-    def copy(self, deps=True):
-        """Return a copy of this spec.
+    def copy(self, deps=True, **kwargs):
+        """Make a copy of this spec.
 
-        By default, returns a deep copy. To control how dependencies are
-        copied, supply:
+        Args:
+            deps (bool or tuple): Defaults to True. If boolean, controls
+                whether dependencies are copied (copied if True). If a
+                tuple is provided, *only* dependencies of types matching
+                those in the tuple are copied.
+            kwargs: additional arguments for internal use (passed to ``_dup``).
 
-        deps=True:  deep copy
+        Returns:
+            A copy of this spec.
 
-        deps=False: shallow copy (no dependencies)
+        Examples:
+            Deep copy with dependnecies::
 
-        deps=('link', 'build'):
-            only build and link dependencies.  Similar for other deptypes.
+                spec.copy()
+                spec.copy(deps=True)
+
+            Shallow copy (no dependencies)::
+
+                spec.copy(deps=False)
+
+            Only build and run dependencies::
+
+                deps=('build', 'run'):
 
         """
         clone = Spec.__new__(Spec)
-        clone._dup(self, deps=deps)
+        clone._dup(self, deps=deps, **kwargs)
         return clone
 
     @property
