@@ -53,20 +53,23 @@ class TestAutotoolsPackage(object):
         pkg = spack.repo.get(s)
 
         # Called without parameters
-        l = pkg.with_or_without('foo')
-        assert '--with-bar' in l
-        assert '--without-baz' in l
-        assert '--no-fee' in l
+        options = pkg.with_or_without('foo')
+        assert '--with-bar' in options
+        assert '--without-baz' in options
+        assert '--no-fee' in options
 
         def activate(value):
             return 'something'
 
-        l = pkg.with_or_without('foo', active_parameters=activate)
-        assert '--with-bar=something' in l
-        assert '--without-baz' in l
-        assert '--no-fee' in l
+        options = pkg.with_or_without('foo', activation_value=activate)
+        assert '--with-bar=something' in options
+        assert '--without-baz' in options
+        assert '--no-fee' in options
 
-        l = pkg.enable_or_disable('foo')
-        assert '--enable-bar' in l
-        assert '--disable-baz' in l
-        assert '--disable-fee' in l
+        options = pkg.enable_or_disable('foo')
+        assert '--enable-bar' in options
+        assert '--disable-baz' in options
+        assert '--disable-fee' in options
+
+        options = pkg.with_or_without('bvv')
+        assert '--with-bvv' in options

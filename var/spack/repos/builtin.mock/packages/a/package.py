@@ -50,6 +50,8 @@ class A(AutotoolsPackage):
         multi=False
     )
 
+    variant('bvv', default=True, description='The good old BV variant')
+
     depends_on('b', when='foobar=bar')
 
     def with_or_without_fee(self, activated):
