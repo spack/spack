@@ -63,8 +63,12 @@ class Exodusii(Package):
 
         config_args = std_cmake_args[:]
         config_args.extend([
+            # jgw
+            #'-DSEACASProj_ENABLE_SEACASExodiff:STRING=ON',
+            '-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=ON',
+
             # General Flags #
-            '-DSEACASProj_ENABLE_CXX11:BOOL=OFF',
+            #jgw#'-DSEACASProj_ENABLE_CXX11:BOOL=OFF',
             '-DSEACASProj_ENABLE_Zoltan:BOOL=OFF',
             '-DHDF5_ROOT:PATH={0}'.format(spec['hdf5'].prefix),
             '-DNetCDF_DIR:PATH={0}'.format(spec['netcdf'].prefix),
