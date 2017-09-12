@@ -92,8 +92,9 @@ class Rose(AutotoolsPackage):
                 f.write('992c21ad06893bc1e9e7688afe0562eee0fda021 1460595442')
 
     def autoreconf(self, spec, prefix):
-        bash = which('bash')
-        bash('build')
+        if not spec.satisfies('@develop'):
+            bash = which('bash')
+            bash('build')
 
     @property
     def languages(self):
