@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,6 +31,8 @@ class Dealii(CMakePackage):
     element codes for a broad variety of PDEs."""
     homepage = "https://www.dealii.org"
     url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
+
+    maintainers = ['davydden', 'jppelteret']
 
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.

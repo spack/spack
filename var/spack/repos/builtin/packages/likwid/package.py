@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,8 @@ class Likwid(Package):
 
     homepage = "https://github.com/RRZE-HPC/likwid"
     url      = "https://github.com/RRZE-HPC/likwid/archive/4.1.2.tar.gz"
+
+    maintainers = ['davydden']
 
     version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
 

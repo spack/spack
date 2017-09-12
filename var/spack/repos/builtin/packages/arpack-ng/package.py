@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -62,6 +62,8 @@ class ArpackNg(Package):
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
+    variant('static', default=True,
+            description='Enables the build of static libraries')
     variant('mpi', default=True, description='Activates MPI support')
 
     # The function pdlamch10 does not set the return variable.
@@ -121,6 +123,8 @@ class ArpackNg(Package):
 
         if '+shared' in spec:
             options.append('-DBUILD_SHARED_LIBS=ON')
+        if '+static' in spec:
+            options.append('-DBUILD_STATIC_LIBS=ON')
 
         cmake('.', *options)
         make()

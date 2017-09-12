@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -50,7 +50,5 @@ class AllineaReports(Package):
         return url + "allinea-reports-%s-Suse-12-x86_64.tar" % version
 
     def install(self, spec, prefix):
-        #textinstall = which('textinstall.sh')
-        #textinstall('--accept-licence', prefix)
-        textinstall = which('sh')
-        textinstall('textinstall.sh', '--accept-licence', prefix)
+        textinstall = Executable('./textinstall.sh')
+        textinstall('--accept-licence', prefix)
