@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -454,7 +454,11 @@ def get_specs():
             except fs.FetchError:
                 continue
             with open(stage.save_filename, 'r') as f:
+                # read the spec from the build cache file. All specs
+                # in build caches are concrete (as they are built) so
+                # we need to mark this spec concrete on read-in.
                 spec = spack.spec.Spec.from_yaml(f)
+                spec._mark_concrete()
                 durls[spec].append(link)
 
     spack.binary_cache_retrieved_specs = durls
