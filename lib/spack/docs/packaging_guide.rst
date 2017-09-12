@@ -2441,7 +2441,7 @@ There are three primary idioms that can be combined to create whatever
 behavior the package requires.
 
 1. The default behavior for packages inheriting from
-``AutotoolsPackage`` or ``CmakePackage``.
+``AutotoolsPackage``.
 
 .. code-block:: python
 
