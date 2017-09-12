@@ -31,6 +31,7 @@ class Automake(AutotoolsPackage):
     homepage = 'http://www.gnu.org/software/automake/'
     url      = 'http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz'
 
+    version('1.15.1', '95df3f2d6eb8f81e70b8cb63a93c8853')
     version('1.15',   '716946a105ca228ab545fc37a70df3a3')
     version('1.14.1', 'd052a3e884631b9c7892f2efce542d75')
     version('1.11.6', '0286dc30295b62985ca51919202ecfcc')
