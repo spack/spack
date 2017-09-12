@@ -32,9 +32,15 @@ class Libsigsegv(AutotoolsPackage):
     url      = "https://ftp.gnu.org/gnu/libsigsegv/libsigsegv-2.11.tar.gz"
 
     patch('patch.new_config_guess', when='@2.10')
-
+    
+    variant("shared", default=True, description="Enable shared libraries")
     version('2.11', 'a812d9481f6097f705599b218eea349f')
     version('2.10', '7f96fb1f65b3b8cbc1582fb7be774f0f')
 
     def configure_args(self):
-        return ['--enable-shared']
+        args = []
+        if "+shared" in self.spec:
+            args.append("--enable-shared")
+        else:
+            args.append("--disable-shared")
+        return args

@@ -32,6 +32,7 @@ class Sz(AutotoolsPackage):
     homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
     url      = "https://github.com/disheng222/SZ/archive/v1.4.9.2.tar.gz"
 
+    variant("shared", default=True, description="Enable shared libraries")
     version('develop', git='https://github.com/disheng222/SZ.git',
             branch='master')
     version('1.4.9.2', '028ce90165b7a4c4051d4c0189f193c0')
@@ -45,4 +46,6 @@ class Sz(AutotoolsPackage):
             args += ['--enable-fortran']
         else:
             args += ['--disable-fortran']
+        if "~shared" in self.spec:
+            args.append("--disable-shared")
         return args
