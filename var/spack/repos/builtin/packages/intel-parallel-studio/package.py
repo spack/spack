@@ -104,8 +104,12 @@ class IntelParallelStudio(IntelPackage):
             description='Builds shared library')
     variant('ilp64',    default=False,
             description='64 bit integers')
-    variant('openmp',   default=False,
-            description='OpenMP multithreading layer')
+    variant(
+        'multithreading', default='none',
+        description='Multithreading support',
+        values=('openmp', 'none'),
+        multi=False
+    )
 
     # Components available in all editions
     variant('daal', default=True,
@@ -168,7 +172,7 @@ class IntelParallelStudio(IntelPackage):
 
         omp_libs = LibraryList([])
 
-        if '+openmp' in spec:
+        if spec.satisfies('multithreading=openmp'):
             if '%intel' in spec:
                 mkl_threading = ['libmkl_intel_thread']
                 omp_threading = ['libiomp5']

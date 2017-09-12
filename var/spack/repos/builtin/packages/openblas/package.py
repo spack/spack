@@ -48,12 +48,18 @@ class Openblas(MakefilePackage):
         description='Build shared libraries as well as static libs.'
     )
     variant('ilp64', default=False, description='64 bit integers')
-    variant('openmp', default=False, description="Enable OpenMP support.")
     variant('pic', default=True, description='Build position independent code')
 
     variant('cpu_target', default='',
                     description='Set CPU target architecture (leave empty for '
                         'autodetection; GENERIC, SSE_GENERIC, NEHALEM, ...)')
+
+    variant(
+        'multithreading', default='none',
+        description='Multithreading support',
+        values=('pthreads', 'openmp', 'none'),
+        multi=False
+    )
 
     # virtual dependency
     provides('blas')
@@ -89,7 +95,8 @@ class Openblas(MakefilePackage):
                 'OpenBLAS requires both C and Fortran compilers!'
             )
         # Add support for OpenMP
-        if (('+openmp' in self.spec) and self.spec.satisfies('%clang')):
+        if (self.spec.satisfies('multithreading=openmp') and
+            self.spec.satisfies('%clang')):
             if str(self.spec.compiler.version).endswith('-apple'):
                 raise InstallError("Apple's clang does not support OpenMP")
             if '@:0.2.19' in self.spec:
@@ -134,9 +141,14 @@ class Openblas(MakefilePackage):
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
-        # Add support for OpenMP
-        if '+openmp' in self.spec:
-            make_defs += ['USE_OPENMP=1']
+
+        # Add support for multithreading
+        if self.spec.satisfies('multithreading=openmp'):
+            make_defs += ['USE_OPENMP=1', 'USE_THREAD=1']
+        elif self.spec.satisfies('multithreading=pthreads'):
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=1']
+        else:
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=0']
 
         # 64bit ints
         if '+ilp64' in self.spec:
@@ -183,8 +195,9 @@ class Openblas(MakefilePackage):
         link_flags = spec['openblas'].libs.ld_flags
         if self.compiler.name == 'intel':
             link_flags += ' -lifcore'
-        link_flags += ' -lpthread'
-        if '+openmp' in spec:
+        if self.spec.satisfies('multithreading=pthreads'):
+            link_flags += ' -lpthread'
+        if spec.satisfies('multithreading=openmp'):
             link_flags += ' ' + self.compiler.openmp_flag
 
         output = compile_c_and_execute(

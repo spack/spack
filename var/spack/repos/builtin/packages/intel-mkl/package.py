@@ -50,7 +50,12 @@ class IntelMkl(IntelPackage):
 
     variant('shared', default=True, description='Builds shared library')
     variant('ilp64', default=False, description='64 bit integers')
-    variant('openmp', default=False, description='OpenMP multithreading layer')
+    variant(
+        'multithreading', default='none',
+        description='Multithreading support',
+        values=('openmp', 'none'),
+        multi=False
+    )
 
     provides('blas')
     provides('lapack')
@@ -82,7 +87,7 @@ class IntelMkl(IntelPackage):
 
         omp_libs = LibraryList([])
 
-        if '+openmp' in spec:
+        if spec.satisfies('multithreading=openmp'):
             if '%intel' in spec:
                 mkl_threading = ['libmkl_intel_thread']
                 omp_threading = ['libiomp5']
