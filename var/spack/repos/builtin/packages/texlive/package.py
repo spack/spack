@@ -28,7 +28,8 @@ import os
 
 class Texlive(Package):
     """TeX Live is a free software distribution for the TeX typesetting
-       system"""
+       system (there is no trusted version, must be installed with
+       --no-checksum)."""
 
     homepage = "http://www.tug.org/texlive"
 
@@ -36,12 +37,13 @@ class Texlive(Package):
     # update in synchrony.
     #
     # BEWARE: TexLive updates their installs frequently (probably why
-    # they call it *Live*...).  There is no good way to provide a
-    # repeatable install of the package.  We try to keep up with the
-    # digest values, but don't be surprised if this package is
-    # briefly unbuildable.
+    # they call it *Live*...) without changing the name of the tarball.
+    # There is no good way to provide a repeatable install of the
+    # package.
     #
-    version('live', '8925a175d2b69f5328003893b284a008',
+    # You'll need to install it with `--no-checksum`.
+    #
+    version('live',
             url="http://ctan.math.utah.edu/ctan/tex-archive/systems/texlive/tlnet/install-tl-unx.tar.gz")
 
     # There does not seem to be a complete list of schemes.
