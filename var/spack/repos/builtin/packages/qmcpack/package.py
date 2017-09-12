@@ -158,10 +158,10 @@ class Qmcpack(CMakePackage):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def check_build(self):
+    def check(self):
         """Run ctest after building binary.
-        Use 'spack install --run-tests qmcpack'.
-        It can take 24 hours to run all the regression tests.
-        We only run the unit tests and short tests."""
-        ctest('-L', 'unit')
-        ctest('-R', 'short')
+        It can take over 24 hours to run all the regression tests, here we
+        only run the unit tests and short tests."""
+        with working_dir(self.build_directory):
+            ctest('-L', 'unit')
+            ctest('-R', 'short')
