@@ -32,7 +32,7 @@ class Lammps(CMakePackage):
     homepage = "http://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/stable_01Sep2017.tar.gz"
 
-    version('20170901', 'c498680052f80c6ddb880052ad369af0')
+    version('20170901', '767e7f07289663f033474dfe974974e7')
 
     def url_for_version(self, version):
         vdate = dt.datetime.strptime(str(version), "%Y%m%d")
