@@ -72,10 +72,10 @@ class Elemental(CMakePackage):
     depends_on('blas', when='~openmp_blas ~int64_blas')
     # Hack to forward variant to openblas package
     # Allow Elemental to build internally when using 8-byte ints
-    depends_on('openblas +openmp', when='blas=openblas +openmp_blas ~int64_blas')
+    depends_on('openblas multithreading=openmp', when='blas=openblas +openmp_blas ~int64_blas')
 
     depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
-    depends_on('intel-mkl +openmp', when='blas=mkl +openmp_blas ~int64_blas')
+    depends_on('intel-mkl multithreading=openmp', when='blas=mkl +openmp_blas ~int64_blas')
     depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
