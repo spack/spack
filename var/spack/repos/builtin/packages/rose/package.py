@@ -37,7 +37,7 @@ class Rose(AutotoolsPackage):
     homepage = "http://rosecompiler.org/"
     url = "https://github.com/rose-compiler/rose/archive/v0.9.7.0.tar.gz"
 
-    version('0.9.9.0', '131356e5f12ddc232ad90cfc25f8bfb7')
+    version('0.9.9.0', '8f47fb8aa803d019657bd42c8b892cce')
     version('0.9.7.0', 'be0d0941ba4c0349a20d6394c20d16d7')
     version('develop', branch='master',
             git='https://github.com/rose-compiler/rose-develop.git')
@@ -93,7 +93,7 @@ class Rose(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
-        #bash('build')
+        bash('build')
 
     @property
     def languages(self):
