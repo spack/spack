@@ -67,8 +67,9 @@ class Nauty(AutotoolsPackage):
     depends_on('automake',  type='build', when='@2.6r7')
     depends_on('libtool',  type='build', when='@2.6r7')
     depends_on('pkg-config',  type='build')
-    depends_on('zlib')
     depends_on('help2man', type='build')
+    depends_on('zlib')
+    depends_on('gmp')
 
     @property
     def force_autoreconf(self):
