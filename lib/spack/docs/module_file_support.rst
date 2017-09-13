@@ -21,8 +21,7 @@ directly with automatically generated module files.
 .. note::
 
    If your machine does not already have a module system installed,
-   we advise you to use either Environment Modules or LMod. See :ref:`InstallEnvironmentModules`
-   for more details.
+   you can add it with Spack as described in :ref:`InstallEnvironmentModules`.
 
 .. _shell-support:
 
@@ -53,11 +52,9 @@ For ``csh`` and ``tcsh`` instead:
 Using module files via Spack
 ----------------------------
 
-If you have enabled shell support and if module support is available, you
-should be able to run either ``module avail`` or ``use -l spack`` to see
-what module/dotkit files have been installed.  If module support is not
-available (the 'module' command is not available) you can add it using the
-instructions in :ref:`InstallEnvironmentModules`. Here is sample output of
+If you have enabled shell support and if you have a module system installed,
+you can run either ``module avail`` or ``use -l spack`` to see
+what module/dotkit files have been installed. Here is sample output of
 ``module avail`` and ``use -l spack``, showing lots of installed packages.
 
 .. code-block:: console
