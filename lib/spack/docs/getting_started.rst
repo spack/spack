@@ -909,37 +909,23 @@ What follows are three steps describing how to install and use environment-modul
      ``spack install environment-modules~X`` (The ``~X`` variant builds without Xorg
      dependencies, but ``environment-modules`` works fine too.)
 
-#. Add ``modulecmd`` to ``PATH`` and create a ``module`` command. 
+#. Add ``modulecmd`` to ``PATH`` and create a ``module`` command. you can add
+   it with the following script (or apply the updates to your ``.bashrc`` file
+   manually):
 
-   * If you are using ``bash`` or ``ksh``, Spack can currently do this for you as well.
-     After installing ``environment-modules`` following the step
-     above, source Spack's shell integration script. This will automatically
-     detect the lack of ``modulecmd`` and ``module``, and use the installed
-     ``environment-modules`` from ``spack bootstrap`` or ``spack install``.
-     
-     .. code-block:: console
+       .. code-block:: sh
 
-        # For bash/zsh users
-        $ export SPACK_ROOT=/path/to/spack
-        $ . $SPACK_ROOT/share/spack/setup-env.sh
+          TMP=`tempfile`
+          echo >$TMP
+          MODULE_HOME=`spack location --install-dir environment-modules`
+          MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
+          ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
+          cp .bashrc $TMP
+          echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
+          cat $TMP >>.bashrc
 
-
-   * If you prefer to do it manually,  you can activate with the following 
-     script (or apply the updates to your ``.bashrc`` file manually):
-
-         .. code-block:: sh
-
-            TMP=`tempfile`
-            echo >$TMP
-            MODULE_HOME=`spack location --install-dir environment-modules`
-            MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
-            ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
-            cp .bashrc $TMP
-            echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
-            cat $TMP >>.bashrc
-
-      This is added to your ``.bashrc`` (or similar) files, enabling Environment
-      Modules when you log in.
+    This is added to your ``.bashrc`` (or similar) files, enabling Environment
+    Modules when you log in.
         
 #. Test that the ``module`` command is found with:
 
