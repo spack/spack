@@ -909,23 +909,13 @@ What follows are three steps describing how to install and use environment-modul
      ``spack install environment-modules~X`` (The ``~X`` variant builds without Xorg
      dependencies, but ``environment-modules`` works fine too.)
 
-#. Add ``modulecmd`` to ``PATH`` and create a ``module`` command. you can add
-   it with the following script (or apply the updates to your ``.bashrc`` file
-   manually):
+#. To make the ``module`` command available in your shell, you can add
+   it with the following commands (which modify ``.bashrc``):
 
        .. code-block:: sh
 
-          TMP=`tempfile`
-          echo >$TMP
           MODULE_HOME=`spack location --install-dir environment-modules`
-          MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
-          ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
-          cp .bashrc $TMP
-          echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
-          cat $TMP >>.bashrc
-
-    This is added to your ``.bashrc`` (or similar) files, enabling Environment
-    Modules when you log in.
+          ${MODULE_HOME}/Modules/bin/add.modules
         
 #. Test that the ``module`` command is found with:
 

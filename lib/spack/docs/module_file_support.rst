@@ -53,12 +53,12 @@ For ``csh`` and ``tcsh`` instead:
 Using module files via Spack
 ----------------------------
 
-If you have installed a supported module system either manually or through
-``spack bootstrap`` and have enabled shell support (as described in
-:ref:`InstallEnvironmentModules`), you should be able to run either
-``module avail`` or ``use -l spack`` to see what module/dotkit files have been
-installed.  Here is sample output of those programs, showing lots of installed
-packages.
+If you have enabled shell support and if module support is available, you
+should be able to run either ``module avail`` or ``use -l spack`` to see
+what module/dotkit files have been installed.  If module support is not
+available (the 'module' command is not available) you can add it using the
+instructions in :ref:`InstallEnvironmentModules`. Here is sample output of
+``module avail`` and ``use -l spack``, showing lots of installed packages.
 
 .. code-block:: console
 
