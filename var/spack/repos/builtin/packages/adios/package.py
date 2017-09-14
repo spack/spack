@@ -142,7 +142,7 @@ class Adios(AutotoolsPackage):
             env['MPICC'] = spec['mpi'].mpicc
             env['MPICXX'] = spec['mpi'].mpicxx
 
-        extra_args += self.with_or_without('mpi', activation='prefix')
+        extra_args += self.with_or_without('mpi', activation_value='prefix')
         extra_args += self.with_or_without('infiniband')
 
         # Transforms
@@ -152,7 +152,7 @@ class Adios(AutotoolsPackage):
         variants += ['hdf5', 'netcdf']
 
         for x in variants:
-            extra_args += self.with_or_without(x, activation='prefix')
+            extra_args += self.with_or_without(x, activation_value='prefix')
 
         # Staging transports
         def with_staging(name):
@@ -160,6 +160,6 @@ class Adios(AutotoolsPackage):
                 return spec['libevpath'].prefix
             return spec[name].prefix
 
-        extra_args += self.with_or_without('staging', activation=with_staging)
+        extra_args += self.with_or_without('staging', activation_value=with_staging)
 
         return extra_args
