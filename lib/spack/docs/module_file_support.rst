@@ -21,8 +21,7 @@ directly with automatically generated module files.
 .. note::
 
    If your machine does not already have a module system installed,
-   we advise you to use either Environment Modules or LMod. See :ref:`InstallEnvironmentModules`
-   for more details.
+   you can add it with Spack as described in :ref:`InstallEnvironmentModules`.
 
 .. _shell-support:
 
@@ -44,8 +43,6 @@ For ``csh`` and ``tcsh`` instead:
 
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
-When ``bash`` and ``ksh`` users update their environment with ``setup-env.sh``, it will check for spack-installed environment modules and add the ``module`` command to their environment; This only occurs if the module command is not already available. You can install ``environment-modules`` with ``spack bootstrap`` as described in :ref:`InstallEnvironmentModules`.
-
 .. note::
   You can put the source line in your ``.bashrc`` or ``.cshrc`` to
   have Spack's shell support available on the command line at any login.
@@ -55,11 +52,10 @@ When ``bash`` and ``ksh`` users update their environment with ``setup-env.sh``, 
 Using module files via Spack
 ----------------------------
 
-If you have installed a supported module system either manually or through
-``spack bootstrap`` and have enabled shell support, you should be able to
-run either ``module avail`` or ``use -l spack`` to see what module/dotkit
-files have been installed.  Here is sample output of those programs,
-showing lots of installed packages.
+If you have enabled shell support and if you have a module system installed,
+you can run either ``module avail`` or ``use -l spack`` to see
+what module/dotkit files have been installed. Here is sample output of
+``module avail`` and ``use -l spack``, showing lots of installed packages.
 
 .. code-block:: console
 
