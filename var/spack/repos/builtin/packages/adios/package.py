@@ -49,17 +49,26 @@ class Adios(AutotoolsPackage):
     variant('fortran', default=False,
             description='Enable Fortran bindings support')
 
-    variant('mpi', default=True, description='Enable MPI support')
-    variant('infiniband', default=False, description='Enable infiniband support')
+    variant('mpi', default=True,
+            description='Enable MPI support')
+    variant('infiniband', default=False,
+            description='Enable infiniband support')
 
     # transforms
-    variant('zlib', default=True, description='Enable zlib transform support')
-    variant('bzip2', default=False, description='Enable bzip2 transform support')
-    variant('szip', default=False, description='Enable szip transform support')
-    variant('zfp', default=True, description='Enable ZFP transform support')
-    variant('sz', default=True, description='Enable SZ transform support')
+    variant('zlib', default=True,
+            description='Enable zlib transform support')
+    variant('bzip2', default=False,
+            description='Enable bzip2 transform support')
+    variant('szip', default=False,
+            description='Enable szip transform support')
+    variant('zfp', default=True,
+            description='Enable ZFP transform support')
+    variant('sz', default=True,
+            description='Enable SZ transform support')
     # transports and serial file converters
-    variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
+    variant('hdf5', default=False,
+            description='Enable parallel HDF5 transport and serial bp2h5 ' +
+                        'converter')
     variant('netcdf', default=False, description='Enable netcdf support')
 
     variant(
@@ -160,6 +169,9 @@ class Adios(AutotoolsPackage):
                 return spec['libevpath'].prefix
             return spec[name].prefix
 
-        extra_args += self.with_or_without('staging', activation_value=with_staging)
+        extra_args += self.with_or_without(
+            'staging',
+            activation_value=with_staging
+        )
 
         return extra_args
