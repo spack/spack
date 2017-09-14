@@ -741,7 +741,7 @@ class Database(object):
         return relatives
 
     @_autospec
-    def installed_extensions_for(self, extendee_spec):
+    def activated_extensions_for(self, extendee_spec):
         """
         Return the specs of all packages that extend
         the given spec
