@@ -136,18 +136,21 @@ class CDashTestCase(object):
         # put error somewhere in here
         self.result_type = result_type
         self.element.set('Status', CDashTestCase.results[result_type])
+
         # Completion Status
         completion_status = ET.SubElement(self.result, 'NamedMeasurement')
         completion_status.set('type', 'text/string')
         completion_status.set('name', 'Completion Status')
         value = ET.SubElement(completion_status, 'Value')
         value.text = 'Completed'
+
         # Command line
         cmd_line = ET.SubElement(self.result, 'NamedMeasurement')
         cmd_line.set('type', 'text/string')
         cmd_line.set('name', 'Command Line')
         value = ET.SubElement(cmd_line, 'Value')
         value.text = "spack install"
+
         # Logs
         if message is not None:
             logs = ET.SubElement(self.result, 'Measurement')
@@ -171,11 +174,13 @@ class CDashTestSuite(object):
             self.host_name = self.OS_name = macInfo
         else:
             self.host_name = self.OS_name = platform.system()
+
         # site set
         if not site:
             self.site = self.host_name
         else:
             self.site = site
+
         self.buildstamp = "%s-%s" % (time.strftime("%Y%d%m-%H:%M:%S"), slot)
         self.configure_report = self.prepare_configure_report_()
         self.filename = filename

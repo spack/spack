@@ -170,6 +170,7 @@ def install_spec(spec, cdash, site, path, redundant=False):
             args = parser.parse_args([cdash, site, path])
         args.package = str(spec).split()
         install(parser, args)
+
     except OSError as err:
         traceback.print_exc(file=sys.stdout)
         tty.error(err)
@@ -324,6 +325,7 @@ def test_suite(parser, args):
             for yfile in yaml_files:
                 with open(yfile) as f:
                     spec_sets.append(CombinatorialSpecSet(f))
+
             log_format = '--log-format=' + str(args.log_format)
             path = create_output_directory()
             patharg = "--path=" + str(path)
@@ -357,6 +359,7 @@ def test_suite(parser, args):
                     for c in cdash]
             else:
                 urls = spec_cdash
+
             # iterate over specs from each YAML file.
             for spec in spec_set:
                 if args.time:
@@ -371,7 +374,9 @@ def test_suite(parser, args):
                     concrete = spec.concretized()
                     # if we're doing a dry run, just print the concrete spec
                     if args.dry_run:
-                        print(concrete.tree(color=sys.stdout.isatty()))
+                        print(concrete.tree(
+                            hashes=True, hashlen=7,
+                            color=sys.stdout.isatty()))
                         continue
                 except KeyboardInterrupt:
                     raise
@@ -379,6 +384,7 @@ def test_suite(parser, args):
                     tty.warn('Concretize failed, moving on.')
                     warn(e)
                     continue
+
                 # do the actual install
                 try:
                     install_spec(spec, log_format, site,
@@ -387,15 +393,18 @@ def test_suite(parser, args):
                         uninstall_spec(concrete)
                 except KeyboardInterrupt:
                     raise
+
                 except Exception as e:
                     tty.warn('Install hit exception, moving on.')
                     warn(e)
                     traceback.print_exc(file=sys.stdout)
                     continue
+
                 except PackageStillNeededError as err:
                     tty.warn('Package still needed, cant uninstall.')
                     warn(err)
                     continue
+
                 if args.time:
                     tty.msg(str(spec.name) + "@" + str(spec.version) +
                             " Build time:  " + _hms(time.time() - build_start))

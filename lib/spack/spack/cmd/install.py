@@ -87,8 +87,7 @@ the dependencies"""
     )
     subparser.add_argument(
         '--log-format',
-        default=None,
-        # default='cdash-simple',
+        default='cdash-simple',
         choices=test_suites.keys(),
         help="Format to be used for log files. Default is CDash."
 
