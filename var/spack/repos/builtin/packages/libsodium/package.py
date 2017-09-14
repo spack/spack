@@ -29,9 +29,11 @@ class Libsodium(AutotoolsPackage):
     """Sodium is a modern, easy-to-use software library for encryption,
     decryption, signatures, password hashing and more."""
     homepage = "https://download.libsodium.org/doc/"
-    url      = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.11.tar.gz"
+    url      = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.13.tar.gz"
     list_url = "https://download.libsodium.org/libsodium/releases/old"
 
+    version('1.0.13', 'f38aac160a4bd05f06f743863e54e499')
+    version('1.0.12', 'c308e3faa724b630b86cc0aaf887a5d4')
     version('1.0.11', 'b58928d035064b2a46fb564937b83540')
     version('1.0.10', 'ea89dcbbda0b2b6ff6a1c476231870dd')
     version('1.0.3', 'b3bcc98e34d3250f55ae196822307fab')
@@ -42,6 +44,6 @@ class Libsodium(AutotoolsPackage):
 
     def url_for_version(self, version):
         url = 'https://download.libsodium.org/libsodium/releases/'
-        if version < Version('1.0.4'):
+        if version < Version('1.0.12'):
             url += 'old/'
         return url + 'libsodium-{0}.tar.gz'.format(version)
