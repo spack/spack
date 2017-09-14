@@ -29,7 +29,7 @@ Spack-installed package file hierarchies.  The union is formed from:
 
 - specs resolved from the package names given by the user (the seeds)
 
-- all depenencies of the seeds unless user specifies `--no-depenencies`
+- all dependencies of the seeds unless user specifies `--no-dependencies`
 
 - less any specs with names matching the regular expressions given by
   `--exclude`
