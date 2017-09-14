@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.util.gpg import Gpg
+import argparse
 import spack
 import os
 
@@ -87,8 +88,9 @@ def setup_parser(subparser):
     list.set_defaults(func=gpg_list)
 
     init = subparsers.add_parser('init')
+    init.add_argument('--from', metavar='DIR', type=str,
+                      dest='import_dir', help=argparse.SUPPRESS)
     init.set_defaults(func=gpg_init)
-    init.set_defaults(import_dir=spack.gpg_keys_path)
 
     export = subparsers.add_parser('export')
     export.add_argument('location', type=str,
@@ -144,7 +146,11 @@ def gpg_trust(args):
 
 
 def gpg_init(args):
-    for root, _, filenames in os.walk(args.import_dir):
+    import_dir = args.import_dir
+    if import_dir is None:
+        import_dir = spack.gpg_keys_path
+
+    for root, _, filenames in os.walk(import_dir):
         for filename in filenames:
             if not filename.endswith('.key'):
                 continue

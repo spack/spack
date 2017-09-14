@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -49,24 +49,39 @@ class Adios(AutotoolsPackage):
     variant('fortran', default=False,
             description='Enable Fortran bindings support')
 
-    variant('mpi', default=True, description='Enable MPI support')
-    variant('infiniband', default=False, description='Enable infiniband support')
+    variant('mpi', default=True,
+            description='Enable MPI support')
+    variant('infiniband', default=False,
+            description='Enable infiniband support')
 
     # transforms
-    variant('zlib', default=True, description='Enable zlib transform support')
-    variant('bzip2', default=False, description='Enable bzip2 transform support')
-    variant('szip', default=False, description='Enable szip transform support')
-    variant('zfp', default=True, description='Enable ZFP transform support')
-    variant('sz', default=True, description='Enable SZ transform support')
+    variant('zlib', default=True,
+            description='Enable zlib transform support')
+    variant('bzip2', default=False,
+            description='Enable bzip2 transform support')
+    variant('szip', default=False,
+            description='Enable szip transform support')
+    variant('zfp', default=True,
+            description='Enable ZFP transform support')
+    variant('sz', default=True,
+            description='Enable SZ transform support')
     # transports and serial file converters
-    variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
+    variant('hdf5', default=False,
+            description='Enable parallel HDF5 transport and serial bp2h5 ' +
+                        'converter')
     variant('netcdf', default=False, description='Enable netcdf support')
-    variant('flexpath', default=False, description='Enable flexpath transport')
-    variant('dataspaces', default=False, description='Enable dataspaces transport')
-    variant('staging', default=False, description='Enable dataspaces and flexpath staging transports')
+
+    variant(
+        'staging',
+        default=None,
+        values=('flexpath', 'dataspaces'),
+        multi=True,
+        description='Enable dataspaces and/or flexpath staging transports'
+    )
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
+    depends_on('m4', type='build')
     depends_on('libtool@:2.4.2', type='build')
     depends_on('python', type='build')
 
@@ -99,14 +114,26 @@ class Adios(AutotoolsPackage):
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
 
     def validate(self, spec):
-        """
-        Checks if incompatible variants have been activated at the same time
-        :param spec: spec of the package
-        :raises RuntimeError: in case of inconsistencies
+        """Checks if incompatible variants have been activated at the same time
+
+        Args:
+            spec: spec of the package
+
+        Raises:
+            RuntimeError: in case of inconsistencies
         """
         if '+fortran' in spec and not self.compiler.fc:
             msg = 'cannot build a fortran variant without a fortran compiler'
             raise RuntimeError(msg)
+
+    def with_or_without_hdf5(self, activated):
+
+        if activated:
+            return '--with-phdf5={0}'.format(
+                self.spec['hdf5'].prefix
+            )
+
+        return '--without-phdf5'
 
     def configure_args(self):
         spec = self.spec
@@ -117,64 +144,34 @@ class Adios(AutotoolsPackage):
             'CFLAGS={0}'.format(self.compiler.pic_flag)
         ]
 
-        if '+shared' in spec:
-            extra_args.append('--enable-shared')
+        extra_args += self.enable_or_disable('shared')
+        extra_args += self.enable_or_disable('fortran')
 
         if '+mpi' in spec:
-            extra_args.append('--with-mpi=%s' % spec['mpi'].prefix)
-        else:
-            extra_args.append('--without-mpi')
-        if '+infiniband' in spec:
-            extra_args.append('--with-infiniband')
-        else:
-            extra_args.append('--with-infiniband=no')
+            env['MPICC'] = spec['mpi'].mpicc
+            env['MPICXX'] = spec['mpi'].mpicxx
 
-        if '+fortran' in spec:
-            extra_args.append('--enable-fortran')
-        else:
-            extra_args.append('--disable-fortran')
+        extra_args += self.with_or_without('mpi', activation_value='prefix')
+        extra_args += self.with_or_without('infiniband')
 
         # Transforms
-        if '+zlib' in spec:
-            extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
-        else:
-            extra_args.append('--without-zlib')
-        if '+bzip2' in spec:
-            extra_args.append('--with-bzip2=%s' % spec['bzip2'].prefix)
-        else:
-            extra_args.append('--without-bzip2')
-        if '+szip' in spec:
-            extra_args.append('--with-szip=%s' % spec['szip'].prefix)
-        else:
-            extra_args.append('--without-szip')
-        if '+zfp' in spec:
-            extra_args.append('--with-zfp=%s' % spec['zfp'].prefix)
-        else:
-            extra_args.append('--without-zfp')
-        if '+sz' in spec:
-            extra_args.append('--with-sz=%s' % spec['sz'].prefix)
-        else:
-            extra_args.append('--without-sz')
+        variants = ['zlib', 'bzip2', 'szip', 'zfp', 'sz']
 
         # External I/O libraries
-        if '+hdf5' in spec:
-            extra_args.append('--with-phdf5=%s' % spec['hdf5'].prefix)
-        else:
-            extra_args.append('--without-phdf5')
-        if '+netcdf' in spec:
-            extra_args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
-        else:
-            extra_args.append('--without-netcdf')
+        variants += ['hdf5', 'netcdf']
+
+        for x in variants:
+            extra_args += self.with_or_without(x, activation_value='prefix')
 
         # Staging transports
-        if '+flexpath' in spec or '+staging' in spec:
-            extra_args.append('--with-flexpath=%s' % spec['libevpath'].prefix)
-        else:
-            extra_args.append('--without-flexpath')
-        if '+dataspaces' in spec or '+staging' in spec:
-            extra_args.append('--with-dataspaces=%s'
-                              % spec['dataspaces'].prefix)
-        else:
-            extra_args.append('--without-dataspaces')
+        def with_staging(name):
+            if name == 'flexpath':
+                return spec['libevpath'].prefix
+            return spec[name].prefix
+
+        extra_args += self.with_or_without(
+            'staging',
+            activation_value=with_staging
+        )
 
         return extra_args

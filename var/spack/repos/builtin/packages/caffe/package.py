@@ -62,7 +62,7 @@ class Caffe(CMakePackage):
     depends_on('hdf5')
 
     # Optional dependencies
-    depends_on('opencv@3.2.0', when='+opencv')
+    depends_on('opencv@3.2.0+core+highgui+imgproc', when='+opencv')
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
     depends_on('python@2.7:', when='+python')
@@ -82,6 +82,22 @@ class Caffe(CMakePackage):
                 '-DBUILD_matlab=%s' % ('+matlab' in spec),
                 '-DUSE_OPENCV=%s' % ('+opencv' in spec),
                 '-DUSE_LEVELDB=%s' % ('+leveldb' in spec),
-                '-DUSE_LMDB=%s' % ('+lmdb' in spec)]
+                '-DUSE_LMDB=%s' % ('+lmdb' in spec),
+                '-DGFLAGS_ROOT_DIR=%s' % spec['gflags'].prefix,
+                '-DGLOG_ROOT_DIR=%s' % spec['glog'].prefix,
+                ]
+
+        if spec.satisfies('^openblas'):
+            env['OpenBLAS_HOME'] = spec['openblas'].prefix
+
+        if spec.satisfies('+lmdb'):
+            env['LMDB_DIR'] = spec['lmdb'].prefix
+
+        if spec.satisfies('+leveldb'):
+            env['LEVELDB_ROOT'] = spec['leveldb'].prefix
+
+        if spec.satisfies('+python'):
+            version = spec['python'].version.up_to(1)
+            args.append('-Dpython_version=%s' % version)
 
         return args

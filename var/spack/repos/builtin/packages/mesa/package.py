@@ -1,5 +1,6 @@
 ##############################################################################
-# Copyright (c) 2017 Milton Woods, Mark Olesen
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is released as part of spack under the LGPL license.
 # LLNL-CODE-647188

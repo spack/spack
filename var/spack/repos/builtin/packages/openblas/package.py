@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -47,6 +47,7 @@ class Openblas(MakefilePackage):
         default=True,
         description='Build shared libraries as well as static libs.'
     )
+    variant('ilp64', default=False, description='64 bit integers')
     variant('openmp', default=False, description="Enable OpenMP support.")
     variant('pic', default=True, description='Build position independent code')
 
@@ -128,6 +129,10 @@ class Openblas(MakefilePackage):
         # Add support for OpenMP
         if '+openmp' in self.spec:
             make_defs += ['USE_OPENMP=1']
+
+        # 64bit ints
+        if '+ilp64' in self.spec:
+            make_defs += ['INTERFACE64=1']
 
         return make_defs
 

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,6 +39,14 @@ class Bzip2(Package):
     version('1.0.6', '00b516f4704d4a7cb50a1d97e6e8e15b')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
+
+    # override default implementation
+    @property
+    def libs(self):
+        shared = '+shared' in self.spec
+        return find_libraries(
+            'libbz2', root=self.prefix, shared=shared, recurse=True
+        )
 
     def patch(self):
         # bzip2 comes with two separate Makefiles for static and dynamic builds

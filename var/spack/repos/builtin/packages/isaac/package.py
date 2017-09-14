@@ -44,7 +44,7 @@ class Isaac(CMakePackage):
     #         description='Generate kernels via Alpaka, for CPUs or GPUs')
 
     depends_on('cmake@3.3:', type='build')
-    depends_on('libjpeg-turbo', type='link')
+    depends_on('jpeg', type='link')
     depends_on('jansson', type='link')
     depends_on('boost@1.56:', type='link')
     depends_on('cuda@7.0:', type='link', when='+cuda')
