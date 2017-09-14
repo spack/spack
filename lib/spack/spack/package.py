@@ -903,8 +903,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         s = self.extendee_spec
         return s and spec.satisfies(s)
 
-    @property
-    def activated(self):
+    def is_activated(self):
+        """Return True if package is activated."""
         if not self.is_extension:
             raise ValueError(
                 "is_extension called on package that is not an extension.")
@@ -1787,7 +1787,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Activate any package dependencies that are also extensions.
         if not force:
             for spec in self.dependency_activations():
-                if not spec.package.activated:
+                if not spec.package.is_activated():
                     spec.package.do_activate(force=force)
 
         self.extendee_spec.package.activate(self, **self.extendee_args)
@@ -1849,7 +1849,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
-        if self.activated:
+        if self.is_activated():
             spack.store.layout.remove_extension(
                 self.extendee_spec, self.spec)
 
