@@ -467,12 +467,8 @@ def setup_package(pkg, dirty):
     # code ensures that all packages in the DAG have pieces of the
     # same spec object at build time.
     #
-    # This is safe for the build process, b/c the build process is a
-    # throwaway environment, but it is kind of dirty.
-    #
-    # TODO: Think about how to avoid this fix and do something cleaner.
     for s in pkg.spec.traverse():
-        s.package.spec = s
+        assert s.package.spec is s
 
     # Trap spack-tracked compiler flags as appropriate.
     # Must be before set_compiler_environment_variables
