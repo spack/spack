@@ -153,6 +153,8 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
     variant('openmp',       default=False,
             description='Enable OpenMP')
+    variant('nox',          default=False,
+            description='Enable NOX')
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
@@ -301,6 +303,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+teuchos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
                 'ON' if '+anasazi' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
+                'ON' if '+nox' in spec else 'OFF'),
         ])
 
         if '+xsdkflags' in spec:
