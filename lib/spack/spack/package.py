@@ -1773,7 +1773,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ActivationError("%s does not extend %s!" %
                                   (self.name, self.extendee.name))
 
-    def do_activate(self, force=False):
+    def do_activate(self, force=False, verbose=True):
         """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
@@ -1788,14 +1788,17 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if not force:
             for spec in self.dependency_activations():
                 if not spec.package.is_activated():
-                    spec.package.do_activate(force=force)
+                    spec.package.do_activate(force=force, verbose=verbose)
 
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.store.layout.add_extension(self.extendee_spec, self.spec)
-        tty.msg(
-            "Activated extension %s for %s" %
-            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
+
+        if verbose:
+            tty.msg(
+                "Activated extension %s for %s" %
+                (self.spec.short_spec,
+                 self.extendee_spec.cformat("$_$@$+$%@")))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
@@ -1826,6 +1829,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """Called on the extension to invoke extendee's deactivate() method."""
         self._sanity_check_extension()
         force = kwargs.get('force', False)
+        verbose = kwargs.get("verbose", True)
 
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
@@ -1853,9 +1857,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.store.layout.remove_extension(
                 self.extendee_spec, self.spec)
 
-        tty.msg(
-            "Deactivated extension %s for %s" %
-            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
+        if verbose:
+            tty.msg(
+                "Deactivated extension %s for %s" %
+                (self.spec.short_spec,
+                 self.extendee_spec.cformat("$_$@$+$%@")))
 
     def deactivate(self, extension, **kwargs):
         """Unlinks all files from extension out of this package's install dir.
