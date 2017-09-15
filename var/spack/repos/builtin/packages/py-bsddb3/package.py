@@ -36,5 +36,5 @@ class PyBsddb3(PythonPackage):
 
     version('6.2.5', '610267c189964c905a931990e1ba438c')
 
-    depends_on('python@2.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('python@2.6:')
+    depends_on('py-setuptools')
