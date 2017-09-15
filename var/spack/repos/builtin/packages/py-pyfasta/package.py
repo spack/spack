@@ -26,7 +26,7 @@ from spack import *
 
 
 class PyPyfasta(PythonPackage):
-    """Pyfasta: fast, memory-efficient, pythonic (and command-line) 
+    """Pyfasta: fast, memory-efficient, pythonic (and command-line)
        access to fasta sequence files"""
 
     homepage = "https://pypi.python.org/pypi/pyfasta/"
