@@ -26,7 +26,7 @@ from spack import *
 
 
 class PyMethylcode(PythonPackage):
-    """MethylCoder is a single program that takes of bisulfite-treated 
+    """MethylCoder is a single program that takes of bisulfite-treated
        reads and outputs per-base methylation data. """
 
     homepage = "https://github.com/brentp/methylcode"
@@ -34,12 +34,11 @@ class PyMethylcode(PythonPackage):
 
     version('1.0.0', 'd0ba07c1ab2c74adddd1b23f8e5823e7')
 
-    depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
-    depends_on('py-six', type='build')
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-pyparsing', type=('build', 'run'))
-    depends_on('py-pyfasta', type=('build', 'run'))
-    depends_on('py-bsddb3', type=('build', 'run'))
-    depends_on('openblas', type=('build', 'run'))
-    depends_on('bowtie', type=('build', 'run'))
+    depends_on('python@2.7.0:2.7.999')
+    depends_on('py-six')
+    depends_on('py-setuptools')
+    depends_on('py-numpy')
+    depends_on('py-pyparsing')
+    depends_on('py-pyfasta')
+    depends_on('py-bsddb3')
+    depends_on('bowtie')
