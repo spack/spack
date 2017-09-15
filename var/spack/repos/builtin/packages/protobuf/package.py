@@ -33,9 +33,10 @@ class Protobuf(CMakePackage):
     root_cmakelists_dir = "cmake"
 
     version('3.4.0', '1d077a7d4db3d75681f5c333f2de9b1a')
-    version('3.2.0', '61d899b8369781f6dd1e62370813392d')
-    version('3.1.0', '14a532a7538551d5def317bfca41dace')
-    version('3.0.2', '845b39e4b7681a2ddfd8c7f528299fbb')
+    version('3.3.0', 'f0f712e98de3db0c65c0c417f5e7aca8')
+    version('3.2.0', 'efaa08ae635664fb5e7f31421a41a995')
+    version('3.1.0', '39d6a4fa549c0cce164aa3064b1492dc')
+    version('3.0.2', '7349a7f43433d72c6d805c6ca22b7eeb')
     # does not build with CMake:
     # version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
 
@@ -45,6 +46,17 @@ class Protobuf(CMakePackage):
 
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@:3.3.2')
+
+    def fetch_remote_versions(self):
+        """fix for https://github.com/LLNL/spack/issues/5356"""
+        return dict(map(lambda u:
+                        (u, self.url_for_version(Version(u))),
+                        self.versions))
+
+    def url_for_version(self, version):
+        """fix for https://github.com/LLNL/spack/issues/5356"""
+        return ("https://github.com/google/protobuf/archive/"
+                "v{0}.tar.gz".format(version.dotted))
 
     def cmake_args(self):
         args = [
