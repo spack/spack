@@ -26,9 +26,9 @@ from spack import *
 
 
 class PyPyfasta(PythonPackage):
-    """Pyfasta: fast, memory-efficient, pythonic (and command-line) access to fasta sequence files"""
+    """Pyfasta: fast, memory-efficient, pythonic (and command-line) 
+       access to fasta sequence files"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://pypi.python.org/pypi/pyfasta/"
     url      = "https://pypi.python.org/packages/be/3f/794fbcdaaa2113f0a1d16a962463896c1a6bdab77bd63f33a8f16aae6cdc/pyfasta-0.5.2.tar.gz"
 
