@@ -26,6 +26,7 @@
 
 import os
 import shutil
+import filecmp
 
 from llnl.util.filesystem import traverse_tree, mkdirp, touch
 
@@ -113,4 +114,8 @@ class LinkTree(object):
             elif os.path.exists(dest):
                 if not os.path.islink(dest):
                     raise ValueError("%s is not a link tree!" % dest)
-                os.remove(dest)
+                # remove if dest is a hardlink/symlink to src; this will only
+                # be false if two packages are merged into a prefix and have a
+                # conflicting file
+                if filecmp.cmp(src, dest, shallow=True):
+                    os.remove(dest)
