@@ -45,7 +45,6 @@ class Bioawk(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        print prefix
         copyfile("bioawk", join_path(prefix.bin, "bioawk"))
         copymode("bioawk", join_path(prefix.bin, "bioawk"))
         copyfile("maketab", join_path(prefix.bin, "maketab"))
