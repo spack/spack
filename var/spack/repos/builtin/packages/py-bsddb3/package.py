@@ -50,5 +50,4 @@ class PyBsddb3(PythonPackage):
 
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
 
