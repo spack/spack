@@ -34,6 +34,6 @@ class PyPyfasta(PythonPackage):
 
     version('0.5.2', 'bf61ab997dca329675c3eb2ee7cdfcf2')
 
-    depends_on('python@2.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('python@2.6:')
+    depends_on('py-setuptools')
+    depends_on('py-numpy')
