@@ -50,6 +50,6 @@ class Libsplash(CMakePackage):
     variant('mpi', default=True,
             description='Enable parallel I/O (one-file aggregation) support')
 
-    depends_on('hdf5@1.8.6:')
+    depends_on('hdf5@1.8.6:~fortran')
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
