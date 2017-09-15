@@ -26,9 +26,9 @@ from spack import *
 
 
 class PyBsddb3(PythonPackage):
-    """This module provides a nearly complete wrapping of the Oracle/Sleepycat 
-       C API for the Database Environment, Database, Cursor, Log Cursor, Sequence 
-       and Transaction objects, and each of these is exposed 
+    """This module provides a nearly complete wrapping of the Oracle/Sleepycat
+       C API for the Database Environment, Database, Cursor, Log Cursor, Sequence
+       and Transaction objects, and each of these is exposed
        as a Python type in the bsddb3.db module."""
 
     homepage = "://pypi.python.org/pypi/bsddb3/6.2.5"
