@@ -655,6 +655,18 @@ class TclModule(EnvModule):
                         raise SystemExit('Module generation aborted.')
                 line = self.spec.format(line)
             yield line
+        # Include File (source)
+        include_format = configuration.get('include', [])
+        f = string.Formatter()
+        for item in include_format:
+            line = 'source ' + item + '\n'
+            if not os.path.isfile(item):
+                message = 'Include file must exist!'
+                message += '** You may want to check your '
+                message += '`modules.yaml` configuration file **\n'
+                tty.error(message.format(spec=self.spec))
+                raise SystemExit('Module generation aborted.')
+            yield line
 
 # To construct an arbitrary hierarchy of module files:
 # 1. Parse the configuration file and check that all the items in
