@@ -187,6 +187,12 @@ def get_path_from_module(mod):
         if L >= 0:
             return line[L + 2:line.find('/lib')]
 
+    # If it sets the PATH, use it
+    for line in text:
+        if line.find('PATH') >= 0:
+            path = get_argument_from_module_line(line)
+            return path[:path.find('/bin')]
+
     # Unable to find module path
     return None
 
