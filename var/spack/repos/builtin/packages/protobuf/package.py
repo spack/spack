@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import spack.util.web
 
 
 class Protobuf(CMakePackage):
@@ -48,13 +49,18 @@ class Protobuf(CMakePackage):
     patch('pkgconfig.patch', when='@:3.3.2')
 
     def fetch_remote_versions(self):
-        """fix for https://github.com/LLNL/spack/issues/5356"""
-        return dict(map(lambda u:
-                        (u, self.url_for_version(Version(u))),
-                        self.versions))
+        """Ignore additional source artifacts uploaded with releases,
+           only keep known versions
+           fix for https://github.com/LLNL/spack/issues/5356"""
+        return dict(map(
+            lambda u: (u, self.url_for_version(u)),
+            spack.util.web.find_versions_of_archive(
+                self.all_urls, self.list_url, self.list_depth)
+        ))
 
     def url_for_version(self, version):
-        """fix for https://github.com/LLNL/spack/issues/5356"""
+        """Ignore additional source artifacts uploaded with releases,
+           fix for https://github.com/LLNL/spack/issues/5356"""
         return ("https://github.com/google/protobuf/archive/"
                 "v{0}.tar.gz".format(version.dotted))
 
