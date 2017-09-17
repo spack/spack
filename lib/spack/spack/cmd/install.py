@@ -27,6 +27,8 @@ import codecs
 import functools
 import os
 import platform
+import shutil
+import sys
 import time
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
@@ -68,6 +70,9 @@ the dependencies"""
     subparser.add_argument(
         '--restage', action='store_true',
         help="if a partial install is detected, delete prior state")
+    subparser.add_argument(
+        '--show-log-on-error', action='store_true',
+        help="print full build log to stderr if build fails")
     subparser.add_argument(
         '--source', action='store_true', dest='install_source',
         help="install source files in prefix")
@@ -367,13 +372,26 @@ def install(parser, args, **kwargs):
                 for s in spec.dependencies():
                     p = spack.repo.get(s)
                     p.do_install(**kwargs)
+
             else:
                 package = spack.repo.get(spec)
                 kwargs['explicit'] = True
                 package.do_install(**kwargs)
+
+        except InstallError as e:
+            if args.show_log_on_error:
+                e.print_context()
+                if not os.path.exists(e.pkg.build_log_path):
+                    tty.error("'spack install' created no log.")
+                else:
+                    sys.stderr.write('Full build log:\n')
+                    with open(e.pkg.build_log_path) as log:
+                        shutil.copyfileobj(log, sys.stderr)
+            raise
+
         finally:
             PackageBase.do_install = saved_do_install
 
-        # Dump log file if asked to
+        # Dump test output if asked to
         if args.log_format is not None:
             test_suite.dump(log_filename)
