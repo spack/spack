@@ -142,3 +142,18 @@ def test_install_with_source(
         spec.prefix.share, 'trivial-install-test-package', 'src')
     assert filecmp.cmp(os.path.join(mock_archive.path, 'configure'),
                        os.path.join(src, 'configure'))
+
+
+def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
+                           config, install_mockery, capfd):
+    """Make sure --show-log-on-error works."""
+    with capfd.disabled():
+        out = install('--show-log-on-error', 'build-error',
+                      fail_on_error=False)
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.pkg.name == 'build-error'
+    assert 'Full build log:' in out
+
+    errors = [line for line in out.split('\n')
+              if 'configure: error: cannot run C compiled programs' in line]
+    assert len(errors) == 2
