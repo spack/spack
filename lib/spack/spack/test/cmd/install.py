@@ -114,8 +114,8 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     assert "'install'\nAFTER INSTALL" in out
 
 
-def _test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
-                                        config, install_mockery, capfd):
+def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
+                                       config, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         out = install('build-error', fail_on_error=False)
