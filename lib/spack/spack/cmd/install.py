@@ -60,28 +60,28 @@ the dependencies"""
         '-j', '--jobs', action='store', type=int,
         help="explicitly set number of make jobs. default is #cpus")
     subparser.add_argument(
-        '--keep-prefix', action='store_true', dest='keep_prefix',
+        '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
     subparser.add_argument(
-        '--keep-stage', action='store_true', dest='keep_stage',
+        '--keep-stage', action='store_true',
         help="don't remove the build stage if installation succeeds")
     subparser.add_argument(
-        '--restage', action='store_true', dest='restage',
+        '--restage', action='store_true',
         help="if a partial install is detected, delete prior state")
     subparser.add_argument(
         '--source', action='store_true', dest='install_source',
         help="install source files in prefix")
     subparser.add_argument(
-        '-n', '--no-checksum', action='store_true', dest='no_checksum',
+        '-n', '--no-checksum', action='store_true',
         help="do not check packages against checksum")
     subparser.add_argument(
-        '-v', '--verbose', action='store_true', dest='verbose',
+        '-v', '--verbose', action='store_true',
         help="display verbose build output while installing")
     subparser.add_argument(
-        '--fake', action='store_true', dest='fake',
+        '--fake', action='store_true',
         help="fake install. just remove prefix and create a fake file")
     subparser.add_argument(
-        '-f', '--file', action='store_true', dest='file',
+        '-f', '--file', action='store_true',
         help="install from file. Read specs to install from .yaml files")
 
     cd_group = subparser.add_mutually_exclusive_group()
@@ -93,7 +93,7 @@ the dependencies"""
         help="spec of the package to install"
     )
     subparser.add_argument(
-        '--run-tests', action='store_true', dest='run_tests',
+        '--run-tests', action='store_true',
         help="run package level tests during installation"
     )
     subparser.add_argument(
