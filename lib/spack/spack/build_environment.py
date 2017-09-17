@@ -598,6 +598,10 @@ def fork(pkg, function, dirty):
             target=child_process, args=(child_pipe, input_stream))
         p.start()
 
+    except InstallError as e:
+        e.pkg = pkg
+        raise
+
     finally:
         # Close the input stream in the parent process
         if input_stream is not None:
@@ -605,6 +609,10 @@ def fork(pkg, function, dirty):
 
     child_result = parent_pipe.recv()
     p.join()
+
+    # let the caller know which package went wrong.
+    if isinstance(child_result, InstallError):
+        child_result.pkg = pkg
 
     # If the child process raised an error, print its output here rather
     # than waiting until the call to SpackError.die() in main(). This
@@ -676,10 +684,15 @@ def get_package_context(traceback, context=3):
 
 
 class InstallError(spack.error.SpackError):
-    """Raised by packages when a package fails to install"""
+    """Raised by packages when a package fails to install.
+
+    Any subclass of InstallError will be annotated by Spack wtih a
+    ``pkg`` attribute on failure, which the caller can use to get the
+    package for which the exception was raised.
+    """
 
 
-class ChildError(spack.error.SpackError):
+class ChildError(InstallError):
     """Special exception class for wrapping exceptions from child processes
        in Spack's build environment.
 
