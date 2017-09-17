@@ -29,6 +29,7 @@ import platform
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
+from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, InstallError, run_after
 
@@ -149,6 +150,7 @@ class CMakePackage(PackageBase):
         # to find immediate link dependencies in right places:
         deps = [d.prefix for d in
                 pkg.spec.dependencies(deptype=('build', 'link'))]
+        deps = filter_system_paths(deps)
         args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
         return args
 
