@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 
 from spack import *
 from spack.environment import EnvironmentModifications
@@ -92,10 +93,15 @@ class IntelMkl(IntelPackage):
                 mkl_threading = ['libmkl_intel_thread']
                 omp_threading = ['libiomp5']
 
-                omp_root = prefix.compilers_and_libraries.linux.lib.intel64
+                if sys.platform != 'darwin':
+                    omp_root = prefix.compilers_and_libraries.linux.lib.intel64
+                else:
+                    omp_root = prefix.lib
                 omp_libs = find_libraries(
                     omp_threading, root=omp_root, shared=shared)
             elif '%gcc' in spec:
+                if sys.platform == 'darwin':
+                    raise InstallError('MKL does not support openmp threading with GCC on macOS')  # NOQA: ignore=E501
                 mkl_threading = ['libmkl_gnu_thread']
 
                 gcc = Executable(self.compiler.cc)
@@ -105,7 +111,10 @@ class IntelMkl(IntelPackage):
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
-        mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        if sys.platform != 'darwin':
+            mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        else:
+            mkl_root = prefix.mkl.lib
 
         mkl_libs = find_libraries(
             mkl_integer + ['libmkl_core'] + mkl_threading,
@@ -135,7 +144,10 @@ class IntelMkl(IntelPackage):
         # inspect the root package which asked for Scalapack and check which
         # MPI it depends on.
         root = self.spec.root
-        if '^openmpi' in root:
+        if sys.platform == 'darwin' and '^mpich' in root:
+            # MKL 2018 supports only MPICH on darwin
+            libnames.append('libmkl_blacs_mpich')
+        elif '^openmpi' in root:
             libnames.append('libmkl_blacs_openmpi')
         elif '^mpich@1' in root:
             libnames.append('libmkl_blacs')
@@ -151,7 +163,10 @@ class IntelMkl(IntelPackage):
             raise InstallError('No MPI found for scalapack')
 
         integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
-        mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        if sys.platform != 'darwin':
+            mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64  # NOQA: ignore=E501
+        else:
+            mkl_root = self.prefix.mkl.lib
         shared = True if '+shared' in self.spec else False
 
         libs = find_libraries(
