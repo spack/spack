@@ -751,14 +751,16 @@ class Database(object):
                 yield spec.package
 
     @_autospec
-    def activated_extensions_for(self, extendee_spec):
+    def activated_extensions_for(self, extendee_spec, extensions_layout=None):
         """
         Return the specs of all packages that extend
         the given spec
         """
+        if extensions_layout is None:
+            extensions_layout = spack.store.extensions
         for spec in self.query():
             try:
-                spack.store.layout.check_activated(extendee_spec, spec)
+                extensions_layout.check_activated(extendee_spec, spec)
                 yield spec.package
             except spack.directory_layout.NoSuchExtensionError:
                 continue
