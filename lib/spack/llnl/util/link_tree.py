@@ -64,7 +64,7 @@ class LinkTree(object):
                 return dest
         return None
 
-    def merge(self, dest_root, **kwargs):
+    def merge(self, dest_root, link=os.symlink, **kwargs):
         """Link all files in src into dest, creating directories
            if necessary.
            If ignore_conflicts is True, do not break when the target exists but
@@ -95,7 +95,7 @@ class LinkTree(object):
                     else:
                         raise AssertionError("File already exists: %s" % dest)
                 else:
-                    os.symlink(src, dest)
+                    link(src, dest)
         if ignore_conflicts:
             return existing
 
