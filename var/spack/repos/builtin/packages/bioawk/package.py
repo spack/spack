@@ -23,26 +23,29 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from shutil import copyfile
+from shutil import copymode
 
 
-class Libbson(AutotoolsPackage):
-    """libbson is a library providing useful routines related to building,
-    parsing, and iterating BSON documents."""
+class Bioawk(MakefilePackage):
+    """Bioawk is an extension to Brian Kernighan's awk, adding the support of
+       several common biological data formats, including optionally gzip'ed
+       BED, GFF, SAM, VCF, FASTA/Q and TAB-delimited formats with column names.
+    """
 
-    homepage = "https://github.com/mongodb/libbson"
-    url      = "https://github.com/mongodb/libbson/releases/download/1.7.0/libbson-1.7.0.tar.gz"
+    homepage = "https://github.com/lh3/bioawk"
+    url = "https://github.com/lh3/bioawk/archive/v1.0.zip"
 
-    version('1.7.0', 'e196ad77dd8458ebc1166e6135030b63')
-    version('1.6.3', 'b7bdb314197106fcfb4af105a582d343')
-    version('1.6.2', 'c128a2ae3e35295e1176465be60f19db')
-    version('1.6.1', '4d6779451bc5764a7d4982c01e7bd8c2')
+    version('1.0', 'e423942689f944369de270900978be28')
 
-    depends_on('autoconf', type='build', when='@1.6.1')
-    depends_on('automake', type='build', when='@1.6.1')
-    depends_on('libtool', type='build', when='@1.6.1')
-    depends_on('m4', type='build', when='@1.6.1')
+    depends_on('zlib')
+    depends_on('bison', type=('build'))
 
-    @property
-    def force_autoreconf(self):
-        # 1.6.1 tarball is broken
-        return self.spec.satisfies('@1.6.1')
+    parallel = False
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        copyfile("bioawk", join_path(prefix.bin, "bioawk"))
+        copymode("bioawk", join_path(prefix.bin, "bioawk"))
+        copyfile("maketab", join_path(prefix.bin, "maketab"))
+        copymode("maketab", join_path(prefix.bin, "maketab"))

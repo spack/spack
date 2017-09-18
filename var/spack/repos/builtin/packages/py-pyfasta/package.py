@@ -25,24 +25,15 @@
 from spack import *
 
 
-class Libbson(AutotoolsPackage):
-    """libbson is a library providing useful routines related to building,
-    parsing, and iterating BSON documents."""
+class PyPyfasta(PythonPackage):
+    """Pyfasta: fast, memory-efficient, pythonic (and command-line)
+       access to fasta sequence files"""
 
-    homepage = "https://github.com/mongodb/libbson"
-    url      = "https://github.com/mongodb/libbson/releases/download/1.7.0/libbson-1.7.0.tar.gz"
+    homepage = "https://pypi.python.org/pypi/pyfasta/"
+    url      = "https://pypi.python.org/packages/be/3f/794fbcdaaa2113f0a1d16a962463896c1a6bdab77bd63f33a8f16aae6cdc/pyfasta-0.5.2.tar.gz"
 
-    version('1.7.0', 'e196ad77dd8458ebc1166e6135030b63')
-    version('1.6.3', 'b7bdb314197106fcfb4af105a582d343')
-    version('1.6.2', 'c128a2ae3e35295e1176465be60f19db')
-    version('1.6.1', '4d6779451bc5764a7d4982c01e7bd8c2')
+    version('0.5.2', 'bf61ab997dca329675c3eb2ee7cdfcf2')
 
-    depends_on('autoconf', type='build', when='@1.6.1')
-    depends_on('automake', type='build', when='@1.6.1')
-    depends_on('libtool', type='build', when='@1.6.1')
-    depends_on('m4', type='build', when='@1.6.1')
-
-    @property
-    def force_autoreconf(self):
-        # 1.6.1 tarball is broken
-        return self.spec.satisfies('@1.6.1')
+    depends_on('python@2.6:')
+    depends_on('py-setuptools')
+    depends_on('py-numpy')

@@ -202,7 +202,7 @@ export SPACK_ROOT=${_sp_prefix}
 # Determine which shell is being used
 #
 function _spack_determine_shell() {
-	ps -p $$ | tail -n 1 | awk '{print $4}' | xargs basename
+	ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
 }
 export SPACK_SHELL=$(_spack_determine_shell)
 
@@ -230,18 +230,7 @@ if [ "${need_module}" = "yes" ]; then
         export MODULE_PREFIX=${module_prefix}
         _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
         module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
-        echo "INFO: Using spack managed module system."
-    else
-        echo "WARNING: A method for managing modules does not currently exist."
-        echo ""
-        echo "To resolve this you may either:"
-        echo "1. Allow spack to handle this by running 'spack bootstrap'"
-        echo "   and sourcing this script again."
-        echo "2. Install and activate a supported module managment engine manually"
-        echo "   Supported engines include: environment-modules and lmod"
     fi;
-else
-    echo "INFO: Using system available module system."
 fi;
 
 #

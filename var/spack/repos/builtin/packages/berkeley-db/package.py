@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,24 +25,23 @@
 from spack import *
 
 
-class Libbson(AutotoolsPackage):
-    """libbson is a library providing useful routines related to building,
-    parsing, and iterating BSON documents."""
+class BerkeleyDb(AutotoolsPackage):
+    """Oracle Berkeley DB"""
 
-    homepage = "https://github.com/mongodb/libbson"
-    url      = "https://github.com/mongodb/libbson/releases/download/1.7.0/libbson-1.7.0.tar.gz"
+    homepage = "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html"
+    url      = "http://download.oracle.com/berkeley-db/db-5.3.28.tar.gz"
 
-    version('1.7.0', 'e196ad77dd8458ebc1166e6135030b63')
-    version('1.6.3', 'b7bdb314197106fcfb4af105a582d343')
-    version('1.6.2', 'c128a2ae3e35295e1176465be60f19db')
-    version('1.6.1', '4d6779451bc5764a7d4982c01e7bd8c2')
+    version('5.3.28', 'b99454564d5b4479750567031d66fe24')
+    version('6.0.35', 'c65a4d3e930a116abaaf69edfc697f25')
+    version('6.1.29', '7f4d47302dfec698fe088e5285c9098e')
+    version('6.2.32', '33491b4756cb44b91c3318b727e71023')
 
-    depends_on('autoconf', type='build', when='@1.6.1')
-    depends_on('automake', type='build', when='@1.6.1')
-    depends_on('libtool', type='build', when='@1.6.1')
-    depends_on('m4', type='build', when='@1.6.1')
+    configure_directory = 'dist'
+    build_directory = 'spack-build'
 
-    @property
-    def force_autoreconf(self):
-        # 1.6.1 tarball is broken
-        return self.spec.satisfies('@1.6.1')
+    def url_for_version(self, version):
+        # newer version need oracle login, so get them from gentoo mirror
+        return 'http://distfiles.gentoo.org/distfiles/db-{0}.tar.gz'.format(version)
+
+    def configure_args(self):
+        return ['--disable-static', '--enable-cxx', '--enable-stl']
