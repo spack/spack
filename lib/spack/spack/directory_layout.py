@@ -157,6 +157,11 @@ class ExtensionsLayout(object):
         """
         raise NotImplementedError()
 
+    def extendee_target_directory(self, extendee):
+        """Specify to which full path extendee should link all files
+        from extensions."""
+        raise NotImplementedError
+
     def remove_extension(self, spec, ext_spec):
         """Remove from the list of currently installed extensions."""
         raise NotImplementedError()
@@ -359,6 +364,9 @@ class YamlExtensionsLayout(ExtensionsLayout):
         _check_concrete(spec)
         return self._extension_map(spec).copy()
 
+    def extendee_target_directory(self, extendee):
+        return extendee.prefix
+
     def remove_extension(self, spec, ext_spec):
         _check_concrete(spec)
         _check_concrete(ext_spec)
@@ -426,6 +434,23 @@ class YamlExtensionsLayout(ExtensionsLayout):
 
         # Atomic update by moving tmpfile on top of old one.
         os.rename(tmp.name, path)
+
+
+class YamlViewExtensionsLayout(YamlExtensionsLayout):
+    """Governs the directory layout present when creating filesystem views in a
+    certain root folder.
+
+    Meant to replace YamlDirectoryLayout when working with filesystem views.
+    """
+
+    def extension_file_path(self, spec):
+        """Gets the full path to an installed package's extension file."""
+        _check_concrete(spec)
+        return join_path(self.root, self.layout.metadata_dir, spec.name,
+                         self.extension_file_name)
+
+    def extendee_target_directory(self, extendee):
+        return self.root
 
 
 class DirectoryLayoutError(SpackError):
