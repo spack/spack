@@ -28,23 +28,24 @@ import os
 
 class Texlive(Package):
     """TeX Live is a free software distribution for the TeX typesetting
-       system (there is no trusted version, must be installed with
-       --no-checksum)."""
+       system.  Heads up, it's is not a reproducible installation."""
 
     homepage = "http://www.tug.org/texlive"
 
-    # Pull from specific site because the texlive mirrors do not all
-    # update in synchrony.
+    # Install from specific site because the texlive mirrors do not
+    # all update in synchrony.
     #
     # BEWARE: TexLive updates their installs frequently (probably why
-    # they call it *Live*...) without changing the name of the tarball.
-    # There is no good way to provide a repeatable install of the
-    # package.
+    # they call it *Live*...).  There is no good way to provide a
+    # repeatable install of the package.
     #
-    # You'll need to install it with `--no-checksum`.
-    #
-    version('live',
-            url="http://ctan.math.utah.edu/ctan/tex-archive/systems/texlive/tlnet/install-tl-unx.tar.gz")
+    # We're now pulling the installation bits from tug.org's repo of
+    # historic bits.  This means that the checksum for the installer
+    # itself is stable.  Don't let that fool you though, it's still
+    # installing TeX **LIVE** from e.g. ctan.math.... below, which is
+    # not reproducible.
+    version('live', '8f8fc301514c08a89a2e97197369c648',
+            url='ftp://tug.org/historic/systems/texlive/2017/install-tl-unx.tar.gz')
 
     # There does not seem to be a complete list of schemes.
     # Examples include:
