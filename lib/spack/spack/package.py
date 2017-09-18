@@ -1840,10 +1840,15 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         tree.merge(target, ignore=ignore, link=extensions_layout.link)
 
     def do_deactivate(self, **kwargs):
-        """Called on the extension to invoke extendee's deactivate() method."""
+        """Called on the extension to invoke extendee's deactivate() method.
+
+        `remove_dependents=True` deactivates extensions depending on this
+        package instead of raising an error.
+        """
         self._sanity_check_extension()
         force = kwargs.get('force', False)
         verbose = kwargs.get("verbose", True)
+        remove_dependents = kwargs.get("remove_dependents", False)
         extensions_layout = kwargs.get("extensions_layout",
                                        spack.store.extensions)
 
@@ -1860,11 +1865,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     continue
                 for dep in aspec.traverse(deptype='run'):
                     if self.spec == dep:
-                        msg = ("Cannot deactivate %s because %s is "
-                               "activated and depends on it.")
-                        raise ActivationError(
-                            msg % (self.spec.cshort_spec,
-                                   aspec.cshort_spec))
+                        if remove_dependents:
+                            aspec.package.do_deactivate(**kwargs)
+                        else:
+                            msg = ("Cannot deactivate %s because %s is "
+                                   "activated and depends on it.")
+                            raise ActivationError(
+                                msg % (self.spec.cshort_spec,
+                                       aspec.cshort_spec))
 
         self.extendee_spec.package.deactivate(
             self,
