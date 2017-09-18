@@ -142,7 +142,7 @@ class DefaultConcretizer(object):
                  between these two extremes.
         """
         # return if already concrete.
-        if spec.versions.concrete:
+        if spec._concrete or spec.versions.concrete:
             return False
 
         # List of versions we could consider, in sorted order
@@ -214,6 +214,9 @@ class DefaultConcretizer(object):
         DAG has an architecture, then use the root otherwise use the defaults
         on the platform.
         """
+        if spec._concrete:
+            return False
+
         root_arch = spec.root.architecture
         sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
         spec_changed = False
@@ -243,6 +246,9 @@ class DefaultConcretizer(object):
            the user preferences from packages.yaml or the default variants from
            the package specification.
         """
+        if spec._concrete:
+            return False
+
         changed = False
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
         pkg_cls = spec.package_class
@@ -268,6 +274,9 @@ class DefaultConcretizer(object):
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
+        if spec._concrete:
+            return False
+
         # Pass on concretizing the compiler if the target or operating system
         # is not yet determined
         if not (spec.architecture.platform_os and spec.architecture.target):
@@ -339,6 +348,9 @@ class DefaultConcretizer(object):
         compiler is used, defaulting to no compiler flags in the spec.
         Default specs set at the compiler level will still be added later.
         """
+        if spec._concrete:
+            return False
+
         # Pass on concretizing the compiler flags if the target or operating
         # system is not set.
         if not (spec.architecture.platform_os and spec.architecture.target):
