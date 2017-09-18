@@ -412,7 +412,7 @@ class FileSystem(object):
         shutil.copy(*args)
 
     def file_exists(self, *args):
-        return os.path.exsts(*args)
+        return os.path.exists(*args)
 
     def is_file(self, *args):
         return os.path.isfile(*args)
