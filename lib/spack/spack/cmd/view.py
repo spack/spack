@@ -79,14 +79,14 @@ def setup_parser(sp):
 
     sp.add_argument(
         '-v', '--verbose', action='store_true', default=False,
-        help="display verbose output")
+        help="If not verbose only warnings/errors will be printed.")
     sp.add_argument(
         '-e', '--exclude', action='append', default=[],
         help="exclude packages with names matching the given regex pattern")
     sp.add_argument(
         '-d', '--dependencies', choices=['true', 'false', 'yes', 'no'],
         default='true',
-        help="follow dependencies")
+        help="Link/remove/list dependencies.")
 
     ssp = sp.add_subparsers(metavar='ACTION', dest='action')
 
