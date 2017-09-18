@@ -30,4 +30,5 @@ def pre_uninstall(spec):
 
     if pkg.is_extension:
         if pkg.is_activated():
+            # deactivate globally
             pkg.do_deactivate(force=True)
