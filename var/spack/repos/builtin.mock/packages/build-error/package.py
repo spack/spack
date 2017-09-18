@@ -25,24 +25,25 @@
 from spack import *
 
 
-class Libbson(AutotoolsPackage):
-    """libbson is a library providing useful routines related to building,
-    parsing, and iterating BSON documents."""
+class BuildError(Package):
+    """This package has an install method that fails in a build script."""
 
-    homepage = "https://github.com/mongodb/libbson"
-    url      = "https://github.com/mongodb/libbson/releases/download/1.7.0/libbson-1.7.0.tar.gz"
+    homepage = "http://www.example.com/trivial_install"
+    url      = "http://www.unit-test-should-replace-this-url/trivial_install-1.0.tar.gz"
 
-    version('1.7.0', 'e196ad77dd8458ebc1166e6135030b63')
-    version('1.6.3', 'b7bdb314197106fcfb4af105a582d343')
-    version('1.6.2', 'c128a2ae3e35295e1176465be60f19db')
-    version('1.6.1', '4d6779451bc5764a7d4982c01e7bd8c2')
+    version('1.0', 'foobarbaz')
 
-    depends_on('autoconf', type='build', when='@1.6.1')
-    depends_on('automake', type='build', when='@1.6.1')
-    depends_on('libtool', type='build', when='@1.6.1')
-    depends_on('m4', type='build', when='@1.6.1')
-
-    @property
-    def force_autoreconf(self):
-        # 1.6.1 tarball is broken
-        return self.spec.satisfies('@1.6.1')
+    def install(self, spec, prefix):
+        with open('configure', 'w') as f:
+            f.write("""#!/bin/sh\n
+echo 'checking build system type... x86_64-apple-darwin16.6.0'
+echo 'checking host system type... x86_64-apple-darwin16.6.0'
+echo 'checking for gcc... /Users/gamblin2/src/spack/lib/spack/env/clang/clang'
+echo 'checking whether the C compiler works... yes'
+echo 'checking for C compiler default output file name... a.out'
+echo 'checking for suffix of executables...'
+echo 'configure: error: in /path/to/some/file:'
+echo 'configure: error: cannot run C compiled programs.'
+exit 1
+""")
+        configure()

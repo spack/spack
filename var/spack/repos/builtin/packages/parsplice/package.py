@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,27 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Libbson(AutotoolsPackage):
-    """libbson is a library providing useful routines related to building,
-    parsing, and iterating BSON documents."""
+class Parsplice(CMakePackage):
+    """ParSplice code implements the Parallel Trajectory Splicing algorithm"""
 
-    homepage = "https://github.com/mongodb/libbson"
-    url      = "https://github.com/mongodb/libbson/releases/download/1.7.0/libbson-1.7.0.tar.gz"
+    homepage = "https://gitlab.com/exaalt/parsplice"
+    url      = "https://gitlab.com/exaalt/parsplice/tags/v1.0"
 
-    version('1.7.0', 'e196ad77dd8458ebc1166e6135030b63')
-    version('1.6.3', 'b7bdb314197106fcfb4af105a582d343')
-    version('1.6.2', 'c128a2ae3e35295e1176465be60f19db')
-    version('1.6.1', '4d6779451bc5764a7d4982c01e7bd8c2')
+    version('develop', git='https://gitlab.com/exaalt/parsplice', branch='master')
 
-    depends_on('autoconf', type='build', when='@1.6.1')
-    depends_on('automake', type='build', when='@1.6.1')
-    depends_on('libtool', type='build', when='@1.6.1')
-    depends_on('m4', type='build', when='@1.6.1')
+    depends_on("cmake@3.1:", type='build')
+    depends_on("berkeley-db")
+    depends_on("nauty")
+    depends_on("boost")
+    depends_on("mpi")
+    depends_on("eigen@3:")
+    depends_on("lammps+lib@20170901:")
 
-    @property
-    def force_autoreconf(self):
-        # 1.6.1 tarball is broken
-        return self.spec.satisfies('@1.6.1')
+    def cmake_args(self):
+        options = ['-DBUILD_SHARED_LIBS=ON']
+
+        return options
