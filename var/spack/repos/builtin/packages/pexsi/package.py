@@ -63,9 +63,9 @@ class Pexsi(MakefilePackage):
 
         substitutions = {
             '@MPICC': self.spec['mpi'].mpicc,
-            '@MPICXX': self.spec['mpi'].mpicxx,
+            '@MPICXX@': self.spec['mpi'].mpicxx,
             '@MPIFC': self.spec['mpi'].mpifc,
-            '@MPI_CXX_LIB': self.spec['mpi:cxx'].libs.joined(),
+            '@MPICXX_LIB@' : self.spec['mpi:cxx'].libs.joined(),
             '@RANLIB': 'ranlib',
             '@PEXSI_STAGE': self.stage.source_path,
             '@SUPERLU_PREFIX': self.spec['superlu-dist'].prefix,

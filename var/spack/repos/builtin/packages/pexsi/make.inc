@@ -4,9 +4,9 @@ SUFFIX = linux
 # Compiler and tools
 ################################################################
 CC = @MPICC
-CXX = @MPICXX
+CXX = @MPICXX@
 FC = @MPIFC
-LOADER = @MPICXX
+LOADER = @MPICXX@
 
 
 AR = ar
@@ -36,7 +36,7 @@ DSUPERLU_INCLUDE = -I${DSUPERLU_DIR}/include
 INCLUDES = ${PEXSI_INCLUDE} ${DSUPERLU_INCLUDE}
 
 # Libraries
-CPP_LIB = @MPI_CXX_LIB @STDCXX_LIB
+CPP_LIB = @MPICXX_LIB@ @STDCXX_LIB
 #GFORTRAN_LIB = /usr/lib/gcc/x86_64-linux-gnu/4.8/libgfortran.a
 LAPACK_LIB = @LAPACK_LIBS
 BLAS_LIB = @BLAS_LIBS
