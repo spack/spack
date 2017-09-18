@@ -903,12 +903,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         s = self.extendee_spec
         return s and spec.satisfies(s)
 
-    def is_activated(self):
+    def is_activated(self, extensions_layout=None):
         """Return True if package is activated."""
         if not self.is_extension:
             raise ValueError(
                 "is_extension called on package that is not an extension.")
-        exts = spack.store.layout.extension_map(self.extendee_spec)
+        if extensions_layout is None:
+            extensions_layout = spack.store.extensions
+        exts = extensions_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
     def provides(self, vpkg_name):
@@ -1773,7 +1775,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ActivationError("%s does not extend %s!" %
                                   (self.name, self.extendee.name))
 
-    def do_activate(self, force=False, verbose=True):
+    def do_activate(self, force=False, verbose=True, extensions_layout=None):
         """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
@@ -1781,18 +1783,25 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         self._sanity_check_extension()
 
-        spack.store.layout.check_extension_conflict(
+        if extensions_layout is None:
+            extensions_layout = spack.store.extensions
+
+        extensions_layout.check_extension_conflict(
             self.extendee_spec, self.spec)
 
         # Activate any package dependencies that are also extensions.
         if not force:
             for spec in self.dependency_activations():
-                if not spec.package.is_activated():
-                    spec.package.do_activate(force=force, verbose=verbose)
+                if not spec.package.is_activated(
+                        extensions_layout=extensions_layout):
+                    spec.package.do_activate(
+                        force=force, verbose=verbose,
+                        extensions_layout=extensions_layout)
 
-        self.extendee_spec.package.activate(self, **self.extendee_args)
+        self.extendee_spec.package.activate(
+            self, extensions_layout=extensions_layout, **self.extendee_args)
 
-        spack.store.layout.add_extension(self.extendee_spec, self.spec)
+        extensions_layout.add_extension(self.extendee_spec, self.spec)
 
         if verbose:
             tty.msg(
@@ -1805,7 +1814,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 if spec.package.extends(self.extendee_spec))
 
     def activate(self, extension, **kwargs):
-        """Symlinks all files from the extension into extendee's install dir.
+        """Make extension package usable by linking all its files to a target
+        provided by the directory layout (depending if the user wants to
+        activate globally or in a specified file system view).
 
         Package authors can override this method to support other
         extension mechanisms.  Spack internals (commands, hooks, etc.)
@@ -1813,48 +1824,57 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
+        extensions_layout = kwargs.get("extensions_layout",
+                                       spack.store.extensions)
+        target = extensions_layout.extendee_target_directory(self)
 
         def ignore(filename):
             return (filename in spack.store.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
-        conflict = tree.find_conflict(self.prefix, ignore=ignore)
+        conflict = tree.find_conflict(target, ignore=ignore)
         if conflict:
             raise ExtensionConflictError(conflict)
 
-        tree.merge(self.prefix, ignore=ignore)
+        tree.merge(target, ignore=ignore, link=extensions_layout.link)
 
     def do_deactivate(self, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method."""
         self._sanity_check_extension()
         force = kwargs.get('force', False)
         verbose = kwargs.get("verbose", True)
+        extensions_layout = kwargs.get("extensions_layout",
+                                       spack.store.extensions)
 
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
         if not force:
-            spack.store.layout.check_activated(
+            extensions_layout.check_activated(
                 self.extendee_spec, self.spec)
 
-            activated = spack.store.layout.extension_map(
+            activated = extensions_layout.extension_map(
                 self.extendee_spec)
             for name, aspec in activated.items():
                 if aspec == self.spec:
                     continue
                 for dep in aspec.traverse(deptype='run'):
                     if self.spec == dep:
-                        msg = ("Cannot deactivate %s because %s is activated "
-                               "and depends on it.")
+                        msg = ("Cannot deactivate %s because %s is "
+                               "activated and depends on it.")
                         raise ActivationError(
-                            msg % (self.spec.short_spec, aspec.short_spec))
+                            msg % (self.spec.cshort_spec,
+                                   aspec.cshort_spec))
 
-        self.extendee_spec.package.deactivate(self, **self.extendee_args)
+        self.extendee_spec.package.deactivate(
+            self,
+            extensions_layout=extensions_layout,
+            **self.extendee_args)
 
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
-        if self.is_activated():
-            spack.store.layout.remove_extension(
+        if self.is_activated(extensions_layout):
+            extensions_layout.remove_extension(
                 self.extendee_spec, self.spec)
 
         if verbose:
@@ -1864,7 +1884,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                  self.extendee_spec.cformat("$_$@$+$%@")))
 
     def deactivate(self, extension, **kwargs):
-        """Unlinks all files from extension out of this package's install dir.
+        """Unlinks all files from extension out of this package's install dir
+        or the corresponding filesystem view.
 
         Package authors can override this method to support other
         extension mechanisms.  Spack internals (commands, hooks, etc.)
@@ -1872,13 +1893,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
+        extensions_layout = kwargs.get("extensions_layout",
+                                       spack.store.extensions)
+        target = extensions_layout.extendee_target_directory(self)
 
         def ignore(filename):
             return (filename in spack.store.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
-        tree.unmerge(self.prefix, ignore=ignore)
+        tree.unmerge(target, ignore=ignore)
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""
