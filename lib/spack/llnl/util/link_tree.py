@@ -66,8 +66,14 @@ class LinkTree(object):
 
     def merge(self, dest_root, **kwargs):
         """Link all files in src into dest, creating directories
-           if necessary."""
+           if necessary.
+           If ignore_conflicts is True, do not break when the target exists but
+           rather return a list of files that could not be linked.
+           Note that files blocking directories will still cause an error.
+        """
         kwargs['order'] = 'pre'
+        ignore_conflicts = kwargs.get("ignore_conflicts", False)
+        existing = []
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
                 if not os.path.exists(dest):
@@ -83,8 +89,15 @@ class LinkTree(object):
                     touch(marker)
 
             else:
-                assert(not os.path.exists(dest))
-                os.symlink(src, dest)
+                if os.path.exists(dest):
+                    if ignore_conflicts:
+                        existing.append(src)
+                    else:
+                        raise AssertionError("File already exists: %s" % dest)
+                else:
+                    os.symlink(src, dest)
+        if ignore_conflicts:
+            return existing
 
     def unmerge(self, dest_root, **kwargs):
         """Unlink all files in dest that exist in src.
