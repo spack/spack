@@ -84,14 +84,28 @@ class Scorep(AutotoolsPackage):
             "--with-papi-header=%s" % spec['papi'].prefix.include,
             "--with-papi-lib=%s" % spec['papi'].prefix.lib,
             "--with-pdt=%s" % spec['pdt'].prefix.bin,
-            "--enable-shared",
-        ]
+            "--enable-shared"]
+
+        cname = spec.compiler.name
+        config_args.append('--with-nocross-compiler-suite={0}'.format(cname))
+
+        if spec.satisfies('^intel-mpi'):
+            config_args.append('--with-mpi=intel3')
+        elif spec.satisfies('^mpich') or spec.satisfies('^mvapich2'):
+            config_args.append('--with-mpi=mpich3')
+        elif spec.satisfies('^openmpi'):
+            config_args.append('--with-mpi=openmpi')
 
         if '~shmem' in spec:
             config_args.append("--without-shmem")
 
         config_args.extend([
             'CFLAGS={0}'.format(self.compiler.pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+            'CXXFLAGS={0}'.format(self.compiler.pic_flag),
+            'MPICC={0}'.format(spec['mpi'].mpicc),
+            'MPICXX={0}'.format(spec['mpi'].mpicxx),
+            'MPIF77={0}'.format(spec['mpi'].mpif77),
+            'MPIFC={0}'.format(spec['mpi'].mpifc)
         ])
+
         return config_args
