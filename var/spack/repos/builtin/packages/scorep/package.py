@@ -85,6 +85,7 @@ class Scorep(AutotoolsPackage):
             "--with-papi-lib=%s" % spec['papi'].prefix.lib,
             "--with-pdt=%s" % spec['pdt'].prefix.bin,
             "--enable-shared",
+            "--with-mpi=%s" % spec['mpi'].name
         ]
 
         if '~shmem' in spec:
