@@ -113,6 +113,12 @@ class NoMatch(Exception):
 @subcommand('loads')
 def loads(mtype, specs, args):
     """Prompt the list of modules associated with a list of specs"""
+    for spec in specs:
+        installed_repo_dir = os.path.join(
+            spack.store.layout.build_packages_path(spec), 'builtin')
+        repo = spack.repository.Repo(installed_repo_dir)
+        spack.repo.put_first(repo)
+
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
         specs_from_user_constraint = specs[:]
