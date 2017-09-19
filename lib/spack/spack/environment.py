@@ -118,23 +118,23 @@ class RemovePath(NameValueModifier):
 
 
 class EnvironmentModifications(object):
-
-    """
-    Keeps track of requests to modify the current environment.
+    """Keeps track of requests to modify the current environment.
 
     Each call to a method to modify the environment stores the extra
     information on the caller in the request:
-    - 'filename' : filename of the module where the caller is defined
-    - 'lineno': line number where the request occurred
-    - 'context' : line of code that issued the request that failed
+
+        * 'filename' : filename of the module where the caller is defined
+        * 'lineno': line number where the request occurred
+        * 'context' : line of code that issued the request that failed
     """
 
     def __init__(self, other=None):
-        """
-        Initializes a new instance, copying commands from other if not None
+        """Initializes a new instance, copying commands from 'other'
+        if it is not None.
 
         Args:
-            other: another instance of EnvironmentModifications (optional)
+            other (EnvironmentModifications): list of environment modifications
+                to be extended (optional)
         """
         self.env_modifications = []
         if other is not None:
@@ -169,8 +169,7 @@ class EnvironmentModifications(object):
         return args
 
     def set(self, name, value, **kwargs):
-        """
-        Stores in the current object a request to set an environment variable
+        """Stores a request to set an environment variable.
 
         Args:
             name: name of the environment variable to be set
@@ -195,8 +194,7 @@ class EnvironmentModifications(object):
         self.env_modifications.append(item)
 
     def unset(self, name, **kwargs):
-        """
-        Stores in the current object a request to unset an environment variable
+        """Stores a request to unset an environment variable.
 
         Args:
             name: name of the environment variable to be set
@@ -205,21 +203,19 @@ class EnvironmentModifications(object):
         item = UnsetEnv(name, **kwargs)
         self.env_modifications.append(item)
 
-    def set_path(self, name, elts, **kwargs):
-        """
-        Stores a request to set a path generated from a list.
+    def set_path(self, name, elements, **kwargs):
+        """Stores a request to set a path generated from a list.
 
         Args:
             name: name o the environment variable to be set.
-            elts: elements of the path to set.
+            elements: elements of the path to set.
         """
         kwargs.update(self._get_outside_caller_attributes())
-        item = SetPath(name, elts, **kwargs)
+        item = SetPath(name, elements, **kwargs)
         self.env_modifications.append(item)
 
     def append_path(self, name, path, **kwargs):
-        """
-        Stores in the current object a request to append a path to a path list
+        """Stores a request to append a path to a path list.
 
         Args:
             name: name of the path list in the environment
@@ -230,8 +226,7 @@ class EnvironmentModifications(object):
         self.env_modifications.append(item)
 
     def prepend_path(self, name, path, **kwargs):
-        """
-        Same as `append_path`, but the path is pre-pended
+        """Same as `append_path`, but the path is pre-pended.
 
         Args:
             name: name of the path list in the environment
@@ -242,9 +237,7 @@ class EnvironmentModifications(object):
         self.env_modifications.append(item)
 
     def remove_path(self, name, path, **kwargs):
-        """
-        Stores in the current object a request to remove a path from a path
-        list
+        """Stores a request to remove a path from a path list.
 
         Args:
             name: name of the path list in the environment
@@ -255,8 +248,7 @@ class EnvironmentModifications(object):
         self.env_modifications.append(item)
 
     def group_by_name(self):
-        """
-        Returns a dict of the modifications grouped by variable name
+        """Returns a dict of the modifications grouped by variable name.
 
         Returns:
             dict mapping the environment variable name to the modifications to
@@ -274,9 +266,7 @@ class EnvironmentModifications(object):
         self.env_modifications.clear()
 
     def apply_modifications(self):
-        """
-        Applies the modifications and clears the list
-        """
+        """Applies the modifications and clears the list."""
         modifications = self.group_by_name()
         # Apply modifications one variable at a time
         for name, actions in sorted(modifications.items()):
@@ -452,9 +442,8 @@ class EnvironmentModifications(object):
 
 
 def concatenate_paths(paths, separator=':'):
-    """
-    Concatenates an iterable of paths into a string of paths separated by
-    separator, defaulting to colon
+    """Concatenates an iterable of paths into a string of paths separated by
+    separator, defaulting to colon.
 
     Args:
         paths: iterable of paths
@@ -467,9 +456,8 @@ def concatenate_paths(paths, separator=':'):
 
 
 def set_or_unset_not_first(variable, changes, errstream):
-    """
-    Check if we are going to set or unset something after other modifications
-    have already been requested
+    """Check if we are going to set or unset something after other
+    modifications have already been requested.
     """
     indexes = [ii for ii, item in enumerate(changes)
                if ii != 0 and type(item) in [SetEnv, UnsetEnv]]
@@ -484,9 +472,8 @@ def set_or_unset_not_first(variable, changes, errstream):
 
 
 def validate(env, errstream):
-    """
-    Validates the environment modifications to check for the presence of
-    suspicious patterns. Prompts a warning for everything that was found
+    """Validates the environment modifications to check for the presence of
+    suspicious patterns. Prompts a warning for everything that was found.
 
     Current checks:
     - set or unset variables after other changes on the same variable
@@ -500,17 +487,40 @@ def validate(env, errstream):
 
 
 def filter_environment_blacklist(env, variables):
-    """
-    Generator that filters out any change to environment variables present in
-    the input list
+    """Generator that filters out any change to environment variables present in
+    the input list.
 
     Args:
         env: list of environment modifications
         variables: list of variable names to be filtered
 
-    Yields:
+    Returns:
         items in env if they are not in variables
     """
     for item in env:
         if item.name not in variables:
             yield item
+
+
+def inspect_path(root, inspections):
+    """Inspects a path to search for the subdirectories specified in the
+    inspection dictionary. Return a list of commands that will modify the
+    environment accordingly.
+
+    Args:
+        root: path where to search for subdirectories
+        inspections: dictionary that maps subdirectories to a list of
+            variables that we want to pre-pend with a path, if found
+
+    Returns:
+        instance of EnvironmentModifications containing the requested
+        modifications
+    """
+    env = EnvironmentModifications()
+    # Inspect the prefix to check for the existence of common directories
+    for relative_path, variables in inspections.items():
+        expected = os.path.join(root, relative_path)
+        if os.path.isdir(expected):
+            for variable in variables:
+                env.prepend_path(variable, expected)
+    return env

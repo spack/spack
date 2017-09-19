@@ -25,11 +25,39 @@
 import os
 
 import pytest
+import spack.environment as environment
 from spack import spack_root
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv
 from spack.util.environment import filter_system_paths
+
+
+def test_inspect_path(tmpdir):
+    inspections = {
+        'bin': ['PATH'],
+        'man': ['MANPATH'],
+        'share/man': ['MANPATH'],
+        'share/aclocal': ['ACLOCAL_PATH'],
+        'lib': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'lib64': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'include': ['CPATH'],
+        'lib/pkgconfig': ['PKG_CONFIG_PATH'],
+        'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
+        '': ['CMAKE_PREFIX_PATH']
+    }
+
+    tmpdir.chdir()
+    tmpdir.mkdir('bin')
+    tmpdir.mkdir('lib')
+    tmpdir.mkdir('include')
+
+    env = environment.inspect_path(str(tmpdir), inspections)
+    names = [item.name for item in env]
+    assert 'PATH' in names
+    assert 'LIBRARY_PATH' in names
+    assert 'LD_LIBRARY_PATH' in names
+    assert 'CPATH' in names
 
 
 @pytest.fixture()

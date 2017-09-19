@@ -106,8 +106,8 @@ _arguments['constraint'] = Args(
 _arguments['module_type'] = Args(
     '-m', '--module-type',
     choices=spack.modules.module_types.keys(),
-    default=list(spack.modules.module_types.keys())[0],
-    help='type of module files [default: %(default)s]')
+    action='append',
+    help='type of module file. More than one choice is allowed [default: all available module types]')  # NOQA: ignore=E501
 
 _arguments['yes_to_all'] = Args(
     '-y', '--yes-to-all', action='store_true', dest='yes_to_all',

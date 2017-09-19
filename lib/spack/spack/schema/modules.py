@@ -73,6 +73,9 @@ schema = {
                         }
                     }
                 },
+                'template': {
+                    'type': 'string'
+                },
                 'autoload': {
                     '$ref': '#/definitions/dependency_selection'},
                 'prerequisites': {
@@ -105,6 +108,10 @@ schema = {
             'default': {},
             'anyOf': [
                 {'properties': {
+                    'verbose': {
+                        'type': 'boolean',
+                        'default': False
+                    },
                     'hash_length': {
                         'type': 'integer',
                         'minimum': 0,

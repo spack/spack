@@ -134,6 +134,10 @@ misc_cache_path = canonicalize_path(
 misc_cache = FileCache(misc_cache_path)
 
 
+#: Directories where to search for templates
+template_dirs = spack.config.get_config('config')['template_dirs']
+template_dirs = [canonicalize_path(x) for x in template_dirs]
+
 # If this is enabled, tools that use SSL should not verify
 # certifiates. e.g., curl should use the -k option.
 insecure = not _config.get('verify_ssl', True)

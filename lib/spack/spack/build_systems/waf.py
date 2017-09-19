@@ -94,31 +94,31 @@ class WafPackage(PackageBase):
 
     def configure(self, spec, prefix):
         """Configures the project."""
-        args = self.configure_args(spec, prefix)
+        args = self.configure_args()
 
         self.waf('configure', *args)
 
-    def configure_args(self, spec, prefix):
+    def configure_args(self):
         """Arguments to pass to configure."""
-        return ['--prefix={0}'.format(prefix)]
+        return ['--prefix={0}'.format(self.prefix)]
 
     def build(self, spec, prefix):
         """Executes the build."""
-        args = self.build_args(spec, prefix)
+        args = self.build_args()
 
         self.waf('build', *args)
 
-    def build_args(self, spec, prefix):
+    def build_args(self):
         """Arguments to pass to build."""
         return []
 
     def install(self, spec, prefix):
         """Installs the targets on the system."""
-        args = self.install_args(spec, prefix)
+        args = self.install_args()
 
         self.waf('install', *args)
 
-    def install_args(self, spec, prefix):
+    def install_args(self):
         """Arguments to pass to install."""
         return []
 
