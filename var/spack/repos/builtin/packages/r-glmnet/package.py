@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class RGlmnet(RPackage):
     fashion, as described in the paper linked to via the URL below."""
 
     homepage = "http://www.jstatsoft.org/v33/i01/"
-    url      = "https://cran.r-project.org/src/contrib/glmnet_2.0-5.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/Archive/glmnet/glmnet_2.0-5.tar.gz"
 
     version('2.0-5', '049b18caa29529614cd684db3beaec2a')
 
