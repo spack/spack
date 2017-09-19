@@ -29,18 +29,34 @@ from spack import *
 class Latte(CMakePackage):
     """Open source density functional tight binding molecular dynamics."""
 
-    homepage = "https://gitlab.com/exaalt/latte"
-    url      = "https://gitlab.com/exaalt/latte/tags/v1.0"
+    homepage = "https://github.com/lanl/latte"
+    url      = "https://github.com/lanl/latte/tarball/v1.0"
 
-    version('develop', git='https://gitlab.com/exaalt/latte', branch='cmake')
+    version('develop', git='https://github.com/lanl/latte', branch='master')
+
+    variant('mpi', default=True,
+            description='Build with mpi')
+    variant('progress', default=False,
+            description='Use progress for fast')
+    variant('shared', default=True, description='Build shared libs')
 
     depends_on("cmake@3.1:", type='build')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('mpi', when='+mpi')
+    depends_on('qmd-progress', when='+progress')
 
     root_cmakelists_dir = 'cmake'
 
     def cmake_args(self):
-        options = ['-DBUILD_SHARED_LIBS=ON']
+        options = []
+        if '+shared' in self.spec:
+            options.append('-DBUILD_SHARED_LIBS=ON')
+        else:
+            options.append('-DBUILD_SHARED_LIBS=OFF')
+        if '+mpi' in self.spec:
+            options.append('-DO_MPI=yes')
+        if '+progress' in self.spec:
+            options.append('-DPROGRESS=yes')
 
         return options
