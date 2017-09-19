@@ -33,12 +33,10 @@ class P7zip(MakefilePackage):
 
     version('16.02', 'a0128d661cfe7cc8c121e73519c54fbf')
 
+    # all3 includes 7z, 7za, and 7zr
+    build_targets = ['all3']
+
     def edit(self, spec, prefix):
         # change install path
         makefile = FileFilter('makefile.common')
         makefile.filter('DEST_HOME=.*', 'DEST_HOME=%s' % prefix)
-
-    def install(self, spec, prefix):
-        # all3 includes 7z, 7za, and 7zr
-        make('all3')
-        make('install')
