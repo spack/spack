@@ -33,10 +33,9 @@ class Mariadb(CMakePackage):
     tools make it very versatile for a wide variety of use cases."""
 
     homepage = "https://mariadb.org/about/"
-    url      = "https://downloads.mariadb.org/interstitial/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
+    url      = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
 
     version('10.2.8', 'f93cbd5bfde3c0d082994764ff7db580')
-    # old versions, do not fetch under given url anymore
     version('10.1.23', '1a7392cc05c7c249acd4495022719ca8')
     version('5.5.56', '8bc7772fea3e11b0bc1a09d2278e2e32')
     version('10.1.14', '294925531e0fd2f0461e3894496a5adc')
