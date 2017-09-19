@@ -1,0 +1,31 @@
+{% block header %}
+{% if category %}
+#c {{ category }}
+{% endif %}
+{% if short_description %}
+#d {{ short_description }}
+{% endif %}
+{% if long_description %}
+{{ long_description| textwrap(72)| prepend_to_line('#h ')| join() }}
+{% endif %}
+{% endblock %}
+
+{% block autoloads %}
+{% for module in autoload %}
+dk_op {{ module }}
+{% endfor %}
+{% endblock %}
+
+{% block environment %}
+{% for command_name, cmd in environment_modifications %}
+{% if command_name == 'PrependPath' %}
+dk_alter {{ cmd.name }} {{ cmd.value }}
+{% endif %}
+{% if command_name == 'RemovePath' %}
+dk_unalter {{ cmd.name }} {{ cmd.value }}
+{% endif %}
+{% if command_name == 'SetEnv' %}
+dk_setenv {{ cmd.name }} {{ cmd.value }}
+{% endif %}
+{% endfor %}
+{% endblock %}
