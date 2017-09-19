@@ -33,6 +33,7 @@ class PyDateutil(PythonPackage):
     version('2.4.0', '75714163bb96bedd07685cdb2071b8bc')
     version('2.4.2', '4ef68e1c485b09e9f034e10473e5add2')
     version('2.5.2', 'eafe168e8f404bf384514f5116eedbb6')
+    version('2.2',   'c1f654d0ff7e33999380a8ba9783fd5c')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
