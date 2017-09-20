@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,5 +43,6 @@ class RBh(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/BH/index.html"
     url      = "https://cran.r-project.org/src/contrib/BH_1.60.0-2.tar.gz"
-
+    list_url = homepage
+    version('1.65.0-1', '7d0402188e4af59f4103f36616d6ee55')
     version('1.60.0-2', 'b50fdc85285da05add4e9da664a2d551')
