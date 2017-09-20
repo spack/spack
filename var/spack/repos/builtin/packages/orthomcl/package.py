@@ -25,30 +25,25 @@
 from spack import *
 
 
-class Mariadb(CMakePackage):
-    """MariaDB turns data into structured information in a wide array of
-    applications, ranging from banking to websites. It is an enhanced, drop-in
-    replacement for MySQL. MariaDB is used because it is fast, scalable and
-    robust, with a rich ecosystem of storage engines, plugins and many other
-    tools make it very versatile for a wide variety of use cases."""
+class Orthomcl(Package):
+    """OrthoMCL is a genome-scale algorithm for grouping orthologous protein
+       sequences."""
 
-    homepage = "https://mariadb.org/about/"
-    url      = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
+    homepage = "http://orthomcl.org/orthomcl/"
+    url      = "http://orthomcl.org/common/downloads/software/v2.0/orthomclSoftware-v2.0.9.tar.gz"
 
-    version('10.2.8', 'f93cbd5bfde3c0d082994764ff7db580')
-    version('10.1.23', '1a7392cc05c7c249acd4495022719ca8')
-    version('5.5.56', '8bc7772fea3e11b0bc1a09d2278e2e32')
-    version('10.1.14', '294925531e0fd2f0461e3894496a5adc')
-    version('5.5.49', '67b5a499a5f158b2a586e6e3bfb4f304')
+    version('2.0.9', '2e0202ed4e36a753752c3567edb9bba9')
 
-    variant('nonblocking', default=True, description='Allow non blocking '
-            'operations in the mariadb client library.')
+    depends_on('perl', type=('build', 'run'))
+    depends_on('blast-plus')
+    depends_on('mcl')
+    depends_on('mariadb')
 
-    depends_on('boost')
-    depends_on('cmake@2.6:', type='build')
-    depends_on('jemalloc')
-    depends_on('libaio')
-    depends_on('libedit')
-    depends_on('libevent', when='+nonblocking')
-    depends_on('ncurses')
-    depends_on('zlib')
+    def install(self, spec, prefix):
+        install_tree('bin', prefix.bin)
+        install_tree('config', prefix.config)
+        install_tree('doc', prefix.doc)
+        install_tree('lib', prefix.lib)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PERL5LIB', self.prefix.lib)
