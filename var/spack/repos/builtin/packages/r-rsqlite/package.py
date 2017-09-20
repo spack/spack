@@ -34,8 +34,6 @@ class RRsqlite(RPackage):
     url      = "https://cran.r-project.org/src/contrib/RSQLite_1.0.0.tar.gz"
     list_url = homepage
     version('2.0', '63842410e78ccdfc52d4ee97992521d5')
-
-
     depends_on('r-dbi', type=('build', 'run'))
     depends_on('r-bit64', type=('build', 'run'))
     depends_on('r-blob', type=('build', 'run'))
