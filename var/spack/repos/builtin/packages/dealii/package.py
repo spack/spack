@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -166,7 +166,10 @@ class Dealii(CMakePackage):
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
-            '-DBZIP2_DIR=%s' % spec['bzip2'].prefix,
+            # Cmake may still pick up system's bzip2, fix this:
+            '-DBZIP2_FOUND=true',
+            '-DBZIP2_INCLUDE_DIRS=%s' % spec['bzip2'].prefix.include,
+            '-DBZIP2_LIBRARIES=%s' % spec['bzip2'].libs.joined(';'),
             # CMake's FindBlas/Lapack may pickup system's blas/lapack instead
             # of Spack's. Be more specific to avoid this.
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
