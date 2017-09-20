@@ -39,6 +39,7 @@ class QmdProgress(CMakePackage):
 
     variant('graphlib', default=False, description='Build with Metis Suppport')
     variant('mpi', default=True, description='Build with MPI Support')
+    variant('shared', default=True, description='Build shared libs')
 
     depends_on('bml')
     depends_on('mpi', when='+mpi')
@@ -47,6 +48,10 @@ class QmdProgress(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = ['-DCMAKE_Fortran_FLAGS=-ffree-line-length-none']
+        if '+shared' in spec:
+            args.append('-DBUILD_SHARED_LIBS=ON')
+        else:
+            args.append('-DBUILD_SHARED_LIBS=OFF')
         if '+mpi' in spec:
             args.append('-DPROGRESS_MPI=yes')
             args.append('-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc)

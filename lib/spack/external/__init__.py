@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,8 @@ So far:
     distro:      Provides a more stable linux distribution detection.
 
     functools:   Used for implementation of total_ordering.
+
+    jinja2:      A modern and designer-friendly templating language for Python
 
     jsonschema:  An implementation of JSON Schema for Python.
 
