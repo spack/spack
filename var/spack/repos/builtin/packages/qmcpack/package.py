@@ -45,16 +45,22 @@ class Qmcpack(CMakePackage):
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True, description='Build with MPI support')
     variant('cuda', default=False,
-            description='Enable CUDA and GPU acceleration.')
-    variant('complex', default=True,
+            description='Enable CUDA and GPU acceleration')
+    variant('complex', default=False,
             description='Build the complex (general twist/k-point) version')
     variant('mixed', default=False,
             description='Build the mixed precision (mixture of single and '
-                        'double precision) version for gpu and cpu '
-                        '(experimental)')
+                        'double precision) version for gpu and cpu')
+    variant('timers', default=False,
+             description='Build with support for timers.')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
 
+    # cuda variant implies mixed precision variant by default, but there is
+    # no way to express this in variant syntax, need something like
+    # variant('+mixed', default=True, when='+cuda', description="...")
+
+    # Dependencies match those in the QMCPACK manual
     depends_on('cmake@3.4.3:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('libxml2')
@@ -116,16 +122,28 @@ class Qmcpack(CMakePackage):
         if '~mpi' in self.spec:
             args.append('-DQMC_MPI=0')
 
+        # Default is real-value single particle, but we don't want to get
+        # this wrong so its better to make it explicit here.
+        if '+complex' in self.spec:
+            args.append('-DQMC_COMPLEX=1')
+        else:
+            args.append('-DQMC_COMPLEX=0')
+
         # When '-DQMC_CUDA=1', CMake automatically sets:
         # '-DQMC_MIXED_PRECISION=1'
         #
-        # Note: there is a double-precision CUDA path, but it is deprecated
+        # There is a double-precision CUDA path, but it is not as well
+        # tested. 
         if '+cuda' in self.spec:
             args.append('-DQMC_CUDA=1')
 
-        # this is for the experimental mixed-prescision CPU code
+        # This is for the new mixed-precision CPU code as well as the CUDA
+        # full-precision code.
         if '+mixed' in self.spec:
             args.append('-DQMC_MIXED_PRECISION=1')
+
+        if '+timers' in self.spec:
+            args.append('-DTIMERS=1')
 
         return args
 
