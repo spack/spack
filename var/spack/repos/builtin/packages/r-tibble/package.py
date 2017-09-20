@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,14 +29,13 @@ class RTibble(RPackage):
     """Provides a 'tbl_df' class that offers better checking and printing
     capabilities than traditional data frames."""
 
-    homepage = "https://github.com/hadley/tibble"
+    homepage = "https://cran.rstudio.com/web/packages/tibble/index.html"
     url      = "https://cran.r-project.org/src/contrib/tibble_1.2.tar.gz"
-
+    list_url = homepage
     version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
     version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
 
     depends_on('r@3.1.2:')
-
     depends_on('r-assertthat', type=('build', 'run'))
     depends_on('r-lazyeval@0.1.10:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
