@@ -1,0 +1,5 @@
+enable:
+  - dotkit
+dotkit:
+  all:
+    template: 'override_from_modules.txt'

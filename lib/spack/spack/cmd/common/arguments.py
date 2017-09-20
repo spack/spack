@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,15 +26,23 @@
 import argparse
 
 import spack.cmd
-import spack.store
 import spack.modules
+import spack.spec
+import spack.store
 from spack.util.pattern import Args
+
 __all__ = ['add_common_arguments']
 
 _arguments = {}
 
 
 def add_common_arguments(parser, list_of_arguments):
+    """Extend a parser with extra arguments
+
+    Args:
+        parser: parser to be extended
+        list_of_arguments: arguments to be added to the parser
+    """
     for argument in list_of_arguments:
         if argument not in _arguments:
             message = 'Trying to add non existing argument "{0}" to a command'
@@ -98,8 +106,8 @@ _arguments['constraint'] = Args(
 _arguments['module_type'] = Args(
     '-m', '--module-type',
     choices=spack.modules.module_types.keys(),
-    default=list(spack.modules.module_types.keys())[0],
-    help='type of module files [default: %(default)s]')
+    action='append',
+    help='type of module file. More than one choice is allowed [default: all available module types]')  # NOQA: ignore=E501
 
 _arguments['yes_to_all'] = Args(
     '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
@@ -133,3 +141,7 @@ _arguments['long'] = Args(
 _arguments['very_long'] = Args(
     '-L', '--very-long', action='store_true',
     help='show full dependency hashes as well as versions')
+
+_arguments['tags'] = Args(
+    '-t', '--tags', action='append',
+    help='filter a package query by tags')

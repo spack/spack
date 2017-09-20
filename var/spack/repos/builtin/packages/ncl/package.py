@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,6 +43,8 @@ class Ncl(Package):
     patch('spack_ncl.patch')
     # Make ncl compile with hdf5 1.10
     patch('hdf5.patch')
+    # ymake-filter's buffer may overflow
+    patch('ymake-filter.patch')
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
