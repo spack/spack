@@ -22,22 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-#
 from spack import *
 
 
-class RAnnotationdbi(RPackage):
-    """Provides user interface and database connection code for
-annotation data packages using SQLite data storage."""
+class RIranges(RPackage):
+    """Provides efficient low-level and highly
+ reusable S4 classes for storing,
+ manipulating and aggregating over annotated ranges of
+ integers. Implements an
+ algebra of range operations, including efficient
+ algorithms for finding overlaps
+ and nearest neighbors. Defines efficient list-like
+ classes for storing, transforming
+ and aggregating large grouped data,
+ i.e., collections of atomic vectors and DataFrames."""
 
-    homepage = "https://www.bioconductor.org/packages/AnnotationDbi/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/AnnotationDbi_1.38.2.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/IRanges/"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/IRanges_2.10.3.tar.gz"
     list_url = homepage
-    version('1.38.2', 'aea4a5cd1f752b59cb9f4a8dcca05734')
+    version('2.10.3', '8fd2a39934de72affef35df8bdf53636')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-iranges', type=('build', 'run'))
-    depends_on('r-dbi', type=('build', 'run'))
-    depends_on('r-rsqlite', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
