@@ -46,7 +46,7 @@ class Fastmath(Package):
 #    depends_on('nox-trilinos')  # hoping for stripped down install of just nox
     depends_on('moab')
     depends_on('mpi')
-    depends_on('parpack')  # we need parpack ng
+    depends_on('arpack-ng')
     depends_on('petsc')
     depends_on('phasta')
     depends_on('pumi')
