@@ -41,4 +41,3 @@ class RS4vectors(RPackage):
     version('0.14.4', '08ccc46e6d39f3aa9091f868ecec1f70')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
-
