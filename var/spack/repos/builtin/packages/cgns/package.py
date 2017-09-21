@@ -40,6 +40,8 @@ class Cgns(CMakePackage):
     depends_on('cmake@2.8:', type='build')
     depends_on('hdf5', when='+hdf5')
 
+    parallel = False
+
     def cmake_args(self):
         spec = self.spec
         cmake_args = []
@@ -52,18 +54,9 @@ class Cgns(CMakePackage):
         if '+hdf5' in spec:
             cmake_args.extend([
                 '-DCGNS_ENABLE_HDF5=ON',
-                '-DHDF5_NEEDS_ZLIB=ON'
+                '-DHDF5_DIR=%s' % spec['hdf5'].prefix
             ])
 
-            if spec.satisfies('^hdf5+mpi'):
-                cmake_args.append('-DHDF5_NEEDS_MPI=ON')
-            else:
-                cmake_args.append('-DHDF5_NEEDS_MPI=OFF')
-
-            if spec.satisfies('^hdf5+szip'):
-                cmake_args.append('-DHDF5_NEEDS_SZIP=ON')
-            else:
-                cmake_args.append('-DHDF5_NEEDS_SZIP=OFF')
         else:
             cmake_args.append('-DCGNS_ENABLE_HDF5=OFF')
 
