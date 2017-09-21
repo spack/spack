@@ -29,9 +29,11 @@ class RBiocinstaller(RPackage):
     """This package is used to install and update Bioconductor, CRAN,
     and (some) github packages."""
 
-    homepage = "http://bioconductor.org/packages/devel/bioc/html/BiocInstaller.html"
-    url      = "http://bioconductor.org/packages/devel/bioc/src/contrib/BiocInstaller_1.25.3.tar.gz"
+    homepage = "https://bioconductor.org/packages/BiocInstaller/"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/BiocInstaller_1.26.1.tar.gz"
+    list_url = homepage
 
+    version('1.26.1', 'ec0f8866639475bcd91179dcc840b5f4')
     version('1.25.3', '6214770455a5122dca5544861f52c91d')
 
     depends_on('r@3.4.0:')
