@@ -33,6 +33,8 @@ So far:
 
     functools:   Used for implementation of total_ordering.
 
+    jinja2:      A modern and designer-friendly templating language for Python
+
     jsonschema:  An implementation of JSON Schema for Python.
 
     ordereddict: We include our own version to be Python 2.6 compatible.
