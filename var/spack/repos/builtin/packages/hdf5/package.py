@@ -65,6 +65,7 @@ class Hdf5(AutotoolsPackage):
             description='Produce position-independent code (for shared libs)')
 
     depends_on('mpi', when='+mpi')
+    depends_on('numactl', when='+mpi+fortran')
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 

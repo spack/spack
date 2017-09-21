@@ -43,7 +43,9 @@ class RRmpi(RPackage):
     conflicts('^mvapich2')
     conflicts('^spectrum-mpi')
 
-    def configure_args(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+
         mpi_name = spec['mpi'].name
 
         # The type of MPI. Supported values are:
