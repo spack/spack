@@ -51,6 +51,89 @@ class Openblas(MakefilePackage):
     variant('openmp', default=False, description="Enable OpenMP support.")
     variant('pic', default=True, description='Build position independent code')
 
+    variant('target', default='native', description='Build for this target CPU',
+            values=[
+                # 1.X86/X86_64
+                # a)Intel CPU:
+                'P2',
+                'KATMAI',
+                'COPPERMINE',
+                'NORTHWOOD',
+                'PRESCOTT',
+                'BANIAS',
+                'YONAH',
+                'CORE2',
+                'PENRYN',
+                'DUNNINGTON',
+                'NEHALEM',
+                'SANDYBRIDGE',
+                'HASWELL',
+                'ATOM',
+    
+                # b)AMD CPU:
+                'ATHLON',
+                'OPTERON',
+                'OPTERON_SSE3',
+                'BARCELONA',
+                'SHANGHAI',
+                'ISTANBUL',
+                'BOBCAT',
+                'BULLDOZER',
+                'PILEDRIVER',
+                'STEAMROLLER',
+                'EXCAVATOR',
+                'ZEN',
+    
+                # c)VIA CPU:
+                'SSE_GENERIC',
+                'VIAC3',
+                'NANO',
+    
+                # 2.Power CPU:
+                'POWER4',
+                'POWER5',
+                'POWER6',
+                'POWER7',
+                'POWER8',
+                'PPCG4',
+                'PPC970',
+                'PPC970MP',
+                'PPC440',
+                'PPC440FP2',
+                'CELL',
+    
+                # 3.MIPS CPU:
+                'P5600',
+    
+                # 4.MIPS64 CPU:
+                'SICORTEX',
+                'LOONGSON3A',
+                'LOONGSON3B',
+                'I6400',
+                'P6600',
+    
+                # 5.IA64 CPU:
+                'ITANIUM2',
+    
+                # 6.SPARC CPU:
+                'SPARC',
+                'SPARCV7',
+    
+                # 7.ARM CPU:
+                'CORTEXA15',
+                'CORTEXA9',
+                'ARMV7',
+                'ARMV6',
+                'ARMV5',
+    
+                # 8.ARM 64-bit CPU:
+                'ARMV8',
+                'CORTEXA57',
+                'VULCAN',
+                'THUNDERX',
+                'THUNDERX2T99',
+            ])
+
     # virtual dependency
     provides('blas')
     provides('lapack')
@@ -74,6 +157,8 @@ class Openblas(MakefilePackage):
     parallel = False
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
+
+    depends_on('perl', type='build')
 
     @run_before('edit')
     def check_compilers(self):
@@ -129,6 +214,10 @@ class Openblas(MakefilePackage):
         # Add support for OpenMP
         if '+openmp' in self.spec:
             make_defs += ['USE_OPENMP=1']
+        # Choose target
+        target = self.spec.variants['target'].value
+        if target != 'native':
+            make_defs += ['TARGET={0}'.format(target)]
 
         # 64bit ints
         if '+ilp64' in self.spec:
