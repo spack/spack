@@ -108,15 +108,15 @@ class Openblas(MakefilePackage):
             'FC={0}'.format(spack_f77),
             'MAKE_NO_J=1'
         ]
-        # invoke make with the correct TARGET for aarch64
-        if 'aarch64' in spack.architecture.sys_type():
-            make_defs += [
-                'TARGET=PILEDRIVER',
-                'TARGET=ARMV8'
-            ]
         if self.spec.variants['cpu_target'].value:
             make_defs += [
                 'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
+            ]
+        # invoke make with the correct TARGET for aarch64
+        elif 'aarch64' in spack.architecture.sys_type():
+            make_defs += [
+                'TARGET=PILEDRIVER',
+                'TARGET=ARMV8'
             ]
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs += ['NO_AVX2=1']
