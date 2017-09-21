@@ -60,4 +60,3 @@ class Cereal(CMakePackage):
             '-DJUST_INSTALL_CEREAL=On',
             '-DWITH_WERROR=Off',
         ]
-
