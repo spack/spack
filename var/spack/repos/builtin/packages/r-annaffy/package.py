@@ -28,14 +28,15 @@ from spack import *
 
 
 class RAnnaffy(RPackage):
-    """Functions for handling data from Bioconductor Affymetrix 
-    annotation data packages. Produces compact HTML and text 
-    reports including experimental data and URL links to many 
-    online databases. Allows searching biological metadata 
-    using various criteria."""
+    """Functions for handling data from Bioconductor Affymetrix
+ annotation data packages. Produces compact HTML and text
+ reports including experimental data and URL links to many
+ online databases. Allows searching biological metadata
+ using various criteria."""
 
-    homepage = "https://www.bioconductor.org"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/annaffy_1.48.0.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/annaffy/"
+    url = "https://www.bioconductor.org/packages/release/"
+    "bioc/src/contrib/annaffy_1.48.0.tar.gz"
 
     version('1.48.0', 'c51219a222b377403fe4bc08a6c57e7f')
 
