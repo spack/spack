@@ -26,9 +26,13 @@
 from spack import *
 
 
-class RBiocgenerics(RPackage):
-    """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
+class RBiobase(RPackage):
+    """Functions that are needed by many other packages
+ or which replace R functions."""
+
+    homepage = "https://www.bioconductor.org/packages/Biobase/"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/Biobase_2.36.2.tar.gz"
     list_url = homepage
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+    version('2.36.2', '8854eb70acabb07b55d2953fb1ecff31')
+
+    depends_on('r-biocgenerics', type=('build', 'run'))
