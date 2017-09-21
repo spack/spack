@@ -32,8 +32,8 @@ class RBlob(RPackage):
  for use as a column in data frame."""
 
     homepage = "https://cran.rstudio.com/web/packages/blob/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/blob_1.1.0.tar.gz"
+    url = "https://cran.rstudio.com/src/contrib/blob_1.1.0.tar.gz"
     list_url = homepage
     version('1.1.0', '1c729aca36fd5193d81b1cd5ed9d8a00')
 
-    depends_on('r-tibble', type = ('build','run'))
+    depends_on('r-tibble', type=('build', 'run'))
