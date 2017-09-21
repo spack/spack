@@ -33,6 +33,7 @@ class Latte(CMakePackage):
     url      = "https://github.com/lanl/latte/tarball/v1.0"
 
     version('develop', git='https://github.com/lanl/latte', branch='master')
+    version('1.0.1', 'd0b99edbcf7a19abe0a68a192d6f6234')
 
     variant('mpi', default=True,
             description='Build with mpi')
