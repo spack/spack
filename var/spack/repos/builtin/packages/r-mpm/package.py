@@ -22,20 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-#
 from spack import *
 
 
 class RMpm(RPackage):
-    """Exploratory graphical analysis of multivariate data, specifically 
-    gene expression data with different projection methods: principal 
-    component analysis, correspondence analysis, spectral map analysis."""
+    """Exploratory graphical analysis of multivariate data, specifically
+ gene expression data with different projection methods: principal
+ component analysis, correspondence analysis, spectral map analysis."""
 
     homepage = "https://cran.rstudio.com/web/packages/mpm/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/mpm_1.0-22.tar.gz"
+    url = "https://cran.rstudio.com/src/contrib/mpm_1.0-22.tar.gz"
     list_url = homepage
     version('1.0-22', '91885c421cafd89ce8893ccf827165a2')
 
     depends_on('r-kernsmooth', type=('build', 'run'))
-
