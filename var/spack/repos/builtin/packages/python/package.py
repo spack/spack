@@ -168,7 +168,6 @@ class Python(AutotoolsPackage):
         if '+pic' in spec:
             config_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
 
-
         return config_args
 
     @run_after('install')
