@@ -40,6 +40,8 @@ class Silo(Package):
     variant('shared', default=True, description='Build shared libraries')
     variant('silex', default=False,
             description='Builds Silex, a GUI for viewing Silo files')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
     depends_on('hdf5')
     depends_on('qt', when='+silex')
@@ -55,6 +57,12 @@ class Silo(Package):
 
         if '+silex' in spec:
             config_args.append('--with-Qt-dir=%s' % spec['qt'].prefix)
+
+        if '+pic' in spec:
+            config_args += [
+                'CFLAGS={0}'.format(self.compiler.pic_flag),
+                'CXXFLAGS={0}'.format(self.compiler.pic_flag),
+                'FCFLAGS={0}'.format(self.compiler.pic_flag)]
 
         configure(
             '--prefix=%s' % prefix,

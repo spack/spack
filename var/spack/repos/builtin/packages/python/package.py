@@ -81,6 +81,8 @@ class Python(AutotoolsPackage):
     # builds then use a 32-bit type for Py_UNICODE and store Unicode data
     # internally as UCS4. Note that UCS2 and UCS4 Python builds are not binary
     # compatible.
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -147,6 +149,8 @@ class Python(AutotoolsPackage):
 
         if '+shared' in spec:
             config_args.append('--enable-shared')
+        else:
+            config_args.append('--disable-shared')
 
         if '+ucs4' in spec:
             if spec.satisfies('@:2.7'):
@@ -160,6 +164,9 @@ class Python(AutotoolsPackage):
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
+
+        if '+pic' in spec:
+            config_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
 
         return config_args
 
