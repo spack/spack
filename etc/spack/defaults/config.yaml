@@ -18,6 +18,9 @@ config:
   # You can use $spack here to refer to the root of the spack instance.
   install_tree: $spack/opt/spack
 
+  # Locations where templates should be found
+  template_dirs:
+    - $spack/templates
 
   # Locations where different types of modules should be installed.
   module_roots:

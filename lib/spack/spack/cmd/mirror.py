@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -213,7 +213,7 @@ def mirror_create(args):
         "  %-4d failed to fetch." % e)
     if error:
         tty.error("Failed downloads:")
-        colify(s.format("$_$@") for s in error)
+        colify(s.cformat("$_$@") for s in error)
 
 
 def mirror(parser, args):

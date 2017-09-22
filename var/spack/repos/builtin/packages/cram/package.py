@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,18 +25,13 @@
 from spack import *
 
 
-class Cram(Package):
+class Cram(CMakePackage):
     """Cram runs many small MPI jobs inside one large MPI job."""
     homepage = "https://github.com/llnl/cram"
     url      = "http://github.com/llnl/cram/archive/v1.0.1.tar.gz"
 
     version('1.0.1', 'c73711e945cf5dc603e44395f6647f5e')
 
-    extends('python')
-    depends_on("mpi")
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        cmake(".", *std_cmake_args)
-        make()
-        make("install")
+    extends('python@2.7:')
+    depends_on('mpi')
+    depends_on('cmake@2.8:', type='build')

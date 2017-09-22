@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,6 +26,7 @@ import os
 import re
 import subprocess
 from six import string_types
+import sys
 
 import llnl.util.tty as tty
 import spack
@@ -197,9 +198,9 @@ class Executable(object):
             if output is str or error is str:
                 result = ''
                 if output is str:
-                    result += out.decode('utf-8')
+                    result += to_str(out)
                 if error is str:
-                    result += err.decode('utf-8')
+                    result += to_str(err)
                 return result
 
         except OSError as e:
@@ -234,6 +235,20 @@ class Executable(object):
 
     def __str__(self):
         return ' '.join(self.exe)
+
+
+def to_str(content):
+    """Produce a str type from the content of a process stream obtained with
+       Popen.communicate.
+    """
+    # Prior to python3, Popen.communicate returns a str type. For python3 it
+    # returns a bytes type. In the case of python3 we decode the
+    # byte string to produce a str type. This will generate junk if the
+    # encoding is not UTF-8 (which includes ASCII).
+    if sys.version_info < (3, 0, 0):
+        return content
+    else:
+        return content.decode('utf-8')
 
 
 def which(*args, **kwargs):

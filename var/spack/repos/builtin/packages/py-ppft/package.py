@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class PyPpft(PythonPackage):
     """Distributed and parallel python """
 
     homepage = "https://github.com/uqfoundation/ppft"
-    url      = "https://pypi.org/packages/source/p/ppft/ppft-1.6.4.7.1.zip"
+    url      = "https://pypi.io/packages/source/p/ppft/ppft-1.6.4.7.1.zip"
 
     version('1.6.4.7.1',  '2b196a03bfbc102773f849c6b21e617b')
     version('1.6.4.6',   'e533432bfba4b5a523a07d58011df209')

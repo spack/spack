@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -182,7 +182,7 @@ def all_compiler_specs(scope=None, init_config=True):
 
 
 def find_compilers(*paths):
-    """Return a list of compilers found in the suppied paths.
+    """Return a list of compilers found in the supplied paths.
        This invokes the find_compilers() method for each operating
        system associated with the host platform, and appends
        the compilers detected to a list.

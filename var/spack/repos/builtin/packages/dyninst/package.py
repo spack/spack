@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,7 @@ class Dyninst(Package):
     url = "https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz"
     list_url = "http://www.dyninst.org/downloads/dyninst-8.x"
 
+    version('9.3.2', 'a2bf03b6d1d424853e80d39b13e9c229')
     version('9.3.0', 'edde7847dc673ca69bd59412af572450')
     version('9.2.0', 'ad023f85e8e57837ed9de073b59d6bab',
             url="https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz")

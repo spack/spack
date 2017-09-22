@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class Sbt(Package):
 
     version('0.13.12', 'cec3071d46ef13334c8097cc3467ff28')
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
         shutil.copytree('bin', join_path(prefix, 'bin'), symlinks=True)

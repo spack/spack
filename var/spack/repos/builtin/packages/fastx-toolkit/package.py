@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,3 +35,5 @@ class FastxToolkit(AutotoolsPackage):
     version('0.0.14', 'bf1993c898626bb147de3d6695c20b40')
 
     depends_on('libgtextutils')
+
+    conflicts('%gcc@7.1.0:')

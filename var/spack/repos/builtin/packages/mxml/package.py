@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -50,7 +50,7 @@ class Mxml(AutotoolsPackage):
     def configure_args(self):
         return [
             # ADIOS build with -fPIC, so we need it too (avoid linkage issue)
-            'CFLAGS=-fPIC',
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
             # Default is non-shared, but avoid any future surprises
             '--disable-shared',
         ]

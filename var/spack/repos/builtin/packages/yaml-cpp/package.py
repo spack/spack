@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,7 +36,7 @@ class YamlCpp(CMakePackage):
 
     variant('shared', default=True,
             description='Enable build of shared libraries')
-    variant('fpic',   default=True,
+    variant('pic',   default=True,
             description='Build with position independent code')
 
     depends_on('boost', when='@:0.5.3')
@@ -49,7 +49,7 @@ class YamlCpp(CMakePackage):
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
-                'ON' if '+fpic' in spec else 'OFF'),
+                'ON' if '+pic' in spec else 'OFF'),
         ])
 
         return options

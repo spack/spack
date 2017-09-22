@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -65,6 +65,7 @@ class Hdf5(AutotoolsPackage):
             description='Produce position-independent code (for shared libs)')
 
     depends_on('mpi', when='+mpi')
+    depends_on('numactl', when='+mpi+fortran')
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
@@ -173,6 +174,7 @@ class Hdf5(AutotoolsPackage):
         if '+shared' in spec:
             extra_args.append('--enable-shared')
         else:
+            extra_args.append('--disable-shared')
             extra_args.append('--enable-static-exec')
 
         if '+cxx' in spec:

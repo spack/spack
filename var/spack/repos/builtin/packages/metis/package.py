@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -91,7 +91,7 @@ class Metis(Package):
             raise InstallError('METIS@:4 does not support the following '
                                'variants: gdb, int64, real64.')
 
-        options = ['COPTIONS=-fPIC']
+        options = ['COPTIONS={0}'.format(self.compiler.pic_flag)]
         if '+debug' in spec:
             options.append('OPTFLAGS=-g -O0')
         make(*options)
@@ -119,7 +119,7 @@ class Metis(Package):
             install(sharefile, prefix.share)
 
         if '+shared' in spec:
-            shared_flags = ['-fPIC', '-shared']
+            shared_flags = [self.compiler.pic_flag, '-shared']
             if sys.platform == 'darwin':
                 shared_suffix = 'dylib'
                 shared_flags.extend(['-Wl,-all_load', 'libmetis.a'])

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -45,7 +45,7 @@ class Vcftools(AutotoolsPackage):
     # this needs to be in sync with what setup_environment adds to
     # PERL5LIB below
     def configure_args(self):
-        return ['--with-pmdir=lib']
+        return ['--with-pmdir={0}'.format(self.prefix.lib)]
 
     @run_before('install')
     def filter_sbang(self):
@@ -72,4 +72,4 @@ class Vcftools(AutotoolsPackage):
             filter_file(match, substitute, *files, **kwargs)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', join_path(self.prefix, 'lib'))
+        run_env.prepend_path('PERL5LIB', self.prefix.lib)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,14 +25,22 @@
 from __future__ import print_function
 
 import textwrap
+
 from six.moves import zip_longest
+
 from llnl.util.tty.colify import *
+
+import llnl.util.tty.color as color
 import spack
 import spack.fetch_strategy as fs
+import spack.spec
 
-description = "get detailed information on a particular package"
-section = "basic"
-level = "short"
+description = 'get detailed information on a particular package'
+section = 'basic'
+level = 'short'
+
+header_color = '@*b'
+plain_format = '@.'
 
 
 def padder(str_list, extra=0):
@@ -48,11 +56,23 @@ def padder(str_list, extra=0):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'name', metavar="PACKAGE", help="name of package to get info for")
+        'name', metavar='PACKAGE', help='name of package to get info for')
+
+
+def section_title(s):
+    return header_color + s + plain_format
+
+
+def version(s):
+    return spack.spec.version_color + s + plain_format
+
+
+def variant(s):
+    return spack.spec.enabled_variant_color + s + plain_format
 
 
 class VariantFormatter(object):
-    def __init__(self, variants, max_widths=(25, 20, 35)):
+    def __init__(self, variants, max_widths=(30, 20, 30)):
         self.variants = variants
         self.headers = ('Name [Default]', 'Allowed values', 'Description')
         # Set max headers lengths
@@ -102,9 +122,9 @@ class VariantFormatter(object):
     @property
     def lines(self):
         if not self.variants:
-            yield "    None"
+            yield '    None'
         else:
-            yield "    " + self.fmt % self.headers
+            yield '    ' + self.fmt % self.headers
             yield '\n'
             for k, v in sorted(self.variants.items()):
                 name = textwrap.wrap(
@@ -123,61 +143,95 @@ class VariantFormatter(object):
                         name, allowed, description, fillvalue=''
                 ):
                     yield "    " + self.fmt % t
-                yield ''  # Trigger a new line
 
 
 def print_text_info(pkg):
     """Print out a plain text description of a package."""
-    header = "{0}:   ".format(pkg.build_system_class)
 
-    print(header, pkg.name)
+    header = section_title(
+        '{0}:   '
+    ).format(pkg.build_system_class) + pkg.name
+    color.cprint(header)
 
-    print()
-    print("Description:")
+    color.cprint('')
+    color.cprint(section_title('Description:'))
     if pkg.__doc__:
-        print(pkg.format_doc(indent=4))
+        color.cprint(pkg.format_doc(indent=4))
     else:
-        print("    None")
+        color.cprint("    None")
 
-    whitespaces = ''.join([' '] * (len(header) - len("Homepage: ")))
-    print("Homepage:", whitespaces, pkg.homepage)
+    color.cprint(section_title('Homepage: ') + pkg.homepage)
 
-    print()
-    print("Safe versions:  ")
+    if len(pkg.maintainers) > 0:
+        mnt = " ".join(['@@' + m for m in pkg.maintainers])
+        color.cprint('')
+        color.cprint(section_title('Maintainers: ') + mnt)
+
+    color.cprint('')
+    color.cprint(section_title("Tags: "))
+    if hasattr(pkg, 'tags'):
+        tags = sorted(pkg.tags)
+        colify(tags, indent=4)
+    else:
+        color.cprint("    None")
+
+    color.cprint('')
+    color.cprint(section_title('Preferred version:  '))
 
     if not pkg.versions:
-        print("    None")
+        color.cprint(version('    None'))
+        color.cprint('')
+        color.cprint(section_title('Safe versions:  '))
+        color.cprint(version('    None'))
     else:
         pad = padder(pkg.versions, 4)
+
+        # Here we sort first on the fact that a version is marked
+        # as preferred in the package, then on the fact that the
+        # version is not develop, then lexicographically
+        l = [
+            (value.get('preferred', False), not key.isdevelop(), key)
+            for key, value in pkg.versions.items()
+        ]
+        l = sorted(l)
+        _, _, preferred = l.pop()
+
+        f = fs.for_package_version(pkg, preferred)
+        line = version('    {0}'.format(pad(preferred))) + str(f)
+        color.cprint(line)
+        color.cprint('')
+        color.cprint(section_title('Safe versions:  '))
+
         for v in reversed(sorted(pkg.versions)):
             f = fs.for_package_version(pkg, v)
-            print("    %s%s" % (pad(v), str(f)))
+            line = version('    {0}'.format(pad(v))) + str(f)
+            color.cprint(line)
 
-    print()
-    print("Variants:")
+    color.cprint('')
+    color.cprint(section_title('Variants:'))
 
     formatter = VariantFormatter(pkg.variants)
     for line in formatter.lines:
-        print(line)
+        color.cprint(line)
 
-    print()
-    print("Installation Phases:")
+    color.cprint('')
+    color.cprint(section_title('Installation Phases:'))
     phase_str = ''
     for phase in pkg.phases:
         phase_str += "    {0}".format(phase)
-    print(phase_str)
+    color.cprint(phase_str)
 
     for deptype in ('build', 'link', 'run'):
-        print()
-        print("%s Dependencies:" % deptype.capitalize())
+        color.cprint('')
+        color.cprint(section_title('%s Dependencies:' % deptype.capitalize()))
         deps = sorted(pkg.dependencies_of_type(deptype))
         if deps:
             colify(deps, indent=4)
         else:
-            print("    None")
+            color.cprint('    None')
 
-    print()
-    print("Virtual Packages: ")
+    color.cprint('')
+    color.cprint(section_title('Virtual Packages: '))
     if pkg.provided:
         inverse_map = {}
         for spec, whens in pkg.provided.items():
@@ -186,10 +240,15 @@ def print_text_info(pkg):
                     inverse_map[when] = set()
                 inverse_map[when].add(spec)
         for when, specs in reversed(sorted(inverse_map.items())):
-            print("    %s provides %s" % (
-                when, ', '.join(str(s) for s in specs)))
+            line = "    %s provides %s" % (
+                when.colorized(), ', '.join(s.colorized() for s in specs)
+            )
+            print(line)
+
     else:
-        print("    None")
+        color.cprint("    None")
+
+    color.cprint('')
 
 
 def info(parser, args):

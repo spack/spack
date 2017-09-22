@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -52,7 +52,7 @@ class Cce(Compiler):
 
     @classmethod
     def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*(\d+(\.\d+)+)')
+        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
 
     @property
     def openmp_flag(self):

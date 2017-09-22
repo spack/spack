@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,7 +33,7 @@ class Gdbm(AutotoolsPackage):
     manipulate a hashed database."""
 
     homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
-    url      = "ftp://ftp.gnu.org/gnu/gdbm/gdbm-1.13.tar.gz"
+    url      = "http://ftp.gnu.org/gnu/gdbm/gdbm-1.13.tar.gz"
 
     version('1.13',  '8929dcda2a8de3fd2367bdbf66769376')
     version('1.12',  '9ce96ff4c99e74295ea19040931c8fb9')

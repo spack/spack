@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,7 +38,6 @@ schema = {
         'config': {
             'type': 'object',
             'default': {},
-            'additionalProperties': False,
             'properties': {
                 'install_tree': {'type': 'string'},
                 'install_hash_length': {'type': 'integer', 'minimum': 1},
@@ -48,6 +47,10 @@ schema = {
                         {'type': 'string'},
                         {'type': 'array',
                          'items': {'type': 'string'}}],
+                },
+                'template_dirs': {
+                    'type': 'array',
+                    'items': {'type': 'string'}
                 },
                 'module_roots': {
                     'type': 'object',

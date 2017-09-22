@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,6 +36,8 @@ class Ffmpeg(AutotoolsPackage):
 
     variant('shared', default=True,
             description='build shared libraries')
+
+    depends_on('yasm@1.2.0:')
 
     def configure_args(self):
         spec = self.spec

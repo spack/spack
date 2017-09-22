@@ -1,6 +1,6 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -142,6 +142,10 @@ misc_cache_path = canonicalize_path(
 misc_cache = FileCache(misc_cache_path)
 
 
+#: Directories where to search for templates
+template_dirs = spack.config.get_config('config')['template_dirs']
+template_dirs = [canonicalize_path(x) for x in template_dirs]
+
 # If this is enabled, tools that use SSL should not verify
 # certifiates. e.g., curl should use the -k option.
 insecure = not _config.get('verify_ssl', True)
@@ -191,10 +195,13 @@ from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.qmake import QMakePackage
+from spack.build_systems.scons import SConsPackage
 from spack.build_systems.waf import WafPackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
 from spack.build_systems.perl import PerlPackage
+from spack.build_systems.intel import IntelPackage
 
 __all__ += [
     'run_before',
@@ -204,10 +211,13 @@ __all__ += [
     'MakefilePackage',
     'AutotoolsPackage',
     'CMakePackage',
+    'QMakePackage',
+    'SConsPackage',
     'WafPackage',
     'PythonPackage',
     'RPackage',
     'PerlPackage',
+    'IntelPackage',
 ]
 
 from spack.version import Version, ver

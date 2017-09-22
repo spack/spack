@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -76,7 +76,7 @@ class Zoltan(Package):
         if '+shared' in spec:
             config_args.append('RANLIB=echo')
             config_args.append('--with-ar=$(CXX) -shared $(LDFLAGS) -o')
-            config_cflags.append('-fPIC')
+            config_cflags.append(self.compiler.pic_flag)
             if spec.satisfies('%gcc'):
                 config_args.append('--with-libs={0}'.format('-lgfortran'))
 

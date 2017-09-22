@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,8 +25,8 @@
 import sys
 
 import llnl.util.tty as tty
+import spack
 import spack.cmd.common.arguments as arguments
-
 from spack.cmd import display_specs
 
 description = "list and search installed packages"
@@ -54,12 +54,16 @@ def setup_parser(subparser):
         const='deps',
         help='show full dependency DAG of installed packages')
 
-    arguments.add_common_arguments(subparser, ['long', 'very_long'])
+    arguments.add_common_arguments(subparser, ['long', 'very_long', 'tags'])
 
     subparser.add_argument('-f', '--show-flags',
                            action='store_true',
                            dest='show_flags',
                            help='show spec compiler flags')
+    subparser.add_argument('--show-full-compiler',
+                           action='store_true',
+                           dest='show_full_compiler',
+                           help='show full compiler specs')
     implicit_explicit = subparser.add_mutually_exclusive_group()
     implicit_explicit.add_argument(
         '-e', '--explicit',
@@ -119,19 +123,18 @@ def find(parser, args):
 
     # Exit early if no package matches the constraint
     if not query_specs and args.constraint:
-        msg = "No package matches the query: {0}".format(
-            ' '.join(args.constraint))
+        msg = "No package matches the query: {0}"
+        msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
         return
+
+    # If tags have been specified on the command line, filter by tags
+    if args.tags:
+        packages_with_tags = spack.repo.packages_with_tags(*args.tags)
+        query_specs = [x for x in query_specs if x.name in packages_with_tags]
 
     # Display the result
     if sys.stdout.isatty():
         tty.msg("%d installed packages." % len(query_specs))
 
-    display_specs(query_specs,
-                  mode=args.mode,
-                  long=args.long,
-                  very_long=args.very_long,
-                  show_flags=args.show_flags,
-                  namespace=args.namespace,
-                  variants=args.variants)
+    display_specs(query_specs, args)
