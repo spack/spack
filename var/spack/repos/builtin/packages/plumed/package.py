@@ -111,6 +111,12 @@ class Plumed(AutotoolsPackage):
         }
     }
 
+    # The configure.ac script may detect the wrong linker for
+    # LD_RO which causes issues at link time. Here we work around
+    # the issue saying we have no LD_RO executable.
+    build_targets = ['LD_RO=']
+    install_targets = ['install', 'LD_RO=']
+
     force_autoreconf = True
 
     parallel = False
