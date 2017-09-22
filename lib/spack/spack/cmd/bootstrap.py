@@ -30,7 +30,7 @@ import spack.cmd.common.arguments as arguments
 description = "Bootstrap packages needed for spack to run smoothly"
 section = "admin"
 level = "long"
- 
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -72,7 +72,10 @@ def bootstrap(parser, args, **kwargs):
     # Define requirement dictionary defining general specs which need
     # to be satisfied, and the specs to install when the general spec
     # isn't satisfied.
+<<<<<<< 19ea0053efa901883688eacc5ea90b11037d7f76
 
+=======
+>>>>>>> Cleaned up
     requirement_dict = {'environment-modules': 'environment-modules~X'}
 
     for requirement in requirement_dict:
