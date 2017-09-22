@@ -31,6 +31,7 @@ class Emacs(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/emacs"
     url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
 
+    version('25.3', '74ddd373dc52ac05ca7a8c63b1ddbf58')
     version('25.2', '0a36d1cdbba6024d4dbbac027f87995f')
     version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
