@@ -27,22 +27,133 @@ import os
 import sys
 import copy
 import spack
+import atexit
 import subprocess
+import cPickle as pickle
 import llnl.util.tty as tty
+from socket import *
 from itertools import product
 from spack.util.executable import which
 from llnl.util.filesystem import join_path
+
 from fstab import Fstab
+from daemon import Daemon
 
 # Files or paths which need to be binded with mount --bind
 BIND_PATHS = [
     '/dev',
+    '/sys',
+    '/proc'
 ]
 
 # Files or paths which need to be copied
 COPY_PATHS = [
     '/etc/resolv.conf'
 ]
+
+mount_daemon_pidfile = "/tmp/spack-mount-deamon.pid"
+MOUNT_DEV   = 1
+MOUNT_SYS   = 2
+MOUNT_PROC  = 3
+UMOUNT_DEV  = 4
+UMOUNT_SYS  = 5
+UMOUNT_PROC = 6
+
+class MountOperation:
+    def __init__(self, operation, location):
+        self.operation = operation
+        self.location  = location
+
+    def __str__(self):
+        if (self.operation == 1):
+            return "MOUNT DEV: " + self.location
+        elif (self.operation == 2):
+            return "MOUNT SYS: " + self.location
+        elif (self.operation == 3):
+            return "MOUNT PROC: " + self.location
+        elif (self.operation == 4):
+            return "UMOUNT DEV: " + self.location
+        elif (self.operation == 5):
+            return "UMOUNT SYS: " + self.location
+        elif (self.operation == 6):
+            return "UMOUNT PROC: " + self.location
+        return "UNKNOWN OPERATION: " + self.operation + ", " + self.location
+
+class MountDaemon(Daemon):
+    def __init__(self,
+                 stdin='/dev/null',
+                 stdout='/dev/null',
+                 stderr='/dev/null'):
+        Daemon.__init__(self, mount_daemon_pidfile, stdin, stdout, stderr)
+        self.bound_locations = set()
+        self.socket = None
+
+    def init_network(self):
+        self.socket = socket(AF_INET, SOCK_DGRAM)
+        self.socket.bind(("", 11259))
+        self.bufferSize = 16384
+
+    def shutdown(self):
+        Daemon.shutdown(self)
+        self.socket.close()
+
+        for mount in self.bound_locations:
+            umount_bind_path(mount, False)
+
+    def run(self):
+        self.init_network()
+        while True:
+            # check if the file got remove and recreate it if necessary
+            if (not os.path.exists(self.pidfile)):
+                pid = str(os.getpid())
+                with file(self.pidfile, 'w+') as f:
+                    f.write("%s\n" % pid)
+
+            # recive the commands from a spack implementation
+            (data, addr) = self.socket.recvfrom(self.bufferSize)
+            operation = pickle.loads(data)
+
+            # run the mount operations
+            if (operation != None):
+                if (operation.operation in [1, 2, 3]):
+                    if (operation.location in self.bound_locations):
+                        continue
+                elif (operation.operation in [4, 5, 6]):
+                    if (not operation.location in self.bound_locations):
+                        continue
+
+                if (operation.operation == 1):
+                    self.bound_locations.add(operation.location)
+                    mount_bind_path('/dev', operation.location, False)
+                    sys.stdout.write(str(operation) + '\n')
+                elif (operation.operation == 2):
+                    self.bound_locations.add(operation.location)
+                    mount_bind_path('/sys', operation.location, False)
+                    sys.stdout.write(str(operation) + '\n')
+                elif (operation.operation == 3):
+                    self.bound_locations.add(operation.location)
+                    mount_bind_path('/proc', operation.location, False)
+                    sys.stdout.write(str(operation) + '\n')
+                elif (operation.operation == 4):
+                    self.bound_locations.remove(operation.location)
+                    umount_bind_path(operation.location, False)
+                    sys.stdout.write(str(operation) + '\n')
+                elif (operation.operation == 5):
+                    self.bound_locations.remove(operation.location)
+                    umount_bind_path(operation.location, False)
+                    sys.stdout.write(str(operation) + '\n')
+                elif (operation.operation == 6):
+                    self.bound_locations.remove(operation.location)
+                    umount_bind_path(operation.location, False)
+                    sys.stdout.write(str(operation) + '\n')
+                else:
+                    sys.stderr.write(str(operation) + '\n')
+            else:
+                sys.stderr.write("recived unknown command %s\n" %
+                    (str(type(operation))))
+
+            sys.stderr.flush()
+            sys.stdout.flush()
 
 def mount_bind_path(realpath, chrootpath, permanent):
         mount = True
@@ -66,6 +177,11 @@ def mount_bind_path(realpath, chrootpath, permanent):
                 Fstab.add(realpath, chrootpath, filesystem="none", options="bind")
             os.system ("sudo mount --bind %s %s" % (realpath, chrootpath))
 
+def send_command_to_daemon(command):
+    sock = socket(AF_INET, SOCK_DGRAM)
+    data = pickle.dumps(command, pickle.HIGHEST_PROTOCOL)
+    sock.sendto(data, ("127.0.0.1", 11259))
+    sock.close()
 
 def umount_bind_path(chrootpath, permanent):
     # remove permanent mount point
@@ -88,13 +204,32 @@ def build_chroot_environment(dir, permanent):
     if os.path.ismount(dir):
         tty.die("The path is already a bootstraped enviroment")
 
-    for lib in BIND_PATHS:
-        mount_bind_path(lib, os.path.join(dir, lib[1:]), permanent)
+    # if a daemon exist use it instead of the local command
+    # which require root rights
+    if (os.path.exists(mount_daemon_pidfile)):
+        send_command_to_daemon(
+            MountOperation(MOUNT_DEV, os.path.join(dir, 'dev')))
+        send_command_to_daemon(
+            MountOperation(MOUNT_SYS, os.path.join(dir, 'sys')))
+        send_command_to_daemon(
+            MountOperation(MOUNT_PROC, os.path.join(dir, 'proc')))
+    else:
+        for lib in BIND_PATHS:
+            mount_bind_path(lib, os.path.join(dir, lib[1:]), permanent)
+
     copy_environment(dir)
 
 def remove_chroot_environment(dir, permanent):
-    for lib in BIND_PATHS:
-        umount_bind_path(os.path.join(dir, lib[1:]), permanent)
+    if (os.path.exists(mount_daemon_pidfile)):
+        send_command_to_daemon(
+            MountOperation(UMOUNT_DEV, os.path.join(dir, 'dev')))
+        send_command_to_daemon(
+            MountOperation(UMOUNT_SYS, os.path.join(dir, 'sys')))
+        send_command_to_daemon(
+            MountOperation(UMOUNT_PROC, os.path.join(dir, 'proc')))
+    else:
+        for lib in BIND_PATHS:
+            umount_bind_path(os.path.join(dir, lib[1:]), permanent)
 
 def get_group(username):
     groups = which("groups", required=True)
@@ -113,7 +248,10 @@ def run_command(command):
         chrootCommand)
 
 def isolate_environment():
-    tty.msg("Isolate spack")
+    if (os.path.exists(mount_daemon_pidfile)):
+        tty.msg("Isolate spack through a daemon process")
+    else:
+        tty.msg("Isolate spack through mount bind")
 
     lockFile = os.path.join(spack.spack_root, '.env')
     existed = True

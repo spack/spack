@@ -22,16 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+import sys
+import time
 import argparse
+import cPickle as pickle
+from socket import *
+
 import llnl.util.tty as tty
 import spack
 import spack.cmd
-import os
 from llnl.util.filesystem import join_path, mkdirp
-from spack.util.chroot import build_chroot_enviroment,  \
-                              remove_chroot_enviroment, \
-                              isolate_enviroment,       \
-                              run_command
+from spack.util.chroot import build_chroot_environment,  \
+                              remove_chroot_environment, \
+                              isolate_environment,       \
+                              run_command,               \
+                              MountDaemon,               \
+                              MountOperation
 
 description = "starts an isolated bash session for spack"
 
@@ -56,6 +63,22 @@ administrator rights when using spack as an user""")
     subparser.add_argument(
         '--cli', action='store_true', dest='cli',
         help="connect to a bash session in the generated environment"
+    )
+    #subparser.add_argument(
+    #    '--install-daemon', action='store_true', dest='create_daemon',
+    #    help="connect to a bash session in the generated environment"
+    #)
+    #subparser.add_argument(
+    #    '--remove-daemon', action='store_false', dest='create_daemon',
+    #    help="connect to a bash session in the generated environment"
+    #)
+    subparser.add_argument(
+        '--start-daemon', action='store_true', dest='start_daemon',
+        help="Start a daemon which handles the mount bind process"
+    )
+    subparser.add_argument(
+        '--stop-daemon', action='store_true', dest='stop_daemon',
+        help="Stops the daemon which handles the mount bind process"
     )
 
 def construct_environment(force, permanent):
@@ -94,6 +117,19 @@ def destroy_environment(force):
         remove_chroot_environment(spack.spack_bootstrap_root, wasPermanent)
         os.remove(lockFile)
 
+def start_daemon():
+    if os.getuid() != 0:
+        tty.die("Starting the daemon require root rights")
+    daemon = MountDaemon(stdout='/tmp/spack-mount.out',
+                         stderr='/tmp/spack-mount.err')
+    daemon.start()
+
+def stop_daemon():
+    if os.getuid() != 0:
+        tty.die("Stopping the daemon require root rights")
+    daemon = MountDaemon()
+    daemon.stop()
+
 def isolate(parser, args):
     force = args.force
     build_enviroment = args.build_enviroment
@@ -104,6 +140,12 @@ def isolate(parser, args):
         construct_environment(force, permanent)
     else:
         destroy_environment(force)
+
+    if args.start_daemon:
+        start_daemon()
+    if args.stop_daemon:
+        stop_daemon()
+
     if args.start_enviroment:
         isolate_environment()
     if cli:
