@@ -56,7 +56,7 @@ class Atlas(Package):
     variant('shared', default=True, description='Builds shared library')
 
     variant(
-        'multithreading', default='none',
+        'threads', default='none',
         description='Multithreading support',
         values=('pthreads', 'none'),
         multi=False
@@ -124,7 +124,7 @@ class Atlas(Package):
         # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
         # serial BLAS), and all ATLAS symbols needed to support them. Whereas
         # libtatlas.[so,dylib,dll ] is parallel (multithreaded) version.
-        is_threaded = self.spec.satisfies('multithreading=pthreads')
+        is_threaded = self.spec.satisfies('threads=pthreads')
         if '+shared' in self.spec:
             to_find = ['libtatlas'] if is_threaded else ['libsatlas']
             shared = True
