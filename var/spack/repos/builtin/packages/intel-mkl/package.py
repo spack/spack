@@ -63,6 +63,10 @@ class IntelMkl(IntelPackage):
     provides('scalapack')
     provides('mkl')
 
+    if sys.platform == 'darwin':
+        # there is no libmkl_gnu_thread on macOS
+        conflicts('threads=openmp', when='%gcc')
+
     @property
     def license_required(self):
         # The Intel libraries are provided without requiring a license as of
@@ -100,9 +104,6 @@ class IntelMkl(IntelPackage):
                 omp_libs = find_libraries(
                     omp_threading, root=omp_root, shared=shared)
             elif '%gcc' in spec:
-                if sys.platform == 'darwin':
-                    raise InstallError('MKL does not support openmp threading '
-                                       'with GCC on macOS')
                 mkl_threading = ['libmkl_gnu_thread']
 
                 gcc = Executable(self.compiler.cc)
