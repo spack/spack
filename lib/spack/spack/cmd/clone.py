@@ -80,7 +80,7 @@ def clone(parser, args):
         tty.die("There is already a file at %s" % prefix)
 
     mkdirp(prefix)
-
+ 
     if os.path.exists(join_path(prefix, '.git')):
         tty.die("There already seems to be a git repository in %s" % prefix)
 
