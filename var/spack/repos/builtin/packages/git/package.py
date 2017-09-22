@@ -44,6 +44,11 @@ class Git(AutotoolsPackage):
 
     releases = [
         {
+            'version': '2.14.1',
+            'md5': 'e965a37b3d277f2e7e78f5b04de28e2a',
+            'md5_manpages': 'da2e75ea3972b9e93fb47023e3bf1401',
+        },
+        {
             'version': '2.13.0',
             'md5': 'd0f14da0ef1d22f1ce7f7876fadcb39f',
             'md5_manpages': 'fda8d6d5314eb5a47e315405830f9970',
@@ -145,7 +150,8 @@ class Git(AutotoolsPackage):
     depends_on('gettext')
     depends_on('libiconv')
     depends_on('openssl')
-    depends_on('pcre')
+    depends_on('pcre', when='@:2.13')
+    depends_on('pcre+jit', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
 
