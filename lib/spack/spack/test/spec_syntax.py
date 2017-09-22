@@ -25,6 +25,7 @@
 import pytest
 import shlex
 
+import spack
 import spack.spec as sp
 from spack.parse import Token
 from spack.spec import *
@@ -314,33 +315,20 @@ class TestSpecSyntax(object):
         assert len(specs) == 2
 
     def test_ambiguous_hash(self, database):
-        dbspecs = database.mock.db.query()
-
-        def find_ambiguous(specs, keyfun):
-            """Return the first set of specs that's ambiguous under a
-               particular key function."""
-            key_to_spec = {}
-            for spec in specs:
-                key = keyfun(spec)
-                speclist = key_to_spec.setdefault(key, [])
-                speclist.append(spec)
-                if len(speclist) > 1:
-                    return (key, speclist)
-
-            # If we fail here, we may need to guarantee that there are
-            # some ambiguos specs by adding more specs to the test DB
-            # until this succeeds.
-            raise RuntimeError("no ambiguous specs found for keyfun!")
+        x1 = Spec('a')
+        x1._hash = 'xy'
+        x1._concrete = True
+        x2 = Spec('a')
+        x2._hash = 'xx'
+        x2._concrete = True
+        database.mock.db.add(x1, spack.store.layout)
+        database.mock.db.add(x2, spack.store.layout)
 
         # ambiguity in first hash character
-        char, specs = find_ambiguous(dbspecs, lambda s: s.dag_hash()[0])
-        self._check_raises(AmbiguousHashError, ['/' + char])
+        self._check_raises(AmbiguousHashError, ['/x'])
 
         # ambiguity in first hash character AND spec name
-        t, specs = find_ambiguous(dbspecs,
-                                  lambda s: (s.name, s.dag_hash()[0]))
-        name, char = t
-        self._check_raises(AmbiguousHashError, [name + '/' + char])
+        self._check_raises(AmbiguousHashError, ['a/x'])
 
     def test_invalid_hash(self, database):
         mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')

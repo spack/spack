@@ -259,7 +259,10 @@ def database(tmpdir_factory, builtin_mock, config):
 
     with spack.store.db.write_transaction():
         for spec in spack.store.db.query():
-            t.uninstall(spec)
+            if spec.package.installed:
+                t.uninstall(spec)
+            else:
+                spack.store.db.remove(spec)
 
     install_path.remove(rec=1)
     spack.store.root = str(spack_install_path)
