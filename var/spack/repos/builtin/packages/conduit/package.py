@@ -280,11 +280,7 @@ class Conduit(Package):
         if "+mpi" in spec:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", spec['mpi'].mpicc))
-            # we use `mpicc` as `MPI_CXX_COMPILER` b/c we don't want to
-            # introduce linking deps to the MPI C++ libs (we aren't using
-            # C++ features of MPI) -- this happens with some versions of
-            # OpenMPI
-            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", spec['mpi'].mpicc))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", spec['mpi'].mpicxx))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                         spec['mpi'].mpifc))
         else:
