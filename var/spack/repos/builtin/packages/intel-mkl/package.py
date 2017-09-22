@@ -101,7 +101,8 @@ class IntelMkl(IntelPackage):
                     omp_threading, root=omp_root, shared=shared)
             elif '%gcc' in spec:
                 if sys.platform == 'darwin':
-                    raise InstallError('MKL does not support openmp threading with GCC on macOS')  # NOQA: ignore=E501
+                    raise InstallError('MKL does not support openmp threading '
+                                       'with GCC on macOS')
                 mkl_threading = ['libmkl_gnu_thread']
 
                 gcc = Executable(self.compiler.cc)
@@ -163,10 +164,9 @@ class IntelMkl(IntelPackage):
             raise InstallError('No MPI found for scalapack')
 
         integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
-        if sys.platform != 'darwin':
-            mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64  # NOQA: ignore=E501
-        else:
-            mkl_root = self.prefix.mkl.lib
+        mkl_root = self.prefix.mkl.lib if sys.platform == 'darwin' else \
+            self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+
         shared = True if '+shared' in self.spec else False
 
         libs = find_libraries(
@@ -179,7 +179,8 @@ class IntelMkl(IntelPackage):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package
-        mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        mkl_root = self.prefix.mkl.lib if sys.platform == 'darwin' else \
+            self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
 
         spack_env.set('MKLROOT', self.prefix)
         spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_root)
