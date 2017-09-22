@@ -35,6 +35,8 @@ class GitLfs(Package):
     homepage = "https://git-lfs.github.com"
     git_url  = "https://github.com/github/git-lfs.git"
 
+    version('2.3.0', git=git_url, tag='v2.3.0')
+    version('2.2.1', git=git_url, tag='v2.2.1')
     version('2.0.2', git=git_url, tag='v2.0.2')
     version('1.4.1', git=git_url, tag='v1.4.1')
     version('1.3.1', git=git_url, tag='v1.3.1')
