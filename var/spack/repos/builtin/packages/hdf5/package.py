@@ -174,6 +174,7 @@ class Hdf5(AutotoolsPackage):
         if '+shared' in spec:
             extra_args.append('--enable-shared')
         else:
+            extra_args.append('--disable-shared')
             extra_args.append('--enable-static-exec')
 
         if '+cxx' in spec:
