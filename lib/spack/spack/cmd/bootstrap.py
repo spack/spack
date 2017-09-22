@@ -30,7 +30,7 @@ import spack.cmd.common.arguments as arguments
 description = "Bootstrap packages needed for spack to run smoothly"
 section = "admin"
 level = "long"
-
+ 
 
 def setup_parser(subparser):
     subparser.add_argument(
