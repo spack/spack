@@ -86,7 +86,7 @@ def parse_log_events(logfile, context=6):
 
     log_events = []
     for i, line in enumerate(lines):
-        if re.search('error:', line, re.IGNORECASE):
+        if re.search(r'\berror:', line, re.IGNORECASE):
             event = LogEvent(
                 line.strip(),
                 i + 1,

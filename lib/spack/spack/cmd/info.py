@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,14 +26,14 @@ from __future__ import print_function
 
 import textwrap
 
+from six.moves import zip_longest
+
+from llnl.util.tty.colify import *
+
 import llnl.util.tty.color as color
 import spack
 import spack.fetch_strategy as fs
 import spack.spec
-
-from llnl.util.tty.colify import *
-
-from six.moves import zip_longest
 
 description = 'get detailed information on a particular package'
 section = 'basic'
@@ -156,11 +156,24 @@ def print_text_info(pkg):
     color.cprint('')
     color.cprint(section_title('Description:'))
     if pkg.__doc__:
-        print(pkg.format_doc(indent=4))
+        color.cprint(pkg.format_doc(indent=4))
     else:
-        print("    None")
+        color.cprint("    None")
 
     color.cprint(section_title('Homepage: ') + pkg.homepage)
+
+    if len(pkg.maintainers) > 0:
+        mnt = " ".join(['@@' + m for m in pkg.maintainers])
+        color.cprint('')
+        color.cprint(section_title('Maintainers: ') + mnt)
+
+    color.cprint('')
+    color.cprint(section_title("Tags: "))
+    if hasattr(pkg, 'tags'):
+        tags = sorted(pkg.tags)
+        colify(tags, indent=4)
+    else:
+        color.cprint("    None")
 
     color.cprint('')
     color.cprint(section_title('Preferred version:  '))
@@ -215,7 +228,7 @@ def print_text_info(pkg):
         if deps:
             colify(deps, indent=4)
         else:
-            print('    None')
+            color.cprint('    None')
 
     color.cprint('')
     color.cprint(section_title('Virtual Packages: '))
@@ -233,7 +246,9 @@ def print_text_info(pkg):
             print(line)
 
     else:
-        print("    None")
+        color.cprint("    None")
+
+    color.cprint('')
 
 
 def info(parser, args):

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,9 @@ class Armadillo(CMakePackage):
     homepage = "http://arma.sourceforge.net/"
     url = "http://sourceforge.net/projects/arma/files/armadillo-7.200.1.tar.xz"
 
+    version('8.100.1', 'd9762d6f097e0451d0cfadfbda295e7c')
+    version('7.950.1', 'c06eb38b12cae49cab0ce05f96147147')
+    # NOTE: v7.900.1 download url seems broken is no v7.950.1?
     version('7.900.1', '5ef71763bd429a3d481499878351f3be')
     version('7.500.0', '7d316fdf3c3c7ea92b64704180ae315d')
     version('7.200.2', 'b21585372d67a8876117fd515d8cf0a2')
@@ -47,11 +50,17 @@ class Armadillo(CMakePackage):
     depends_on('superlu@5.2:')
     depends_on('hdf5', when='+hdf5')
 
+    # Adds an `#undef linux` to prevent preprocessor expansion of include
+    # directories with `linux` in them getting transformed into a 1.
+    # E.g. `/path/linux-x86_64/dir` -> `/path/1-x86_64/dir` if/when a linux
+    # platform's compiler is adding `#define linux 1`.
+    patch('undef_linux.patch', when='platform=linux')
+
     def cmake_args(self):
         spec = self.spec
 
         arpack = find_libraries('libarpack', root=spec[
-                                'arpack-ng'].prefix.lib, shared=True)
+                                'arpack-ng'].prefix.lib64, shared=True)
         superlu = find_libraries('libsuperlu', root=spec[
                                  'superlu'].prefix, shared=False, recurse=True)
         return [

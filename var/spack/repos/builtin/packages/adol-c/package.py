@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,7 @@ class AdolC(AutotoolsPackage):
 
     version('develop',  git='https://gitlab.com/adol-c/adol-c.git',
             branch='master')
+    version('2.6.3', 'f78f67f70d5874830a1ad1c0f54e54f7')
     version('2.6.2', '0f9547584c99c0673e4f81cf64e8d865')
     version('2.6.1', '1032b28427d6e399af4610e78c0f087b')
 

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,6 +24,7 @@
 ##############################################################################
 import argparse
 import os
+import filecmp
 
 import pytest
 
@@ -138,8 +139,8 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     assert "'install'\nAFTER INSTALL" in out
 
 
-def _test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
-                                        config, install_mockery, capfd):
+def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
+                                       config, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         out = install('build-error', fail_on_error=False)
@@ -155,3 +156,29 @@ def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.name == 'InstallError'
     assert 'raise InstallError("Expected failure.")' in out
+
+
+def test_install_with_source(
+        builtin_mock, mock_archive, mock_fetch, config, install_mockery):
+    """Verify that source has been copied into place."""
+    install('--source', '--keep-stage', 'trivial-install-test-package')
+    spec = Spec('trivial-install-test-package').concretized()
+    src = os.path.join(
+        spec.prefix.share, 'trivial-install-test-package', 'src')
+    assert filecmp.cmp(os.path.join(mock_archive.path, 'configure'),
+                       os.path.join(src, 'configure'))
+
+
+def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
+                           config, install_mockery, capfd):
+    """Make sure --show-log-on-error works."""
+    with capfd.disabled():
+        out = install('--show-log-on-error', 'build-error',
+                      fail_on_error=False)
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.pkg.name == 'build-error'
+    assert 'Full build log:' in out
+
+    errors = [line for line in out.split('\n')
+              if 'configure: error: cannot run C compiled programs' in line]
+    assert len(errors) == 2

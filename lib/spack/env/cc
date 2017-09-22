@@ -1,6 +1,6 @@
 #!/bin/bash
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -328,8 +328,10 @@ IFS=':' read -ra extra_rpaths <<< "$SPACK_COMPILER_EXTRA_RPATHS"
 for extra_rpath in "${extra_rpaths[@]}"; do
     if [[ $mode == ccld ]]; then
         $add_rpaths && args=("$rpath$extra_rpath" "${args[@]}")
+        args=("-L$extra_rpath" "${args[@]}")
     elif [[ $mode == ld ]]; then
         $add_rpaths && args=("-rpath" "$extra_rpath" "${args[@]}")
+        args=("-L$extra_rpath" "${args[@]}")
     fi
 done
 

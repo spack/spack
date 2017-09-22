@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -131,7 +131,10 @@ class UrlPatch(Patch):
             patch_stage.fetch()
             patch_stage.check()
             patch_stage.cache_local()
-            patch_stage.expand_archive()
+
+            if spack.util.compression.allowed_archive(self.url):
+                patch_stage.expand_archive()
+
             self.path = os.path.abspath(
                 os.listdir(patch_stage.path).pop()
             )

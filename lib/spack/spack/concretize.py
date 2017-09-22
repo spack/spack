@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -317,6 +317,9 @@ class DefaultConcretizer(object):
             # No compiler with a satisfactory spec was found
             raise UnavailableCompilerVersionError(other_compiler)
 
+        # By default, prefer later versions of compilers
+        compiler_list = sorted(
+            compiler_list, key=lambda x: (x.name, x.version), reverse=True)
         ppk = PackagePrefs(other_spec.name, 'compiler')
         matches = sorted(compiler_list, key=ppk)
 

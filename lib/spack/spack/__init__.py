@@ -1,6 +1,6 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -133,6 +133,10 @@ misc_cache_path = canonicalize_path(
     _config.get('misc_cache', join_path(user_config_path, 'cache')))
 misc_cache = FileCache(misc_cache_path)
 
+
+#: Directories where to search for templates
+template_dirs = spack.config.get_config('config')['template_dirs']
+template_dirs = [canonicalize_path(x) for x in template_dirs]
 
 # If this is enabled, tools that use SSL should not verify
 # certifiates. e.g., curl should use the -k option.
