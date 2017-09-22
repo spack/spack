@@ -198,7 +198,7 @@ class Openblas(MakefilePackage):
         if self.spec.satisfies('threads=pthreads'):
             link_flags += ' -lpthread'
         if spec.satisfies('threads=openmp'):
-            link_flags += ' ' + self.compiler.openmp_flag
+            link_flags += ' -lpthread ' + self.compiler.openmp_flag
 
         output = compile_c_and_execute(
             source_file, [include_flags], link_flags.split()
