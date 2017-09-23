@@ -94,30 +94,26 @@ class DirectiveMetaMixin(type):
             try:
                 directive_from_base = base._directives_to_be_executed
                 attr_dict['_directives_to_be_executed'].extend(
-                    directive_from_base
-                )
+                    directive_from_base)
             except AttributeError:
                 # The base class didn't have the required attribute.
                 # Continue searching
                 pass
+
         # De-duplicates directives from base classes
         attr_dict['_directives_to_be_executed'] = [
             x for x in llnl.util.lang.dedupe(
-                attr_dict['_directives_to_be_executed']
-            )
-        ]
+                attr_dict['_directives_to_be_executed'])]
 
         # Move things to be executed from module scope (where they
         # are collected first) to class scope
         if DirectiveMetaMixin._directives_to_be_executed:
             attr_dict['_directives_to_be_executed'].extend(
-                DirectiveMetaMixin._directives_to_be_executed
-            )
+                DirectiveMetaMixin._directives_to_be_executed)
             DirectiveMetaMixin._directives_to_be_executed = []
 
         return super(DirectiveMetaMixin, mcs).__new__(
-            mcs, name, bases, attr_dict
-        )
+            mcs, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
         # The class is being created: if it is a package we must ensure
@@ -128,13 +124,19 @@ class DirectiveMetaMixin(type):
             # from llnl.util.lang.get_calling_module_name
             pkg_name = module.__name__.split('.')[-1]
             setattr(cls, 'name', pkg_name)
+
             # Ensure the presence of the dictionaries associated
             # with the directives
             for d in DirectiveMetaMixin._directive_names:
                 setattr(cls, d, {})
-            # Lazy execution of directives
+
+            # Lazily execute directives
             for directive in cls._directives_to_be_executed:
                 directive(cls)
+
+            # Ignore any directives executed *within* top-level
+            # directives by clearing out the queue they're appended to
+            DirectiveMetaMixin._directives_to_be_executed = []
 
         super(DirectiveMetaMixin, cls).__init__(name, bases, attr_dict)
 
@@ -194,15 +196,44 @@ class DirectiveMetaMixin(type):
 
             @functools.wraps(decorated_function)
             def _wrapper(*args, **kwargs):
+                # If any of the arguments are executors returned by a
+                # directive passed as an argument, don't execute them
+                # lazily. Instead, let the called directive handle them.
+                # This allows nested directive calls in packages.  The
+                # caller can return the directive if it should be queued.
+                def remove_directives(arg):
+                    directives = DirectiveMetaMixin._directives_to_be_executed
+                    if isinstance(arg, (list, tuple)):
+                        # Descend into args that are lists or tuples
+                        for a in arg:
+                            remove_directives(a)
+                    else:
+                        # Remove directives args from the exec queue
+                        remove = next(
+                            (d for d in directives if d is arg), None)
+                        if remove is not None:
+                            directives.remove(remove)
+
+                # Nasty, but it's the best way I can think of to avoid
+                # side effects if directive results are passed as args
+                remove_directives(args)
+                remove_directives(kwargs.values())
+
                 # A directive returns either something that is callable on a
                 # package or a sequence of them
-                values = decorated_function(*args, **kwargs)
+                result = decorated_function(*args, **kwargs)
 
                 # ...so if it is not a sequence make it so
+                values = result
                 if not isinstance(values, collections.Sequence):
                     values = (values, )
 
                 DirectiveMetaMixin._directives_to_be_executed.extend(values)
+
+                # wrapped function returns same result as original so
+                # that we can nest directives
+                return result
+
             return _wrapper
 
         return _decorator
@@ -229,7 +260,7 @@ def version(ver, checksum=None, **kwargs):
     return _execute_version
 
 
-def _depends_on(pkg, spec, when=None, type=default_deptype):
+def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
     # If when is False do nothing
     if when is False:
         return
@@ -245,12 +276,35 @@ def _depends_on(pkg, spec, when=None, type=default_deptype):
 
     type = canonical_deptype(type)
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
+
+    # call this patches here for clarity -- we want patch to be a list,
+    # but the caller doesn't have to make it one.
+    if patches and dep_spec.virtual:
+        raise DependencyPatchError("Cannot patch a virtual dependency.")
+
+    # ensure patches is a list
+    if patches is None:
+        patches = []
+    elif not isinstance(patches, (list, tuple)):
+        patches = [patches]
+
+    # auto-call patch() directive on any strings in patch list
+    patches = [patch(p) if isinstance(p, string_types)
+               else p for p in patches]
+    assert all(callable(p) for p in patches)
+
+    # this is where we actually add the dependency to this package
     if when_spec not in conditions:
-        conditions[when_spec] = Dependency(dep_spec, type)
+        dependency = Dependency(pkg, dep_spec, type=type)
+        conditions[when_spec] = dependency
     else:
         dependency = conditions[when_spec]
         dependency.spec.constrain(dep_spec, deps=False)
         dependency.type |= set(type)
+
+    # apply patches to the dependency
+    for execute_patch in patches:
+        execute_patch(dependency)
 
 
 @directive('conflicts')
@@ -285,13 +339,24 @@ def conflicts(conflict_spec, when=None, msg=None):
 
 
 @directive(('dependencies'))
-def depends_on(spec, when=None, type=default_deptype):
+def depends_on(spec, when=None, type=default_deptype, patches=None):
     """Creates a dict of deps with specs defining when they apply.
+
+    Args:
+        spec (Spec or str): the package and constraints depended on
+        when (Spec or str): when the dependent satisfies this, it has
+            the dependency represented by ``spec``
+        type (str or tuple of str): str or tuple of legal Spack deptypes
+        patches (obj or list): single result of ``patch()`` directive, a
+            ``str`` to be passed to ``patch``, or a list of these
+
     This directive is to be used inside a Package definition to declare
     that the package requires other packages to be built first.
-    @see The section "Dependency specs" in the Spack Packaging Guide."""
+    @see The section "Dependency specs" in the Spack Packaging Guide.
+
+    """
     def _execute_depends_on(pkg):
-        _depends_on(pkg, spec, when=when, type=type)
+        _depends_on(pkg, spec, when=when, type=type, patches=patches)
     return _execute_depends_on
 
 
@@ -356,20 +421,23 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
         level (int): patch level (as in the patch shell command)
         when (Spec): optional anonymous spec that specifies when to apply
             the patch
-        **kwargs: the following list of keywords is supported
 
-            - md5 (str): md5 sum of the patch (used to verify the file
-                if it comes from a url)
+    Keyword Args:
+        sha256 (str): sha256 sum of the patch, used to verify the patch
+            (only required for URL patches)
+        archive_sha256 (str): sha256 sum of the *archive*, if the patch
+            is compressed (only required for compressed URL patches)
 
     """
-    def _execute_patch(pkg):
-        constraint = pkg.name if when is None else when
-        when_spec = parse_anonymous_spec(constraint, pkg.name)
+    def _execute_patch(pkg_or_dep):
+        constraint = pkg_or_dep.name if when is None else when
+        when_spec = parse_anonymous_spec(constraint, pkg_or_dep.name)
 
         # if this spec is identical to some other, then append this
         # patch to the existing list.
-        cur_patches = pkg.patches.setdefault(when_spec, [])
-        cur_patches.append(Patch.create(pkg, url_or_filename, level, **kwargs))
+        cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
+        cur_patches.append(
+            Patch.create(pkg_or_dep, url_or_filename, level, **kwargs))
 
     return _execute_patch
 
@@ -381,8 +449,7 @@ def variant(
         description='',
         values=None,
         multi=False,
-        validator=None
-):
+        validator=None):
     """Define a variant for the package. Packager can specify a default
     value as well as a text description.
 
@@ -484,3 +551,7 @@ class DirectiveError(spack.error.SpackError):
 
 class CircularReferenceError(DirectiveError):
     """This is raised when something depends on itself."""
+
+
+class DependencyPatchError(DirectiveError):
+    """Raised for errors with patching dependencies."""
