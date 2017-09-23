@@ -1841,7 +1841,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         try:
             return spack.util.web.find_versions_of_archive(
                 self.all_urls, self.list_url, self.list_depth)
-        except spack.error.NoNetworkConnectionError as e:
+        except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url,
                     e.message)
 
@@ -2062,15 +2062,6 @@ class PackageVersionError(PackageError):
         super(PackageVersionError, self).__init__(
             "Cannot determine a URL automatically for version %s" % version,
             "Please provide a url for this version in the package.py file.")
-
-
-class VersionFetchError(PackageError):
-    """Raised when a version URL cannot automatically be determined."""
-
-    def __init__(self, cls):
-        super(VersionFetchError, self).__init__(
-            "Cannot fetch versions for package %s " % cls.__name__ +
-            "because it does not define any URLs to fetch.")
 
 
 class NoURLError(PackageError):
