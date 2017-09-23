@@ -54,7 +54,13 @@ class Atlas(Package):
             url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
 
     variant('shared', default=True, description='Builds shared library')
-    variant('pthread', default=False, description='Use multithreaded libraries')
+
+    variant(
+        'threads', default='none',
+        description='Multithreading support',
+        values=('pthreads', 'none'),
+        multi=False
+    )
 
     provides('blas')
     provides('lapack')
@@ -118,7 +124,7 @@ class Atlas(Package):
         # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
         # serial BLAS), and all ATLAS symbols needed to support them. Whereas
         # libtatlas.[so,dylib,dll ] is parallel (multithreaded) version.
-        is_threaded = '+pthread' in self.spec
+        is_threaded = self.spec.satisfies('threads=pthreads')
         if '+shared' in self.spec:
             to_find = ['libtatlas'] if is_threaded else ['libsatlas']
             shared = True
