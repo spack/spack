@@ -32,6 +32,7 @@ class Lftp(AutotoolsPackage):
     homepage = "http://lftp.yar.ru/"
     url      = "http://lftp.yar.ru/ftp/lftp-4.7.7.tar.gz"
 
+    version('4.8.1', '419b27c016d968a0226b2e5df1454c22')
     version('4.7.7', 'ddc71b3b11a1af465e829075ae14b3ff')
 
     depends_on('expat')
