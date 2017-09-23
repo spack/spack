@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -40,14 +40,6 @@ def testing_gpg_directory(tmpdir):
 
 
 @pytest.fixture(scope='function')
-def mock_gpg_config():
-    orig_gpg_keys_path = spack.gpg_keys_path
-    spack.gpg_keys_path = spack.mock_gpg_keys_path
-    yield
-    spack.gpg_keys_path = orig_gpg_keys_path
-
-
-@pytest.fixture(scope='function')
 def gpg():
     return SpackCommand('gpg')
 
@@ -60,16 +52,15 @@ def has_gnupg2():
         return False
 
 
-@pytest.mark.xfail  # TODO: fix failing tests.
 @pytest.mark.skipif(not has_gnupg2(),
                     reason='These tests require gnupg2')
-def test_gpg(gpg, tmpdir, testing_gpg_directory, mock_gpg_config):
+def test_gpg(gpg, tmpdir, testing_gpg_directory):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
         gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
 
     # Import the default key.
-    gpg('init')
+    gpg('init', '--from', spack.mock_gpg_keys_path)
 
     # List the keys.
     # TODO: Test the output here.

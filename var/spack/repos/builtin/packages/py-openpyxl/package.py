@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@ class PyOpenpyxl(PythonPackage):
     url      = "https://pypi.io/packages/source/o/openpyxl/openpyxl-2.4.5.tar.gz"
 
     version('2.4.5', '3de13dc9b731e1a9dd61b873d9b35a8a')
+    version('2.2.0-b1', 'eeefabe384f6e53166c8c2e6abe5d11b')
 
     depends_on('python@2.6:2.8,3.0:3.1,3.3:')
 

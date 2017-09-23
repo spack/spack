@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -545,6 +545,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     # Verbosity level, preserved across installs.
     _verbose = None
 
+    #: List of strings which contains GitHub usernames of package maintainers.
+    #: Do not include @ here in order not to unnecessarily ping the users.
+    maintainers = []
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -780,6 +784,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     def stage(self, stage):
         """Allow a stage object to be set to override the default."""
         self._stage = stage
+
+    @property
+    def env_path(self):
+        return os.path.join(self.stage.source_path, 'spack-build.env')
+
+    @property
+    def log_path(self):
+        return os.path.join(self.stage.source_path, 'spack-build.out')
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1327,20 +1339,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     self.stage.chdir_to_source()
 
                     # Save the build environment in a file before building.
-                    env_path = join_path(os.getcwd(), 'spack-build.env')
-
-                    # Redirect I/O to a build log (and optionally to
-                    # the terminal)
-                    log_path = join_path(os.getcwd(), 'spack-build.out')
-
-                    # FIXME : refactor this assignment
-                    self.log_path = log_path
-                    self.env_path = env_path
-                    dump_environment(env_path)
+                    dump_environment(self.env_path)
 
                     # Spawn a daemon that reads from a pipe and redirects
                     # everything to log_path
-                    with log_output(log_path, echo, True) as logger:
+                    with log_output(self.log_path, echo, True) as logger:
                         for phase_name, phase_attr in zip(
                                 self.phases, self._InstallPhase_phases):
 

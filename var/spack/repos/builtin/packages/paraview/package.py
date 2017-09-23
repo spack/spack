@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -68,6 +68,7 @@ class Paraview(CMakePackage):
     # depends_on('protobuf') # version mismatches?
     # depends_on('sqlite') # external version not supported
     depends_on('zlib')
+    depends_on('cmake@3.3:', type='build')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 

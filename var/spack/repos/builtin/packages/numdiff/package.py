@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,8 @@ class Numdiff(AutotoolsPackage):
 
     homepage  = 'https://www.nongnu.org/numdiff'
     url       = 'http://nongnu.askapache.com/numdiff/numdiff-5.8.1.tar.gz'
+
+    maintainers = ['davydden']
 
     version('5.9.0', '794461a7285d8b9b1f2c4a8149889ea6')
     version('5.8.1', 'a295eb391f6cb1578209fc6b4f9d994e')
