@@ -572,7 +572,7 @@ class MockPackage(object):
 
         assert len(dependencies) == len(dependency_types)
         for dep, dtype in zip(dependencies, dependency_types):
-            d = Dependency(Spec(dep.name), type=dtype)
+            d = Dependency(self, Spec(dep.name), type=dtype)
             if not conditions or dep.name not in conditions:
                 self.dependencies[dep.name] = {Spec(name): d}
             else:
@@ -587,12 +587,15 @@ class MockPackage(object):
         self.variants = {}
         self.provided = {}
         self.conflicts = {}
+        self.patches = {}
 
 
 class MockPackageMultiRepo(object):
 
     def __init__(self, packages):
         self.spec_to_pkg = dict((x.name, x) for x in packages)
+        self.spec_to_pkg.update(
+            dict(('mockrepo.' + x.name, x) for x in packages))
 
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):

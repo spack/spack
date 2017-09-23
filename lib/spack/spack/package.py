@@ -542,8 +542,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: Defaults to the empty string.
     license_url = ''
 
-    # Verbosity level, preserved across installs.
+    #: Verbosity level, preserved across installs.
     _verbose = None
+
+    #: index of patches by sha256 sum, built lazily
+    _patches_by_hash = None
 
     #: List of strings which contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
@@ -642,7 +645,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     @property
     def package_dir(self):
         """Return the directory where the package.py file lives."""
-        return os.path.dirname(self.module.__file__)
+        return os.path.abspath(os.path.dirname(self.module.__file__))
 
     @property
     def global_license_dir(self):
@@ -990,9 +993,42 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.expand_archive()
         self.stage.chdir_to_source()
 
+    @classmethod
+    def lookup_patch(cls, sha256):
+        """Look up a patch associated with this package by its sha256 sum.
+
+        Args:
+            sha256 (str): sha256 sum of the patch to look up
+
+        Returns:
+            (Patch): ``Patch`` object with the given hash, or ``None`` if
+                not found.
+
+        To do the lookup, we build an index lazily.  This allows us to
+        avoid computing a sha256 for *every* patch and on every package
+        load.  With lazy hashing, we only compute hashes on lookup, which
+        usually happens at build time.
+
+        """
+        if cls._patches_by_hash is None:
+            cls._patches_by_hash = {}
+
+            # Add patches from the class
+            for cond, patch_list in cls.patches.items():
+                for patch in patch_list:
+                    cls._patches_by_hash[patch.sha256] = patch
+
+            # and patches on dependencies
+            for name, conditions in cls.dependencies.items():
+                for cond, dependency in conditions.items():
+                    for pcond, patch_list in dependency.patches.items():
+                        for patch in patch_list:
+                            cls._patches_by_hash[patch.sha256] = patch
+
+        return cls._patches_by_hash.get(sha256, None)
+
     def do_patch(self):
-        """Calls do_stage(), then applied patches to the expanded tarball if they
-           haven't been applied already."""
+        """Applies patches if they haven't been applied already."""
         if not self.spec.concrete:
             raise ValueError("Can only patch concrete packages.")
 
@@ -1002,8 +1038,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Package can add its own patch function.
         has_patch_fun = hasattr(self, 'patch') and callable(self.patch)
 
+        # Get the patches from the spec (this is a shortcut for the MV-variant)
+        patches = self.spec.patches
+
         # If there are no patches, note it.
-        if not self.patches and not has_patch_fun:
+        if not patches and not has_patch_fun:
             tty.msg("No patches needed for %s" % self.name)
             return
 
@@ -1032,18 +1071,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Apply all the patches for specs that match this one
         patched = False
-        for spec, patch_list in self.patches.items():
-            if self.spec.satisfies(spec):
-                for patch in patch_list:
-                    try:
-                        patch.apply(self.stage)
-                        tty.msg('Applied patch %s' % patch.path_or_url)
-                        patched = True
-                    except:
-                        # Touch bad file if anything goes wrong.
-                        tty.msg('Patch %s failed.' % patch.path_or_url)
-                        touch(bad_file)
-                        raise
+        for patch in patches:
+            try:
+                patch.apply(self.stage)
+                tty.msg('Applied patch %s' % patch.path_or_url)
+                patched = True
+            except:
+                # Touch bad file if anything goes wrong.
+                tty.msg('Patch %s failed.' % patch.path_or_url)
+                touch(bad_file)
+                raise
 
         if has_patch_fun:
             try:
@@ -1054,9 +1091,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 # We are running a multimethod without a default case.
                 # If there's no default it means we don't need to patch.
                 if not patched:
-                    # if we didn't apply a patch, AND the patch function
-                    # didn't apply, say no patches are needed.
-                    # Otherwise, we already said we applied each patch.
+                    # if we didn't apply a patch from a patch()
+                    # directive, AND the patch function didn't apply, say
+                    # no patches are needed.  Otherwise, we already
+                    # printed a message for each patch.
                     tty.msg("No patches needed for %s" % self.name)
             except:
                 tty.msg("patch() function failed for %s" % self.name)
