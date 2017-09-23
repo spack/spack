@@ -26,6 +26,9 @@
 """
 from six import string_types
 
+import spack
+
+
 #: The types of dependency relationships that Spack understands.
 all_deptypes = ('build', 'link', 'run', 'test')
 
@@ -78,13 +81,52 @@ class Dependency(object):
     e.g. whether it is required for building the package, whether it
     needs to be linked to, or whether it is needed at runtime so that
     Spack can call commands from it.
+
+    A package can also depend on another package with *patches*. This is
+    for cases where the maintainers of one package also maintain special
+    patches for their dependencies.  If one package depends on another
+    with patches, a special version of that dependency with patches
+    applied will be built for use by the dependent package.  The patches
+    are included in the new version's spec hash to differentiate it from
+    unpatched versions of the same package, so that unpatched versions of
+    the dependency package can coexist with the patched version.
+
     """
-    def __init__(self, spec, type=default_deptype):
+    def __init__(self, pkg, spec, type=default_deptype):
         """Create a new Dependency.
 
         Args:
+            pkg (type): Package that has this dependency
             spec (Spec): Spec indicating dependency requirements
             type (sequence): strings describing dependency relationship
         """
-        self.spec = spec
-        self.type = set(type)
+        assert isinstance(spec, spack.spec.Spec)
+
+        self.pkg = pkg
+        self.spec = spec.copy()
+
+        # This dict maps condition specs to lists of Patch objects, just
+        # as the patches dict on packages does.
+        self.patches = {}
+
+        if type is None:
+            self.type = set(default_deptype)
+        else:
+            self.type = set(type)
+
+    @property
+    def name(self):
+        """Get the name of the dependency package."""
+        return self.spec.name
+
+    def merge(self, other):
+        """Merge constraints, deptypes, and patches of other into self."""
+        self.spec.constrain(other.spec)
+        self.type |= other.type
+
+        # concatenate patch lists, or just copy them in
+        for cond, p in other.patches.items():
+            if cond in self.patches:
+                self.patches[cond].extend(other.patches[cond])
+            else:
+                self.patches[cond] = other.patches[cond]

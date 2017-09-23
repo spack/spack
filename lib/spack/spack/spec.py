@@ -1488,8 +1488,7 @@ class Spec(object):
                     spec.compiler_flags[name] = value
                 else:
                     spec.variants[name] = MultiValuedVariant.from_node_dict(
-                        name, value
-                    )
+                        name, value)
         elif 'variants' in node:
             for name, value in node['variants'].items():
                 spec.variants[name] = MultiValuedVariant.from_node_dict(
@@ -1806,6 +1805,43 @@ class Spec(object):
             if s.namespace is None:
                 s.namespace = spack.repo.repo_for_pkg(s.name).namespace
 
+            # Add any patches from the package to the spec.
+            patches = []
+            for cond, patch_list in s.package_class.patches.items():
+                if s.satisfies(cond):
+                    for patch in patch_list:
+                        patches.append(patch.sha256)
+            if patches:
+                # Special-case: keeps variant values unique but ordered.
+                s.variants['patches'] = MultiValuedVariant('patches', ())
+                mvar = s.variants['patches']
+                mvar._value = mvar._original_value = tuple(dedupe(patches))
+
+        # Apply patches required on dependencies by depends_on(..., patch=...)
+        for dspec in self.traverse_edges(deptype=all,
+                                         cover='edges', root=False):
+            pkg_deps = dspec.parent.package_class.dependencies
+            if dspec.spec.name not in pkg_deps:
+                continue
+
+            patches = []
+            for cond, dependency in pkg_deps[dspec.spec.name].items():
+                if dspec.parent.satisfies(cond):
+                    for pcond, patch_list in dependency.patches.items():
+                        if dspec.spec.satisfies(pcond):
+                            for patch in patch_list:
+                                patches.append(patch.sha256)
+            if patches:
+                # note that we use a special multi-valued variant and
+                # keep the patches ordered.
+                if 'patches' not in dspec.spec.variants:
+                    mvar = MultiValuedVariant('patches', ())
+                    dspec.spec.variants['patches'] = mvar
+                else:
+                    mvar = dspec.spec.variants['patches']
+                mvar._value = mvar._original_value = tuple(
+                    dedupe(list(mvar._value) + patches))
+
         for s in self.traverse():
             if s.external_module:
                 compiler = spack.compilers.compiler_for_spec(
@@ -1908,7 +1944,7 @@ class Spec(object):
             name (str): name of dependency to evaluate conditions on.
 
         Returns:
-            (tuple): tuple of ``Spec`` and tuple of ``deptypes``.
+            (Dependency): new Dependency object combining all constraints.
 
         If the package depends on <name> in the current spec
         configuration, return the constrained dependency and
@@ -1922,21 +1958,19 @@ class Spec(object):
 
         substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
-        dep, deptypes = None, None
+        dep = None
         for when_spec, dependency in conditions.items():
             if self.satisfies(when_spec, strict=True):
                 if dep is None:
-                    dep = Spec(name)
-                    deptypes = set()
+                    dep = Dependency(self.name, Spec(name), type=())
                 try:
-                    dep.constrain(dependency.spec)
-                    deptypes |= dependency.type
+                    dep.merge(dependency)
                 except UnsatisfiableSpecError as e:
                     e.message = ("Conflicting conditional dependencies on"
                                  "package %s for spec %s" % (self.name, self))
                     raise e
 
-        return dep, deptypes
+        return dep
 
     def _find_provider(self, vdep, provider_index):
         """Find provider for a virtual spec in the provider index.
@@ -1971,15 +2005,26 @@ class Spec(object):
             elif required:
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
-    def _merge_dependency(self, dep, deptypes, visited, spec_deps,
-                          provider_index):
-        """Merge the dependency into this spec.
+    def _merge_dependency(
+            self, dependency, visited, spec_deps, provider_index):
+        """Merge dependency information from a Package into this Spec.
 
-        Caller should assume that this routine can owns the dep parameter
-        (i.e. it needs to be a copy of any internal structures like
-        dependencies on Package class objects).
+        Args:
+            dependency (Dependency): dependency metadata from a package;
+                this is typically the result of merging *all* matching
+                dependency constraints from the package.
+            visited (set): set of dependency nodes already visited by
+                ``normalize()``.
+            spec_deps (dict): ``dict`` of all dependencies from the spec
+                being normalized.
+            provider_index (dict): ``provider_index`` of virtual dep
+                providers in the ``Spec`` as normalized so far.
 
-        This is the core of normalize().  There are some basic steps:
+        NOTE: Caller should assume that this routine owns the
+        ``dependency`` parameter, i.e., it needs to be a copy of any
+        internal structures.
+
+        This is the core of ``normalize()``.  There are some basic steps:
 
           * If dep is virtual, evaluate whether it corresponds to an
             existing concrete dependency, and merge if so.
@@ -1994,6 +2039,7 @@ class Spec(object):
 
         """
         changed = False
+        dep = dependency.spec
 
         # If it's a virtual dependency, try to find an existing
         # provider in the spec, and merge that.
@@ -2045,11 +2091,11 @@ class Spec(object):
                 raise
 
         # Add merged spec to my deps and recurse
-        dependency = spec_deps[dep.name]
+        spec_dependency = spec_deps[dep.name]
         if dep.name not in self._dependencies:
-            self._add_dependency(dependency, deptypes)
+            self._add_dependency(spec_dependency, dependency.type)
 
-        changed |= dependency._normalize_helper(
+        changed |= spec_dependency._normalize_helper(
             visited, spec_deps, provider_index)
         return changed
 
@@ -2074,12 +2120,12 @@ class Spec(object):
             changed = False
             for dep_name in pkg.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
-                dep, deptypes = self._evaluate_dependency_conditions(dep_name)
+                dep = self._evaluate_dependency_conditions(dep_name)
                 # If dep is a needed dependency, merge it.
                 if dep and (spack.package_testing.check(self.name) or
-                            set(deptypes) - set(['test'])):
+                            set(dep.type) - set(['test'])):
                     changed |= self._merge_dependency(
-                        dep, deptypes, visited, spec_deps, provider_index)
+                        dep, visited, spec_deps, provider_index)
             any_change |= changed
 
         return any_change
@@ -2463,6 +2509,35 @@ class Spec(object):
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
+    @property
+    def patches(self):
+        """Return patch objects for any patch sha256 sums on this Spec.
+
+        This is for use after concretization to iterate over any patches
+        associated with this spec.
+
+        TODO: this only checks in the package; it doesn't resurrect old
+        patches from install directories, but it probably should.
+        """
+        if 'patches' not in self.variants:
+            return []
+
+        patches = []
+        for sha256 in self.variants['patches'].value:
+            patch = self.package.lookup_patch(sha256)
+            if patch:
+                patches.append(patch)
+                continue
+
+            # if not found in this package, check immediate dependents
+            # for dependency patches
+            for dep in self._dependents:
+                patch = dep.parent.package.lookup_patch(sha256)
+                if patch:
+                    patches.append(patch)
+
+        return patches
+
     def _dup(self, other, deps=True, cleardeps=True, caches=None):
         """Copy the spec other into self.  This is an overwriting
         copy. It does not copy any dependents (parents), but by default
@@ -2549,7 +2624,8 @@ class Spec(object):
 
     def _dup_deps(self, other, deptypes, caches):
         new_specs = {self.name: self}
-        for dspec in other.traverse_edges(cover='edges', root=False):
+        for dspec in other.traverse_edges(cover='edges',
+                                          root=False):
             if (dspec.deptypes and
                 not any(d in deptypes for d in dspec.deptypes)):
                 continue

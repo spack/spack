@@ -53,7 +53,7 @@ def saved_deps():
 @pytest.fixture()
 def set_dependency(saved_deps):
     """Returns a function that alters the dependency information
-    for a package.
+    for a package in the ``saved_deps`` fixture.
     """
     def _mock(pkg_name, spec, deptypes=all_deptypes):
         """Alters dependence information for a package.
@@ -67,7 +67,7 @@ def set_dependency(saved_deps):
             saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
 
         cond = Spec(pkg.name)
-        dependency = Dependency(spec, deptypes)
+        dependency = Dependency(pkg, spec, type=deptypes)
         pkg.dependencies[spec.name] = {cond: dependency}
     return _mock
 
