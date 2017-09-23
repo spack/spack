@@ -82,6 +82,8 @@ class Dealii(CMakePackage):
     variant('build_type', default='DebugRelease',
             description='The build type to build',
             values=('Debug', 'Release', 'DebugRelease'))
+    variant('cuda', default=False,
+            description='Build with CUDA')
 
     # required dependencies, light version
     depends_on("blas")
@@ -123,6 +125,8 @@ class Dealii(CMakePackage):
     depends_on("graphviz",         when='+doc')
     depends_on("gsl",              when='@8.5.0:+gsl')
     depends_on("hdf5+mpi",         when='+hdf5+mpi')
+    depends_on("cuda@8:",          when='+cuda')
+    depends_on("cmake@3.9:",       when='+cuda')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on("metis@5:+int64+real64",   when='+metis+int64')
@@ -149,6 +153,7 @@ class Dealii(CMakePackage):
     conflicts('+adol-c', when='@:8.5.1')
     conflicts('+gsl',    when='@:8.4.2')
     conflicts('+python', when='@:8.4.2')
+    conflicts('+cuda', when='%gcc@6:')
     for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
               '+slepc', '+trilinos']:
         conflicts(p, when='~mpi')
@@ -166,7 +171,10 @@ class Dealii(CMakePackage):
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
-            '-DBZIP2_DIR=%s' % spec['bzip2'].prefix,
+            # Cmake may still pick up system's bzip2, fix this:
+            '-DBZIP2_FOUND=true',
+            '-DBZIP2_INCLUDE_DIRS=%s' % spec['bzip2'].prefix.include,
+            '-DBZIP2_LIBRARIES=%s' % spec['bzip2'].libs.joined(';'),
             # CMake's FindBlas/Lapack may pickup system's blas/lapack instead
             # of Spack's. Be more specific to avoid this.
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
@@ -207,6 +215,18 @@ class Dealii(CMakePackage):
                 '-DDEAL_II_EXAMPLES_RELDIR=share/deal.II/examples',
                 '-DDEAL_II_DOCREADME_RELDIR=share/deal.II/',
                 '-DDEAL_II_DOCHTML_RELDIR=share/deal.II/doc'
+            ])
+
+        # CUDA
+        # FIXME  -DDEAL_II_CUDA_FLAGS="-arch=sm_60"
+        if '+cuda' in spec:
+            options.extend([
+                '-DDEAL_II_WITH_CUDA=ON',
+                '-DDEAL_II_WITH_CXX14=OFF'
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_CUDA=OFF',
             ])
 
         # MPI
