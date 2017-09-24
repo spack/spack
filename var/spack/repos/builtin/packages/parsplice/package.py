@@ -30,8 +30,9 @@ class Parsplice(CMakePackage):
     """ParSplice code implements the Parallel Trajectory Splicing algorithm"""
 
     homepage = "https://gitlab.com/exaalt/parsplice"
-    url      = "https://gitlab.com/exaalt/parsplice/tags/v1.0"
+    url      = "https://gitlab.com/exaalt/parsplice/repository/archive.tar.gz?ref=v1.1"
 
+    version('1.1', '3a72340d49d731a076e8942f2ae2f4e9')
     version('develop', git='https://gitlab.com/exaalt/parsplice', branch='master')
 
     depends_on("cmake@3.1:", type='build')
