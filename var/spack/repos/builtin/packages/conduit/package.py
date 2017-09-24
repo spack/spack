@@ -280,7 +280,8 @@ class Conduit(Package):
         if "+mpi" in spec:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", spec['mpi'].mpicc))
-            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", spec['mpi'].mpicxx))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER",
+                                        spec['mpi'].mpicxx))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                         spec['mpi'].mpifc))
         else:
