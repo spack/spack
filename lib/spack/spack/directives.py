@@ -133,8 +133,8 @@ class DirectiveMetaMixin(type):
             for d in DirectiveMetaMixin._directive_names:
                 setattr(cls, d, {})
             # Lazy execution of directives
-            for command in cls._directives_to_be_executed:
-                command(cls)
+            for directive in cls._directives_to_be_executed:
+                directive(cls)
 
         super(DirectiveMetaMixin, cls).__init__(name, bases, attr_dict)
 
@@ -218,7 +218,7 @@ def version(ver, checksum=None, **kwargs):
     dictionary.  Package must turn it into a valid fetch strategy
     later.
     """
-    def _execute(pkg):
+    def _execute_version(pkg):
         # TODO: checksum vs md5 distinction is confusing -- fix this.
         # special case checksum for backward compatibility
         if checksum:
@@ -226,7 +226,7 @@ def version(ver, checksum=None, **kwargs):
 
         # Store kwargs for the package to later with a fetch_strategy.
         pkg.versions[Version(ver)] = kwargs
-    return _execute
+    return _execute_version
 
 
 def _depends_on(pkg, spec, when=None, type=default_deptype):
@@ -240,7 +240,8 @@ def _depends_on(pkg, spec, when=None, type=default_deptype):
 
     dep_spec = Spec(spec)
     if pkg.name == dep_spec.name:
-        raise CircularReferenceError('depends_on', pkg.name)
+        raise CircularReferenceError(
+            "Package '%s' cannot depend on itself." % pkg.name)
 
     type = canonical_deptype(type)
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
@@ -272,7 +273,7 @@ def conflicts(conflict_spec, when=None, msg=None):
         when (Spec): optional constraint that triggers the conflict
         msg (str): optional user defined message
     """
-    def _execute(pkg):
+    def _execute_conflicts(pkg):
         # If when is not specified the conflict always holds
         condition = pkg.name if when is None else when
         when_spec = parse_anonymous_spec(condition, pkg.name)
@@ -280,7 +281,7 @@ def conflicts(conflict_spec, when=None, msg=None):
         # Save in a list the conflicts and the associated custom messages
         when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
         when_spec_list.append((when_spec, msg))
-    return _execute
+    return _execute_conflicts
 
 
 @directive(('dependencies'))
@@ -289,9 +290,9 @@ def depends_on(spec, when=None, type=default_deptype):
     This directive is to be used inside a Package definition to declare
     that the package requires other packages to be built first.
     @see The section "Dependency specs" in the Spack Packaging Guide."""
-    def _execute(pkg):
+    def _execute_depends_on(pkg):
         _depends_on(pkg, spec, when=when, type=type)
-    return _execute
+    return _execute_depends_on
 
 
 @directive(('extendees', 'dependencies'))
@@ -309,7 +310,7 @@ def extends(spec, **kwargs):
     mechanism.
 
     """
-    def _execute(pkg):
+    def _execute_extends(pkg):
         # if pkg.extendees:
         #     directive = 'extends'
         #     msg = 'Packages can extend at most one other package.'
@@ -318,7 +319,7 @@ def extends(spec, **kwargs):
         when = kwargs.pop('when', pkg.name)
         _depends_on(pkg, spec, when=when)
         pkg.extendees[spec] = (Spec(spec), kwargs)
-    return _execute
+    return _execute_extends
 
 
 @directive('provided')
@@ -327,18 +328,20 @@ def provides(*specs, **kwargs):
        'mpi', other packages can declare that they depend on "mpi", and spack
        can use the providing package to satisfy the dependency.
     """
-    def _execute(pkg):
+    def _execute_provides(pkg):
         spec_string = kwargs.get('when', pkg.name)
         provider_spec = parse_anonymous_spec(spec_string, pkg.name)
 
         for string in specs:
             for provided_spec in spack.spec.parse(string):
                 if pkg.name == provided_spec.name:
-                    raise CircularReferenceError('depends_on', pkg.name)
+                    raise CircularReferenceError(
+                        "Package '%s' cannot provide itself.")
+
                 if provided_spec not in pkg.provided:
                     pkg.provided[provided_spec] = set()
                 pkg.provided[provided_spec].add(provider_spec)
-    return _execute
+    return _execute_provides
 
 
 @directive('patches')
@@ -359,7 +362,7 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
                 if it comes from a url)
 
     """
-    def _execute(pkg):
+    def _execute_patch(pkg):
         constraint = pkg.name if when is None else when
         when_spec = parse_anonymous_spec(constraint, pkg.name)
 
@@ -368,7 +371,7 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
         cur_patches = pkg.patches.setdefault(when_spec, [])
         cur_patches.append(Patch.create(pkg, url_or_filename, level, **kwargs))
 
-    return _execute
+    return _execute_patch
 
 
 @directive('variants')
@@ -414,7 +417,7 @@ def variant(
     default = default
     description = str(description).strip()
 
-    def _execute(pkg):
+    def _execute_variant(pkg):
         if not re.match(spack.spec.identifier_re, name):
             directive = 'variant'
             msg = "Invalid variant name in {0}: '{1}'"
@@ -423,7 +426,7 @@ def variant(
         pkg.variants[name] = Variant(
             name, default, description, values, multi, validator
         )
-    return _execute
+    return _execute_variant
 
 
 @directive('resources')
@@ -443,7 +446,7 @@ def resource(**kwargs):
     * 'placement' : (optional) gives the possibility to fine tune how the
       resource is moved into the main package stage area.
     """
-    def _execute(pkg):
+    def _execute_resource(pkg):
         when = kwargs.get('when', pkg.name)
         destination = kwargs.get('destination', "")
         placement = kwargs.get('placement', None)
@@ -472,33 +475,12 @@ def resource(**kwargs):
         name = kwargs.get('name')
         fetcher = from_kwargs(**kwargs)
         resources.append(Resource(name, fetcher, destination, placement))
-    return _execute
+    return _execute_resource
 
 
 class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""
 
-    def __init__(self, directive, message):
-        super(DirectiveError, self).__init__(message)
-        self.directive = directive
-
 
 class CircularReferenceError(DirectiveError):
     """This is raised when something depends on itself."""
-
-    def __init__(self, directive, package):
-        super(CircularReferenceError, self).__init__(
-            directive,
-            "Package '%s' cannot pass itself to %s" % (package, directive))
-        self.package = package
-
-
-class UnknownDependencyTypeError(DirectiveError):
-    """This is raised when a dependency is of an unknown type."""
-
-    def __init__(self, directive, package, deptype):
-        super(UnknownDependencyTypeError, self).__init__(
-            directive,
-            "Package '%s' cannot depend on a package via %s."
-            % (package, deptype))
-        self.package = package
