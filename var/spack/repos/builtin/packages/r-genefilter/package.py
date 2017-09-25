@@ -28,7 +28,7 @@ from spack import *
 class RGenefilter(RPackage):
     """Some basic functions for filtering genes"""
 
-    homepage = "Some basic functions for filtering genes"
+    homepage = "https://bioconductor.org/packages/genefilter/"
     url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/genefilter_1.58.1.tar.gz"
     list_url = homepage
     version('1.58.1', 'bc1a90bdf93d8db994220545cd80f438')
