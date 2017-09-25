@@ -61,6 +61,7 @@ import spack.build_environment as build_environment
 import spack.environment
 import spack.tengine as tengine
 import spack.util.path
+import spack.util.environment
 import spack.error
 
 #: Root folders where the various module files should be written
@@ -473,7 +474,9 @@ class BaseContext(tengine.Context):
         """List of environment modifications to be processed."""
         # Modifications guessed inspecting the spec prefix
         env = spack.environment.inspect_path(
-            self.spec.prefix, prefix_inspections
+            self.spec.prefix,
+            prefix_inspections,
+            exclude=spack.util.environment.is_system_path
         )
 
         # Modifications that are coded at package level

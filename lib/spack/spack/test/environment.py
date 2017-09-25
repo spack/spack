@@ -30,7 +30,7 @@ from spack import spack_root
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv
-from spack.util.environment import filter_system_paths
+from spack.util.environment import filter_system_paths, is_system_path
 
 
 def test_inspect_path(tmpdir):
@@ -58,6 +58,20 @@ def test_inspect_path(tmpdir):
     assert 'LIBRARY_PATH' in names
     assert 'LD_LIBRARY_PATH' in names
     assert 'CPATH' in names
+
+
+def test_exclude_paths_from_inspection():
+    inspections = {
+        'lib': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'lib64': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'include': ['CPATH']
+    }
+
+    env = environment.inspect_path(
+        '/usr', inspections, exclude=is_system_path
+    )
+
+    assert len(env) == 0
 
 
 @pytest.fixture()
