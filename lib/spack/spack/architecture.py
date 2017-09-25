@@ -500,7 +500,7 @@ def platform():
 
 
 @memoized
-def front_end():
+def front_end_sys_type():
     """Detects the front end architecture of a machine.
 
     On machines with a single architecture it will return that same arch str.
