@@ -58,12 +58,6 @@ class Protobuf(CMakePackage):
                 self.all_urls, self.list_url, self.list_depth)
         ))
 
-    def url_for_version(self, version):
-        """Ignore additional source artifacts uploaded with releases,
-           fix for https://github.com/LLNL/spack/issues/5356"""
-        return ("https://github.com/google/protobuf/archive/"
-                "v{0}.tar.gz".format(version.dotted))
-
     def cmake_args(self):
         args = [
             '-Dprotobuf_BUILD_TESTS:BOOL=OFF',
