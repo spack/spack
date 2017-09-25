@@ -22,8 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-#
 from spack import *
 
 
@@ -32,6 +30,7 @@ class RLimma(RPackage):
     for microarray data."""
 
     homepage = "https://www.bioconductor.org/packages/limma/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/limma_3.32.6.tar.gz"
+    url      = "https://www.bioconductor.org/packages/release"
+               "/bioc/src/contrib/limma_3.32.6.tar.gz"
     list_url = homepage
     version('3.32.6', 'df5dc2b85189a24e939efa3a8e6abc41')
