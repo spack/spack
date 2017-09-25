@@ -47,7 +47,7 @@ class Cntk(Package):
     depends_on('openblas')
     depends_on('mpi')
     depends_on('boost')
-    depends_on('protobuf~shared')
+    depends_on('protobuf')
     # CNTK depends on kaldi@c02e8.
     # See https://github.com/Microsoft/CNTK/blob/master/Tools/docker/CNTK-CPUOnly-Image/Dockerfile#L105-L125
     depends_on('kaldi@c024e8', when='+kaldi')
