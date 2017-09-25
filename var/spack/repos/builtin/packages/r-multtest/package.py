@@ -22,8 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-#
 from spack import *
 
 
@@ -31,9 +29,8 @@ class RMulttest(RPackage):
     """Resampling-based multiple hypothesis testing"""
 
     homepage = "https://www.bioconductor.org/packages/multtest/"
-
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/multtest_2.32.0.tar.gz"
-
+    url      = "https://www.bioconductor.org/packages/release"
+               "/bioc/src/contrib/multtest_2.32.0.tar.gz"
     version('2.32.0', 'edfa82ac11e4f86c438609e9d2128e5c')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
