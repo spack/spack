@@ -168,6 +168,26 @@ class TestTcl(object):
 
         assert writer.conf.naming_scheme == expected
 
+    def test_invalid_naming_scheme(self, factory, patch_configuration):
+        """Tests the evaluation of an invalid naming scheme."""
+
+        patch_configuration('invalid_naming_scheme')
+
+        # Test that having invalid tokens in the naming scheme raises
+        # a RuntimeError
+        writer, _ = factory('mpileaks')
+        with pytest.raises(RuntimeError):
+            writer.layout.use_name
+
+    def test_invalid_token_in_env_name(self, factory, patch_configuration):
+        """Tests setting environment variables with an invalid name."""
+
+        patch_configuration('invalid_token_in_env_var_name')
+
+        writer, _ = factory('mpileaks')
+        with pytest.raises(RuntimeError):
+            writer.write()
+
     def test_conflicts(self, modulefile_content, patch_configuration):
         """Tests adding conflicts to the module."""
 

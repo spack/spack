@@ -74,6 +74,39 @@ configuration = spack.config.get_config('modules')
 prefix_inspections = configuration.get('prefix_inspections', {})
 
 
+def _token_invalidator(msg):
+    """Private function to return a dictionary that invalidates a few
+    tokens in ``spec.format``.
+
+    Args:
+        msg (str): format for the exception message raised if an invalid
+            token is expanded. The token name will be expanded at ``{0}``
+    """
+    # These tokens don't really make sense in a module or variable name,
+    # so we should raise an exception when they are present. The exception
+    # will be handled by the module file generation hook, that will turn
+    # it into a user warning.
+    invalid_tokens = (
+        'COMPILERFLAGS',
+        'OPTIONS',
+        'SHA1',
+        'SPACK_ROOT',
+        'SPACK_INSTALL',
+        'PREFIX'
+    )
+    transform = {}
+    for token in invalid_tokens:
+        # The things you do just to capture a value...
+        def make_invalid(t):
+            def invalid(x):
+                raise RuntimeError(msg.format(t))
+
+            return invalid
+
+        transform[token] = make_invalid(token)
+    return transform
+
+
 def update_dictionary_extending_lists(target, update):
     """Updates a dictionary, but extends lists instead of overriding them.
 
@@ -385,7 +418,12 @@ class BaseFileLayout(object):
         to console to use it. This implementation fits the needs of most
         non-hierarchical layouts.
         """
-        name = self.spec.format(self.conf.naming_scheme)
+
+        transform = _token_invalidator(
+            'token {0} cannot be part of the module naming scheme'
+        )
+
+        name = self.spec.format(self.conf.naming_scheme, transform=transform)
         # Not everybody is working on linux...
         parts = name.split('/')
         name = os.path.join(*parts)
@@ -521,8 +559,11 @@ class BaseContext(tengine.Context):
         blacklist = self.conf.environment_blacklist
 
         # We may have tokens to substitute in environment commands
+        transform = _token_invalidator(
+            'token {0} cannot be expanded in an environment variable name'
+        )
         for x in env:
-            x.name = self.spec.format(x.name)
+            x.name = self.spec.format(x.name, transform=transform)
             try:
                 # Not every command has a value
                 x.value = self.spec.format(x.value)
