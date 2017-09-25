@@ -36,7 +36,7 @@ class AutodockVina(MakefilePackage):
 
     version('1_1_2', 'b467b71ee77dd155b65b1c5364e4220f')
 
-    depends_on('boost')
+    depends_on('boost@1.65.0')
 
     # Replacing depecrated function call of boost with current function call
     patch('main.patch')
