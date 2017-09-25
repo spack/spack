@@ -52,19 +52,19 @@ class RPackage(PackageBase):
 
     depends_on('r', type=('build', 'run'))
 
-    def configure_args(self, spec, prefix):
+    def configure_args(self):
         """Arguments to pass to install via ``--configure-args``."""
         return []
 
-    def configure_vars(self, spec, prefix):
+    def configure_vars(self):
         """Arguments to pass to install via ``--configure-vars``."""
         return []
 
     def install(self, spec, prefix):
         """Installs an R package."""
 
-        config_args = self.configure_args(spec, prefix)
-        config_vars = self.configure_vars(spec, prefix)
+        config_args = self.configure_args()
+        config_vars = self.configure_vars()
 
         args = [
             'CMD',

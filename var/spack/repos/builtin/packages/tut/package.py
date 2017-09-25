@@ -33,7 +33,7 @@ class Tut(WafPackage):
 
     version('2016-12-19', '8b1967fa295ae1ce4d4431c2f811e521')
 
-    def build_args(self, spec, prefix):
+    def build_args(self):
         args = []
 
         if self.run_tests:
