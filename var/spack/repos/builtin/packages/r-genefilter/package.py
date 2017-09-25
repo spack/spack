@@ -29,11 +29,10 @@ class RGenefilter(RPackage):
     """Some basic functions for filtering genes"""
 
     homepage = "Some basic functions for filtering genes"
-    url      = "https://www.bioconductor.org/packages/release"
-               "/bioc/src/contrib/genefilter_1.58.1.tar.gz"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/genefilter_1.58.1.tar.gz"
     list_url = homepage
     version('1.58.1', 'bc1a90bdf93d8db994220545cd80f438')
-    depends_on('r-s4vectors', type = ('build', 'run'))
-    depends_on('r-annotationdbi', type = ('build', 'run'))
-    depends_on('r-annotate', type = ('build', 'run'))
-    depends_on('r-biobase', type = ('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on('r-annotate', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
