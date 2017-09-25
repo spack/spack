@@ -38,6 +38,7 @@ class AutodockVina(MakefilePackage):
 
     depends_on('boost')
 
+    # Replacing depecrated function call of boost with current function call
     patch('main.patch')
     patch('split.patch')
 
