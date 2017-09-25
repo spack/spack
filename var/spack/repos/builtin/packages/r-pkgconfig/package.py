@@ -27,7 +27,8 @@ from spack import *
 
 class RPkgconfig(RPackage):
     """Set configuration options on a per-package basis. Options set by a
- given package only apply to that package, other packages are unaffected."""
+     given package only apply to that package, other packages are unaffected."""
+
     homepage = "https://cran.rstudio.com/web/packages/pkgconfig/index.html"
     url      = "https://cran.rstudio.com/src/contrib/pkgconfig_2.0.1.tar.gz"
     list_url = homepage
