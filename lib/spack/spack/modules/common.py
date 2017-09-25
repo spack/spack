@@ -559,9 +559,27 @@ class BaseContext(tengine.Context):
         blacklist = self.conf.environment_blacklist
 
         # We may have tokens to substitute in environment commands
+
+        # Prepare a suitable transformation dictionary for the names
+        # of the environment variables. This means:
+        #
+        # 1. raising on invalid tokens
+        # 2. turn the valid tokens uppercase
+        #
         transform = _token_invalidator(
             'token {0} cannot be expanded in an environment variable name'
         )
+        valid_tokens = (
+            'PACKAGE',
+            'VERSION',
+            'COMPILER',
+            'COMPILERNAME',
+            'COMPILERVER',
+            'ARCHITECTURE'
+        )
+        for token in valid_tokens:
+            transform[token] = str.upper
+
         for x in env:
             x.name = self.spec.format(x.name, transform=transform)
             try:
@@ -569,7 +587,7 @@ class BaseContext(tengine.Context):
                 x.value = self.spec.format(x.value)
             except AttributeError:
                 pass
-            x.name = str(x.name).replace('-', '_').upper()
+            x.name = str(x.name).replace('-', '_')
 
         return [(type(x).__name__, x) for x in env if x.name not in blacklist]
 

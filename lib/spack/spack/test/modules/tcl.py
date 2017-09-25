@@ -121,6 +121,12 @@ class TestTcl(object):
                     if x.startswith('prepend-path CMAKE_PREFIX_PATH')
                     ]) == 0
         assert len([x for x in content if 'setenv FOO "foo"' in x]) == 1
+        assert len([
+            x for x in content if 'setenv OMPI_MCA_mpi_leave_pinned "1"' in x
+        ]) == 1
+        assert len([
+            x for x in content if 'setenv OMPI_MCA_MPI_LEAVE_PINNED "1"' in x
+        ]) == 0
         assert len([x for x in content if 'unsetenv BAR' in x]) == 1
         assert len([x for x in content if 'setenv MPILEAKS_ROOT' in x]) == 1
 
