@@ -22,20 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-#
 from spack import *
 
 
 class RGenefilter(RPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Some basic functions for filtering genes"""
 
-    homepage = "https://www.bioconductor.org/packages/release/bioc/html/genefilter.html"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/genefilter_1.58.1.tar.gz"
+    homepage = "Some basic functions for filtering genes"
+    url      = "https://www.bioconductor.org/packages/release"
+               "/bioc/src/contrib/genefilter_1.58.1.tar.gz"
     list_url = homepage
     version('1.58.1', 'bc1a90bdf93d8db994220545cd80f438')
     depends_on('r-s4vectors', type = ('build', 'run'))
     depends_on('r-annotationdbi', type = ('build', 'run'))
     depends_on('r-annotate', type = ('build', 'run'))
     depends_on('r-biobase', type = ('build', 'run'))
-
