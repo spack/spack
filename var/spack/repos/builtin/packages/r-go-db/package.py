@@ -27,7 +27,7 @@ from spack import *
 
 class RGoDb(RPackage):
     """A set of annotation maps describing the entire Gene
- Ontology assembled using data from GO."""
+    Ontology assembled using data from GO."""
 
     homepage = "https://www.bioconductor.org/packages/GO.db/"
     url = "https://www.bioconductor.org/packages/release"
