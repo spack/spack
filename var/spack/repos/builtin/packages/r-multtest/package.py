@@ -29,9 +29,8 @@ class RMulttest(RPackage):
     """Resampling-based multiple hypothesis testing"""
 
     homepage = "https://www.bioconductor.org/packages/multtest/"
-    url      = "https://www.bioconductor.org/packages/release"
-               "/bioc/src/contrib/multtest_2.32.0.tar.gz"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/multtest_2.32.0.tar.gz"
     version('2.32.0', 'edfa82ac11e4f86c438609e9d2128e5c')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-biobase', type=('build','run'))
+    depends_on('r-biobase', type=('build', 'run'))
