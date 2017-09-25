@@ -26,7 +26,7 @@ from spack import *
 
 
 class RLimma(RPackage):
-    """Data analysis, linear models and differential expression 
+    """Data analysis, linear models and differential expression
     for microarray data."""
 
     homepage = "https://www.bioconductor.org/packages/limma/"
