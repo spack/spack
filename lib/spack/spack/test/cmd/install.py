@@ -114,8 +114,8 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     assert "'install'\nAFTER INSTALL" in out
 
 
-def _test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
-                                        config, install_mockery, capfd):
+def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
+                                       config, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         out = install('build-error', fail_on_error=False)
@@ -142,3 +142,18 @@ def test_install_with_source(
         spec.prefix.share, 'trivial-install-test-package', 'src')
     assert filecmp.cmp(os.path.join(mock_archive.path, 'configure'),
                        os.path.join(src, 'configure'))
+
+
+def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
+                           config, install_mockery, capfd):
+    """Make sure --show-log-on-error works."""
+    with capfd.disabled():
+        out = install('--show-log-on-error', 'build-error',
+                      fail_on_error=False)
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.pkg.name == 'build-error'
+    assert 'Full build log:' in out
+
+    errors = [line for line in out.split('\n')
+              if 'configure: error: cannot run C compiled programs' in line]
+    assert len(errors) == 2
