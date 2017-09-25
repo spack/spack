@@ -27,8 +27,8 @@ from spack import *
 
 class RPlogr(RPackage):
     """A simple header-only logging library for C++. Add
- 'LinkingTo: plogr' to 'DESCRIPTION', and '#include <plogr.h>'
- in your C++ modules to use it."""
+    'LinkingTo: plogr' to 'DESCRIPTION', and '#include <plogr.h>'
+    in your C++ modules to use it."""
 
     homepage = "https://cran.r-project.org/web/packages/plogr/index.html"
     url      = "https://cran.r-project.org/src/contrib/plogr_0.1-1.tar.gz"
