@@ -30,8 +30,21 @@ system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
     system_paths
 
 
+def is_system_path(path):
+    """Predicate that given a path returns True if it is a system path,
+    False otherwise.
+
+    Args:
+        path (str): path to a directory
+
+    Returns:
+        True or False
+    """
+    return os.path.normpath(path) in system_dirs
+
+
 def filter_system_paths(paths):
-    return [p for p in paths if os.path.normpath(p) not in system_dirs]
+    return [p for p in paths if not is_system_path(p)]
 
 
 def get_path(name):

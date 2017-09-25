@@ -95,12 +95,10 @@ class Adios(AutotoolsPackage):
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
     depends_on('netcdf', when='+netcdf')
-    depends_on('libevpath', when='+flexpath')
-    depends_on('libevpath', when='+staging')
-    depends_on('dataspaces+mpi', when='+dataspaces')
-    depends_on('dataspaces+mpi', when='+staging')
+    depends_on('libevpath', when='staging=flexpath')
+    depends_on('dataspaces+mpi', when='staging=dataspaces')
 
-    for p in ['+hdf5', '+netcdf', '+flexpath', '+dataspaces', '+staging']:
+    for p in ['+hdf5', '+netcdf', 'staging=flexpath', 'staging=dataspaces']:
         conflicts(p, when='~mpi')
 
     build_directory = 'spack-build'

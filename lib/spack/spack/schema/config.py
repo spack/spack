@@ -48,6 +48,10 @@ schema = {
                         {'type': 'array',
                          'items': {'type': 'string'}}],
                 },
+                'template_dirs': {
+                    'type': 'array',
+                    'items': {'type': 'string'}
+                },
                 'module_roots': {
                     'type': 'object',
                     'additionalProperties': False,

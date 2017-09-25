@@ -18,6 +18,9 @@ config:
   # You can use $spack here to refer to the root of the spack instance.
   install_tree: /global/common/sw   # Change to the desired installation
 
+  # Locations where templates should be found
+  template_dirs:
+    - $spack/templates
 
   # This is the scheme that will be the default for NERSC. 
   install_path_scheme: "${PLATFORM}/${OS}/${TARGET}/${PACKAGE}/${VERSION}/${COMPILERNAME}/${COMPILERVERSION}/${HASH:7}"  # NoQA: E501
