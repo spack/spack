@@ -29,7 +29,7 @@ from spack import *
 
 class RAnnotationdbi(RPackage):
     """Provides user interface and database connection code for
- annotation data packages using SQLite data storage."""
+    annotation data packages using SQLite data storage."""
 
     homepage = "https://www.bioconductor.org/packages/AnnotationDbi/"
     url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/AnnotationDbi_1.38.2.tar.gz"
