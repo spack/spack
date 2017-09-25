@@ -29,10 +29,10 @@ from spack import *
 
 class RAnnaffy(RPackage):
     """Functions for handling data from Bioconductor Affymetrix
- annotation data packages. Produces compact HTML and text
- reports including experimental data and URL links to many
- online databases. Allows searching biological metadata
- using various criteria."""
+    annotation data packages. Produces compact HTML and text
+    reports including experimental data and URL links to many
+    online databases. Allows searching biological metadata
+    using various criteria."""
 
     homepage = "https://www.bioconductor.org/packages/annaffy/"
     url = "https://www.bioconductor.org/packages/release/"
