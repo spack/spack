@@ -27,9 +27,9 @@ from spack import *
 
 class RBlob(RPackage):
     """R's raw vector is useful for storing a single binary object.
- What if you want to put a vector of them in a data frame? The blob
- package provides the blob object, a list of raw vectors, suitable
- for use as a column in data frame."""
+    What if you want to put a vector of them in a data frame? The blob
+    package provides the blob object, a list of raw vectors, suitable
+    for use as a column in data frame."""
 
     homepage = "https://cran.rstudio.com/web/packages/blob/index.html"
     url      = "https://cran.rstudio.com/src/contrib/blob_1.1.0.tar.gz"
