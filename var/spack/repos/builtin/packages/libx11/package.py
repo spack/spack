@@ -43,3 +43,4 @@ class Libx11(AutotoolsPackage):
     depends_on('inputproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
+    depends_on('perl', type='build')
