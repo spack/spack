@@ -168,7 +168,7 @@ build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 # If set to true, Spack will isolate itself in an chroot enviroment.
 # This option only work in an enviroment created with
 # ./spack bootstrap --isolate path
-isolate = _config.get('isolate', False)
+isolate = spack.config.get_config('config', 'site').get('isolate', False)
 
 # check sys.argv[1] agaist isolate allow the call to
 # isolate --remove-enviroment without being trapped inside a chroot jail

@@ -87,8 +87,9 @@ class MountDaemon(Daemon):
         self.socket = None
 
     def init_network(self):
-        self.socket = socket(AF_INET, SOCK_DGRAM)
+        self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.bind(("", 11259))
+        self.socket.listen(64)
         self.bufferSize = 16384
 
     def shutdown(self):
@@ -108,7 +109,8 @@ class MountDaemon(Daemon):
                     f.write("%s\n" % pid)
 
             # recive the commands from a spack implementation
-            (data, addr) = self.socket.recvfrom(self.bufferSize)
+            client, addr = self.socket.accept()
+            data = client.recv(self.bufferSize)
             operation = pickle.loads(data)
 
             # run the mount operations
@@ -123,33 +125,42 @@ class MountDaemon(Daemon):
                 if (operation.operation == 1):
                     self.bound_locations.add(operation.location)
                     mount_bind_path('/dev', operation.location, False)
+                    client.send('True')
                     sys.stdout.write(str(operation) + '\n')
                 elif (operation.operation == 2):
                     self.bound_locations.add(operation.location)
                     mount_bind_path('/sys', operation.location, False)
+                    client.send('True')
                     sys.stdout.write(str(operation) + '\n')
                 elif (operation.operation == 3):
                     self.bound_locations.add(operation.location)
                     mount_bind_path('/proc', operation.location, False)
+                    client.send('True')
                     sys.stdout.write(str(operation) + '\n')
                 elif (operation.operation == 4):
                     self.bound_locations.remove(operation.location)
                     umount_bind_path(operation.location, False)
+                    client.send('True')
                     sys.stdout.write(str(operation) + '\n')
                 elif (operation.operation == 5):
                     self.bound_locations.remove(operation.location)
                     umount_bind_path(operation.location, False)
+                    client.send('True')
                     sys.stdout.write(str(operation) + '\n')
                 elif (operation.operation == 6):
                     self.bound_locations.remove(operation.location)
                     umount_bind_path(operation.location, False)
+                    client.send('True')
                     sys.stdout.write(str(operation) + '\n')
                 else:
+                    client.send('False')
                     sys.stderr.write(str(operation) + '\n')
             else:
+                client.send('False')
                 sys.stderr.write("recived unknown command %s\n" %
                                  str(type(operation)))
 
+            client.close()
             sys.stderr.flush()
             sys.stdout.flush()
 
@@ -179,9 +190,11 @@ def mount_bind_path(realpath, chrootpath, permanent):
 
 
 def send_command_to_daemon(command):
-    sock = socket(AF_INET, SOCK_DGRAM)
+    sock = socket(AF_INET, SOCK_STREAM)
+    sock.connect(("127.0.0.1", 11259))
     data = pickle.dumps(command, pickle.HIGHEST_PROTOCOL)
-    sock.sendto(data, ("127.0.0.1", 11259))
+    sock.send(data)
+    result = sock.recv(1024)
     sock.close()
 
 
@@ -219,6 +232,9 @@ def build_chroot_environment(dir, permanent):
         send_command_to_daemon(
             MountOperation(MOUNT_PROC, os.path.join(dir, 'proc')))
     else:
+        lockFile = os.path.join(spack.spack_root, '.env')
+        with open(lockFile, 'w'):
+            pass
         for lib in BIND_PATHS:
             mount_bind_path(lib, os.path.join(dir, lib[1:]), permanent)
 
@@ -234,6 +250,9 @@ def remove_chroot_environment(dir, permanent):
         send_command_to_daemon(
             MountOperation(UMOUNT_PROC, os.path.join(dir, 'proc')))
     else:
+        lockFile = os.path.join(spack.spack_root, '.env')
+        if os.path.exists(lockFile):
+            os.remove(lockFile)
         for lib in BIND_PATHS:
             umount_bind_path(os.path.join(dir, lib[1:]), permanent)
 

@@ -116,12 +116,12 @@ def adapt_config(install_dir, permanent):
 
     # Add the boostrap file to the config list
     spack.config.ConfigScope('bootstrap', config_path)
-    config = spack.config.get_config("config", "bootstrap")
+    config = spack.config.get_config('config', 'bootstrap')
 
     # write to the config
     config['isolate'] = True
     config['permanent'] = permanent
-    spack.config.update_config("config", config, "bootstrap")
+    spack.config.update_config('config', config, 'bootstrap')
 
 
 def check_file_owner(prefix):
