@@ -40,3 +40,7 @@ modules:
       - PKG_CONFIG_PATH
     '':
       - CMAKE_PREFIX_PATH
+
+  lmod:
+    hierarchy:
+      - mpi

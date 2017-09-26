@@ -607,10 +607,11 @@ modules that load their dependencies by adding the ``autoload``
 directive and assigning it the value ``direct``:
 
 .. code-block:: yaml
-  :emphasize-lines: 37,38
+  :emphasize-lines: 3,38,39
 
   modules:
     tcl:
+      verbose: True
       hash_length: 0
       naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
       whitelist:
@@ -702,6 +703,9 @@ and will contain code to autoload all the dependencies:
   Autoloading openblas/0.2.19-gcc-6.2.0
   Autoloading py-numpy/1.11.1-gcc-6.2.0-openblas
 
+In case messages are unwanted during the autoload procedure, it will be
+sufficient to omit the line setting ``verbose: True`` in the configuration file above.
+
 -----------------------------
 Lua hierarchical module files
 -----------------------------
@@ -733,7 +737,7 @@ enabled module file generators. The other things you need to do are:
 After modifications the configuration file will be:
 
 .. code-block:: yaml
-  :emphasize-lines: 2-6
+  :emphasize-lines: 2-8
 
   modules:
     enable::
@@ -741,6 +745,8 @@ After modifications the configuration file will be:
     lmod:
       core_compilers:
         - 'gcc@4.8'
+      hierarchy:
+        - mpi
       hash_length: 0
       whitelist:
         - gcc
@@ -879,7 +885,7 @@ can add an arbitrary list of virtual providers to the triplet
 ``Core``/``Compiler``/``MPI``. A configuration file like:
 
 .. code-block:: yaml
-  :emphasize-lines: 7,8
+  :emphasize-lines: 9
 
   modules:
     enable::
@@ -887,7 +893,8 @@ can add an arbitrary list of virtual providers to the triplet
     lmod:
       core_compilers:
         - 'gcc@4.8'
-      hierarchical_scheme:
+      hierarchy:
+        - mpi
         - lapack
       hash_length: 0
       whitelist:

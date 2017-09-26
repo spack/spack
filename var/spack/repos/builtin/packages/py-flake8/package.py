@@ -66,3 +66,7 @@ class PyFlake8(PythonPackage):
 
     # TODO: Add test dependencies
     # depends_on('py-nose', type='test')
+
+    def patch(self):
+        """Filter pytest-runner requirement out of setup.py."""
+        filter_file("['pytest-runner']", "[]", 'setup.py', string=True)
