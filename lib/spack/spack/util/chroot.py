@@ -22,19 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import re
 import os
 import sys
-import copy
 import spack
-import atexit
-import subprocess
 import cPickle as pickle
 import llnl.util.tty as tty
 from socket import *
-from itertools import product
 from spack.util.executable import which
-from llnl.util.filesystem import join_path
 
 from fstab import Fstab
 from daemon import Daemon
@@ -59,7 +53,9 @@ UMOUNT_DEV  = 4
 UMOUNT_SYS  = 5
 UMOUNT_PROC = 6
 
+
 class MountOperation:
+
     def __init__(self, operation, location):
         self.operation = operation
         self.location  = location
@@ -79,7 +75,9 @@ class MountOperation:
             return "UMOUNT PROC: " + self.location
         return "UNKNOWN OPERATION: " + self.operation + ", " + self.location
 
+
 class MountDaemon(Daemon):
+
     def __init__(self,
                  stdin='/dev/null',
                  stdout='/dev/null',
@@ -114,12 +112,12 @@ class MountDaemon(Daemon):
             operation = pickle.loads(data)
 
             # run the mount operations
-            if (operation != None):
+            if (operation is not None):
                 if (operation.operation in [1, 2, 3]):
                     if (operation.location in self.bound_locations):
                         continue
                 elif (operation.operation in [4, 5, 6]):
-                    if (not operation.location in self.bound_locations):
+                    if (operation.location not in self.bound_locations):
                         continue
 
                 if (operation.operation == 1):
@@ -150,10 +148,11 @@ class MountDaemon(Daemon):
                     sys.stderr.write(str(operation) + '\n')
             else:
                 sys.stderr.write("recived unknown command %s\n" %
-                    (str(type(operation))))
+                                 str(type(operation)))
 
             sys.stderr.flush()
             sys.stdout.flush()
+
 
 def mount_bind_path(realpath, chrootpath, permanent):
         mount = True
@@ -162,7 +161,7 @@ def mount_bind_path(realpath, chrootpath, permanent):
                 os.makedirs(os.path.dirname(chrootpath))
 
             if not os.path.exists(chrootpath):
-                with open(chrootpath, "w") as out:
+                with open(chrootpath, "w"):
                     pass
         else:
             # Don't include empty directories
@@ -174,14 +173,17 @@ def mount_bind_path(realpath, chrootpath, permanent):
 
         if mount:
             if permanent:
-                Fstab.add(realpath, chrootpath, filesystem="none", options="bind")
-            os.system ("sudo mount --bind %s %s" % (realpath, chrootpath))
+                Fstab.add(realpath, chrootpath,
+                          filesystem="none", options="bind")
+            os.system("sudo mount --bind %s %s" % (realpath, chrootpath))
+
 
 def send_command_to_daemon(command):
     sock = socket(AF_INET, SOCK_DGRAM)
     data = pickle.dumps(command, pickle.HIGHEST_PROTOCOL)
     sock.sendto(data, ("127.0.0.1", 11259))
     sock.close()
+
 
 def umount_bind_path(chrootpath, permanent):
     # remove permanent mount point
@@ -190,15 +192,18 @@ def umount_bind_path(chrootpath, permanent):
 
     # Don't unmount no existing directories
     if os.path.exists(chrootpath):
-        os.system ("sudo umount -l %s" % (chrootpath))
+        os.system("sudo umount -l %s" % (chrootpath))
+
 
 def copy_path(realpath, chrootpath):
     if os.path.exists(realpath):
         os.system("cp %s %s" % (realpath, chrootpath))
 
+
 def copy_environment(dir):
     for lib in COPY_PATHS:
         copy_path(lib, os.path.join(dir, lib[1:]))
+
 
 def build_chroot_environment(dir, permanent):
     if os.path.ismount(dir):
@@ -219,6 +224,7 @@ def build_chroot_environment(dir, permanent):
 
     copy_environment(dir)
 
+
 def remove_chroot_environment(dir, permanent):
     if (os.path.exists(mount_daemon_pidfile)):
         send_command_to_daemon(
@@ -231,21 +237,25 @@ def remove_chroot_environment(dir, permanent):
         for lib in BIND_PATHS:
             umount_bind_path(os.path.join(dir, lib[1:]), permanent)
 
+
 def get_group(username):
     groups = which("groups", required=True)
     # just use the first group
     group = groups(username, output=str).split(':')[1].strip().split(' ')[0]
     return group
 
+
 def get_username_and_group():
     whoami = which("whoami", required=True)
     username = whoami(output=str).replace('\n', '')
     return username, get_group(username)
 
+
 def run_command(command):
     chrootCommand = "chroot %s %s" % (spack.spack_bootstrap_root, command)
-    os.system("unshare --user --map-root-user --mount-proc --pid --fork sh -c '%s'" %
-        chrootCommand)
+    options = "--user --map-root-user --mount-proc --pid"
+    os.system("unshare %s --fork sh -c '%s'" % (options, chrootCommand))
+
 
 def isolate_environment():
     if (os.path.exists(mount_daemon_pidfile)):
@@ -263,11 +273,10 @@ def isolate_environment():
     if not os.path.exists(lockFile) and not permanent:
         build_chroot_environment(spack.spack_bootstrap_root, False)
         existed = False
-    else: # copy necessary files
+    else:
+        # copy necessary files
         copy_environment(spack.spack_bootstrap_root)
 
-    chrootCommand = "chroot %s /home/spack/bin/spack %s" \
-        % (spack.spack_bootstrap_root, ' '.join(sys.argv[1:]))
     run_command('/home/spack/bin/spack %s' % (' '.join(sys.argv[1:])))
 
     if not existed:

@@ -62,7 +62,7 @@ class Executable(object):
 
     def get_shared_libraries(self):
         if not self._ldd:
-            self._ldd = which('ldd', required = True)
+            self._ldd = which('ldd', required=True)
 
         libraries = list()
         output = self._ldd(' '.join(self.exe), output=str, fail_on_error=False)

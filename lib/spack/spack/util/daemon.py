@@ -1,17 +1,43 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 import sys
 import time
 import os
 import atexit
 from signal import SIGTERM
 
+
 class Daemon:
     """
     A generic daemon class.
     Usage: subclass the Daemon class and override the run() method
     """
+
     def __init__(self,
                  pidfile,
-                 stdin ='/dev/null',
+                 stdin='/dev/null',
                  stdout='/dev/null',
                  stderr='/dev/null'):
         self.stdin = stdin
@@ -30,7 +56,8 @@ class Daemon:
             if pid > 0:
                 sys.exit(0)
         except OSError, e:
-            sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
+            errorstr = "fork #1 failed: %d (%s)\n" % (e.errno, e.strerror)
+            sys.stderr.write(errorstr)
             sys.exit(1)
 
         # decouple from parent environment
@@ -44,7 +71,8 @@ class Daemon:
             if pid > 0:
                 sys.exit(0)
         except OSError, e:
-            sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
+            errorstr = "fork #2 failed: %d (%s)\n" % (e.errno, e.strerror)
+            sys.stderr.write(errorstr)
             sys.exit(1)
 
         # redirect standard file descriptors
@@ -60,7 +88,7 @@ class Daemon:
         # write pidfile
         atexit.register(self.shutdown)
         pid = str(os.getpid())
-        file(self.pidfile,'w+').write("%s\n" % pid)
+        file(self.pidfile, 'w+').write("%s\n" % pid)
 
     def shutdown(self):
         os.remove(self.pidfile)
@@ -71,7 +99,7 @@ class Daemon:
         """
         # Check for a pidfile to see if the daemon already runs
         try:
-            pf = file(self.pidfile,'r')
+            pf = file(self.pidfile, 'r')
             pid = int(pf.read().strip())
             pf.close()
         except IOError:
@@ -91,7 +119,7 @@ class Daemon:
         """
         # Get the pid from the pidfile
         try:
-            pf = file(self.pidfile,'r')
+            pf = file(self.pidfile, 'r')
             pid = int(pf.read().strip())
             pf.close()
         except IOError:
@@ -129,3 +157,4 @@ class Daemon:
         It will be called after the process has been
         daemonized by start() or restart().
         """
+        pass
