@@ -43,6 +43,26 @@ class Autoconf(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
+    def patch(self):
+        # The full perl shebang might be too long; we have to fix this here
+        # because autom4te is called during the build
+        filter_file('^#! @PERL@ -w',
+                    '#! /usr/bin/env perl',
+                    'bin/autom4te.in')
+
+    @run_after('install')
+    def filter_sbang(self):
+        # We have to do this after install because otherwise the install
+        # target will try to rebuild the binaries (filter_file updates the
+        # timestamps)
+        perl = join_path(self.spec['perl'].prefix.bin, 'perl')
+
+        # Revert sbang, so Spack's sbang hook can fix it up
+        filter_file('^#! /usr/bin/env perl',
+                    '#! {0} -w'.format(perl),
+                    '{0}/autom4te'.format(self.prefix.bin),
+                    backup=False)
+
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
 
