@@ -224,7 +224,7 @@ def build_chroot_environment(dir, permanent):
 
     # if a daemon exist use it instead of the local command
     # which require root rights
-    if (os.path.exists(mount_daemon_pidfile)):
+    if os.path.exists(mount_daemon_pidfile) and not permanent:
         send_command_to_daemon(
             MountOperation(MOUNT_DEV, os.path.join(dir, 'dev')))
         send_command_to_daemon(
@@ -242,7 +242,7 @@ def build_chroot_environment(dir, permanent):
 
 
 def remove_chroot_environment(dir, permanent):
-    if (os.path.exists(mount_daemon_pidfile)):
+    if os.path.exists(mount_daemon_pidfile) and not permanent:
         send_command_to_daemon(
             MountOperation(UMOUNT_DEV, os.path.join(dir, 'dev')))
         send_command_to_daemon(
