@@ -35,8 +35,7 @@ class RAnnaffy(RPackage):
     using various criteria."""
 
     homepage = "https://www.bioconductor.org/packages/annaffy/"
-    url = "https://www.bioconductor.org/packages/release/"
-    "bioc/src/contrib/annaffy_1.48.0.tar.gz"
+    url = "https://www.bioconductor.org/packages/release/bioc/src/contrib/annaffy_1.48.0.tar.gz"
 
     version('1.48.0', 'c51219a222b377403fe4bc08a6c57e7f')
 
