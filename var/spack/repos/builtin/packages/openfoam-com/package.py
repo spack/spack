@@ -292,6 +292,10 @@ class OpenfoamCom(Package):
 
     provides('openfoam')
     depends_on('mpi')
+
+    # After 1712 require openmpi+thread_multiple for collated output
+    conflicts('^openmpi~thread_multiple', when='@1712:')
+
     depends_on('zlib')
     depends_on('fftw')
     depends_on('boost')
