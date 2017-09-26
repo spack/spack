@@ -25,15 +25,10 @@
 from spack import *
 
 
-class PerlGd(PerlPackage):
-    """Interface to Gd Graphics Library"""
+class PerlExtutilsConfig(PerlPackage):
+    """A wrapper for perl's configuration"""
 
-    homepage = "http://search.cpan.org/~lds/GD-2.53/GD.pm"
-    url      = "http://search.cpan.org/CPAN/authors/id/L/LD/LDS/GD-2.53.tar.gz"
+    homepage = "http://search.cpan.org/~leont/ExtUtils-Config-0.008/lib/ExtUtils/Config.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/ExtUtils-Config-0.008.tar.gz"
 
-    version('2.53', 'd2c9b18123bcaff8672eb50f2eb37ed3')
-
-    depends_on('perl-module-build', type='build')
-    depends_on('perl-extutils-makemaker', type=('build', 'run'))
-    depends_on('perl-extutils-pkgconfig', type=('build', 'run'))
-    depends_on('libgd')
+    version('0.008', '565a7b09c7cac5907a25bbe2c959a717')
