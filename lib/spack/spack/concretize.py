@@ -215,26 +215,22 @@ class DefaultConcretizer(object):
         Args:
             component (str):      which component to check and set in arch spec
             platform  (Platform): platform object to help set the attributes of
-                                  architecture 
+                                  architecture
             spec      (Spec):     spec object to set the architecture on.
 
         Returns:
             Returns True if any of the components were set. If all components
             are present then return False. True represents a change happened
             and False represents no change."""
-        architecture = spec.architecture
-        #  represents whatever frontend exists, same if on single arch
-
-        #  methods available to the platform class depends on component
-        #  so created a mapping between component and method name.
-
-        if architecture.concrete:
+        if spec.architecture.concrete:
             return False
+
+        architecture = spec.architecture
 
         frontend_os = str(platform.operating_system("fe"))
         frontend_target = str(platform.target("fe"))
-        default_os = str(platform.operating_system("default_os"))
-        default_target = str(platform.target("default_target"))
+        backend_os = str(platform.operating_system("be"))
+        backend_target = str(platform.target("be"))
 
         # set any frontend architecture if os or target are frontend
         if architecture.target == frontend_target:
@@ -244,9 +240,9 @@ class DefaultConcretizer(object):
 
         # set any backend architecture if os or target are backend
         if not architecture.target:
-            architecture.target = default_target
+            architecture.target = backend_target
         if not architecture.platform_os:
-            architecture.platform_os = default_os
+            architecture.platform_os = backend_os
 
         return True  # spec changed
 
@@ -258,18 +254,19 @@ class DefaultConcretizer(object):
         defaults for the system. If the architecture is a Arch object then
         check if either the platform, target, or operating system are
         concretized. If any of the fields are changed return True."""
+        if spec.architecture and spec.architecture.concrete:
+            return False
+
         sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
         front_arch = spack.spec.ArchSpec(
                 spack.architecture.front_end_sys_type())
 
-        if spec.architecture and spec.architecture.concrete:
-            return False
-
         spec_changed = False
         other_arch_spec = find_spec(spec, lambda x: x.architecture, spec.root)
         other_arch = other_arch_spec.architecture
-        if not other_arch:
+        if not spec.architecture and not other_arch:
             spec.architecture = spack.spec.ArchSpec(sys_arch)
+            spec_changed = True
         elif not spec.architecture and other_arch:
             spec.architecture = other_arch
             spec_changed = True
@@ -279,8 +276,11 @@ class DefaultConcretizer(object):
         spec_changed = self._concretize_arch_component(platform, spec)
 
         if not spec.architecture.concrete:
-            raise InsufficientArchitectureInfoError(spec, [sys_arch,
-                                                    front_arch])
+            if sys_arch == front_arch:
+                insufficient_arch = [sys_arch]
+            else:
+                insufficient_arch = [sys_arch, front_arch]
+            raise InsufficientArchitectureInfoError(spec, insufficient_arch)
         return spec_changed
 
     def concretize_variants(self, spec):
