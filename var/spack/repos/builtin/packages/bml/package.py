@@ -34,6 +34,7 @@ class Bml(CMakePackage):
     url      = "https://github.com/lanl/bml"
 
     version('develop', git='https://github.com/lanl/bml', branch='master')
+    version('1.2.2', git='https://github.com/lanl/bml', tag='v1.2.2')
     version('1.1.0', git='https://github.com/lanl/bml', tag='v1.1.0')
 
     variant('shared', default=True, description='Build shared libs')
