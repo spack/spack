@@ -25,12 +25,16 @@
 import os
 import sys
 import spack
-import cPickle as pickle
 import llnl.util.tty as tty
 from socket import *
 from spack.util.executable import which
-from fstab import Fstab
-from daemon import Daemon
+from spack.util.daemon import Daemon
+from spack.util.fstab import Fstab
+
+if sys.version_info[0] < 3:
+    import cPickle as pickle
+else:
+    import _pickle as pickle
 
 
 # Files or paths which need to be binded with mount --bind

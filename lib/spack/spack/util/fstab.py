@@ -30,7 +30,7 @@ import os
 import llnl.util.tty as tty
 
 
-class Fstab(file):
+class Fstab:
     """ This class extends file in order to implement a file reader/writer
     for file `/etc/fstab`
     """
