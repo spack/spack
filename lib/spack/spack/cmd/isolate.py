@@ -23,10 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import sys
-import time
-import argparse
-import cPickle as pickle
 from socket import *
 
 import llnl.util.tty as tty
@@ -34,16 +30,15 @@ import spack
 import spack.cmd
 from spack.util.executable import ProcessError, which
 from llnl.util.filesystem import join_path, mkdirp
-from spack.util.chroot import build_chroot_environment,  \
-                              remove_chroot_environment, \
-                              isolate_environment,       \
-                              run_command,               \
-                              MountDaemon,               \
-                              MountOperation
+from spack.util.chroot import build_chroot_environment
+from spack.util.chroot import remove_chroot_environment
+from spack.util.chroot import run_command
+from spack.util.chroot import MountDaemon
 
 description = "manages the isolation of spack by a jail"
 section = "admin"
 level = "long"
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -69,14 +64,14 @@ administrator rights when using spack as an user""")
     subparser.add_argument(
         '--tarball',
         help="name of the tar file which contains the operating system")
-    #subparser.add_argument(
-    #    '--install-daemon', action='store_true', dest='create_daemon',
-    #    help="connect to a bash session in the generated environment"
-    #)
-    #subparser.add_argument(
-    #    '--remove-daemon', action='store_false', dest='create_daemon',
-    #    help="connect to a bash session in the generated environment"
-    #)
+    # subparser.add_argument(
+    # '--install-daemon', action='store_true', dest='create_daemon',
+    # help="connect to a bash session in the generated environment"
+    # )
+    # subparser.add_argument(
+    # '--remove-daemon', action='store_false', dest='create_daemon',
+    # help="connect to a bash session in the generated environment"
+    # )
     subparser.add_argument(
         '--start-daemon', action='store_true', dest='start_daemon',
         help="Start a daemon which handles the mount bind process"
@@ -85,6 +80,7 @@ administrator rights when using spack as an user""")
         '--stop-daemon', action='store_true', dest='stop_daemon',
         help="Stops the daemon which handles the mount bind process"
     )
+
 
 def get_origin_info(remote):
     git_dir = join_path(spack.prefix, '.git')
@@ -109,9 +105,12 @@ def get_origin_info(remote):
                  'using default upstream URL: %s' % origin_url)
     return (origin_url.strip(), branch.strip())
 
-# Rewrite the configuration file in the bootstrapped environment to inform
-# the local spack that it is running in a isolated environment.
+
 def adapt_config(install_dir, permanent):
+    """
+    Rewrite the configuration file in the bootstrapped environment to inform
+    the local spack that it is running in a isolated environment.
+    """
     etc_path = join_path(install_dir, "etc")
     config_path = join_path(etc_path, "spack")
 
@@ -119,10 +118,11 @@ def adapt_config(install_dir, permanent):
     spack.config.ConfigScope('bootstrap', config_path)
     config = spack.config.get_config("config", "bootstrap")
 
-    #write to the config
+    # write to the config
     config['isolate'] = True
     config['permanent'] = permanent
     spack.config.update_config("config", config, "bootstrap")
+
 
 def check_file_owner(prefix):
     if os.geteuid() == 0:
@@ -133,9 +133,11 @@ def check_file_owner(prefix):
         group = get_group(username)
         chown('-R', '%s:%s' % (username, group), '%s' % (prefix))
 
+
 def unpack_environment(path, tarball):
     tar = which('tar', required=True)
     tar('-xzf', tarball, '-C', path, '--strip-components=1')
+
 
 def construct_environment(force, permanent):
     lockFile = os.path.join(spack.spack_root, '.env')
@@ -157,7 +159,8 @@ def construct_environment(force, permanent):
         config['isolate'] = True
         spack.config.update_config("config", config, "site")
         with open(lockFile, "w") as out:
-            pass
+            out.write('please do not remove this file')
+
 
 def destroy_environment(force):
     lockFile = os.path.join(spack.spack_root, '.env')
@@ -173,6 +176,7 @@ def destroy_environment(force):
         remove_chroot_environment(spack.spack_bootstrap_root, wasPermanent)
         os.remove(lockFile)
 
+
 def start_daemon():
     if os.getuid() != 0:
         tty.die("Starting the daemon require root rights")
@@ -180,19 +184,22 @@ def start_daemon():
                          stderr='/tmp/spack-mount.err')
     daemon.start()
 
+
 def stop_daemon():
     if os.getuid() != 0:
         tty.die("Stopping the daemon require root rights")
     daemon = MountDaemon()
     daemon.stop()
 
+
 def isolate(parser, args):
     force = args.force
     build_enviroment = args.build_environment
     permanent = args.permanent
     if build_enviroment:
+        # origin_url, branch = get_origin_info(args.remote)
         origin_url = "https://github.com/TheTimmy/spack.git"
-        branch = "features/bootstrap-systemimages" #get_origin_info(args.remote)
+        branch = "features/bootstrap-systemimages"
 
         prefix = args.build_environment
         tarball = args.tarball
@@ -214,13 +221,14 @@ def isolate(parser, args):
         mkdirp(home)
         mkdirp(install_dir)
 
-        #generate and remove enviroment
+        # generate and remove enviroment
         build_chroot_environment(prefix, permanent)
         if not permanent:
             remove_chroot_environment(prefix, False)
 
         if os.path.exists(join_path(install_dir, '.git')):
-            tty.die("There already seems to be a git repository in %s" % prefix)
+            tty.die("There already seems to be a git repository in %s" %
+                    prefix)
 
         files_in_the_way = os.listdir(install_dir)
         if files_in_the_way:
@@ -242,7 +250,8 @@ def isolate(parser, args):
         git('checkout', '-B', branch, 'origin/%s' % branch, '-q')
 
         tty.msg("Successfully created a new spack in %s" % prefix,
-                "Run %s/home/spack/bin/spack to use this installation." %prefix)
+                "Run %s/home/spack/bin/spack to use this installation." %
+                prefix)
 
         adapt_config(install_dir, permanent)
         check_file_owner(prefix)

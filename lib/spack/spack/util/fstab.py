@@ -26,9 +26,9 @@
 # Original author 'Jorge Niedbalski R. <jnr@metaklass.org>'
 # https://gist.github.com/niedbalski/507e974ed2d54a87ad37
 
-import os, subprocess
+import os
 import llnl.util.tty as tty
-from spack.util.executable import which
+
 
 class Fstab(file):
     """ This class extends file in order to implement a file reader/writer
@@ -54,12 +54,12 @@ class Fstab(file):
             return str(self) == str(o)
 
         def __str__(self):
-            return "{} {} {} {} {} {}".format(self.device,
-                                              self.mountpoint,
-                                              self.filesystem,
-                                              self.options,
-                                              self.d,
-                                              self.p)
+            return "%s %s %s %s %s %s" % (self.device,
+                                          self.mountpoint,
+                                          self.filesystem,
+                                          self.options,
+                                          self.d,
+                                          self.p)
 
     DEFAULT_PATH = os.path.join(os.path.sep, 'etc', 'fstab')
 
@@ -74,7 +74,8 @@ class Fstab(file):
 
     def _check_privilege(self):
         if os.geteuid() != 0:
-            tty.die("To install a permanent boostrap environment root rights are required")
+            err = 'Root rights are required to install a permanent environment'
+            tty.die(err)
 
     def _hydrate_entry(self, line):
         return Fstab.Entry(*filter(
@@ -138,5 +139,5 @@ class Fstab(file):
 
     @classmethod
     def add(cls, device, mountpoint, filesystem, options=None, path=None):
-        return cls(path=path).add_entry(Fstab.Entry(device, mountpoint, \
+        return cls(path=path).add_entry(Fstab.Entry(device, mountpoint,
                                                     filesystem, options))
