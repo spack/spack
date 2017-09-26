@@ -34,6 +34,6 @@ class RAnnotate(RPackage):
     version('1.54.0', '01a4961ef28fc88943e168f946592d44')
 
     depends_on('r-annotationdbi', type=('build', 'run'))
-    depends_on('r-xml',type=('build', 'run'))
-    depends_on('r-rcurl',type=('build', 'run'))
-    depends_on('r-xtable',type=('build', 'run'))
+    depends_on('r-xml', type=('build', 'run'))
+    depends_on('r-rcurl', type=('build', 'run'))
+    depends_on('r-xtable', type=('build', 'run'))
