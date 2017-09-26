@@ -36,7 +36,9 @@ class Lammps(CMakePackage):
     homepage = "http://lammps.sandia.gov/"
     url      = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
 
+    version('20170922', '4306071f919ec7e759bda195c26cfd9a')
     version('20170901', '767e7f07289663f033474dfe974974e7')
+    version('develop', git='https://github.com/lammps/lammps', branch='master')
 
     def url_for_version(self, version):
         vdate = dt.datetime.strptime(str(version), "%Y%m%d")
@@ -44,7 +46,7 @@ class Lammps(CMakePackage):
             vdate.strftime("%d%b%Y").lstrip('0'))
 
     supported_packages = ['voronoi', 'rigid', 'user-nc-dump', 'kspace',
-                          'user-atc', 'meam', 'manybody']
+                          'latte', 'user-atc', 'meam', 'manybody']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -60,8 +62,14 @@ class Lammps(CMakePackage):
     depends_on('netcdf+mpi', when='+user-nc-dump')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
+    depends_on('latte', when='+latte')
+    depends_on('blas', when='+latte')
+    depends_on('lapack', when='+latte')
+
+    conflicts('+latte', when='@:20170921')
 
     patch("lib.patch", when="@20170901")
+    patch("660.patch", when="@20170922")
 
     root_cmakelists_dir = 'cmake'
 
@@ -80,6 +88,8 @@ class Lammps(CMakePackage):
             '-DENABLE_KSAPCE={0}'.format(
                 'ON' if '+kspace' in spec else 'OFF'),
             '-DFFT=FFTW3',  # doesn't do harm withiout KSPACE
+            '-DENABLE_LATTE={0}'.format(
+                'ON' if '+latte' in spec else 'OFF'),
             '-DENABLE_MANYBODY={0}'.format(
                 'ON' if '+manybody' in spec else 'OFF'),
             '-DENABLE_USER-NETCDF={0}'.format(
