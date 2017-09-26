@@ -32,7 +32,9 @@ class Astyle(MakefilePackage):
     """
 
     homepage = "http://astyle.sourceforge.net/"
-    url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    # homepage is dead use Gentoo Mirror
+    # url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    url = "http://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
 
     maintainers = ['davydden']
 
