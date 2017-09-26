@@ -172,8 +172,7 @@ def mount_bind_path(realpath, chrootpath, permanent):
                 os.makedirs(os.path.dirname(chrootpath))
 
             if not os.path.exists(chrootpath):
-                with open(chrootpath, "w"):
-                    pass
+                open(chrootpath, "w").close()
         else:
             # Don't include empty directories
             if os.listdir(realpath):
@@ -233,8 +232,8 @@ def build_chroot_environment(dir, permanent):
             MountOperation(MOUNT_PROC, os.path.join(dir, 'proc')))
     else:
         lockFile = os.path.join(spack.spack_root, '.env')
-        with open(lockFile, 'w'):
-            pass
+        open(lockFile, 'w').close()
+
         for lib in BIND_PATHS:
             mount_bind_path(lib, os.path.join(dir, lib[1:]), permanent)
 
