@@ -298,6 +298,10 @@ class Openmpi(AutotoolsPackage):
         # Fabrics and schedulers
         config_args.extend(self.with_or_without('fabrics'))
         config_args.extend(self.with_or_without('schedulers'))
+        # jgw
+        config_args.extend([
+            '--with-tm=/opt/pbs/default'
+            ])
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
