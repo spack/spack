@@ -259,7 +259,7 @@ class DefaultConcretizer(object):
 
         sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
         front_arch = spack.spec.ArchSpec(
-                spack.architecture.front_end_sys_type())
+            spack.architecture.front_end_sys_type())
 
         spec_changed = False
         other_arch_spec = find_spec(spec, lambda x: x.architecture, spec.root)
