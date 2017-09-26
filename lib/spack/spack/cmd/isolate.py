@@ -84,22 +84,6 @@ administrator rights when using spack as an user""")
         '--stop-daemon', action='store_true', dest='stop_daemon',
         help="Stops the daemon which handles the mount bind process"
     )
-    #subparser.add_argument(
-    #    '--install-daemon', action='store_true', dest='create_daemon',
-    #    help="connect to a bash session in the generated environment"
-    #)
-    #subparser.add_argument(
-    #    '--remove-daemon', action='store_false', dest='create_daemon',
-    #    help="connect to a bash session in the generated environment"
-    #)
-    subparser.add_argument(
-        '--start-daemon', action='store_true', dest='start_daemon',
-        help="Start a daemon which handles the mount bind process"
-    )
-    subparser.add_argument(
-        '--stop-daemon', action='store_true', dest='stop_daemon',
-        help="Stops the daemon which handles the mount bind process"
-    )
 
 
 def get_origin_info(remote):

@@ -24,13 +24,11 @@
 ##############################################################################
 import os
 import sys
-import copy
 import spack
 import cPickle as pickle
 import llnl.util.tty as tty
 from socket import *
 from spack.util.executable import which
-from llnl.util.filesystem import join_path
 
 from fstab import Fstab
 from daemon import Daemon
@@ -189,11 +187,6 @@ def send_command_to_daemon(command):
     sock.sendto(data, ("127.0.0.1", 11259))
     sock.close()
 
-def send_command_to_daemon(command):
-    sock = socket(AF_INET, SOCK_DGRAM)
-    data = pickle.dumps(command, pickle.HIGHEST_PROTOCOL)
-    sock.sendto(data, ("127.0.0.1", 11259))
-    sock.close()
 
 def umount_bind_path(chrootpath, permanent):
     # remove permanent mount point
