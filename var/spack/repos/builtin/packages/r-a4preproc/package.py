@@ -22,18 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-#
 from spack import *
 
 
 class RA4preproc(RPackage):
     """Automated Affymetrix Array Analysis Preprocessing Package."""
 
-    homepage = "https://www.bioconductor.org"
+    homepage = "https://www.bioconductor.org/packages/a4Preproc/"
     url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/a4Preproc_1.24.0.tar.gz"
 
     version('1.24.0', '8de73ad20a28155f34a4636c3f7c6539')
 
     depends_on('r-annotationdbi', type=('build', 'run'))
-
