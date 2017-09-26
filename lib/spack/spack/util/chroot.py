@@ -193,7 +193,7 @@ def send_command_to_daemon(command):
     sock.connect(("127.0.0.1", 11259))
     data = pickle.dumps(command, pickle.HIGHEST_PROTOCOL)
     sock.send(data)
-    result = sock.recv(1024)
+    sock.recv(1024)
     sock.close()
 
 
