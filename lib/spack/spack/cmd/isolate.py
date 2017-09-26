@@ -197,9 +197,9 @@ def isolate(parser, args):
     build_enviroment = args.build_environment
     permanent = args.permanent
     if build_enviroment:
-        # origin_url, branch = get_origin_info(args.remote)
-        origin_url = "https://github.com/TheTimmy/spack.git"
-        branch = "features/bootstrap-systemimages"
+        origin_url, branch = get_origin_info(args.remote)
+        # origin_url = "https://github.com/TheTimmy/spack.git"
+        # branch = "features/bootstrap-systemimages"
 
         prefix = args.build_environment
         tarball = args.tarball
