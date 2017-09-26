@@ -29,12 +29,9 @@ import cPickle as pickle
 import llnl.util.tty as tty
 from socket import *
 from spack.util.executable import which
-
 from fstab import Fstab
 from daemon import Daemon
 
-from fstab import Fstab
-from daemon import Daemon
 
 # Files or paths which need to be binded with mount --bind
 BIND_PATHS = [

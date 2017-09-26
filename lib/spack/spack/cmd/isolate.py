@@ -62,10 +62,6 @@ administrator rights when using spack as an user""")
         help="name of the remote to bootstrap from",
         default='origin')
     subparser.add_argument(
-        '--permanent', action='store_true', dest='permanent',
-        help="""generate a permanent chroot environment to require
-administrator rights when using spack as an user""")
-    subparser.add_argument(
         '--tarball',
         help="name of the tar file which contains the operating system")
     # subparser.add_argument(
@@ -179,7 +175,6 @@ def destroy_environment(force):
 
         remove_chroot_environment(spack.spack_bootstrap_root, wasPermanent)
         os.remove(lockFile)
-
 
 
 def start_daemon():
