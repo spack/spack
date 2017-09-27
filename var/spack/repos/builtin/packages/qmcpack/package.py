@@ -65,6 +65,9 @@ class Qmcpack(CMakePackage):
     # no way to express this in variant syntax, need something like
     # variant('+mixed', default=True, when='+cuda', description="...")
 
+    # conflicts
+    conflicts('+soa', when='+cuda')
+
     # Dependencies match those in the QMCPACK manual
     depends_on('cmake@3.4.3:', type='build')
     depends_on('mpi', when='+mpi')
@@ -162,11 +165,11 @@ class Qmcpack(CMakePackage):
 
         # New Structure-of-Array (SOA) code, much faster than default
         # Array-of-Structure (AOS) code. 
-        # CPU and mixed-precision code path only.
         # No support for local atomic orbital basis.
-        if '+cuda' not in self.spec:
-            if '+mixed' and '+soa' in self.spec:
-                args.append('-DENABLE_SOA=1')
+        if '+soa' in self.spec:
+            args.append('-DENABLE_SOA=1')
+        elif '~soa' in self.spec:
+            args.append('-DENABLE_SOA=0')
 
         # Manual Timers
         if '+timers' in self.spec:
