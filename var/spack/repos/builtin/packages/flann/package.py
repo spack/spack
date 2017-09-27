@@ -46,11 +46,18 @@ class Flann(CMakePackage):
     version('1.8.1', '1f51500e172f5e11fbda05f033858eb6')
     version('1.8.0', '473150f592c2997e32d5ce31fd3c19a2')
 
+    def url_for_version(self, version):
+        if version > Version('1.8.1'):
+            return "https://github.com/mariusmuja/flann/archive/{0}.tar.gz".format(version)
+        else:
+            return "https://github.com/mariusmuja/flann/archive/{0}-src.tar.gz".format(version)
+
     # Options available in the CMakeLists.txt
     # Language bindings
     variant("python",   default=False,
             description="Build the Python bindings. "
                         "Module: pyflann.")
+    extends('python', when='+python')
     variant("matlab",   default=False, description="Build the Matlab bindings.")
     # default to true for C because it's a C++ library, nothing extra needed
     variant("c",        default=True,  description="Build the C bindings.")
@@ -93,9 +100,10 @@ class Flann(CMakePackage):
                     ),
                     "src/python/CMakeLists.txt")
         # Fix the install location so that spack activate works
-        filter_file("share/flann/python",
-                    site_packages_dir,
-                    "src/python/CMakeLists.txt")
+        if '+python' in self.spec:
+            filter_file("share/flann/python",
+                        site_packages_dir,
+                        "src/python/CMakeLists.txt")
         # Hack. Don't install setup.py
         filter_file("install( FILES",
                     "# install( FILES",
