@@ -26,8 +26,8 @@ from spack import *
 
 
 class RSfsmisc(RPackage):
-    """Useful utilities ['goodies'] from Seminar fuer Statistik 
-    ETH Zurich, quite a few related to graphics; 
+    """Useful utilities ['goodies'] from Seminar fuer Statistik
+    ETH Zurich, quite a few related to graphics;
     some were ported from S-plus."""
 
     homepage = "https://cran.r-project.org/web/packages/sfsmisc/index.html"
