@@ -50,7 +50,7 @@ class Clang(Compiler):
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'clang/clang',
                   'cxx': 'clang/clang++'}
-    
+
     if sys.platform == 'darwin':
         # Use default wrappers for fortran, in case provided in
         # compilers.yaml
