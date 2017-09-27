@@ -31,6 +31,7 @@ class Libmongoc(AutotoolsPackage):
     homepage = "https://github.com/mongodb/mongo-c-driver"
     url      = "https://github.com/mongodb/mongo-c-driver/releases/download/1.7.0/mongo-c-driver-1.7.0.tar.gz"
 
+    version('1.8.0', '8c271a16ff30f6d4f5e134f699f7360f')
     version('1.7.0', '21acf3584e92631422bc91e9e3cf4f76')
     version('1.6.3', '0193610cf1d98aae7008f272a1000972')
     version('1.6.2', 'aac86df153282cda1e4905cca181631a')
