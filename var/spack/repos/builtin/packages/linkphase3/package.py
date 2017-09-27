@@ -35,7 +35,10 @@ class Linkphase3(Package):
             git='https://github.com/tdruet/LINKPHASE3.git')
 
     def install(self, spec, prefix):
-        gfortran = which('gfortran')
-        gfortran('LINKPHASE3.f90', '-o', 'LINKPHASE3')
+        if self.compiler.name == 'intel':
+            fortran = which('ifort')
+        else:
+            fortran = which('gfortran')
+        fortran('LINKPHASE3.f90', '-o', 'LINKPHASE3')
         mkdirp(prefix.bin)
         install('LINKPHASE3', prefix.bin)
