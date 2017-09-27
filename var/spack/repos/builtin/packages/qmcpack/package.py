@@ -31,16 +31,16 @@ class Qmcpack(CMakePackage):
 
     # Package information
     homepage = "http://www.qmcpack.org/"
-    url      = "https://github.com/QMCPACK/qmcpack/archive/v3.2.0.tar.gz"
-
-    version('3.2.0', 'fbaa0e2234ae785b9be9b8840f26432f')
-    version('3.1.1', 'f088c479ae928c37320e717c96880974')
-    version('3.1.0', 'bdf3acd090557acdb6cab5ddbf7c7960')
-    version('3.0.0', '75f9cf70e6cc6d8b7ff11a86340da43d')
+    url      = "https://github.com/QMCPACK/qmcpack.git"
 
     # This download method is untrusted, and is not recommended
-    # by the Spack manual.
-    version('develop', git='https://github.com/QMCPACK/qmcpack.git')
+    # by the Spack manual. However, it is easier to maintain
+    # because github hashes can occasionally change
+    version('3.2.0', git=url, tag='v3.2.0')
+    version('3.1.1', git=url, tag='v3.1.1')
+    version('3.1.0', git=url, tag='v3.1.0')
+    version('3.0.0', git=url, tag='v3.0.0')
+    version('develop', git=url)
 
     # These defaults match those in the QMCPACK manual
     variant('debug', default=False, description='Build debug version')
