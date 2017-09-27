@@ -66,6 +66,12 @@ config:
   checksum: true
 
 
+  # If set to true, Spack will isolate itself in an chroot enviroment.
+  # This option only work in an enviroment created with
+  # ./spack bootstrap --isolate path
+  isolate: false
+
+
   # If set to true, `spack install` and friends will NOT clean
   # potentially harmful variables from the build environment. Use wisely.
   dirty: false

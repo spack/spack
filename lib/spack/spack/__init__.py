@@ -30,6 +30,9 @@ import tempfile
 import getpass
 from llnl.util.filesystem import *
 import llnl.util.tty as tty
+from spack.util.chroot import build_chroot_environment
+from spack.util.chroot import remove_chroot_environment
+from spack.util.chroot import isolate_environment
 
 #-----------------------------------------------------------------------------
 # Variables describing how Spack is laid out in its prefix.
@@ -37,6 +40,9 @@ import llnl.util.tty as tty
 # This file lives in $prefix/lib/spack/spack/__file__
 spack_root = ancestor(__file__, 4)
 
+#the bootstrap enviroment is in $prefix/home/spack_root
+spack_bootstrap_root = ancestor(spack_root, 2)
+#
 # The spack script itself
 spack_file = join_path(spack_root, "bin", "spack")
 
@@ -156,6 +162,22 @@ dirty = _config.get('dirty', False)
 # The number of jobs to use when building in parallel.
 # By default, use all cores on the machine.
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
+
+
+# If set to true, Spack will isolate itself in an chroot enviroment.
+# This option only work in an enviroment created with
+# ./spack bootstrap --isolate path
+isolate = spack.config.get_config('config', 'site').get('isolate', False)
+
+# check sys.argv[1] agaist isolate allow the call to
+# isolate --remove-enviroment without being trapped inside a chroot jail
+if isolate and sys.argv[1] != 'isolate':
+    if spack_root != "/home/spack":
+        isolate_environment()
+        # exit the main process because it wasn't called in a chroot jail
+        sys.exit(0)
+
+
 
 
 #-----------------------------------------------------------------------------
