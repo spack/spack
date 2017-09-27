@@ -33,5 +33,5 @@ class RA4core(RPackage):
 
     version('1.24.0', 'd7f79c350ae0a6175f2ecc9a337ca61f')
 
-    depends_on('r-biobase',type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-glmnet', type=('build', 'run'))
