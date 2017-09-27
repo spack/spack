@@ -44,8 +44,13 @@ class Coevp(MakefilePackage):
             branch='master')
 
     variant('mpi', default=True, description='Build with MPI Support')
+    variant('silo', default=False, description='Build with silo Support')
+    variant('flann', default=False, description='Build with flann Support')
 
     depends_on('mpi', when='+mpi')
+    depends_on('silo', when='+silo')
+    depends_on('flann@1.8.1', when='+flann')
+    depends_on('lapack')
 
     @property
     def build_targets(self):
@@ -54,10 +59,23 @@ class Coevp(MakefilePackage):
             targets.append('COEVP_MPI=yes')
         else:
             targets.append('COEVP_MPI=no')
-        targets.append('FLANN=no')
+        if '+flann' in self.spec:
+            targets.append('FLANN=yes')
+            targets.append('FLANN_TARGET=')
+            targets.append('FLANN_LOC={0}'.format(
+                join_path(self.spec['flann'].prefix.include, 'flann')))
+        else:
+            targets.append('FLANN=no')
         targets.append('REDIS=no')
-        targets.append('SILO=no')
+        if '+silo' in self.spec:
+            targets.append('SILO=yes')
+            targets.append('SILO_TARGET=')
+            targets.append('SILO_LOC={0}'.format(self.spec['silo'].prefix))
+        else:
+            targets.append('SILO=no')
         targets.append('TWEMPROXY=no')
+        targets.append('LAPACK=%s' % self.spec['lapack'].libs.ld_flags)
+
         return targets
 
     def install(self, spec, prefix):
