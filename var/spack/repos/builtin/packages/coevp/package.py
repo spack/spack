@@ -52,6 +52,8 @@ class Coevp(MakefilePackage):
     depends_on('flann@1.8.1', when='+flann')
     depends_on('lapack')
 
+    tags = ['proxy-app']
+
     @property
     def build_targets(self):
         targets = []
