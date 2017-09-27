@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Mpich(AutotoolsPackage):
@@ -41,11 +42,30 @@ class Mpich(AutotoolsPackage):
     version('3.1.1', '40dc408b1e03cc36d80209baaa2d32b7')
     version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
+    version('develop', git='git://github.com/pmodels/mpich')
 
     variant('hydra', default=True,  description='Build the hydra process manager')
     variant('pmi',   default=True,  description='Build with PMI support')
     variant('romio', default=True,  description='Enable ROMIO MPI I/O implementation')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+    variant(
+        'device',
+        default='ch3',
+        description='''Abstract Device Interface (ADI)
+implementation. The ch4 device is currently in experimental state''',
+        values=('ch3', 'ch4'),
+        multi=False
+    )
+    variant(
+        'netmod',
+        default='tcp',
+        description='''Network module. Only single netmod builds are
+supported. For ch3 device configurations, this presumes the
+ch3:nemesis communication channel. ch3:sock is not supported by this
+spack package at this time.''',
+        values=('tcp', 'mxm', 'ofi', 'ucx'),
+        multi=False
+    )
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -55,6 +75,15 @@ class Mpich(AutotoolsPackage):
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
     patch('mpich32_clang.patch', when='@3.2%clang')
+
+    depends_on('libfabric', when='netmod=ofi')
+
+    conflicts('device=ch4', when='@:3.2')
+    conflicts('netmod=ofi', when='@:3.1.4')
+    conflicts('netmod=ucx', when='device=ch3')
+    conflicts('netmod=mxm', when='device=ch4')
+    conflicts('netmod=mxm', when='@:3.1.3')
+    conflicts('netmod=tcp', when='device=ch4')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # On Cray, the regular compiler wrappers *are* the MPI wrappers.
@@ -92,6 +121,15 @@ class Mpich(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
+    def autoreconf(self, spec, prefix):
+        """Not needed usually, configure should be already there"""
+        # If configure exists nothing needs to be done
+        if os.path.exists(self.configure_abs_path):
+            return
+        # Else bootstrap with autotools
+        bash = which('bash')
+        bash('./autogen.sh')
+
     @run_before('autoreconf')
     def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
@@ -104,13 +142,33 @@ class Mpich(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        return [
+        config_args = [
             '--enable-shared',
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--with-pmi={0}'.format('yes' if '+pmi' in spec else 'no'),
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
             '--{0}-ibverbs'.format('with' if '+verbs' in spec else 'without')
         ]
+
+        # setup device configuration
+        device_config = ''
+        if 'device=ch4' in spec:
+            device_config = '--with-device=ch4:'
+        elif 'device=ch3' in spec:
+            device_config = '--with-device=ch3:nemesis:'
+
+        if 'netmod=ucx' in spec:
+            device_config += 'ucx'
+        elif 'netmod=ofi' in spec:
+            device_config += 'ofi'
+        elif 'netmod=mxm' in spec:
+            device_config += 'mxm'
+        elif 'netmod=tcp' in spec:
+            device_config += 'tcp'
+
+        config_args.append(device_config)
+
+        return config_args
 
     @run_after('install')
     def filter_compilers(self):
