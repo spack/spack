@@ -33,3 +33,4 @@ class PyDbf(PythonPackage):
     url      = "https://pypi.io/packages/source/d/dbf/dbf-0.96.005.tar.gz"
 
     version('0.96.005', 'bce1a1ed8b454a30606e7e18dd2f8277')
+    version('0.94.003', '33a659ec90d7e8d8ffcd69d2189c0c6c')
