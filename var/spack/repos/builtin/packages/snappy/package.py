@@ -33,6 +33,20 @@ class Snappy(CMakePackage):
 
     version('1.1.7', 'ee9086291c9ae8deb4dac5e0b85bf54a')
 
+    variant('shared', default=True, description='Build shared libraries')
+
+    def cmake_args(self):
+        spec = self.spec
+
+        args = [
+            '-DCMAKE_INSTALL_LIBDIR:PATH={0}'.format(
+                self.prefix.lib),
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF')
+        ]
+
+        return args
+
     @run_after('install')
     def install_pkgconfig(self):
         mkdirp(self.prefix.lib.pkgconfig)
