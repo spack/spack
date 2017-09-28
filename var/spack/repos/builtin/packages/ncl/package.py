@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 import os
 import shutil
 import tempfile
@@ -64,6 +65,7 @@ class Ncl(Package):
     depends_on('bison', type='build')
     depends_on('flex+lex')
     depends_on('libiconv')
+    depends_on('tcsh')
 
     # Also, the manual says that ncl requires zlib, but that comes as a
     # mandatory dependency of libpng, which is a mandatory dependency of cairo.
@@ -100,6 +102,23 @@ class Ncl(Package):
         md5='10aff8d7950f5e0e2fb6dd2e340be2c9',
         placement='triangle_src',
         when='+triangle')
+
+    def patch(self):
+        # Make configure scripts use Spack's tcsh
+        files = ['Configure'] + glob.glob('config/*')
+
+        filter_file('^#!/bin/csh -f', '#!/usr/bin/env csh', *files)
+
+    @run_before('install')
+    def filter_sbang(self):
+        # Filter sbang before install so Spack's sbang hook can fix it up
+        files = glob.glob('ncarg2d/src/bin/scripts/*')
+        files += glob.glob('ncarview/src/bin/scripts/*')
+        files += glob.glob('ni/src/scripts/*')
+
+        csh = join_path(self.spec['tcsh'].prefix.bin, 'csh')
+
+        filter_file('^#!/bin/csh', '#!{0}'.format(csh), *files)
 
     def install(self, spec, prefix):
 

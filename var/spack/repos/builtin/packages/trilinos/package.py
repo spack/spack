@@ -155,6 +155,12 @@ class Trilinos(CMakePackage):
             description='Enable OpenMP')
     variant('nox',          default=False,
             description='Enable NOX')
+    variant('shards',       default=False,
+            description='Enable Shards')
+    variant('intrepid',     default=False,
+            description='Enable Intrepid')
+    variant('intrepid2',     default=False,
+            description='Enable Intrepid2')
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
@@ -305,6 +311,12 @@ class Trilinos(CMakePackage):
                 'ON' if '+anasazi' in spec else 'OFF'),
             '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
                 'ON' if '+nox' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Shards=%s' % (
+                'ON' if '+shards' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Intrepid=%s' % (
+                'ON' if '+intrepid' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Intrepid2=%s' % (
+                'ON' if '+intrepid2' in spec else 'OFF'),
         ])
 
         if '+xsdkflags' in spec:
