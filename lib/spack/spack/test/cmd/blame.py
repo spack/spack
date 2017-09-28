@@ -55,5 +55,5 @@ def test_blame_by_git(builtin_mock, capfd):
     """Sanity check the blame command to make sure it works."""
     with capfd.disabled():
         out = blame('--git', 'mpich')
-    assert 'Mpich' in out
-    assert 'mock_packages' in out
+    assert 'class Mpich' in out
+    assert '    homepage   = "http://www.mpich.org"' in out
