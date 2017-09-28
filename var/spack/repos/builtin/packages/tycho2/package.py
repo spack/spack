@@ -38,7 +38,9 @@ class Tycho2(MakefilePackage):
     depends_on("mpi")
 
     def patch(self):
-        touch('make.inc')  # included by Makefile, but we set MPICC below
+        # make.inc is included by Makefile to set MPICC, but we that
+        # through build_targets() below, so any empty include file is fine.
+        touch('make.inc')
 
     @property
     def build_targets(self):
