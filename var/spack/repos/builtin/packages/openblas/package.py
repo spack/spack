@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -47,8 +47,13 @@ class Openblas(MakefilePackage):
         default=True,
         description='Build shared libraries as well as static libs.'
     )
+    variant('ilp64', default=False, description='64 bit integers')
     variant('openmp', default=False, description="Enable OpenMP support.")
     variant('pic', default=True, description='Build position independent code')
+
+    variant('cpu_target', default='',
+                    description='Set CPU target architecture (leave empty for '
+                        'autodetection; GENERIC, SSE_GENERIC, NEHALEM, ...)')
 
     # virtual dependency
     provides('blas')
@@ -107,8 +112,12 @@ class Openblas(MakefilePackage):
             'FC={0}'.format(spack_f77),
             'MAKE_NO_J=1'
         ]
+        if self.spec.variants['cpu_target'].value:
+            make_defs += [
+                'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
+            ]
         # invoke make with the correct TARGET for aarch64
-        if 'aarch64' in spack.architecture.sys_type():
+        elif 'aarch64' in spack.architecture.sys_type():
             make_defs += [
                 'TARGET=PILEDRIVER',
                 'TARGET=ARMV8'
@@ -128,6 +137,10 @@ class Openblas(MakefilePackage):
         # Add support for OpenMP
         if '+openmp' in self.spec:
             make_defs += ['USE_OPENMP=1']
+
+        # 64bit ints
+        if '+ilp64' in self.spec:
+            make_defs += ['INTERFACE64=1']
 
         return make_defs
 

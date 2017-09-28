@@ -31,30 +31,44 @@ class Qmcpack(CMakePackage):
 
     # Package information
     homepage = "http://www.qmcpack.org/"
-    url      = "https://github.com/QMCPACK/qmcpack/archive/v3.1.1.tar.gz"
-
-    version('3.1.1', 'f088c479ae928c37320e717c96880974')
-    version('3.1.0', 'bdf3acd090557acdb6cab5ddbf7c7960')
-    version('3.0.0', '75f9cf70e6cc6d8b7ff11a86340da43d')
+    url      = "https://github.com/QMCPACK/qmcpack.git"
 
     # This download method is untrusted, and is not recommended
-    # by the Spack manual.
-    version('develop', git='https://github.com/QMCPACK/qmcpack.git')
+    # by the Spack manual. However, it is easier to maintain
+    # because github hashes can occasionally change
+    version('3.2.0', git=url, tag='v3.2.0')
+    version('3.1.1', git=url, tag='v3.1.1')
+    version('3.1.0', git=url, tag='v3.1.0')
+    version('3.0.0', git=url, tag='v3.0.0')
+    version('develop', git=url)
 
     # These defaults match those in the QMCPACK manual
     variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True, description='Build with MPI support')
     variant('cuda', default=False,
-            description='Enable CUDA and GPU acceleration.')
-    variant('complex', default=True,
+            description='Enable CUDA and GPU acceleration')
+    variant('complex', default=False,
             description='Build the complex (general twist/k-point) version')
     variant('mixed', default=False,
             description='Build the mixed precision (mixture of single and '
-                        'double precision) version for gpu and cpu '
-                        '(experimental)')
+                        'double precision) version for gpu and cpu')
+    variant('soa', default=False,
+            description='Build with Structure-of-Array instead of '
+                        'Array-of-Structure code. Only for CPU code'
+                        'and only in mixed precision')
+    variant('timers', default=False,
+             description='Build with support for timers.')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
 
+    # cuda variant implies mixed precision variant by default, but there is
+    # no way to express this in variant syntax, need something like
+    # variant('+mixed', default=True, when='+cuda', description="...")
+
+    # conflicts
+    conflicts('+soa', when='+cuda')
+
+    # Dependencies match those in the QMCPACK manual
     depends_on('cmake@3.4.3:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('libxml2')
@@ -112,20 +126,56 @@ class Qmcpack(CMakePackage):
         args.append('-DBOOST_ROOT={0}'.format(self.spec['boost'].prefix))
         args.append('-DHDF5_ROOT={0}'.format(self.spec['hdf5'].prefix))
 
+        # If using non-Intel comiler with MKL, this extra bit of code is needed.
+        # MKLROOT environment variable must be defined for this to work properly
+        if 'intel-mkl' in self.spec:
+            mkl_prefix = self.spec['intel-mkl'].prefix
+            args.append('-DBLA_VENDOR=Intel10_64lp_seq')
+            args.append('-DCMAKE_PREFIX_PATH={0}'.format(mkl_prefix.lib))
+                
+
         # Default is MPI, serial version is convenient for cases, e.g. laptops
-        if '~mpi' in self.spec:
+        if '+mpi' in self.spec:
+            args.append('-DQMC_MPI=1')
+        elif '~mpi' in self.spec:
             args.append('-DQMC_MPI=0')
+
+        # Default is real-valued single particle orbitals
+        if '+complex' in self.spec:
+            args.append('-DQMC_COMPLEX=1')
+        elif '~complex' in self.spec:
+            args.append('-DQMC_COMPLEX=0')
 
         # When '-DQMC_CUDA=1', CMake automatically sets:
         # '-DQMC_MIXED_PRECISION=1'
         #
-        # Note: there is a double-precision CUDA path, but it is deprecated
+        # There is a double-precision CUDA path, but it is not as well
+        # tested. 
+
         if '+cuda' in self.spec:
             args.append('-DQMC_CUDA=1')
+        elif '~cuda' in self.spec:
+            args.append('-DQMC_CUDA=0')
 
-        # this is for the experimental mixed-prescision CPU code
+        # Mixed-precision versues double-precision CPU and GPU code        
         if '+mixed' in self.spec:
             args.append('-DQMC_MIXED_PRECISION=1')
+        elif '~mixed' in self.spec:
+            args.append('-DQMC_MIXED_PRECISION=0')
+
+        # New Structure-of-Array (SOA) code, much faster than default
+        # Array-of-Structure (AOS) code. 
+        # No support for local atomic orbital basis.
+        if '+soa' in self.spec:
+            args.append('-DENABLE_SOA=1')
+        elif '~soa' in self.spec:
+            args.append('-DENABLE_SOA=0')
+
+        # Manual Timers
+        if '+timers' in self.spec:
+            args.append('-DTIMERS=1')
+        elif '~timers' in self.spec:
+            args.append('-DTIMERS=0')
 
         return args
 
@@ -158,10 +208,10 @@ class Qmcpack(CMakePackage):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def check_build(self):
+    def check(self):
         """Run ctest after building binary.
-        Use 'spack install --run-tests qmcpack'.
-        It can take 24 hours to run all the regression tests.
-        We only run the unit tests and short tests."""
-        ctest('-L', 'unit')
-        ctest('-R', 'short')
+        It can take over 24 hours to run all the regression tests, here we
+        only run the unit tests and short tests."""
+        with working_dir(self.build_directory):
+            ctest('-L', 'unit')
+            ctest('-R', 'short')

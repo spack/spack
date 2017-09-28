@@ -178,7 +178,7 @@ def set_compiler_environment_variables(pkg, env):
     return env
 
 
-def set_build_environment_variables(pkg, env, dirty=False):
+def set_build_environment_variables(pkg, env, dirty):
     """Ensure a clean install environment when we build packages.
 
     This involves unsetting pesky environment variables that may
@@ -450,7 +450,7 @@ def load_external_modules(pkg):
             load_module(dep.external_module)
 
 
-def setup_package(pkg, dirty=False):
+def setup_package(pkg, dirty):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
@@ -465,12 +465,8 @@ def setup_package(pkg, dirty=False):
     # code ensures that all packages in the DAG have pieces of the
     # same spec object at build time.
     #
-    # This is safe for the build process, b/c the build process is a
-    # throwaway environment, but it is kind of dirty.
-    #
-    # TODO: Think about how to avoid this fix and do something cleaner.
     for s in pkg.spec.traverse():
-        s.package.spec = s
+        assert s.package.spec is s
 
     # Trap spack-tracked compiler flags as appropriate.
     # Must be before set_compiler_environment_variables
@@ -516,7 +512,7 @@ def setup_package(pkg, dirty=False):
     spack_env.apply_modifications()
 
 
-def fork(pkg, function, dirty=False):
+def fork(pkg, function, dirty):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -602,6 +598,10 @@ def fork(pkg, function, dirty=False):
             target=child_process, args=(child_pipe, input_stream))
         p.start()
 
+    except InstallError as e:
+        e.pkg = pkg
+        raise
+
     finally:
         # Close the input stream in the parent process
         if input_stream is not None:
@@ -609,6 +609,10 @@ def fork(pkg, function, dirty=False):
 
     child_result = parent_pipe.recv()
     p.join()
+
+    # let the caller know which package went wrong.
+    if isinstance(child_result, InstallError):
+        child_result.pkg = pkg
 
     # If the child process raised an error, print its output here rather
     # than waiting until the call to SpackError.die() in main(). This
@@ -680,10 +684,15 @@ def get_package_context(traceback, context=3):
 
 
 class InstallError(spack.error.SpackError):
-    """Raised by packages when a package fails to install"""
+    """Raised by packages when a package fails to install.
+
+    Any subclass of InstallError will be annotated by Spack wtih a
+    ``pkg`` attribute on failure, which the caller can use to get the
+    package for which the exception was raised.
+    """
 
 
-class ChildError(spack.error.SpackError):
+class ChildError(InstallError):
     """Special exception class for wrapping exceptions from child processes
        in Spack's build environment.
 
@@ -739,8 +748,13 @@ class ChildError(spack.error.SpackError):
             # the build log with errors highlighted.
             if self.build_log:
                 events = parse_log_events(self.build_log)
-                out.write("\n%d errors in build log:\n" % len(events))
-                out.write(make_log_context(events))
+                nerr = len(events)
+                if nerr > 0:
+                    if nerr == 1:
+                        out.write("\n1 error found in build log:\n")
+                    else:
+                        out.write("\n%d errors found in build log:\n" % nerr)
+                    out.write(make_log_context(events))
 
         else:
             # The error happened in in the Python code, so try to show

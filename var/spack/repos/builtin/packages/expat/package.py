@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Expat(AutotoolsPackage):
@@ -39,7 +40,7 @@ class Expat(AutotoolsPackage):
     # someone's asking for an older version and also libbsd.
     # In order to install an older version, you'll need to add
     # `~libbsd`.
-    variant('libbsd', default=True,
+    variant('libbsd', default=sys.platform != 'darwin',
             description="Use libbsd (for high quality randomness)")
     depends_on('libbsd', when="@2.2.1:+libbsd")
 

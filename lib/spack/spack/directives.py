@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -357,6 +357,17 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
     optionally provide a when spec to indicate that a particular
     patch should only be applied when the package's spec meets
     certain conditions (e.g. a particular version).
+
+    Args:
+        url_or_filename (str): url or filename of the patch
+        level (int): patch level (as in the patch shell command)
+        when (Spec): optional anonymous spec that specifies when to apply
+            the patch
+        **kwargs: the following list of keywords is supported
+
+            - md5 (str): md5 sum of the patch (used to verify the file
+                if it comes from a url)
+
     """
     def _execute(pkg):
         constraint = pkg.name if when is None else when
