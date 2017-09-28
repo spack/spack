@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import division
+
 import os
 import re
 import functools
@@ -102,21 +104,6 @@ def index_by(objects, *funcs):
         result[key] = index_by(objects, *funcs[1:])
 
     return result
-
-
-def partition_list(elements, predicate):
-    """Partition a list into two lists, the first containing elements
-       for which the predicate evaluates to true, the second containing
-       those for which it is false.
-    """
-    trues = []
-    falses = []
-    for elt in elements:
-        if predicate(elt):
-            trues.append(elt)
-        else:
-            falses.append(elt)
-    return trues, falses
 
 
 def caller_locals():
@@ -425,30 +412,30 @@ def pretty_date(time, now=None):
         if second_diff < 120:
             return "a minute ago"
         if second_diff < 3600:
-            return str(second_diff / 60) + " minutes ago"
+            return str(second_diff // 60) + " minutes ago"
         if second_diff < 7200:
             return "an hour ago"
         if second_diff < 86400:
-            return str(second_diff / 3600) + " hours ago"
+            return str(second_diff // 3600) + " hours ago"
     if day_diff == 1:
         return "yesterday"
     if day_diff < 7:
         return str(day_diff) + " days ago"
     if day_diff < 28:
-        weeks = day_diff / 7
+        weeks = day_diff // 7
         if weeks == 1:
             return "a week ago"
         else:
-            return str(day_diff / 7) + " weeks ago"
+            return str(day_diff // 7) + " weeks ago"
     if day_diff < 365:
-        months = day_diff / 30
+        months = day_diff // 30
         if months == 1:
             return "a month ago"
         elif months == 12:
             months -= 1
         return str(months) + " months ago"
 
-    diff = day_diff / 365
+    diff = day_diff // 365
     if diff == 1:
         return "a year ago"
     else:
