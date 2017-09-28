@@ -30,7 +30,6 @@ class Metaphysicl(AutotoolsPackage):
        numerical simulations."""
     homepage = "https://github.com/roystgnr/MetaPhysicL"
     url      = "https://github.com/roystgnr/MetaPhysicL/archive/v0.2.0.tar.gz"
-    list_url = "https://github.com/roystgnr/MetaPhysicL/archive/v0.2.0.tar.gz"
 
     version('0.2.0', '2af65536524a3945b6507a30233ca1cf')
 
