@@ -31,7 +31,7 @@ import platform
 from llnl.util.filesystem import *
 
 import spack
-from spack.cmd.pkg import get_git
+from spack.cmd import spack_is_git_repo
 from spack.util.executable import *
 
 
@@ -64,12 +64,15 @@ def git_case_consistency_check(path):
     TODO: lowercase for a long while.
 
     """
-    with working_dir(path):
-        # Don't bother fixing case if Spack isn't in a git repository
-        git = get_git(fatal=False)
-        if git is None:
-            return
+    # Don't bother fixing case if Spack isn't in a git repository
+    if not spack_is_git_repo():
+        return
 
+    git = which('git', required=False)
+    if not git:
+        return
+
+    with working_dir(path):
         try:
             git_filenames = git('ls-tree', '--name-only', 'HEAD', output=str)
             git_filenames = set(re.split(r'\s+', git_filenames.strip()))
