@@ -325,7 +325,7 @@ class URLFetchStrategy(FetchStrategy):
                                          "spack-expanded-archive")
         mkdirp(tarball_container)
         os.chdir(tarball_container)
-        decompress(self.archive_file)
+        decompress(self.archive_file, env={})
 
         # Check for an exploding tarball, i.e. one that doesn't expand
         # to a single directory.  If the tarball *didn't* explode,
