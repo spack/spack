@@ -30,7 +30,7 @@ import spack
 import spack.architecture
 import spack.package
 
-from conftest import MockPackage, MockPackageMultiRepo
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 from spack.spec import Spec, canonical_deptype, alldeps
 
 
