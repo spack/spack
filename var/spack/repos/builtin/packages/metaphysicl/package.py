@@ -25,13 +25,14 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class Metaphysicl(AutotoolsPackage):
+    """Metaprogramming and operator-overloaded classes for
+       numerical simulations."""
+    homepage = "https://github.com/roystgnr/MetaPhysicL"
+    url      = "https://github.com/roystgnr/MetaPhysicL/archive/v0.2.0.tar.gz"
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    version('0.2.0', '2af65536524a3945b6507a30233ca1cf')
+
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')

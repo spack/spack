@@ -25,13 +25,11 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class RKeggDb(RPackage):
+    """A set of annotation maps for KEGG assembled using data from KEGG."""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    homepage = "https://www.bioconductor.org/packages/KEGG.db/"
+    url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/KEGG.db_3.2.3.tar.gz"
+
+    version('3.2.3', '023ac22f57063627c2e62d1ae5e011b0')
+    depends_on('r-annotationdbi', type=('build', 'run'))

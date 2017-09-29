@@ -25,13 +25,12 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class RRlang(RPackage):
+    """A toolbox for working with base types, core R features like the
+       condition system, and core 'Tidyverse' features like tidy evaluation."""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/rlang/index.html"
+    url      = "https://cran.r-project.org/src/contrib/rlang_0.1.2.tar.gz"
     list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+
+    version('0.1.1', '38a51a0b8f8487eb52b4f3d986313682')

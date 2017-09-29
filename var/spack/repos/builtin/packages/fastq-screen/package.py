@@ -25,13 +25,22 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class FastqScreen(Package):
+    """FastQ Screen allows you to screen a library of sequences in FastQ format
+       against a set of sequence databases so you can see if the composition of
+       the library matches with what you expect."""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    homepage = "https://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/"
+    url      = "https://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/fastq_screen_v0.11.2.tar.gz"
+
+    version('0.11.2', 'ef79f16ee553aaa0ab2fc14ea11e5473')
+
+    depends_on('perl', type='run')
+    depends_on('perl-gd-graph', type='run')
+    depends_on('bowtie')
+    depends_on('bowtie2')
+    depends_on('bwa')
+    depends_on('samtools')
+
+    def install(self, spec, prefix):
+        install_tree('.', prefix.bin)

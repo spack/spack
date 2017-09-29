@@ -25,13 +25,10 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class PerlExtutilsPkgconfig(PerlPackage):
+    """simplistic interface to pkg-config"""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    homepage = "http://search.cpan.org/~xaoc/ExtUtils-PkgConfig-1.16/lib/ExtUtils/PkgConfig.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/X/XA/XAOC/ExtUtils-PkgConfig-1.16.tar.gz"
+
+    version('1.16', 'b86318f2b6ac6af3ee985299e1e38fe5')

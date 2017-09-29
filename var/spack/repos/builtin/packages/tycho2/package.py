@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,16 +22,35 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class Tycho2(MakefilePackage):
+    """A neutral particle transport mini-app to study performance of sweeps
+       on unstructured, 3D tetrahedral meshes.
+    """
+    homepage = "https://github.com/lanl/tycho2"
+    url      = "https://github.com/lanl/tycho2/tarball/v0.1"
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    version('develop', git='https://github.com/lanl/tycho2', branch='master')
+
+    depends_on("mpi")
+
+    def patch(self):
+        # make.inc is included by Makefile to set MPICC, but we that
+        # through build_targets() below, so any empty include file is fine.
+        touch('make.inc')
+
+    @property
+    def build_targets(self):
+        targets = [
+            'MPICC={0} -std=c++11 {1}'.format(self.spec['mpi'].mpicxx,
+                                              self.compiler.openmp_flag)
+        ]
+
+        return targets
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('sweep.x', prefix.bin)

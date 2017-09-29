@@ -25,13 +25,17 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class RBiostrings(RPackage):
+    """Memory efficient string containers, string matching algorithms, and
+       other utilities, for fast manipulation of large biological sequences
+       or sets of sequences."""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    homepage = "https://bioconductor.org/packages/Biostrings/"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/Biostrings_2.44.2.tar.gz"
+
+    version('2.44.2', 'b30d8c116493ea160a0ca0a662666436')
+
+    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-xvector', type=('build', 'run'))

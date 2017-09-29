@@ -25,13 +25,22 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class Hacckernels(CMakePackage):
+    """HACCKernels: A Benchmark for HACC's Particle Force Kernels.
+    The Hardware/Hybrid Accelerated Cosmology Code (HACC), a
+    cosmology N-body-code framework, is designed to run efficiently
+    on diverse computing architectures and to scale to millions of
+    cores and beyond."""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    homepage = "https://xgitlab.cels.anl.gov/hacc/HACCKernels"
+    url      = "https://xgitlab.cels.anl.gov/hacc/HACCKernels.git"
+
+    tags = ['proxy-app']
+
+    version('develop', git='https://xgitlab.cels.anl.gov/hacc/HACCKernels.git',
+            branch='master')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('README', prefix)
+        install('spack-build/HACCKernels', prefix.bin)

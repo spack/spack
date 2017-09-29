@@ -25,13 +25,12 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class PerlGdText(PerlPackage):
+    """Text utilities for use with GD"""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    homepage = "http://search.cpan.org/~mverb/GDTextUtil-0.86/Text.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/M/MV/MVERB/GDTextUtil-0.86.tar.gz"
+
+    version('0.86', '941ad06eadc86b47f3a32da405665c41')
+
+    depends_on('perl-gd', type=('build', 'run'))

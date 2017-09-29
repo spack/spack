@@ -25,13 +25,26 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class Cloc(Package):
+    """Count, or compute differences of, physical lines of source code in the
+    given files (may be archives such as compressed tarballs or zip files)
+    and/or recursively below the given directories."""
+    homepage = "https://github.com/AlDanial/cloc/"
+    url      = "https://github.com/AlDanial/cloc/releases/download/1.74/cloc-1.74.tar.gz"
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    version('1.74', '1372da13a83862c186aa0b6b0c9b86f5')
+
+    depends_on('perl')
+
+    def install(self, spec, prefix):
+        # rewrite the script's #! line to call the perl dependency
+        shbang = '#!' + spec['perl'].command.path
+        filter_file(r'^#!/usr/bin/env perl', shbang, 'cloc')
+        filter_file(r'^#!/usr/bin/env perl', shbang, 'sqlite_formatter')
+
+        # cloc doesn't have a build system. We have to do our own install here.
+        mkdirp(prefix.bin)
+        install('cloc', join_path(prefix.bin, "cloc"))
+        install('sqlite_formatter', join_path(prefix.bin, "sqlite_formatter"))
+        install('./LICENSE', "%s" % prefix)
+        install('./README.md', "%s" % prefix)

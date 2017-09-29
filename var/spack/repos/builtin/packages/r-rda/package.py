@@ -25,13 +25,11 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class RRda(RPackage):
+    """Shrunken Centroids Regularized Discriminant Analysis for the
+    classification purpose in high dimensional data."""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/rda/index.html"
+    url      = "https://cran.r-project.org/src/contrib/rda_1.0.2-2.tar.gz"
     list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    version('1.0.2-1', '78060c5e054a63a2df4ae4002d7247bc')

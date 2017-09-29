@@ -25,13 +25,18 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class RGcrma(RPackage):
+    """Background adjustment using sequence information"""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
+    homepage = "https://bioconductor.org/packages/gcrma/"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/gcrma_2.48.0.tar.gz"
     list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+
+    version('2.48.0', 'c3a2f21c6f93458d1a123594e437a210')
+
+    depends_on('r-affy', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-affyio', type=('build', 'run'))
+    depends_on('r-xvector', type=('build', 'run'))
+    depends_on('r-biostrings', type=('build', 'run'))
+    depends_on('r-biocinstaller', type=('build', 'run'))

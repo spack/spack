@@ -25,13 +25,10 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class PerlCaptureTiny(PerlPackage):
+    """Capture STDOUT and STDERR from Perl, XS or external programs"""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    homepage = "http://search.cpan.org/~dagolden/Capture-Tiny-0.46/lib/Capture/Tiny.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/D/DA/DAGOLDEN/Capture-Tiny-0.46.tar.gz"
+
+    version('0.46', 'd718af07729d26a793949ca6ba2580a7')

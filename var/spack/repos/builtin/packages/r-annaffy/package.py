@@ -22,16 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
+#
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class RAnnaffy(RPackage):
+    """Functions for handling data from Bioconductor Affymetrix
+    annotation data packages. Produces compact HTML and text
+    reports including experimental data and URL links to many
+    online databases. Allows searching biological metadata
+    using various criteria."""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    homepage = "https://www.bioconductor.org/packages/annaffy/"
+    url = "https://www.bioconductor.org/packages/release/bioc/src/contrib/annaffy_1.48.0.tar.gz"
+
+    version('1.48.0', 'c51219a222b377403fe4bc08a6c57e7f')
+
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-go-db', type=('build', 'run'))
+    depends_on('r-kegg-db', type=('build', 'run'))

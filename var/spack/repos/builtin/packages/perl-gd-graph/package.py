@@ -25,13 +25,15 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class PerlGdGraph(PerlPackage):
+    """Graph Plotting Module for Perl 5"""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    homepage = "http://search.cpan.org/~bwarfield/GDGraph/Graph.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/B/BW/BWARFIELD/GDGraph-1.44.tar.gz"
+
+    version('1.4308', 'fcdd34d5e09ae917b5d264887734b3b1')
+
+    depends_on('perl-capture-tiny', type=('build', 'run'))
+    depends_on('perl-test-exception', type=('build', 'run'))
+    depends_on('perl-gd-text', type=('build', 'run'))
+    depends_on('perl-gd', type=('build', 'run'))

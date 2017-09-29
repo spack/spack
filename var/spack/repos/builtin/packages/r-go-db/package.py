@@ -25,13 +25,13 @@
 from spack import *
 
 
-class RDbi(RPackage):
-    """A database interface definition for communication between R and
-    relational database management systems. All classes in this package are
-    virtual and need to be extended by the various R/DBMS implementations."""
+class RGoDb(RPackage):
+    """A set of annotation maps describing the entire Gene
+    Ontology assembled using data from GO."""
 
-    homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/GO.db/"
+    url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/GO.db_3.4.1.tar.gz"
     list_url = homepage
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+
+    version('3.4.1', 'e16ee8921d8adc1ed3cbac2a3e35e386')
+    depends_on('r-annotationdbi', type=('build', 'run'))
