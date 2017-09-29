@@ -31,7 +31,7 @@ class RThreejs(RPackage):
 
     homepage = "http://bwlewis.github.io/rthreejs"
     url      = "https://cran.r-project.org/src/contrib/threejs_0.2.2.tar.gz"
-
+    list_url = homepage
     version('0.2.2', '35c179b10813c5e4bd3e7827fae6627b')
 
     depends_on('r-htmlwidgets', type=('build', 'run'))
