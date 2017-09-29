@@ -2775,6 +2775,7 @@ class Spec(object):
         You can also use full-string versions, which elide the prefixes::
 
             ${PACKAGE}       Package name
+            ${NAMESPACE}     Namespace
             ${VERSION}       Version
             ${COMPILER}      Full compiler string
             ${COMPILERNAME}  Compiler name
@@ -2885,6 +2886,8 @@ class Spec(object):
                 if named_str == 'PACKAGE':
                     name = self.name if self.name else ''
                     write(fmt % self.name, '@')
+                if named_str == 'NAMESPACE':
+                    out.write(fmt % self.namespace)
                 if named_str == 'VERSION':
                     if self.versions and self.versions != _any_version:
                         write(fmt % str(self.versions), '@')

@@ -47,6 +47,11 @@ def setup_parser(subparser):
                               dest='mode',
                               const='paths',
                               help='show paths to package install directories')
+    format_group.add_argument('-t', '--table',
+                              action='store_const',
+                              dest='mode',
+                              const='table',
+                              help='show specs in a combined table')
     format_group.add_argument(
         '-d', '--deps',
         action='store_const',
