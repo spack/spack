@@ -97,13 +97,18 @@ the dependencies"""
         nargs=argparse.REMAINDER,
         help="spec of the package to install"
     )
-    subparser.add_argument(
+    testing = subparser.add_mutually_exclusive_group()
+    testing.add_argument(
         '--test', default=None,
         choices=['root', 'all'],
         help="""If 'root' is chosen, run package tests during
 installation for top-level packages (but skip tests for dependencies).
 if 'all' is chosen, run package tests during installation for all
 packages. If neither are chosen, don't run tests for any packages."""
+    )
+    testing.add_argument(
+        '--run-tests', action='store_const', dest='test', const='all',
+        help='run package tests during installation (same as --test=all)'
     )
     subparser.add_argument(
         '--log-format',
