@@ -42,6 +42,7 @@ class Executable(object):
         self.exe = name.split(' ')
         self.default_env = {}
         self.returncode = None
+        self._ldd = None
 
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
@@ -58,6 +59,18 @@ class Executable(object):
             value: The value to set it to
         """
         self.default_env[key] = value
+
+    def get_shared_libraries(self):
+        if not self._ldd:
+            self._ldd = which('ldd', required=True)
+
+        libraries = list()
+        output = self._ldd(' '.join(self.exe), output=str, fail_on_error=False)
+        for line in output.split('\n'):
+            found = re.search(r'\s+([^\s]+)(?<!=>)\s+\([^)]+\)', line)
+            if found:
+                libraries.append(found.group(1))
+        return libraries
 
     @property
     def command(self):

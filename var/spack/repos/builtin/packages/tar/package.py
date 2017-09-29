@@ -40,3 +40,6 @@ class Tar(AutotoolsPackage):
     patch('se-selinux.patch', when='@:1.29')
     patch('argp-pgi.patch',   when='@:1.29')
     patch('gnutar-configure-xattrs.patch', when='@1.28')
+
+    depends_on('bzip2')
+    depends_on('patch', type="build")

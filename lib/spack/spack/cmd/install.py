@@ -86,7 +86,11 @@ the dependencies"""
         '--fake', action='store_true',
         help="fake install. just remove prefix and create a fake file")
     subparser.add_argument(
-        '-f', '--file', action='store_true',
+        '--no-isolation', action='store_true', dest='no_isolation',
+        help="""don't isolate this installation.
+This only have affact in an isolated boostraped enviroment""")
+    subparser.add_argument(
+        '-f', '--file', action='store_true', dest='file',
         help="install from file. Read specs to install from .yaml files")
 
     cd_group = subparser.add_mutually_exclusive_group()
@@ -315,6 +319,9 @@ def install(parser, args, **kwargs):
 
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
+
+    if args.no_isolation:
+        spack.isolate = False            # TODO: remove this global.
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API

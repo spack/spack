@@ -965,7 +965,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.fetch(mirror_only)
 
         self._fetch_time = time.time() - start_time
-
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
