@@ -49,17 +49,26 @@ class Adios(AutotoolsPackage):
     variant('fortran', default=False,
             description='Enable Fortran bindings support')
 
-    variant('mpi', default=True, description='Enable MPI support')
-    variant('infiniband', default=False, description='Enable infiniband support')
+    variant('mpi', default=True,
+            description='Enable MPI support')
+    variant('infiniband', default=False,
+            description='Enable infiniband support')
 
     # transforms
-    variant('zlib', default=True, description='Enable zlib transform support')
-    variant('bzip2', default=False, description='Enable bzip2 transform support')
-    variant('szip', default=False, description='Enable szip transform support')
-    variant('zfp', default=True, description='Enable ZFP transform support')
-    variant('sz', default=True, description='Enable SZ transform support')
+    variant('zlib', default=True,
+            description='Enable zlib transform support')
+    variant('bzip2', default=False,
+            description='Enable bzip2 transform support')
+    variant('szip', default=False,
+            description='Enable szip transform support')
+    variant('zfp', default=True,
+            description='Enable ZFP transform support')
+    variant('sz', default=True,
+            description='Enable SZ transform support')
     # transports and serial file converters
-    variant('hdf5', default=False, description='Enable parallel HDF5 transport and serial bp2h5 converter')
+    variant('hdf5', default=False,
+            description='Enable parallel HDF5 transport and serial bp2h5 ' +
+                        'converter')
     variant('netcdf', default=False, description='Enable netcdf support')
 
     variant(
@@ -86,12 +95,10 @@ class Adios(AutotoolsPackage):
     # optional transports & file converters
     depends_on('hdf5@1.8:+mpi', when='+hdf5')
     depends_on('netcdf', when='+netcdf')
-    depends_on('libevpath', when='+flexpath')
-    depends_on('libevpath', when='+staging')
-    depends_on('dataspaces+mpi', when='+dataspaces')
-    depends_on('dataspaces+mpi', when='+staging')
+    depends_on('libevpath', when='staging=flexpath')
+    depends_on('dataspaces+mpi', when='staging=dataspaces')
 
-    for p in ['+hdf5', '+netcdf', '+flexpath', '+dataspaces', '+staging']:
+    for p in ['+hdf5', '+netcdf', 'staging=flexpath', 'staging=dataspaces']:
         conflicts(p, when='~mpi')
 
     build_directory = 'spack-build'
@@ -142,7 +149,7 @@ class Adios(AutotoolsPackage):
             env['MPICC'] = spec['mpi'].mpicc
             env['MPICXX'] = spec['mpi'].mpicxx
 
-        extra_args += self.with_or_without('mpi', activation='prefix')
+        extra_args += self.with_or_without('mpi', activation_value='prefix')
         extra_args += self.with_or_without('infiniband')
 
         # Transforms
@@ -152,7 +159,7 @@ class Adios(AutotoolsPackage):
         variants += ['hdf5', 'netcdf']
 
         for x in variants:
-            extra_args += self.with_or_without(x, activation='prefix')
+            extra_args += self.with_or_without(x, activation_value='prefix')
 
         # Staging transports
         def with_staging(name):
@@ -160,6 +167,9 @@ class Adios(AutotoolsPackage):
                 return spec['libevpath'].prefix
             return spec[name].prefix
 
-        extra_args += self.with_or_without('staging', activation=with_staging)
+        extra_args += self.with_or_without(
+            'staging',
+            activation_value=with_staging
+        )
 
         return extra_args
