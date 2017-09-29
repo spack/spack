@@ -65,13 +65,42 @@ def spack_transitive_include_path():
     )
 
 
-def write_spconfig(package):
+def write_spconfig(package, dirty):
     # Set-up the environment
-    spack.build_environment.setup_package(package)
+    old_env = os.environ.copy()
+    spack.build_environment.setup_package(package, dirty)
 
-    cmd = [str(which('cmake'))] + package.std_cmake_args + package.cmake_args()
+    new_keys = set(os.environ) - set(old_env)
+    kept_keys = set(old_env) & set(os.environ)
+    changed_keys = set(k for k in kept_keys if old_env[k] != os.environ[k])
+
+    changes = new_keys | changed_keys
 
     env = dict()
+
+    reserved_names = ['PATH', 'SPACK_TRANSITIVE_INCLUDE_PATH', 'CMAKE_PREFIX_PATH',
+                      'CC', 'CXX', 'FC', 'CFLAGS', 'CXXFLAGS', 'CPPFLAGS', 'LDFLAGS',
+                      'LDLIBS', 'FFLAGS']
+
+    for k in changes:
+        if k not in reserved_names and k[:6] != 'SPACK_':
+            if 'lib/spack/env/' not in os.environ[k]:
+                # We don't want to accidentally include the compiler wrappers
+                # through some other vector
+                env[k] = os.environ[k]
+
+    # Add spack compiler flags to the environment using standard implicit vars
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
+        spack_flag = 'SPACK_' + flag.upper()
+        raw_flag = flag.upper()
+        if spack_flag in changes and raw_flag in changes:
+            env[raw_flag] = os.environ[spack_flag] + ' ' + os.environ[raw_flag]
+        elif spack_flag in changes:
+            env[raw_flag] = os.environ[spack_flag]
+        elif raw_flag in changes:
+            env[raw_flag] = os.environ[raw_flag]
+
+    cmd = [str(which('cmake'))] + package.std_cmake_args + package.cmake_args()
 
     paths = os.environ['PATH'].split(':')
     paths = [item for item in paths if 'spack/env' not in item]
@@ -160,8 +189,8 @@ def setup(self, args):
         spack.do_checksum = False
 
         # Install dependencies if requested to do so
+        parser = argparse.ArgumentParser()
         if not args.ignore_deps:
-            parser = argparse.ArgumentParser()
             install.setup_parser(parser)
             inst_args = copy.deepcopy(args)
             inst_args = parser.parse_args(
@@ -173,7 +202,7 @@ def setup(self, args):
         tty.msg(
             'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
         )
-        write_spconfig(package)
+        write_spconfig(package, args.dirty)
         # Install this package to register it in the DB and permit
         # module file regeneration
         inst_args = copy.deepcopy(args)
