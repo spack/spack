@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,8 +35,8 @@ class Zfp(MakefilePackage):
        of zfp 0.5.1 or newer also support compression of integer data.
     """
 
-    homepage = "http://computation.llnl.gov/projects/floating-point-compression"
-    url      = "http://computation.llnl.gov/projects/floating-point-compression/download/zfp-0.5.1.tar.gz"
+    homepage = 'http://computation.llnl.gov/projects/floating-point-compression'
+    url      = 'http://computation.llnl.gov/projects/floating-point-compression/download/zfp-0.5.1.tar.gz'
 
     version('0.5.1', '0ed7059a9b480635e0dd33745e213d17')
     version('0.5.0', '2ab29a852e65ad85aae38925c5003654')
@@ -45,8 +45,11 @@ class Zfp(MakefilePackage):
         default='64',
         values=('8', '16', '32', '64'),
         multi=False,
-        description='Bit stream word size: use smaller for finer \
-            rate granularity. Use 8 for H5Z-ZFP filter.')
+        description='Bit stream word size: use smaller for finer ' \
+            'rate granularity. Use 8 for H5Z-ZFP filter.')
+
+    variant('shared', default=True,
+            description='Build shared versions of the library')
 
     def edit(self, spec, prefix):
         config_file = FileFilter('Config')
@@ -56,15 +59,23 @@ class Zfp(MakefilePackage):
             spec.variants['bsws'].value)
 
     def build(self, spec, prefix):
-        make("shared")
+        with working_dir('src'):
+            if '~shared' in spec:
+                make('static')
+            else:
+                make('shared')
 
     def install(self, spec, prefix):
         incdir = 'include' if spec.satisfies('@0.5.1:') else 'inc'
 
-        # No install provided
+        # Note: ZFP package does not provide an install target
         mkdirp(prefix.lib)
         mkdirp(prefix.include)
-        install('lib/libzfp.so', prefix.lib)
+        # Note: ZFP package builds .so files even on OSX
+        if '~shared' in spec:
+            install('lib/libzfp.a', prefix.lib)
+        else:
+            install('lib/libzfp.so', prefix.lib)
         install('%s/zfp.h' % incdir, prefix.include)
         install('%s/bitstream.h' % incdir, prefix.include)
         if spec.satisfies('@0.5.1:'):

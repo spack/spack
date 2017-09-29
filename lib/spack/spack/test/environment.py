@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,11 +25,53 @@
 import os
 
 import pytest
+import spack.environment as environment
 from spack import spack_root
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv
-from spack.util.environment import filter_system_paths
+from spack.util.environment import filter_system_paths, is_system_path
+
+
+def test_inspect_path(tmpdir):
+    inspections = {
+        'bin': ['PATH'],
+        'man': ['MANPATH'],
+        'share/man': ['MANPATH'],
+        'share/aclocal': ['ACLOCAL_PATH'],
+        'lib': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'lib64': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'include': ['CPATH'],
+        'lib/pkgconfig': ['PKG_CONFIG_PATH'],
+        'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
+        '': ['CMAKE_PREFIX_PATH']
+    }
+
+    tmpdir.chdir()
+    tmpdir.mkdir('bin')
+    tmpdir.mkdir('lib')
+    tmpdir.mkdir('include')
+
+    env = environment.inspect_path(str(tmpdir), inspections)
+    names = [item.name for item in env]
+    assert 'PATH' in names
+    assert 'LIBRARY_PATH' in names
+    assert 'LD_LIBRARY_PATH' in names
+    assert 'CPATH' in names
+
+
+def test_exclude_paths_from_inspection():
+    inspections = {
+        'lib': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'lib64': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'include': ['CPATH']
+    }
+
+    env = environment.inspect_path(
+        '/usr', inspections, exclude=is_system_path
+    )
+
+    assert len(env) == 0
 
 
 @pytest.fixture()

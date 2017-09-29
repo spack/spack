@@ -2560,25 +2560,54 @@ is handy when a package supports additional variants like
 
    variant('openmp', default=True, description="Enable OpenMP support.")
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Blas and Lapack libraries
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Blas, Lapack and ScaLapack libraries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Multiple packages provide implementations of ``Blas`` and ``Lapack``
+Multiple packages provide implementations of ``Blas``, ``Lapack`` and ``ScaLapack``
 routines.  The names of the resulting static and/or shared libraries
 differ from package to package. In order to make the ``install()`` method
 independent of the choice of ``Blas`` implementation, each package which
-provides it sets up ``self.spec.blas_libs`` to point to the correct
-``Blas`` libraries.  The same applies to packages which provide
-``Lapack``. Package developers are advised to use these variables, for
-example ``spec['blas'].blas_libs.joined()`` instead of hard-coding them:
+provides it implements ``@property def blas_libs(self):`` to return an object
+of
+`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+type which simplifies usage of a set of libraries.
+The same applies to packages which provide ``Lapack`` and ``ScaLapack``.
+Package developers are requested to use this interface. Common usage cases are:
+
+1. Space separated list of full paths
 
 .. code-block:: python
 
-   if 'openblas' in spec:
-       libs = join_path(spec['blas'].prefix.lib, 'libopenblas.so')
-   elif 'intel-mkl' in spec:
-       ...
+   lapack_blas = spec['lapack'].libs + spec['blas'].libs
+   options.append(
+      '--with-blas-lapack-lib={0}'.format(lapack_blas.joined())
+   )
+
+2. Names of libraries and directories which contain them
+
+.. code-block:: python
+
+   blas = spec['blas'].libs
+   options.extend([
+     '-DBLAS_LIBRARY_NAMES={0}'.format(';'.join(blas.names)),
+     '-DBLAS_LIBRARY_DIRS={0}'.format(';'.join(blas.directories))
+   ])
+
+3. Search and link flags
+
+.. code-block:: python
+
+   math_libs = spec['scalapack'].libs + spec['lapack'].libs + spec['blas'].libs
+   options.append(
+     '-DMATH_LIBS:STRING={0}'.format(math_libs.ld_flags)
+   )
+
+
+For more information, see documentation of
+`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+class.
+
 
 .. _prefix-objects:
 
