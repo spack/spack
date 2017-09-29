@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,7 @@ import spack.stage
     params=[
         ('configure',      'autotools'),
         ('CMakeLists.txt', 'cmake'),
+        ('project.pro',    'qmake'),
         ('SConstruct',     'scons'),
         ('waf',            'waf'),
         ('setup.py',       'python'),

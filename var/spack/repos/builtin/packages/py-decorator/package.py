@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,7 @@ class PyDecorator(PythonPackage):
        for the average programmer, and to popularize decorators by showing
        various non-trivial examples."""
     homepage = "https://github.com/micheles/decorator"
-    url      = "https://pypi.python.org/packages/source/d/decorator/decorator-4.0.9.tar.gz"
+    url      = "https://pypi.io/packages/source/d/decorator/decorator-4.0.9.tar.gz"
 
     version('4.0.9', 'f12c5651ccd707e12a0abaa4f76cd69a')
 

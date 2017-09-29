@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -129,7 +129,9 @@ class Scotch(Package):
             if self.spec.satisfies('platform=darwin'):
                 makefile_inc.extend([
                     'LIB       = .dylib',
-                    'CLIBFLAGS = -dynamiclib -fPIC',
+                    'CLIBFLAGS = -dynamiclib {0}'.format(
+                        self.compiler.pic_flag
+                    ),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
                     'ARFLAGS   = -dynamiclib $(LDFLAGS) -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % prefix.lib  # noqa
@@ -137,12 +139,12 @@ class Scotch(Package):
             else:
                 makefile_inc.extend([
                     'LIB       = .so',
-                    'CLIBFLAGS = -shared -fPIC',
+                    'CLIBFLAGS = -shared {0}'.format(self.compiler.pic_flag),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
                     'ARFLAGS   = -shared $(LDFLAGS) -o'
                 ])
-            cflags.append('-fPIC')
+            cflags.append(self.compiler.pic_flag)
         else:
             makefile_inc.extend([
                 'LIB       = .a',

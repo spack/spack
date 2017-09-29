@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,19 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
 
 
 class RBiocgenerics(RPackage):
     """S4 generic functions needed by many Bioconductor packages."""
-
-    homepage = 'https://bioconductor.org/packages/BiocGenerics/'
-    version('3.3',
-            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
-            branch='release-3.3')
-    version('3.2',
-            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
-            branch='release-3.2')
-
-    depends_on('r@3.3.0:3.3.9', when='@3.3')
-    depends_on('r@3.2.0:3.2.9', when='@3.2')
+    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
+    list_url = homepage
+    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')

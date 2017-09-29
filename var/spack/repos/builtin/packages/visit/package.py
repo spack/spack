@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Visit(Package):
+class Visit(CMakePackage):
     """VisIt is an Open Source, interactive, scalable, visualization,
        animation and analysis tool."""
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
@@ -36,29 +36,26 @@ class Visit(Package):
     version('2.10.2', '253de0837a9d69fb689befc98ea4d068')
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@3.0:', type='build')
     depends_on('vtk@6.1.0~opengl2')
     depends_on('qt@4.8.6')
     depends_on('python')
     depends_on('silo+shared')
     depends_on('hdf5~mpi')
 
-    def install(self, spec, prefix):
+    root_cmakelists_dir = 'src'
+
+    def cmake_args(self):
+        spec = self.spec
         qt_bin = spec['qt'].prefix.bin
 
-        with working_dir('spack-build', create=True):
-            cmake_args = std_cmake_args[:]
-            cmake_args.extend([
-                '-DVTK_MAJOR_VERSION=6',
-                '-DVTK_MINOR_VERSION=1',
-                '-DVISIT_USE_GLEW=OFF',
-                '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin),
-                '-DPYTHON_DIR:PATH={0}'.format(spec['python'].home),
-                '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix),
-                '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix),
-                '-DVISIT_VTK_DIR:PATH={0}'.format(spec['vtk'].prefix),
-            ])
-
-            cmake(join_path('..', 'src'), *cmake_args)
-            make()
-            make('install')
+        return [
+            '-DVTK_MAJOR_VERSION={0}'.format(spec['vtk'].version[0]),
+            '-DVTK_MINOR_VERSION={0}'.format(spec['vtk'].version[1]),
+            '-DVISIT_USE_GLEW=OFF',
+            '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin),
+            '-DPYTHON_DIR:PATH={0}'.format(spec['python'].home),
+            '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix),
+            '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix),
+            '-DVISIT_VTK_DIR:PATH={0}'.format(spec['vtk'].prefix),
+        ]

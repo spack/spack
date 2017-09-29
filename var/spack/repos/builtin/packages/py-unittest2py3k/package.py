@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,7 +31,7 @@ class PyUnittest2py3k(PythonPackage):
     version of unittest2."""
 
     homepage = "https://pypi.python.org/pypi/unittest2py3k"
-    url      = "https://pypi.python.org/packages/source/u/unittest2py3k/unittest2py3k-0.5.1.tar.gz"
+    url      = "https://pypi.io/packages/source/u/unittest2py3k/unittest2py3k-0.5.1.tar.gz"
 
     version('0.5.1', '8824ff92044310d9365f90d892bf0f09')
 

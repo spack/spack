@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -112,9 +112,17 @@ class PackagePrefs(object):
 
         # integer is the index of the first spec in order that satisfies
         # spec, or it's a number larger than any position in the order.
-        return next(
+        match_index = next(
             (i for i, s in enumerate(spec_order) if spec.satisfies(s)),
             len(spec_order))
+        if match_index < len(spec_order) and spec_order[match_index] == spec:
+            # If this is called with multiple specs that all satisfy the same
+            # minimum index in spec_order, the one which matches that element
+            # of spec_order exactly is considered slightly better. Note
+            # that because this decreases the value by less than 1, it is not
+            # better than a match which occurs at an earlier index.
+            match_index -= 0.5
+        return match_index
 
     @classproperty
     @classmethod

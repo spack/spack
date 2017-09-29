@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -62,9 +62,16 @@ def filter_shebang(path):
     if original.startswith(new_sbang_line):
         return
 
+    # In the following, newlines have to be excluded in the regular expression
+    # else any mention of "lua" in the document will lead to spurious matches.
+
     # Use --! instead of #! on second line for lua.
-    if re.search(r'^#!(/[^/]*)*lua\b', original):
+    if re.search(r'^#!(/[^/\n]*)*lua\b', original):
         original = re.sub(r'^#', '--', original)
+
+    # Use //! instead of #! on second line for node.js.
+    if re.search(r'^#!(/[^/\n]*)*node\b', original):
+        original = re.sub(r'^#', '//', original)
 
     # Change non-writable files to be writable if needed.
     saved_mode = None

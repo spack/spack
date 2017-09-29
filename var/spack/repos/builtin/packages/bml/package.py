@@ -30,20 +30,20 @@ class Bml(CMakePackage):
     formats (in dense and sparse) and their associated algorithms for basic
     matrix operations."""
 
-    homepage = "https://github.com/qmmd/bml"
-    url      = "https://github.com/qmmd/bml"
+    homepage = "http://lanl.github.io/bml/"
+    url      = "https://github.com/lanl/bml/tarball/v1.2.2"
 
-    version('develop', git='https://github.com/qmmd/bml', branch='master')
-    version('1.1.0', git='https://github.com/qmmd/bml', tag='v1.1.0')
+    version('1.2.2', 'c86959cb0188e9d0a9a2cbad03b2782d')
+    version('1.1.0', '271adecee08aee678be9eeceee06b6fb')
+    version('develop', git='https://github.com/lanl/bml', branch='master')
 
-    variant('debug', default=False, description='Build debug version')
+    variant('shared', default=True, description='Build shared libs')
 
     depends_on("blas")
     depends_on("lapack")
 
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
+    def cmake_args(self):
+        return [
+            '-DBUILD_SHARED_LIBS={0}'.format(
+                'ON' if '+shared' in self.spec else 'OFF')
+        ]

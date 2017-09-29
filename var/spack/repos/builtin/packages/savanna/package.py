@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,13 +36,14 @@ class Savanna(MakefilePackage):
 
     version('develop', git='https://github.com/CODARcode/savanna.git',
             branch='master', submodules=True)
-    version('0.5', '3f13adf29ec30f4acb2ba3fa07ed12b2')
+    version('0.5', git='https://github.com/CODARcode/savanna.git',
+            tag='0.5', submodules=True)
 
     variant('tau', default=False, description='Enable TAU profiling support')
 
     depends_on('mpi')
     depends_on('stc')
-    depends_on('adios +staging')
+    depends_on('adios +fortran +zlib +sz +zfp +staging')
     depends_on('mpix-launch-swift')
     depends_on('tau', when='+tau')
 

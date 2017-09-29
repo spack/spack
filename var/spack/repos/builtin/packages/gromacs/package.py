@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -41,6 +41,7 @@ class Gromacs(CMakePackage):
     homepage = 'http://www.gromacs.org'
     url = 'http://ftp.gromacs.org/gromacs/gromacs-5.1.2.tar.gz'
 
+    version('2016.4', '19c8b5c85f3ec62df79d2249a3c272f8')
     version('2016.3', 'e9e3a41bd123b52fbcc6b32d09f8202b')
     version('5.1.4', 'ba2e34d59b3982603b4935d650c08040')
     version('5.1.2', '614d0be372f1a6f1f36382b7a6fcab98')
@@ -48,12 +49,15 @@ class Gromacs(CMakePackage):
     variant('mpi', default=True, description='Activate MPI support')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('debug', default=False, description='Enables debug mode')
     variant(
         'double', default=False,
         description='Produces a double precision version of the executables')
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
+                    'Reference', 'RelWithAssert', 'Profile'))
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
@@ -78,11 +82,6 @@ class Gromacs(CMakePackage):
 
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
-
-        if '+debug' in self.spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
-        else:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
 
         if '+cuda' in self.spec:
             options.append('-DGMX_GPU:BOOL=ON')

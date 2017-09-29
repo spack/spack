@@ -490,6 +490,21 @@ version.joined       123
    Python properties don't need parentheses. ``version.dashed`` is correct.
    ``version.dashed()`` is incorrect.
 
+In addition, these version properties can be combined with ``up_to()``.
+For example:
+
+.. code-block:: python
+
+   >>> version = Version('1.2.3')
+   >>> version.up_to(2).dashed
+   Version('1-2')
+   >>> version.underscored.up_to(2)
+   Version('1_2')
+
+
+As you can see, order is not important. Just keep in mind that ``up_to()`` and
+the other version properties return ``Version`` objects, not strings.
+
 If a URL cannot be derived systematically, or there is a special URL for one
 of its versions, you can add an explicit URL for a particular version:
 
@@ -2103,7 +2118,13 @@ The classes that are currently provided by Spack are:
     | :py:class:`.CMakePackage`     | Specialized class for packages   |
     |                               | built using CMake                |
     +-------------------------------+----------------------------------+
-    | :py:class:`.WafPackage`       | Specialize class for packages    |
+    | :py:class:`.QMakePackage`     | Specialized class for packages   |
+    |                               | build using QMake                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.SConsPackage`     | Specialized class for packages   |
+    |                               | built using SCons                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.WafPackage`       | Specialized class for packages   |
     |                               | built using Waf                  |
     +-------------------------------+----------------------------------+
     | :py:class:`.RPackage`         | Specialized class for            |
@@ -2114,6 +2135,9 @@ The classes that are currently provided by Spack are:
     +-------------------------------+----------------------------------+
     | :py:class:`.PerlPackage`      | Specialized class for            |
     |                               | :py:class:`.Perl` extensions     |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.IntelPackage`     | Specialized class for licensed   |
+    |                               | Intel software                   |
     +-------------------------------+----------------------------------+
 
 
@@ -2390,6 +2414,94 @@ build system.
 Compiler flags
 ^^^^^^^^^^^^^^
 
+Compiler flags set by the user through the Spec object can be passed to
+the build in one of two ways. For packages inheriting from the
+``CmakePackage`` or ``AutotoolsPackage`` classes, the build environment
+passes those flags to the relevant environment variables (``CFLAGS``,
+``CXXFLAGS``, etc) that are respected by the build system. For all other
+packages, the default behavior is to inject the flags directly into the
+compiler commands using Spack's compiler wrappers.
+
+Individual packages can override the default behavior for the flag
+handling.  Packages can define a ``default_flag_handler`` method that
+applies to all sets of flags handled by Spack, or may define
+individual methods ``cflags_handler``, ``cxxflags_handler``,
+etc. Spack will apply the individual method for a flag set if it
+exists, otherwise the ``default_flag_handler`` method if it exists,
+and fall back on the default for that package class if neither exists.
+
+These methods are defined on the package class, and take two
+parameters in addition to the packages itself. The ``env`` parameter
+is an ``EnvironmentModifications`` object that can be used to change
+the build environment. The ``flag_val`` parameter is a tuple. Its
+first entry is the name of the flag (``cflags``, ``cxxflags``, etc.)
+and its second entry is a list of the values for that flag.
+
+There are three primary idioms that can be combined to create whatever
+behavior the package requires.
+
+1. The default behavior for packages inheriting from
+``AutotoolsPackage`` or ``CmakePackage``.
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
+        return []
+
+2. The default behavior for other packages
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        return flag_val[1]
+
+
+3. Packages may have additional flags to add to the build. These flags
+can be added to either idiom above. For example:
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        flags = flag_val[1]
+        flags.append('-flag')
+        return flags
+
+or
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
+        env.append_flags(flag_val[0].upper(), '-flag')
+        return []
+
+Packages may also opt for methods that include aspects of any of the
+idioms above. E.g.
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        flags = []
+        if len(flag_val[1]) > 3:
+            env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1][3:]))
+            flags = flag_val[1][:3]
+        else:
+            flags = flag_val[1]
+        flags.append('-flag')
+        return flags
+
+Because these methods can pass values through environment variables,
+it is important not to override these variables unnecessarily in other
+package methods. In the ``setup_environment`` and
+``setup_dependent_environment`` methods, use the ``append_flags``
+method of the ``EnvironmentModifications`` class to append values to a
+list of flags whenever there is no good reason to override the
+existing value. In the ``install`` method and other methods that can
+operate on the build environment directly through the ``env``
+variable, test for environment variable existance before overriding
+values to add compiler flags.
+
 In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
 flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
@@ -2406,25 +2518,54 @@ is handy when a package supports additional variants like
 
    variant('openmp', default=True, description="Enable OpenMP support.")
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Blas and Lapack libraries
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Blas, Lapack and ScaLapack libraries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Multiple packages provide implementations of ``Blas`` and ``Lapack``
+Multiple packages provide implementations of ``Blas``, ``Lapack`` and ``ScaLapack``
 routines.  The names of the resulting static and/or shared libraries
 differ from package to package. In order to make the ``install()`` method
 independent of the choice of ``Blas`` implementation, each package which
-provides it sets up ``self.spec.blas_libs`` to point to the correct
-``Blas`` libraries.  The same applies to packages which provide
-``Lapack``. Package developers are advised to use these variables, for
-example ``spec['blas'].blas_libs.joined()`` instead of hard-coding them:
+provides it implements ``@property def blas_libs(self):`` to return an object
+of
+`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+type which simplifies usage of a set of libraries.
+The same applies to packages which provide ``Lapack`` and ``ScaLapack``.
+Package developers are requested to use this interface. Common usage cases are:
+
+1. Space separated list of full paths
 
 .. code-block:: python
 
-   if 'openblas' in spec:
-       libs = join_path(spec['blas'].prefix.lib, 'libopenblas.so')
-   elif 'intel-mkl' in spec:
-       ...
+   lapack_blas = spec['lapack'].libs + spec['blas'].libs
+   options.append(
+      '--with-blas-lapack-lib={0}'.format(lapack_blas.joined())
+   )
+
+2. Names of libraries and directories which contain them
+
+.. code-block:: python
+
+   blas = spec['blas'].libs
+   options.extend([
+     '-DBLAS_LIBRARY_NAMES={0}'.format(';'.join(blas.names)),
+     '-DBLAS_LIBRARY_DIRS={0}'.format(';'.join(blas.directories))
+   ])
+
+3. Search and link flags
+
+.. code-block:: python
+
+   math_libs = spec['scalapack'].libs + spec['lapack'].libs + spec['blas'].libs
+   options.append(
+     '-DMATH_LIBS:STRING={0}'.format(math_libs.ld_flags)
+   )
+
+
+For more information, see documentation of
+`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+class.
+
 
 .. _prefix-objects:
 
@@ -3323,24 +3464,12 @@ Does this in one of two ways:
 ``spack clean``
 ^^^^^^^^^^^^^^^
 
-Cleans up temporary files for a particular package, by deleting the
-expanded/checked out source code *and* any downloaded archive.  If
-``fetch``, ``stage``, or ``install`` are run again after this, Spack's
-build process will start from scratch.
-
-.. _cmd-spack-purge:
-
-^^^^^^^^^^^^^^^
-``spack purge``
-^^^^^^^^^^^^^^^
-
 Cleans up all of Spack's temporary and cached files.  This can be used to
 recover disk space if temporary files from interrupted or failed installs
 accumulate in the staging area.
 
 When called with ``--stage`` or without arguments this removes all staged
-files and will be equivalent to running ``spack clean`` for every package
-you have fetched or staged.
+files.
 
 When called with ``--downloads`` this will clear all resources
 :ref:`cached <caching>` during installs.
@@ -3349,6 +3478,11 @@ When called with ``--user-cache`` this will remove caches in the user home
 directory, including cached virtual indices.
 
 To remove all of the above, the command can be called with ``--all``.
+
+When called with positional arguments, cleans up temporary files only
+for a particular package. If ``fetch``, ``stage``, or ``install``
+are run again after this, Spack's build process will start from scratch.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the stage directory on success
@@ -3363,7 +3497,7 @@ package has been successfully built and installed.  Use
    $ spack install --keep-stage <spec>
 
 This allows you to inspect the build directory and potentially debug
-the build.  You can use ``purge`` or ``clean`` later to get rid of the
+the build.  You can use ``clean`` later to get rid of the
 unwanted temporary files.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

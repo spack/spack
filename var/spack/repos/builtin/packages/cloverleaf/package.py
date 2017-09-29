@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,6 +36,8 @@ class Cloverleaf(MakefilePackage):
 
     homepage = "http://uk-mac.github.io/CloverLeaf"
     url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/CloverLeaf/CloverLeaf-1.1.tar.gz"
+
+    tags = ['proxy-app']
 
     version('1.1', '65652b30a64eb237ec844a6fdd4cd518')
 

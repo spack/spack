@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Xrootd(Package):
+class Xrootd(CMakePackage):
     """The XROOTD project aims at giving high performance, scalable fault
        tolerant access to data repositories of many kinds."""
     homepage = "http://xrootd.org"
@@ -38,19 +38,4 @@ class Xrootd(Package):
     version('4.4.0', '58f55e56801d3661d753ff5fd33dbcc9')
     version('4.3.0', '39c2fab9f632f35e12ff607ccaf9e16c')
 
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
-
-        build_directory = join_path(self.stage.path, 'spack-build')
-        source_directory = self.stage.source_path
-
-        if '+debug' in spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
-
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
-            make()
-            make("install")
+    depends_on('cmake@2.6:', type='build')

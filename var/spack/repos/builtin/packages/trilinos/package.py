@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -46,6 +46,8 @@ class Trilinos(CMakePackage):
     homepage = "https://trilinos.org/"
     url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
 
+    maintainers = ['aprokop']
+
     # ###################### Versions ##########################
 
     version('xsdk-0.2.0',
@@ -54,7 +56,7 @@ class Trilinos(CMakePackage):
             git='https://github.com/trilinos/Trilinos.git', tag='develop')
     version('master',
             git='https://github.com/trilinos/Trilinos.git', tag='master')
-    version('12.10.1', '40f28628b63310f9bd17c26d9ebe32b1')
+    version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '01c0026f1e2050842857db941060ecd5')
     version('12.6.4', 'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
     version('12.6.3', '8de5cc00981a0ca0defea6199b2fe4c1')
@@ -93,8 +95,6 @@ class Trilinos(CMakePackage):
             description='Build python wrappers')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
-    variant('debug',        default=False,
-            description='Builds a debug version of the libraries')
     variant('boost',        default=True,
             description='Compile with Boost')
     variant('tpetra',       default=True,
@@ -153,6 +153,14 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
     variant('openmp',       default=False,
             description='Enable OpenMP')
+    variant('nox',          default=False,
+            description='Enable NOX')
+    variant('shards',       default=False,
+            description='Enable Shards')
+    variant('intrepid',     default=False,
+            description='Enable Intrepid')
+    variant('intrepid2',     default=False,
+            description='Enable Intrepid2')
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
@@ -173,13 +181,13 @@ class Trilinos(CMakePackage):
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
     # deprecated SuperLUDist v3.3 together with an Amesos patch is working.
-    conflicts('+superlu-dist', when='@:11.14.3')
+    conflicts('+superlu-dist', when='@11.4.1:11.14.3')
     # PnetCDF was only added after v12.10.1
-    conflicts('+pnetcdf', when='@:12.10.1')
+    conflicts('+pnetcdf', when='@0:12.10.1')
 
     # ###################### Dependencies ##########################
 
-    # Everything should be compiled with -fpic
+    # Everything should be compiled position independent (-fpic)
     depends_on('blas')
     depends_on('lapack')
     depends_on('boost', when='+boost')
@@ -205,11 +213,11 @@ class Trilinos(CMakePackage):
     # work at the end. But let's avoid all this by simply using shared libs
     depends_on('mumps@5.0:+mpi+shared', when='+mumps')
     depends_on('scalapack', when='+mumps')
+    depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
-    depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
     depends_on('superlu-dist@develop', when='@develop+superlu-dist')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0+superlu-dist')
-    depends_on('superlu+fpic@4.3', when='+superlu')
+    depends_on('superlu+pic@4.3', when='+superlu')
     # Trilinos can not be built against 64bit int hypre
     depends_on('hypre~internal-superlu~int64', when='+hypre')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
@@ -241,8 +249,6 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
             '-DTrilinos_ENABLE_EXAMPLES:BOOL=OFF',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
 
@@ -303,6 +309,14 @@ class Trilinos(CMakePackage):
                 'ON' if '+teuchos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
                 'ON' if '+anasazi' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
+                'ON' if '+nox' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Shards=%s' % (
+                'ON' if '+shards' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Intrepid=%s' % (
+                'ON' if '+intrepid' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Intrepid2=%s' % (
+                'ON' if '+intrepid2' in spec else 'OFF'),
         ])
 
         if '+xsdkflags' in spec:

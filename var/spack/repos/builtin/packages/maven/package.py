@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class Maven(Package):
 
     version('3.3.9', '516923b3955b6035ba6b0a5b031fbd8b')
 
-    depends_on('jdk')
+    depends_on('java')
 
     def install(self, spec, prefix):
         # install pre-built distribution

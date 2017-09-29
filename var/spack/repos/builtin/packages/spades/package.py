@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -40,6 +40,4 @@ class Spades(CMakePackage):
 
     conflicts('%gcc@7.1.0:')
 
-    @property
-    def root_cmakelists_dir(self):
-        return join_path(self.stage.source_path, 'src')
+    root_cmakelists_dir = 'src'

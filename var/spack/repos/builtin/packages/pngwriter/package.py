@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,7 +38,7 @@ class Pngwriter(CMakePackage):
     homepage = "http://pngwriter.sourceforge.net/"
     url      = "https://github.com/pngwriter/pngwriter/archive/0.5.6.tar.gz"
 
-    version('dev', branch='dev',
+    version('develop', branch='dev',
             git='https://github.com/pngwriter/pngwriter.git')
     version('master', branch='master',
             git='https://github.com/pngwriter/pngwriter.git')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,6 +39,6 @@ class PyJpype(PythonPackage):
     depends_on('python@2.6:')
 
     depends_on('py-setuptools', type='build')
-    depends_on('jdk', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
     # extra requirements
     # depends_on('py-numpy@1.6:', type=('build', 'run'))

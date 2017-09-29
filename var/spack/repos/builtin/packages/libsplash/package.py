@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,7 +37,7 @@ class Libsplash(CMakePackage):
     homepage = "https://github.com/ComputationalRadiationPhysics/libSplash"
     url      = "https://github.com/ComputationalRadiationPhysics/libSplash/archive/v1.4.0.tar.gz"
 
-    version('dev', branch='dev',
+    version('develop', branch='dev',
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')
     version('master', branch='master',
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')

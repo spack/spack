@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -28,7 +28,7 @@ from spack import *
 class PyBlessings(PythonPackage):
     """A nicer, kinder way to write to the terminal """
     homepage = "https://github.com/erikrose/blessings"
-    url      = "https://pypi.python.org/packages/source/b/blessings/blessings-1.6.tar.gz"
+    url      = "https://pypi.io/packages/source/b/blessings/blessings-1.6.tar.gz"
 
     version('1.6', '4f552a8ebcd4982693c92571beb99394')
 

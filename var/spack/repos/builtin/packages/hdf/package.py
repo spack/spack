@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -51,7 +51,7 @@ class Hdf(AutotoolsPackage):
         spec = self.spec
 
         config_args = [
-            'CFLAGS=-fPIC',
+            'CFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-jpeg={0}'.format(spec['jpeg'].prefix),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
             '--disable-netcdf',  # must be disabled to build NetCDF with HDF4

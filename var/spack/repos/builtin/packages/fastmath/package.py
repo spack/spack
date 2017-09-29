@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -46,7 +46,7 @@ class Fastmath(Package):
 #    depends_on('nox-trilinos')  # hoping for stripped down install of just nox
     depends_on('moab')
     depends_on('mpi')
-    depends_on('parpack')  # we need parpack ng
+    depends_on('arpack-ng')
     depends_on('petsc')
     depends_on('phasta')
     depends_on('pumi')

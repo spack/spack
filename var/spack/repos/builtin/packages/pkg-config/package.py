@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -44,15 +44,18 @@ class PkgConfig(AutotoolsPackage):
 
     parallel = False
 
-    @when('platform=cray')
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """spack built pkg-config on cray's requires adding /usr/local/
         and /usr/lib64/  to PKG_CONFIG_PATH in order to access cray '.pc'
-        files."""
-        spack_env.append_path('PKG_CONFIG_PATH', '/usr/lib64/pkgconfig')
-        spack_env.append_path('PKG_CONFIG_PATH', '/usr/local/lib64/pkgconfig')
+        files.
+        Adds the ACLOCAL path for autotools."""
         spack_env.append_path('ACLOCAL_PATH',
                               join_path(self.prefix.share, 'aclocal'))
+        if 'platform=cray' in self.spec:
+            spack_env.append_path('PKG_CONFIG_PATH',
+                                  '/usr/lib64/pkgconfig')
+            spack_env.append_path('PKG_CONFIG_PATH',
+                                  '/usr/local/lib64/pkgconfig')
 
     def configure_args(self):
         config_args = ['--enable-shared']

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -104,7 +104,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('libtool')
     depends_on('pkg-config', type='build')
 
-    depends_on('jdk', when='+java')
+    depends_on('java', when='+java')
     depends_on('python@2:2.8', when='+python')
 
     def patch(self):

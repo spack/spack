@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,18 +36,9 @@ class Sas(CMakePackage):
     version('0.1.4', '20d7311258f2a59c9367ae1576c392b6')
     version('0.1.3', '1e6572afcc03318d16d7321d40eec0fd')
 
-    variant('debug', default=False, description='Build debug version')
-
     depends_on('python@2.7:')
     depends_on('llvm@3.5:')
     depends_on('cmake@2.8:', type='build')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         args = [

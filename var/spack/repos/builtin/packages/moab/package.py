@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -49,7 +49,7 @@ class Moab(AutotoolsPackage):
             description='Required to enable the hdf5 (default I/O) format')
     variant('netcdf', default=False,
             description='Required to enable the ExodusII reader/writer.')
-    variant('pnetcdf', default=False, 
+    variant('pnetcdf', default=False,
             description='Enable pnetcdf (AKA parallel-netcdf) support')
     variant('netcdf', default=False,
             description='Required to enable the ExodusII reader/writer.')
@@ -57,7 +57,7 @@ class Moab(AutotoolsPackage):
     variant('cgm', default=False, description='Enable common geometric module')
     variant('metis', default=True, description='Enable metis link')
     variant('parmetis', default=True, description='Enable parmetis link')
-    variant('irel', default=False, description='Enable irel interface') 
+    variant('irel', default=False, description='Enable irel interface')
     variant('fbigeom', default=False, description='Enable fbigeom interface')
     variant('coupler', default=True, description='Enable mbcoupler tool')
 
@@ -79,6 +79,7 @@ class Moab(AutotoolsPackage):
     # depends_on('cgns', when='+cgns')
     # depends_on('vtk', when='+vtk')
 
+    depends_on('blas')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+hdf5+mpi')

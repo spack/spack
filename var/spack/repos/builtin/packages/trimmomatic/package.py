@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,7 +39,7 @@ class Trimmomatic(Package):
     version('0.36', '8549130d86b6f0382b1a71a2eb45de39')
     version('0.33', '924fc8eb38fdff71740a0e05d32d6a2b')
 
-    depends_on('jdk@8:', type='run')
+    depends_on('java@8:', type='run')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
@@ -58,7 +58,7 @@ class Trimmomatic(Package):
 
         # Munge the helper script to explicitly point to java and the
         # jar file.
-        java = join_path(self.spec['jdk'].prefix, 'bin', 'java')
+        java = join_path(self.spec['java'].prefix, 'bin', 'java')
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('trimmomatic.jar', join_path(prefix.bin, jar_file),

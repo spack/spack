@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,5 +32,7 @@ class SomaticSniper(CMakePackage):
     url      = "https://github.com/genome/somatic-sniper/archive/v1.0.5.0.tar.gz"
 
     version('1.0.5.0', '64bc2b001c9a8089f2a05900f8a0abfe')
+
+    depends_on('ncurses')
 
     parallel = False

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,17 +25,11 @@
 from spack import *
 
 
-class MsgpackC(Package):
+class MsgpackC(CMakePackage):
     """A small, fast binary interchange format convertible to/from JSON"""
     homepage = "http://www.msgpack.org"
     url      = "https://github.com/msgpack/msgpack-c/archive/cpp-1.4.1.tar.gz"
 
     version('1.4.1', 'e2fd3a7419b9bc49e5017fdbefab87e0')
 
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
-
-        make()
-        make("install")
+    depends_on('cmake@2.8.12:', type='build')

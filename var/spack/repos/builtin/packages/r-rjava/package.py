@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,4 +34,4 @@ class RRjava(RPackage):
 
     version('0.9-8', '51ae0d690ceed056ebe7c4be71fc6c7a')
 
-    depends_on('jdk')
+    depends_on('java')
