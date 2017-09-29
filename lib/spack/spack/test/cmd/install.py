@@ -52,6 +52,7 @@ def noop_install(monkeypatch):
 
     monkeypatch.setattr(spack.package.PackageBase, 'do_install', noop)
 
+
 def test_install_package_and_dependency(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
