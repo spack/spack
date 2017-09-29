@@ -236,3 +236,13 @@ class TestLmod(object):
 
         content = modulefile_content('mpileaks arch=x86-linux')
         assert 'Override even better!' in content
+
+    @pytest.mark.usefixtures('config')
+    def test_external_configure_args(
+            self, factory
+    ):
+        # If this package is detected as an external, its configure option line
+        # in the module file starts with 'unknown'
+        writer, spec = factory('externaltool')
+
+        assert 'unknown' in writer.context.configure_options
