@@ -122,7 +122,9 @@ class UrlPatch(Patch):
         Args:
             stage: stage for the package that needs to be patched
         """
-        fetcher = fs.URLFetchStrategy(self.url, digest=self.md5)
+        is_archive = spack.util.compression.allowed_archive(self.url)
+        fetcher = fs.URLFetchStrategy(
+            self.url, digest=self.md5, expand=is_archive)
         mirror = join_path(
             os.path.dirname(stage.mirror_path),
             os.path.basename(self.url)
@@ -131,13 +133,15 @@ class UrlPatch(Patch):
             patch_stage.fetch()
             patch_stage.check()
             patch_stage.cache_local()
+            patch_stage.setup_source()
 
-            if spack.util.compression.allowed_archive(self.url):
-                patch_stage.expand_archive()
-
-            self.path = os.path.abspath(
-                os.listdir(patch_stage.path).pop()
-            )
+            if is_archive:
+                self.path = patch_stage.source_path
+            else:
+                self.path = os.path.abspath(
+                    os.listdir(patch_stage.source_path).pop()
+                )
+            
             super(UrlPatch, self).apply(stage)
 
 
