@@ -47,6 +47,7 @@ class Masa(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('swig',     type='build')
+    depends_on('python', when='+python')
     depends_on('metaphysicl')
 
     def configure_args(self):
