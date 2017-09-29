@@ -44,7 +44,7 @@ class Trilinos(CMakePackage):
     A unique design feature of Trilinos is its focus on packages.
     """
     homepage = "https://trilinos.org/"
-    url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
+    url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
 
     maintainers = ['aprokop']
 
@@ -56,6 +56,7 @@ class Trilinos(CMakePackage):
             git='https://github.com/trilinos/Trilinos.git', tag='develop')
     version('master',
             git='https://github.com/trilinos/Trilinos.git', tag='master')
+    version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
     version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '01c0026f1e2050842857db941060ecd5')
     version('12.6.4', 'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
