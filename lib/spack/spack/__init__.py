@@ -158,6 +158,9 @@ dirty = _config.get('dirty', False)
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
 
+package_testing = spack.package_prefs.PackageTesting()
+
+
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
