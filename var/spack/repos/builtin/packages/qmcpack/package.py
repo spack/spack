@@ -57,7 +57,9 @@ class Qmcpack(CMakePackage):
                         'Array-of-Structure code. Only for CPU code'
                         'and only in mixed precision')
     variant('timers', default=False,
-             description='Build with support for timers.')
+             description='Build with support for timers')
+    variant('da', default=False,
+            description='Install with support for basic data analysis tools')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
 
@@ -83,11 +85,13 @@ class Qmcpack(CMakePackage):
     depends_on('fftw~mpi', when='~mpi')
     depends_on('cuda', when='+cuda')
 
-    # qmcpack needs these for data analysis
-    depends_on('python', type='run')
-    depends_on('py-numpy', type='run')
+    # qmcpack data analysis tools
+    # basic command line tool based on Python and NumPy
+    # blas and lapack patching fails often and so are disabled at this time
+    depends_on('py-numpy~blas~lapack', type='run', when='+da')
 
-    # GUI is optional and leads to a long complex DAG for dependencies
+    # GUI is optional fpr data anlysis
+    # py-matplotlib leads to a long complex DAG for dependencies
     depends_on('py-matplotlib', type='run', when='+gui')
 
     # B-spline basis calculation require a patched version of
@@ -125,14 +129,6 @@ class Qmcpack(CMakePackage):
 
         args.append('-DBOOST_ROOT={0}'.format(self.spec['boost'].prefix))
         args.append('-DHDF5_ROOT={0}'.format(self.spec['hdf5'].prefix))
-
-        # If using non-Intel comiler with MKL, this extra bit of code is needed.
-        # MKLROOT environment variable must be defined for this to work properly
-        if 'intel-mkl' in self.spec:
-            mkl_prefix = self.spec['intel-mkl'].prefix
-            args.append('-DBLA_VENDOR=Intel10_64lp_seq')
-            args.append('-DCMAKE_PREFIX_PATH={0}'.format(mkl_prefix.lib))
-                
 
         # Default is MPI, serial version is convenient for cases, e.g. laptops
         if '+mpi' in self.spec:
@@ -173,11 +169,21 @@ class Qmcpack(CMakePackage):
 
         # Manual Timers
         if '+timers' in self.spec:
-            args.append('-DTIMERS=1')
+            args.append('-DENABLE_TIMERS=1')
         elif '~timers' in self.spec:
-            args.append('-DTIMERS=0')
-
+            args.append('-DENABLE_TIMERS=0')
+        
+        # Include MKL flags     
+        if 'intel-mkl' in self.spec:
+            args.append('-DBLA_VENDOR=Intel10_64lp_seq')
+            args.append('-DQMC_INCLUDE={0}'.format(join_path(env['MKLROOT'],'include')))
         return args
+
+    def setup_environment(self, spack_env, run_env):
+        # Add MKLROOT/lib to the CMAKE_PREFIX_PATH to enable CMake to find MKL libraries.
+        # MKLROOT environment variable must be defined for this to work properly.
+        if 'intel-mkl' in self.spec:
+            spack_env.append_path('CMAKE_PREFIX_PATH',format(join_path(env['MKLROOT'],'lib')))
 
     def install(self, spec, prefix):
         """Make the install targets"""
