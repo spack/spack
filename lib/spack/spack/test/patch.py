@@ -44,7 +44,7 @@ def mock_apply(monkeypatch):
     def check_expand(self, *args, **kwargs):
         # Check tarball expansion
         if spack.util.compression.allowed_archive(self.url):
-            file = os.path.join(self.path, 'foo.txt')
+            file = os.path.join(os.path.dirname(self.path), 'spack-expanded-archive', 'foo.txt')
             assert os.path.exists(file)
 
         # Check tarball fetching
