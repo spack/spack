@@ -44,6 +44,8 @@ import spack.util.executable
 import spack.util.pattern
 from spack.package import PackageBase
 from spack.fetch_strategy import *
+from spack.spec import Spec
+from spack.version import Version
 
 
 ##########
@@ -552,3 +554,58 @@ def mock_svn_repository():
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
     current.chdir()
+
+
+##########
+# Mock packages
+##########
+
+
+class MockPackage(object):
+
+    def __init__(self, name, dependencies, dependency_types, conditions=None,
+                 versions=None):
+        self.name = name
+        self.spec = None
+        dep_to_conditions = ordereddict_backport.OrderedDict()
+        for dep in dependencies:
+            if not conditions or dep.name not in conditions:
+                dep_to_conditions[dep.name] = {name: dep.name}
+            else:
+                dep_to_conditions[dep.name] = conditions[dep.name]
+        self.dependencies = dep_to_conditions
+        self.dependency_types = dict(
+            (x.name, y) for x, y in zip(dependencies, dependency_types))
+        if versions:
+            self.versions = versions
+        else:
+            versions = list(Version(x) for x in [1, 2, 3])
+            self.versions = dict((x, {'preferred': False}) for x in versions)
+        self.variants = {}
+        self.provided = {}
+        self.conflicts = {}
+
+
+class MockPackageMultiRepo(object):
+
+    def __init__(self, packages):
+        self.specToPkg = dict((x.name, x) for x in packages)
+
+    def get(self, spec):
+        if not isinstance(spec, spack.spec.Spec):
+            spec = Spec(spec)
+        return self.specToPkg[spec.name]
+
+    def get_pkg_class(self, name):
+        return self.specToPkg[name]
+
+    def exists(self, name):
+        return name in self.specToPkg
+
+    def is_virtual(self, name):
+        return False
+
+    def repo_for_pkg(self, name):
+        import collections
+        Repo = collections.namedtuple('Repo', ['namespace'])
+        return Repo('mockrepo')
