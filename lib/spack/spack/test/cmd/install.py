@@ -44,6 +44,15 @@ def parser():
     return parser
 
 
+@pytest.fixture()
+def noop_install(monkeypatch):
+
+    def noop(*args, **kwargs):
+        return
+
+    monkeypatch.setattr(spack.package.PackageBase, 'do_install', noop)
+
+
 def test_install_package_and_dependency(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
@@ -62,6 +71,33 @@ def test_install_package_and_dependency(
 
     s = Spec('libdwarf').concretized()
     assert not spack.repo.get(s).stage.created
+
+
+@pytest.mark.usefixtures('noop_install', 'builtin_mock', 'config')
+def test_install_runtests():
+    assert not spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
+
+    install('--test=root', 'dttop')
+    assert not spack.package_testing._test_all
+    assert spack.package_testing.packages_to_test == set(['dttop'])
+
+    spack.package_testing.clear()
+
+    install('--test=all', 'a')
+    assert spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
+
+    spack.package_testing.clear()
+
+    install('--run-tests', 'a')
+    assert spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
+
+    spack.package_testing.clear()
+
+    assert not spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
 
 
 def test_install_package_already_installed(

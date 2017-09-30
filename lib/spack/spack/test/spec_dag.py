@@ -30,6 +30,7 @@ import spack
 import spack.architecture
 import spack.package
 
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 from spack.spec import Spec, canonical_deptype, alldeps
 
 
@@ -67,6 +68,44 @@ def set_dependency(saved_deps):
         pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
         pkg.dependency_types[spec.name] = set(deptypes)
     return _mock
+
+
+@pytest.mark.usefixtures('config')
+def test_test_deptype():
+    """Ensure that test-only dependencies are only included for specified
+packages in the following spec DAG::
+
+        w
+       /|
+      x y
+        |
+        z
+
+w->y deptypes are (link, build), w->x and y->z deptypes are (test)
+
+"""
+    saved_repo = spack.repo
+
+    default = ('build', 'link')
+    test_only = ('test',)
+
+    x = MockPackage('x', [], [])
+    z = MockPackage('z', [], [])
+    y = MockPackage('y', [z], [test_only])
+    w = MockPackage('w', [x, y], [test_only, default])
+
+    mock_repo = MockPackageMultiRepo([w, x, y, z])
+    try:
+        spack.package_testing.test(w.name)
+        spack.repo = mock_repo
+        spec = Spec('w')
+        spec.concretize()
+
+        assert ('x' in spec)
+        assert ('z' not in spec)
+    finally:
+        spack.repo = saved_repo
+        spack.package_testing.clear()
 
 
 @pytest.mark.usefixtures('refresh_builtin_mock')
