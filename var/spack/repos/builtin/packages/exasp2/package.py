@@ -46,7 +46,7 @@ class Exasp2(MakefilePackage):
     version('develop', git='https://github.com/ECP-copa/ExaSP2',
             branch='master')
 
-    variant('mpi', default=False, description='Build With MPI Support')
+    variant('mpi', default=True, description='Build With MPI Support')
 
     depends_on('bml')
     depends_on('blas')
@@ -64,6 +64,8 @@ class Exasp2(MakefilePackage):
             targets.append('MPICC={0}'.format(self.spec['mpi'].mpicc))
             targets.append('MPI_LIB=-L{0} -lmpi'.format(self.spec['mpi'].prefix.lib))
             targets.append('MPI_INCLUDE=-I{0}'.format(self.spec['mpi'].prefix.include))
+        else:
+            targets.append('PARALLEL=NONE')
         targets.append('BLAS=OPENBLAS')
         targets.append('BLAS_ROOT=' + self.spec['blas'].prefix)
         targets.append('BML_PATH=' + self.spec['bml'].prefix.lib64)
