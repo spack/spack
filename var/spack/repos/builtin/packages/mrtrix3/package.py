@@ -47,7 +47,7 @@ class Mrtrix3(Package):
     depends_on('libtiff')
     depends_on('fftw')
 
-    conflicts('%gcc@7:', when='@2017-09-25')
+    conflicts('%gcc@7:', when='@2017-09-25')  # MRtrix3/mrtrix3#1041
 
     def install(self, spec, prefix):
         configure = Executable('./configure')
