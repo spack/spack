@@ -57,4 +57,6 @@ class Bml(CMakePackage):
             args.append('-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc)
             args.append('-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx)
             args.append('-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc)
+        else:
+            args.append('-DBML_MPI=False')
         return args
