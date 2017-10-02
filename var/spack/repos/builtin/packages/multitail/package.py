@@ -36,17 +36,24 @@ class Multitail(MakefilePackage):
 
     depends_on('ncurses')
 
+    # It's counterintuitive, but use DESTDIR for the install because
+    # the Makefile doesn't consistently use PREFIX with the things
+    # it's installing...
+    @property
+    def install_targets(self):
+        targets = []
+        targets.append('PREFIX=')
+        targets.append('DESTDIR={0}'.format(self.prefix))
+        targets.append('install')
+        return targets
+
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
-        nc_inc = spec['ncurses'].prefix.inc
-        nc_lib = spec['ncurses'].prefix.lib
 
-        # Use DESTDIR for the install because the Makefile doesn't
-        # consistently use PREFIX.
-        makefile.filter('DESTDIR=', 'DESTDIR={0}'.format(self.prefix))
-        makefile.filter('PREFIX=/usr', 'PREFIX=')
-        makefile.filter('CFLAGS\+=', 'CFLAGS+=-I{0} '.format(nc_inc))
-        makefile.filter('LDFLAGS\+=', 'LDFLAGS+=-L{0} '.format(nc_lib))
+        nc_include_flags = spec['ncurses'].headers.include_flags
+        nc_ld_flags = spec['ncurses'].libs.ld_flags
+        makefile.filter('CFLAGS\+=', 'CFLAGS+={0} '.format(nc_include_flags))
+        makefile.filter('LDFLAGS\+=', 'LDFLAGS+={0} '.format(nc_ld_flags))
 
         # Copy the conf file directly into place (don't worry about
         # overwriting an existing file...)
