@@ -41,12 +41,8 @@ class Fastqvalidator(MakefilePackage):
         destination='libStatGen'
     )
 
-    def build(self, spec, prefix):
-        make('all')
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        make('install', 'INSTALLDIR=%s' % prefix.bin)
 
     def setup_environment(self, spack_env, run_env):
         # Need to make sure self.stage.source_path has a value before setting
@@ -54,4 +50,4 @@ class Fastqvalidator(MakefilePackage):
         if self.stage.source_path:
             spack_env.set('LIB_PATH_GENERAL', join_path(self.stage.source_path,
                           'libStatGen', 'libStatGen-1.0.14'))
-        run_env.prepend_path('PATH', self.prefix)
+        spack_env.set('INSTALLDIR', self.prefix.bin)
