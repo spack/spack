@@ -43,6 +43,7 @@ class Fastqvalidator(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
+        make('install')
 
     def setup_environment(self, spack_env, run_env):
         # Need to make sure self.stage.source_path has a value before setting
