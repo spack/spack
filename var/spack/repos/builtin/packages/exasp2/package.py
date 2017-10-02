@@ -63,8 +63,8 @@ class Exasp2(MakefilePackage):
         if '+mpi' in spec:
             targets.append('PARALLEL=MPI')
             targets.append('MPICC={0}'.format(spec['mpi'].mpicc))
-            targets.append('MPI_LIB=-L{0} -lmpi'.format(spec['mpi'].prefix.lib))
-            targets.append('MPI_INCLUDE=-I{0}'.format(spec['mpi'].prefix.include))
+            targets.append('MPI_LIB=-L' + spec['mpi'].prefix.lib + ' -lmpi')
+            targets.append('MPI_INCLUDE=-I' + spec['mpi'].prefix.include)
         else:
             targets.append('PARALLEL=NONE')
         # NOTE: no blas except for mkl has been properly tested. OpenBlas was
