@@ -141,7 +141,7 @@ class UrlPatch(Patch):
                 self.path = os.path.abspath(
                     os.listdir(patch_stage.source_path).pop()
                 )
-            
+
             super(UrlPatch, self).apply(stage)
 
 
