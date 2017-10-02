@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,6 +38,7 @@ class Fastqvalidator(MakefilePackage):
     resource(
         name='libStatGen',
         url='https://github.com/statgen/libStatGen/archive/v1.0.14.tar.gz',
+        sha256='70a504c5cc4838c6ac96cdd010644454615cc907df4e3794c999baf958fa734b',
         destination='libStatGen'
     )
 
