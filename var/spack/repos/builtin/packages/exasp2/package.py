@@ -52,7 +52,7 @@ class Exasp2(MakefilePackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
-    depends_on('bml@develop+mpi', when='+mpi')
+    depends_on('bml@1.2.3:+mpi', when='+mpi')
 
     build_directory = 'src'
 
@@ -66,9 +66,11 @@ class Exasp2(MakefilePackage):
             targets.append('MPI_INCLUDE=-I{0}'.format(self.spec['mpi'].prefix.include))
         else:
             targets.append('PARALLEL=NONE')
+        # Current ExaSP2 build system treats "OPENBLAS" as a generic default
         targets.append('BLAS=OPENBLAS')
         targets.append('BLAS_ROOT=' + self.spec['blas'].prefix)
-        targets.append('BML_PATH=' + self.spec['bml'].prefix.lib64)
+        bmlLibDirs = self.spec['bml'].libs.directories[0]
+        targets.append('BML_PATH=' + bmlLibDirs)
         targets.append('--file=Makefile.vanilla')
         return targets
 
