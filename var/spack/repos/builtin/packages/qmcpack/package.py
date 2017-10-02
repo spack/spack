@@ -69,6 +69,8 @@ class Qmcpack(CMakePackage):
 
     # conflicts
     conflicts('+soa', when='+cuda')
+    conflicts('^openblas+ilp64')
+    conflicts('^intel-mkl+ilp64')
 
     # Dependencies match those in the QMCPACK manual
     depends_on('cmake@3.4.3:', type='build')
