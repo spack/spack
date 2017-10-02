@@ -33,7 +33,7 @@ class Fastqvalidator(MakefilePackage):
 
     version('0.1.1a', '5c5de69527020b72b64f32987409bd12')
 
-    conflicts('%gcc@7:', when='@0.1.1a')
+    conflicts('%gcc@7:', when='@0.1.1a')  # statgen/fastQValidator#14
 
     resource(
         name='libStatGen',
