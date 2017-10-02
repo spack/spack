@@ -41,7 +41,6 @@ class Bml(CMakePackage):
     variant('mpi', default=False, description='Build with MPI Support')
 
     conflicts('+mpi', when='@:1.2.2')
-    conflicts('+mpi', when='@:1.1.0')
 
     depends_on("blas")
     depends_on("lapack")
