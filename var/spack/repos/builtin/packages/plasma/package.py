@@ -10,7 +10,6 @@
 #
 from spack import *
 
-import os
 
 class Plasma(MakefilePackage):
     """Parallel Linear Algebra Software for Multicore Architectures, PLASMA is
@@ -28,16 +27,21 @@ class Plasma(MakefilePackage):
 
     version("develop", hg="https://luszczek@bitbucket.org/icl/plasma")
 
-    # installation of Intel's MKL requires access to /opt which is usually restricted
-    #depends_on("intel-mkl")
+    depends_on("blas")
+    depends_on("lapack")
 
-    #depends_on("atlas") # does not have LAPACKE interface
-    #depends_on("netlib-lapack@3:3.999+lapacke+external-blas")
-    depends_on("netlib-lapack@3:3.999+lapacke")
-    #depends_on("cblas") # clashes with OpenBLAS declarations and has a problem compiling on its own
-    depends_on("openblas")
+    # Intel's MKL installer accesses /opt regardless of PREFIX
+    conflicts("intel-mkl")
+    conflicts("intel-parallel-studio")
 
-    depends_on("gcc@7:", type="build")
+    conflicts("atlas")  # does not have LAPACKE interface
+    conflicts("netlib-lapack@:2.999")  # missing LAPACKE features
+    # clashes with OpenBLAS declarations and has a problem compiling on its own
+    conflicts("cblas")
+    conflicts("openblas-with-lapack")  # incomplete LAPACK implementation
+    conflicts("veclibfort")
+
+    conflicts("gcc@:6")  # support for OpenMP 4+ is required, available in 7.0
 
     # only GCC 7 and higher have sufficient support for OpenMP tasks
     conflicts("%gcc@3.0:6.999")
@@ -53,14 +57,24 @@ class Plasma(MakefilePackage):
 
     def edit(self, spec, prefix):
         # copy "make.inc.mkl-gcc" provided by default into "make.inc"
-        open("make.inc","w").write(open("make.inc.mkl-gcc").read())
+        open("make.inc", "w").write(open("make.inc.mkl-gcc").read())
 
         make_inc = FileFilter("make.inc")
-        make_inc.filter("CC *= *.*", "CC = {0}".format(env["CC"])) # use $CC set by Spack
-        make_inc.filter("^LIBS *=.*", "LIBS = -lopenblas -lm")
+        make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
+        # pass prefix variable from "make.inc" to "Makefile"
         make_inc.filter("# --*", "prefix={0}".format(self.prefix))
-        make_inc.filter("-DPLASMA_WITH_MKL", "") # not using MKL
-        make_inc.filter("# programs", "# {0} {1}".format(os.system(env["CC"] + " -v"), env["SPACK_PREFIX"])) # show Spack's prefix
 
         makefile = FileFilter("Makefile")
         makefile.filter("CC *[?]*= * cc", "")
+
+    @property
+    def build_targets(self):
+        targets = list()
+
+        # use $CC set by Spack
+        targets.append("CC = {0}".format(env["CC"]))
+
+        # pass BLAS library flags
+        targets.append("LIBS = {0}".format(self.spec["blas"].libs.ld_flags))
+
+        return targets
