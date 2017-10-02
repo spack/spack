@@ -207,8 +207,11 @@ __all__ += [
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
 
-from spack.spec import Spec, alldeps
-__all__ += ['Spec', 'alldeps']
+from spack.spec import Spec
+__all__ += ['Spec']
+
+from spack.dependency import all_deptypes
+__all__ += ['all_deptypes']
 
 from spack.multimethod import when
 __all__ += ['when']

@@ -45,19 +45,12 @@ def parser():
 
 
 @pytest.fixture()
-def mock_calls_for_install(monkeypatch):
+def noop_install(monkeypatch):
 
-    class Counter(object):
-        def __init__(self):
-            self.call_count = 0
+    def noop(*args, **kwargs):
+        return
 
-        def __call__(self, *args, **kwargs):
-            self.call_count += 1
-
-    monkeypatch.setattr(spack.package.PackageBase, 'do_install', Counter())
-    monkeypatch.setattr(spack.package_prefs.PackageTesting, 'test', Counter())
-    monkeypatch.setattr(spack.package_prefs.PackageTesting,
-                        'test_all', Counter())
+    monkeypatch.setattr(spack.package.PackageBase, 'do_install', noop)
 
 
 def test_install_package_and_dependency(
@@ -80,13 +73,31 @@ def test_install_package_and_dependency(
     assert not spack.repo.get(s).stage.created
 
 
-@pytest.mark.usefixtures('mock_calls_for_install', 'builtin_mock', 'config')
+@pytest.mark.usefixtures('noop_install', 'builtin_mock', 'config')
 def test_install_runtests():
-    install('--test-root', 'dttop')
-    assert spack.package_prefs.PackageTesting.test.call_count == 1
+    assert not spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
 
-    install('--test-all', 'a')
-    assert spack.package_prefs.PackageTesting.test_all.call_count == 1
+    install('--test=root', 'dttop')
+    assert not spack.package_testing._test_all
+    assert spack.package_testing.packages_to_test == set(['dttop'])
+
+    spack.package_testing.clear()
+
+    install('--test=all', 'a')
+    assert spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
+
+    spack.package_testing.clear()
+
+    install('--run-tests', 'a')
+    assert spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
+
+    spack.package_testing.clear()
+
+    assert not spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
 
 
 def test_install_package_already_installed(

@@ -30,10 +30,9 @@ import spack
 import spack.architecture
 import spack.package
 
-from spack.version import Version
-from spack.spec import Spec, canonical_deptype, alldeps
-
-from ordereddict_backport import OrderedDict
+from spack.spec import Spec
+from spack.dependency import *
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 
 def check_links(spec_to_check):
@@ -54,9 +53,9 @@ def saved_deps():
 @pytest.fixture()
 def set_dependency(saved_deps):
     """Returns a function that alters the dependency information
-    for a package.
+    for a package in the ``saved_deps`` fixture.
     """
-    def _mock(pkg_name, spec, deptypes=spack.alldeps):
+    def _mock(pkg_name, spec, deptypes=all_deptypes):
         """Alters dependence information for a package.
 
         Adds a dependency on <spec> to pkg. Use this to mock up constraints.
@@ -67,59 +66,10 @@ def set_dependency(saved_deps):
         if pkg_name not in saved_deps:
             saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
 
-        pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
-        pkg.dependency_types[spec.name] = set(deptypes)
+        cond = Spec(pkg.name)
+        dependency = Dependency(pkg, spec, type=deptypes)
+        pkg.dependencies[spec.name] = {cond: dependency}
     return _mock
-
-
-class MockPackage(object):
-
-    def __init__(self, name, dependencies, dependency_types, conditions=None,
-                 versions=None):
-        self.name = name
-        self.spec = None
-        dep_to_conditions = OrderedDict()
-        for dep in dependencies:
-            if not conditions or dep.name not in conditions:
-                dep_to_conditions[dep.name] = {name: dep.name}
-            else:
-                dep_to_conditions[dep.name] = conditions[dep.name]
-        self.dependencies = dep_to_conditions
-        self.dependency_types = dict(
-            (x.name, y) for x, y in zip(dependencies, dependency_types))
-        if versions:
-            self.versions = versions
-        else:
-            versions = list(Version(x) for x in [1, 2, 3])
-            self.versions = dict((x, {'preferred': False}) for x in versions)
-        self.variants = {}
-        self.provided = {}
-        self.conflicts = {}
-
-
-class MockPackageMultiRepo(object):
-
-    def __init__(self, packages):
-        self.specToPkg = dict((x.name, x) for x in packages)
-
-    def get(self, spec):
-        if not isinstance(spec, spack.spec.Spec):
-            spec = Spec(spec)
-        return self.specToPkg[spec.name]
-
-    def get_pkg_class(self, name):
-        return self.specToPkg[name]
-
-    def exists(self, name):
-        return name in self.specToPkg
-
-    def is_virtual(self, name):
-        return False
-
-    def repo_for_pkg(self, name):
-        import collections
-        Repo = collections.namedtuple('Repo', ['namespace'])
-        return Repo('mockrepo')
 
 
 @pytest.mark.usefixtures('config')
@@ -644,7 +594,7 @@ class TestSpecDag(object):
                  'dtlink1', 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5',
                  'dtrun3', 'dtbuild3']
 
-        traversal = dag.traverse(deptype=spack.alldeps)
+        traversal = dag.traverse(deptype=all)
         assert [x.name for x in traversal] == names
 
     def test_deptype_traversal_run(self):
@@ -893,12 +843,16 @@ class TestSpecDag(object):
 
     def test_canonical_deptype(self):
         # special values
-        assert canonical_deptype(all) == alldeps
-        assert canonical_deptype('all') == alldeps
-        assert canonical_deptype(None) == alldeps
+        assert canonical_deptype(all) == all_deptypes
+        assert canonical_deptype('all') == all_deptypes
 
-        # everything in alldeps is canonical
-        for v in alldeps:
+        with pytest.raises(ValueError):
+            canonical_deptype(None)
+        with pytest.raises(ValueError):
+            canonical_deptype([None])
+
+        # everything in all_deptypes is canonical
+        for v in all_deptypes:
             assert canonical_deptype(v) == (v,)
 
         # tuples
