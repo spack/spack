@@ -59,17 +59,26 @@ class Exasp2(MakefilePackage):
     @property
     def build_targets(self):
         targets = []
-        if '+mpi' in self.spec:
+        spec = self.spec
+        if '+mpi' in spec:
             targets.append('PARALLEL=MPI')
-            targets.append('MPICC={0}'.format(self.spec['mpi'].mpicc))
-            targets.append('MPI_LIB=-L{0} -lmpi'.format(self.spec['mpi'].prefix.lib))
-            targets.append('MPI_INCLUDE=-I{0}'.format(self.spec['mpi'].prefix.include))
+            targets.append('MPICC={0}'.format(spec['mpi'].mpicc))
+            targets.append('MPI_LIB=-L{0} -lmpi'.format(spec['mpi'].prefix.lib))
+            targets.append('MPI_INCLUDE=-I{0}'.format(spec['mpi'].prefix.include))
         else:
             targets.append('PARALLEL=NONE')
-        # Current ExaSP2 build system treats "OPENBLAS" as a generic default
-        targets.append('BLAS=OPENBLAS')
-        targets.append('BLAS_ROOT=' + self.spec['blas'].prefix)
-        bmlLibDirs = self.spec['bml'].libs.directories[0]
+        # NOTE: no blas except for mkl has been properly tested. OpenBlas was
+        #   briefly but not rigoruously tested. Using generic blas approach to
+        #   meet Spack requirements
+        targets.append('BLAS=GENERIC_SPACKBLAS')
+        math_libs = str(spec['lapack'].libs)
+        math_libs += ' ' + str(spec['lapack'].libs)
+        targets.append('SPACKBLASLIBFLAGS=' + math_libs)
+        math_includes = spec['lapack'].prefix.include
+        math_includes += " -I" + spec['blas'].prefix.include
+        targets.append('SPACKBLASINCLUDES=' + math_includes)
+        # And BML
+        bmlLibDirs = spec['bml'].libs.directories[0]
         targets.append('BML_PATH=' + bmlLibDirs)
         targets.append('--file=Makefile.vanilla')
         return targets
