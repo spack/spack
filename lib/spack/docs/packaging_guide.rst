@@ -1254,27 +1254,47 @@ structure like this:
            package.py
            ad_lustre_rwcontig_open_source.patch
 
-If you supply a URL instead of a filename, you need to supply a checksum,
-like this:
+If you supply a URL instead of a filename, you need to supply a
+``sha256`` checksum, like this:
+
+.. code-block:: python
+
+   patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch',
+         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866')
+
+Spack includes the hashes of patches in its versioning information, so
+that the same package with different patches applied will have different
+hash identifiers.  To ensure that the hashing scheme is consistent, you
+must use a ``sha256`` checksum for the patch.  Patches will be fetched
+from their URLs, checked, and applied to your source code.  You can use
+the ``spack sha256`` command to generate a checksum for a patch file or
+URL.
+
+Spack can also handle compressed patches.  If you use these, Spack needs
+a little more help.  Specifically, it needs *two* checksums: the
+``sha256`` of the patch and ``archive_sha256`` for the compressed
+archive.  ``archive_sha256`` helps Spack ensure that the downloaded
+file is not corrupted or malicious, before running it through a tool like
+``tar`` or ``zip``.  The ``sha256`` of the patch is still required so
+that it can be included in specs.  Providing it in the package file
+ensures that Spack won't have to download and decompress patches it won't
+end up using at install time.  Both the archive and patch checksum are
+checked when patch archives are downloaded.
 
 .. code-block:: python
 
    patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz',
-         md5='f91c6a04df56e228fe946291d2f38c9a')
+         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
+         archive_sha256='4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e')
 
-This directive provides an ``md5`` checksum.  You can use other hashing
-algorihtms like ``sha256`` as well.  The patch will be fetched from the
-URL, checked, and applied to your source code.  You can use the ``spack
-md5`` command to generate a checksum for a patch file.
+``patch`` keyword arguments are described below.
 
-``patch`` can take two options keyword arguments.  They are:
+""""""""""""""""""""""""""""""
+``sha256``, ``archive_sha256``
+""""""""""""""""""""""""""""""
 
-""""""""""""""""""""""""""""""""""""""
-``md5``, ``sha256``, ``sha512``, etc.
-""""""""""""""""""""""""""""""""""""""
-
-Use one of these when you supply a patch to be downloaded from a remote
-site. The downloaded file will be validated using the given checksum.
+Hashes of downloaded patch and compressed archive, respectively.  Only
+needed for patches fetched from URLs.
 
 """"""""
 ``when``
@@ -1350,6 +1370,21 @@ function gives you some benefits.  First, spack ensures that the
 if you run install, hit ctrl-C, and run install again, the code in the
 patch function is only run once.  Also, you can tell Spack to run only
 the patching part of the build using the :ref:`cmd-spack-patch` command.
+
+.. _patch_dependency_patching:
+
+^^^^^^^^^^^^^^^^^^^
+Dependency patching
+^^^^^^^^^^^^^^^^^^^
+
+So far we've covered how the ``patch`` directive can be used by a package
+to patch *its own* source code. Packages can *also* specify patches to be
+applied to their dependencies, if they require special modifications.  As
+with all packages in Spack, a patched dependency library can coexist with
+other versions of that library.  See the `section on depends_on
+<dependency_dependency_patching_>`_ for more details.
+
+.. _handling_rpaths:
 
 ---------------
 Handling RPATHs
@@ -1524,7 +1559,7 @@ particular constraints, and package authors can use specs to describe
 relationships between packages.
 
 ^^^^^^^^^^^^^^
-Version Ranges
+Version ranges
 ^^^^^^^^^^^^^^
 
 Although some packages require a specific version for their dependencies,
@@ -1572,7 +1607,7 @@ correct way to specify this would be:
 
 
 ^^^^^^^^^^^^^^^^
-Dependency Types
+Dependency types
 ^^^^^^^^^^^^^^^^
 
 Not all dependencies are created equal, and Spack allows you to specify
@@ -1608,6 +1643,91 @@ inject the dependency's ``prefix/lib`` directory, but the package needs to
 be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
 a user wants to run the package.
 
+.. _dependency_dependency_patching:
+
+^^^^^^^^^^^^^^^^^^^
+Dependency patching
+^^^^^^^^^^^^^^^^^^^
+
+Some packages maintain special patches on their dependencies, either to
+add new features or to fix bugs.  This typically makes a package harder
+to maintain, and we encourage developers to upstream (contribute back)
+their changes rather than maintaining patches.  However, in some cases
+it's not possible to upstream. Maybe the dependency's developers don't
+accept changes, or maybe they just haven't had time to integrate them.
+
+For times like these, Spack's ``depends_on`` directive can optionally
+take a patch or list of patches:
+
+.. code-block:: python
+
+    class SpecialTool(Package):
+        ...
+        depends_on('binutils', patches='special-binutils-feature.patch')
+        ...
+
+Here, the ``special-tool`` package requires a special feature in
+``binutils``, so it provides an extra ``patches=<filename>`` keyword
+argument.  This is similar to the `patch directive <patching_>`_, with
+one small difference.  Here, ``special-tool`` is responsible for the
+patch, so it should live in ``special-tool``'s directory in the package
+repository, not the ``binutils`` directory.
+
+If you need something more sophisticated than this, you can simply nest a
+``patch()`` directive inside of ``depends_on``:
+
+.. code-block:: python
+
+    class SpecialTool(Package):
+        ...
+        depends_on(
+            'binutils',
+            patches=patch('special-binutils-feature.patch',
+                          level=3,
+                          when='@:1.3'),   # condition on binutils
+            when='@2.0:')                  # condition on special-tool
+        ...
+
+Note that there are two optional ``when`` conditions here -- one on the
+``patch`` directive and the other on ``depends_on``.  The condition in
+the ``patch`` directive applies to ``binutils`` (the package being
+patched), while the condition in ``depends_on`` applies to
+``special-tool``.  See `patch directive <patching_>`_ for details on all
+the arguments the ``patch`` directive can take.
+
+Finally, if you need *multiple* patches on a dependency, you can provide
+a list for ``patches``, e.g.:
+
+.. code-block:: python
+
+    class SpecialTool(Package):
+        ...
+        depends_on(
+            'binutils',
+            patches=[
+                'binutils-bugfix1.patch',
+                'binutils-bugfix2.patch',
+                patch('https://example.com/special-binutils-feature.patch',
+                      sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
+                      when='@:1.3')],
+            when='@2.0:')
+        ...
+
+As with ``patch`` directives, patches are applied in the order they
+appear in the package file (or in this case, in the list).
+
+.. note::
+
+   You may wonder whether dependency patching will interfere with other
+   packages that depend on ``binutils``.  It won't.
+
+   As described in patching_, Patching a package adds the ``sha256`` of
+   the patch to the package's spec, which means it will have a
+   *different* unique hash than other versions without the patch.  The
+   patched version coexists with unpatched versions, and Spack's support
+   for handling_rpaths_ guarantees that each installation finds the
+   right version. If two packages depend on ``binutils`` patched *the
+   same* way, they can both use a single installation of ``binutils``.
 
 .. _setup-dependent-environment:
 
