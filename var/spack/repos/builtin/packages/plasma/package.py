@@ -30,10 +30,6 @@ class Plasma(MakefilePackage):
     depends_on("blas")
     depends_on("lapack")
 
-    # Intel's MKL installer accesses /opt regardless of PREFIX
-    conflicts("intel-mkl")
-    conflicts("intel-parallel-studio")
-
     conflicts("atlas")  # does not have LAPACKE interface
     conflicts("netlib-lapack@:2.999")  # missing LAPACKE features
     # clashes with OpenBLAS declarations and has a problem compiling on its own
@@ -60,7 +56,10 @@ class Plasma(MakefilePackage):
         open("make.inc", "w").write(open("make.inc.mkl-gcc").read())
 
         make_inc = FileFilter("make.inc")
-        make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
+
+        if not spec.satisfies("^intel-mkl"):
+            make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
+
         # pass prefix variable from "make.inc" to "Makefile"
         make_inc.filter("# --*", "prefix={0}".format(self.prefix))
 
@@ -73,6 +72,9 @@ class Plasma(MakefilePackage):
 
         # use $CC set by Spack
         targets.append("CC = {0}".format(env["CC"]))
+
+        if self.spec.satisfies("^intel-mkl"):
+            targets.append("MKLROOT = {0}/mkl".format(env["MKLROOT"]))
 
         # pass BLAS library flags
         targets.append("LIBS = {0}".format(self.spec["blas"].libs.ld_flags))
