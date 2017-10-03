@@ -39,7 +39,6 @@ class Fastqvalidator(MakefilePackage):
         name='libStatGen',
         url='https://github.com/statgen/libStatGen/archive/v1.0.14.tar.gz',
         sha256='70a504c5cc4838c6ac96cdd010644454615cc907df4e3794c999baf958fa734b',
-        destination='libStatGen'
     )
 
     def install(self, spec, prefix):
@@ -47,9 +46,11 @@ class Fastqvalidator(MakefilePackage):
         make('install')
 
     def setup_environment(self, spack_env, run_env):
-        # Need to make sure self.stage.source_path has a value before setting
-        # this variable. Will fail otherwise.
-        if self.stage.source_path:
-            spack_env.set('LIB_PATH_GENERAL', join_path(self.stage.source_path,
-                          'libStatGen', 'libStatGen-1.0.14'))
+        # Stage must already be created and tarball exapnded in order for
+        # LIB_PATH_GENERAL to be set.
+        if not self.stage.source_path:
+            self.stage.fetch()
+            self.stage.expand_archive()
+        spack_env.set('LIB_PATH_GENERAL', join_path(self.stage.source_path,
+                                                    'libStatGen-1.0.14'))
         spack_env.set('INSTALLDIR', self.prefix.bin)
