@@ -51,3 +51,13 @@ class Libpng(AutotoolsPackage):
     version('1.2.57', 'dfcda3603e29dcc11870c48f838ef75b')
 
     depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended
+
+    def configure_args(self):
+        args = [
+            # not honored, see
+            #   https://sourceforge.net/p/libpng/bugs/210/#33f1
+            # '--with-zlib=' + self.spec['zlib'].prefix,
+            'CFLAGS=-I{0}'.format(self.spec['zlib'].prefix.include),
+            'LDFLAGS=-L{0}'.format(self.spec['zlib'].prefix.lib)
+        ]
+        return args
