@@ -73,38 +73,36 @@ configuration = spack.config.get_config('modules')
 #: Inspections that needs to be done on spec prefixes
 prefix_inspections = configuration.get('prefix_inspections', {})
 
+#: Valid tokens for naming scheme and env variable names
+_valid_tokens = (
+    'PACKAGE',
+    'VERSION',
+    'COMPILER',
+    'COMPILERNAME',
+    'COMPILERVER',
+    'ARCHITECTURE'
+)
 
-def _token_invalidator(msg):
-    """Private function to return a dictionary that invalidates a few
-    tokens in ``spec.format``.
+
+def _check_tokens_are_valid(format_string, message):
+    """Checks that the tokens used in the format string are valid in
+    the context of module file and environment variable naming.
 
     Args:
-        msg (str): format for the exception message raised if an invalid
-            token is expanded. The token name will be expanded at ``{0}``
+        format_string (str): string containing the format to be checked. This
+            is supposed to be a 'template' for ``Spec.format``
+
+        message (str): first sentence of the error message in case invalid
+            tokens are found
+
     """
-    # These tokens don't really make sense in a module or variable name,
-    # so we should raise an exception when they are present. The exception
-    # will be handled by the module file generation hook, that will turn
-    # it into a user warning.
-    invalid_tokens = (
-        'COMPILERFLAGS',
-        'OPTIONS',
-        'SHA1',
-        'SPACK_ROOT',
-        'SPACK_INSTALL',
-        'PREFIX'
-    )
-    transform = {}
-    for token in invalid_tokens:
-        # The things you do just to capture a value...
-        def make_invalid(t):
-            def invalid(x):
-                raise RuntimeError(msg.format(t))
-
-            return invalid
-
-        transform[token] = make_invalid(token)
-    return transform
+    named_tokens = re.findall(r'\${(\w*)}', format_string)
+    invalid_tokens = [x for x in named_tokens if x not in _valid_tokens]
+    if invalid_tokens:
+        msg = message
+        msg += ' [{0}]. '.format(', '.join(invalid_tokens))
+        msg += 'Did you check your "modules.yaml" configuration?'
+        raise RuntimeError(msg)
 
 
 def update_dictionary_extending_lists(target, update):
@@ -256,6 +254,12 @@ class BaseConfiguration(object):
             'naming_scheme',
             '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
         )
+
+        # Ensure the named tokens we are expanding are allowed, see
+        # issue #2884 for reference
+        msg = 'some tokens cannot be part of the module naming scheme'
+        _check_tokens_are_valid(scheme, message=msg)
+
         return scheme
 
     @property
@@ -418,12 +422,7 @@ class BaseFileLayout(object):
         to console to use it. This implementation fits the needs of most
         non-hierarchical layouts.
         """
-
-        transform = _token_invalidator(
-            'token {0} cannot be part of the module naming scheme'
-        )
-
-        name = self.spec.format(self.conf.naming_scheme, transform=transform)
+        name = self.spec.format(self.conf.naming_scheme)
         # Not everybody is working on linux...
         parts = name.split('/')
         name = os.path.join(*parts)
@@ -561,26 +560,17 @@ class BaseContext(tengine.Context):
         # We may have tokens to substitute in environment commands
 
         # Prepare a suitable transformation dictionary for the names
-        # of the environment variables. This means:
-        #
-        # 1. raising on invalid tokens
-        # 2. turn the valid tokens uppercase
-        #
-        transform = _token_invalidator(
-            'token {0} cannot be expanded in an environment variable name'
-        )
-        valid_tokens = (
-            'PACKAGE',
-            'VERSION',
-            'COMPILER',
-            'COMPILERNAME',
-            'COMPILERVER',
-            'ARCHITECTURE'
-        )
-        for token in valid_tokens:
+        # of the environment variables. This means turn the valid
+        # tokens uppercase.
+        transform = {}
+        for token in _valid_tokens:
             transform[token] = str.upper
 
         for x in env:
+            # Ensure all the tokens are valid in this context
+            msg = 'some tokens cannot be expanded in an environment variable name'  # noqa: E501
+            _check_tokens_are_valid(x.name, message=msg)
+            # Transform them
             x.name = self.spec.format(x.name, transform=transform)
             try:
                 # Not every command has a value
