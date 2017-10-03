@@ -42,3 +42,9 @@ class Mpfr(AutotoolsPackage):
 
     patch('vasprintf.patch', when='@3.1.5')
     patch('strtofr.patch',   when='@3.1.5')
+
+    def configure_args(self):
+        args = [
+            '--with-gmp=' + self.spec['gmp'].prefix,
+        ]
+        return args
