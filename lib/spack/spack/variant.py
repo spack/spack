@@ -369,6 +369,15 @@ class MultiValuedVariant(AbstractVariant):
         # Otherwise we want all the values in `other` to be also in `self`
         return all(v in self.value for v in other.value)
 
+    def _cmp_key(self):
+        if isinstance(self.value, basestring):
+            return self.name, self.value
+        try:
+            iter(self.value)
+            return self.name, tuple(sorted(self.value))
+        except:
+            return self.name, self.value
+
 
 class SingleValuedVariant(MultiValuedVariant):
     """A variant that can hold multiple values, but one at a time."""
