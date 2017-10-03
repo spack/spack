@@ -41,16 +41,16 @@ class Fastqvalidator(MakefilePackage):
         sha256='70a504c5cc4838c6ac96cdd010644454615cc907df4e3794c999baf958fa734b',
     )
 
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        make('install')
+    @property
+    def build_targets(self):
+        return ['LIB_PATH_GENERAL={0}'.format(
+                join_path(self.stage.source_path, 'libStatGen-1.0.14'))]
 
-    def setup_environment(self, spack_env, run_env):
-        # Stage must already be created and tarball exapnded in order for
-        # LIB_PATH_GENERAL to be set.
-        if not self.stage.source_path:
-            self.stage.fetch()
-            self.stage.expand_archive()
-        spack_env.set('LIB_PATH_GENERAL', join_path(self.stage.source_path,
-                                                    'libStatGen-1.0.14'))
-        spack_env.set('INSTALLDIR', self.prefix.bin)
+    @property
+    def install_targets(self):
+        return [
+            'INSTALLDIR={0}'.format(self.prefix.bin),
+            'LIB_PATH_GENERAL={0}'.format(
+                join_path(self.stage.source_path, 'libStatGen-1.0.14')),
+            'install'
+        ]
