@@ -1612,7 +1612,7 @@ class Spec(object):
         if self.name in visited:
             return False
 
-        if self.concrete and self.package.installed:
+        if self.concrete:
             visited.add(self.name)
             return False
 
@@ -1809,7 +1809,7 @@ class Spec(object):
             if s.namespace is None:
                 s.namespace = spack.repo.repo_for_pkg(s.name).namespace
 
-            if s.concrete and s.package.installed:
+            if s.concrete:
                 continue
 
             # Add any patches from the package to the spec.
@@ -1831,7 +1831,7 @@ class Spec(object):
             if dspec.spec.name not in pkg_deps:
                 continue
 
-            if dspec.spec.concrete and dspec.spec.package.installed:
+            if dspec.spec.concrete:
                 continue
 
             patches = []
