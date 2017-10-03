@@ -113,16 +113,6 @@ class UnsupportedPlatformError(SpackError):
         super(UnsupportedPlatformError, self).__init__(message)
 
 
-class NoNetworkConnectionError(SpackError):
-    """Raised when an operation needs an internet connection."""
-
-    def __init__(self, message, url):
-        super(NoNetworkConnectionError, self).__init__(
-            "No network connection: " + str(message),
-            "URL was: " + str(url))
-        self.url = url
-
-
 class SpecError(SpackError):
     """Superclass for all errors that occur while constructing specs."""
 
