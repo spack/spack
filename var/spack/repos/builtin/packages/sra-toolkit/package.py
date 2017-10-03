@@ -26,9 +26,11 @@ from spack import *
 
 
 class SraToolkit(Package):
-    """FIXME: Put a proper description of your package here."""
+    """The NCBI SRA Toolkit enables reading ("dumping") of sequencing files
+       from the SRA database and writing ("loading") files into the .sra
+       format."""
 
-    homepage = "http://www.example.com"
+    homepage = "https://trace.ncbi.nlm.nih.gov/Traces/sra"
     url      = "https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.8.2-1/sratoolkit.2.8.2-1-centos_linux64.tar.gz"
 
     version('2.8.2-1', '3a2910754aea71aba5662804efff2a68')
