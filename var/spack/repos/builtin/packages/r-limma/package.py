@@ -32,4 +32,6 @@ class RLimma(RPackage):
     homepage = "https://www.bioconductor.org/packages/limma/"
     url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/limma_3.32.6.tar.gz"
     list_url = homepage
+
+    version('3.32.7', '9fb616ba50b4758307b0e89dbe3143d9')
     version('3.32.6', 'df5dc2b85189a24e939efa3a8e6abc41')
