@@ -94,6 +94,8 @@ class Openssl(Package):
         config = Executable('./config')
         config('--prefix=%s' % prefix,
                '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
+               '-I{0}'.format(self.spec['zlib'].prefix.include),
+               '-L{0}'.format(self.spec['zlib'].prefix.lib),
                *options)
 
         # Remove non-standard compiler options if present. These options are
