@@ -1813,9 +1813,10 @@ class Spec(object):
                         patches.append(patch.sha256)
             if patches:
                 # Special-case: keeps variant values unique but ordered.
-                s.variants['patches'] = MultiValuedVariant('patches', ())
-                mvar = s.variants['patches']
-                mvar._value = mvar._original_value = tuple(dedupe(patches))
+                mvar = s.variants.setdefault(
+                    'patches', MultiValuedVariant('patches', ())
+                )
+                mvar.value = patches
 
         # Apply patches required on dependencies by depends_on(..., patch=...)
         for dspec in self.traverse_edges(deptype=all,
@@ -1834,13 +1835,10 @@ class Spec(object):
             if patches:
                 # note that we use a special multi-valued variant and
                 # keep the patches ordered.
-                if 'patches' not in dspec.spec.variants:
-                    mvar = MultiValuedVariant('patches', ())
-                    dspec.spec.variants['patches'] = mvar
-                else:
-                    mvar = dspec.spec.variants['patches']
-                mvar._value = mvar._original_value = tuple(
-                    dedupe(list(mvar._value) + patches))
+                mvar = dspec.spec.variants.setdefault(
+                    'patches', MultiValuedVariant('patches', ())
+                )
+                mvar.value = mvar.value + tuple(patches)
 
         for s in self.traverse():
             if s.external_module:
