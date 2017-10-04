@@ -128,6 +128,19 @@ def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
     assert dependent['dependency-install'] == dependency
 
 
+def test_installed_dependency_request_conflicts(
+        install_mockery, mock_fetch, refresh_builtin_mock):
+    dependency = Spec('dependency-install')
+    dependency.concretize()
+    dependency.package.do_install()
+
+    dependency_hash = dependency.dag_hash()
+    dependent = Spec(
+        'conflicting-dependent ^/' + dependency_hash)
+    with pytest.raises(spack.spec.UnsatisfiableSpecError):    
+        dependent.concretize()
+
+
 def test_partial_install_keep_prefix(install_mockery, mock_fetch):
     spec = Spec('canfail')
     spec.concretize()

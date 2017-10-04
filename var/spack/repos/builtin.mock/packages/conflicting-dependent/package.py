@@ -25,14 +25,17 @@
 from spack import *
 
 
-class DependencyInstall(Package):
-    """Dependency which has a working install method"""
+class ConflictingDependent(Package):
+    """By itself this package does not have conflicts, but it is used to
+       ensure that if a user tries to build with an installed instance
+       of dependency-install@2 that there is a failure."""
 
     homepage = "http://www.example.com"
     url      = "http://www.example.com/a-1.0.tar.gz"
 
-    version('1.0', 'hash1.0')
-    version('2.0', 'hash2.0')
+    version('1.0', '0123456789abcdef0123456789abcdef')
+
+    depends_on('dependency-install@:1.0')
 
     def install(self, spec, prefix):
-        touch(join_path(prefix, 'an_installation_file'))
+        pass
