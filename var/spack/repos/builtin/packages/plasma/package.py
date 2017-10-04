@@ -37,10 +37,8 @@ class Plasma(MakefilePackage):
     conflicts("openblas-with-lapack")  # incomplete LAPACK implementation
     conflicts("veclibfort")
 
-    conflicts("gcc@:6")  # support for OpenMP 4+ is required, available in 7.0
-
-    # only GCC 7 and higher have sufficient support for OpenMP tasks
-    conflicts("%gcc@3.0:6.999")
+    # only GCC 7+ and higher have sufficient support for OpenMP 4+ tasks+deps
+    conflicts("%gcc@:6.999")
     conflicts("%cce")
     conflicts("%clang")
     conflicts("%intel")
@@ -60,18 +58,23 @@ class Plasma(MakefilePackage):
         if not spec.satisfies("^intel-mkl"):
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
 
+        # headers' CPP flags allow the compiler to find <cblas.h> file
+        if spec.satisfies("^openblas"):
+            make_inc.filter("CFLAGS +[+]=", "CFLAGS += " +
+                            spec["openblas"].headers.cpp_flags + " ")
+
         # pass prefix variable from "make.inc" to "Makefile"
         make_inc.filter("# --*", "prefix={0}".format(self.prefix))
 
-        makefile = FileFilter("Makefile")
-        makefile.filter("CC *[?]*= * cc", "")
+        # make sure CC variable comes from build environment
+        make_inc.filter("CC *[?]*= * .*cc", "")
 
     @property
     def build_targets(self):
         targets = list()
 
         # use $CC set by Spack
-        targets.append("CC = {0}".format(env["CC"]))
+        targets.append("CC = {0}".format(self.compiler.cc))
 
         if self.spec.satisfies("^intel-mkl"):
             targets.append("MKLROOT = {0}/mkl".format(env["MKLROOT"]))
