@@ -40,16 +40,14 @@ class SnapKorf(MakefilePackage):
     depends_on('sqlite')
     depends_on('sparsehash')
 
-    conflicts('%gcc@5:')
+    conflicts('%gcc@5:', when='@2013-11-29')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('snap', prefix.bin)
-        install('fathom', prefix.bin)
-        install('forge', prefix.bin)
-        install('depend', prefix.bin)
-        install('exonpairs', prefix.bin)
-        install('hmm-info', prefix.bin)
+
+        progs  = ['snap', 'fathom', 'forge', 'depend', 'exonpairs', 'hmm-info']
+        for p in progs:
+            install(p, prefix.bin)
 
         files = glob.iglob('*.pl')
         for file in files:
