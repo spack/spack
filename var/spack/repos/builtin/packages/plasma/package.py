@@ -55,13 +55,18 @@ class Plasma(MakefilePackage):
 
         make_inc = FileFilter("make.inc")
 
-        if not spec.satisfies("^intel-mkl"):
+        if not spec.satisfies("^mkl"):
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
 
-        # headers' CPP flags allow the compiler to find <cblas.h> file
-        if spec.satisfies("^openblas"):
-            make_inc.filter("CFLAGS +[+]=", "CFLAGS += " +
-                            spec["openblas"].headers.cpp_flags + " ")
+        header_flags = ""
+        # accumulate CPP flags for headers: <cblas.h> and <lapacke.h>
+        for dep in ("blas", "lapack"):
+            try:  # in case the dependency does not provide header flags
+                header_flags += " " + spec[dep].headers.cpp_flags
+            except:
+                pass
+
+        make_inc.filter("CFLAGS +[+]=", "CFLAGS += " + header_flags + " ")
 
         # pass prefix variable from "make.inc" to "Makefile"
         make_inc.filter("# --*", "prefix={0}".format(self.prefix))
@@ -76,7 +81,7 @@ class Plasma(MakefilePackage):
         # use $CC set by Spack
         targets.append("CC = {0}".format(self.compiler.cc))
 
-        if self.spec.satisfies("^intel-mkl"):
+        if self.spec.satisfies("^mkl"):
             targets.append("MKLROOT = {0}/mkl".format(env["MKLROOT"]))
 
         # pass BLAS library flags
