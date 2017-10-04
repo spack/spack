@@ -36,4 +36,4 @@ class Extendee(Package):
     version('1.0', 'hash-extendee-1.0')
 
     def install(self, spec, prefix):
-        pass
+        mkdirp(prefix.bin)
