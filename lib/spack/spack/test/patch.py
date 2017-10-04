@@ -99,9 +99,11 @@ def test_patch_in_spec(builtin_mock, config):
     spec.concretize()
     assert 'patches' in list(spec.variants.keys())
 
-    # foo, bar, baz
-    assert (('b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c',
-             '7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730',
+    # Here the order is bar, foo, baz. Note that MV variants order
+    # lexicographically based on the hash, not on the position of the
+    # patch directive.
+    assert (('7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730',
+             'b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c',
              'bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c') ==
             spec.variants['patches'].value)
 
@@ -131,8 +133,8 @@ def test_multiple_patched_dependencies(builtin_mock, config):
     # URL patches
     assert 'patches' in list(spec['fake'].variants.keys())
     # urlpatch.patch, urlpatch.patch.gz
-    assert (('abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234',
-             '1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd') ==
+    assert (('1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd',
+             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234') ==
             spec['fake'].variants['patches'].value)
 
 
@@ -159,8 +161,8 @@ def test_conditional_patched_dependencies(builtin_mock, config):
     # URL patches
     assert 'patches' in list(spec['fake'].variants.keys())
     # urlpatch.patch, urlpatch.patch.gz
-    assert (('abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234',
-             '1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd') ==
+    assert (('1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd',
+             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234') ==
             spec['fake'].variants['patches'].value)
 
 
@@ -187,6 +189,6 @@ def test_conditional_patched_deps_with_conditions(builtin_mock, config):
     # URL patches
     assert 'patches' in list(spec['fake'].variants.keys())
     # urlpatch.patch, urlpatch.patch.gz
-    assert (('abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234',
-             '1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd') ==
+    assert (('1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd',
+             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234') ==
             spec['fake'].variants['patches'].value)
