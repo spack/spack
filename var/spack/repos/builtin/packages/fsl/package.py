@@ -25,6 +25,7 @@
 from spack import *
 from spack.environment import EnvironmentModifications
 import os
+import distutils.dir_util
 
 
 class Fsl(Package):
@@ -51,8 +52,10 @@ class Fsl(Package):
     depends_on('boost')
     depends_on('sqlite')
 
+    conflicts('%gcc@6:', when='@5.0.10')
+
     def patch(self):
-        # Uncomment lines in source file
+        # Uncomment lines in source file to allow building from source
         with working_dir(join_path(self.stage.source_path, 'etc', 'fslconf')):
             sourced = FileFilter('fsl.sh')
             sourced.filter('#FSLCONFDIR', 'FSLCONFDIR')
@@ -62,38 +65,34 @@ class Fsl(Package):
         buildscript.filter('mist-clean', 'mist')
 
     def install(self, spec, prefix):
-        install(join_path(self.stage.source_path, 'etc', 'fslconf', 'fsl.sh'),
-                prefix)
         build = Executable('./build')
         build()
-        install_tree('bin', prefix.bin)
-        install_tree('config', prefix.config)
-        install_tree('data', prefix.data)
-        install_tree('doc', prefix.doc)
-        install_tree('etc', prefix.etc)
-        install_tree('extras', prefix.extras)
-        install_tree('include', prefix.include)
-        install_tree('lib', prefix.lib)
-        install_tree('refdoc', prefix.refdoc)
-        install_tree('src', prefix.src)
-        install_tree('tcl', prefix.tcl)
+
+        distutils.dir_util.copy_tree(".", prefix)
 
     def setup_environment(self, spack_env, run_env):
         if not self.stage.source_path:
             self.stage.fetch()
             self.stage.expand_archive()
+
         spack_env.set('FSLDIR', self.stage.source_path)
+
         run_env.set('FSLDIR', self.prefix)
+        run_env.set('FSLOUTPUTTYPE', 'NIFTI_GZ')
+        run_env.set('FSLMULTIFILEQUIT', 'TRUE')
+        run_env.set('FSLTCLSH', self.prefix.bin.fsltclsh)
+        run_env.set('FSLWISH', self.prefix.bin.fslwish)
+        run_env.set('FSLLOCKDIR', '')
+        run_env.set('FSLMACHINELIST', '')
+        run_env.set('FSLREMOTECALL', '')
+        run_env.set('FSLGECUDAQ', 'cuda.q')
+
         run_env.prepend_path('PATH', self.prefix)
 
-        # Below is for sourcing purposes
-        fslvars = join_path(self.prefix, 'fsl.sh')
+        # Below is for sourcing purposes during building
         fslsetup = join_path(self.stage.source_path, 'etc', 'fslconf',
                              'fsl.sh')
 
-        if os.path.isfile(fslvars):
-            run_env.extend(EnvironmentModifications.from_sourcing_file(
-                           fslvars))
         if os.path.isfile(fslsetup):
             spack_env.extend(EnvironmentModifications.from_sourcing_file(
                              fslsetup))
