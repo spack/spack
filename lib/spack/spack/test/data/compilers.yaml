@@ -122,7 +122,4 @@ compilers:
       cxx: /path/to/g++-5
       f77: None
       fc: None
-    flags:
-      cflags: -O3
-      cxxflags: -O3
     modules: 'None'
