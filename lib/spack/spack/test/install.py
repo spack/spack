@@ -137,7 +137,7 @@ def test_installed_dependency_request_conflicts(
     dependency_hash = dependency.dag_hash()
     dependent = Spec(
         'conflicting-dependent ^/' + dependency_hash)
-    with pytest.raises(spack.spec.UnsatisfiableSpecError):    
+    with pytest.raises(spack.spec.UnsatisfiableSpecError):
         dependent.concretize()
 
 
