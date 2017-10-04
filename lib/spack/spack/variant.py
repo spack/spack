@@ -267,9 +267,6 @@ class AbstractVariant(object):
         # to a set
         self._value = tuple(sorted(set(value)))
 
-    def _cmp_key(self):
-        return self.name, self.value
-
     def copy(self):
         """Returns an instance of a variant equivalent to self
 
@@ -370,13 +367,7 @@ class MultiValuedVariant(AbstractVariant):
         return all(v in self.value for v in other.value)
 
     def _cmp_key(self):
-        if isinstance(self.value, basestring):
-            return self.name, self.value
-        try:
-            iter(self.value)
-            return self.name, tuple(sorted(self.value))
-        except:
-            return self.name, self.value
+        return self.name, tuple(sorted(self.value))
 
 
 class SingleValuedVariant(MultiValuedVariant):
@@ -418,6 +409,9 @@ class SingleValuedVariant(MultiValuedVariant):
     def __contains__(self, item):
         return item == self.value
 
+    def _cmp_key(self):
+        return self.name, self.value
+
     def yaml_entry(self):
         return self.name, self.value
 
@@ -441,6 +435,9 @@ class BoolValuedVariant(SingleValuedVariant):
 
     def __contains__(self, item):
         return item is self.value
+
+    def _cmp_key(self):
+        return self.name, self.value
 
     def __str__(self):
         return '{0}{1}'.format('+' if self.value else '~', self.name)
