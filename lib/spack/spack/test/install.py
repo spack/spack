@@ -111,6 +111,23 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
             pass
 
 
+def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
+    import sys
+    dependency = Spec('dependency-install')
+    dependency.concretize()
+    dependency.package.do_install()
+
+    dependency.package.patches['dependency-install'] = (
+        sys.modules['spack.patch'].Patch.create(
+            None, 'file://fake.patch', sha256='unused-hash'))
+
+    dependency_hash = dependency.dag_hash()
+    dependent = Spec('dependent-install ^/' + dependency_hash)
+    dependent.concretize()
+
+    assert dependent['dependency-install'] == dependency
+
+
 def test_partial_install_keep_prefix(install_mockery, mock_fetch):
     spec = Spec('canfail')
     spec.concretize()
