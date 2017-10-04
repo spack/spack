@@ -192,7 +192,6 @@ def implicit_variant_conversion(method):
     return convert
 
 
-@lang.key_ordering
 class AbstractVariant(object):
     """A variant that has not yet decided who it wants to be. It behaves like
     a multi valued variant which **could** do things.
@@ -345,6 +344,7 @@ class AbstractVariant(object):
         )
 
 
+@lang.key_ordering
 class MultiValuedVariant(AbstractVariant):
     """A variant that can hold multiple values at once."""
     @implicit_variant_conversion
