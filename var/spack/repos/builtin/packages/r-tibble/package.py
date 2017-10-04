@@ -39,5 +39,6 @@ class RTibble(RPackage):
     depends_on('r@3.1.2:')
 
     depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'))
+    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
     depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
