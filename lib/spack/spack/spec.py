@@ -1812,11 +1812,12 @@ class Spec(object):
                     for patch in patch_list:
                         patches.append(patch.sha256)
             if patches:
-                # Special-case: keeps variant values unique but ordered.
                 mvar = s.variants.setdefault(
                     'patches', MultiValuedVariant('patches', ())
                 )
                 mvar.value = patches
+                # FIXME: Monkey patches mvar to store patches order
+                mvar._patches_in_order_of_appearance = patches
 
         # Apply patches required on dependencies by depends_on(..., patch=...)
         for dspec in self.traverse_edges(deptype=all,
@@ -1833,12 +1834,13 @@ class Spec(object):
                             for patch in patch_list:
                                 patches.append(patch.sha256)
             if patches:
-                # note that we use a special multi-valued variant and
-                # keep the patches ordered.
                 mvar = dspec.spec.variants.setdefault(
                     'patches', MultiValuedVariant('patches', ())
                 )
                 mvar.value = mvar.value + tuple(patches)
+                # FIXME: Monkey patches mvar to store patches order
+                l = getattr(mvar, '_patches_in_order_of_appearance', [])
+                mvar._patches_in_order_of_appearance = dedupe(l + patches)
 
         for s in self.traverse():
             if s.external_module:
@@ -2521,7 +2523,11 @@ class Spec(object):
             return []
 
         patches = []
-        for sha256 in self.variants['patches'].value:
+
+        # FIXME: The private attribute below is attached after
+        # FIXME: concretization to store the order of patches somewhere.
+        # FIXME: Needs to be refactored in a cleaner way.
+        for sha256 in self.variants['patches']._patches_in_order_of_appearance:
             patch = self.package.lookup_patch(sha256)
             if patch:
                 patches.append(patch)
