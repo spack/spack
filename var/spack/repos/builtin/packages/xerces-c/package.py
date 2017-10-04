@@ -33,7 +33,7 @@ class XercesC(AutotoolsPackage):
     APIs."""
 
     homepage = "https://xerces.apache.org/xerces-c"
-    url      = "https://www.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
+    url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
 
     version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
 

@@ -190,9 +190,9 @@ def set_build_environment_variables(pkg, env, dirty):
         dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
-    build_deps      = pkg.spec.dependencies(deptype='build')
-    link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
-    build_link_deps = pkg.spec.traverse(root=False, deptype=('build', 'link'))
+    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
 
     build_prefixes      = [dep.prefix for dep in build_deps]
@@ -749,14 +749,14 @@ class ChildError(InstallError):
             # The error happened in some external executed process. Show
             # the build log with errors highlighted.
             if self.build_log:
-                events = parse_log_events(self.build_log)
-                nerr = len(events)
+                errors, warnings = parse_log_events(self.build_log)
+                nerr = len(errors)
                 if nerr > 0:
                     if nerr == 1:
                         out.write("\n1 error found in build log:\n")
                     else:
                         out.write("\n%d errors found in build log:\n" % nerr)
-                    out.write(make_log_context(events))
+                    out.write(make_log_context(errors))
 
         else:
             # The error happened in in the Python code, so try to show

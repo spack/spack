@@ -47,6 +47,7 @@ class Glib(AutotoolsPackage):
     depends_on('libffi')
     depends_on('zlib')
     depends_on('gettext')
+    depends_on('perl', type=('build', 'run'))
     depends_on('pcre+utf', when='@2.48:')
     depends_on('util-linux', when='+libmount')
 
@@ -76,3 +77,11 @@ class Glib(AutotoolsPackage):
             args.append("--disable-shared")
 
         return args
+
+    @run_before('install')
+    def filter_sbang(self):
+        # Filter sbang before install so Spack's sbang hook can fix it up
+        perl = join_path(self.spec['perl'].prefix.bin, 'perl')
+        files = ['gobject/glib-mkenums']
+
+        filter_file('^#! /usr/bin/perl', '#!{0}'.format(perl), *files)

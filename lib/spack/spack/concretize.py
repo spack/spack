@@ -404,7 +404,7 @@ def find_spec(spec, condition, default=None):
         visited.add(id(relative))
 
     # Then search all other relatives in the DAG *except* spec
-    for relative in spec.root.traverse(deptypes=spack.alldeps):
+    for relative in spec.root.traverse(deptypes=all):
         if relative is spec:
             continue
         if id(relative) in visited:
