@@ -77,6 +77,10 @@ class Fsl(Package):
 
         spack_env.set('FSLDIR', self.stage.source_path)
 
+        # Here, run-time environment variables are being set manually.
+        # Normally these would be added to the modulefile at build-time
+        # by sourcing fsl.sh, but incorrect paths were being set, pointing to
+        # the staging directory rather than the install directory.
         run_env.set('FSLDIR', self.prefix)
         run_env.set('FSLOUTPUTTYPE', 'NIFTI_GZ')
         run_env.set('FSLMULTIFILEQUIT', 'TRUE')
