@@ -183,11 +183,11 @@ class Qmcpack(CMakePackage):
             args.append('-DENABLE_TIMERS=0')
 
     #     # Proper MKL detection not working.
-    #     # Include MKL flags     
+    #     # Include MKL flags
     #     if 'intel-mkl' in self.spec:
     #         args.append('-DBLA_VENDOR=Intel10_64lp_seq')
     #         args.append('-DQMC_INCLUDE={0}'.format(join_path(env['MKLROOT'],'include')))
-          return args
+        return args
 
     # def setup_environment(self, spack_env, run_env):
     #     # Add MKLROOT/lib to the CMAKE_PREFIX_PATH to enable CMake to find MKL libraries.
