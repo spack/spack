@@ -98,8 +98,15 @@ class Qmcpack(CMakePackage):
 
     # B-spline basis calculation require a patched version of
     # Quantum Espresso 5.3.0 (see QMCPACK manual)
-    depends_on('espresso@5.3.0+qmcpackconv~elpa', when='+mpi')
-    depends_on('espresso@5.3.0+qmcpackconv~elpa~scalapack~mpi', when='~mpi')
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_espresso-5.3.0.diff'
+    patch_checksum = '0d8d7ba805313ddd4c02ee32c96d2f12e7091e9e82e22671d3ad5a24247860c4'
+    depends_on('espresso@5.3.0~elpa',
+               patches=patch(patch_url, sha256=patch_checksum),
+               when='+mpi')
+
+    depends_on('espresso@5.3.0~elpa~scalapack~mpi',
+               patches=patch(patch_url, sha256=patch_checksum),
+               when='~mpi')
 
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
