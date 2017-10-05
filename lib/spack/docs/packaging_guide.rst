@@ -2572,6 +2572,11 @@ passes those flags to the relevant environment variables (``CFLAGS``,
 packages, the default behavior is to inject the flags directly into the
 compiler commands using Spack's compiler wrappers.
 
+.. warning::
+
+   The flag handling methods described in this section are in beta.
+   The exact semantics are liable to change to improve usability.
+
 Individual packages can override the default behavior for the flag
 handling.  Packages can define a ``default_flag_handler`` method that
 applies to all sets of flags handled by Spack, or may define
