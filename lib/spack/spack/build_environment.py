@@ -503,7 +503,9 @@ def setup_package(pkg, dirty):
     spack_env.apply_modifications()
 
     # All module loads that otherwise would belong in previous functions
-    # have to occur after previous line. They are now here
+    # have to occur after the spack_env object has its modifications applied.
+    # Otherwise the environment modifications could undo module changes, such
+    # as unsetting LD_LIBRARY_PATH after a module changes it.
     for mod in pkg.compiler.modules:
         # Fixes issue https://github.com/LLNL/spack/issues/3153
         if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
