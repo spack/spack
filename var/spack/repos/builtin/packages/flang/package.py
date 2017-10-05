@@ -58,3 +58,8 @@ class Flang(CMakePackage):
         ]
 
         return options
+
+    @run_after('install')
+    def post_install(self):
+        symlink(os.path.join(self.spec['llvm'].prefix.bin, 'flang'),
+                os.path.join(self.prefix.bin, 'flang'))
