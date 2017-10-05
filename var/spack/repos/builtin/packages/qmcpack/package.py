@@ -181,18 +181,19 @@ class Qmcpack(CMakePackage):
             args.append('-DENABLE_TIMERS=1')
         elif '~timers' in self.spec:
             args.append('-DENABLE_TIMERS=0')
-        
-        # Include MKL flags     
-        if 'intel-mkl' in self.spec:
-            args.append('-DBLA_VENDOR=Intel10_64lp_seq')
-            args.append('-DQMC_INCLUDE={0}'.format(join_path(env['MKLROOT'],'include')))
-        return args
 
-    def setup_environment(self, spack_env, run_env):
-        # Add MKLROOT/lib to the CMAKE_PREFIX_PATH to enable CMake to find MKL libraries.
-        # MKLROOT environment variable must be defined for this to work properly.
-        if 'intel-mkl' in self.spec:
-            spack_env.append_path('CMAKE_PREFIX_PATH',format(join_path(env['MKLROOT'],'lib')))
+    #     # Proper MKL detection not working.        
+    #     # Include MKL flags     
+    #     if 'intel-mkl' in self.spec:
+    #         args.append('-DBLA_VENDOR=Intel10_64lp_seq')
+    #         args.append('-DQMC_INCLUDE={0}'.format(join_path(env['MKLROOT'],'include')))
+    #     return args
+
+    # def setup_environment(self, spack_env, run_env):
+    #     # Add MKLROOT/lib to the CMAKE_PREFIX_PATH to enable CMake to find MKL libraries.
+    #     # MKLROOT environment variable must be defined for this to work properly.
+    #     if 'intel-mkl' in self.spec:
+    #         spack_env.append_path('CMAKE_PREFIX_PATH',format(join_path(env['MKLROOT'],'lib')))
 
     def install(self, spec, prefix):
         """Make the install targets"""
