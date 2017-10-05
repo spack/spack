@@ -460,6 +460,30 @@ def print_section(section):
         raise ConfigError("Error reading configuration: %s" % section)
 
 
+def print_raw_sections(sections):
+    """Print a configuration to stdout."""
+    try:
+        first = True
+        total_config = ""
+        conf = None
+        for sec in sections:
+            if first:
+                conf = get_config(sec)
+                total_config = "%s" % sec
+                first = False
+            else:
+                if sec == "LEN":
+                    print(len(conf))
+                    return
+                if sec.isdigit():
+                    sec = int(sec)
+                conf = conf[sec]
+                total_config = "%s %s" % (total_config, sec)
+        print(conf)
+    except (yaml.YAMLError, IOError):
+        raise ConfigError("Error reading configuration: %s" % total_config)
+
+
 class ConfigError(SpackError):
     pass
 
