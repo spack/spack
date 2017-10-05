@@ -27,6 +27,7 @@ from spack import *
 
 class TheSilverSearcher(AutotoolsPackage):
     """Fast recursive grep alternative"""
+
     homepage = "http://geoff.greer.fm/ag/"
     url      = "https://geoff.greer.fm/ag/releases/the_silver_searcher-2.1.0.tar.gz"
 
