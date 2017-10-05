@@ -2535,8 +2535,9 @@ class Spec(object):
 
             # if not found in this package, check immediate dependents
             # for dependency patches
-            for dep in self._dependents:
-                patch = dep.parent.package.lookup_patch(sha256)
+            for dep_spec in self._dependents.values():
+                patch = dep_spec.parent.package.lookup_patch(sha256)
+
                 if patch:
                     patches.append(patch)
 
