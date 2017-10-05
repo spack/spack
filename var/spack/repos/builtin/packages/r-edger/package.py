@@ -25,20 +25,20 @@
 from spack import *
 
 
-class RTibble(RPackage):
-    """Provides a 'tbl_df' class that offers better checking and printing
-    capabilities than traditional data frames."""
+class REdger(RPackage):
+    """Differential expression analysis of RNA-seq expression profiles with
+       biological replication. Implements a range of statistical methodology
+       based on the negative binomial distributions, including empirical Bayes
+       estimation, exact tests, generalized linear models and quasi-likelihood
+       tests. As well as RNA-seq, it be applied to differential signal analysis
+       of other types of genomic data that produce counts, including ChIP-seq,
+       SAGE and CAGE."""
 
-    homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
+    homepage = "https://bioconductor.org/packages/edgeR/"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/edgeR_3.18.1.tar.gz"
     list_url = homepage
-    version('1.3.4', '298e81546f999fb0968625698511b8d3')
-    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
-    version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
 
-    depends_on('r@3.1.2:')
+    version('3.18.1', 'f074fe4d8f220efe27d61c0666e4b270')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
+    depends_on('r-limma', type=('build', 'run'))
+    depends_on('r-locfit', type=('build', 'run'))
