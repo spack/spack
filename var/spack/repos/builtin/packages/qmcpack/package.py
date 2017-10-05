@@ -155,21 +155,21 @@ class Qmcpack(CMakePackage):
         # '-DQMC_MIXED_PRECISION=1'
         #
         # There is a double-precision CUDA path, but it is not as well
-        # tested. 
+        # tested.
 
         if '+cuda' in self.spec:
             args.append('-DQMC_CUDA=1')
         elif '~cuda' in self.spec:
             args.append('-DQMC_CUDA=0')
 
-        # Mixed-precision versues double-precision CPU and GPU code        
+        # Mixed-precision versues double-precision CPU and GPU code
         if '+mixed' in self.spec:
             args.append('-DQMC_MIXED_PRECISION=1')
         elif '~mixed' in self.spec:
             args.append('-DQMC_MIXED_PRECISION=0')
 
         # New Structure-of-Array (SOA) code, much faster than default
-        # Array-of-Structure (AOS) code. 
+        # Array-of-Structure (AOS) code.
         # No support for local atomic orbital basis.
         if '+soa' in self.spec:
             args.append('-DENABLE_SOA=1')
@@ -182,7 +182,7 @@ class Qmcpack(CMakePackage):
         elif '~timers' in self.spec:
             args.append('-DENABLE_TIMERS=0')
 
-    #     # Proper MKL detection not working.        
+    #     # Proper MKL detection not working.
     #     # Include MKL flags     
     #     if 'intel-mkl' in self.spec:
     #         args.append('-DBLA_VENDOR=Intel10_64lp_seq')
