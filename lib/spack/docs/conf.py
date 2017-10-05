@@ -135,6 +135,20 @@ for line in fileinput.input('spack.rst', inplace=1):
 # Enable todo items
 todo_include_todos = True
 
+#
+# Disable duplicate cross-reference warnings.
+#
+from sphinx.domains.python import PythonDomain
+class PatchedPythonDomain(PythonDomain):
+    def resolve_xref(self, env, fromdocname, builder, typ, target, node, contnode):
+        if 'refspecific' in node:
+            del node['refspecific']
+        return super(PatchedPythonDomain, self).resolve_xref(
+            env, fromdocname, builder, typ, target, node, contnode)
+
+def setup(sphinx):
+    sphinx.override_domain(PatchedPythonDomain)
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.

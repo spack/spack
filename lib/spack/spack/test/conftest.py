@@ -42,8 +42,11 @@ import spack.repository
 import spack.stage
 import spack.util.executable
 import spack.util.pattern
+from spack.dependency import *
 from spack.package import PackageBase
 from spack.fetch_strategy import *
+from spack.spec import Spec
+from spack.version import Version
 
 
 ##########
@@ -259,7 +262,10 @@ def database(tmpdir_factory, builtin_mock, config):
 
     with spack.store.db.write_transaction():
         for spec in spack.store.db.query():
-            t.uninstall(spec)
+            if spec.package.installed:
+                t.uninstall(spec)
+            else:
+                spack.store.db.remove(spec)
 
     install_path.remove(rec=1)
     spack.store.root = str(spack_install_path)
@@ -549,3 +555,63 @@ def mock_svn_repository():
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
     current.chdir()
+
+
+##########
+# Mock packages
+##########
+
+
+class MockPackage(object):
+
+    def __init__(self, name, dependencies, dependency_types, conditions=None,
+                 versions=None):
+        self.name = name
+        self.spec = None
+        self.dependencies = ordereddict_backport.OrderedDict()
+
+        assert len(dependencies) == len(dependency_types)
+        for dep, dtype in zip(dependencies, dependency_types):
+            d = Dependency(self, Spec(dep.name), type=dtype)
+            if not conditions or dep.name not in conditions:
+                self.dependencies[dep.name] = {Spec(name): d}
+            else:
+                self.dependencies[dep.name] = {Spec(conditions[dep.name]): d}
+
+        if versions:
+            self.versions = versions
+        else:
+            versions = list(Version(x) for x in [1, 2, 3])
+            self.versions = dict((x, {'preferred': False}) for x in versions)
+
+        self.variants = {}
+        self.provided = {}
+        self.conflicts = {}
+        self.patches = {}
+
+
+class MockPackageMultiRepo(object):
+
+    def __init__(self, packages):
+        self.spec_to_pkg = dict((x.name, x) for x in packages)
+        self.spec_to_pkg.update(
+            dict(('mockrepo.' + x.name, x) for x in packages))
+
+    def get(self, spec):
+        if not isinstance(spec, spack.spec.Spec):
+            spec = Spec(spec)
+        return self.spec_to_pkg[spec.name]
+
+    def get_pkg_class(self, name):
+        return self.spec_to_pkg[name]
+
+    def exists(self, name):
+        return name in self.spec_to_pkg
+
+    def is_virtual(self, name):
+        return False
+
+    def repo_for_pkg(self, name):
+        import collections
+        Repo = collections.namedtuple('Repo', ['namespace'])
+        return Repo('mockrepo')
