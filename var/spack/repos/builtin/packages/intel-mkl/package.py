@@ -216,5 +216,4 @@ class IntelMkl(IntelPackage):
         else:
             if os.path.isfile(mklvars):
                 run_env.extend(EnvironmentModifications.from_sourcing_file(
-                    mklvars,'intel64'))
-           
+                    mklvars, 'intel64'))
