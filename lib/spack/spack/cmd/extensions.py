@@ -31,6 +31,7 @@ import spack
 import spack.cmd
 import spack.cmd.find
 import spack.store
+from spack.directory_layout import YamlViewExtensionsLayout
 
 description = "list extensions for package"
 section = "extensions"
@@ -48,6 +49,9 @@ def setup_parser(subparser):
     format_group.add_argument(
         '-d', '--deps', action='store_const', dest='mode', const='deps',
         help='show full dependency DAG of extensions')
+    subparser.add_argument(
+        '-v', '--view', metavar='VIEW', type=str,
+        help="the view to operate on")
 
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
@@ -86,6 +90,10 @@ def extensions(parser, args):
     tty.msg("%d extensions:" % len(extensions))
     colify(ext.name for ext in extensions)
 
+    layout = spack.store.extensions
+    if args.view is not None:
+        layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
+
     #
     # List specs of installed extensions.
     #
@@ -95,14 +103,13 @@ def extensions(parser, args):
     print
     if not installed:
         tty.msg("None installed.")
-        return
     tty.msg("%d installed:" % len(installed))
     spack.cmd.find.display_specs(installed, mode=args.mode)
 
     #
-    # List specs of globally activated extensions.
+    # List specs of activated extensions.
     #
-    activated = spack.store.extensions.extension_map(spec)
+    activated = layout.extension_map(spec)
     print
     if not activated:
         tty.msg("None activated.")
