@@ -33,11 +33,6 @@ class Nghttp2(AutotoolsPackage):
 
     version('1.26.0', '83fa813b22bacbc6ea80dfb24847569f')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
     def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
         args = []
         return args
