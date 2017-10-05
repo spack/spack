@@ -26,7 +26,8 @@ from spack import *
 
 
 class Nghttp2(AutotoolsPackage):
-    """nghttp2 is an implementation of HTTP/2 and its header compression algorithm HPACK in C."""
+    """nghttp2 is an implementation of HTTP/2 and its header compression
+       algorithm HPACK in C."""
 
     homepage = "https://nghttp2.org/"
     url      = "https://github.com/nghttp2/nghttp2/releases/download/v1.26.0/nghttp2-1.26.0.tar.gz"
