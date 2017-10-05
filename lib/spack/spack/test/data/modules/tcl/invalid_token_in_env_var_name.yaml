@@ -7,13 +7,12 @@ tcl:
         - CMAKE_PREFIX_PATH
     environment:
       set:
-        '${PACKAGE}_ROOT': '${PREFIX}'
+        '${PACKAGE}_ROOT_${PREFIX}': '${PREFIX}'
 
   'platform=test target=x86_64':
     environment:
       set:
-        FOO: 'foo'
-        OMPI_MCA_mpi_leave_pinned: '1'
+        FOO_${OPTIONS}: 'foo'
       unset:
         - BAR
 
