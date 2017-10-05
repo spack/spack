@@ -34,6 +34,7 @@ class Extension1(Package):
     extends('extendee')
 
     version('1.0', 'hash-extension1-1.0')
+    version('2.0', 'hash-extension1-2.0')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
