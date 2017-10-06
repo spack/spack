@@ -25,20 +25,17 @@
 from spack import *
 
 
-class RTibble(RPackage):
-    """Provides a 'tbl_df' class that offers better checking and printing
-    capabilities than traditional data frames."""
+class RAbadata(RPackage):
+    """Provides the data for the gene expression enrichment analysis
+    conducted in the package 'ABAEnrichment'. The package includes three
+    datasets which are derived from the Allen Brain Atlas: (1) Gene
+    expression data from Human Brain (adults) averaged across donors,
+    (2) Gene expression data from the Developing Human Brain pooled into
+    five age categories and averaged across donors and (3) a developmental
+    effect score based on the Developing Human Brain expression data.
+    All datasets are restricted to protein coding genes."""
 
-    homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
-    list_url = homepage
-    version('1.3.4', '298e81546f999fb0968625698511b8d3')
-    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
-    version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
+    homepage = "https://bioconductor.org/packages/ABAData/"
+    url      = "https://bioconductor.org/packages/release/data/experiment/src/contrib/ABAData_1.6.0.tar.gz"
 
-    depends_on('r@3.1.2:')
-
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
+    version('1.6.0', '9adfb9fbb39ad05cf72852a229476fb7')

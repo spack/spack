@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,20 +25,10 @@
 from spack import *
 
 
-class RTibble(RPackage):
-    """Provides a 'tbl_df' class that offers better checking and printing
-    capabilities than traditional data frames."""
+class Sandbox(AutotoolsPackage):
+    """sandbox'd LD_PRELOAD hack by Gentoo Linux"""
 
-    homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
-    list_url = homepage
-    version('1.3.4', '298e81546f999fb0968625698511b8d3')
-    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
-    version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
+    homepage = "https://www.gentoo.org/proj/en/portage/sandbox/"
+    url      = "https://dev.gentoo.org/~mgorny/dist/sandbox-2.12.tar.xz"
 
-    depends_on('r@3.1.2:')
-
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
+    version('2.12', 'be97a391dd0696ab1813ca7aad455471')

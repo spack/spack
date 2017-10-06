@@ -25,20 +25,13 @@
 from spack import *
 
 
-class RTibble(RPackage):
-    """Provides a 'tbl_df' class that offers better checking and printing
-    capabilities than traditional data frames."""
+class RLocfit(RPackage):
+    """Local regression, likelihood and density estimation."""
 
-    homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
+    homepage = "https://cran.rstudio.com/web/packages/locfit/index.html"
+    url      = "https://cran.rstudio.com/src/contrib/locfit_1.5-9.1.tar.gz"
     list_url = homepage
-    version('1.3.4', '298e81546f999fb0968625698511b8d3')
-    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
-    version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
 
-    depends_on('r@3.1.2:')
+    version('1.5-9.1', '38af7791c9cda78e2804020e65ac7fb4')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
+    depends_on('r-lattice', type=('build', 'run'))

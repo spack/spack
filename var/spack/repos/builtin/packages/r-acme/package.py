@@ -25,20 +25,21 @@
 from spack import *
 
 
-class RTibble(RPackage):
-    """Provides a 'tbl_df' class that offers better checking and printing
-    capabilities than traditional data frames."""
+class RAcme(RPackage):
+    """ACME (Algorithms for Calculating Microarray Enrichment) is a set
+    of tools for analysing tiling array ChIP/chip, DNAse hypersensitivity,
+    or other experiments that result in regions of the genome showing
+    "enrichment". It does not rely on a specific array technology
+    (although the array should be a "tiling" array), is very general
+    (can be applied in experiments resulting in regions of enrichment),
+    and is very insensitive to array noise or normalization methods.
+    It is also very fast and can be applied on whole-genome tiling array
+    experiments quite easily with enough memory."""
 
-    homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
-    list_url = homepage
-    version('1.3.4', '298e81546f999fb0968625698511b8d3')
-    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
-    version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
+    homepage = "https://www.bioconductor.org/packages/ACME/"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/ACME_2.32.0.tar.gz"
 
-    depends_on('r@3.1.2:')
+    version('2.32.0', 'f99ea6b94399fd7a10f55ac7e7ec04fa')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-biocgenerics', type=('build', 'run'))

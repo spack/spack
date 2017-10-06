@@ -61,9 +61,20 @@ class Esmf(MakefilePackage):
     # Testing dependencies
     # depends_on('perl', type='test')  # TODO: Add a test deptype
 
-    # NOTE: ESMF cannot be installed with GCC 6. It uses constructs that
-    # are no longer valid in GCC 6. GCC 4 is recommended for installation.
-    conflicts('%gcc@6:')
+    # Make esmf build with newer gcc versions
+    # https://sourceforge.net/p/esmf/esmf/ci/3706bf758012daebadef83d6575c477aeff9c89b/
+    patch('gcc.patch', when='@:7.0.99 %gcc@6:')
+
+    # Fix undefined reference errors with mvapich2
+    # https://sourceforge.net/p/esmf/esmf/ci/34de0ccf556ba75d35c9687dae5d9f666a1b2a18/
+    patch('mvapich2.patch', when='@:7.0.99')
+
+    # Make script from mvapich2.patch executable
+    @run_before('build')
+    @when('@:7.0.99')
+    def chmod_scripts(self):
+        chmod = which('chmod')
+        chmod('+x', 'scripts/libs.mvapich2f90')
 
     def url_for_version(self, version):
         return "http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
@@ -167,7 +178,7 @@ class Esmf(MakefilePackage):
 
             # Specifies the linker directive needed to link the LAPACK library
             # to the application.
-            os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].lapack_libs.link_flags  # noqa
+            os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].libs.link_flags  # noqa
         else:
             # Disables LAPACK-dependent code.
             os.environ['ESMF_LAPACK'] = 'OFF'
