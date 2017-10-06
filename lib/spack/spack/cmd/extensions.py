@@ -50,6 +50,10 @@ def setup_parser(subparser):
         '-d', '--deps', action='store_const', dest='mode', const='deps',
         help='show full dependency DAG of extensions')
     subparser.add_argument(
+        '-s', '--show', dest='show', metavar='TYPE', type=str,
+        default='all',
+        help="one of packages, installed, activated, all")
+    subparser.add_argument(
         '-v', '--view', metavar='VIEW', type=str,
         help="the view to operate on")
 
@@ -61,6 +65,24 @@ def setup_parser(subparser):
 def extensions(parser, args):
     if not args.spec:
         tty.die("extensions requires a package spec.")
+
+    show_packages = False
+    show_installed = False
+    show_activated = False
+    show_all = False
+    if args.show == 'packages':
+        show_packages = True
+    elif args.show == 'installed':
+        show_installed = True
+    elif args.show == 'activated':
+        show_activated = True
+    elif args.show == 'all':
+        show_packages = True
+        show_installed = True
+        show_activated = True
+        show_all = True
+    else:
+        tty.die('unrecognized show type: %s' % args.show)
 
     #
     # Checks
@@ -80,40 +102,46 @@ def extensions(parser, args):
     if not args.mode:
         args.mode = 'short'
 
-    #
-    # List package names of extensions
-    extensions = spack.repo.extensions_for(spec)
-    if not extensions:
-        tty.msg("%s has no extensions." % spec.cshort_spec)
-        return
-    tty.msg(spec.cshort_spec)
-    tty.msg("%d extensions:" % len(extensions))
-    colify(ext.name for ext in extensions)
+    if show_packages:
+        #
+        # List package names of extensions
+        extensions = spack.repo.extensions_for(spec)
+        if not extensions:
+            tty.msg("%s has no extensions." % spec.cshort_spec)
+        else:
+            tty.msg(spec.cshort_spec)
+            tty.msg("%d extensions:" % len(extensions))
+            colify(ext.name for ext in extensions)
 
     layout = spack.store.extensions
     if args.view is not None:
         layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
 
-    #
-    # List specs of installed extensions.
-    #
-    installed = [s.spec
-                 for s in spack.store.db.installed_extensions_for(spec)]
+    if show_installed:
+        #
+        # List specs of installed extensions.
+        #
+        installed = [s.spec
+                     for s in spack.store.db.installed_extensions_for(spec)]
 
-    print
-    if not installed:
-        tty.msg("None installed.")
-    tty.msg("%d installed:" % len(installed))
-    spack.cmd.find.display_specs(installed, mode=args.mode)
+        if show_all:
+            print
+        if not installed:
+            tty.msg("None installed.")
+        else:
+            tty.msg("%d installed:" % len(installed))
+            spack.cmd.find.display_specs(installed, mode=args.mode)
 
-    #
-    # List specs of activated extensions.
-    #
-    activated = layout.extension_map(spec)
-    print
-    if not activated:
-        tty.msg("None activated.")
-        return
-    tty.msg("%d currently activated:" % len(activated))
-    spack.cmd.find.display_specs(
-        activated.values(), mode=args.mode, long=args.long)
+    if show_activated:
+        #
+        # List specs of activated extensions.
+        #
+        activated = layout.extension_map(spec)
+        if show_all:
+            print
+        if not activated:
+            tty.msg("None activated.")
+        else:
+            tty.msg("%d currently activated:" % len(activated))
+            spack.cmd.find.display_specs(
+                activated.values(), mode=args.mode, long=args.long)
