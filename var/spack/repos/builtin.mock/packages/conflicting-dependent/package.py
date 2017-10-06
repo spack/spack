@@ -25,14 +25,17 @@
 from spack import *
 
 
-class RBoot(RPackage):
-    """Functions and datasets for bootstrapping from the book "Bootstrap
-    Methods and Their Application" by A. C. Davison and D. V. Hinkley (1997,
-    CUP), originally written by Angelo Canty for S."""
+class ConflictingDependent(Package):
+    """By itself this package does not have conflicts, but it is used to
+       ensure that if a user tries to build with an installed instance
+       of dependency-install@2 that there is a failure."""
 
-    homepage = "https://cran.r-project.org/package=boot"
-    url      = "https://cran.r-project.org/src/contrib/boot_1.3-18.tar.gz"
-    list_url = homepage
+    homepage = "http://www.example.com"
+    url      = "http://www.example.com/a-1.0.tar.gz"
 
-    version('1.3-20', 'bb879fb4204a4f94ab82c98dd1ad5eca')
-    version('1.3-18', '711dd58af14e1027eb8377d9202e9b6f')
+    version('1.0', '0123456789abcdef0123456789abcdef')
+
+    depends_on('dependency-install@:1.0')
+
+    def install(self, spec, prefix):
+        pass

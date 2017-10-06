@@ -25,14 +25,17 @@
 from spack import *
 
 
-class RBoot(RPackage):
-    """Functions and datasets for bootstrapping from the book "Bootstrap
-    Methods and Their Application" by A. C. Davison and D. V. Hinkley (1997,
-    CUP), originally written by Angelo Canty for S."""
+class RAbadata(RPackage):
+    """Provides the data for the gene expression enrichment analysis
+    conducted in the package 'ABAEnrichment'. The package includes three
+    datasets which are derived from the Allen Brain Atlas: (1) Gene
+    expression data from Human Brain (adults) averaged across donors,
+    (2) Gene expression data from the Developing Human Brain pooled into
+    five age categories and averaged across donors and (3) a developmental
+    effect score based on the Developing Human Brain expression data.
+    All datasets are restricted to protein coding genes."""
 
-    homepage = "https://cran.r-project.org/package=boot"
-    url      = "https://cran.r-project.org/src/contrib/boot_1.3-18.tar.gz"
-    list_url = homepage
+    homepage = "https://bioconductor.org/packages/ABAData/"
+    url      = "https://bioconductor.org/packages/release/data/experiment/src/contrib/ABAData_1.6.0.tar.gz"
 
-    version('1.3-20', 'bb879fb4204a4f94ab82c98dd1ad5eca')
-    version('1.3-18', '711dd58af14e1027eb8377d9202e9b6f')
+    version('1.6.0', '9adfb9fbb39ad05cf72852a229476fb7')

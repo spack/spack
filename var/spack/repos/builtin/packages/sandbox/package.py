@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,14 +25,10 @@
 from spack import *
 
 
-class RBoot(RPackage):
-    """Functions and datasets for bootstrapping from the book "Bootstrap
-    Methods and Their Application" by A. C. Davison and D. V. Hinkley (1997,
-    CUP), originally written by Angelo Canty for S."""
+class Sandbox(AutotoolsPackage):
+    """sandbox'd LD_PRELOAD hack by Gentoo Linux"""
 
-    homepage = "https://cran.r-project.org/package=boot"
-    url      = "https://cran.r-project.org/src/contrib/boot_1.3-18.tar.gz"
-    list_url = homepage
+    homepage = "https://www.gentoo.org/proj/en/portage/sandbox/"
+    url      = "https://dev.gentoo.org/~mgorny/dist/sandbox-2.12.tar.xz"
 
-    version('1.3-20', 'bb879fb4204a4f94ab82c98dd1ad5eca')
-    version('1.3-18', '711dd58af14e1027eb8377d9202e9b6f')
+    version('2.12', 'be97a391dd0696ab1813ca7aad455471')

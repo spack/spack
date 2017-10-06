@@ -25,14 +25,21 @@
 from spack import *
 
 
-class RBoot(RPackage):
-    """Functions and datasets for bootstrapping from the book "Bootstrap
-    Methods and Their Application" by A. C. Davison and D. V. Hinkley (1997,
-    CUP), originally written by Angelo Canty for S."""
+class RAcme(RPackage):
+    """ACME (Algorithms for Calculating Microarray Enrichment) is a set
+    of tools for analysing tiling array ChIP/chip, DNAse hypersensitivity,
+    or other experiments that result in regions of the genome showing
+    "enrichment". It does not rely on a specific array technology
+    (although the array should be a "tiling" array), is very general
+    (can be applied in experiments resulting in regions of enrichment),
+    and is very insensitive to array noise or normalization methods.
+    It is also very fast and can be applied on whole-genome tiling array
+    experiments quite easily with enough memory."""
 
-    homepage = "https://cran.r-project.org/package=boot"
-    url      = "https://cran.r-project.org/src/contrib/boot_1.3-18.tar.gz"
-    list_url = homepage
+    homepage = "https://www.bioconductor.org/packages/ACME/"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/ACME_2.32.0.tar.gz"
 
-    version('1.3-20', 'bb879fb4204a4f94ab82c98dd1ad5eca')
-    version('1.3-18', '711dd58af14e1027eb8377d9202e9b6f')
+    version('2.32.0', 'f99ea6b94399fd7a10f55ac7e7ec04fa')
+
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-biocgenerics', type=('build', 'run'))

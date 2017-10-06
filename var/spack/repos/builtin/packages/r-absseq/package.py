@@ -25,14 +25,16 @@
 from spack import *
 
 
-class RBoot(RPackage):
-    """Functions and datasets for bootstrapping from the book "Bootstrap
-    Methods and Their Application" by A. C. Davison and D. V. Hinkley (1997,
-    CUP), originally written by Angelo Canty for S."""
+class RAbsseq(RPackage):
+    """Inferring differential expression genes by absolute counts
+    difference between two groups, utilizing Negative binomial
+    distribution and moderating fold-change according to heterogeneity
+    of dispersion across expression level."""
 
-    homepage = "https://cran.r-project.org/package=boot"
-    url      = "https://cran.r-project.org/src/contrib/boot_1.3-18.tar.gz"
-    list_url = homepage
+    homepage = "https://www.bioconductor.org/packages/ABSSeq/"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/ABSSeq_1.22.8.tar.gz"
 
-    version('1.3-20', 'bb879fb4204a4f94ab82c98dd1ad5eca')
-    version('1.3-18', '711dd58af14e1027eb8377d9202e9b6f')
+    version('1.22.8', 'bfdb1800f2e7c60dfa7f6b43026ec8f9')
+
+    depends_on('r-locfit', type=('build', 'run'))
+    depends_on('r-limma', type=('build', 'run'))
