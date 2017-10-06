@@ -186,7 +186,7 @@ class Ncl(Package):
             # Parent installation directory :
             '\'' + self.spec.prefix + '\'\n',
             # System temp space directory   :
-            '\'' + tempfile.mkdtemp(prefix='ncl_ncar_') + '\'\n',
+            '\'' + tempfile.gettempdir() + '\'\n',
             # Build NetCDF4 feature support (optional)?
             'y\n'
         ]
