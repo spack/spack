@@ -25,20 +25,18 @@
 from spack import *
 
 
-class RTibble(RPackage):
-    """Provides a 'tbl_df' class that offers better checking and printing
-    capabilities than traditional data frames."""
+class RAcgh(RPackage):
+    """Functions for reading aCGH data from image analysis output files
+    and clone information files, creation of aCGH S3 objects for storing
+    these data. Basic methods for accessing/replacing, subsetting,
+    printing and plotting aCGH objects."""
 
-    homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
-    list_url = homepage
-    version('1.3.4', '298e81546f999fb0968625698511b8d3')
-    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
-    version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
+    homepage = "https://www.bioconductor.org/packages/aCGH/"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/aCGH_1.54.0.tar.gz"
 
-    depends_on('r@3.1.2:')
+    version('1.54.0', '8e5bd1800b2760e46fcab4179c2e920c')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
+    depends_on('r-cluster', type=('build', 'run'))
+    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-multtest', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))

@@ -25,20 +25,16 @@
 from spack import *
 
 
-class RTibble(RPackage):
-    """Provides a 'tbl_df' class that offers better checking and printing
-    capabilities than traditional data frames."""
+class RAbsseq(RPackage):
+    """Inferring differential expression genes by absolute counts
+    difference between two groups, utilizing Negative binomial
+    distribution and moderating fold-change according to heterogeneity
+    of dispersion across expression level."""
 
-    homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
-    list_url = homepage
-    version('1.3.4', '298e81546f999fb0968625698511b8d3')
-    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
-    version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
+    homepage = "https://www.bioconductor.org/packages/ABSSeq/"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/ABSSeq_1.22.8.tar.gz"
 
-    depends_on('r@3.1.2:')
+    version('1.22.8', 'bfdb1800f2e7c60dfa7f6b43026ec8f9')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
+    depends_on('r-locfit', type=('build', 'run'))
+    depends_on('r-limma', type=('build', 'run'))
