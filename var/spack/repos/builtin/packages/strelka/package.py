@@ -62,16 +62,16 @@ class Strelka(CMakePackage):
                 'python/libexec/vcfCmdlineSwapper.py',
                 'python/libexec/mergeChromDepth.py',
                 'python/scoringModelTraining/germline/bin/evs_learn.py',
-                'python/scoringModelTraining/germline/bin/parseAnnotatedTrainingVcf.py',
-                'python/scoringModelTraining/germline/bin/filterTrainingVcf.py',
+                'python/scoringModelTraining/germline/bin/parseAnnotatedTrainingVcf.py',  # noqa: E501
+                'python/scoringModelTraining/germline/bin/filterTrainingVcf.py',  # noqa: E501
                 'python/scoringModelTraining/germline/bin/evs_exportmodel.py',
                 'python/scoringModelTraining/germline/bin/evs_qq.py',
                 'python/scoringModelTraining/germline/bin/evs_pr.py',
                 'python/scoringModelTraining/germline/bin/evs_evaluate.py',
-                'python/scoringModelTraining/somatic/bin/evs_random_sample_tpfp.py',
+                'python/scoringModelTraining/somatic/bin/evs_random_sample_tpfp.py',  # noqa: E501
                 'python/scoringModelTraining/somatic/bin/evs_learn.py',
-                'python/scoringModelTraining/somatic/bin/evs_random_split_csv.py',
-                'python/scoringModelTraining/somatic/bin/vcf_to_feature_csv.py',
+                'python/scoringModelTraining/somatic/bin/evs_random_split_csv.py',  # noqa: E501
+                'python/scoringModelTraining/somatic/bin/vcf_to_feature_csv.py',  # noqa: E501
                 'python/scoringModelTraining/somatic/bin/calc_features.py',
                 'python/scoringModelTraining/somatic/bin/evs_exportmodel.py',
                 'python/scoringModelTraining/somatic/bin/evs_pr.py',
