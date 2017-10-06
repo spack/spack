@@ -1888,7 +1888,7 @@ class Spec(object):
         unless there is a need to force a spec to be concrete.
         """
         for s in self.traverse(deptype_query=all):
-            if s.concrete and s.package.installed:
+            if (not value) and s.concrete and s.package.installed:
                 continue
             s._normal = value
             s._concrete = value
