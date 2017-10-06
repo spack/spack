@@ -25,20 +25,21 @@
 from spack import *
 
 
-class RTibble(RPackage):
-    """Provides a 'tbl_df' class that offers better checking and printing
-    capabilities than traditional data frames."""
+class SraToolkit(Package):
+    """The NCBI SRA Toolkit enables reading ("dumping") of sequencing files
+       from the SRA database and writing ("loading") files into the .sra
+       format."""
 
-    homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
-    list_url = homepage
-    version('1.3.4', '298e81546f999fb0968625698511b8d3')
-    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
-    version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
+    homepage = "https://trace.ncbi.nlm.nih.gov/Traces/sra"
+    url      = "https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.8.2-1/sratoolkit.2.8.2-1-centos_linux64.tar.gz"
 
-    depends_on('r@3.1.2:')
+    version('2.8.2-1', '3a2910754aea71aba5662804efff2a68')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
+    def url_for_version(self, version):
+        url = 'https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/{0}/sratoolkit.{0}-centos_linux64.tar.gz'
+        return url.format(version)
+
+    def install(self, spec, prefix):
+        install_tree('bin', prefix.bin)
+        install_tree('example', prefix.example)
+        install_tree('schema', prefix.schema)

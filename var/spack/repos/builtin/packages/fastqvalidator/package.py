@@ -25,20 +25,32 @@
 from spack import *
 
 
-class RTibble(RPackage):
-    """Provides a 'tbl_df' class that offers better checking and printing
-    capabilities than traditional data frames."""
+class Fastqvalidator(MakefilePackage):
+    """The fastQValidator validates the format of fastq files."""
 
-    homepage = "https://github.com/tidyverse/tibble"
-    url      = "https://cran.rstudio.com/src/contrib/tibble_1.3.4.tar.gz"
-    list_url = homepage
-    version('1.3.4', '298e81546f999fb0968625698511b8d3')
-    version('1.2', 'bdbc3d67aa16860741add6d6ec20ea13')
-    version('1.1', '2fe9f806109d0b7fadafb1ffafea4cb8')
+    homepage = "http://genome.sph.umich.edu/wiki/FastQValidator"
+    url      = "https://github.com/statgen/fastQValidator/archive/v0.1.1a.tar.gz"
 
-    depends_on('r@3.1.2:')
+    version('0.1.1a', '5c5de69527020b72b64f32987409bd12')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')
+    conflicts('%gcc@7:', when='@0.1.1a')  # statgen/fastQValidator#14
+
+    resource(
+        name='libStatGen',
+        url='https://github.com/statgen/libStatGen/archive/v1.0.14.tar.gz',
+        sha256='70a504c5cc4838c6ac96cdd010644454615cc907df4e3794c999baf958fa734b',
+    )
+
+    @property
+    def build_targets(self):
+        return ['LIB_PATH_GENERAL={0}'.format(
+                join_path(self.stage.source_path, 'libStatGen-1.0.14'))]
+
+    @property
+    def install_targets(self):
+        return [
+            'INSTALLDIR={0}'.format(self.prefix.bin),
+            'LIB_PATH_GENERAL={0}'.format(
+                join_path(self.stage.source_path, 'libStatGen-1.0.14')),
+            'install'
+        ]
