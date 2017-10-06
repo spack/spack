@@ -180,11 +180,15 @@ class IntelMkl(IntelPackage):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up MKLROOT for everyone using MKL package
-        mkl_root = self.prefix.mkl.lib if sys.platform == 'darwin' else \
-            self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        if sys.platform == 'darwin':
+            mkl_lib = self.prefix.mkl.lib
+            mkl_root = self.prefix.mkl
+        else:
+            mkl_lib = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+            mkl_root = self.prefix.compilers_and_libraries.linux.mkl
 
-        spack_env.set('MKLROOT', self.prefix)
-        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_root)
+        spack_env.set('MKLROOT', mkl_root)
+        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_lib)
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
@@ -205,6 +209,11 @@ class IntelMkl(IntelPackage):
         # this problem.
         mklvars = os.path.join(self.prefix.mkl.bin, 'mklvars.sh')
 
-        if os.path.isfile(mklvars):
-            run_env.extend(EnvironmentModifications.from_sourcing_file(
-                mklvars, 'intel64'))
+        if sys.platform == 'darwin':
+            if os.path.isfile(mklvars):
+                run_env.extend(EnvironmentModifications.from_sourcing_file(
+                    mklvars))
+        else:
+            if os.path.isfile(mklvars):
+                run_env.extend(EnvironmentModifications.from_sourcing_file(
+                    mklvars, 'intel64'))
