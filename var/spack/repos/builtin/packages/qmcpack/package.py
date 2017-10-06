@@ -190,8 +190,9 @@ class Qmcpack(CMakePackage):
         return args
 
     # def setup_environment(self, spack_env, run_env):
-    #     # Add MKLROOT/lib to the CMAKE_PREFIX_PATH to enable CMake to find MKL libraries.
-    #     # MKLROOT environment variable must be defined for this to work properly.
+    #     # Add MKLROOT/lib to the CMAKE_PREFIX_PATH to enable CMake to find
+    #     # MKL libraries. MKLROOT environment variable must be defined for
+    #     # this to work properly.
     #     if 'intel-mkl' in self.spec:
     #         spack_env.append_path('CMAKE_PREFIX_PATH',format(join_path(env['MKLROOT'],'lib')))
 
