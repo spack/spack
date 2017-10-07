@@ -29,6 +29,7 @@ import glob
 import os
 import shutil
 import sys
+import platform
 
 
 class Gcc(AutotoolsPackage):
@@ -148,6 +149,10 @@ class Gcc(AutotoolsPackage):
     conflicts('languages=jit', when='@:4')
 
     if sys.platform == 'darwin':
+        # Fix parallel build on APFS filesystem
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
+        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.13':
+            patch('darwin/apfs.patch', when='@7.2.0')
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
