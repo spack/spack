@@ -40,4 +40,9 @@ class Bison(AutotoolsPackage):
 
     patch('pgi.patch', when='@3.0.4')
 
+    patch('https://raw.githubusercontent.com/macports/macports-ports/14451f57e89/devel/bison/files/secure_snprintf.patch',
+          level=0,
+          sha256='57f972940a10d448efbd3d5ba46e65979ae4eea93681a85e1d998060b356e0d2',
+          when='os=highsierra')
+
     build_directory = 'spack-build'
