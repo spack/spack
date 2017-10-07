@@ -30,7 +30,6 @@ import glob
 import os
 import shutil
 import sys
-import platform
 
 
 class Gcc(AutotoolsPackage):
