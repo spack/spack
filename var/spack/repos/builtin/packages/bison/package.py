@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import platform
 
 
 class Bison(AutotoolsPackage):
@@ -44,6 +43,6 @@ class Bison(AutotoolsPackage):
     patch('https://raw.githubusercontent.com/macports/macports-ports/14451f57e89/devel/bison/files/secure_snprintf.patch',
           level=0,
           sha256='57f972940a10d448efbd3d5ba46e65979ae4eea93681a85e1d998060b356e0d2',
-          when=(int(platform.mac_ver()[0].split('.')[1]) >= 13))
+          when='os=highsierra')
 
     build_directory = 'spack-build'
