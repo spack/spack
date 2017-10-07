@@ -293,12 +293,12 @@ class Dealii(CMakePackage):
         # Assimp
         if '+assimp' in spec:
             options.extend([
-                '-DEAL_II_WITH_ASSIMP=ON',
+                '-DDEAL_II_WITH_ASSIMP=ON',
                 '-DASSIMP_DIR=%s' % spec['assimp'].prefix
             ])
         else:
             options.extend([
-                '-DEAL_II_WITH_ASSIMP=OFF'
+                '-DDEAL_II_WITH_ASSIMP=OFF'
             ])
 
         # since Netcdf is spread among two, need to do it by hand:
