@@ -24,6 +24,14 @@
 ##############################################################################
 import platform as py_platform
 from spack.architecture import OperatingSystem
+from spack.version import *
+
+
+# FIXME: store versions inside OperatingSystem as a Version instead of string
+def macOS_version():
+    """temporary workaround to return a macOS version as a Version object
+    """
+    return Version('.'.join(py_platform.mac_ver()[0].split('.')[:2]))
 
 
 class MacOs(OperatingSystem):

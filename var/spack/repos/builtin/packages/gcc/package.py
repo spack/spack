@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.operating_systems.mac_os import macOS_version
 from llnl.util import tty
 
 import glob
@@ -151,7 +152,7 @@ class Gcc(AutotoolsPackage):
     if sys.platform == 'darwin':
         # Fix parallel build on APFS filesystem
         # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
-        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.13':
+        if macOS_version() >= Version('10.13'):
             patch('darwin/apfs.patch', when='@7.2.0')
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
