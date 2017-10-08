@@ -35,12 +35,13 @@ class Hypre(Package):
     homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
     url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
 
-    version('develop', git='https://github.com/LLNL/hypre', tag='master')
-    version('xsdk-0.2.0', git='https://github.com/LLNL/hypre', tag='xsdk-0.2.0')
+    version('2.12.1', 'c6fcb6d7e57cec1c7ce4a44da885068c', url='https://github.com/LLNL/hypre/archive/v2.12.1.tar.gz')
     version('2.11.2', 'd507943a1a3ce5681c3308e2f3a6dd34')
     version('2.11.1', '3f02ef8fd679239a6723f60b7f796519')
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
+    version('develop', git='https://github.com/LLNL/hypre', tag='master')
+    version('xsdk-0.2.0', git='https://github.com/LLNL/hypre', tag='xsdk-0.2.0')
 
     # hypre does not know how to build shared libraries on Darwin
     variant('shared', default=(sys.platform != 'darwin'),
