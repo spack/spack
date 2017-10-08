@@ -61,5 +61,19 @@ class Flang(CMakePackage):
 
     @run_after('install')
     def post_install(self):
-        symlink(os.path.join(self.spec['llvm'].prefix.bin, 'flang'),
-                os.path.join(self.prefix.bin, 'flang'))
+        # we are installing flang in a path different from llvm, so we
+        # create a wrapper with -L for e.g. libflangrti.so and -I for
+        # e.g. iso_c_binding.mod. PATH is needed to help flang to find
+        # flang1 and flang2
+        flang = os.path.join(self.spec.prefix.bin, 'flang')
+        with open(flang, 'w') as out:
+            out.write('#!/bin/bash\n')
+            out.write('export PATH=${{PATH:+${{PATH}}:}}{0}\n'.format(
+                self.spec.prefix.bin))
+            out.write(
+                '{0} -I{1} -L{2} "$@"\n'.format(
+                    os.path.join(self.spec['llvm'].prefix.bin, 'flang'),
+                    self.prefix.include, self.prefix.lib))
+            out.close()
+        chmod = which('chmod')
+        chmod('+x', flang)
