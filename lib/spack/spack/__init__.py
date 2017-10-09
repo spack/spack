@@ -177,6 +177,7 @@ __all__ = []
 
 from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
+from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.qmake import QMakePackage
@@ -193,6 +194,7 @@ __all__ += [
     'on_package_attributes',
     'Package',
     'MakefilePackage',
+    'AspellDictPackage',
     'AutotoolsPackage',
     'CMakePackage',
     'QMakePackage',
