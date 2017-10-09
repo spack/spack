@@ -61,6 +61,7 @@ import spack.build_environment as build_environment
 import spack.environment
 import spack.tengine as tengine
 import spack.util.path
+import spack.util.environment
 import spack.error
 
 #: Root folders where the various module files should be written
@@ -456,16 +457,24 @@ class BaseContext(tengine.Context):
     def configure_options(self):
         pkg = self.spec.package
 
+        # If the spec is external Spack doesn't know its configure options
+        if self.spec.external:
+            msg = 'unknown, software installed outside of Spack'
+            return msg
+
         # This is quite simple right now, but contains information on how
         # to call different build system classes.
         for attr in ('configure_args', 'cmake_args'):
             try:
                 configure_args = getattr(pkg, attr)()
                 return ' '.join(configure_args)
-            except (AttributeError, IOError):
+            except (AttributeError, IOError, KeyError):
+                # The method doesn't exist in the current spec,
+                # or it's not usable
                 pass
 
-        # The default is to return None
+        # Returning a false-like value makes the default templates skip
+        # the configure option section
         return None
 
     @tengine.context_property
@@ -473,7 +482,9 @@ class BaseContext(tengine.Context):
         """List of environment modifications to be processed."""
         # Modifications guessed inspecting the spec prefix
         env = spack.environment.inspect_path(
-            self.spec.prefix, prefix_inspections
+            self.spec.prefix,
+            prefix_inspections,
+            exclude=spack.util.environment.is_system_path
         )
 
         # Modifications that are coded at package level
