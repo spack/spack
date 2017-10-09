@@ -51,9 +51,13 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
+    version('3.3.1-rc1', git='https://github.com/mfem/mfem',
+            tag='v3.3.1-rc1')
+
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
-            url='http://goo.gl/Vrpsns', extension='.tar.gz')
+            url='http://goo.gl/Vrpsns', extension='.tar.gz',
+            preferred=True)
 
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
