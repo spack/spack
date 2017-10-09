@@ -210,7 +210,7 @@ export SPACK_SHELL=$(_spack_determine_shell)
 # Check whether a function of the given name is defined
 #
 function _spack_fn_exists() {
-	type $1 2>&1 | grep -q 'function'
+	LANG= type $1 2>&1 | grep -q 'function'
 }
 
 need_module="no"

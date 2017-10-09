@@ -502,25 +502,56 @@ def filter_environment_blacklist(env, variables):
             yield item
 
 
-def inspect_path(root, inspections):
-    """Inspects a path to search for the subdirectories specified in the
-    inspection dictionary. Return a list of commands that will modify the
-    environment accordingly.
+def inspect_path(root, inspections, exclude=None):
+    """Inspects ``root`` to search for the subdirectories in ``inspections``.
+    Adds every path found to a list of prepend-path commands and returns it.
 
     Args:
-        root: path where to search for subdirectories
-        inspections: dictionary that maps subdirectories to a list of
-            variables that we want to pre-pend with a path, if found
+        root (str): absolute path where to search for subdirectories
+
+        inspections (dict): maps relative paths to a list of environment
+            variables that will be modified if the path exists. The
+            modifications are not performed immediately, but stored in a
+            command object that is returned to client
+
+        exclude (callable): optional callable. If present it must accept an
+            absolute path and return True if it should be excluded from the
+            inspection
+
+    Examples:
+
+    The following lines execute an inspection in ``/usr`` to search for
+    ``/usr/include`` and ``/usr/lib64``. If found we want to prepend
+    ``/usr/include`` to ``CPATH`` and ``/usr/lib64`` to ``MY_LIB64_PATH``.
+
+        .. code-block:: python
+
+            # Set up the dictionary containing the inspection
+            inspections = {
+                'include': ['CPATH'],
+                'lib64': ['MY_LIB64_PATH']
+            }
+
+            # Get back the list of command needed to modify the environment
+            env = inspect_path('/usr', inspections)
+
+            # Eventually execute the commands
+            env.apply_modifications()
 
     Returns:
         instance of EnvironmentModifications containing the requested
         modifications
     """
+    if exclude is None:
+        exclude = lambda x: False
+
     env = EnvironmentModifications()
     # Inspect the prefix to check for the existence of common directories
     for relative_path, variables in inspections.items():
         expected = os.path.join(root, relative_path)
-        if os.path.isdir(expected):
+
+        if os.path.isdir(expected) and not exclude(expected):
             for variable in variables:
                 env.prepend_path(variable, expected)
+
     return env
