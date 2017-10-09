@@ -39,28 +39,36 @@ class Nauty(AutotoolsPackage):
     urls_for_patches = {
         '@2.6r7': [
             # Debian patch to fix the gt_numorbits declaration
-            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-fix-gt_numorbits.patch', 'a6e1ef4897aabd67c104fd1d78bcc334'),  # noqa: E50
+            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-fix-gt_numorbits.patch',
+             'c8e4546a7b262c92cee226beb1dc71d87d644b115375e9c8550598efcc00254f'),
             # Debian patch to add explicit extern declarations where needed
-            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-fix-include-extern.patch', '741034dec2d2f8b418b6e186aa3eb50f'),  # noqa: E50
+            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-fix-include-extern.patch',
+             'c52c62e4dc46532ad89632a3f59a9faf13dd7988e9ef29fc5e5b2a3e17449bb6'),
             # Debian patch to use zlib instead of invoking zcat through a pipe
-            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-zlib-blisstog.patch', '667e1ce341f2506482ad30afd04f17e3'),  # noqa: E50
+            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-zlib-blisstog.patch',
+             'b1210bfb41ddbeb4c956d660266f62e806026a559a4700ce78024a9db2b82168'),
             # Debian patch to improve usage and help information
-            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-help2man.patch', '4202e6d83362daa2c4c4ab0788e11ac5'),  # noqa: E50
+            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-help2man.patch',
+             'c11544938446a3eca70d55b0f1084ce56fb1fb415db1ec1b5a69fd310a02b16c'),
             # Debian patch to add libtool support for building a shared library
-            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-autotoolization.patch', 'ea75f19c8a980c4d6d4e07223785c751'),  # noqa: E50
+            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-autotoolization.patch',
+             '7f60ae3d8aeee830306db991c908efae461f103527a7899ce79d936bb15212b5'),
             # Debian patch to canonicalize header file usage
-            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-includes.patch', 'c6ce4209d1381fb5489ed552ef35d7dc'),  # noqa: E50
+            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-includes.patch',
+             '9a305f0cd3f1136a9885518bd7912c669d1ca4b2b43bd039d6fc5535b9679778'),
             # Debian patch to prefix "nauty-" to the names of the generic tools
-            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-tool-prefix.patch', 'e89d87b4450adc5d0009ce11438dc975'),  # noqa: E50
+            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-tool-prefix.patch',
+             '736266813a62b3151e0b81ded6578bd0f53f03fc8ffbc54c7c2a2c64ac07b25f'),
             # Fedora patch to detect availability of the popcnt
             # instruction at runtime
-            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-popcnt.patch', '8a32d31a7150c8f5f21ccb1f6dc857b1')  # noqa: E50
+            ('https://src.fedoraproject.org/rpms/nauty/raw/0f07d01caf84e9d30cb06b11af4860dd3837636a/f/nauty-popcnt.patch',
+             '0dc2e0374491dddf5757f0717d0ea3f949f85b540202385662f10c358b4a08e8')
         ]
     }
     # Iterate over patches
     for condition, urls in urls_for_patches.items():
-        for url, md5 in urls:
-            patch(url, when=condition, level=1, md5=md5)
+        for url, sha256 in urls:
+            patch(url, when=condition, level=1, sha256=sha256)
 
     depends_on('m4',  type='build', when='@2.6r7')
     depends_on('autoconf',  type='build', when='@2.6r7')
