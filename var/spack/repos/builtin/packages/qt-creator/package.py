@@ -33,6 +33,7 @@ class QtCreator(QMakePackage):
     list_url = 'http://download.qt.io/official_releases/qtcreator/'
     list_depth = 2
 
+    version('4.4.0', 'bae2e08bb5087aba65d41eb3f9328d9a')
     version('4.3.1', '6769ea47f287e2d9e30ff92acb899eef')
     version('4.1.0', '657727e4209befa4bf5889dff62d9e0a')
 
