@@ -58,6 +58,6 @@ class Libpng(AutotoolsPackage):
             #   https://sourceforge.net/p/libpng/bugs/210/#33f1
             # '--with-zlib=' + self.spec['zlib'].prefix,
             'CFLAGS={0}'.format(self.spec['zlib'].headers.include_flags),
-            'LDFLAGS={0}'.format(self.spec['zlib'].libs.ld_flags)
+            'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
         ]
         return args
