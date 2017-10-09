@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,6 +31,7 @@ class Httpie(PythonPackage):
     homepage = "https://httpie.org/"
     url      = "https://pypi.io/packages/source/h/httpie/httpie-0.9.8.tar.gz"
 
+    version('0.9.9', '13ed0b79b65e793eb288e563db38b2a2')
     version('0.9.8', 'e0d1af07d0959a2e081e7954797ce260')
 
     variant('socks', default=True,

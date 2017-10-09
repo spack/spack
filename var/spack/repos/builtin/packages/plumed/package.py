@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -148,7 +148,12 @@ class Plumed(AutotoolsPackage):
         # with MPI you should use:
         #
         # > ./configure CXX="$MPICXX"
-        configure_opts = []
+
+        # The configure.ac script may detect the wrong linker for
+        # LD_RO which causes issues at link time. Here we work around
+        # the issue saying we have no LD_RO executable.
+        configure_opts = ['--disable-ld-r']
+
         # If using MPI then ensure the correct compiler wrapper is used.
         if '+mpi' in spec:
             configure_opts.extend([

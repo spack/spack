@@ -32,9 +32,7 @@ class RZlibbioc(RPackage):
        direct need for this package). See the vignette for instructions
        on use."""
 
-    homepage = ("http://bioconductor.org/packages/release"
-                "/bioc/html/Zlibbioc.html")
-    url      = ("https://bioconductor.org/packages/3.5/bioc"
-                "/src/contrib/zlibbioc_1.22.0.tar.gz")
+    homepage = "http://bioconductor.org/packages/release/bioc/html/Zlibbioc.html"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/zlibbioc_1.22.0.tar.gz"
 
     version('1.22.0', '2e9496b860270d2e73d1305b8c6c69a5')

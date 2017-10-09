@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,7 +35,7 @@ def cmake_cache_entry(name, value):
     Helper that creates CMake cache entry strings used in
     'host-config' files.
     """
-    return 'set("{0}" "{1}" CACHE PATH "")\n\n'.format(name, value)
+    return 'set({0} "{1}" CACHE PATH "")\n\n'.format(name, value)
 
 
 class Conduit(Package):
@@ -45,12 +45,17 @@ class Conduit(Package):
     coupling between packages in-core, serialization, and I/O tasks."""
 
     homepage = "http://software.llnl.gov/conduit"
-    url = "https://github.com/LLNL/conduit/archive/v0.2.1.tar.gz"
+    url = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
 
-    version('0.2.1', 'cd2b42c76f70ac3546582b6da77c6028')
-    version('0.2.0', 'd595573dedf55514c11d7391092fd760')
+    version('0.3.0', '6396f1d1ca16594d7c66d4535d4f898e')
+    # note: checksums on github automatic release source tars changed ~9/17
+    version('0.2.1', 'ed7358af3463ba03f07eddd6a6e626ff')
+    version('0.2.0', 'a7b398d493fd71b881a217993a9a29d4')
 
-    version('master', git='https://github.com/LLNL/conduit.git')
+    version('master',
+            git='https://github.com/LLNL/conduit.git',
+            branch="master",
+            submodules=True)
 
     ###########################################################################
     # package variants
@@ -67,7 +72,7 @@ class Conduit(Package):
     # variants for comm and i/o
     variant("mpi", default=True, description="Build Conduit MPI Support")
     variant("hdf5", default=True, description="Build Conduit HDF5 support")
-    variant("silo", default=True, description="Build Conduit Silo support")
+    variant("silo", default=False, description="Build Conduit Silo support")
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
@@ -79,8 +84,8 @@ class Conduit(Package):
     #######################
     # CMake
     #######################
-    # cmake 3.3.1 is the version we tested
-    depends_on("cmake@3.3.1", when="+cmake")
+    # cmake 3.8.2 is the version we recommend
+    depends_on("cmake@3.8.2", when="+cmake")
 
     #######################
     # Python
@@ -95,7 +100,7 @@ class Conduit(Package):
     #######################
     # TODO: cxx variant is disabled due to build issue Cyrus
     # experienced on BGQ. When on, the static build tries
-    # to link agains shared libs.
+    # to link against shared libs.
     #
     # we are not using hdf5's mpi or fortran features.
     depends_on("hdf5~cxx~mpi~fortran", when="+shared")
@@ -115,6 +120,22 @@ class Conduit(Package):
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
     depends_on("doxygen", when="+doc")
+
+    def url_for_version(self, version):
+        """
+        Provide proper url
+        """
+        v = str(version)
+        if v == "0.2.0":
+            return "https://github.com/LLNL/conduit/archive/v0.2.0.tar.gz"
+        elif v == "0.2.1":
+            return "https://github.com/LLNL/conduit/archive/v0.2.1.tar.gz"
+        elif v == "0.3.0":
+            # conduit uses BLT (https://github.com/llnl/blt) as a submodule,
+            # since github does not automatically package source from
+            # submodules, conduit provides a custom src tarball
+            return "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
+        return url
 
     def install(self, spec, prefix):
         """
@@ -259,11 +280,8 @@ class Conduit(Package):
         if "+mpi" in spec:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", spec['mpi'].mpicc))
-            # we use `mpicc` as `MPI_CXX_COMPILER` b/c we don't want to
-            # introduce linking deps to the MPI C++ libs (we aren't using
-            # C++ features of MPI) -- this happens with some versions of
-            # OpenMPI
-            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", spec['mpi'].mpicc))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER",
+                                        spec['mpi'].mpicxx))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                         spec['mpi'].mpifc))
         else:

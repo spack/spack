@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -121,6 +121,7 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 
+from spack.dependency import *
 from spack.util.module_cmd import get_path_from_module, load_module
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
@@ -135,8 +136,6 @@ from yaml.error import MarkedYAMLError
 
 __all__ = [
     'Spec',
-    'alldeps',
-    'canonical_deptype',
     'parse',
     'parse_anonymous_spec',
     'SpecError',
@@ -196,29 +195,8 @@ _separators = '[\\%s]' % '\\'.join(color_formats.keys())
 #: every time we call str()
 _any_version = VersionList([':'])
 
-#: Types of dependencies that Spack understands.
-alldeps = ('build', 'link', 'run')
-
 #: Max integer helps avoid passing too large a value to cyaml.
 maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
-
-
-def canonical_deptype(deptype):
-    if deptype in (None, 'all', all):
-        return alldeps
-
-    elif isinstance(deptype, string_types):
-        if deptype not in alldeps:
-            raise ValueError('Invalid dependency type: %s' % deptype)
-        return (deptype,)
-
-    elif isinstance(deptype, (tuple, list)):
-        invalid = next((d for d in deptype if d not in alldeps), None)
-        if invalid:
-            raise ValueError('Invalid dependency type: %s' % invalid)
-        return tuple(sorted(deptype))
-
-    return deptype
 
 
 def colorize_spec(spec):
@@ -635,10 +613,6 @@ class FlagMap(HashableMap):
     def valid_compiler_flags():
         return _valid_compiler_flags
 
-    @property
-    def concrete(self):
-        return all(flag in self for flag in _valid_compiler_flags)
-
     def copy(self):
         clone = FlagMap(None)
         for name, value in self.items():
@@ -660,73 +634,6 @@ class FlagMap(HashableMap):
 class DependencyMap(HashableMap):
     """Each spec has a DependencyMap containing specs for its dependencies.
        The DependencyMap is keyed by name. """
-
-    def __init__(self, owner):
-        super(DependencyMap, self).__init__()
-
-        # Owner Spec for the current map
-        self.owner = owner
-
-    @property
-    def concrete(self):
-
-        # Check if the dependencies are concrete and of the correct type
-        dependencies_are_concrete = all(
-            (d.spec.concrete and d.deptypes) for d in self.values()
-        )
-
-        if not dependencies_are_concrete:
-            return False
-
-        # If we are dealing with an external spec, it clearly has no
-        # dependencies managed by spack
-        if self.owner.external:
-            return True
-
-        # Now check we have every dependency we need
-        pkg = self.owner.package
-        for dependency in pkg.dependencies.values():
-            # Check that for every condition we satisfy we satisfy also
-            # the associated constraint
-            for condition, constraint in dependency.items():
-                # WARNING: This part relies on the fact that dependencies are
-                # the last item to be checked when computing if a spec is
-                # concrete. This means that we are ensured that all variants,
-                # versions, compilers, etc. are there with their final value
-                # when we call 'Spec.satisfies(..., strict=True)'
-
-                # FIXME: at the moment check only for non conditional
-                # FIXME: dependencies, to avoid infinite recursion
-
-                # satisfy_condition = self.owner.satisfies(
-                #     condition, strict=True
-                # )
-
-                satisfy_condition = str(condition) == self.owner.name
-
-                if not satisfy_condition:
-                    continue
-
-                dependency_name = constraint.name
-
-                # We don't want to check build dependencies
-                if pkg.dependency_types[dependency_name] == set(['build']):
-                    continue
-
-                try:
-                    dependency = self.owner[dependency_name]
-                    satisfy_constraint = dependency.satisfies(
-                        constraint, strict=True
-                    )
-                except KeyError:
-                    # If the dependency is not there we don't
-                    # satisfy the constraint
-                    satisfy_constraint = False
-
-                if satisfy_condition and not satisfy_constraint:
-                    return False
-
-        return True
 
     def __str__(self):
         return "{deps: %s}" % ', '.join(str(d) for d in sorted(self.values()))
@@ -1169,19 +1076,19 @@ class Spec(object):
                 if deptype and (not dep.deptypes or
                                 any(d in deptype for d in dep.deptypes))]
 
-    def dependencies(self, deptype=None):
+    def dependencies(self, deptype='all'):
         return [d.spec
                 for d in self._find_deps(self._dependencies, deptype)]
 
-    def dependents(self, deptype=None):
+    def dependents(self, deptype='all'):
         return [d.parent
                 for d in self._find_deps(self._dependents, deptype)]
 
-    def dependencies_dict(self, deptype=None):
+    def dependencies_dict(self, deptype='all'):
         return dict((d.spec.name, d)
                     for d in self._find_deps(self._dependencies, deptype))
 
-    def dependents_dict(self, deptype=None):
+    def dependents_dict(self, deptype='all'):
         return dict((d.parent.name, d)
                     for d in self._find_deps(self._dependents, deptype))
 
@@ -1315,26 +1222,16 @@ class Spec(object):
 
     @property
     def concrete(self):
-        """A spec is concrete if it can describe only ONE build of a package.
-           If any of the name, version, architecture, compiler,
-           variants, or depdenencies are ambiguous,then it is not concrete.
-        """
-        # If we have cached that the spec is concrete, then it's concrete
-        if self._concrete:
-            return True
+        """A spec is concrete if it describes a single build of a package.
 
-        # Otherwise check if the various parts of the spec are concrete.
-        # It's crucial to have the check on dependencies last, as it relies
-        # on all the other parts to be already checked for concreteness.
-        self._concrete = bool(not self.virtual and
-                              self.namespace is not None and
-                              self.versions.concrete and
-                              self.variants.concrete and
-                              self.architecture and
-                              self.architecture.concrete and
-                              self.compiler and self.compiler.concrete and
-                              self.compiler_flags.concrete and
-                              self._dependencies.concrete)
+        More formally, a spec is concrete if concretize() has been called
+        on it and it has been marked `_concrete`.
+
+        Concrete specs either can be or have been built. All constraints
+        have been resolved, optional dependencies have been added or
+        removed, a compiler has been chosen, and all variants have
+        values.
+        """
         return self._concrete
 
     def traverse(self, **kwargs):
@@ -1352,8 +1249,8 @@ class Spec(object):
             for dspec in self.traverse_edges(**kwargs):
                 yield get_spec(dspec)
 
-    def traverse_edges(self, visited=None, d=0, deptype=None,
-                       deptype_query=None, dep_spec=None, **kwargs):
+    def traverse_edges(self, visited=None, d=0, deptype='all',
+                       deptype_query=default_deptype, dep_spec=None, **kwargs):
         """Generic traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
 
@@ -1406,8 +1303,7 @@ class Spec(object):
         order = kwargs.get('order', 'pre')
 
         deptype = canonical_deptype(deptype)
-        if deptype_query is None:
-            deptype_query = ('link', 'run')
+        deptype_query = canonical_deptype(deptype_query)
 
         # Make sure kwargs have legal values; raise ValueError if not.
         def validate(name, val, allowed_values):
@@ -1592,8 +1488,7 @@ class Spec(object):
                     spec.compiler_flags[name] = value
                 else:
                     spec.variants[name] = MultiValuedVariant.from_node_dict(
-                        name, value
-                    )
+                        name, value)
         elif 'variants' in node:
             for name, value in node['variants'].items():
                 spec.variants[name] = MultiValuedVariant.from_node_dict(
@@ -1825,8 +1720,8 @@ class Spec(object):
                 if replacement.external:
                     if (spec._dependencies):
                         changed = True
-                        spec._dependencies = DependencyMap(spec)
-                    replacement._dependencies = DependencyMap(replacement)
+                        spec._dependencies = DependencyMap()
+                    replacement._dependencies = DependencyMap()
                     replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
@@ -1863,15 +1758,24 @@ class Spec(object):
 
     def concretize(self):
         """A spec is concrete if it describes one build of a package uniquely.
-           This will ensure that this spec is concrete.
+        This will ensure that this spec is concrete.
 
-           If this spec could describe more than one version, variant, or build
-           of a package, this will add constraints to make it concrete.
+        If this spec could describe more than one version, variant, or build
+        of a package, this will add constraints to make it concrete.
 
-           Some rigorous validation and checks are also performed on the spec.
-           Concretizing ensures that it is self-consistent and that it's
-           consistent with requirements of its pacakges.  See flatten() and
-           normalize() for more details on this.
+        Some rigorous validation and checks are also performed on the spec.
+        Concretizing ensures that it is self-consistent and that it's
+        consistent with requirements of its pacakges. See flatten() and
+        normalize() for more details on this.
+
+        It also ensures that:
+
+        .. code-block:: python
+
+            for x in self.traverse():
+                assert x.package.spec == x
+
+        which may not be true *during* the concretization step.
         """
         if not self.name:
             raise SpecError("Attempting to concretize anonymous spec")
@@ -1889,7 +1793,7 @@ class Spec(object):
             changed = any(changes)
             force = True
 
-        for s in self.traverse(deptype_query=alldeps):
+        for s in self.traverse(deptype_query=all):
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
             # configuration is constant throughout a spack run, and
@@ -1900,6 +1804,43 @@ class Spec(object):
             # compatibility across repositories as possible.
             if s.namespace is None:
                 s.namespace = spack.repo.repo_for_pkg(s.name).namespace
+
+            # Add any patches from the package to the spec.
+            patches = []
+            for cond, patch_list in s.package_class.patches.items():
+                if s.satisfies(cond):
+                    for patch in patch_list:
+                        patches.append(patch.sha256)
+            if patches:
+                mvar = s.variants.setdefault(
+                    'patches', MultiValuedVariant('patches', ())
+                )
+                mvar.value = patches
+                # FIXME: Monkey patches mvar to store patches order
+                mvar._patches_in_order_of_appearance = patches
+
+        # Apply patches required on dependencies by depends_on(..., patch=...)
+        for dspec in self.traverse_edges(deptype=all,
+                                         cover='edges', root=False):
+            pkg_deps = dspec.parent.package_class.dependencies
+            if dspec.spec.name not in pkg_deps:
+                continue
+
+            patches = []
+            for cond, dependency in pkg_deps[dspec.spec.name].items():
+                if dspec.parent.satisfies(cond):
+                    for pcond, patch_list in dependency.patches.items():
+                        if dspec.spec.satisfies(pcond):
+                            for patch in patch_list:
+                                patches.append(patch.sha256)
+            if patches:
+                mvar = dspec.spec.variants.setdefault(
+                    'patches', MultiValuedVariant('patches', ())
+                )
+                mvar.value = mvar.value + tuple(patches)
+                # FIXME: Monkey patches mvar to store patches order
+                l = getattr(mvar, '_patches_in_order_of_appearance', [])
+                mvar._patches_in_order_of_appearance = dedupe(l + patches)
 
         for s in self.traverse():
             if s.external_module:
@@ -1925,13 +1866,18 @@ class Spec(object):
         if matches:
             raise ConflictsInSpecError(self, matches)
 
+        # At this point the spec-package mutual references should
+        # be self-consistent
+        for x in self.traverse():
+            x.package.spec = x
+
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
 
         Only for internal use -- client code should use "concretize"
         unless there is a need to force a spec to be concrete.
         """
-        for s in self.traverse(deptype_query=alldeps):
+        for s in self.traverse(deptype_query=all):
             s._normal = value
             s._concrete = value
 
@@ -1954,7 +1900,7 @@ class Spec(object):
            returns them.
         """
         copy = kwargs.get('copy', True)
-        deptype_query = kwargs.get('deptype_query')
+        deptype_query = kwargs.get('deptype_query', 'all')
 
         flat_deps = {}
         try:
@@ -1983,10 +1929,10 @@ class Spec(object):
             # parser doesn't allow it. Spack must be broken!
             raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
 
-    def index(self, deptype=None):
+    def index(self, deptype='all'):
         """Return DependencyMap that points to all the dependencies in this
            spec."""
-        dm = DependencyMap(None)
+        dm = DependencyMap()
         for spec in self.traverse(deptype=deptype):
             dm[spec.name] = spec
         return dm
@@ -1994,9 +1940,18 @@ class Spec(object):
     def _evaluate_dependency_conditions(self, name):
         """Evaluate all the conditions on a dependency with this name.
 
-        If the package depends on <name> in this configuration, return
-        the dependency.  If no conditions are True (and we don't
-        depend on it), return None.
+        Args:
+            name (str): name of dependency to evaluate conditions on.
+
+        Returns:
+            (Dependency): new Dependency object combining all constraints.
+
+        If the package depends on <name> in the current spec
+        configuration, return the constrained dependency and
+        corresponding dependency types.
+
+        If no conditions are True (and we don't depend on it), return
+        ``(None, None)``.
         """
         pkg = spack.repo.get(self.fullname)
         conditions = pkg.dependencies[name]
@@ -2004,17 +1959,17 @@ class Spec(object):
         substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
         dep = None
-        for when_spec, dep_spec in conditions.items():
-            sat = self.satisfies(when_spec, strict=True)
-            if sat:
+        for when_spec, dependency in conditions.items():
+            if self.satisfies(when_spec, strict=True):
                 if dep is None:
-                    dep = Spec(name)
+                    dep = Dependency(self.name, Spec(name), type=())
                 try:
-                    dep.constrain(dep_spec)
+                    dep.merge(dependency)
                 except UnsatisfiableSpecError as e:
                     e.message = ("Conflicting conditional dependencies on"
                                  "package %s for spec %s" % (self.name, self))
                     raise e
+
         return dep
 
     def _find_provider(self, vdep, provider_index):
@@ -2050,15 +2005,26 @@ class Spec(object):
             elif required:
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
-    def _merge_dependency(self, dep, deptypes, visited, spec_deps,
-                          provider_index):
-        """Merge the dependency into this spec.
+    def _merge_dependency(
+            self, dependency, visited, spec_deps, provider_index):
+        """Merge dependency information from a Package into this Spec.
 
-        Caller should assume that this routine can owns the dep parameter
-        (i.e. it needs to be a copy of any internal structures like
-        dependencies on Package class objects).
+        Args:
+            dependency (Dependency): dependency metadata from a package;
+                this is typically the result of merging *all* matching
+                dependency constraints from the package.
+            visited (set): set of dependency nodes already visited by
+                ``normalize()``.
+            spec_deps (dict): ``dict`` of all dependencies from the spec
+                being normalized.
+            provider_index (dict): ``provider_index`` of virtual dep
+                providers in the ``Spec`` as normalized so far.
 
-        This is the core of normalize().  There are some basic steps:
+        NOTE: Caller should assume that this routine owns the
+        ``dependency`` parameter, i.e., it needs to be a copy of any
+        internal structures.
+
+        This is the core of ``normalize()``.  There are some basic steps:
 
           * If dep is virtual, evaluate whether it corresponds to an
             existing concrete dependency, and merge if so.
@@ -2073,6 +2039,7 @@ class Spec(object):
 
         """
         changed = False
+        dep = dependency.spec
 
         # If it's a virtual dependency, try to find an existing
         # provider in the spec, and merge that.
@@ -2113,21 +2080,22 @@ class Spec(object):
                 fmt += 'while trying to concretize the partial spec:'
                 fmt += '\n\n{0}\n\n'.format(self.tree(indent=4))
                 fmt += '{0} requires {1} {2} {3}, but spec asked for {4}'
+
                 e.message = fmt.format(
                     self.name,
                     dep.name,
                     e.constraint_type,
                     e.required,
-                    e.provided
-                )
-                raise e
+                    e.provided)
+
+                raise
 
         # Add merged spec to my deps and recurse
-        dependency = spec_deps[dep.name]
+        spec_dependency = spec_deps[dep.name]
         if dep.name not in self._dependencies:
-            self._add_dependency(dependency, deptypes)
+            self._add_dependency(spec_dependency, dependency.type)
 
-        changed |= dependency._normalize_helper(
+        changed |= spec_dependency._normalize_helper(
             visited, spec_deps, provider_index)
         return changed
 
@@ -2152,12 +2120,12 @@ class Spec(object):
             changed = False
             for dep_name in pkg.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
-                pkg_dep = self._evaluate_dependency_conditions(dep_name)
-                deptypes = pkg.dependency_types[dep_name]
-                # If pkg_dep is a dependency, merge it.
-                if pkg_dep:
+                dep = self._evaluate_dependency_conditions(dep_name)
+                # If dep is a needed dependency, merge it.
+                if dep and (spack.package_testing.check(self.name) or
+                            set(dep.type) - set(['test'])):
                     changed |= self._merge_dependency(
-                        pkg_dep, deptypes, visited, spec_deps, provider_index)
+                        dep, visited, spec_deps, provider_index)
             any_change |= changed
 
         return any_change
@@ -2182,17 +2150,17 @@ class Spec(object):
         if not self.name:
             raise SpecError("Attempting to normalize anonymous spec")
 
-        if self._normal and not force:
-            return False
-
-        # avoid any assumptions about concreteness when forced
+        # Set _normal and _concrete to False when forced
         if force:
             self._mark_concrete(False)
+
+        if self._normal:
+            return False
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
         # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies(copy=False, deptype_query=alldeps)
+        spec_deps = self.flat_dependencies(copy=False, deptype_query=all)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
@@ -2541,9 +2509,42 @@ class Spec(object):
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
-    def _dup(self, other, deps=True, cleardeps=True):
+    @property
+    def patches(self):
+        """Return patch objects for any patch sha256 sums on this Spec.
+
+        This is for use after concretization to iterate over any patches
+        associated with this spec.
+
+        TODO: this only checks in the package; it doesn't resurrect old
+        patches from install directories, but it probably should.
+        """
+        if 'patches' not in self.variants:
+            return []
+
+        patches = []
+
+        # FIXME: The private attribute below is attached after
+        # FIXME: concretization to store the order of patches somewhere.
+        # FIXME: Needs to be refactored in a cleaner way.
+        for sha256 in self.variants['patches']._patches_in_order_of_appearance:
+            patch = self.package.lookup_patch(sha256)
+            if patch:
+                patches.append(patch)
+                continue
+
+            # if not found in this package, check immediate dependents
+            # for dependency patches
+            for dep in self._dependents:
+                patch = dep.parent.package.lookup_patch(sha256)
+                if patch:
+                    patches.append(patch)
+
+        return patches
+
+    def _dup(self, other, deps=True, cleardeps=True, caches=None):
         """Copy the spec other into self.  This is an overwriting
-        copy.  It does not copy any dependents (parents), but by default
+        copy. It does not copy any dependents (parents), but by default
         copies dependencies.
 
         To duplicate an entire DAG, call _dup() on the root of the DAG.
@@ -2556,6 +2557,10 @@ class Spec(object):
             cleardeps (bool): if True clears the dependencies of ``self``,
                 before possibly copying the dependencies of ``other`` onto
                 ``self``
+            caches (bool or None): preserve cached fields such as
+                ``_normal``, ``_concrete``, and ``_cmp_key_cache``. By
+                default this is ``False`` if DAG structure would be
+                changed by the copy, ``True`` if it's an exact copy.
 
         Returns:
             True if ``self`` changed because of the copy operation,
@@ -2583,8 +2588,8 @@ class Spec(object):
             else None
         self.compiler = other.compiler.copy() if other.compiler else None
         if cleardeps:
-            self._dependents = DependencyMap(self)
-            self._dependencies = DependencyMap(self)
+            self._dependents = DependencyMap()
+            self._dependencies = DependencyMap()
         self.compiler_flags = other.compiler_flags.copy()
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
@@ -2593,21 +2598,22 @@ class Spec(object):
         self.external_module = other.external_module
         self.namespace = other.namespace
 
-        # If we copy dependencies, preserve DAG structure in the new spec
-        if deps:
-            deptypes = alldeps  # by default copy all deptypes
-
-            # if caller restricted deptypes to be copied, adjust that here.
-            if isinstance(deps, (tuple, list)):
-                deptypes = deps
-
-            self._dup_deps(other, deptypes)
-
-        # These fields are all cached results of expensive operations.
+        # Cached fields are results of expensive operations.
         # If we preserved the original structure, we can copy them
         # safely. If not, they need to be recomputed.
-        # TODO: dependency hashes can be copied more aggressively.
-        if deps is True or deps == alldeps:
+        if caches is None:
+            caches = (deps is True or deps == all_deptypes)
+
+        # If we copy dependencies, preserve DAG structure in the new spec
+        if deps:
+            # If caller restricted deptypes to be copied, adjust that here.
+            # By default, just copy all deptypes
+            deptypes = all_deptypes
+            if isinstance(deps, (tuple, list)):
+                deptypes = deps
+            self._dup_deps(other, deptypes, caches)
+
+        if caches:
             self._hash = other._hash
             self._cmp_key_cache = other._cmp_key_cache
             self._normal = other._normal
@@ -2620,37 +2626,54 @@ class Spec(object):
 
         return changed
 
-    def _dup_deps(self, other, deptypes):
+    def _dup_deps(self, other, deptypes, caches):
         new_specs = {self.name: self}
-        for dspec in other.traverse_edges(cover='edges', root=False):
+        for dspec in other.traverse_edges(cover='edges',
+                                          root=False):
             if (dspec.deptypes and
                 not any(d in deptypes for d in dspec.deptypes)):
                 continue
 
             if dspec.parent.name not in new_specs:
-                new_specs[dspec.parent.name] = dspec.parent.copy(deps=False)
+                new_specs[dspec.parent.name] = dspec.parent.copy(
+                    deps=False, caches=caches)
             if dspec.spec.name not in new_specs:
-                new_specs[dspec.spec.name] = dspec.spec.copy(deps=False)
+                new_specs[dspec.spec.name] = dspec.spec.copy(
+                    deps=False, caches=caches)
 
             new_specs[dspec.parent.name]._add_dependency(
                 new_specs[dspec.spec.name], dspec.deptypes)
 
-    def copy(self, deps=True):
-        """Return a copy of this spec.
+    def copy(self, deps=True, **kwargs):
+        """Make a copy of this spec.
 
-        By default, returns a deep copy. To control how dependencies are
-        copied, supply:
+        Args:
+            deps (bool or tuple): Defaults to True. If boolean, controls
+                whether dependencies are copied (copied if True). If a
+                tuple is provided, *only* dependencies of types matching
+                those in the tuple are copied.
+            kwargs: additional arguments for internal use (passed to ``_dup``).
 
-        deps=True:  deep copy
+        Returns:
+            A copy of this spec.
 
-        deps=False: shallow copy (no dependencies)
+        Examples:
+            Deep copy with dependnecies::
 
-        deps=('link', 'build'):
-            only build and link dependencies.  Similar for other deptypes.
+                spec.copy()
+                spec.copy(deps=True)
+
+            Shallow copy (no dependencies)::
+
+                spec.copy(deps=False)
+
+            Only build and run dependencies::
+
+                deps=('build', 'run'):
 
         """
         clone = Spec.__new__(Spec)
-        clone._dup(self, deps=deps)
+        clone._dup(self, deps=deps, **kwargs)
         return clone
 
     @property
@@ -3059,10 +3082,10 @@ class Spec(object):
             if show_types:
                 out += '['
                 if dep_spec.deptypes:
-                    for t in alldeps:
+                    for t in all_deptypes:
                         out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
                 else:
-                    out += ' ' * len(alldeps)
+                    out += ' ' * len(all_deptypes)
                 out += ']  '
 
             out += ("    " * d)
@@ -3276,8 +3299,8 @@ class SpecParser(spack.parse.Parser):
         spec.external_path = None
         spec.external_module = None
         spec.compiler_flags = FlagMap(spec)
-        spec._dependents = DependencyMap(spec)
-        spec._dependencies = DependencyMap(spec)
+        spec._dependents = DependencyMap()
+        spec._dependencies = DependencyMap()
         spec.namespace = spec_namespace
         spec._hash = None
         spec._cmp_key_cache = None

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,7 @@ class Paraview(CMakePackage):
     url      = "http://www.paraview.org/files/v5.3/ParaView-v5.3.0.tar.gz"
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
 
+    version('5.4.1', '4030c70477ec5a85aa72d6fc86a30753')
     version('5.4.0', 'b92847605bac9036414b644f33cb7163')
     version('5.3.0', '68fbbbe733aa607ec13d1db1ab5eba71')
     version('5.2.0', '4570d1a2a183026adb65b73c7125b8b0')
@@ -55,6 +56,9 @@ class Paraview(CMakePackage):
     depends_on('qt', when='@5.3.0:+qt')
     depends_on('qt@:4', when='@:5.2.0+qt')
 
+    depends_on('mesa+swrender', when='+osmesa')
+    conflicts('+qt', when='+osmesa')
+
     depends_on('bzip2')
     depends_on('freetype')
     # depends_on('hdf5+mpi', when='+mpi')
@@ -68,6 +72,7 @@ class Paraview(CMakePackage):
     # depends_on('protobuf') # version mismatches?
     # depends_on('sqlite') # external version not supported
     depends_on('zlib')
+    depends_on('cmake@3.3:', type='build')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 

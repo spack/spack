@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,6 @@ import re
 import llnl.util.tty as tty
 import spack
 import spack.cmd
-import spack.cmd.checksum
 import spack.util.web
 from llnl.util.filesystem import mkdirp
 from spack.repository import Repo
@@ -587,7 +586,7 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.cmd.checksum.get_checksums(
+        versions = spack.util.web.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
             keep_stage=args.keep_stage)
 

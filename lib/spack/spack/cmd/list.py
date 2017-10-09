@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,11 +29,14 @@ import cgi
 import fnmatch
 import re
 import sys
+
 from six import StringIO
 
 import llnl.util.tty as tty
-import spack
 from llnl.util.tty.colify import colify
+
+import spack
+import spack.cmd.common.arguments as arguments
 
 description = "list and search available packages"
 section = "basic"
@@ -59,6 +62,8 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--format', default='name_only', choices=formatters,
         help='format to be used to print the output [default: name_only]')
+
+    arguments.add_common_arguments(subparser, ['tags'])
 
 
 def filter_by_name(pkgs, args):
@@ -165,7 +170,7 @@ def rst(pkgs):
                                    reversed(sorted(pkg.versions))))
             print()
 
-        for deptype in spack.alldeps:
+        for deptype in spack.all_deptypes:
             deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print('%s Dependencies' % deptype.capitalize())
@@ -183,5 +188,12 @@ def list(parser, args):
     pkgs = set(spack.repo.all_package_names())
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
+
+    # Filter by tags
+    if args.tags:
+        packages_with_tags = set(spack.repo.packages_with_tags(*args.tags))
+        sorted_packages = set(sorted_packages) & packages_with_tags
+        sorted_packages = sorted(sorted_packages)
+
     # Print to stdout
     formatters[args.format](sorted_packages)

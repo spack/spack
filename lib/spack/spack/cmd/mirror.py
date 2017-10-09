@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -182,7 +182,7 @@ def mirror_create(args):
         new_specs = set()
         for spec in specs:
             spec.concretize()
-            for s in spec.traverse(deptype_query=spack.alldeps):
+            for s in spec.traverse(deptype_query=all):
                 new_specs.add(s)
         specs = list(new_specs)
 

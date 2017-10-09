@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,7 +43,9 @@ class RRmpi(RPackage):
     conflicts('^mvapich2')
     conflicts('^spectrum-mpi')
 
-    def configure_args(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+
         mpi_name = spec['mpi'].name
 
         # The type of MPI. Supported values are:

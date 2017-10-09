@@ -1,6 +1,6 @@
 # flake8: noqa
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -134,6 +134,10 @@ misc_cache_path = canonicalize_path(
 misc_cache = FileCache(misc_cache_path)
 
 
+#: Directories where to search for templates
+template_dirs = spack.config.get_config('config')['template_dirs']
+template_dirs = [canonicalize_path(x) for x in template_dirs]
+
 # If this is enabled, tools that use SSL should not verify
 # certifiates. e.g., curl should use the -k option.
 insecure = not _config.get('verify_ssl', True)
@@ -152,6 +156,9 @@ dirty = _config.get('dirty', False)
 # The number of jobs to use when building in parallel.
 # By default, use all cores on the machine.
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
+
+
+package_testing = spack.package_prefs.PackageTesting()
 
 
 #-----------------------------------------------------------------------------
@@ -200,8 +207,11 @@ __all__ += [
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
 
-from spack.spec import Spec, alldeps
-__all__ += ['Spec', 'alldeps']
+from spack.spec import Spec
+__all__ += ['Spec']
+
+from spack.dependency import all_deptypes
+__all__ += ['all_deptypes']
 
 from spack.multimethod import when
 __all__ += ['when']

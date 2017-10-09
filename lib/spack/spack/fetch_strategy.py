@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -54,13 +54,14 @@ from llnl.util.filesystem import *
 import spack
 import spack.error
 import spack.util.crypto as crypto
+import spack.util.pattern as pattern
 from spack.util.executable import *
 from spack.util.string import *
 from spack.version import Version, ver
 from spack.util.compression import decompressor_for, extension
 
-import spack.util.pattern as pattern
-"""List of all fetch strategies, created by FetchStrategy metaclass."""
+
+#: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
 
 
@@ -967,7 +968,7 @@ def from_list_url(pkg):
        the specified package's version."""
     if pkg.list_url:
         try:
-            versions = pkg.fetch_remote_versions()
+            versions = pkg.fetch_remote_package_versions()
             try:
                 url_from_list = versions[pkg.version]
                 digest = None

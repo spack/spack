@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@ import llnl.util.tty as tty
 from llnl.util.lang import *
 from llnl.util.tty.colify import *
 from llnl.util.tty.color import *
+from llnl.util.filesystem import working_dir
 
 import spack
 import spack.config
@@ -287,3 +288,9 @@ def display_specs(specs, args=None, **kwargs):
             raise ValueError(
                 "Invalid mode for display_specs: %s. Must be one of (paths,"
                 "deps, short)." % mode)
+
+
+def spack_is_git_repo():
+    """Ensure that this instance of Spack is a git clone."""
+    with working_dir(spack.prefix):
+        return os.path.isdir('.git')

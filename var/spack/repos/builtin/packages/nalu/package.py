@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,12 +35,14 @@ class Nalu(CMakePackage):
     homepage = "https://github.com/NaluCFD/Nalu"
     url      = "https://github.com/NaluCFD/Nalu.git"
 
+    maintainers = ['jrood-nrel']
+
     version('master',
             git='https://github.com/NaluCFD/Nalu.git', branch='master')
 
     # Currently Nalu only builds static libraries; To be fixed soon
-    depends_on('yaml-cpp+pic~shared')
-    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf@master')
+    depends_on('yaml-cpp+pic~shared@0.5.3:')
+    depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards@master,12.12.1:')
 
     def cmake_args(self):
         spec = self.spec
