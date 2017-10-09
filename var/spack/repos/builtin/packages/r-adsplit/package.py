@@ -25,13 +25,20 @@
 from spack import *
 
 
-class RRlang(RPackage):
-    """A toolbox for working with base types, core R features like the
-       condition system, and core 'Tidyverse' features like tidy evaluation."""
+class RAdsplit(RPackage):
+    """This package implements clustering of microarray gene expression
+    profiles according to functional annotations. For each term genes
+    are annotated to, splits into two subclasses are computed and a
+    significance of the supporting gene set is determined."""
 
-    homepage = "https://cran.r-project.org/web/packages/rlang/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rlang_0.1.2.tar.gz"
-    list_url = homepage
+    homepage = "https://www.bioconductor.org/packages/adSplit/"
+    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/adSplit_1.46.0.tar.gz"
 
-    version('0.1.2', '170f8cf7b61898040643515a1746a53a')
-    version('0.1.1', '38a51a0b8f8487eb52b4f3d986313682')
+    version('1.46.0', '7638432c734c1fe458acbb9b29384f57')
+
+    depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-cluster', type=('build', 'run'))
+    depends_on('r-go-db', type=('build', 'run'))
+    depends_on('r-kegg-db', type=('build', 'run'))
+    depends_on('r-multtest', type=('build', 'run'))
