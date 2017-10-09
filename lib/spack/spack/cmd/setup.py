@@ -65,9 +65,9 @@ def spack_transitive_include_path():
     )
 
 
-def write_spconfig(package):
+def write_spconfig(package, dirty):
     # Set-up the environment
-    spack.build_environment.setup_package(package)
+    spack.build_environment.setup_package(package, dirty)
 
     cmd = [str(which('cmake'))] + package.std_cmake_args + package.cmake_args()
 
@@ -173,7 +173,8 @@ def setup(self, args):
         tty.msg(
             'Generating spconfig.py [{0}]'.format(package.spec.cshort_spec)
         )
-        write_spconfig(package)
+        dirty = args.dirty
+        write_spconfig(package, dirty)
         # Install this package to register it in the DB and permit
         # module file regeneration
         inst_args = copy.deepcopy(args)
