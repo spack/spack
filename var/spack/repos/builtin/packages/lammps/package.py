@@ -45,8 +45,8 @@ class Lammps(CMakePackage):
         return "https://github.com/lammps/lammps/archive/patch_{0}.tar.gz".format(
             vdate.strftime("%d%b%Y").lstrip('0'))
 
-    supported_packages = ['voronoi', 'rigid', 'user-nc-dump', 'kspace',
-                          'latte', 'user-atc', 'meam', 'manybody']
+    supported_packages = ['voronoi', 'rigid', 'user-netcdf', 'kspace',
+                          'latte', 'user-atc', 'user-omp', 'meam', 'manybody']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -57,9 +57,9 @@ class Lammps(CMakePackage):
             description='Build with mpi')
 
     depends_on('mpi', when='+mpi')
-    depends_on('fftw', when='+ksapce')
+    depends_on('fftw', when='+kspace')
     depends_on('voropp', when='+voronoi')
-    depends_on('netcdf+mpi', when='+user-nc-dump')
+    depends_on('netcdf+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
     depends_on('latte', when='+latte')
@@ -76,26 +76,20 @@ class Lammps(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        return [
+        args = [
             '-DBUILD_SHARED_LIBS={0}'.format(
                 'ON' if '+lib' in spec else 'OFF'),
             '-DENABLE_MPI={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
-            '-DENABLE_RIGID={0}'.format(
-                'ON' if '+rigid' in spec else 'OFF'),
-            '-DENABLE_MEAM={0}'.format(
-                'ON' if '+meam' in spec else 'OFF'),
-            '-DENABLE_KSAPCE={0}'.format(
-                'ON' if '+kspace' in spec else 'OFF'),
-            '-DFFT=FFTW3',  # doesn't do harm withiout KSPACE
-            '-DENABLE_LATTE={0}'.format(
-                'ON' if '+latte' in spec else 'OFF'),
-            '-DENABLE_MANYBODY={0}'.format(
-                'ON' if '+manybody' in spec else 'OFF'),
-            '-DENABLE_USER-NETCDF={0}'.format(
-                'ON' if '+user-nc-dump' in spec else 'OFF'),
-            '-DENABLE_VORONOI={0}'.format(
-                'ON' if '+voronoi' in spec else 'OFF'),
-            '-DENABLE_USER-ATC={0}'.format(
-                'ON' if '+user-atc' in spec else 'OFF'),
+                'ON' if '+mpi' in spec else 'OFF')
         ]
+
+        for pkg in self.supported_packages:
+            opt = '-DENABLE_{0}'.format(pkg.upper())
+            if '+{0}'.format(pkg) in spec:
+                args.append('{0}=ON'.format(opt))
+            else:
+                args.append('{0}=OFF'.format(opt))
+        if '+kspace' in spec:
+            args.append('-DFFT=FFTW3')
+
+        return args
