@@ -33,3 +33,5 @@ class RGenomeinfodbdata(RPackage):
     url      = "https://bioconductor.org/packages/3.5/data/annotation/src/contrib/GenomeInfoDbData_0.99.0.tar.gz"
 
     version('0.99.0', '85977b51061dd02a90153db887040d05')
+
+    depends_on('r@3.4.0:3.4.9', when='@0.99.0')
