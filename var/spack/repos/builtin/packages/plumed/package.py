@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import subprocess
+import collections
 
 from spack import *
 
@@ -43,6 +44,7 @@ class Plumed(AutotoolsPackage):
     homepage = 'http://www.plumed.org/'
     url = 'https://github.com/plumed/plumed2/archive/v2.2.3.tar.gz'
 
+    version('2.3.3', '9f5729e406e79a06a16976fcb020e024')
     version('2.3.0', 'a9b5728f115dca8f0519111f1f5a6fa5')
     version('2.2.4', 'afb00da25a3fbd47acf377e53342059d')
     version('2.2.3', 'a6e3863e40aac07eb8cf739cbd14ecf8')
@@ -73,63 +75,46 @@ class Plumed(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
 
-    # Dictionary mapping PLUMED versions to the patches it provides
-    # interactively
-    plumed_patches = {
-        '2.3.0': {
-            'amber-14': '1',
-            'gromacs-2016.1': '2',
-            'gromacs-4.5.7': '3',
-            'gromacs-5.0.7': '4',
-            'gromacs-5.1.4': '5',
-            'lammps-6Apr13': '6',
-            'namd-2.8': '7',
-            'namd-2.9': '8',
-            'espresso-5.0.2': '9'
-        },
-        '2.2.4': {
-            'amber-14': '1',
-            'gromacs-4.5.7': '2',
-            'gromacs-4.6.7': '3',
-            'gromacs-5.0.7': '4',
-            'gromacs-5.1.2': '5',
-            'lammps-6Apr13': '6',
-            'namd-2.8': '7',
-            'namd-2.9': '8',
-            'espresso-5.0.2': '9'
-        },
-        '2.2.3': {
-            'amber-14': '1',
-            'gromacs-4.5.7': '2',
-            'gromacs-4.6.7': '3',
-            'gromacs-5.0.7': '4',
-            'gromacs-5.1.2': '5',
-            'lammps-6Apr13': '6',
-            'namd-2.8': '7',
-            'namd-2.9': '8',
-            'espresso-5.0.2': '9'
-        }
-    }
-
-    # The configure.ac script may detect the wrong linker for
-    # LD_RO which causes issues at link time. Here we work around
-    # the issue saying we have no LD_RO executable.
-    build_targets = ['LD_RO=']
-    install_targets = ['install', 'LD_RO=']
-
     force_autoreconf = True
 
     parallel = False
 
     def apply_patch(self, other):
-        plumed = subprocess.Popen(
-            [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
-            stdin=subprocess.PIPE
+
+        # The name of MD engines differ slightly from the ones used in Spack
+        format_strings = collections.defaultdict(
+            lambda: '{0.name}-{0.version}'
         )
-        opts = Plumed.plumed_patches[str(self.version)]
-        search = '{0.name}-{0.version}'.format(other)
-        choice = opts[search] + '\n'
-        plumed.stdin.write(choice)
+        format_strings['espresso'] = 'q{0.name}-{0.version}'
+        format_strings['amber'] = '{0.name}{0.version}'
+
+        get_md = lambda x: format_strings[x.name].format(x)
+
+        # Get available patches
+        plumed = subprocess.Popen([
+            join_path(self.spec.prefix.bin, 'plumed-patch'),
+            '-q',
+            '-l'
+        ], stdout=subprocess.PIPE)
+        available = plumed.stdout.readlines()
+        available = [x.strip() for x in available]
+        plumed.wait()
+
+        # Check that `other` is among the patchable applications
+        if get_md(other) not in available:
+            msg = '{0.name}@{0.version} is not among the MD engine'
+            msg += ' that can be patched by {1.name}@{1.version}.\n'
+            for x in available:
+                msg += x + '\n'
+            raise RuntimeError(msg.format(other, self.spec))
+
+        # Call plumed-patch to patch executables
+        plumed = subprocess.Popen([
+            join_path(self.spec.prefix.bin, 'plumed-patch'),
+            '-p',
+            '-e',
+            format_strings[other.name].format(other)
+        ])
         plumed.wait()
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -154,7 +139,12 @@ class Plumed(AutotoolsPackage):
         # with MPI you should use:
         #
         # > ./configure CXX="$MPICXX"
-        configure_opts = []
+
+        # The configure.ac script may detect the wrong linker for
+        # LD_RO which causes issues at link time. Here we work around
+        # the issue saying we have no LD_RO executable.
+        configure_opts = ['--disable-ld-r']
+
         # If using MPI then ensure the correct compiler wrapper is used.
         if '+mpi' in spec:
             configure_opts.extend([
