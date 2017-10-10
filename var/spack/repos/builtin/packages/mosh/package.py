@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,6 +35,7 @@ class Mosh(AutotoolsPackage):
     homepage = "https://mosh.org/"
     url      = "https://mosh.org/mosh-1.2.6.tar.gz"
 
+    version('1.3.2', '5122f4d2b973ab7c38dcdac8c35cb61e')
     version('1.3.0', 'd961276995936953bf2d5a794068b076')
     version('1.2.6', 'bb4e24795bb135a754558176a981ee9e')
 

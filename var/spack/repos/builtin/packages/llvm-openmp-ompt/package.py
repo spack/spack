@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,26 +33,56 @@ class LlvmOpenmpOmpt(CMakePackage):
 
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
 
-    # tr4-stable branch
+    # towards_tr4 branch
+    version('towards_tr4', branch='towards_tr4',
+            git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git')
+
     version('3.9.2b2',
             git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
             commit='5cdca5dd3c0c336d42a335ca7cff622e270c9d47')
+
     # align-to-tr-rebased branch
     version('3.9.2b',
             git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git',
             commit='982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3')
 
+    # variant for building llvm-openmp-ompt as a stand alone library
+    variant('standalone', default=False,
+            description="Build llvm openmpi ompt library as a \
+                         stand alone entity.")
+
+    variant('build_type', default='Release',
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
     depends_on('cmake@2.8:', type='build')
-    depends_on('llvm')
+    depends_on('llvm', when='~standalone')
     depends_on('ninja@1.5:', type='build')
 
     generator = 'Ninja'
 
     def cmake_args(self):
-        return [
-            '-DCMAKE_C_COMPILER=clang',
-            '-DCMAKE_CXX_COMPILER=clang++',
+        cmake_args = [
             '-DLIBOMP_OMPT_SUPPORT=on',
             '-DLIBOMP_OMPT_BLAME=on',
-            '-DLIBOMP_OMPT_TRACE=on'
+            '-DLIBOMP_OMPT_TRACE=on',
+            '-DCMAKE_C_COMPILER=%s' % spack_cc,
+            '-DCMAKE_CXX_COMPILER=%s' % spack_cxx
         ]
+
+        # Build llvm-openmp-ompt as a stand alone library
+        # CMAKE rpath variable prevents standalone error
+        # where this package wants the llvm tools path
+        if '+standalone' in self.spec:
+                cmake_args.extend(
+                    ['-DLIBOMP_STANDALONE_BUILD=true',
+                     '-DCMAKE_BUILD_WITH_INSTALL_RPATH=true',
+                     '-DLIBOMP_USE_DEBUGGER=false'])
+
+        # Build llvm-openmp-ompt using the toward_tr4 branch
+        # This requires the version to be 5.0 (50)
+        if '@towards_tr4' in self.spec:
+                cmake_args.extend(
+                    ['-DLIBOMP_OMP_VERSION=50'])
+
+        return cmake_args

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 
 
 class Likwid(Package):
@@ -32,6 +33,8 @@ class Likwid(Package):
 
     homepage = "https://github.com/RRZE-HPC/likwid"
     url      = "https://github.com/RRZE-HPC/likwid/archive/4.1.2.tar.gz"
+
+    maintainers = ['davydden']
 
     version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
 
@@ -45,7 +48,24 @@ class Likwid(Package):
     # TODO: check
     # depends_on('gnuplot', type='run')
 
+    depends_on('perl', type=('build', 'run'))
+
     supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
+
+    def patch(self):
+        files = glob.glob('perl/*.*') + glob.glob('bench/perl/*.*')
+
+        # Allow the scripts to find Spack's perl
+        filter_file('^#!/usr/bin/perl -w', '#!/usr/bin/env perl', *files)
+        filter_file('^#!/usr/bin/perl', '#!/usr/bin/env perl', *files)
+
+    @run_before('install')
+    def filter_sbang(self):
+        # Filter sbang before install so Spack's sbang hook can fix it up
+        perl = join_path(self.spec['perl'].prefix.bin, 'perl')
+        files = ['perl/feedGnuplot'] + glob.glob('filters/*')
+
+        filter_file('^#!/usr/bin/perl', '#!{0}'.format(perl), *files)
 
     def install(self, spec, prefix):
         if self.compiler.name not in self.supported_compilers:

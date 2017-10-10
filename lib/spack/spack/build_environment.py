@@ -167,12 +167,6 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
-    for mod in compiler.modules:
-        # Fixes issue https://github.com/LLNL/spack/issues/3153
-        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-            load_module("cce")
-        load_module(mod)
-
     compiler.setup_custom_environment(pkg, env)
 
     return env
@@ -191,9 +185,9 @@ def set_build_environment_variables(pkg, env, dirty):
         dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
-    build_deps      = pkg.spec.dependencies(deptype='build')
-    link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
-    build_link_deps = pkg.spec.traverse(root=False, deptype=('build', 'link'))
+    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
 
     build_prefixes      = [dep.prefix for dep in build_deps]
@@ -311,9 +305,6 @@ def set_build_environment_variables(pkg, env, dirty):
             pcdir = join_path(prefix, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
-
-    if pkg.architecture.target.module_name:
-        load_module(pkg.architecture.target.module_name)
 
     return env
 
@@ -465,12 +456,8 @@ def setup_package(pkg, dirty):
     # code ensures that all packages in the DAG have pieces of the
     # same spec object at build time.
     #
-    # This is safe for the build process, b/c the build process is a
-    # throwaway environment, but it is kind of dirty.
-    #
-    # TODO: Think about how to avoid this fix and do something cleaner.
     for s in pkg.spec.traverse():
-        s.package.spec = s
+        assert s.package.spec is s
 
     # Trap spack-tracked compiler flags as appropriate.
     # Must be before set_compiler_environment_variables
@@ -488,7 +475,7 @@ def setup_package(pkg, dirty):
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
-    load_external_modules(pkg)
+
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
     for dspec in pkg.spec.traverse(order='post', root=False, deptype='build'):
@@ -514,6 +501,21 @@ def setup_package(pkg, dirty):
     # Make sure nothing's strange about the Spack environment.
     validate(spack_env, tty.warn)
     spack_env.apply_modifications()
+
+    # All module loads that otherwise would belong in previous functions
+    # have to occur after the spack_env object has its modifications applied.
+    # Otherwise the environment modifications could undo module changes, such
+    # as unsetting LD_LIBRARY_PATH after a module changes it.
+    for mod in pkg.compiler.modules:
+        # Fixes issue https://github.com/LLNL/spack/issues/3153
+        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+            load_module("cce")
+        load_module(mod)
+
+    if pkg.architecture.target.module_name:
+        load_module(pkg.architecture.target.module_name)
+
+    load_external_modules(pkg)
 
 
 def fork(pkg, function, dirty):
@@ -602,6 +604,10 @@ def fork(pkg, function, dirty):
             target=child_process, args=(child_pipe, input_stream))
         p.start()
 
+    except InstallError as e:
+        e.pkg = pkg
+        raise
+
     finally:
         # Close the input stream in the parent process
         if input_stream is not None:
@@ -609,6 +615,10 @@ def fork(pkg, function, dirty):
 
     child_result = parent_pipe.recv()
     p.join()
+
+    # let the caller know which package went wrong.
+    if isinstance(child_result, InstallError):
+        child_result.pkg = pkg
 
     # If the child process raised an error, print its output here rather
     # than waiting until the call to SpackError.die() in main(). This
@@ -680,10 +690,15 @@ def get_package_context(traceback, context=3):
 
 
 class InstallError(spack.error.SpackError):
-    """Raised by packages when a package fails to install"""
+    """Raised by packages when a package fails to install.
+
+    Any subclass of InstallError will be annotated by Spack wtih a
+    ``pkg`` attribute on failure, which the caller can use to get the
+    package for which the exception was raised.
+    """
 
 
-class ChildError(spack.error.SpackError):
+class ChildError(InstallError):
     """Special exception class for wrapping exceptions from child processes
        in Spack's build environment.
 
@@ -738,14 +753,14 @@ class ChildError(spack.error.SpackError):
             # The error happened in some external executed process. Show
             # the build log with errors highlighted.
             if self.build_log:
-                events = parse_log_events(self.build_log)
-                nerr = len(events)
+                errors, warnings = parse_log_events(self.build_log)
+                nerr = len(errors)
                 if nerr > 0:
                     if nerr == 1:
                         out.write("\n1 error found in build log:\n")
                     else:
                         out.write("\n%d errors found in build log:\n" % nerr)
-                    out.write(make_log_context(events))
+                    out.write(make_log_context(errors))
 
         else:
             # The error happened in in the Python code, so try to show

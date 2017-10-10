@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -47,8 +47,19 @@ class Openblas(MakefilePackage):
         default=True,
         description='Build shared libraries as well as static libs.'
     )
-    variant('openmp', default=False, description="Enable OpenMP support.")
+    variant('ilp64', default=False, description='64 bit integers')
     variant('pic', default=True, description='Build position independent code')
+
+    variant('cpu_target', default='',
+                    description='Set CPU target architecture (leave empty for '
+                        'autodetection; GENERIC, SSE_GENERIC, NEHALEM, ...)')
+
+    variant(
+        'threads', default='none',
+        description='Multithreading support',
+        values=('pthreads', 'openmp', 'none'),
+        multi=False
+    )
 
     # virtual dependency
     provides('blas')
@@ -84,7 +95,8 @@ class Openblas(MakefilePackage):
                 'OpenBLAS requires both C and Fortran compilers!'
             )
         # Add support for OpenMP
-        if (('+openmp' in self.spec) and self.spec.satisfies('%clang')):
+        if (self.spec.satisfies('threads=openmp') and
+            self.spec.satisfies('%clang')):
             if str(self.spec.compiler.version).endswith('-apple'):
                 raise InstallError("Apple's clang does not support OpenMP")
             if '@:0.2.19' in self.spec:
@@ -107,8 +119,12 @@ class Openblas(MakefilePackage):
             'FC={0}'.format(spack_f77),
             'MAKE_NO_J=1'
         ]
+        if self.spec.variants['cpu_target'].value:
+            make_defs += [
+                'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
+            ]
         # invoke make with the correct TARGET for aarch64
-        if 'aarch64' in spack.architecture.sys_type():
+        elif 'aarch64' in spack.architecture.sys_type():
             make_defs += [
                 'TARGET=PILEDRIVER',
                 'TARGET=ARMV8'
@@ -125,9 +141,18 @@ class Openblas(MakefilePackage):
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
-        # Add support for OpenMP
-        if '+openmp' in self.spec:
-            make_defs += ['USE_OPENMP=1']
+
+        # Add support for multithreading
+        if self.spec.satisfies('threads=openmp'):
+            make_defs += ['USE_OPENMP=1', 'USE_THREAD=1']
+        elif self.spec.satisfies('threads=pthreads'):
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=1']
+        else:
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=0']
+
+        # 64bit ints
+        if '+ilp64' in self.spec:
+            make_defs += ['INTERFACE64=1']
 
         return make_defs
 
@@ -170,9 +195,10 @@ class Openblas(MakefilePackage):
         link_flags = spec['openblas'].libs.ld_flags
         if self.compiler.name == 'intel':
             link_flags += ' -lifcore'
-        link_flags += ' -lpthread'
-        if '+openmp' in spec:
-            link_flags += ' ' + self.compiler.openmp_flag
+        if self.spec.satisfies('threads=pthreads'):
+            link_flags += ' -lpthread'
+        if spec.satisfies('threads=openmp'):
+            link_flags += ' -lpthread ' + self.compiler.openmp_flag
 
         output = compile_c_and_execute(
             source_file, [include_flags], link_flags.split()

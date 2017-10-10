@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -661,6 +661,9 @@ class DIYStage(object):
 
     def restage(self):
         tty.die("Cannot restage DIY stage.")
+
+    def create(self):
+        self.created = True
 
     def destroy(self):
         # No need to destroy DIY stage.

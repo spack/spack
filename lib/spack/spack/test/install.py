@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -109,6 +109,36 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
             delattr(pkg, 'succeed')
         except AttributeError:
             pass
+
+
+def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
+    import sys
+    dependency = Spec('dependency-install')
+    dependency.concretize()
+    dependency.package.do_install()
+
+    dependency.package.patches['dependency-install'] = [
+        sys.modules['spack.patch'].Patch.create(
+            None, 'file://fake.patch', sha256='unused-hash')]
+
+    dependency_hash = dependency.dag_hash()
+    dependent = Spec('dependent-install ^/' + dependency_hash)
+    dependent.concretize()
+
+    assert dependent['dependency-install'] == dependency
+
+
+def test_installed_dependency_request_conflicts(
+        install_mockery, mock_fetch, refresh_builtin_mock):
+    dependency = Spec('dependency-install')
+    dependency.concretize()
+    dependency.package.do_install()
+
+    dependency_hash = dependency.dag_hash()
+    dependent = Spec(
+        'conflicting-dependent ^/' + dependency_hash)
+    with pytest.raises(spack.spec.UnsatisfiableSpecError):
+        dependent.concretize()
 
 
 def test_partial_install_keep_prefix(install_mockery, mock_fetch):

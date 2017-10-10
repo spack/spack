@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@ class Maven(Package):
     homepage = "https://maven.apache.org/index.html"
     url = "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.tar.gz"
 
+    version('3.5.0', '35c39251d2af99b6624d40d801f6ff02')
     version('3.3.9', '516923b3955b6035ba6b0a5b031fbd8b')
 
     depends_on('java')
