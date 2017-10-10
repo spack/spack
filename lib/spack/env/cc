@@ -110,13 +110,13 @@ case "$command" in
         comp="CXX"
         lang_flags=CXX
         ;;
-    ftn|f90|fc|f95|gfortran|ifort|pgfortran|xlf90|xlf90_r|nagfor)
+    ftn|f90|fc|f95|gfortran|flang|ifort|pgfortran|xlf90|xlf90_r|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
         ;;
-    f77|gfortran|ifort|pgfortran|xlf|xlf_r|nagfor|ftn)
+    f77|gfortran|flang|ifort|pgfortran|xlf|xlf_r|nagfor|ftn)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
