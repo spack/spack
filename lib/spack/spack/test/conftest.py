@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -27,40 +27,31 @@ import copy
 import os
 import re
 import shutil
-from six import StringIO
 
-import llnl.util.filesystem
-import llnl.util.lang
 import ordereddict_backport
 
 import py
 import pytest
+
 import spack
 import spack.architecture
 import spack.database
 import spack.directory_layout
-import spack.fetch_strategy
 import spack.platforms.test
 import spack.repository
 import spack.stage
 import spack.util.executable
 import spack.util.pattern
+from spack.dependency import *
+from spack.package import PackageBase
+from spack.fetch_strategy import *
+from spack.spec import Spec
+from spack.version import Version
 
 
 ##########
 # Monkey-patching that is applied to all tests
 ##########
-
-
-@pytest.fixture(autouse=True)
-def no_stdin_duplication(monkeypatch):
-    """Duplicating stdin (or any other stream) returns an empty
-    StringIO object.
-    """
-    monkeypatch.setattr(llnl.util.lang, 'duplicate_stream',
-                        lambda x: StringIO())
-
-
 @pytest.fixture(autouse=True)
 def mock_fetch_cache(monkeypatch):
     """Substitutes spack.fetch_cache with a mock object that does nothing
@@ -78,12 +69,10 @@ def mock_fetch_cache(monkeypatch):
             pass
 
         def fetch(self):
-            raise spack.fetch_strategy.FetchError(
-                'Mock cache always fails for tests'
-            )
+            raise FetchError('Mock cache always fails for tests')
 
         def __str__(self):
-            return "[mock fetcher]"
+            return "[mock fetch cache]"
 
     monkeypatch.setattr(spack, 'fetch_cache', MockCache())
 
@@ -273,7 +262,10 @@ def database(tmpdir_factory, builtin_mock, config):
 
     with spack.store.db.write_transaction():
         for spec in spack.store.db.query():
-            t.uninstall(spec)
+            if spec.package.installed:
+                t.uninstall(spec)
+            else:
+                spack.store.db.remove(spec)
 
     install_path.remove(rec=1)
     spack.store.root = str(spack_install_path)
@@ -286,6 +278,43 @@ def refresh_db_on_exit(database):
     """"Restores the state of the database after a test."""
     yield
     database.refresh()
+
+
+@pytest.fixture()
+def install_mockery(tmpdir, config, builtin_mock):
+    """Hooks a fake install directory and a fake db into Spack."""
+    layout = spack.store.layout
+    db = spack.store.db
+    # Use a fake install directory to avoid conflicts bt/w
+    # installed pkgs and mock packages.
+    spack.store.layout = spack.directory_layout.YamlDirectoryLayout(
+        str(tmpdir))
+    spack.store.db = spack.database.Database(str(tmpdir))
+    # We use a fake package, so skip the checksum.
+    spack.do_checksum = False
+    yield
+    # Turn checksumming back on
+    spack.do_checksum = True
+    # Restore Spack's layout.
+    spack.store.layout = layout
+    spack.store.db = db
+
+
+@pytest.fixture()
+def mock_fetch(mock_archive):
+    """Fake the URL for a package so it downloads from a file."""
+    fetcher = FetchStrategyComposite()
+    fetcher.append(URLFetchStrategy(mock_archive.url))
+
+    @property
+    def fake_fn(self):
+        return fetcher
+
+    orig_fn = PackageBase.fetcher
+    PackageBase.fetcher = fake_fn
+    yield
+    PackageBase.fetcher = orig_fn
+
 
 ##########
 # Fake archives and repositories
@@ -526,3 +555,63 @@ def mock_svn_repository():
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
     current.chdir()
+
+
+##########
+# Mock packages
+##########
+
+
+class MockPackage(object):
+
+    def __init__(self, name, dependencies, dependency_types, conditions=None,
+                 versions=None):
+        self.name = name
+        self.spec = None
+        self.dependencies = ordereddict_backport.OrderedDict()
+
+        assert len(dependencies) == len(dependency_types)
+        for dep, dtype in zip(dependencies, dependency_types):
+            d = Dependency(self, Spec(dep.name), type=dtype)
+            if not conditions or dep.name not in conditions:
+                self.dependencies[dep.name] = {Spec(name): d}
+            else:
+                self.dependencies[dep.name] = {Spec(conditions[dep.name]): d}
+
+        if versions:
+            self.versions = versions
+        else:
+            versions = list(Version(x) for x in [1, 2, 3])
+            self.versions = dict((x, {'preferred': False}) for x in versions)
+
+        self.variants = {}
+        self.provided = {}
+        self.conflicts = {}
+        self.patches = {}
+
+
+class MockPackageMultiRepo(object):
+
+    def __init__(self, packages):
+        self.spec_to_pkg = dict((x.name, x) for x in packages)
+        self.spec_to_pkg.update(
+            dict(('mockrepo.' + x.name, x) for x in packages))
+
+    def get(self, spec):
+        if not isinstance(spec, spack.spec.Spec):
+            spec = Spec(spec)
+        return self.spec_to_pkg[spec.name]
+
+    def get_pkg_class(self, name):
+        return self.spec_to_pkg[name]
+
+    def exists(self, name):
+        return name in self.spec_to_pkg
+
+    def is_virtual(self, name):
+        return False
+
+    def repo_for_pkg(self, name):
+        import collections
+        Repo = collections.namedtuple('Repo', ['namespace'])
+        return Repo('mockrepo')

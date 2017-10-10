@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@ import os.path
 import pytest
 import spack
 import spack.store
+from spack.test.conftest import MockPackageMultiRepo
 from spack.util.executable import Executable
 from llnl.util.tty.colify import colify
 
@@ -378,6 +379,22 @@ def test_110_no_write_with_exception_on_install(database):
     # reload DB and make sure cmake was not written.
     with install_db.read_transaction():
         assert install_db.query('cmake', installed=any) == []
+
+
+def test_115_reindex_with_packages_not_in_repo(database, refresh_db_on_exit):
+    install_db = database.mock.db
+
+    saved_repo = spack.repo
+    # Dont add any package definitions to this repository, the idea is that
+    # packages should not have to be defined in the repository once they are
+    # installed
+    mock_repo = MockPackageMultiRepo([])
+    try:
+        spack.repo = mock_repo
+        spack.store.db.reindex(spack.store.layout)
+        _check_db_sanity(install_db)
+    finally:
+        spack.repo = saved_repo
 
 
 def test_external_entries_in_db(database):

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -306,6 +306,20 @@ class TestSpecSematics(object):
 
         # Check that conditional dependencies are treated correctly
         assert '^b' in a
+
+    def test_unsatisfied_single_valued_variant(self):
+        a = Spec('a foobar=baz')
+        a.concretize()
+        assert '^b' not in a
+
+        mv = Spec('multivalue_variant')
+        mv.concretize()
+        assert 'a@1.0' not in mv
+
+    def test_indirect_unsatisfied_single_valued_variant(self):
+        spec = Spec('singlevalue-variant-dependent')
+        spec.concretize()
+        assert 'a@1.0' not in spec
 
     def test_unsatisfiable_multi_value_variant(self):
 
@@ -693,3 +707,14 @@ class TestSpecSematics(object):
         check_constrain_not_changed(
             'libelf^foo target=' + default_target,
             'libelf^foo target=' + default_target)
+
+    def test_exceptional_paths_for_constructor(self):
+
+        with pytest.raises(TypeError):
+            Spec((1, 2))
+
+        with pytest.raises(ValueError):
+            Spec('')
+
+        with pytest.raises(ValueError):
+            Spec('libelf foo')

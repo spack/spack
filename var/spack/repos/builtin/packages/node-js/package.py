@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -50,7 +50,7 @@ class NodeJs(Package):
     depends_on('python@2.7:2.8', type='build')
     # depends_on('bash-completion', when="+bash-completion")
     depends_on('icu4c', when='+icu4c')
-    depends_on('openssl', when='+openssl')
+    depends_on('openssl@1.0.2d:', when='+openssl')
 
     def install(self, spec, prefix):
         options = []

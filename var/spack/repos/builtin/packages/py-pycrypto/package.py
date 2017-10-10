@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,7 @@ class PyPycrypto(PythonPackage):
     """The Python Cryptography Toolkit"""
 
     homepage = "https://www.dlitz.net/software/pycrypto/"
-    url      = "https://pypi.python.org/packages/source/p/pycrypto/pycrypto-2.6.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pycrypto/pycrypto-2.6.1.tar.gz"
 
     version('2.6.1', '55a61a054aa66812daf5161a0d5d7eda')
 

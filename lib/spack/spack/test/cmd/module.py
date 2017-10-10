@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,8 +31,14 @@ import spack.modules as modules
 
 
 def _get_module_files(args):
-    return [modules.module_types[args.module_type](spec).file_name
-            for spec in args.specs()]
+
+    files = []
+    specs = args.specs()
+
+    for module_type in args.module_type:
+        writer_cls = modules.module_types[module_type]
+        files.extend([writer_cls(spec).layout.filename for spec in specs])
+    return files
 
 
 @pytest.fixture(scope='module')
@@ -45,9 +51,10 @@ def parser():
 
 @pytest.fixture(
     params=[
-        ['rm', 'doesnotexist'],  # Try to remove a non existing module [tcl]
+        ['rm', 'doesnotexist'],  # Try to remove a non existing module
         ['find', 'mpileaks'],  # Try to find a module with multiple matches
         ['find', 'doesnotexist'],  # Try to find a module with no matches
+        ['find', 'libelf'],  # Try to find a module wo specifying the type
     ]
 )
 def failure_args(request):
@@ -67,29 +74,39 @@ def test_exit_with_failure(database, parser, failure_args):
 
 
 def test_remove_and_add_tcl(database, parser):
+    """Tests adding and removing a tcl module file."""
+
     # Remove existing modules [tcl]
-    args = parser.parse_args(['rm', '-y', 'mpileaks'])
+    args = parser.parse_args(['rm', '-y', '-m', 'tcl', 'mpileaks'])
     module_files = _get_module_files(args)
+
     for item in module_files:
         assert os.path.exists(item)
+
     module.module(parser, args)
+
     for item in module_files:
         assert not os.path.exists(item)
 
     # Add them back [tcl]
-    args = parser.parse_args(['refresh', '-y', 'mpileaks'])
+    args = parser.parse_args(['refresh', '-y', '-m', 'tcl', 'mpileaks'])
     module.module(parser, args)
+
     for item in module_files:
         assert os.path.exists(item)
 
 
 def test_find(database, parser):
-    # Try to find a module
-    args = parser.parse_args(['find', 'libelf'])
+    """Tests the 'spack module find' under a few common scenarios."""
+
+    # Try to find it for tcl module files
+    args = parser.parse_args(['find', '--module-type', 'tcl', 'libelf'])
     module.module(parser, args)
 
 
 def test_remove_and_add_dotkit(database, parser):
+    """Tests adding and removing a dotkit module file."""
+
     # Remove existing modules [dotkit]
     args = parser.parse_args(['rm', '-y', '-m', 'dotkit', 'mpileaks'])
     module_files = _get_module_files(args)

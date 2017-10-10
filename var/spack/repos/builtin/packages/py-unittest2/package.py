@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,7 @@ class PyUnittest2(PythonPackage):
     testing framework in Python 2.7 and onwards."""
 
     homepage = "https://pypi.python.org/pypi/unittest2"
-    url      = "https://pypi.python.org/packages/source/u/unittest2/unittest2-1.1.0.tar.gz"
+    url      = "https://pypi.io/packages/source/u/unittest2/unittest2-1.1.0.tar.gz"
 
     version('1.1.0', 'f72dae5d44f091df36b6b513305ea000')
 

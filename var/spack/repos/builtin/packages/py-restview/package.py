@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ class PyRestview(PythonPackage):
     """A viewer for ReStructuredText documents that renders them on the fly."""
 
     homepage = "https://mg.pov.lt/restview/"
-    url = "https://pypi.python.org/packages/source/r/restview/restview-2.6.1.tar.gz"
+    url = "https://pypi.io/packages/source/r/restview/restview-2.6.1.tar.gz"
 
     version('2.6.1', 'ac8b70e15b8f1732d1733d674813666b')
 

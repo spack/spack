@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -55,6 +55,9 @@ class Symengine(CMakePackage):
             description='Enable thread safety option')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
     # NOTE: mpir is a drop-in replacement for gmp
     # NOTE: [mpc,mpfr,flint,piranha] could also be built against mpir
@@ -66,10 +69,6 @@ class Symengine(CMakePackage):
     depends_on('flint',    when='+flint~boostmp')
     depends_on('piranha',  when='+piranha~flint~boostmp')
 
-    def build_type(self):
-        # CMAKE_BUILD_TYPE should be  Debug | Release
-        return 'Release'
-
     def cmake_args(self):
         spec = self.spec
         options = []
@@ -77,7 +76,6 @@ class Symengine(CMakePackage):
         # See https://github.com/symengine/symengine/blob/master/README.md
         # for build options
         options.extend([
-            '-DCMAKE_BUILD_TYPE=Release',
             '-DWITH_SYMENGINE_RCP:BOOL=ON',
             '-DWITH_SYMENGINE_THREAD_SAFE:BOOL=%s' % (
                 'ON' if ('+thread_safe' or '+openmp') in spec else 'OFF'),

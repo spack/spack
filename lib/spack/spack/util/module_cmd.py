@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -97,7 +97,7 @@ def get_module_cmd_from_bash(bashopts=''):
     module_cmd = which(args[0])
     if module_cmd:
         for arg in args[1:]:
-            if arg == 'bash':
+            if arg in ('bash', 'sh'):
                 module_cmd.add_default_arg('python')
                 break
             else:
@@ -186,6 +186,12 @@ def get_path_from_module(mod):
         L = line.find('-L/')
         if L >= 0:
             return line[L + 2:line.find('/lib')]
+
+    # If it sets the PATH, use it
+    for line in text:
+        if line.find('PATH') >= 0:
+            path = get_argument_from_module_line(line)
+            return path[:path.find('/bin')]
 
     # Unable to find module path
     return None

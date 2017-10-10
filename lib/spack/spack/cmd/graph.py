@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,6 +31,7 @@ import spack
 import spack.cmd
 import spack.store
 from spack.spec import *
+from spack.dependency import *
 from spack.graph import *
 
 description = "generate graphs of package dependency relationships"
@@ -64,7 +65,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-t', '--deptype', action='store',
         help="comma-separated list of deptypes to traverse. default=%s"
-        % ','.join(alldeps))
+        % ','.join(all_deptypes))
 
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER,
@@ -87,10 +88,11 @@ def graph(parser, args):
         setup_parser.parser.print_help()
         return 1
 
-    deptype = alldeps
+    deptype = all_deptypes
     if args.deptype:
         deptype = tuple(args.deptype.split(','))
-        validate_deptype(deptype)
+        if deptype == ('all',):
+            deptype = 'all'
         deptype = canonical_deptype(deptype)
 
     if args.dot:  # Dot graph only if asked for.

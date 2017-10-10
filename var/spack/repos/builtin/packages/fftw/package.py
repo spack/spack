@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -69,6 +69,11 @@ class Fftw(AutotoolsPackage):
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
     depends_on('libtool', type='build', when='+pfft_patches')
+
+    @property
+    def libs(self):
+        result = find_libraries(['libfftw3'], root=self.prefix, recurse=True)
+        return result
 
     def autoreconf(self, spec, prefix):
         if '+pfft_patches' in spec:

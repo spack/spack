@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,3 +34,15 @@ class Pdsh(AutotoolsPackage):
     url      = "https://github.com/grondo/pdsh/archive/pdsh-2.31.tar.gz"
 
     version('2.31', 'cab34b0ca78f3cf596fd648b265223ed')
+
+    variant('ssh', default=True, description="Build with ssh module")
+
+    variant('static_modules', default=True, description="Build with static modules")
+
+    def configure_args(self):
+        args = []
+        if '+ssh' in self.spec:
+            args.append('--with-ssh')
+        if '+static_modules' in self.spec:
+            args.append('--enable-static-modules')
+        return args

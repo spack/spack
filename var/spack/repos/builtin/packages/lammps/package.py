@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,184 +23,73 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 import datetime as dt
 
 
-class Lammps(MakefilePackage):
+class Lammps(CMakePackage):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
-    Parallel Simulator."""
+    Parallel Simulator. This package uses patch releases, not
+    stable release.
+    See https://github.com/LLNL/spack/pull/5342 for a detailed
+    discussion.
+    """
     homepage = "http://lammps.sandia.gov/"
-    url      = "https://github.com/lammps/lammps/archive/stable_17Nov2016.tar.gz"
+    url      = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
 
-    version('2016.11.17', '8aecc58a39f9775203517c62a592d13b')
+    version('20170922', '4306071f919ec7e759bda195c26cfd9a')
+    version('20170901', '767e7f07289663f033474dfe974974e7')
+    version('develop', git='https://github.com/lammps/lammps', branch='master')
 
     def url_for_version(self, version):
-        vdate = dt.datetime.strptime(str(version), "%Y.%m.%d")
-        return "https://github.com/lammps/lammps/archive/stable_{0}.tar.gz".format(
-            vdate.strftime("%d%b%Y"))
+        vdate = dt.datetime.strptime(str(version), "%Y%m%d")
+        return "https://github.com/lammps/lammps/archive/patch_{0}.tar.gz".format(
+            vdate.strftime("%d%b%Y").lstrip('0'))
 
-    supported_packages = ['voronoi', 'rigid', 'user-nc-dump',
-                          'user-atc', 'meam', 'manybody']
+    supported_packages = ['voronoi', 'rigid', 'user-netcdf', 'kspace',
+                          'latte', 'user-atc', 'user-omp', 'meam', 'manybody']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
                 description='Activate the {0} package'.format(pkg))
     variant('lib', default=True,
             description='Build the liblammps in addition to the executable')
+    variant('mpi', default=True,
+            description='Build with mpi')
 
-    depends_on('mpi')
-    depends_on('fftw')
+    depends_on('mpi', when='+mpi')
+    depends_on('fftw', when='+kspace')
     depends_on('voropp', when='+voronoi')
-    depends_on('netcdf+mpi', when='+user-nc-dump')
+    depends_on('netcdf+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
+    depends_on('latte', when='+latte')
+    depends_on('blas', when='+latte')
+    depends_on('lapack', when='+latte')
 
-    def setup_environment(self, spack_env, run_env):
-        self.target_name = self.compiler.name
+    conflicts('+latte', when='@:20170921')
 
-    def edit(self, spec, prefix):
-        config = []
+    patch("lib.patch", when="@20170901")
+    patch("660.patch", when="@20170922")
 
-        config.append('CC = c++')
-        if self.compiler.name == 'intel':
-            # This is taken from MAKE/OPTIONS/Makefile.intel_cpu_intelmpi
-            config.append('OPTFLAGS = -xHost -O2 -fp-model fast=2 -no-prec-div -qoverride-limits')  # noqa: E501
-            config.append('CCFLAGS = -g -qopenmp -DLAMMPS_MEMALIGN=64 -no-offload -fno-alias -ansi-alias -restrict $(OPTFLAGS)')  # noqa: E501
-            config.append('LINKFLAGS = -qopenmp $(OPTFLAGS)')
-        else:
-            # This is taken from MAKE/OPTIONS/Makefile.g++
-            config.append('OPTFLAGS = -O3')
-            config.append('CCFLAGS = -fopenmp')
-            config.append('LINKFLAGS = -fopenmp $(OPTFLAGS)')
+    root_cmakelists_dir = 'cmake'
 
-        config.append('SHFLAGS = -fPIC')
-        config.append('DEPFLAGS = -M')
-        config.append('LINK = c++')
+    def cmake_args(self):
+        spec = self.spec
 
-        config.append('LIB = ')
-        config.append('SIZE = size')
+        args = [
+            '-DBUILD_SHARED_LIBS={0}'.format(
+                'ON' if '+lib' in spec else 'OFF'),
+            '-DENABLE_MPI={0}'.format(
+                'ON' if '+mpi' in spec else 'OFF')
+        ]
 
-        config.append('ARCHIVE = ar')
-        config.append('ARFLAGS = -rc')
-        config.append('SHLIBFLAGS = -shared')
-
-        config.append('LMP_INC = -DLAMMPS_GZIP')
-
-        mpi_path = self.spec['mpi'].prefix.lib
-        mpi_inc = self.spec['mpi'].prefix.include
-
-        config.append(
-            'MPI_INC = -DMPICH_SKIP_MPICXX -DOMPI_SKIP_MPICXX=1 -I{0}'.format(
-                mpi_inc))
-        config.append('MPI_PATH = -L{0}'.format(mpi_path))
-        config.append('MPI_LIB = {0}'.format(
-            ' '.join(self.spec['mpi'].mpicxx_shared_libs)))
-
-        config.append('FFT_INC = -DFFT_FFTW3 -L{0}'.format(
-            self.spec['fftw'].prefix.include))
-        config.append('FFT_PATH = -L{0}'.format(self.spec['fftw'].prefix.lib))
-        config.append('FFT_LIB = -lfftw3')
-
-        config.append('JPG_INC = ')
-        config.append('JPG_PATH = ')
-        config.append('JPG_LIB = ')
-
-        makefile_inc_template = \
-            join_path(os.path.dirname(self.module.__file__),
-                      'Makefile.inc')
-        with open(makefile_inc_template, "r") as fhr:
-            config.extend(fhr.read().split('\n'))
-
-        with working_dir('src/MAKE/'):
-            with open('Makefile.{0}'.format(self.target_name), 'w') as fh:
-                fh.write('\n'.join(config))
-
-    def build_meam(self):
-        with working_dir('lib/meam'):
-            filter_file(r'EXTRAMAKE = Makefile.lammps.ifort',
-                        'EXTRAMAKE = Makefile.lammps.spack',
-                        'Makefile.ifort')
-            filter_file('F90 = *ifort',
-                        'F90 = {0}'.format(self.compiler.fc),
-                        'Makefile.ifort')
-
-            with open('Makefile.lammps.spack', 'w') as fh:
-                syslib = ''
-                syspath = ''
-                if self.compiler.name == 'gcc':
-                    syslib = '-lgfortran'
-                elif self.compiler.name == 'intel':
-                    syslib = '-lifcore'
-
-                makefile = ['meam_SYSINC =',
-                            'meam_SYSLIB = {0}'.format(syslib),
-                            'meam_SYSPATH = {0}'.format(syspath)]
-
-                fh.write('\n'.join(makefile))
-
-            make('lib', '-f', 'Makefile.ifort')
-
-    def build_user_atc(self):
-        with working_dir('lib/atc'):
-            filter_file(r'CC =.*',
-                        'CC = {0}'.format(self.compiler.cxx),
-                        'Makefile.icc')
-
-            mpi_include = self.spec['mpi'].prefix.include
-
-            filter_file(r'CCFLAGS = *',
-                        'CCFLAGS = -I{0} '.format(mpi_include),
-                        'Makefile.icc')
-
-            filter_file('LINK =.*',
-                        'LINK = {0}'.format(self.compiler.cxx),
-                        'Makefile.icc')
-
-            make('lib', '-f', 'Makefile.icc')
-            with open('Makefile.lammps', 'w') as fh:
-                lapack_blas = (self.spec['lapack'].libs +
-                               self.spec['blas'].libs)
-                makefile = [
-                    'user-atc_SYSINC =',
-                    'user-atc_SYSLIB = {0}'.format(lapack_blas.ld_flags),
-                    'user-atc_SYSPATH = ']
-                fh.write('\n'.join(makefile))
-
-    def build_voronoi(self):
-        # no need to set the voronoi_SYS variable in Makefile.lammps
-        # since the spack wrapper takes care of the path
-        with working_dir('src/VORONOI'):
-            filter_file(r'#include "voro\+\+\.hh"',
-                        '#include <voro++/voro++.hh>',
-                        'compute_voronoi_atom.h')
-
-    def build(self, spec, prefix):
         for pkg in self.supported_packages:
+            opt = '-DENABLE_{0}'.format(pkg.upper())
             if '+{0}'.format(pkg) in spec:
-                _build_pkg_name = 'build_{0}'.format(pkg.replace('-', '_'))
-                if hasattr(self, _build_pkg_name):
-                    _build_pkg = getattr(self, _build_pkg_name)
-                    _build_pkg()
+                args.append('{0}=ON'.format(opt))
+            else:
+                args.append('{0}=OFF'.format(opt))
+        if '+kspace' in spec:
+            args.append('-DFFT=FFTW3')
 
-                with working_dir('src'):
-                    make('yes-{0}'.format(pkg))
-
-        with working_dir('src'):
-            make(self.target_name)
-
-            if '+lib' in spec:
-                make('mode=shlib', self.target_name)
-
-    def install(self, spec, prefix):
-        with working_dir('src'):
-            mkdirp(prefix.bin)
-            install('lmp_{0}'.format(self.target_name), prefix.bin)
-
-            if '+lib' in spec:
-                mkdirp(prefix.lib)
-                install('liblammps_{0}.{1}'.format(self.target_name,
-                                                   dso_suffix), prefix.lib)
-
-                # TODO: install the necessary headers
-                mkdirp(prefix.include)
+        return args

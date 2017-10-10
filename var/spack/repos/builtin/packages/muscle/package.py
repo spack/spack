@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,11 @@ class Muscle(MakefilePackage):
     url      = "http://www.drive5.com/muscle/muscle_src_3.8.1551.tar.gz"
 
     version('3.8.1551', '1b7c9661f275a82d3cf708f923736bf8')
+
+    def edit(self, spec, prefix):
+        makefile = FileFilter('Makefile')
+        makefile.filter('-static', '')
+        makefile.filter('-funroll-loops', '')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

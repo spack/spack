@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,7 +39,7 @@ class Spark(Package):
     variant('hadoop', default=False,
             description='Build with Hadoop')
 
-    depends_on('jdk', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
     depends_on('hadoop', when='+hadoop', type=('build', 'run'))
 
     version('2.1.0', '21d4471e78250775b1fa7c0e6c3a1326')
@@ -68,7 +68,7 @@ class Spark(Package):
     @when('+hadoop')
     def setup_environment(self, spack_env, run_env):
 
-        env['JAVA_HOME'] = self.spec['jdk'].prefix
+        env['JAVA_HOME'] = self.spec['java'].prefix
         # spack_env.set('JAVA_HOME', self.spec['jdk'].prefix)
 
         hadoop = self.spec['hadoop'].command

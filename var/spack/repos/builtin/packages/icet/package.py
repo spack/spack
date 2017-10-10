@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -40,3 +40,7 @@ class Icet(CMakePackage):
 
     def cmake_args(self):
         return ['-DICET_USE_OPENGL:BOOL=OFF']
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """Work-around for ill-placed CMake modules"""
+        spack_env.prepend_path('CMAKE_PREFIX_PATH', self.prefix.lib)

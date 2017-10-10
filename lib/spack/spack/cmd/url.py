@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -334,6 +334,8 @@ def name_parsed_correctly(pkg, name):
         pkg_name = pkg_name[2:]
     elif pkg_name.startswith('py-'):
         pkg_name = pkg_name[3:]
+    elif pkg_name.startswith('perl-'):
+        pkg_name = pkg_name[5:]
     elif pkg_name.startswith('octave-'):
         pkg_name = pkg_name[7:]
 

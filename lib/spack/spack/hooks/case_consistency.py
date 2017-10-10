@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,7 +31,7 @@ import platform
 from llnl.util.filesystem import *
 
 import spack
-from spack.cmd.pkg import get_git
+from spack.cmd import spack_is_git_repo
 from spack.util.executable import *
 
 
@@ -39,7 +39,11 @@ def pre_run():
     if platform.system() != "Darwin":
         return
 
-    git_case_consistency_check(spack.repo.get_repo('builtin').packages_path)
+    try:
+        repo = spack.repo.get_repo('builtin')
+        git_case_consistency_check(repo.packages_path)
+    except spack.repository.UnknownNamespaceError:
+        pass
 
 
 def git_case_consistency_check(path):
@@ -60,12 +64,15 @@ def git_case_consistency_check(path):
     TODO: lowercase for a long while.
 
     """
-    with working_dir(path):
-        # Don't bother fixing case if Spack isn't in a git repository
-        git = get_git(fatal=False)
-        if git is None:
-            return
+    # Don't bother fixing case if Spack isn't in a git repository
+    if not spack_is_git_repo():
+        return
 
+    git = which('git', required=False)
+    if not git:
+        return
+
+    with working_dir(path):
         try:
             git_filenames = git('ls-tree', '--name-only', 'HEAD', output=str)
             git_filenames = set(re.split(r'\s+', git_filenames.strip()))

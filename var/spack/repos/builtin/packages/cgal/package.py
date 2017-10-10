@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Cgal(Package):
+class Cgal(CMakePackage):
     """The Computational Geometry Algorithms Library (CGAL) is a C++ library
     that aims to provide easy access to efficient and reliable algorithms in
     computational geometry. CGAL is used in various areas needing geometric
@@ -42,8 +42,9 @@ class Cgal(Package):
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('debug', default=False,
-            description='Builds a debug version of the libraries')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
     # ---- See "7 CGAL Libraries" at:
     # http://doc.cgal.org/latest/Manual/installation.html
@@ -57,6 +58,8 @@ class Cgal(Package):
             description='Build utilities to read/write image files')
     variant('demos', default=False,
             description='Build CGAL demos')
+
+    depends_on('cmake@2.8.11:', type='build')
 
     # Essential Third Party Libraries
     depends_on('boost+thread+system')
@@ -82,18 +85,12 @@ class Cgal(Package):
     # depends_on('esbtl')
     # depends_on('intel-tbb')
 
-    # Build dependencies
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
+    def cmake_args(self):
         # Installation instructions:
         # http://doc.cgal.org/latest/Manual/installation.html
+        spec = self.spec
 
-        options = std_cmake_args + [
-            # CGAL supports only Release and Debug build type. Any
-            # other build type will raise an error at configure time
-            '-DCMAKE_BUILD_TYPE:STRING=%s' %
-            ('Debug' if '+debug' in spec else 'Release'),
+        return [
             '-DBUILD_SHARED_LIBS:BOOL=%s' %
             ('ON' if '+shared' in spec else 'OFF'),
             '-DWITH_CGAL_Core:BOOL=%s' %
@@ -101,9 +98,5 @@ class Cgal(Package):
             '-DWITH_CGAL_ImageIO:BOOL=%s' %
             ('YES' if '+imageio' in spec else 'NO'),
             '-DWITH_CGAL_Qt5:BOOL=%s' %
-            ('YES' if '+demos' in spec else 'NO')]
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *options)
-            make()
-            make('install')
+            ('YES' if '+demos' in spec else 'NO'),
+        ]

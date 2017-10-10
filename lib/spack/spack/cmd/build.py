@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,8 @@ level = "long"
 build_system_to_phase = {
     AutotoolsPackage: 'build',
     CMakePackage: 'build',
+    QMakePackage: 'build',
+    SConsPackage: 'build',
     WafPackage: 'build',
     PythonPackage: 'build',
     PerlPackage: 'build',

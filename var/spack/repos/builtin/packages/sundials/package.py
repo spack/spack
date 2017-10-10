@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import sys
 
 
 class Sundials(Package):
@@ -33,21 +34,28 @@ class Sundials(Package):
     homepage = "http://computation.llnl.gov/casc/sundials/"
     url = "http://computation.llnl.gov/projects/sundials-suite-nonlinear-differential-algebraic-equation-solvers/download/sundials-2.6.2.tar.gz"
 
+    version('2.7.0', 'c304631b9bc82877d7b0e9f4d4fd94d3')
     version('2.6.2', '3deeb0ede9f514184c6bd83ecab77d95')
 
-    variant('mpi',     default=True,  description='Enable MPI support')
+    variant('mpi',     default=True,
+            description='Enable MPI parallelism')
     variant('lapack',  default=True,
-            description='Build with external BLAS/LAPACK libraries')
+            description='Use external BLAS/LAPACK libraries')
     variant('klu',     default=False,
-            description='Build with SuiteSparse KLU libraries')
+            description='Enable KLU sparse, direct solver')
     variant('superlu', default=False,
-            description='Build with SuperLU_MT libraries')
-    variant('openmp',  default=False, description='Enable OpenMP support')
+            description='Enable SuperLU_MT sparse, direct solver')
+    variant('openmp',  default=False,
+            description='Enable OpenMP parallelism')
     variant('pthread', default=True,
-            description='Enable POSIX threads support')
+            description='Enable Pthreads parallelism')
+    variant('hypre', default=False,
+            description='Enable Hypre parallel vector for MPI parallelism')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake',              type='build')
     depends_on('mpi',                when='+mpi')
+    depends_on('mpi',                when='@2.7:+hypre')
+    depends_on('hypre',              when='@2.7:+hypre')
     depends_on('blas',               when='+lapack')
     depends_on('lapack',             when='+lapack')
     depends_on('suite-sparse',       when='+klu')
@@ -55,54 +63,72 @@ class Sundials(Package):
     depends_on('superlu-mt+pthread', when='+superlu+pthread')
 
     def install(self, spec, prefix):
+
+        def on_off(varstr):
+            return 'ON' if varstr in self.spec else 'OFF'
+
         cmake_args = std_cmake_args[:]
+
+        fortran_flag = self.compiler.pic_flag
+        if spec.satisfies('%clang platform=darwin'):
+            mpif77 = Executable(self.spec['mpi'].mpif77)
+            libgfortran = LibraryList(mpif77('--print-file-name',
+                                             'libgfortran.a', output=str))
+            fortran_flag += ' ' + libgfortran.ld_flags
+
         cmake_args.extend([
             '-DBUILD_SHARED_LIBS=ON',
-            '-DCMAKE_C_FLAGS=-fPIC',
-            '-DCMAKE_Fortran_FLAGS=-fPIC',
+            '-DCMAKE_C_FLAGS={0}'.format(self.compiler.pic_flag),
+            '-DCMAKE_Fortran_FLAGS={0}'.format(fortran_flag),
             '-DEXAMPLES_ENABLE=ON',
             '-DEXAMPLES_INSTALL=ON',
-            '-DFCMIX_ENABLE=ON'
+            '-DFCMIX_ENABLE=ON',
+            '-DMPI_ENABLE=%s' % on_off('+mpi'),
+            '-DLAPACK_ENABLE=%s' % on_off('+lapack'),
+            '-DKLU_ENABLE=%s' % on_off('+klu'),
+            '-DHYPRE_ENABLE=%s' % on_off('+hypre'),
+            '-DSUPERLUMT_ENABLE=%s' % on_off('+superlu'),
+            '-DOPENMP_ENABLE=%s' % on_off('+openmp'),
+            '-DPTHREAD_ENABLE=%s' % on_off('+pthread')
         ])
 
         # MPI support
         if '+mpi' in spec:
             cmake_args.extend([
-                '-DMPI_ENABLE=ON',
                 '-DMPI_MPICC={0}'.format(spec['mpi'].mpicc),
                 '-DMPI_MPIF77={0}'.format(spec['mpi'].mpif77)
             ])
-        else:
-            cmake_args.append('-DMPI_ENABLE=OFF')
+
+        # Building with Hypre
+        if '+hypre' in spec and spec.satisfies('@2.7:'):
+            cmake_args.extend([
+                '-DHYPRE_INCLUDE_DIR={0}'.format(
+                    spec['hypre'].prefix.include),
+                '-DHYPRE_LIBRARY_DIR={0}'.format(
+                    spec['hypre'].prefix.lib)
+            ])
 
         # Building with LAPACK and BLAS
         if '+lapack' in spec:
             cmake_args.extend([
-                '-DLAPACK_ENABLE=ON',
                 '-DLAPACK_LIBRARIES={0}'.format(
                     (spec['lapack'].libs +
                      spec['blas'].libs).joined(';')
                 )
             ])
-        else:
-            cmake_args.append('-DLAPACK_ENABLE=OFF')
 
         # Building with KLU
         if '+klu' in spec:
             cmake_args.extend([
-                '-DKLU_ENABLE=ON',
                 '-DKLU_INCLUDE_DIR={0}'.format(
                     spec['suite-sparse'].prefix.include),
                 '-DKLU_LIBRARY_DIR={0}'.format(
                     spec['suite-sparse'].prefix.lib)
             ])
-        else:
-            cmake_args.append('-DKLU_ENABLE=OFF')
 
         # Building with SuperLU_MT
         if '+superlu' in spec:
             cmake_args.extend([
-                '-DSUPERLUMT_ENABLE=ON',
                 '-DSUPERLUMT_INCLUDE_DIR={0}'.format(
                     spec['superlu-mt'].prefix.include),
                 '-DSUPERLUMT_LIBRARY_DIR={0}'.format(
@@ -116,26 +142,15 @@ class Sundials(Package):
                 msg = 'You must choose either +openmp or +pthread when '
                 msg += 'building with SuperLU_MT'
                 raise RuntimeError(msg)
-        else:
-            cmake_args.append('-DSUPERLUMT_ENABLE=OFF')
-
-        # OpenMP support
-        if '+openmp' in spec:
-            cmake_args.append('-DOPENMP_ENABLE=ON')
-        else:
-            cmake_args.append('-DOPENMP_ENABLE=OFF')
-
-        # POSIX threads support
-        if '+pthread' in spec:
-            cmake_args.append('-DPTHREAD_ENABLE=ON')
-        else:
-            cmake_args.append('-DPTHREAD_ENABLE=OFF')
 
         with working_dir('build', create=True):
             cmake('..', *cmake_args)
 
             make()
             make('install')
+
+            if (sys.platform == 'darwin'):
+                fix_darwin_install_name(prefix.lib)
 
         install('LICENSE', prefix)
 

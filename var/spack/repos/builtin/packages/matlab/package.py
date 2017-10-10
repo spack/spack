@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -65,6 +65,8 @@ class Matlab(Package):
     license_files    = ['licenses/license.dat']
     license_vars     = ['LM_LICENSE_FILE']
     license_url      = 'https://www.mathworks.com/help/install/index.html'
+
+    extendable = True
 
     def url_for_version(self, version):
         return "file://{0}/matlab_{1}_glnxa64.zip".format(os.getcwd(), version)

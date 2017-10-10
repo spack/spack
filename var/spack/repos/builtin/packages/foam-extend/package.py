@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -143,7 +143,6 @@ class FoamExtend(Package):
         run_env.set('WM_PROJECT_DIR', self.projectdir)
         for d in ['wmake', self.archbin]:  # bin already added automatically
             run_env.prepend_path('PATH', join_path(self.projectdir, d))
-        run_env.set('MPI_BUFFER_SIZE', "20000000")
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Provide location of the OpenFOAM project.

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -50,6 +50,9 @@ class Eccodes(CMakePackage):
             description="Enable OpenMP threads")
     variant('memfs', default=False,
             description="Memory based access to definitions/samples")
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'Production'))
 
     depends_on('netcdf', when='+netcdf')
     depends_on('openjpeg', when='+jpeg')

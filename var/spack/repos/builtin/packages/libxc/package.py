@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -71,8 +71,15 @@ class Libxc(Package):
             if which('xiar'):
                 env['AR'] = 'xiar'
 
-        env['CFLAGS']  = optflags
-        env['FCFLAGS'] = optflags
+        if 'CFLAGS' in env and env['CFLAGS']:
+            env['CFLAGS'] += ' ' + optflags
+        else:
+            env['CFLAGS'] = optflags
+
+        if 'FCFLAGS' in env and env['FCFLAGS']:
+            env['FCFLAGS'] += ' ' + optflags
+        else:
+            env['FCFLAGS'] = optflags
 
         configure('--prefix={0}'.format(prefix),
                   '--enable-shared')

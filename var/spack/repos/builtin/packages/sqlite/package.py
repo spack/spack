@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,8 +33,12 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "www.sqlite.org"
 
+    version('3.20.0', 'e262a28b73cc330e7e83520c8ce14e4d',
+            url='https://www.sqlite.org/2017/sqlite-autoconf-3200000.tar.gz')
     version('3.18.0', 'a6687a8ae1f66abc8df739aeadecfd0c',
             url='https://www.sqlite.org/2017/sqlite-autoconf-3180000.tar.gz')
+    version('3.8.10.2', 'a18bfc015cd49a1e7a961b7b77bc3b37',
+            url='https://www.sqlite.org/2015/sqlite-autoconf-3081002.tar.gz')
     version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed',
             url='https://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
 
