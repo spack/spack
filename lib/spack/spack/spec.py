@@ -1612,6 +1612,10 @@ class Spec(object):
         if self.name in visited:
             return False
 
+        if self.concrete:
+            visited.add(self.name)
+            return False
+
         changed = False
 
         # Concretize deps first -- this is a bottom-up process.
@@ -1805,6 +1809,9 @@ class Spec(object):
             if s.namespace is None:
                 s.namespace = spack.repo.repo_for_pkg(s.name).namespace
 
+            if s.concrete:
+                continue
+
             # Add any patches from the package to the spec.
             patches = []
             for cond, patch_list in s.package_class.patches.items():
@@ -1824,6 +1831,9 @@ class Spec(object):
                                          cover='edges', root=False):
             pkg_deps = dspec.parent.package_class.dependencies
             if dspec.spec.name not in pkg_deps:
+                continue
+
+            if dspec.spec.concrete:
                 continue
 
             patches = []
@@ -1878,6 +1888,8 @@ class Spec(object):
         unless there is a need to force a spec to be concrete.
         """
         for s in self.traverse(deptype_query=all):
+            if (not value) and s.concrete and s.package.installed:
+                continue
             s._normal = value
             s._concrete = value
 
@@ -2067,6 +2079,9 @@ class Spec(object):
         # caller, it's a copy from _evaluate_dependency_conditions. If it
         # comes from a vdep, it's a defensive copy from _find_provider.
         if dep.name not in spec_deps:
+            if self.concrete:
+                return False
+
             spec_deps[dep.name] = dep
             changed = True
         else:
