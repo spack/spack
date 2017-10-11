@@ -36,8 +36,6 @@ from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 from spack.test.concretize_preferences import concretize_scope  # NOQA: ignore=F401
 
-from ordereddict_backport import OrderedDict
-
 
 def check_links(spec_to_check):
     for spec in spec_to_check.traverse():

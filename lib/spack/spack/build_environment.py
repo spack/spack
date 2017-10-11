@@ -52,7 +52,6 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import inspect
-import itertools
 import multiprocessing
 import os
 import shutil
@@ -188,7 +187,7 @@ def set_build_environment_variables(pkg, env, dirty):
     # Gather information about various types of dependencies
     build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
     link_deps       = set(pkg.spec.traverse(
-                              root=False, deptype=('link', 'include')))
+                          root=False, deptype=('link', 'include')))
     build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
 
