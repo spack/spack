@@ -44,6 +44,11 @@ class Git(AutotoolsPackage):
 
     releases = [
         {
+            'version': '2.14.1',
+            'md5': 'e965a37b3d277f2e7e78f5b04de28e2a',
+            'md5_manpages': 'da2e75ea3972b9e93fb47023e3bf1401',
+        },
+        {
             'version': '2.13.0',
             'md5': 'd0f14da0ef1d22f1ce7f7876fadcb39f',
             'md5_manpages': 'fda8d6d5314eb5a47e315405830f9970',
@@ -145,7 +150,8 @@ class Git(AutotoolsPackage):
     depends_on('gettext')
     depends_on('libiconv')
     depends_on('openssl')
-    depends_on('pcre')
+    depends_on('pcre', when='@:2.13')
+    depends_on('pcre+jit', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
 
@@ -155,8 +161,12 @@ class Git(AutotoolsPackage):
     depends_on('m4',       type='build')
 
     def setup_environment(self, spack_env, run_env):
-        spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
-            self.spec['gettext'].prefix.lib))
+        # This is done to avoid failures when git is an external package.
+        # In that case the node in the DAG gets truncated and git DOES NOT
+        # have a gettext dependency.
+        if 'gettext' in self.spec:
+            spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
+                self.spec['gettext'].prefix.lib))
 
     def configure_args(self):
         spec = self.spec

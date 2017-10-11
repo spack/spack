@@ -53,7 +53,8 @@ def test_get_path_from_module(save_env):
     lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
              'setenv MOD_DIR /path/to',
              'setenv LDFLAGS -Wl,-rpath/path/to/lib',
-             'setenv LDFLAGS -L/path/to/lib']
+             'setenv LDFLAGS -L/path/to/lib',
+             'prepend-path PATH /path/to/bin']
 
     for line in lines:
         module_func = '() { eval `echo ' + line + ' bash filler`\n}'

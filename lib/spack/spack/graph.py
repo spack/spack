@@ -69,11 +69,12 @@ from llnl.util.lang import *
 from llnl.util.tty.color import *
 
 from spack.spec import *
+from spack.dependency import *
 
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
 
-def topological_sort(spec, reverse=False, deptype=None):
+def topological_sort(spec, reverse=False, deptype='all'):
     """Topological sort for specs.
 
     Return a list of dependency specs sorted topologically.  The spec
@@ -493,7 +494,7 @@ class AsciiGraph(object):
 
 
 def graph_ascii(spec, node='o', out=None, debug=False,
-                indent=0, color=None, deptype=None):
+                indent=0, color=None, deptype='all'):
     graph = AsciiGraph()
     graph.debug = debug
     graph.indent = indent
@@ -504,7 +505,7 @@ def graph_ascii(spec, node='o', out=None, debug=False,
     graph.write(spec, color=color, out=out)
 
 
-def graph_dot(specs, deptype=None, static=False, out=None):
+def graph_dot(specs, deptype='all', static=False, out=None):
     """Generate a graph in dot format of all provided specs.
 
     Print out a dot formatted graph of all the dependencies between
@@ -515,9 +516,7 @@ def graph_dot(specs, deptype=None, static=False, out=None):
     """
     if out is None:
         out = sys.stdout
-
-    if deptype is None:
-        deptype = alldeps
+    deptype = canonical_deptype(deptype)
 
     out.write('digraph G {\n')
     out.write('  labelloc = "b"\n')

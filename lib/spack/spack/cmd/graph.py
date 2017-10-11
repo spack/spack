@@ -31,6 +31,7 @@ import spack
 import spack.cmd
 import spack.store
 from spack.spec import *
+from spack.dependency import *
 from spack.graph import *
 
 description = "generate graphs of package dependency relationships"

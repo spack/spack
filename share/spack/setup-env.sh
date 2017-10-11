@@ -210,7 +210,7 @@ export SPACK_SHELL=$(_spack_determine_shell)
 # Check whether a function of the given name is defined
 #
 function _spack_fn_exists() {
-	type $1 2>&1 | grep -q 'function'
+	LANG= type $1 2>&1 | grep -q 'function'
 }
 
 need_module="no"
@@ -230,18 +230,7 @@ if [ "${need_module}" = "yes" ]; then
         export MODULE_PREFIX=${module_prefix}
         _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
         module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
-        echo "INFO: Using spack managed module system."
-    else
-        echo "WARNING: A method for managing modules does not currently exist."
-        echo ""
-        echo "To resolve this you may either:"
-        echo "1. Allow spack to handle this by running 'spack bootstrap'"
-        echo "   and sourcing this script again."
-        echo "2. Install and activate a supported module managment engine manually"
-        echo "   Supported engines include: environment-modules and lmod"
     fi;
-else
-    echo "INFO: Using system available module system."
 fi;
 
 #

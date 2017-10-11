@@ -162,7 +162,7 @@ your site.
 
 Once you have a mirror, you need to let spack know about it.  This is
 relatively simple.  First, figure out the URL for the mirror.  If it's
-a file, you can use a file URL like this one:
+a directory, you can use a file URL like this one:
 
 .. code-block:: none
 

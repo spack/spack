@@ -29,8 +29,10 @@ class RHtmltools(RPackage):
     """Tools for HTML generation and output."""
 
     homepage = "https://github.com/rstudio/htmltools"
-    url      = "https://cran.r-project.org/src/contrib/htmltools_0.3.5.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/htmltools_0.3.6.tar.gz"
+    list_url = homepage
 
+    version('0.3.6', '336419c2143f958862e01ef1bbc9c253')
     version('0.3.5', '5f001aff4a39e329f7342dcec5139724')
 
     depends_on('r-digest', type=('build', 'run'))

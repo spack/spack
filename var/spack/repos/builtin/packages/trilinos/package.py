@@ -44,7 +44,7 @@ class Trilinos(CMakePackage):
     A unique design feature of Trilinos is its focus on packages.
     """
     homepage = "https://trilinos.org/"
-    url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz"
+    url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
 
     maintainers = ['aprokop']
 
@@ -56,7 +56,8 @@ class Trilinos(CMakePackage):
             git='https://github.com/trilinos/Trilinos.git', tag='develop')
     version('master',
             git='https://github.com/trilinos/Trilinos.git', tag='master')
-    version('12.10.1', '40f28628b63310f9bd17c26d9ebe32b1')
+    version('12.12.1', 'ecd4606fa332212433c98bf950a69cc7')
+    version('12.10.1', '667333dbd7c0f031d47d7c5511fd0810')
     version('12.8.1', '01c0026f1e2050842857db941060ecd5')
     version('12.6.4', 'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
     version('12.6.3', '8de5cc00981a0ca0defea6199b2fe4c1')
@@ -153,6 +154,14 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
     variant('openmp',       default=False,
             description='Enable OpenMP')
+    variant('nox',          default=False,
+            description='Enable NOX')
+    variant('shards',       default=False,
+            description='Enable Shards')
+    variant('intrepid',     default=False,
+            description='Enable Intrepid')
+    variant('intrepid2',     default=False,
+            description='Enable Intrepid2')
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit',
@@ -301,6 +310,14 @@ class Trilinos(CMakePackage):
                 'ON' if '+teuchos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
                 'ON' if '+anasazi' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
+                'ON' if '+nox' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Shards=%s' % (
+                'ON' if '+shards' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Intrepid=%s' % (
+                'ON' if '+intrepid' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Intrepid2=%s' % (
+                'ON' if '+intrepid2' in spec else 'OFF'),
         ])
 
         if '+xsdkflags' in spec:
