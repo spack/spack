@@ -32,8 +32,10 @@ class RBiocparallel(RPackage):
 
     homepage = "https://bioconductor.org/packages/BiocParallel/"
     url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/BiocParallel_1.10.1.tar.gz"
+    list_url = homepage
 
     version('1.10.1', '0b587026c0e2c5945be1d84deb12d7dd')
 
     depends_on('r-futile-logger', type=('build', 'run'))
     depends_on('r-snow', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.10.1')
