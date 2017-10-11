@@ -94,6 +94,9 @@ build-only. Note that the y->v and p->v dependencies could use different
 instances of v if it were not for the q->v dependency.
 
 """
+    saved_repo = spack.repo
+
+    default = ('build', 'link')
 
     v = MockPackage('v', [], [])
     # Adding a condition for q on v ensures that q's instance of v is not

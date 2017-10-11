@@ -2164,54 +2164,49 @@ class Spec(object):
             return False
 
         # Combine constraints from package deps with constraints from
-        # the spec, until nothing changes.
-        any_change = False
-        changed = True
+        # the spec
 
         pkg = spack.repo.get(self.fullname)
 
         build_only = set()
         for dep_name in pkg.dependencies:
-            deptypes = pkg.dependency_types[dep_name]
-            if set(deptypes) == set(['build']):
+            dependency = self._evaluate_dependency_conditions(dep_name)
+            if dependency and set(dependency.type) == set(['build']):
                 build_only.add(dep_name)
         if build_only:
             build_constraints = DependencyConstraints(self)
             dep_constraints = dep_constraints.copy()
             dep_constraints.append(build_constraints)
 
-        while changed:
-            changed = False
-            for dep_name in pkg.dependencies:
-                pkg_dep = self._evaluate_dependency_conditions(dep_name)
-                deptypes = pkg.dependency_types[dep_name]
+        changed = False
+        for dep_name in pkg.dependencies:
+            dependency = self._evaluate_dependency_conditions(dep_name)
 
-                if not pkg_dep:
-                    continue
-                elif not (spack.package_testing.check(self.name) or
-                          set(dep.type) - set(['test'])):
-                    continue
+            if not dependency:
+                continue
+            elif not (spack.package_testing.check(self.name) or
+                      set(dependency.type) - set(['test'])):
+                continue
 
-                child_build = in_build or dep_name in build_only
-                if dep_name in build_only:
-                    child_constraints = build_constraints
-                else:
-                    child_constraints = dep_constraints
+            child_build = in_build or dep_name in build_only
+            if dep_name in build_only:
+                child_constraints = build_constraints
+            else:
+                child_constraints = dep_constraints
 
-                if pkg_dep and (all_deps or dep_name not in build_only):
-                    if user_build_constraints and dep_name in build_only:
-                        for constraint_spec in user_build_constraints:
-                            if constraint_spec.name == pkg_dep.name:
-                                pkg_dep.constrain(constraint_spec)
+            if dependency and (all_deps or dep_name not in build_only):
+                if user_build_constraints and dep_name in build_only:
+                    for constraint_spec in user_build_constraints:
+                        if constraint_spec.name == dependency.name:
+                            dependency.constrain(constraint_spec)
 
-                    local_changed = self._merge_dependency(
-                        pkg_dep, deptypes, child_constraints, visited,
-                        provider_index, all_deps, child_build,
-                        user_build_constraints)
-                    changed |= local_changed
-            any_change |= changed
+                local_changed = self._merge_dependency(
+                    dependency, child_constraints, visited,
+                    provider_index, all_deps, child_build,
+                    user_build_constraints)
+                changed |= local_changed
 
-        return any_change
+        return changed
 
     def normalize(self):
         dep_constraints = DependencyConstraints(self, copy=True)
