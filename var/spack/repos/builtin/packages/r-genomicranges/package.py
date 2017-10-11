@@ -40,6 +40,8 @@ class RGenomicranges(RPackage):
     homepage = "https://bioconductor.org/packages/GenomicRanges/"
     url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/GenomicRanges_1.28.5.tar.gz"
     list_url = homepage
+
+    version('1.28.6', '84c5a40e846b35e98d019ca39783cfe6')
     version('1.28.5', '5b11897331c4371e09133ea3be125c03')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
@@ -47,4 +49,4 @@ class RGenomicranges(RPackage):
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-xvector', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.28.5')
+    depends_on('r@3.4.0:3.4.9', when='@1.28.5:1.28.6')
