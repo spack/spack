@@ -52,18 +52,11 @@ class Cereal(CMakePackage):
 
     depends_on('cmake@2.6.2:', type='build')
 
-    def patch(self):
-        # Don't use -Werror
-        filter_file(r'-Werror', '', 'CMakeLists.txt')
-
     def cmake_args(self):
         # Boost is only used for self-tests, which we are not running (yet?)
         return [
             '-DCMAKE_DISABLE_FIND_PACKAGE_Boost=TRUE',
             '-DSKIP_PORTABILITY_TEST=TRUE',
+            '-DJUST_INSTALL_CEREAL=On',
+            '-DWITH_WERROR=Off',
         ]
-
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            install_tree('doc', prefix.doc)
-            install_tree('include', prefix.include)

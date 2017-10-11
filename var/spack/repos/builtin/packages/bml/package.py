@@ -31,18 +31,32 @@ class Bml(CMakePackage):
     matrix operations."""
 
     homepage = "http://lanl.github.io/bml/"
-    url      = "https://github.com/lanl/bml"
+    url      = "https://github.com/lanl/bml/tarball/v1.2.2"
 
+    version('1.2.2', 'c86959cb0188e9d0a9a2cbad03b2782d')
+    version('1.1.0', '271adecee08aee678be9eeceee06b6fb')
     version('develop', git='https://github.com/lanl/bml', branch='master')
-    version('1.1.0', git='https://github.com/lanl/bml', tag='v1.1.0')
 
     variant('shared', default=True, description='Build shared libs')
+    variant('mpi', default=False, description='Build with MPI Support')
+
+    conflicts('+mpi', when='@:1.2.2')
 
     depends_on("blas")
     depends_on("lapack")
+    depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
-        return [
+        args = [
             '-DBUILD_SHARED_LIBS={0}'.format(
                 'ON' if '+shared' in self.spec else 'OFF')
         ]
+        spec = self.spec
+        if '+mpi' in spec:
+            args.append('-DBML_MPI=True')
+            args.append('-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc)
+            args.append('-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx)
+            args.append('-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc)
+        else:
+            args.append('-DBML_MPI=False')
+        return args

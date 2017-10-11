@@ -13,6 +13,7 @@ tcl:
     environment:
       set:
         FOO: 'foo'
+        OMPI_MCA_mpi_leave_pinned: '1'
       unset:
         - BAR
 
