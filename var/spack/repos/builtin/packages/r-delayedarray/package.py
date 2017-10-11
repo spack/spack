@@ -51,3 +51,4 @@ class RDelayedarray(RPackage):
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-matrixstats', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@0.2.7')
