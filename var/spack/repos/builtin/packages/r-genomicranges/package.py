@@ -47,3 +47,4 @@ class RGenomicranges(RPackage):
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-xvector', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.28.5')
