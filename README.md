@@ -4,7 +4,6 @@
 [![Build Status](https://travis-ci.org/LLNL/spack.svg?branch=develop)](https://travis-ci.org/LLNL/spack)
 [![codecov](https://codecov.io/gh/LLNL/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/LLNL/spack)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
-[![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
 
 Spack is a multi-platform package manager that builds and installs
 multiple versions and configurations of software. It works on Linux,
