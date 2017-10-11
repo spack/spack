@@ -38,7 +38,7 @@ class Strelka(CMakePackage):
     depends_on('zlib')
     depends_on('bzip2')
     depends_on('cmake@2.8.5:')
-    depends_on('boost@1.56.0')
+    depends_on('boost@1.56.0:')
 
     @run_before('install')
     def filter_sbang(self):
