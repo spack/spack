@@ -34,16 +34,18 @@ class Sundials(CMakePackage):
     homepage = "https://computation.llnl.gov/projects/sundials"
     url = "https://computation.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
 
-
-    ##### Versions #####
+    # ==========================================================================
+    # Versions
+    # ==========================================================================
 
     version('3.0.0-beta-2',
             git='https://github.com/LLNL/sundials.git', tag='v3.0.0-beta-2')
     version('2.7.0', 'c304631b9bc82877d7b0e9f4d4fd94d3', preferred=True)
     version('2.6.2', '3deeb0ede9f514184c6bd83ecab77d95')
 
-
-    ##### Variants #####
+    # ==========================================================================
+    # Variants
+    # ==========================================================================
 
     # SUNDIALS solvers
     variant('cvode',  default=True,
@@ -67,7 +69,7 @@ class Sundials(CMakePackage):
         values=('single', 'double', 'extended'),
         multi=False
     )
-    
+
     # Index type
     variant(
         'indextype',
@@ -77,7 +79,7 @@ class Sundials(CMakePackage):
         multi=False
     )
 
-    # Parallelism 
+    # Parallelism
     variant('mpi',     default=True,
             description='Enable MPI parallel vector')
     variant('openmp',  default=False,
@@ -136,14 +138,15 @@ class Sundials(CMakePackage):
     # xSDK options
     variant('xsdk-defaults', default=False,
             description='Use default xSDK configuration')
-    
-    
-    ##### Conflicts #####
-    
+
+    # ==========================================================================
+    # Conflicts
+    # ==========================================================================
+
     # Options added after v2.6.2
     conflicts('+hypre', when='@:2.6.2')
     conflicts('+petsc', when='@:2.6.2')
-    
+
     # Options added after v2.7.0
     conflicts('+cuda',          when='@:2.7.0')
     conflicts('+raja',          when='@:2.7.0')
@@ -152,21 +155,37 @@ class Sundials(CMakePackage):
     conflicts('+xsdk-defaults', when='@:2.7.0')
     conflicts('+examples-cuda', when='@:2.7.0')
     conflicts('+examples-raja', when='@:2.7.0')
-    
-    ##### Dependencies #####
-    
+
+    # External libraries incompatible with 64-bit indices
+    conflicts('+lapack', when='@3.0.0-beta-2: indextype=int64_t')
+    conflicts('+hypre',  when='+hypre@:2.6.1a indextype=int64_t')
+
+    # External libraries incompatible with single precision
+    conflicts('+klu',   when='precision=single')
+    conflicts('+hypre', when='+hypre@:2.12.0 precision=single')
+
+    # External libraries incompatible with extended (quad) precision
+    conflicts('+lapack',     when='precision=extended')
+    conflicts('+superlu-mt', when='precision=extended')
+    conflicts('+klu',        when='precision=extended')
+    conflicts('+hypre',      when='+hypre@:2.12.0 precision=extended')
+
+    # ==========================================================================
+    # Dependencies
+    # ==========================================================================
+
     # Build dependencies
     depends_on('cmake', type='build')
-    
+
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+hypre')
     depends_on('mpi', when='+petsc')
-    
+
     # Other parallelism dependencies
     depends_on('cuda', when='+cuda')
     depends_on('raja', when='+raja')
-    
+
     # External libraries
     depends_on('hypre',              when='+hypre')
     depends_on('petsc',              when='+petsc')
@@ -175,17 +194,17 @@ class Sundials(CMakePackage):
     depends_on('suite-sparse',       when='+klu')
     depends_on('superlu-mt+openmp',  when='+superlu-mt+openmp')
     depends_on('superlu-mt+pthread', when='+superlu-mt+pthread')
-    
-    
-    ##### SUNDIALS Settings #####
-    
+
+    # ==========================================================================
+    # SUNDIALS Settings
+    # ==========================================================================
+
     def cmake_args(self):
-        spec   = self.spec
-        prefix = self.spec.prefix
-                
+        spec = self.spec
+
         def on_off(varstr):
             return 'ON' if varstr in self.spec else 'OFF'
-        
+
         fortran_flag = self.compiler.pic_flag
         if spec.satisfies('%clang platform=darwin'):
             mpif77 = Executable(self.spec['mpi'].mpif77)
@@ -202,7 +221,7 @@ class Sundials(CMakePackage):
             '-DBUILD_IDAS=%s'   % on_off('+idas'),
             '-DBUILD_KINSOL=%s' % on_off('+kinsol')
         ]
-        
+
         # precision
         if 'precision=single' in spec:
             args.extend(['-DSUNDIALS_PRECISION=single'])
@@ -210,19 +229,19 @@ class Sundials(CMakePackage):
             args.extend(['-DSUNDIALS_PRECISION=double'])
         elif 'precision=extended' in spec:
             args.extend(['-DSUNDIALS_PRECISION=extended'])
-        
+
         # index type (after v2.7.0)
         if not spec.satisfies('@:2.7.0'):
             if 'indextype=int32_t' in spec:
                 args.extend(['-DSUNDIALS_INDEX_TYPE=int32_t'])
             elif 'indextype=int64_t' in spec:
                 args.extend(['-DSUNDIALS_INDEX_TYPE=int64_t'])
-        
+
         # Fortran interface
         args.extend([
             '-DFCMIX_ENABLE=%s' % on_off('+fcmix')
         ])
-        
+
         # library type
         args.extend([
             '-DBUILD_SHARED_LIBS=%s' % on_off('+shared'),
@@ -231,10 +250,10 @@ class Sundials(CMakePackage):
 
         # generic (std-c) math libraries
         args.extend([
-            '-DUSE_GENERIC_MATH=%s' % on_off('+generic-math')       
+            '-DUSE_GENERIC_MATH=%s' % on_off('+generic-math')
         ])
 
-        # parallelism 
+        # parallelism
         args.extend([
             '-DMPI_ENABLE=%s'     % on_off('+mpi'),
             '-DOPENMP_ENABLE=%s'  % on_off('+openmp'),
@@ -242,7 +261,7 @@ class Sundials(CMakePackage):
             '-DCUDA_ENABLE=%s'    % on_off('+cuda'),
             '-DRAJA_ENABLE=%s'    % on_off('+raja'),
         ])
-        
+
         # MPI support
         if '+mpi' in spec:
             args.extend([
@@ -262,15 +281,7 @@ class Sundials(CMakePackage):
                 ])
 
         # Building with LAPACK and BLAS
-        if spec.satisfies('@:2.7.0'):
-            if '+lapack' in spec:
-                args.extend([
-                    '-DLAPACK_LIBRARIES={0}'.format(
-                        (spec['lapack'].libs +
-                         spec['blas'].libs).joined(';')
-                    )
-                ]) 
-        else:
+        if not spec.satisfies('@:2.7.0'):
             if '+blas' in spec:
                 args.extend([
                     '-DBLAS_ENABLE=ON',
@@ -280,6 +291,15 @@ class Sundials(CMakePackage):
                 args.extend([
                     '-DLAPACK_ENABLE=ON',
                     '-DLAPACK_LIBRARIES={0}'.format(spec['lapack'].libs),
+                ])
+        else:
+            if '+lapack' in spec:
+                args.extend([
+                    '-DLAPACK_ENABLE=ON',
+                    '-DLAPACK_LIBRARIES={0}'.format(
+                        (spec['lapack'].libs +
+                         spec['blas'].libs).joined(';')
+                    )
                 ])
 
         # Building with KLU
@@ -353,17 +373,17 @@ class Sundials(CMakePackage):
 
         return args
 
+    # ==========================================================================
+    # SUNDIALS xSDK Settings
+    # ==========================================================================
 
-    ##### SUNDIALS xSDK Settings #####
-    
     @when('xsdk-defaults=True')
     def cmake_args(self):
-        spec   = self.spec
-        prefix = self.spec.prefix
-                
+        spec = self.spec
+
         def on_off(varstr):
             return 'ON' if varstr in self.spec else 'OFF'
-        
+
         fortran_flag = self.compiler.pic_flag
         if spec.satisfies('%clang platform=darwin'):
             mpif77 = Executable(self.spec['mpi'].mpif77)
@@ -380,7 +400,7 @@ class Sundials(CMakePackage):
             '-DBUILD_IDAS=%s'   % on_off('+idas'),
             '-DBUILD_KINSOL=%s' % on_off('+kinsol')
         ]
-        
+
         # precision
         if 'precision=single' in spec:
             args.extend(['-DXSDK_PRECISION=single'])
@@ -388,18 +408,18 @@ class Sundials(CMakePackage):
             args.extend(['-DXSDK_PRECISION=double'])
         elif 'precision=extended' in spec:
             args.extend(['-DXSDK_PRECISION=quad'])
-        
+
         # index type (after v2.7.0)
         if 'indextype=int32_t' in spec:
             args.extend(['-DXSDK_INDEX_SIZE=32'])
         elif 'indextype=int64_t' in spec:
             args.extend(['-DXSDK_INDEX_SIZE=64'])
-        
+
         # Fortran interface
         args.extend([
             '-DXSDK_ENABLE_FORTRAN=%s' % on_off('+fcmix')
         ])
-        
+
         # library type
         args.extend([
             '-DBUILD_SHARED_LIBS=%s' % on_off('+shared'),
@@ -408,10 +428,10 @@ class Sundials(CMakePackage):
 
         # generic (std-c) math libraries
         args.extend([
-            '-DUSE_GENERIC_MATH=%s' % on_off('+generic-math')       
+            '-DUSE_GENERIC_MATH=%s' % on_off('+generic-math')
         ])
 
-        # parallelism 
+        # parallelism
         args.extend([
             '-DMPI_ENABLE=%s'     % on_off('+mpi'),
             '-DOPENMP_ENABLE=%s'  % on_off('+openmp'),
@@ -419,7 +439,7 @@ class Sundials(CMakePackage):
             '-DCUDA_ENABLE=%s'    % on_off('+cuda'),
             '-DRAJA_ENABLE=%s'    % on_off('+raja'),
         ])
-        
+
         # MPI support
         if '+mpi' in spec:
             args.extend([
@@ -513,11 +533,14 @@ class Sundials(CMakePackage):
 
         return args
 
-
-    ##### Post Install Fixes #####
+    # ==========================================================================
+    # Post Install Actions
+    # ==========================================================================
 
     @run_after('install')
     def post_install(self):
+        """Run after install to fix install name of dynamic libraries
+        on Darwin to have full path and install the LICENSE file."""
         prefix = self.spec.prefix
 
         if (sys.platform == 'darwin'):
@@ -525,13 +548,10 @@ class Sundials(CMakePackage):
 
         install('LICENSE', prefix)
 
-
-    ##### Fix Example Makefiles #####
-
     @run_after('install')
     def filter_compilers(self):
-        """Run after install to tell the Makefiles to use
-        the compilers that Spack built the package with.
+        """Run after install to tell the example program Makefiles
+        to use the compilers that Spack built the package with.
 
         If this isn't done, they'll have CC, CPP, and F77 set to
         Spack's generic cc and f77. We want them to be bound to
@@ -558,7 +578,7 @@ class Sundials(CMakePackage):
             'ida/serial/Makefile',
             'idas/C_openmp/Makefile',
             'idas/parallel/Makefile',
-            'idas/serial/Makefile', 
+            'idas/serial/Makefile',
             'kinsol/C_openmp/Makefile',
             'kinsol/parallel/Makefile',
             'kinsol/serial/Makefile',
