@@ -44,7 +44,8 @@ class MacOs(OperatingSystem):
                         "10.9": "mavericks",
                         "10.10": "yosemite",
                         "10.11": "elcapitan",
-                        "10.12": "sierra"}
+                        "10.12": "sierra",
+                        "10.13": "highsierra"}
 
         mac_ver = '.'.join(py_platform.mac_ver()[0].split('.')[:2])
         name = mac_releases.get(mac_ver, "macos")
