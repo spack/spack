@@ -31,8 +31,7 @@ Then:
 Documentation
 ----------------
 
-[**Full documentation**](http://spack.readthedocs.io/) for Spack is
-the first place to look.
+[**Full documentation**](http://spack.readthedocs.io/) for Spack is the first place to look.
 
 Try the
 [**Spack Tutorial**](http://spack.readthedocs.io/en/latest/tutorial.html),
