@@ -106,9 +106,18 @@ the dependencies"""
         nargs=argparse.REMAINDER,
         help="spec of the package to install"
     )
-    subparser.add_argument(
+    testing = subparser.add_mutually_exclusive_group()
+    testing.add_argument(
+        '--test', default=None,
+        choices=['root', 'all'],
+        help="""If 'root' is chosen, run package tests during
+installation for top-level packages (but skip tests for dependencies).
+if 'all' is chosen, run package tests during installation for all
+packages. If neither are chosen, don't run tests for any packages."""
+    )
+    testing.add_argument(
         '--run-tests', action='store_true',
-        help="run package level tests during installation"
+        help='run package tests during installation (same as --test=all)'
     )
     subparser.add_argument(
         '--log-format',
@@ -339,12 +348,21 @@ def install(parser, args, **kwargs):
         'install_source': args.install_source,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,
-        'run_tests': args.run_tests,
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty,
         'skip_deps': skip_deps,
     })
+
+    if args.run_tests:
+        tty.warn("Deprecated option: --run-tests: use --test=all instead")
+
+    specs = spack.cmd.parse_specs(args.package)
+    if args.test == 'all' or args.run_tests:
+        spack.package_testing.test_all()
+    elif args.test == 'root':
+        for spec in specs:
+            spack.package_testing.test(spec.name)
 
     # Spec from cli
     specs = []

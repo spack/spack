@@ -354,6 +354,9 @@ class Llvm(CMakePackage):
     conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')
 
+    # Github issue #4986
+    patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
+
     def setup_environment(self, spack_env, run_env):
         spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
 
