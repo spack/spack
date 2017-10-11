@@ -182,9 +182,7 @@ class Sundials(CMakePackage):
     def cmake_args(self):
         spec   = self.spec
         prefix = self.spec.prefix
-        
-        args = []
-        
+                
         def on_off(varstr):
             return 'ON' if varstr in self.spec else 'OFF'
         
@@ -196,44 +194,48 @@ class Sundials(CMakePackage):
             fortran_flag += ' ' + libgfortran.ld_flags
 
         # SUNDIALS solvers
-        cmake_args.extend([
+        args = [
             '-DBUILD_CVODE=%s'  % on_off('+cvode'),
             '-DBUILD_CVODES=%s' % on_off('+cvodes'),
             '-DBUILD_ARKODE=%s' % on_off('+arkode'),
             '-DBUILD_IDA=%s'    % on_off('+ida'),
             '-DBUILD_IDAS=%s'   % on_off('+idas'),
             '-DBUILD_KINSOL=%s' % on_off('+kinsol')
-        ])
+        ]
         
         # precision
-        cmake_args.extend([
-            '-DSUNDIALS_PRECISION={0}'.format(spec['precision'].value)
-        ])
+        if 'precision=single' in spec:
+            args.extend(['-DSUNDIALS_PRECISION=single'])
+        elif 'precision=double' in spec:
+            args.extend(['-DSUNDIALS_PRECISION=double'])
+        elif 'precision=extended' in spec:
+            args.extend(['-DSUNDIALS_PRECISION=extended'])
         
         # index type (after v2.7.0)
         if not spec.satisfies('@:2.7.0'):
-            cmake_args.extend([
-                '-DSUNDIALS_PRECISION={0}'.format(spec['indextype'].value)
-            ])
+            if 'indextype=int32_t' in spec:
+                args.extend(['-DSUNDIALS_INDEX_TYPE=int32_t'])
+            elif 'indextype=int64_t' in spec:
+                args.extend(['-DSUNDIALS_INDEX_TYPE=int64_t'])
         
         # Fortran interface
-        cmake_args.extend([
+        args.extend([
             '-DFCMIX_ENABLE=%s' % on_off('+fcmix')
         ])
         
         # library type
-        cmake_args.extend([
+        args.extend([
             '-DBUILD_SHARED_LIBS=%s' % on_off('+shared'),
             '-DBUILD_STATIC_LIBS=%s' % on_off('+static')
         ])
 
         # generic (std-c) math libraries
-        cmake_args.extend([
+        args.extend([
             '-DEXAMPLES_ENABLE=%s' % on_off('+generic-math')       
         ])
 
         # parallelism 
-        cmake_args.extend([
+        args.extend([
             '-DMPI_ENABLE=%s'     % on_off('+mpi'),
             '-DOPENMP_ENABLE=%s'  % on_off('+openmp'),
             '-DPTHREAD_ENABLE=%s' % on_off('+pthread'),
@@ -243,26 +245,26 @@ class Sundials(CMakePackage):
         
         # MPI support
         if '+mpi' in spec:
-            cmake_args.extend([
+            args.extend([
                 '-DMPI_MPICC={0}'.format(spec['mpi'].mpicc)
             ])
             if 'examples-cxx' in spec:
-                cmake_args.extend([
+                args.extend([
                     '-DMPI_MPICXX={0}'.format(spec['mpi'].mpicxx)
                 ])
             if ('+fcmix' in spec) and ('+examples-f77' in spec):
-                cmake_args.extend([
+                args.extend([
                     '-DMPI_MPIF77={0}'.format(spec['mpi'].mpif77)
                 ])
             if ('+fcmix' in spec) and ('+examples-f90' in spec):
-                cmake_args.extend([
+                args.extend([
                     '-DMPI_MPIF90={0}'.format(spec['mpi'].mpifc)
                 ])
 
         # Building with LAPACK and BLAS
         if spec.satisfies('@:2.7.0'):
             if '+lapack' in spec:
-                cmake_args.extend([
+                args.extend([
                     '-DLAPACK_LIBRARIES={0}'.format(
                         (spec['lapack'].libs +
                          spec['blas'].libs).joined(';')
@@ -270,19 +272,19 @@ class Sundials(CMakePackage):
                 ]) 
         else:
             if '+blas' in spec:
-                cmake_args.extend([
+                args.extend([
                     '-DBLAS_ENABLE=ON',
                     '-DBLAS_LIBRARIES={0}'.format(spec['blas'].libs),
                 ])
             if '+lapack' in spec:
-                cmake_args.extend([
+                args.extend([
                     '-DLAPACK_ENABLE=ON',
                     '-DLAPACK_LIBRARIES={0}'.format(spec['lapack'].libs),
                 ])
 
         # Building with KLU
         if '+klu' in spec:
-            cmake_args.extend([
+            args.extend([
                 '-DKLU_ENABLE=ON',
                 '-DKLU_INCLUDE_DIR={0}'.format(
                     spec['suite-sparse'].prefix.include),
@@ -292,7 +294,7 @@ class Sundials(CMakePackage):
 
         # Building with SuperLU_MT
         if '+superlu-mt' in spec:
-            cmake_args.extend([
+            args.extend([
                 '-DSUPERLUMT_ENABLE=ON',
                 '-DSUPERLUMT_INCLUDE_DIR={0}'.format(
                     spec['superlu-mt'].prefix.include),
@@ -300,9 +302,9 @@ class Sundials(CMakePackage):
                     spec['superlu-mt'].prefix.lib)
             ])
             if '+openmp' in spec:
-                cmake_args.append('-DSUPERLUMT_THREAD_TYPE=OpenMP')
+                args.append('-DSUPERLUMT_THREAD_TYPE=OpenMP')
             elif '+pthread' in spec:
-                cmake_args.append('-DSUPERLUMT_THREAD_TYPE=Pthread')
+                args.append('-DSUPERLUMT_THREAD_TYPE=Pthread')
             else:
                 msg = 'You must choose either +openmp or +pthread when '
                 msg += 'building with SuperLU_MT'
@@ -310,7 +312,7 @@ class Sundials(CMakePackage):
 
         # Building with Hypre
         if '+hypre' in spec:
-            cmake_args.extend([
+            args.extend([
                 '-DHYPRE_ENABLE=ON',
                 '-DHYPRE_INCLUDE_DIR={0}'.format(
                     spec['hypre'].prefix.include),
@@ -320,7 +322,7 @@ class Sundials(CMakePackage):
 
         # Building with PETSc
         if '+petsc' in spec:
-            cmake_args.extend([
+            args.extend([
                 '-DPETSC_ENABLE=ON',
                 '-DPETSC_INCLUDE_DIR={0}'.format(
                     spec['petsc'].prefix.include),
@@ -329,21 +331,23 @@ class Sundials(CMakePackage):
             ])
 
         # Examples
-        if spec.satisfies('@:2.7.0'):
-            cmake_args.extend([
+        if not spec.satisfies('@:2.7.0'):
+            args.extend([
+                '-DEXAMPLES_ENABLE_C=%s'    % on_off('+examples-c'),
+                '-DEXAMPLES_ENABLE_CXX=%s'  % on_off('+examples-cxx'),
+                '-DEXAMPLES_ENABLE_F77=%s'  % on_off('+examples-f77'),
+                '-DEXAMPLES_ENABLE_F90=%s'  % on_off('+examples-f90'),
+                '-DEXAMPLES_ENABLE_CUDA=%s' % on_off('+examples-cuda'),
+                '-DEXAMPLES_ENABLE_RAJA=%s' % on_off('+examples-raja')
+            ])
+        else:
+            args.extend([
                 '-DEXAMPLES_ENABLE=%s' % on_off('+examples-c'),
                 '-DCXX_ENABLE=%s'      % on_off('+examples-cxx'),
                 '-DF90_ENABLE=%s'      % on_off('+examples-f90')
             ])
-        else:
-            cmake_args.extend([
-                '-DEXAMPLES_ENABLE_C=%s'   % on_off('+examples-c'),
-                '-DEXAMPLES_ENABLE_CXX=%s' % on_off('+examples-cxx'),
-                '-DEXAMPLES_ENABLE_F77=%s' % on_off('+examples-f77'),
-                '-DEXAMPLES_ENABLE_F90=%s' % on_off('+examples-f90')
-            ])
 
-        cmake_args.extend([
+        args.extend([
             '-DEXAMPLES_INSTALL=%s' % on_off('+examples-install')
         ])
 
@@ -376,27 +380,104 @@ class Sundials(CMakePackage):
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
         dirname = os.path.join(self.prefix, 'examples')
 
+        # files that need to be added
+        #'cvode/cuda/Makefile'
+        #'cvode/raja/Makefile'
+        #'nvector/cuda/Makefile',
+        #'nvector/raja/Makefile',
+
         cc_files = [
-            'arkode/C_serial/Makefile',  'arkode/C_parallel/Makefile',
-            'cvode/serial/Makefile',     'cvode/parallel/Makefile',
-            'cvodes/serial/Makefile',    'cvodes/parallel/Makefile',
-            'ida/serial/Makefile',       'ida/parallel/Makefile',
-            'idas/serial/Makefile',      'idas/parallel/Makefile',
-            'kinsol/serial/Makefile',    'kinsol/parallel/Makefile',
-            'nvector/serial/Makefile',   'nvector/parallel/Makefile',
-            'nvector/pthreads/Makefile'
+            'arkode/C_openmp/Makefile',
+            'arkode/C_parallel/Makefile',
+            'arkode/C_parhyp/Makefile',
+            'arkode/C_serial/Makefile',
+            'cvode/C_openmp/Makefile',
+            'cvode/parallel/Makefile',
+            'cvode/parhyp/Makefile',
+            'cvode/serial/Makefile',
+            'cvodes/C_openmp/Makefile',
+            'cvodes/parallel/Makefile',
+            'cvodes/serial/Makefile',
+            'ida/C_openmp/Makefile',
+            'ida/parallel/Makefile',
+            'ida/petsc/Makefile',
+            'ida/serial/Makefile',
+            'idas/C_openmp/Makefile',
+            'idas/parallel/Makefile',
+            'idas/serial/Makefile', 
+            'kinsol/C_openmp/Makefile',
+            'kinsol/parallel/Makefile',
+            'kinsol/serial/Makefile',
+            'nvector/C_openmp/Makefile',
+            'nvector/parallel/Makefile',
+            'nvector/parhyp/Makefile',
+            'nvector/petsc/Makefile',
+            'nvector/pthreads/Makefile',
+            'nvector/serial/Makefile',
+            'sunlinsol/band/Makefile',
+            'sunlinsol/dense/Makefile',
+            'sunlinsol/klu/Makefile',
+            'sunlinsol/lapackband/Makefile',
+            'sunlinsol/lapackdense/Makefile',
+            'sunlinsol/pcg/parallel/Makefile',
+            'sunlinsol/pcg/serial/Makefile',
+            'sunlinsol/spbcgs/parallel/Makefile',
+            'sunlinsol/spbcgs/serial/Makefile',
+            'sunlinsol/spfgmr/parallel/Makefile',
+            'sunlinsol/spfgmr/serial/Makefile',
+            'sunlinsol/spgmr/parallel/Makefile',
+            'sunlinsol/spgmr/serial/Makefile',
+            'sunlinsol/sptfqmr/parallel/Makefile',
+            'sunlinsol/sptfqmr/serial/Makefile',
+            'sunlinsol/superlumt/Makefile',
+            'sunmatrix/band/Makefile',
+            'sunmatrix/dense/Makefile',
+            'sunmatrix/sparse/Makefile'
+        ]
+
+        cxx_files = [
+            'arkode/CXX_parallel/Makefile',
+            'arkode/CXX_serial/Makefile'
         ]
 
         f77_files = [
-            'arkode/F77_serial/Makefile', 'cvode/fcmix_serial/Makefile',
-            'ida/fcmix_serial/Makefile',  'ida/fcmix_pthreads/Makefile',
+            'arkode/F77_parallel/Makefile',
+            'arkode/F77_serial/Makefile',
+            'cvode/fcmix_parallel/Makefile',
+            'cvode/fcmix_serial/Makefile',
+            'ida/fcmix_openmp/Makefile',
+            'ida/fcmix_parallel/Makefile',
+            'ida/fcmix_pthreads/Makefile',
+            'ida/fcmix_serial/Makefile',
+            'kinsol/fcmix_parallel/Makefile',
             'kinsol/fcmix_serial/Makefile'
+        ]
+
+        f90_files = [
+            'arkode/F90_parallel/Makefile',
+            'arkode/F90_serial/Makefile'
         ]
 
         for filename in cc_files:
             filter_file(os.environ['CC'], self.compiler.cc,
                         os.path.join(dirname, filename), **kwargs)
 
+        for filename in cc_files:
+            filter_file(r'^CPP\s*=.*', self.compiler.cc,
+                        os.path.join(dirname, filename), **kwargs)
+
+        for filename in cxx_files:
+            filter_file(os.environ['CXX'], self.compiler.cxx,
+                        os.path.join(dirname, filename), **kwargs)
+
+        for filename in cxx_files:
+            filter_file(r'^CPP\s*=.*', self.compiler.cc,
+                        os.path.join(dirname, filename), **kwargs)
+
         for filename in f77_files:
             filter_file(os.environ['F77'], self.compiler.f77,
+                        os.path.join(dirname, filename), **kwargs)
+
+        for filename in f90_files:
+            filter_file(os.environ['FC'], self.compiler.fc,
                         os.path.join(dirname, filename), **kwargs)
