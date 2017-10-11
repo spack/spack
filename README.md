@@ -2,7 +2,7 @@
 ============
 
 [![Build Status](https://travis-ci.org/kaust-rc/spack.svg?branch=develop)](https://travis-ci.org/kaust-rc/spack)
-[![codecov](https://codecov.io/gh/LLNL/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/LLNL/spack)
+[![codecov](https://codecov.io/gh/kaust-rc/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/kaust-rc/spack)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 
 Spack is a multi-platform package manager that builds and installs
