@@ -28,9 +28,9 @@ from spack import *
 
 
 class EcpProxyApps(Package):
-    """ This is a collection of packages that represents the official suite of
-        DOE/ECP proxy applications. This is a Spack bundle package that
-        installs the ECP proxy application suite.
+    """This is a collection of packages that represents the official suite of
+       DOE/ECP proxy applications. This is a Spack bundle package that
+       installs the ECP proxy application suite.
     """
 
     homepage = "https://exascaleproject.github.io/proxy-apps"
