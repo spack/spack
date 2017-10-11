@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -52,20 +52,20 @@ class Ruby(Package):
         make()
         make("install")
 
-    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
         ruby_paths = []
-        for d in extension_spec.traverse():
+        for d in dependent_spec.traverse():
             if d.package.extends(self.spec):
                 ruby_paths.append(d.prefix)
 
         spack_env.set_path('GEM_PATH', ruby_paths)
 
         # The actual installation path for this gem
-        spack_env.set('GEM_HOME', extension_spec.prefix)
+        spack_env.set('GEM_HOME', dependent_spec.prefix)
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME
         and GEM_PATH to values appropriate for the package being built.
 

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,16 +25,19 @@
 from spack import *
 
 
-class Tmux(Package):
-    """tmux is a terminal multiplexer. What is a terminal multiplexer? It lets
-       you switch easily between several programs in one terminal, detach them
-       (they keep running in the background) and reattach them to a different
-       terminal. And do a lot more.
+class Tmux(AutotoolsPackage):
+    """Tmux is a terminal multiplexer.
+
+    What is a terminal multiplexer? It lets you switch easily between several
+    programs in one terminal, detach them (they keep running in the
+    background) and reattach them to a different terminal. And do a lot more.
     """
 
     homepage = "http://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz"
 
+    version('2.5', '4a5d73d96d8f11b0bdf9b6f15ab76d15')
+    version('2.4', '6165d3aca811a3225ef8afbd1afcf1c5')
     version('2.3', 'fcfd1611d705d8b31df3c26ebc93bd3e')
     version('2.2', 'bd95ee7205e489c62c616bb7af040099')
     version('2.1', '74a2855695bccb51b6e301383ad4818c')
@@ -43,15 +46,5 @@ class Tmux(Package):
     depends_on('libevent')
     depends_on('ncurses')
 
-    def install(self, spec, prefix):
-        pkg_config_path = ':'.join([
-            spec['libevent'].prefix,
-            spec['ncurses'].prefix
-        ])
-
-        configure(
-            "--prefix=%s" % prefix,
-            "PKG_CONFIG_PATH=%s" % pkg_config_path)
-
-        make()
-        make("install")
+    def configure_args(self):
+        return ['LIBTINFO_LIBS=-lncurses']

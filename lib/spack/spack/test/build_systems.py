@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,6 +24,8 @@
 ##############################################################################
 
 import spack
+import pytest
+
 from spack.build_environment import get_std_cmake_args
 from spack.spec import Spec
 
@@ -40,3 +42,34 @@ def test_cmake_std_args(config, builtin_mock):
     s.concretize()
     pkg = spack.repo.get(s)
     assert get_std_cmake_args(pkg)
+
+
+@pytest.mark.usefixtures('config', 'builtin_mock')
+class TestAutotoolsPackage(object):
+
+    def test_with_or_without(self):
+        s = Spec('a')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        # Called without parameters
+        options = pkg.with_or_without('foo')
+        assert '--with-bar' in options
+        assert '--without-baz' in options
+        assert '--no-fee' in options
+
+        def activate(value):
+            return 'something'
+
+        options = pkg.with_or_without('foo', activation_value=activate)
+        assert '--with-bar=something' in options
+        assert '--without-baz' in options
+        assert '--no-fee' in options
+
+        options = pkg.enable_or_disable('foo')
+        assert '--enable-bar' in options
+        assert '--disable-baz' in options
+        assert '--disable-fee' in options
+
+        options = pkg.with_or_without('bvv')
+        assert '--with-bvv' in options

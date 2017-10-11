@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Opari2(Package):
+class Opari2(AutotoolsPackage):
     """OPARI2 is a source-to-source instrumentation tool for OpenMP and hybrid
     codes. It surrounds OpenMP directives and runtime library calls with calls
     to the POMP2 measurement interface. OPARI2 will provide you with a new
@@ -39,14 +39,10 @@ class Opari2(Package):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/opari2/opari2-1.1.2.tar.gz"
 
-    version('2.0', '72350dbdb6139f2e68a5055a4f0ba16c',
-            url='http://www.vi-hps.org/upload/packages/opari2/opari2-2.0.tar.gz')
-    version('1.1.4', '245d3d11147a06de77909b0805f530c0',
-            url='http://www.vi-hps.org/upload/packages/opari2/opari2-1.1.4.tar.gz')
+    version('2.0.1', '74af78f1f27b8caaa4271e0b97fb0fba')
+    version('2.0',   '72350dbdb6139f2e68a5055a4f0ba16c')
+    version('1.1.4', '245d3d11147a06de77909b0805f530c0')
     version('1.1.2', '9a262c7ca05ff0ab5f7775ae96f3539e')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--enable-shared")
-        make()
-        make("install")
+    def configure_args(self):
+        return ["--enable-shared"]

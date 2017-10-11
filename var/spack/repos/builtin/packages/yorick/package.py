@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,7 @@ import glob
 class Yorick(Package):
     """Yorick is an interpreted programming language for scientific simulations
        or calculations, postprocessing or steering large simulation codes,
-       interactive scientific graphics, and reading, writing, or translating 
+       interactive scientific graphics, and reading, writing, or translating
        files of numbers. Yorick includes an interactive graphics package, and a
        binary file package capable of translating to and from the raw numeric
        formats of all modern computers. Yorick is written in ANSI C and runs on
@@ -39,9 +39,9 @@ class Yorick(Package):
     """
 
     homepage = "http://dhmunro.github.io/yorick-doc/"
-    url =  "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
+    url      = "https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz"
 
-    version('2.2.04', md5='1b5b0da6ad81b2d9dba64d991ec17939')
+    version('2.2.04', '1b5b0da6ad81b2d9dba64d991ec17939')
     version('master', branch='master',
             git='https://github.com/dhmunro/yorick.git')
     version('f90-plugin', branch='f90-plugin',
@@ -50,6 +50,12 @@ class Yorick(Package):
     variant('X', default=False, description='Enable X11 support')
 
     depends_on('libx11', when='+X')
+
+    extendable = True
+
+    def url_for_version(self, version):
+        url = "https://github.com/dhmunro/yorick/archive/y_{0}.tar.gz"
+        return url.format(version.underscored)
 
     def install(self, spec, prefix):
         os.environ['FORTRAN_LINKAGE'] = '-Df_linkage'

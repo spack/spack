@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,9 +34,13 @@ class Bcftools(Package):
     homepage = "http://samtools.github.io/bcftools/"
     url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
 
+    version('1.4', '50ccf0a073bd70e99cdb3c8be830416e')
     version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
 
     depends_on('zlib')
+    depends_on('bzip2', when="@1.4:")
+    # build fails without xz
+    depends_on('xz', when="@1.4")
 
     def install(self, spec, prefix):
         make("prefix=%s" % prefix, "all")

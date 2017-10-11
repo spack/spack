@@ -1,0 +1,18 @@
+diff --git a/config/BuildSystem/config/libraries.py b/config/BuildSystem/config/libraries.py
+index 0af92f0..8644b55 100644
+--- a/config/BuildSystem/config/libraries.py
++++ b/config/BuildSystem/config/libraries.py
+@@ -50,12 +50,7 @@ class Configure(config.base.Configure):
+         flagName  = self.language[-1]+'SharedLinkerFlag'
+         flagSubst = self.language[-1].upper()+'_LINKER_SLFLAG'
+         dirname   = os.path.dirname(library).replace('\\ ',' ').replace(' ', '\\ ').replace('\\(','(').replace('(', '\\(').replace('\\)',')').replace(')', '\\)')
+-        if hasattr(self.setCompilers, flagName) and not getattr(self.setCompilers, flagName) is None:
+-          return [getattr(self.setCompilers, flagName)+dirname,'-L'+dirname,'-l'+name]
+-        if flagSubst in self.argDB:
+-          return [self.argDB[flagSubst]+dirname,'-L'+dirname,'-l'+name]
+-        else:
+-          return ['-L'+dirname,' -l'+name]
++        return ['-L'+dirname,' -l'+name]
+       else:
+         return ['-l'+name]
+     if os.path.splitext(library)[1] == '.so':

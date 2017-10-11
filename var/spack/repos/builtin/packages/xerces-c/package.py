@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,7 @@ class XercesC(AutotoolsPackage):
     APIs."""
 
     homepage = "https://xerces.apache.org/xerces-c"
-    url      = "https://www.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
+    url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
 
     version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
 

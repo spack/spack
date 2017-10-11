@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,9 +39,15 @@ if ($?SPACK_ROOT) then
     alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
     alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
 
+    # Shamelessly stolen from setup-env.sh
+    set _sp_sys_type    = `$SPACK_ROOT/bin/spack python -c 'print(spack.architecture.sys_type())'`
+    set _sp_dotkit_root = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('dotkit')))"`
+    set _sp_tcl_root    = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('tcl')))"`
+
     # Set up modules and dotkit search paths in the user environment
-    # TODO: fix SYS_TYPE to something non-LLNL-specific
-    _spack_pathadd DK_NODE    "$_spack_share_dir/dotkit/$SYS_TYPE"
-    _spack_pathadd MODULEPATH "$_spack_share_dir/modules/$SYS_TYPE"
+    _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
+    _spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
     _spack_pathadd PATH       "$SPACK_ROOT/bin"
+else
+    echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to the root of your spack installation"
 endif

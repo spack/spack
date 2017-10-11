@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -71,12 +71,12 @@ class TestCompilerCommand(object):
             all=True, compiler_spec='gcc@4.5.0', add_paths=[], scope=None
         )
         spack.cmd.compiler.compiler_remove(args)
-        compilers = spack.compilers.all_compilers()
+        compilers = spack.compilers.all_compiler_specs()
         assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
 
     def test_compiler_add(self, mock_compiler_dir):
         # Compilers available by default.
-        old_compilers = set(spack.compilers.all_compilers())
+        old_compilers = set(spack.compilers.all_compiler_specs())
 
         args = spack.util.pattern.Bunch(
             all=None,
@@ -87,8 +87,6 @@ class TestCompilerCommand(object):
         spack.cmd.compiler.compiler_find(args)
 
         # Ensure new compiler is in there
-        new_compilers = set(spack.compilers.all_compilers())
+        new_compilers = set(spack.compilers.all_compiler_specs())
         new_compiler = new_compilers - old_compilers
-        assert new_compiler
-        c = new_compiler.pop()
-        assert c.version == Version(test_version)
+        assert any(c.version == Version(test_version) for c in new_compiler)

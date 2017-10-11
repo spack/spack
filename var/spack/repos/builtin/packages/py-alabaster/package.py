@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,10 +29,12 @@ class PyAlabaster(PythonPackage):
     """Alabaster is a visually (c)lean, responsive, configurable theme
     for the Sphinx documentation system."""
 
-    homepage = "https://pypi.python.org/pypi/alabaster"
-    url      = "https://pypi.python.org/packages/source/a/alabaster/alabaster-0.7.9.tar.gz"
+    homepage = "https://alabaster.readthedocs.io/"
+    url      = "https://pypi.io/packages/source/a/alabaster/alabaster-0.7.10.tar.gz"
 
-    version('0.7.9', 'b29646a8bbe7aa52830375b7d17b5d7a',
-            url="https://pypi.python.org/packages/71/c3/70da7d8ac18a4f4c502887bd2549e05745fa403e2cd9d06a8a9910a762bc/alabaster-0.7.9.tar.gz")
+    import_modules = ['alabaster']
+
+    version('0.7.10', '7934dccf38801faa105f6e7b4784f493')
+    version('0.7.9',  'b29646a8bbe7aa52830375b7d17b5d7a')
 
     depends_on('py-setuptools', type='build')

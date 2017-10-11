@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,7 +29,7 @@ import os
 class PyPyside(PythonPackage):
     """Python bindings for Qt."""
     homepage = "https://pypi.python.org/pypi/pyside"
-    url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
+    url      = "https://pypi.io/packages/source/P/PySide/PySide-1.2.2.tar.gz"
 
     version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')  # rpath problems
     version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d', preferred=True)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,11 +28,24 @@ from spack import *
 class PyPytest(PythonPackage):
     """pytest: simple powerful testing with Python."""
 
-    homepage = "http://doc.pytest.org/en/latest/"
-    url      = "https://pypi.python.org/packages/source/p/pytest/pytest-3.0.2.tar.gz"
+    homepage = "http://pytest.org/"
+    url      = "https://pypi.io/packages/source/p/pytest/pytest-3.0.7.tar.gz"
 
-    version('3.0.2', '61dc36e65a6f6c11c53b1388e043a9f5',
-            url="https://pypi.python.org/packages/2b/05/e20806c99afaff43331f5fd8770bb346145303882f98ef3275fa1dd66f6d/pytest-3.0.2.tar.gz")
+    import_modules = [
+        '_pytest', '_pytest.assertion', '_pytest._code',
+        '_pytest.vendored_packages', 'pytest'
+    ]
 
-    depends_on('py-setuptools', type='build')
+    version('3.0.7', '89c60546507dc7eb6e9e40a6e9f720bd')
+    version('3.0.2', '61dc36e65a6f6c11c53b1388e043a9f5')
+
+    # Most Python packages only require setuptools as a build dependency.
+    # However, pytest requires setuptools during runtime as well.
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-py@1.4.29:', type=('build', 'run'))
+    depends_on('py-hypothesis@3.5.2:', type=('build', 'run'))
+
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose', type='test')
+    # depends_on('py-mock', type='test')
+    # depends_on('py-requests', type='test')

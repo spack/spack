@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,7 @@ class Nag(Package):
     """The NAG Fortran Compiler."""
     homepage = "http://www.nag.com/nagware/np.asp"
 
-    version('6.1', 'f49bd548e0d5e2458b2dabb3ee01341a')
+    version('6.1', '0040d2254258223c78a6a4ab4829d7e0')
     version('6.0', '3fa1e7f7b51ef8a23e6c687cdcad9f96')
 
     # Licensing
@@ -54,3 +54,7 @@ class Nag(Package):
 
         # Run install script
         os.system('./INSTALLU.sh')
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('F77', join_path(self.prefix.bin, 'nagfor'))
+        run_env.set('FC',  join_path(self.prefix.bin, 'nagfor'))

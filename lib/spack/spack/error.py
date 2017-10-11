@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,8 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
+from __future__ import print_function
+
 import sys
+
 import llnl.util.tty as tty
 import spack
 import inspect
@@ -43,15 +45,32 @@ class SpackError(Exception):
         # traceback as a string and print it in the parent.
         self.traceback = None
 
+        # we allow exceptions to print debug info via print_context()
+        # before they are caught at the top level. If they *haven't*
+        # printed context early, we do it by default when die() is
+        # called, so we need to remember whether it's been called.
+        self.printed = False
+
     @property
     def long_message(self):
         return self._long_message
 
-    def die(self):
+    def print_context(self):
+        """Print extended debug information about this exception.
+
+        This is usually printed when the top-level Spack error handler
+        calls ``die()``, but it acn be called separately beforehand if a
+        lower-level error handler needs to print error context and
+        continue without raising the exception to the top level.
+        """
+        if self.printed:
+            return
+
         # basic debug message
         tty.error(self.message)
         if self.long_message:
-            print(self.long_message)
+            sys.stderr.write(self.long_message)
+            sys.stderr.write('\n')
 
         # stack trace, etc. in debug mode.
         if spack.debug:
@@ -63,7 +82,12 @@ class SpackError(Exception):
                 # run parent exception hook.
                 sys.excepthook(*sys.exc_info())
 
-        os._exit(1)
+        sys.stderr.flush()
+        self.printed = True
+
+    def die(self):
+        self.print_context()
+        sys.exit(1)
 
     def __str__(self):
         msg = self.message
@@ -89,11 +113,16 @@ class UnsupportedPlatformError(SpackError):
         super(UnsupportedPlatformError, self).__init__(message)
 
 
-class NoNetworkConnectionError(SpackError):
-    """Raised when an operation needs an internet connection."""
+class SpecError(SpackError):
+    """Superclass for all errors that occur while constructing specs."""
 
-    def __init__(self, message, url):
-        super(NoNetworkConnectionError, self).__init__(
-            "No network connection: " + str(message),
-            "URL was: " + str(url))
-        self.url = url
+
+class UnsatisfiableSpecError(SpecError):
+    """Raised when a spec conflicts with package constraints.
+       Provide the requirement that was violated when raising."""
+    def __init__(self, provided, required, constraint_type):
+        super(UnsatisfiableSpecError, self).__init__(
+            "%s does not satisfy %s" % (provided, required))
+        self.provided = provided
+        self.required = required
+        self.constraint_type = constraint_type

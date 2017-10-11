@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Mbedtls(Package):
+class Mbedtls(CMakePackage):
     """mbed TLS (formerly known as PolarSSL) makes it trivially easy for
        developers to include cryptographic and SSL/TLS capabilities in
        their (embedded) products, facilitating this functionality with a
@@ -42,10 +42,9 @@ class Mbedtls(Package):
     version('2.1.3', '7eb4cf1dfa68578a2c8dbd0b6fa752dd')
     version('1.3.16', '4144d7320c691f721aeb9e67a1bc38e0')
 
-    depends_on('cmake', type='build')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release', 'Coverage', 'ASan', 'ASanDbg',
+                    'MemSan', 'MemSanDbg', 'Check', 'CheckFull'))
 
-    def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
-
-        make()
-        make("install")
+    depends_on('cmake@2.6:', type='build')

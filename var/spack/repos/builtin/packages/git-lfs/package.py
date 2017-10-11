@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,12 +35,14 @@ class GitLfs(Package):
     homepage = "https://git-lfs.github.com"
     git_url  = "https://github.com/github/git-lfs.git"
 
+    version('2.3.0', git=git_url, tag='v2.3.0')
+    version('2.2.1', git=git_url, tag='v2.2.1')
+    version('2.0.2', git=git_url, tag='v2.0.2')
     version('1.4.1', git=git_url, tag='v1.4.1')
     version('1.3.1', git=git_url, tag='v1.3.1')
 
-    # TODO: Implement this by following the instructions at this location:
+    # TODO: Add tests by following the instructions at this location:
     # https://github.com/github/git-lfs/blob/master/CONTRIBUTING.md#building
-    # variant('test', default=True, description='Build and run tests as part of the build.')  # NOQA: E501
 
     depends_on('go@1.5:', type='build')
     depends_on('git@1.8.2:', type='run')

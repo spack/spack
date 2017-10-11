@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,4 +33,8 @@ class PyPip(PythonPackage):
 
     version('9.0.1', '35f01da33009719497f01a4ba69d63c9')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('python@2.6:2.8,3.3:')
+
+    # Most Python packages only require setuptools as a build dependency.
+    # However, pip requires setuptools during runtime as well.
+    depends_on('py-setuptools', type=('build', 'run'))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -41,7 +41,7 @@ class Zoltan(Package):
     """
 
     homepage = "http://www.cs.sandia.gov/zoltan"
-    base_url = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions"
+    url      = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions/zoltan_distrib_v3.83.tar.gz"
 
     version('3.83', '1ff1bc93f91e12f2c533ddb01f2c095f')
     version('3.8', '9d8fba8a990896881b85351d4327c4a9')
@@ -55,9 +55,6 @@ class Zoltan(Package):
     variant('mpi', default=True, description='Enable MPI support.')
 
     depends_on('mpi', when='+mpi')
-
-    def url_for_version(self, version):
-        return '%s/zoltan_distrib_v%s.tar.gz' % (Zoltan.base_url, version)
 
     def install(self, spec, prefix):
         # FIXME: The older Zoltan versions fail to compile the F90 MPI wrappers
@@ -79,7 +76,7 @@ class Zoltan(Package):
         if '+shared' in spec:
             config_args.append('RANLIB=echo')
             config_args.append('--with-ar=$(CXX) -shared $(LDFLAGS) -o')
-            config_cflags.append('-fPIC')
+            config_cflags.append(self.compiler.pic_flag)
             if spec.satisfies('%gcc'):
                 config_args.append('--with-libs={0}'.format('-lgfortran'))
 
@@ -88,9 +85,18 @@ class Zoltan(Package):
             config_args.append('CXX={0}'.format(spec['mpi'].mpicxx))
             config_args.append('FC={0}'.format(spec['mpi'].mpifc))
 
-            mpi_libs = ' -l'.join(self.get_mpi_libs())
             config_args.append('--with-mpi={0}'.format(spec['mpi'].prefix))
-            config_args.append('--with-mpi-libs=-l{0}'.format(mpi_libs))
+
+            mpi_libs = self.get_mpi_libs()
+
+            # NOTE: Some external mpi installations may have empty lib
+            # directory (e.g. bg-q). In this case we need to explicitly
+            # pass empty library name.
+            if mpi_libs:
+                mpi_libs = ' -l'.join(mpi_libs)
+                config_args.append('--with-mpi-libs=-l{0}'.format(mpi_libs))
+            else:
+                config_args.append('--with-mpi-libs= ')
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's

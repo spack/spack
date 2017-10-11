@@ -1,0 +1,22 @@
+enable:
+  - tcl
+tcl:
+  all:
+    filter:
+      environment_blacklist':
+        - CMAKE_PREFIX_PATH
+    environment:
+      set:
+        '${PACKAGE}_ROOT': '${PREFIX}'
+
+  'platform=test target=x86_64':
+    environment:
+      set:
+        FOO: 'foo'
+        OMPI_MCA_mpi_leave_pinned: '1'
+      unset:
+        - BAR
+
+  'platform=test target=x86_32':
+    load:
+      - 'foo/bar'

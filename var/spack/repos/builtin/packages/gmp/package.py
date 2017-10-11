@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,7 @@ class Gmp(AutotoolsPackage):
     on signed integers, rational numbers, and floating-point numbers."""
 
     homepage = "https://gmplib.org"
-    url = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
+    url      = "https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2"
 
     version('6.1.2',  '8ddbb26dc3bd4e2302984debba1406a5')
     version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
@@ -38,7 +38,14 @@ class Gmp(AutotoolsPackage):
     version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
     version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
     depends_on('m4', type='build')
+
+    # gmp's configure script seems to be broken; it sometimes misdetects
+    # shared library support. Regenerating it fixes the issue.
+    force_autoreconf = True
 
     def configure_args(self):
         args = ['--enable-cxx']

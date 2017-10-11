@@ -443,26 +443,31 @@ Version URLs
 By default, each version's URL is extrapolated from the ``url`` field
 in the package.  For example, Spack is smart enough to download
 version ``8.2.1.`` of the ``Foo`` package above from
-``http://example.com/foo-8.2.1.tar.gz``.
+http://example.com/foo-8.2.1.tar.gz.
 
 If the URL is particularly complicated or changes based on the release,
 you can override the default URL generation algorithm by defining your
-own ``url_for_version()`` function. For example, the developers of HDF5
-keep changing the archive layout, so the ``url_for_version()`` function
-looks like:
+own ``url_for_version()`` function. For example, the download URL for
+OpenMPI contains the major.minor version in one spot and the
+major.minor.patch version in another:
 
-.. literalinclude:: ../../../var/spack/repos/builtin/packages/hdf5/package.py
-   :pyobject: Hdf5.url_for_version
+https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 
-With the use of this ``url_for_version()``, Spack knows to download HDF5 ``1.8.16``
-from ``http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.16/src/hdf5-1.8.16.tar.gz``
-but download HDF5 ``1.10.0`` from ``http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0/src/hdf5-1.10.0.tar.gz``.
+In order to handle this, you can define a ``url_for_version()`` function
+like so:
 
-You'll notice that HDF5's ``url_for_version()`` function makes use of a special
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/openmpi/package.py
+   :pyobject: Openmpi.url_for_version
+
+With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.1.1``
+from http://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
+but download OpenMPI ``1.10.7`` from http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.7.tar.bz2.
+
+You'll notice that OpenMPI's ``url_for_version()`` function makes use of a special
 ``Version`` function called ``up_to()``. When you call ``version.up_to(2)`` on a
 version like ``1.10.0``, it returns ``1.10``. ``version.up_to(1)`` would return
 ``1``. This can be very useful for packages that place all ``X.Y.*`` versions in
-a single directory and then places all ``X.Y.Z`` versions in a subdirectory.
+a single directory and then places all ``X.Y.Z`` versions in a sub-directory.
 
 There are a few ``Version`` properties you should be aware of. We generally
 prefer numeric versions to be separated by dots for uniformity, but not all
@@ -485,6 +490,21 @@ version.joined       123
    Python properties don't need parentheses. ``version.dashed`` is correct.
    ``version.dashed()`` is incorrect.
 
+In addition, these version properties can be combined with ``up_to()``.
+For example:
+
+.. code-block:: python
+
+   >>> version = Version('1.2.3')
+   >>> version.up_to(2).dashed
+   Version('1-2')
+   >>> version.underscored.up_to(2)
+   Version('1_2')
+
+
+As you can see, order is not important. Just keep in mind that ``up_to()`` and
+the other version properties return ``Version`` objects, not strings.
+
 If a URL cannot be derived systematically, or there is a special URL for one
 of its versions, you can add an explicit URL for a particular version:
 
@@ -493,9 +513,6 @@ of its versions, you can add an explicit URL for a particular version:
    version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
            url='http://example.com/foo-8.2.1-special-version.tar.gz')
 
-This is common for Python packages that download from PyPi. Since newer
-download URLs often contain a unique hash for each version, there is no
-way to guess the URL systematically.
 
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
@@ -854,7 +871,7 @@ Git fetching is enabled with the following parameters to ``version``:
 * ``tag``: name of a tag to fetch.
 * ``branch``: name of a branch to fetch.
 * ``commit``: SHA hash (or prefix) of a commit to fetch.
-* ``submodules``: Also fetch submodules when checking out this repository.
+* ``submodules``: Also fetch submodules recursively when checking out this repository.
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
 
@@ -917,12 +934,13 @@ Commits
 Submodules
 
   You can supply ``submodules=True`` to cause Spack to fetch submodules
-  along with the repository at fetch time.
+  recursively along with the repository at fetch time. For more information
+  about git submodules see the manpage of git: ``man git-submodule``.
 
   .. code-block:: python
 
      version('1.0.1', git='https://github.com/example-project/example.git',
-             tag='v1.0.1', submdoules=True)
+             tag='v1.0.1', submodules=True)
 
 
 .. _github-fetch:
@@ -1194,27 +1212,47 @@ structure like this:
            package.py
            ad_lustre_rwcontig_open_source.patch
 
-If you supply a URL instead of a filename, you need to supply a checksum,
-like this:
+If you supply a URL instead of a filename, you need to supply a
+``sha256`` checksum, like this:
+
+.. code-block:: python
+
+   patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch',
+         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866')
+
+Spack includes the hashes of patches in its versioning information, so
+that the same package with different patches applied will have different
+hash identifiers.  To ensure that the hashing scheme is consistent, you
+must use a ``sha256`` checksum for the patch.  Patches will be fetched
+from their URLs, checked, and applied to your source code.  You can use
+the ``spack sha256`` command to generate a checksum for a patch file or
+URL.
+
+Spack can also handle compressed patches.  If you use these, Spack needs
+a little more help.  Specifically, it needs *two* checksums: the
+``sha256`` of the patch and ``archive_sha256`` for the compressed
+archive.  ``archive_sha256`` helps Spack ensure that the downloaded
+file is not corrupted or malicious, before running it through a tool like
+``tar`` or ``zip``.  The ``sha256`` of the patch is still required so
+that it can be included in specs.  Providing it in the package file
+ensures that Spack won't have to download and decompress patches it won't
+end up using at install time.  Both the archive and patch checksum are
+checked when patch archives are downloaded.
 
 .. code-block:: python
 
    patch('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz',
-         md5='f91c6a04df56e228fe946291d2f38c9a')
+         sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
+         archive_sha256='4e8092a161ec6c3a1b5253176fcf33ce7ba23ee2ff27c75dbced589dabacd06e')
 
-This directive provides an ``md5`` checksum.  You can use other hashing
-algorihtms like ``sha256`` as well.  The patch will be fetched from the
-URL, checked, and applied to your source code.  You can use the ``spack
-md5`` command to generate a checksum for a patch file.
+``patch`` keyword arguments are described below.
 
-``patch`` can take two options keyword arguments.  They are:
+""""""""""""""""""""""""""""""
+``sha256``, ``archive_sha256``
+""""""""""""""""""""""""""""""
 
-""""""""""""""""""""""""""""""""""""""
-``md5``, ``sha256``, ``sha512``, etc.
-""""""""""""""""""""""""""""""""""""""
-
-Use one of these when you supply a patch to be downloaded from a remote
-site. The downloaded file will be validated using the given checksum.
+Hashes of downloaded patch and compressed archive, respectively.  Only
+needed for patches fetched from URLs.
 
 """"""""
 ``when``
@@ -1266,6 +1304,36 @@ It's generally easier to just structure your patch file so that it
 applies cleanly with ``-p1``, but if you're using a patch you didn't
 create yourself, ``level`` can be handy.
 
+"""""""""""""""
+``working_dir``
+"""""""""""""""
+
+This tells spack where to run the ``patch`` command.  By default,
+the working directory is the source path of the stage (``.``).
+However, sometimes patches are made with respect to a subdirectory
+and this is where the working directory comes in handy. Internally,
+the working directory is given to ``patch`` via the ``-d`` option.
+Let's take the example patch from above and assume for some reason,
+it can only be downloaded in the following form:
+
+.. code-block:: diff
+   :linenos:
+
+   --- a/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 12:05:44.806417000 -0800
+   +++ b/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 11:53:03.295622000 -0800
+   @@ -8,7 +8,7 @@
+     *   Copyright (C) 2008 Sun Microsystems, Lustre group
+     \*/
+
+   -#define _XOPEN_SOURCE 600
+   +//#define _XOPEN_SOURCE 600
+    #include <stdlib.h>
+    #include <malloc.h>
+    #include "ad_lustre.h"
+
+Hence, the patch needs to applied in the ``src/mpi`` subdirectory, and the
+``working_dir='src/mpi'`` option would exactly do that.
+
 ^^^^^^^^^^^^^^^^^^^^^
 Patch functions
 ^^^^^^^^^^^^^^^^^^^^^
@@ -1290,6 +1358,21 @@ function gives you some benefits.  First, spack ensures that the
 if you run install, hit ctrl-C, and run install again, the code in the
 patch function is only run once.  Also, you can tell Spack to run only
 the patching part of the build using the :ref:`cmd-spack-patch` command.
+
+.. _patch_dependency_patching:
+
+^^^^^^^^^^^^^^^^^^^
+Dependency patching
+^^^^^^^^^^^^^^^^^^^
+
+So far we've covered how the ``patch`` directive can be used by a package
+to patch *its own* source code. Packages can *also* specify patches to be
+applied to their dependencies, if they require special modifications.  As
+with all packages in Spack, a patched dependency library can coexist with
+other versions of that library.  See the `section on depends_on
+<dependency_dependency_patching_>`_ for more details.
+
+.. _handling_rpaths:
 
 ---------------
 Handling RPATHs
@@ -1438,75 +1521,201 @@ so you can rely on it for your libdwarf build.
 Dependency specs
 ^^^^^^^^^^^^^^^^
 
-``depends_on`` doesn't just take the name of another package.  It
-takes a full spec.  This means that you can restrict the versions or
+``depends_on`` doesn't just take the name of another package. It can
+take a full spec as well. This means that you can restrict the versions or
 other configuration options of ``libelf`` that ``libdwarf`` will build
-with.  Here's an example.  Suppose that in the ``libdwarf`` package
-you write:
+with. For example, suppose that in the ``libdwarf`` package you write:
 
 .. code-block:: python
 
-   depends_on("libelf@0.8:")
+   depends_on('libelf@0.8')
 
-Now ``libdwarf`` will require a version of ``libelf`` version ``0.8``
-or higher in order to build.  If some versions of ``libelf`` are
-installed but they are all older than this, then Spack will build a
-new version of ``libelf`` that satisfies the spec's version
-constraint, and it will build ``libdwarf`` with that one.  You could
-just as easily provide a version range:
+Now ``libdwarf`` will require ``libelf`` at *exactly* version ``0.8``.
+You can also specify a requirement for a particular variant or for
+specific compiler flags:
 
 .. code-block:: python
 
-   depends_on("libelf@0.8.2:0.8.4:")
-
-Or a requirement for a particular variant or compiler flags:
-
-.. code-block:: python
-
-   depends_on("libelf@0.8+debug")
+   depends_on('libelf@0.8+debug')
    depends_on('libelf debug=True')
    depends_on('libelf cppflags="-fPIC"')
 
 Both users *and* package authors can use the same spec syntax to refer
-to different package configurations.  Users use the spec syntax on the
+to different package configurations. Users use the spec syntax on the
 command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
 relationships between packages.
 
-Additionally, dependencies may be specified for specific use cases:
+^^^^^^^^^^^^^^
+Version ranges
+^^^^^^^^^^^^^^
+
+Although some packages require a specific version for their dependencies,
+most can be built with a range of version. For example, if you are
+writing a package for a legacy Python module that only works with Python
+2.4 through 2.6, this would look like:
 
 .. code-block:: python
 
-   depends_on("cmake", type="build")
-   depends_on("libelf", type=("build", "link"))
-   depends_on("python", type="run")
+   depends_on('python@2.4:2.6')
 
-The dependency types are:
+Version ranges in Spack are *inclusive*, so ``2.4:2.6`` means any version
+greater than or equal to ``2.4`` and up to and including ``2.6``. If you
+want to specify that a package works with any version of Python 3, this
+would look like:
 
-  * **"build"**: made available during the project's build. The package will
-    be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
-    Other projects which depend on this one will not have these modified
-    (building project X doesn't need project Y's build dependencies).
-  * **"link"**: the project is linked to by the project. The package will be
-    added to the current package's ``rpath``.
-  * **"run"**: the project is used by the project at runtime. The package will
-    be added to ``PATH`` and ``PYTHONPATH``.
+.. code-block:: python
 
-Additional hybrid dependency types are (note the lack of quotes):
+   depends_on('python@3:')
 
-  * **<not specified>**: ``type`` assumed to be ``("build",
-    "link")``. This is the common case for compiled language usage.
+Here we leave out the upper bound. If you want to say that a package
+requires Python 2, you can similarly leave out the lower bound:
 
-"""""""""""""""""""
-Dependency Formulas
-"""""""""""""""""""
+.. code-block:: python
 
-This section shows how to write appropriate ``depends_on()``
-declarations for some common cases.
+   depends_on('python@:2.9')
 
-* Python 2 only: ``depends_on('python@:2.8')``
-* Python 2.7 only: ``depends_on('python@2.7:2.8')``
-* Python 3 only: ``depends_on('python@3:')``
+Notice that we didn't use ``@:3``. Version ranges are *inclusive*, so
+``@:3`` means "up to and including 3".
+
+What if a package can only be built with Python 2.6? You might be
+inclined to use:
+
+.. code-block:: python
+
+   depends_on('python@2.6')
+
+However, this would be wrong. Spack assumes that all version constraints
+are absolute, so it would try to install Python at exactly ``2.6``. The
+correct way to specify this would be:
+
+.. code-block:: python
+
+   depends_on('python@2.6.0:2.6.999')
+
+
+^^^^^^^^^^^^^^^^
+Dependency types
+^^^^^^^^^^^^^^^^
+
+Not all dependencies are created equal, and Spack allows you to specify
+exactly what kind of a dependency you need. For example:
+
+.. code-block:: python
+
+   depends_on('cmake', type='build')
+   depends_on('py-numpy', type=('build', 'run'))
+   depends_on('libelf', type=('build', 'link'))
+
+The following dependency types are available:
+
+* **"build"**: made available during the project's build. The package will
+  be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
+  Other projects which depend on this one will not have these modified
+  (building project X doesn't need project Y's build dependencies).
+* **"link"**: the project is linked to by the project. The package will be
+  added to the current package's ``rpath``.
+* **"run"**: the project is used by the project at runtime. The package will
+  be added to ``PATH`` and ``PYTHONPATH``.
+
+One of the advantages of the ``build`` dependency type is that although the
+dependency needs to be installed in order for the package to be built, it
+can be uninstalled without concern afterwards. ``link`` and ``run`` disallow
+this because uninstalling the dependency would break the package.
+
+If the dependency type is not specified, Spack uses a default of
+``('build', 'link')``. This is the common case for compiler languages.
+Non-compiled packages like Python modules commonly use
+``('build', 'run')``. This means that the compiler wrappers don't need to
+inject the dependency's ``prefix/lib`` directory, but the package needs to
+be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
+a user wants to run the package.
+
+.. _dependency_dependency_patching:
+
+^^^^^^^^^^^^^^^^^^^
+Dependency patching
+^^^^^^^^^^^^^^^^^^^
+
+Some packages maintain special patches on their dependencies, either to
+add new features or to fix bugs.  This typically makes a package harder
+to maintain, and we encourage developers to upstream (contribute back)
+their changes rather than maintaining patches.  However, in some cases
+it's not possible to upstream. Maybe the dependency's developers don't
+accept changes, or maybe they just haven't had time to integrate them.
+
+For times like these, Spack's ``depends_on`` directive can optionally
+take a patch or list of patches:
+
+.. code-block:: python
+
+    class SpecialTool(Package):
+        ...
+        depends_on('binutils', patches='special-binutils-feature.patch')
+        ...
+
+Here, the ``special-tool`` package requires a special feature in
+``binutils``, so it provides an extra ``patches=<filename>`` keyword
+argument.  This is similar to the `patch directive <patching_>`_, with
+one small difference.  Here, ``special-tool`` is responsible for the
+patch, so it should live in ``special-tool``'s directory in the package
+repository, not the ``binutils`` directory.
+
+If you need something more sophisticated than this, you can simply nest a
+``patch()`` directive inside of ``depends_on``:
+
+.. code-block:: python
+
+    class SpecialTool(Package):
+        ...
+        depends_on(
+            'binutils',
+            patches=patch('special-binutils-feature.patch',
+                          level=3,
+                          when='@:1.3'),   # condition on binutils
+            when='@2.0:')                  # condition on special-tool
+        ...
+
+Note that there are two optional ``when`` conditions here -- one on the
+``patch`` directive and the other on ``depends_on``.  The condition in
+the ``patch`` directive applies to ``binutils`` (the package being
+patched), while the condition in ``depends_on`` applies to
+``special-tool``.  See `patch directive <patching_>`_ for details on all
+the arguments the ``patch`` directive can take.
+
+Finally, if you need *multiple* patches on a dependency, you can provide
+a list for ``patches``, e.g.:
+
+.. code-block:: python
+
+    class SpecialTool(Package):
+        ...
+        depends_on(
+            'binutils',
+            patches=[
+                'binutils-bugfix1.patch',
+                'binutils-bugfix2.patch',
+                patch('https://example.com/special-binutils-feature.patch',
+                      sha256='252c0af58be3d90e5dc5e0d16658434c9efa5d20a5df6c10bf72c2d77f780866',
+                      when='@:1.3')],
+            when='@2.0:')
+        ...
+
+As with ``patch`` directives, patches are applied in the order they
+appear in the package file (or in this case, in the list).
+
+.. note::
+
+   You may wonder whether dependency patching will interfere with other
+   packages that depend on ``binutils``.  It won't.
+
+   As described in patching_, Patching a package adds the ``sha256`` of
+   the patch to the package's spec, which means it will have a
+   *different* unique hash than other versions without the patch.  The
+   patched version coexists with unpatched versions, and Spack's support
+   for handling_rpaths_ guarantees that each installation finds the
+   right version. If two packages depend on ``binutils`` patched *the
+   same* way, they can both use a single installation of ``binutils``.
 
 .. _setup-dependent-environment:
 
@@ -1523,23 +1732,23 @@ properties to be used by dependents.
 
 The function declaration should look like this:
 
-.. code-block:: python
-
-   class Qt(Package):
-       ...
-       def setup_dependent_environment(self, module, spec, dep_spec):
-           """Dependencies of Qt find it using the QTDIR environment variable."""
-           os.environ['QTDIR'] = self.prefix
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/qt/package.py
+   :pyobject: Qt.setup_dependent_environment
+   :linenos:
 
 Here, the Qt package sets the ``QTDIR`` environment variable so that
 packages that depend on a particular Qt installation will find it.
 
 The arguments to this function are:
 
-* **module**: the module of the dependent package, where global
-  properties can be assigned.
-* **spec**: the spec of the *dependency package* (the one the function is called on).
-* **dep_spec**: the spec of the dependent package (i.e. dep_spec depends on spec).
+* **spack_env**: List of environment modifications to be applied when
+  the dependent package is built within Spack.
+* **run_env**: List of environment modifications to be applied when
+  the dependent package is run outside of Spack. These are added to the
+  resulting module file.
+* **dependent_spec**: The spec of the dependent package about to be
+  built. This allows the extendee (self) to query the dependent's state.
+  Note that *this* package's spec is available as ``self.spec``.
 
 A good example of using these is in the Python package:
 
@@ -1559,6 +1768,28 @@ packages to have a very simple install method, like this:
 Python's ``setup_dependent_environment`` method also sets up some
 other variables, creates a directory, and sets up the ``PYTHONPATH``
 so that dependent packages can find their dependencies at build time.
+
+.. _packaging_conflicts:
+
+---------
+Conflicts
+---------
+
+Sometimes packages have known bugs, or limitations, that would prevent them
+to build e.g. against other dependencies or with certain compilers. Spack
+makes it possible to express such constraints with the ``conflicts`` directive.
+
+Adding the following to a package:
+
+.. code-block:: python
+
+    conflicts('%intel', when='@1.2')
+
+we express the fact that the current package *cannot be built* with the Intel
+compiler when we are trying to install version "1.2". The ``when`` argument can
+be omitted, in which case the conflict will always be active.
+Conflicts are always evaluated after the concretization step has been performed,
+and if any match is found a detailed error message is shown to the user.
 
 .. _packaging_extensions:
 
@@ -2021,29 +2252,43 @@ The package base class, usually specialized for a given build system, determines
 actual set of entities available for overriding.
 The classes that are currently provided by Spack are:
 
-    +------------------------------------+----------------------------------+
-    |                                    |   **Base class purpose**         |
-    +====================================+==================================+
-    |          :py:class:`.Package`      | General base class not           |
-    |                                    | specialized for any build system |
-    +------------------------------------+----------------------------------+
-    |   :py:class:`.MakefilePackage`     | Specialized class for packages   |
-    |                                    | built invoking                   |
-    |                                    | hand-written Makefiles           |
-    +------------------------------------+----------------------------------+
-    |   :py:class:`.AutotoolsPackage`    | Specialized class for packages   |
-    |                                    | built using GNU Autotools        |
-    +------------------------------------+----------------------------------+
-    |  :py:class:`.CMakePackage`         | Specialized class for packages   |
-    |                                    | built using CMake                |
-    +------------------------------------+----------------------------------+
-    |  :py:class:`.RPackage`             | Specialized class for            |
-    |                                    | :py:class:`.R` extensions        |
-    +------------------------------------+----------------------------------+
-    |  :py:class:`.PythonPackage`        | Specialized class for            |
-    |                                    | :py:class:`.Python` extensions   |
-    +------------------------------------+----------------------------------+
-
+    +-------------------------------+----------------------------------+
+    |        **Base Class**         |           **Purpose**            |
+    +===============================+==================================+
+    | :py:class:`.Package`          | General base class not           |
+    |                               | specialized for any build system |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.MakefilePackage`  | Specialized class for packages   |
+    |                               | built invoking                   |
+    |                               | hand-written Makefiles           |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.AutotoolsPackage` | Specialized class for packages   |
+    |                               | built using GNU Autotools        |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.CMakePackage`     | Specialized class for packages   |
+    |                               | built using CMake                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.QMakePackage`     | Specialized class for packages   |
+    |                               | build using QMake                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.SConsPackage`     | Specialized class for packages   |
+    |                               | built using SCons                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.WafPackage`       | Specialized class for packages   |
+    |                               | built using Waf                  |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.RPackage`         | Specialized class for            |
+    |                               | :py:class:`.R` extensions        |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.PythonPackage`    | Specialized class for            |
+    |                               | :py:class:`.Python` extensions   |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.PerlPackage`      | Specialized class for            |
+    |                               | :py:class:`.Perl` extensions     |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.IntelPackage`     | Specialized class for licensed   |
+    |                               | Intel software                   |
+    +-------------------------------+----------------------------------+
 
 
 .. note::
@@ -2319,6 +2564,99 @@ build system.
 Compiler flags
 ^^^^^^^^^^^^^^
 
+Compiler flags set by the user through the Spec object can be passed to
+the build in one of two ways. For packages inheriting from the
+``CmakePackage`` or ``AutotoolsPackage`` classes, the build environment
+passes those flags to the relevant environment variables (``CFLAGS``,
+``CXXFLAGS``, etc) that are respected by the build system. For all other
+packages, the default behavior is to inject the flags directly into the
+compiler commands using Spack's compiler wrappers.
+
+.. warning::
+
+   The flag handling methods described in this section are in beta.
+   The exact semantics are liable to change to improve usability.
+
+Individual packages can override the default behavior for the flag
+handling.  Packages can define a ``default_flag_handler`` method that
+applies to all sets of flags handled by Spack, or may define
+individual methods ``cflags_handler``, ``cxxflags_handler``,
+etc. Spack will apply the individual method for a flag set if it
+exists, otherwise the ``default_flag_handler`` method if it exists,
+and fall back on the default for that package class if neither exists.
+
+These methods are defined on the package class, and take two
+parameters in addition to the packages itself. The ``env`` parameter
+is an ``EnvironmentModifications`` object that can be used to change
+the build environment. The ``flag_val`` parameter is a tuple. Its
+first entry is the name of the flag (``cflags``, ``cxxflags``, etc.)
+and its second entry is a list of the values for that flag.
+
+There are three primary idioms that can be combined to create whatever
+behavior the package requires.
+
+1. The default behavior for packages inheriting from
+``AutotoolsPackage`` or ``CmakePackage``.
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
+        return []
+
+2. The default behavior for other packages
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        return flag_val[1]
+
+
+3. Packages may have additional flags to add to the build. These flags
+can be added to either idiom above. For example:
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        flags = flag_val[1]
+        flags.append('-flag')
+        return flags
+
+or
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
+        env.append_flags(flag_val[0].upper(), '-flag')
+        return []
+
+Packages may also opt for methods that include aspects of any of the
+idioms above. E.g.
+
+.. code-block:: python
+
+    def default_flag_handler(self, env, flag_val):
+        flags = []
+        if len(flag_val[1]) > 3:
+            env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1][3:]))
+            flags = flag_val[1][:3]
+        else:
+            flags = flag_val[1]
+        flags.append('-flag')
+        return flags
+
+Because these methods can pass values through environment variables,
+it is important not to override these variables unnecessarily in other
+package methods. In the ``setup_environment`` and
+``setup_dependent_environment`` methods, use the ``append_flags``
+method of the ``EnvironmentModifications`` class to append values to a
+list of flags whenever there is no good reason to override the
+existing value. In the ``install`` method and other methods that can
+operate on the build environment directly through the ``env``
+variable, test for environment variable existance before overriding
+values to add compiler flags.
+
 In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
 flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
@@ -2335,19 +2673,54 @@ is handy when a package supports additional variants like
 
    variant('openmp', default=True, description="Enable OpenMP support.")
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Blas and Lapack libraries
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Blas, Lapack and ScaLapack libraries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Different packages provide implementation of ``Blas`` and ``Lapack``
+Multiple packages provide implementations of ``Blas``, ``Lapack`` and ``ScaLapack``
 routines.  The names of the resulting static and/or shared libraries
 differ from package to package. In order to make the ``install()`` method
 independent of the choice of ``Blas`` implementation, each package which
-provides it sets up ``self.spec.blas_libs`` to point to the correct
-``Blas`` libraries.  The same applies to packages which provide
-``Lapack``. Package developers are advised to use these variables, for
-example ``spec['blas'].blas_libs.joined()`` instead of hard-coding
-``join_path(spec['blas'].prefix.lib, 'libopenblas.so')``.
+provides it implements ``@property def blas_libs(self):`` to return an object
+of
+`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+type which simplifies usage of a set of libraries.
+The same applies to packages which provide ``Lapack`` and ``ScaLapack``.
+Package developers are requested to use this interface. Common usage cases are:
+
+1. Space separated list of full paths
+
+.. code-block:: python
+
+   lapack_blas = spec['lapack'].libs + spec['blas'].libs
+   options.append(
+      '--with-blas-lapack-lib={0}'.format(lapack_blas.joined())
+   )
+
+2. Names of libraries and directories which contain them
+
+.. code-block:: python
+
+   blas = spec['blas'].libs
+   options.extend([
+     '-DBLAS_LIBRARY_NAMES={0}'.format(';'.join(blas.names)),
+     '-DBLAS_LIBRARY_DIRS={0}'.format(';'.join(blas.directories))
+   ])
+
+3. Search and link flags
+
+.. code-block:: python
+
+   math_libs = spec['scalapack'].libs + spec['lapack'].libs + spec['blas'].libs
+   options.append(
+     '-DMATH_LIBS:STRING={0}'.format(math_libs.ld_flags)
+   )
+
+
+For more information, see documentation of
+`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+class.
+
 
 .. _prefix-objects:
 
@@ -2361,7 +2734,7 @@ e.g.:
 
 .. code-block:: python
 
-   configure('--prefix=' + prefix)
+   configure('--prefix={0}'.format(prefix))
 
 For the most part, prefix objects behave exactly like strings.  For
 packages that do not have their own install target, or for those that
@@ -2382,29 +2755,27 @@ yourself, e.g.:
        mkdirp(prefix.lib)
        install('libfoo.a', prefix.lib)
 
-Most of the standard UNIX directory names are attributes on the
-``prefix`` object.  Here is a full list:
 
-  =========================  ================================================
-  Prefix Attribute           Location
-  =========================  ================================================
-  ``prefix.bin``             ``$prefix/bin``
-  ``prefix.sbin``            ``$prefix/sbin``
-  ``prefix.etc``             ``$prefix/etc``
-  ``prefix.include``         ``$prefix/include``
-  ``prefix.lib``             ``$prefix/lib``
-  ``prefix.lib64``           ``$prefix/lib64``
-  ``prefix.libexec``         ``$prefix/libexec``
-  ``prefix.share``           ``$prefix/share``
-  ``prefix.doc``             ``$prefix/doc``
-  ``prefix.info``            ``$prefix/info``
+Attributes of this object are created on the fly when you request them,
+so any of the following will work:
 
-  ``prefix.man``             ``$prefix/man``
-  ``prefix.man[1-8]``        ``$prefix/man/man[1-8]``
+======================  =======================
+Prefix Attribute        Location
+======================  =======================
+``prefix.bin``          ``$prefix/bin``
+``prefix.lib64``        ``$prefix/lib64``
+``prefix.share.man``    ``$prefix/share/man``
+``prefix.foo.bar.baz``  ``$prefix/foo/bar/baz``
+======================  =======================
 
-  ``prefix.share_man``       ``$prefix/share/man``
-  ``prefix.share_man[1-8]``  ``$prefix/share/man[1-8]``
-  =========================  ================================================
+Of course, this only works if your file or directory is a valid Python
+variable name. If your file or directory contains dashes or dots, use
+``join_path`` instead:
+
+.. code-block:: python
+
+   join_path(prefix.lib, 'libz.a')
+
 
 .. _spec-objects:
 
@@ -2503,23 +2874,25 @@ of its dependencies satisfy the provided spec.
 Accessing Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^
 
-You may need to get at some file or binary that's in the prefix of one
-of your dependencies.  You can do that by sub-scripting the spec:
+You may need to get at some file or binary that's in the installation
+prefix of one of your dependencies. You can do that by sub-scripting
+the spec:
 
 .. code-block:: python
 
-   my_mpi = spec['mpi']
+   spec['mpi']
 
 The value in the brackets needs to be some package name, and spec
 needs to depend on that package, or the operation will fail.  For
 example, the above code will fail if the ``spec`` doesn't depend on
-``mpi``.  The value returned and assigned to ``my_mpi``, is itself
-just another ``Spec`` object, so you can do all the same things you
-would do with the package's own spec:
+``mpi``.  The value returned is itself just another ``Spec`` object,
+so you can do all the same things you would do with the package's
+own spec:
 
 .. code-block:: python
 
-   mpicc = join_path(my_mpi.prefix.bin, 'mpicc')
+   spec['mpi'].prefix.bin
+   spec['mpi'].version
 
 .. _multimethods:
 
@@ -2805,11 +3178,8 @@ the one passed to install, only the MPI implementations all set some
 additional properties on it to help you out.  E.g., in mvapich2, you'll
 find this:
 
-.. code-block:: python
-
-    def setup_dependent_package(self, module, dep_spec):
-        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
-        # … etc …
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/mvapich2/package.py
+   :pyobject: Mvapich2.setup_dependent_package
 
 That code allows the mvapich2 package to associate an ``mpicc`` property
 with the ``mvapich2`` node in the DAG, so that dependents can access it.
@@ -3020,7 +3390,7 @@ Filtering functions
      .. code-block:: python
 
         filter_file(r'#!/usr/bin/perl',
-                    '#!/usr/bin/env perl', join_path(prefix.bin, 'bib2xhtml'))
+                    '#!/usr/bin/env perl', prefix.bin.bib2xhtml)
 
   #. Switching the compilers used by ``mpich``'s MPI wrapper scripts from
      ``cc``, etc. to the compilers used by the Spack build:
@@ -3028,10 +3398,10 @@ Filtering functions
      .. code-block:: python
 
         filter_file('CC="cc"', 'CC="%s"' % self.compiler.cc,
-                    join_path(prefix.bin, 'mpicc'))
+                    prefix.bin.mpicc)
 
         filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx,
-                    join_path(prefix.bin, 'mpicxx'))
+                    prefix.bin.mpicxx)
 
 :py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.change_sed_delim>`
     Some packages, like TAU, have a build system that can't install
@@ -3068,12 +3438,10 @@ File functions
 
   .. code-block:: python
 
-     install('my-header.h', join_path(prefix.include))
+     install('my-header.h', prefix.include)
 
-:py:func:`join_path(prefix, *args) <spack.join_path>`
-  Like ``os.path.join``, this joins paths using the OS path separator.
-  However, this version allows an arbitrary number of arguments, so
-  you can string together many path components.
+:py:func:`join_path(*paths) <spack.join_path>`
+  An alias for ``os.path.join``. This joins paths using the OS path separator.
 
 :py:func:`mkdirp(*paths) <spack.mkdirp>`
   Create each of the directories in ``paths``, creating any parent
@@ -3158,37 +3526,6 @@ Version Lists
 ^^^^^^^^^^^^^
 
 Spack packages should list supported versions with the newest first.
-
-^^^^^^^^^^^^^^^^
-Special Versions
-^^^^^^^^^^^^^^^^
-
-The following *special* version names may be used when building a package:
-
-"""""""""""
-``@system``
-"""""""""""
-
-Indicates a hook to the OS-installed version of the
-package.  This is useful, for example, to tell Spack to use the
-OS-installed version in ``packages.yaml``:
-
-.. code-block:: yaml
-
-   openssl:
-     paths:
-       openssl@system: /usr
-     buildable: False
-
-Certain Spack internals look for the ``@system`` version and do
-appropriate things in that case.
-
-""""""""""
-``@local``
-""""""""""
-
-Indicates the version was built manually from some source
-tree of unknown provenance (see ``spack setup``).
 
 ---------------------------
 Packaging workflow commands
@@ -3282,24 +3619,12 @@ Does this in one of two ways:
 ``spack clean``
 ^^^^^^^^^^^^^^^
 
-Cleans up temporary files for a particular package, by deleting the
-expanded/checked out source code *and* any downloaded archive.  If
-``fetch``, ``stage``, or ``install`` are run again after this, Spack's
-build process will start from scratch.
-
-.. _cmd-spack-purge:
-
-^^^^^^^^^^^^^^^
-``spack purge``
-^^^^^^^^^^^^^^^
-
 Cleans up all of Spack's temporary and cached files.  This can be used to
 recover disk space if temporary files from interrupted or failed installs
 accumulate in the staging area.
 
 When called with ``--stage`` or without arguments this removes all staged
-files and will be equivalent to running ``spack clean`` for every package
-you have fetched or staged.
+files.
 
 When called with ``--downloads`` this will clear all resources
 :ref:`cached <caching>` during installs.
@@ -3308,6 +3633,11 @@ When called with ``--user-cache`` this will remove caches in the user home
 directory, including cached virtual indices.
 
 To remove all of the above, the command can be called with ``--all``.
+
+When called with positional arguments, cleans up temporary files only
+for a particular package. If ``fetch``, ``stage``, or ``install``
+are run again after this, Spack's build process will start from scratch.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the stage directory on success
@@ -3322,7 +3652,7 @@ package has been successfully built and installed.  Use
    $ spack install --keep-stage <spec>
 
 This allows you to inspect the build directory and potentially debug
-the build.  You can use ``purge`` or ``clean`` later to get rid of the
+the build.  You can use ``clean`` later to get rid of the
 unwanted temporary files.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

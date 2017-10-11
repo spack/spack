@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,11 +25,9 @@
 from spack import *
 
 
-class Glm(Package):
+class Glm(CMakePackage):
     """OpenGL Mathematics (GLM) is a header only C++ mathematics library for
-       graphics software based on the OpenGL Shading Language (GLSL)
-       specification.
-
+    graphics software based on the OpenGL Shading Language (GLSL) specification
     """
 
     homepage = "https://github.com/g-truc/glm"
@@ -37,10 +35,4 @@ class Glm(Package):
 
     version('0.9.7.1', '61af6639cdf652d1cdd7117190afced8')
 
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
-            make()
-            make("install")
+    depends_on('cmake@2.6:', type='build')

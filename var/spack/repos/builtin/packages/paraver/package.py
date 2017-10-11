@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,12 +31,13 @@ class Paraver(Package):
         based on traces that can be used to analyse any information that
         is expressed on its input trace format.  Traces for parallel MPI,
         OpenMP and other programs can be genereated with Extrae."""
-    homepage = "http://www.bsc.es/computer-sciences/performance-tools/paraver"
-    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/paraver-sources-4.6.2.tar.gz"
+    homepage = "https://tools.bsc.es/paraver"
+    url = "https://ftp.tools.bsc.es/paraver/wxparaver-4.6.3-src.tar.bz2"
 
     # NOTE: Paraver provides only latest version for download.
     #       Don't keep/add older versions.
-    version('4.6.2', 'c54e124382b597574628b00e31649803')
+    version('4.6.3', '7940a2651f56712c4e8a21138b4bf16c')
+    version('4.6.2', '3f5b3e207d98b2c44101f1ff5685aa55')
 
     depends_on("boost")
     # depends_on("extrae")

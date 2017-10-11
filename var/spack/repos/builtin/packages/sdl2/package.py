@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Sdl2(Package):
+class Sdl2(CMakePackage):
     """Simple DirectMedia Layer is a cross-platform development library designed
     to provide low level access to audio, keyboard, mouse, joystick, and
     graphics hardware via OpenGL and Direct3D."""
@@ -35,11 +35,4 @@ class Sdl2(Package):
 
     version('2.0.5', 'd4055424d556b4a908aa76fad63abd3c')
 
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
-
-            make()
-            make('install')
+    depends_on('cmake@2.8.5:', type='build')

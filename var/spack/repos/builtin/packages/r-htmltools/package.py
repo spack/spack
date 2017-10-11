@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,9 +29,10 @@ class RHtmltools(RPackage):
     """Tools for HTML generation and output."""
 
     homepage = "https://github.com/rstudio/htmltools"
-    url      = "https://cran.r-project.org/src/contrib/htmltools_0.3.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/htmltools"
+    url      = "https://cran.rstudio.com/src/contrib/htmltools_0.3.6.tar.gz"
+    list_url = homepage
 
+    version('0.3.6', '336419c2143f958862e01ef1bbc9c253')
     version('0.3.5', '5f001aff4a39e329f7342dcec5139724')
 
     depends_on('r-digest', type=('build', 'run'))

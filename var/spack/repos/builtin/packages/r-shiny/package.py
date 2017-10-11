@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,9 +32,10 @@ class RShiny(RPackage):
     powerful applications with minimal effort."""
 
     homepage = "http://shiny.rstudio.com/"
-    url      = "https://cran.r-project.org/src/contrib/shiny_0.13.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/shiny"
+    url      = "https://cran.rstudio.com/src/contrib/shiny_1.0.5.tar.gz"
+    list_url = homepage
 
+    version('1.0.5', '419dd5d3ea0bd87a07f8f0b1ef14fc13')
     version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
 
     depends_on('r-httpuv', type=('build', 'run'))

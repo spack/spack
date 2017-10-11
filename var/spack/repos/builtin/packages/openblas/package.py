@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,49 +24,66 @@
 ##############################################################################
 from spack import *
 from spack.package_test import *
+import spack.architecture
 import os
 
 
 class Openblas(MakefilePackage):
     """OpenBLAS: An optimized BLAS library"""
     homepage = 'http://www.openblas.net'
-    url = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz'
+    url = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
 
+    version('0.2.20', '48637eb29f5b492b91459175dcc574b1')
     version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
     version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
+    version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
+
     variant(
         'shared',
         default=True,
         description='Build shared libraries as well as static libs.'
     )
-    variant('openmp', default=False, description="Enable OpenMP support.")
+    variant('ilp64', default=False, description='64 bit integers')
     variant('pic', default=True, description='Build position independent code')
+
+    variant('cpu_target', default='',
+                    description='Set CPU target architecture (leave empty for '
+                        'autodetection; GENERIC, SSE_GENERIC, NEHALEM, ...)')
+
+    variant(
+        'threads', default='none',
+        description='Multithreading support',
+        values=('pthreads', 'openmp', 'none'),
+        multi=False
+    )
 
     # virtual dependency
     provides('blas')
     provides('lapack')
 
-    patch('make.patch')
+    patch('make.patch', when='@0.2.16:')
     #  This patch is in a pull request to OpenBLAS that has not been handled
     #  https://github.com/xianyi/OpenBLAS/pull/915
-    patch('openblas_icc.patch', when='%intel')
+    #  UPD: the patch has been merged starting version 0.2.20
+    patch('openblas_icc.patch', when='@:0.2.19%intel')
+    patch('openblas_icc_openmp.patch', when='%intel@16.0:')
+    patch('openblas_icc_fortran.patch', when='%intel@16.0:')
+
+    # Fixes compilation error on POWER8 with GCC 7
+    # https://github.com/xianyi/OpenBLAS/pull/1098
+    patch('power8.patch', when='@0.2.18:0.2.19 %gcc@7.1.0: target=ppc64')
+
+    # Change file comments to work around clang 3.9 assembler bug
+    # https://github.com/xianyi/OpenBLAS/pull/982
+    patch('openblas0.2.19.diff', when='@0.2.19')
 
     parallel = False
 
-    @property
-    def blas_libs(self):
-        shared = True if '+shared' in self.spec else False
-        return find_libraries(
-            ['libopenblas'], root=self.prefix, shared=shared, recurse=True
-        )
-
-    @property
-    def lapack_libs(self):
-        return self.blas_libs
+    conflicts('%intel@16', when='@0.2.15:0.2.19')
 
     @run_before('edit')
     def check_compilers(self):
@@ -78,12 +95,16 @@ class Openblas(MakefilePackage):
                 'OpenBLAS requires both C and Fortran compilers!'
             )
         # Add support for OpenMP
-        if '+openmp' in self.spec and self.spec.satisfies('%clang'):
-            # Openblas (as of 0.2.18) hardcoded that OpenMP cannot
-            # be used with any (!) compiler named clang, bummer.
-            raise InstallError(
-                'OpenBLAS does not support OpenMP with clang!'
-            )
+        if (self.spec.satisfies('threads=openmp') and
+            self.spec.satisfies('%clang')):
+            if str(self.spec.compiler.version).endswith('-apple'):
+                raise InstallError("Apple's clang does not support OpenMP")
+            if '@:0.2.19' in self.spec:
+                # Openblas (as of 0.2.19) hardcoded that OpenMP cannot
+                # be used with any (!) compiler named clang, bummer.
+                raise InstallError(
+                    'OpenBLAS @:0.2.19 does not support OpenMP with clang!'
+                )
 
     @property
     def make_defs(self):
@@ -98,6 +119,16 @@ class Openblas(MakefilePackage):
             'FC={0}'.format(spack_f77),
             'MAKE_NO_J=1'
         ]
+        if self.spec.variants['cpu_target'].value:
+            make_defs += [
+                'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
+            ]
+        # invoke make with the correct TARGET for aarch64
+        elif 'aarch64' in spack.architecture.sys_type():
+            make_defs += [
+                'TARGET=PILEDRIVER',
+                'TARGET=ARMV8'
+            ]
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs += ['NO_AVX2=1']
         if '~shared' in self.spec:
@@ -110,9 +141,18 @@ class Openblas(MakefilePackage):
         # fix missing _dggsvd_ and _sggsvd_
         if self.spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
-        # Add support for OpenMP
-        if '+openmp' in self.spec:
-            make_defs += ['USE_OPENMP=1']
+
+        # Add support for multithreading
+        if self.spec.satisfies('threads=openmp'):
+            make_defs += ['USE_OPENMP=1', 'USE_THREAD=1']
+        elif self.spec.satisfies('threads=pthreads'):
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=1']
+        else:
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=0']
+
+        # 64bit ints
+        if '+ilp64' in self.spec:
+            make_defs += ['INTERFACE64=1']
 
         return make_defs
 
@@ -127,6 +167,7 @@ class Openblas(MakefilePackage):
         return self.make_defs + targets
 
     @run_after('build')
+    @on_package_attributes(run_tests=True)
     def check_build(self):
         make('tests', *self.make_defs)
 
@@ -139,6 +180,7 @@ class Openblas(MakefilePackage):
         return make_args + self.make_defs
 
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
         spec = self.spec
         # Openblas may pass its own test but still fail to compile Lapack
@@ -149,13 +191,16 @@ class Openblas(MakefilePackage):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = ["-I%s" % join_path(spec.prefix, "include")]
-        link_flags = self.lapack_libs.ld_flags.split()
+        include_flags = spec['openblas'].headers.cpp_flags
+        link_flags = spec['openblas'].libs.ld_flags
         if self.compiler.name == 'intel':
-            link_flags.extend(["-lifcore"])
-        link_flags.extend(["-lpthread"])
-        if '+openmp' in spec:
-            link_flags.extend([self.compiler.openmp_flag])
+            link_flags += ' -lifcore'
+        if self.spec.satisfies('threads=pthreads'):
+            link_flags += ' -lpthread'
+        if spec.satisfies('threads=openmp'):
+            link_flags += ' -lpthread ' + self.compiler.openmp_flag
 
-        output = compile_c_and_execute(source_file, include_flags, link_flags)
+        output = compile_c_and_execute(
+            source_file, [include_flags], link_flags.split()
+        )
         compare_output_file(output, blessed_file)

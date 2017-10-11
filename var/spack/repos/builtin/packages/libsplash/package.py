@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Libsplash(Package):
+class Libsplash(CMakePackage):
     """libSplash aims at developing a HDF5-based I/O library for HPC
     simulations. It is created as an easy-to-use frontend for the standard HDF5
     library with support for MPI processes in a cluster environment. While the
@@ -37,7 +37,7 @@ class Libsplash(Package):
     homepage = "https://github.com/ComputationalRadiationPhysics/libSplash"
     url      = "https://github.com/ComputationalRadiationPhysics/libSplash/archive/v1.4.0.tar.gz"
 
-    version('dev', branch='dev',
+    version('develop', branch='dev',
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')
     version('master', branch='master',
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')
@@ -50,15 +50,6 @@ class Libsplash(Package):
     variant('mpi', default=True,
             description='Enable parallel I/O (one-file aggregation) support')
 
-    depends_on('cmake', type='build')
     depends_on('hdf5@1.8.6:')
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-
-            make()
-            make('install')

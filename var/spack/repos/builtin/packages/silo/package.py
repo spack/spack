@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,7 @@ class Silo(Package):
        data to binary, disk files."""
 
     homepage = "http://wci.llnl.gov/simulation/computer-codes/silo"
-    base_url = "https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo"
+    url      = "https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2.tar.gz"
 
     version('4.10.2', '9ceac777a2f2469ac8cef40f4fab49c8')
     version('4.9', 'a83eda4f06761a86726e918fc55e782a')
@@ -40,10 +40,13 @@ class Silo(Package):
     variant('shared', default=True, description='Build shared libraries')
     variant('silex', default=False,
             description='Builds Silex, a GUI for viewing Silo files')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
 
-    # silo uses the obsolete function H5Pset_fapl_mpiposix:
-    depends_on("hdf5 @:1.8.12")
+    depends_on('hdf5')
     depends_on('qt', when='+silex')
+
+    patch('remove-mpiposix.patch', when='@4.8:4.10.2')
 
     def install(self, spec, prefix):
         config_args = [
@@ -54,6 +57,12 @@ class Silo(Package):
 
         if '+silex' in spec:
             config_args.append('--with-Qt-dir=%s' % spec['qt'].prefix)
+
+        if '+pic' in spec:
+            config_args += [
+                'CFLAGS={0}'.format(self.compiler.pic_flag),
+                'CXXFLAGS={0}'.format(self.compiler.pic_flag),
+                'FCFLAGS={0}'.format(self.compiler.pic_flag)]
 
         configure(
             '--prefix=%s' % prefix,
@@ -66,6 +75,3 @@ class Silo(Package):
 
         make()
         make('install')
-
-    def url_for_version(self, version):
-        return '%s/silo-%s/silo-%s.tar.gz' % (Silo.base_url, version, version)

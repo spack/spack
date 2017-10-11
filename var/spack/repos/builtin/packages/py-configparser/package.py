@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,16 +29,13 @@ class PyConfigparser(PythonPackage):
     """This library brings the updated configparser from Python 3.5 to
     Python 2.6-3.5."""
 
-    homepage = "https://pypi.python.org/pypi/configparser"
-    url      = "https://pypi.python.org/packages/source/c/configparser/configparser-3.5.0.tar.gz"
+    homepage = "https://docs.python.org/3/library/configparser.html"
+    url      = "https://pypi.io/packages/source/c/configparser/configparser-3.5.0.tar.gz"
 
-    version('3.5.0', 'cfdd915a5b7a6c09917a64a573140538',
-            url="https://pypi.python.org/packages/7c/69/c2ce7e91c89dc073eb1aa74c0621c3eefbffe8216b3f9af9d3885265c01c/configparser-3.5.0.tar.gz")
+    version('3.5.0', 'cfdd915a5b7a6c09917a64a573140538')
 
-    depends_on('python@2.6:2.7,3.4:')
+    depends_on('py-setuptools', type='build')
 
     # This dependency breaks concretization
     # See https://github.com/LLNL/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@2.6:2.6.999', type=('build', 'run'))  # noqa
-
-    depends_on('py-setuptools', type='build')
+    # depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))

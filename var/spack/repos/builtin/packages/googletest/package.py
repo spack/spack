@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,24 +25,41 @@
 from spack import *
 
 
-class Googletest(Package):
+class Googletest(CMakePackage):
     """Google test framework for C++.  Also called gtest."""
     homepage = "https://github.com/google/googletest"
     url      = "https://github.com/google/googletest/tarball/release-1.7.0"
 
+    version('1.8.0', 'd2edffbe844902d942c31db70c7cfec2')
     version('1.7.0', '5eaf03ed925a47b37c8e1d559eb19bc4')
+    version('1.6.0', '90407321648ab25b067fcd798caf8c78')
 
-    depends_on("cmake", type='build')
+    variant('gmock', default=False, description='Build with gmock')
+    conflicts('+gmock', when='@:1.7.0')
 
+    def cmake_args(self):
+        spec = self.spec
+        if '@1.8.0:' in spec:
+            # New style (contains both Google Mock and Google Test)
+            options = ['-DBUILD_GTEST=ON']
+            if '+gmock' in spec:
+                options.append('-DBUILD_GMOCK=ON')
+            else:
+                options.append('-DBUILD_GMOCK=OFF')
+        else:
+            # Old style (contains only GTest)
+            options = []
+        return options
+
+    @when('@:1.7.0')
     def install(self, spec, prefix):
-        which('cmake')('.', *std_cmake_args)
+        """Make the install targets"""
+        with working_dir(self.build_directory):
+            # Google Test doesn't have a make install
+            # We have to do our own install here.
+            install_tree(join_path(self.stage.source_path, 'include'),
+                         prefix.include)
 
-        make()
-
-        # Google Test doesn't have a make install
-        # We have to do our own install here.
-        install_tree('include', prefix.include)
-
-        mkdirp(prefix.lib)
-        install('./libgtest.a', '%s' % prefix.lib)
-        install('./libgtest_main.a', '%s' % prefix.lib)
+            mkdirp(prefix.lib)
+            install('libgtest.a', prefix.lib)
+            install('libgtest_main.a', prefix.lib)

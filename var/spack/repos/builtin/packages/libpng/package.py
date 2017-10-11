@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,8 +29,11 @@ class Libpng(AutotoolsPackage):
     """libpng is the official PNG reference library."""
 
     homepage = "http://www.libpng.org/pub/png/libpng.html"
-    url      = "http://download.sourceforge.net/libpng/libpng-1.6.27.tar.gz"
+    url      = "http://download.sourceforge.net/libpng/libpng-1.6.29.tar.gz"
+    list_url = "https://sourceforge.net/projects/libpng/files/"
+    list_depth = 2
 
+    version('1.6.29', '68553080685f812d1dd7a6b8215c37d8')
     version('1.6.27', '58698519e9f6126c1caeefc28dbcbd5f')
     # From http://www.libpng.org/pub/png/libpng.html (2017-01-04)
     #     Virtually all libpng versions through 1.6.26, 1.5.27,
@@ -48,3 +51,13 @@ class Libpng(AutotoolsPackage):
     version('1.2.57', 'dfcda3603e29dcc11870c48f838ef75b')
 
     depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended
+
+    def configure_args(self):
+        args = [
+            # not honored, see
+            #   https://sourceforge.net/p/libpng/bugs/210/#33f1
+            # '--with-zlib=' + self.spec['zlib'].prefix,
+            'CFLAGS={0}'.format(self.spec['zlib'].headers.include_flags),
+            'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
+        ]
+        return args

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -56,6 +56,7 @@ class ArpackNg(Package):
     homepage = 'https://github.com/opencollab/arpack-ng'
     url = 'https://github.com/opencollab/arpack-ng/archive/3.3.0.tar.gz'
 
+    version('3.5.0', '9762c9ae6d739a9e040f8201b1578874')
     version('3.4.0', 'ae9ca13f2143a7ea280cb0e2fd4bfae4')
     version('3.3.0', 'ed3648a23f0a868a43ef44c97a21bad5')
 
@@ -80,6 +81,19 @@ class ArpackNg(Package):
 
     depends_on('mpi', when='+mpi')
 
+    @property
+    def libs(self):
+        # TODO: do we need spec['arpack-ng:parallel'].libs ?
+        # query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libarpack']
+
+        if '+mpi' in self.spec:
+            libraries = ['libparpack'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recurse=True
+        )
+
     @when('@3.4.0:')
     def install(self, spec, prefix):
 
@@ -88,8 +102,8 @@ class ArpackNg(Package):
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Make sure we use Spack's blas/lapack:
-        lapack_libs = spec['lapack'].lapack_libs.joined(';')
-        blas_libs = spec['blas'].blas_libs.joined(';')
+        lapack_libs = spec['lapack'].libs.joined(';')
+        blas_libs = spec['blas'].libs.joined(';')
 
         options.extend([
             '-DLAPACK_FOUND=true',
@@ -114,7 +128,7 @@ class ArpackNg(Package):
             make('test')
         make('install')
 
-    @when('@3.3.0')
+    @when('@3.3.0')  # noqa
     def install(self, spec, prefix):
         # Apparently autotools are not bootstrapped
         which('libtoolize')()
@@ -129,8 +143,8 @@ class ArpackNg(Package):
             ])
 
         options.extend([
-            '--with-blas={0}'.format(spec['blas'].blas_libs.ld_flags),
-            '--with-lapack={0}'.format(spec['lapack'].lapack_libs.ld_flags)
+            '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
+            '--with-lapack={0}'.format(spec['lapack'].libs.ld_flags)
         ])
         if '+shared' not in spec:
             options.append('--enable-shared=no')

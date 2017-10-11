@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,7 +38,7 @@ class Gdal(Package):
     homepage   = "http://www.gdal.org/"
     url        = "http://download.osgeo.org/gdal/2.1.2/gdal-2.1.2.tar.xz"
     list_url   = "http://download.osgeo.org/gdal/"
-    list_depth = 2
+    list_depth = 1
 
     version('2.1.2', 'ae85b78888514c75e813d658cac9478e')
     version('2.0.2', '940208e737c87d31a90eaae43d0efd65')
@@ -72,7 +72,7 @@ class Gdal(Package):
         args.append("--prefix=%s" % prefix)
         args.append("--with-liblzma=yes")
         args.append("--with-zlib=%s" % spec['zlib'].prefix)
-        args.append("--with-python=%s" % spec['python'].prefix.bin + "/python")
+        args.append("--with-python=%s" % spec['python'].command.path)
         args.append("--without-libtool")
 
         if '+geos' in spec:

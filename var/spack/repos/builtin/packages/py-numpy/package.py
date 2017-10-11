@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,25 +34,44 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.9.1.tar.gz"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip"
 
-    version('1.11.2', '03bd7927c314c43780271bf1ab795ebc')
-    version('1.11.1', '2f44a895a8104ffac140c3a70edbd450')
-    version('1.11.0', 'bc56fb9fc2895aa4961802ffbdb31d0b')
-    version('1.10.4', 'aed294de0aa1ac7bd3f9745f4f1968ad')
-    version('1.9.2',  'a1ed53432dbcd256398898d35bc8e645')
-    version('1.9.1',  '78842b73560ec378142665e712ae4ad9')
+    install_time_test_callbacks = ['install_test', 'import_module_test']
 
-    variant('blas',   default=True)
-    variant('lapack', default=True)
+    import_modules = [
+        'numpy', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc',
+        'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma',
+        'numpy.matrixlib', 'numpy.polynomial', 'numpy.random', 'numpy.testing',
+        'numpy.distutils.command', 'numpy.distutils.fcompiler'
+    ]
 
-    depends_on('python@2.6:2.8,3.2:')
-    depends_on('py-nose', type='build')
+    # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
+    # FIXME: Is this expected?
+
+    version('1.13.1', '2c3c0f4edf720c3a7b525dacc825b9ae')
+    version('1.13.0', 'fd044f0b8079abeaf5e6d2e93b2c1d03')
+    version('1.12.1', 'c75b072a984028ac746a6a332c209a91')
+    version('1.12.0', '33e5a84579f31829bbbba084fe0a4300')
+    version('1.11.2', '8308cc97be154d2f64a2387ea863c2ac')
+    version('1.11.1', '5caa3428b24aaa07e72c79d115140e46')
+    version('1.11.0', '19ce5c4eb16d663a0713daf0018a3021')
+    version('1.10.4', '510ffc322c635511e7be95d225b6bcbb')
+    version('1.9.2',  'e80c19d2fb25af576460bb7dac31c59a')
+    version('1.9.1',  '223532d8e1bdaff5d30936439701d6e1')
+
+    variant('blas',   default=True, description='Build with BLAS support')
+    variant('lapack', default=True, description='Build with LAPACK support')
+
+    depends_on('python@2.7:2.8,3.4:')
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
-    def setup_dependent_package(self, module, dep_spec):
+    # Tests require:
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose@1.0.0:', type='test')
+
+    def setup_dependent_package(self, module, dependent_spec):
         python_version = self.spec['python'].version.up_to(2)
         arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
 
@@ -69,10 +88,10 @@ class PyNumpy(PythonPackage):
         # for build notes see http://www.scipy.org/scipylib/building/linux.html
         lapackblas = LibraryList('')
         if '+lapack' in spec:
-            lapackblas += spec['lapack'].lapack_libs
+            lapackblas += spec['lapack'].libs
 
         if '+blas' in spec:
-            lapackblas += spec['blas'].blas_libs
+            lapackblas += spec['blas'].libs
 
         if '+blas' in spec or '+lapack' in spec:
             # note that one should not use [blas_opt] and [lapack_opt], see
@@ -95,11 +114,11 @@ class PyNumpy(PythonPackage):
                     # FIXME: as of @1.11.2, numpy does not work with separately
                     # specified threading and interface layers. A workaround is
                     # a terribly bad idea to use mkl_rt. In this case Spack
-                    # won't no longer be able to guarantee that one and the
+                    # will no longer be able to guarantee that one and the
                     # same variant of Blas/Lapack (32/64bit, threaded/serial)
                     # is used within the DAG. This may lead to a lot of
                     # hard-to-debug segmentation faults on user's side. Users
-                    # may also break working installation by (unconciously)
+                    # may also break working installation by (unconsciously)
                     # setting environment variable to switch between different
                     # interface and threading layers dynamically. From this
                     # perspective it is no different from throwing away RPATH's
@@ -122,3 +141,31 @@ class PyNumpy(PythonPackage):
                 if not ((platform.system() == "Darwin") and
                         (platform.mac_ver()[0] == '10.12')):
                     f.write('rpath=%s\n' % dirs)
+
+    def build_args(self, spec, prefix):
+        args = []
+
+        # From NumPy 1.10.0 on it's possible to do a parallel build
+        if self.version >= Version('1.10.0'):
+            args = ['-j', str(make_jobs)]
+
+        return args
+
+    def test(self):
+        # `setup.py test` is not supported.  Use one of the following
+        # instead:
+        #
+        # - `python runtests.py`              (to build and test)
+        # - `python runtests.py --no-build`   (to test installed numpy)
+        # - `>>> numpy.test()`           (run tests for installed numpy
+        #                                 from within an interpreter)
+        pass
+
+    def install_test(self):
+        # Change directories due to the following error:
+        #
+        # ImportError: Error importing numpy: you should not try to import
+        #       numpy from its source directory; please exit the numpy
+        #       source tree, and relaunch your python interpreter from there.
+        with working_dir('..'):
+            python('-c', 'import numpy; numpy.test("full", verbose=2)')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,6 +30,5 @@ class RChron(RPackage):
 
     homepage = "https://cran.r-project.org/package=chron"
     url      = "https://cran.r-project.org/src/contrib/chron_2.3-47.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/chron"
 
     version('2.3-47', 'b8890cdc5f2337f8fd775b0becdcdd1f')

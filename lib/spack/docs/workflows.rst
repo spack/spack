@@ -33,24 +33,12 @@ possible realization of a particular package, out of combinatorially
 many other realizations.  For example, here is a concrete spec
 instantiated from ``curl``:
 
-.. code-block:: console
-
-   curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+.. command-output:: spack spec curl
 
 Spack's core concretization algorithm generates concrete specs by
 instantiating packages from its repo, based on a set of "hints",
 including user input and the ``packages.yaml`` file.  This algorithm
-may be accessed at any time with the ``spack spec`` command.  For
-example:
-
-.. code-block:: console
-
-   $ spack spec curl
-     curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-         ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
-         ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
+may be accessed at any time with the ``spack spec`` command.
 
 Every time Spack installs a package, that installation corresponds to
 a concrete spec.  Only a vanishingly small fraction of possible
@@ -68,7 +56,7 @@ variant, compiler, etc.  For example, the following set is consistent:
 .. code-block:: console
 
    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^openssl@1.0.2k%gcc@5.3.0 arch=linux-SuSE11-x86_64
        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
    zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
@@ -77,7 +65,7 @@ The following set is not consistent:
 .. code-block:: console
 
    curl@7.50.1%gcc@5.3.0 arch=linux-SuSE11-x86_64
-       ^openssl@system%gcc@5.3.0 arch=linux-SuSE11-x86_64
+       ^openssl@1.0.2k%gcc@5.3.0 arch=linux-SuSE11-x86_64
        ^zlib@1.2.8%gcc@5.3.0 arch=linux-SuSE11-x86_64
    zlib@1.2.7%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
@@ -488,10 +476,11 @@ if the view is built with hardlinks.
 
 .. FIXME: reference the relocation work of Hegner and Gartung (PR #1013)
 
+.. _cmd-spack-view:
 
-""""""""""""""""""""""
-Using Filesystem Views
-""""""""""""""""""""""
+""""""""""""""
+``spack view``
+""""""""""""""
 
 A filesystem view is created, and packages are linked in, by the ``spack
 view`` command's ``symlink`` and ``hardlink`` sub-commands.  The
@@ -1038,6 +1027,84 @@ or filesystem views.  However, it has some drawbacks:
 #. It requires that users are comfortable with Spack, as they
    integrate Spack explicitly in their workflow.  Not all users are
    willing to do this.
+
+------------------------
+Using Spack on Travis-CI
+------------------------
+
+Spack can be deployed as a provider for userland software in
+`Travis-CI <https://http://travis-ci.org>`_.
+
+A starting-point for a ``.travis.yml`` file can look as follows.
+It uses `caching <https://docs.travis-ci.com/user/caching/>`_ for
+already built environments, so make sure to clean the Travis cache if
+you run into problems.
+
+The main points that are implemented below:
+
+#. Travis is detected as having up to 34 cores available, but only 2
+   are actually allocated for the user. We limit the parallelism of
+   the spack builds in the config.
+   (The Travis yaml parser is a bit buggy on the echo command.)
+
+#. Builds over 10 minutes need to be prefixed with ``travis_wait``.
+   Alternatively, generate output once with ``spack install -v``.
+
+#. Travis builds are non-interactive. This prevents using bash
+   aliases and functions for modules. We fix that by sourcing
+   ``/etc/profile`` first (or running everything in a subshell with
+   ``bash -l -c '...'``).
+
+.. code-block:: yaml
+
+   language: cpp
+   sudo: false
+   dist: trusty
+
+   cache:
+     apt: true
+     directories:
+       - $HOME/.cache
+
+   addons:
+     apt:
+       sources:
+         - ubuntu-toolchain-r-test
+       packages:
+         - g++-4.9
+         - environment-modules
+
+   env:
+     global:
+       - SPACK_ROOT: $HOME/.cache/spack
+       - PATH: $PATH:$HOME/.cache/spack/bin
+
+   before_install:
+     - export CXX=g++-4.9
+     - export CC=gcc-4.9
+     - export FC=gfortran-4.9
+     - export CXXFLAGS="-std=c++11"
+
+   install:
+     - if ! which spack >/dev/null; then
+         mkdir -p $SPACK_ROOT &&
+         git clone --depth 50 https://github.com/llnl/spack.git $SPACK_ROOT &&
+         echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
+       fi
+     - travis_wait spack install cmake@3.7.2~openssl~ncurses
+     - travis_wait spack install boost@1.62.0~graph~iostream~locale~log~wave
+     - spack clean -a
+     - source /etc/profile &&
+       source $SPACK_ROOT/share/spack/setup-env.sh
+     - spack load cmake
+     - spack load boost
+
+   script:
+     - mkdir -p $HOME/build
+     - cd $HOME/build
+     - cmake $TRAVIS_BUILD_DIR
+     - make -j 2
+     - make test
 
 ------------------
 Upstream Bug Fixes

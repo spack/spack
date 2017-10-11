@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,18 +23,44 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import spack.util.web
 
 
-class Protobuf(AutotoolsPackage):
+class Protobuf(CMakePackage):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
-    url      = "https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.bz2"
+    url      = "https://github.com/google/protobuf/archive/v3.2.0.tar.gz"
+    root_cmakelists_dir = "cmake"
 
-    version('3.0.2', '845b39e4b7681a2ddfd8c7f528299fbb', url='https://github.com/google/protobuf/archive/v3.0.2.tar.gz')
-    version('2.5.0', 'a72001a9067a4c2c4e0e836d0f92ece4')
+    version('3.4.0', '1d077a7d4db3d75681f5c333f2de9b1a')
+    version('3.3.0', 'f0f712e98de3db0c65c0c417f5e7aca8')
+    version('3.2.0', 'efaa08ae635664fb5e7f31421a41a995')
+    version('3.1.0', '39d6a4fa549c0cce164aa3064b1492dc')
+    version('3.0.2', '7349a7f43433d72c6d805c6ca22b7eeb')
+    # does not build with CMake:
+    # version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
 
-    depends_on('m4', when='@3.0.2:')
-    depends_on('autoconf', when='@3.0.2:')
-    depends_on('automake', when='@3.0.2:')
-    depends_on('libtool', when='@3.0.2:')
+    depends_on('zlib')
+
+    conflicts('%gcc@:4.6')  # Requires c++11
+
+    # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
+    patch('pkgconfig.patch', when='@:3.3.2')
+
+    def fetch_remote_versions(self):
+        """Ignore additional source artifacts uploaded with releases,
+           only keep known versions
+           fix for https://github.com/LLNL/spack/issues/5356"""
+        return dict(map(
+            lambda u: (u, self.url_for_version(u)),
+            spack.util.web.find_versions_of_archive(
+                self.all_urls, self.list_url, self.list_depth)
+        ))
+
+    def cmake_args(self):
+        args = [
+            '-Dprotobuf_BUILD_TESTS:BOOL=OFF',
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON'
+        ]
+        return args

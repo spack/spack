@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,14 +25,18 @@
 from spack import *
 
 
-class Cdo(Package):
+class Cdo(AutotoolsPackage):
     """CDO is a collection of command line Operators to manipulate and analyse
-    Climate and NWP model Data. """
+       Climate and NWP model Data.
+    """
 
-    homepage = "https://code.zmaw.de/projects/cdo"
+    homepage = 'https://code.mpimet.mpg.de/projects/cdo'
+    url = 'https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz'
+    list_url = 'https://code.mpimet.mpg.de/projects/cdo/files'
 
-    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31', url='https://code.zmaw.de/attachments/download/12760/cdo-1.7.2.tar.gz')
-    version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2', url='https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz')
+    version('1.9.0', '2d88561b3b4a880df0422a62e5027e40')
+    version('1.8.2', '6a2e2f99b7c67ee9a512c40a8d4a7121')
+    version('1.7.2', 'f08e4ce8739a4f2b63fc81a24db3ee31')
 
     variant('szip', default=True, description='Enable szip compression for GRIB1')
     variant('hdf5', default=False, description='Enable HDF5 support')
@@ -41,9 +45,10 @@ class Cdo(Package):
     variant('grib', default=True, description='Enable GRIB_API support')
     variant('libxml2', default=True, description='Enable libxml2 support')
     variant('proj', default=True, description='Enable PROJ library for cartographic projections')
-    variant('curl', default=True, description='Enable curl support')
+    variant('curl', default=False, description='Enable curl support')
     variant('fftw', default=True, description='Enable support for fftw3')
-    variant('magics', default=True, description='Enable Magics library support')
+    variant('magics', default=False, description='Enable Magics library support')
+    variant('openmp', default=True, description='Enable OpenMP support')
 
     depends_on('szip', when='+szip')
     depends_on('netcdf', when='+netcdf')
@@ -54,64 +59,66 @@ class Cdo(Package):
     depends_on('proj', when='+proj')
     depends_on('curl', when='+curl')
     depends_on('fftw', when='+fftw')
-    depends_on('magics', when='+magics') 
+    depends_on('magics', when='+magics')
 
-    def install(self, spec, prefix):
-        config_args = ["--prefix=" + prefix,
-                       "--enable-shared",
-                       "--enable-static"]
+    def configure_args(self):
+        config_args = ['--enable-shared', '--enable-static']
 
-        if '+szip' in spec:
-            config_args.append('--with-szlib=' + spec['szip'].prefix)
+        if '+szip' in self.spec:
+            config_args.append('--with-szlib=' + self.spec['szip'].prefix)
         else:
             config_args.append('--without-szlib')
 
-        if '+hdf5' in spec:
-            config_args.append('--with-hdf5=' + spec['hdf5'].prefix)
+        if '+hdf5' in self.spec:
+            config_args.append('--with-hdf5=' + self.spec['hdf5'].prefix)
         else:
             config_args.append('--without-hdf5')
 
-        if '+netcdf' in spec:
-            config_args.append('--with-netcdf=' + spec['netcdf'].prefix)
+        if '+netcdf' in self.spec:
+            config_args.append('--with-netcdf=' + self.spec['netcdf'].prefix)
         else:
             config_args.append('--without-netcdf')
 
-        if '+udunits2' in spec:
-            config_args.append('--with-udunits2=' + spec['udunits2'].prefix)
+        if '+udunits2' in self.spec:
+            config_args.append('--with-udunits2=' +
+                               self.spec['udunits2'].prefix)
         else:
             config_args.append('--without-udunits2')
 
-        if '+grib' in spec:
-            config_args.append('--with-grib_api=' + spec['grib-api'].prefix)
+        if '+grib' in self.spec:
+            config_args.append('--with-grib_api=' +
+                               self.spec['grib-api'].prefix)
         else:
             config_args.append('--without-grib_api')
 
-        if '+libxml2' in spec:
-            config_args.append('--with-libxml2=' + spec['libxml2'].prefix)
+        if '+libxml2' in self.spec:
+            config_args.append('--with-libxml2=' + self.spec['libxml2'].prefix)
         else:
             config_args.append('--without-libxml2')
 
-        if '+proj' in spec:
-            config_args.append('--with-proj=' + spec['proj'].prefix)
+        if '+proj' in self.spec:
+            config_args.append('--with-proj=' + self.spec['proj'].prefix)
         else:
             config_args.append('--without-proj')
 
-        if '+curl' in spec:
-            config_args.append('--with-curl=' + spec['curl'].prefix)
+        if '+curl' in self.spec:
+            config_args.append('--with-curl=' + self.spec['curl'].prefix)
         else:
             config_args.append('--without-curl')
 
-        if '+fftw' in spec:
+        if '+fftw' in self.spec:
             config_args.append('--with-fftw3')
         else:
             config_args.append('--without-fftw3')
 
-        if '+magics' in spec:
-            config_args.append('--with-magics=' + spec['magics'].prefix)
+        if '+magics' in self.spec:
+            config_args.append('--with-magics=' + self.spec['magics'].prefix)
         else:
             config_args.append('--without-magics')
 
-        configure(*config_args)
+        if '+openmp' in self.spec:
+            config_args.append('--enable-openmp')
+        else:
+            config_args.append('--disable-openmp')
 
-        make()
-        make('install')
+        return config_args

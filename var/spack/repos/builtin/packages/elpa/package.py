@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,24 +26,16 @@
 from spack import *
 
 
-class Elpa(Package):
-    """
-    Eigenvalue solvers for Petaflop-Applications (ELPA)
-    """
+class Elpa(AutotoolsPackage):
+    """Eigenvalue solvers for Petaflop-Applications (ELPA)"""
 
     homepage = 'http://elpa.mpcdf.mpg.de/'
     url = 'http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
 
-    version(
-        '2016.05.003',
-        '88a9f3f3bfb63e16509dd1be089dcf2c',
-        url='http://elpa.mpcdf.mpg.de/html/Releases/2016.05.003/elpa-2016.05.003.tar.gz'
-    )
-    version(
-        '2015.11.001',
-        'de0f35b7ee7c971fd0dca35c900b87e6',
-        url='http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
-    )
+    version('2016.11.001.pre', '5656fd066cf0dcd071dbcaf20a639b37')
+    version('2016.05.004', 'c0dd3a53055536fc3a2a221e78d8b376', preferred=True)
+    version('2016.05.003', '88a9f3f3bfb63e16509dd1be089dcf2c')
+    version('2015.11.001', 'de0f35b7ee7c971fd0dca35c900b87e6')
 
     variant('openmp', default=False, description='Activates OpenMP support')
 
@@ -52,30 +44,39 @@ class Elpa(Package):
     depends_on('lapack')
     depends_on('scalapack')
 
-    def install(self, spec, prefix):
+    def url_for_version(self, version):
+        t = 'http://elpa.mpcdf.mpg.de/html/Releases/{0}/elpa-{0}.tar.gz'
+        if version < Version('2016.05.003'):
+            t = 'http://elpa.mpcdf.mpg.de/elpa-{0}.tar.gz'
+        return t.format(str(version))
 
-        options = [
-            'CC={0}'.format(self.spec['mpi'].mpicc),
-            'FC={0}'.format(self.spec['mpi'].mpifc),
-            'CXX={0}'.format(self.spec['mpi'].mpicxx),
-            'FCFLAGS={0}'.format(
-                spec['lapack'].lapack_libs.joined()
-            ),
-            'LDFLAGS={0}'.format(
-                spec['lapack'].lapack_libs.joined()
-            ),
-            'SCALAPACK_FCFLAGS={0}'.format(
-                spec['scalapack'].scalapack_libs.joined()
-            ),
-            'SCALAPACK_LDFLAGS={0}'.format(
-                spec['scalapack'].scalapack_libs.joined()
-            ),
-            '--prefix={0}'.format(self.prefix)
-        ]
+    # override default implementation which returns static lib
+    @property
+    def libs(self):
 
-        if '+openmp' in spec:
+        libname = 'libelpa_openmp' if '+openmp' in self.spec else 'libelpa'
+
+        return find_libraries(
+            libname, root=self.prefix, shared=True, recurse=True
+        )
+
+    build_directory = 'spack-build'
+
+    def setup_environment(self, spack_env, run_env):
+        # TODO: set optimum flags for platform+compiler combo, see
+        # https://github.com/hfp/xconfigure/tree/master/elpa
+        spec = self.spec
+
+        spack_env.set('CC', spec['mpi'].mpicc)
+        spack_env.set('FC', spec['mpi'].mpifc)
+        spack_env.set('CXX', spec['mpi'].mpicxx)
+
+        spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
+        spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
+        spack_env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
+
+    def configure_args(self):
+        options = []
+        if '+openmp' in self.spec:
             options.append("--enable-openmp")
-
-        configure(*options)
-        make()
-        make("install")
+        return options

@@ -1,0 +1,24 @@
+From b46cc6a6a7410108af84a854818c154a17e0ef42 Mon Sep 17 00:00:00 2001
+From: Christoph Junghans <junghans@lanl.gov>
+Date: Fri, 22 Sep 2017 15:17:44 -0600
+Subject: [PATCH] cmake: fix build with system cmake
+
+---
+ cmake/CMakeLists.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/cmake/CMakeLists.txt b/cmake/CMakeLists.txt
+index bc33da60de..666b77ae3d 100644
+--- a/cmake/CMakeLists.txt
++++ b/cmake/CMakeLists.txt
+@@ -665,7 +665,9 @@ include_directories(${LAMMPS_STYLE_HEADERS_DIR})
+ ############################################
+ add_library(lammps ${LIB_SOURCES})
+ target_link_libraries(lammps ${LAMMPS_LINK_LIBS})
+-add_dependencies(lammps ${LAMMPS_DEPS})
++if(LAMMPS_DEPS)
++  add_dependencies(lammps ${LAMMPS_DEPS})
++endif()
+ set_target_properties(lammps PROPERTIES OUTPUT_NAME lammps${LAMMPS_MACHINE})
+ if(BUILD_SHARED_LIBS)
+   set_target_properties(lammps PROPERTIES SOVERSION ${SOVERSION})

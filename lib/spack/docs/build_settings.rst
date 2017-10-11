@@ -71,9 +71,9 @@ package lacks a spec component, such as missing a compiler or
 package version, then Spack will guess the missing component based
 on its most-favored packages, and it may guess incorrectly.
 
-Each package version and compilers listed in an external should
+Each package version and compiler listed in an external should
 have entries in Spack's packages and compiler configuration, even
-though the package and compiler may not every be built.
+though the package and compiler may not ever be built.
 
 The packages configuration can tell Spack to use an external location
 for certain package versions, but it does not restrict Spack to using

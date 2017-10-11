@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,7 +27,7 @@ from __future__ import absolute_import
 import string
 import itertools
 import re
-from StringIO import StringIO
+from six import StringIO
 
 import spack
 
@@ -39,6 +39,7 @@ __all__ = [
     'validate_fully_qualified_module_name',
     'validate_module_name',
     'possible_spack_module_names',
+    'simplify_name',
     'NamespaceTrie']
 
 # Valid module names can contain '-' but can't start with it.
@@ -56,7 +57,7 @@ def mod_to_class(mod_name):
           * Class names use the CapWords convention.
 
        Regular source code follows these convetions.  Spack is a bit
-       more liberal with its Package names nad Compiler names:
+       more liberal with its Package names and Compiler names:
 
           * They can contain '-' as well as '_', but cannot start with '-'.
           * They can start with numbers, e.g. "3proxy".
@@ -106,6 +107,54 @@ def possible_spack_module_names(python_mod_name):
         results.append(''.join(s))
 
     return results
+
+
+def simplify_name(name):
+    """Simplify package name to only lowercase, digits, and dashes.
+
+    Simplifies a name which may include uppercase letters, periods,
+    underscores, and pluses. In general, we want our package names to
+    only contain lowercase letters, digits, and dashes.
+
+    Args:
+        name (str): The original name of the package
+
+    Returns:
+        str: The new name of the package
+    """
+    # Convert CamelCase to Dashed-Names
+    # e.g. ImageMagick -> Image-Magick
+    # e.g. SuiteSparse -> Suite-Sparse
+    # name = re.sub('([a-z])([A-Z])', r'\1-\2', name)
+
+    # Rename Intel downloads
+    # e.g. l_daal, l_ipp, l_mkl -> daal, ipp, mkl
+    if name.startswith('l_'):
+        name = name[2:]
+
+    # Convert UPPERCASE to lowercase
+    # e.g. SAMRAI -> samrai
+    name = name.lower()
+
+    # Replace '_' and '.' with '-'
+    # e.g. backports.ssl_match_hostname -> backports-ssl-match-hostname
+    name = name.replace('_', '-')
+    name = name.replace('.', '-')
+
+    # Replace "++" with "pp" and "+" with "-plus"
+    # e.g. gtk+   -> gtk-plus
+    # e.g. voro++ -> voropp
+    name = name.replace('++', 'pp')
+    name = name.replace('+', '-plus')
+
+    # Simplify Lua package names
+    # We don't want "lua" to occur multiple times in the name
+    name = re.sub('^(lua)([^-])', r'\1-\2', name)
+
+    # Simplify Bio++ package names
+    name = re.sub('^(bpp)([^-])', r'\1-\2', name)
+
+    return name
 
 
 def valid_module_name(mod_name):

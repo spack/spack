@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,9 +27,11 @@ from spack import *
 
 class TheSilverSearcher(AutotoolsPackage):
     """Fast recursive grep alternative"""
+
     homepage = "http://geoff.greer.fm/ag/"
     url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
 
+    version('2.1.0', '3e7207b060424174323236932bf76ec2')
     version('0.32.0', '3fdfd5836924246073d5344257a06823')
     version('0.30.0', '95e2e7859fab1156c835aff7413481db')
 

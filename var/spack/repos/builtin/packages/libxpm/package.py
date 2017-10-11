@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,16 +29,22 @@ class Libxpm(AutotoolsPackage):
     """libXpm - X Pixmap (XPM) image file format library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXpm"
-    url      = "https://www.x.org/archive//individual/lib/libXpm-3.5.11.tar.gz"
+    url      = "https://www.x.org/archive//individual/lib/libXpm-3.5.12.tar.gz"
 
+    version('3.5.12', 'b286c884b11b5a0b4371175c5327141f')
     version('3.5.11', '7c67c878ee048206b070bc0b24154f04')
     version('3.5.10', 'a70507638d74541bf30a771f1e5938bb')
     version('3.5.9', 'd6d4b0f76248a6b346eb42dfcdaa72a6')
     version('3.5.8', '2d81d6633e67ac5562e2fbee126b2897')
     version('3.5.7', '7bbc8f112f7143ed6961a58ce4e14558')
 
+    depends_on('gettext')
     depends_on('libx11')
 
     depends_on('xproto', type='build')
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
+            self.spec['gettext'].prefix.lib))

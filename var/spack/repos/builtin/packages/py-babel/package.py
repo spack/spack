@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,10 +31,12 @@ class PyBabel(PythonPackage):
     emphasis on web-based applications."""
 
     homepage = "http://babel.pocoo.org/en/latest/"
-    url      = "https://pypi.python.org/packages/source/B/Babel/Babel-2.3.4.tar.gz"
+    url      = "https://pypi.io/packages/source/B/Babel/Babel-2.4.0.tar.gz"
 
-    version('2.3.4', 'afa20bc55b0e991833030129ad498f35',
-            url="https://pypi.python.org/packages/6e/96/ba2a2462ed25ca0e651fb7b66e7080f5315f91425a07ea5b34d7c870c114/Babel-2.3.4.tar.gz")
+    import_modules = ['babel', 'babel.localtime', 'babel.messages']
+
+    version('2.4.0', '90e7a0add19b2036a9b415630a0d9388')
+    version('2.3.4', 'afa20bc55b0e991833030129ad498f35')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pytz',       type=('build', 'run'))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -39,21 +39,21 @@ def compile_c_and_execute(source_file, include_flags, link_flags):
        *link_flags)
 
     check = Executable('./check')
-    return check(return_output=True)
+    return check(output=str)
 
 
 def compare_output(current_output, blessed_output):
     """Compare blessed and current output of executables."""
     if not (current_output == blessed_output):
-        print "Produced output does not match expected output."
-        print "Expected output:"
-        print '-' * 80
-        print blessed_output
-        print '-' * 80
-        print "Produced output:"
-        print '-' * 80
-        print current_output
-        print '-' * 80
+        print("Produced output does not match expected output.")
+        print("Expected output:")
+        print('-' * 80)
+        print(blessed_output)
+        print('-' * 80)
+        print("Produced output:")
+        print('-' * 80)
+        print(current_output)
+        print('-' * 80)
         raise RuntimeError("Ouput check failed.",
                            "See spack_output.log for details")
 

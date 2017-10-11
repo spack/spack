@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,11 +23,33 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Expat(AutotoolsPackage):
     """Expat is an XML parser library written in C."""
-    homepage = "http://expat.sourceforge.net/"
-    url = "http://downloads.sourceforge.net/project/expat/expat/2.2.0/expat-2.2.0.tar.bz2"
 
+    homepage = "http://expat.sourceforge.net/"
+    url      = "https://sourceforge.net/projects/expat/files/expat/2.2.2/expat-2.2.2.tar.bz2"
+
+    # Version 2.2.2 introduced a requirement for a high quality
+    # entropy source.  "Older" linux systems (aka CentOS 7) do not
+    # support get_random so we'll provide a high quality source via
+    # libbsd.
+    # There's no need for it in earlier versions, so 'conflict' if
+    # someone's asking for an older version and also libbsd.
+    # In order to install an older version, you'll need to add
+    # `~libbsd`.
+    variant('libbsd', default=sys.platform != 'darwin',
+            description="Use libbsd (for high quality randomness)")
+    depends_on('libbsd', when="@2.2.1:+libbsd")
+
+    version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
     version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+        if '+libbsd' in spec and '@2.2.1:' in spec:
+            args = ['--with-libbsd']
+        return args

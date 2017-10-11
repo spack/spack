@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,6 +27,8 @@ import inspect
 import os
 import os.path
 import shutil
+from os import stat
+from stat import *
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -47,7 +49,8 @@ class AutotoolsPackage(PackageBase):
         4. :py:meth:`~.AutotoolsPackage.install`
 
     They all have sensible defaults and for many packages the only thing
-    necessary will be to override the helper method :py:meth:`.configure_args`.
+    necessary will be to override the helper method
+    :py:meth:`~.AutotoolsPackage.configure_args`.
     For a finer tuning you may also override:
 
         +-----------------------------------------------+--------------------+
@@ -92,10 +95,17 @@ class AutotoolsPackage(PackageBase):
     #: Options to be passed to autoreconf when using the default implementation
     autoreconf_extra_args = []
 
+    @run_after('autoreconf')
     def _do_patch_config_guess(self):
         """Some packages ship with an older config.guess and need to have
-        this updated when installed on a newer architecture."""
+        this updated when installed on a newer architecture. In particular,
+        config.guess fails for PPC64LE for version prior to a 2013-06-10
+        build date (automake 1.13.4)."""
 
+        if not self.patch_config_guess or not self.spec.satisfies(
+                'target=ppc64le'
+        ):
+            return
         my_config_guess = None
         config_guess = None
         if os.path.exists('config.guess'):
@@ -117,11 +127,11 @@ class AutotoolsPackage(PackageBase):
             try:
                 check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
                 # The package's config.guess already runs OK, so just use it
-                return True
+                return
             except Exception:
                 pass
         else:
-            return True
+            return
 
         # Look for a spack-installed automake package
         if 'automake' in self.spec:
@@ -131,16 +141,8 @@ class AutotoolsPackage(PackageBase):
             path = os.path.join(automake_path, 'config.guess')
             if os.path.exists(path):
                 config_guess = path
-        if config_guess is not None:
-            try:
-                check_call([config_guess], stdout=PIPE, stderr=PIPE)
-                shutil.copyfile(config_guess, my_config_guess)
-                return True
-            except Exception:
-                pass
-
         # Look for the system's config.guess
-        if os.path.exists('/usr/share'):
+        if config_guess is None and os.path.exists('/usr/share'):
             automake_dir = [s for s in os.listdir('/usr/share') if
                             "automake" in s]
             if automake_dir:
@@ -151,12 +153,14 @@ class AutotoolsPackage(PackageBase):
         if config_guess is not None:
             try:
                 check_call([config_guess], stdout=PIPE, stderr=PIPE)
+                mod = stat(my_config_guess).st_mode & 0o777 | S_IWUSR
+                os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
-                return True
+                return
             except Exception:
                 pass
 
-        return False
+        raise RuntimeError('Failed to find suitable config.guess')
 
     @property
     def configure_directory(self):
@@ -179,19 +183,14 @@ class AutotoolsPackage(PackageBase):
         """Override to provide another place to build the package"""
         return self.configure_directory
 
-    def patch(self):
-        """Patches config.guess if
-        :py:attr:``~.AutotoolsPackage.patch_config_guess`` is True
-
-        :raise RuntimeError: if something goes wrong when patching
-            ``config.guess``
-        """
-
-        if self.patch_config_guess and self.spec.satisfies(
-                'arch=linux-rhel7-ppc64le'
-        ):
-            if not self._do_patch_config_guess():
-                raise RuntimeError('Failed to find suitable config.guess')
+    def default_flag_handler(self, spack_env, flag_val):
+        # Relies on being the first thing that can affect the spack_env
+        # EnvironmentModification after it is instantiated or no other
+        # method trying to affect these variables. Currently both are true
+        # flag_val is a tuple (flag, value_list).
+        spack_env.set(flag_val[0].upper(),
+                      ' '.join(flag_val[1]))
+        return []
 
     @run_before('autoreconf')
     def delete_configure_to_force_update(self):
@@ -238,7 +237,7 @@ class AutotoolsPackage(PackageBase):
         appropriately, otherwise raises an error.
 
         :raises RuntimeError: if a configure script is not found in
-            :py:meth:`~.configure_directory`
+            :py:meth:`~AutotoolsPackage.configure_directory`
         """
         # Check if a configure script is there. If not raise a RuntimeError.
         if not os.path.exists(self.configure_abs_path):
@@ -259,7 +258,8 @@ class AutotoolsPackage(PackageBase):
         return []
 
     def configure(self, spec, prefix):
-        """Runs configure with the arguments specified in :py:meth:`.configure_args`
+        """Runs configure with the arguments specified in
+        :py:meth:`~.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
         options = ['--prefix={0}'.format(prefix)] + self.configure_args()
@@ -290,6 +290,163 @@ class AutotoolsPackage(PackageBase):
         with working_dir(self.build_directory):
             self._if_make_target_execute('test')
             self._if_make_target_execute('check')
+
+    def _activate_or_not(
+            self,
+            name,
+            activation_word,
+            deactivation_word,
+            activation_value=None
+    ):
+        """This function contains the current implementation details of
+        :py:meth:`~.AutotoolsPackage.with_or_without` and
+        :py:meth:`~.AutotoolsPackage.enable_or_disable`.
+
+        Args:
+            name (str): name of the variant that is being processed
+            activation_word (str): the default activation word ('with' in the
+                case of ``with_or_without``)
+            deactivation_word (str): the default deactivation word ('without'
+                in the case of ``with_or_without``)
+            activation_value (callable): callable that accepts a single
+                value. This value is either one of the allowed values for a
+                multi-valued variant or the name of a bool-valued variant.
+                Returns the parameter to be used when the value is activated.
+
+                The special value 'prefix' can also be assigned and will return
+                ``spec[name].prefix`` as activation parameter.
+
+        Examples:
+
+            Given a package with:
+
+            .. code-block:: python
+
+                variant('foo', values=('x', 'y'), description='')
+                variant('bar', default=True, description='')
+
+            calling this function like:
+
+            .. code-block:: python
+
+                _activate_or_not(
+                    'foo', 'with', 'without', activation_value='prefix'
+                )
+                _activate_or_not('bar', 'with', 'without')
+
+            will generate the following configuration options:
+
+            .. code-block:: console
+
+                --with-x=<prefix-to-x> --without-y --with-bar
+
+            for ``<spec-name> foo=x +bar``
+
+        Returns:
+            list of strings that corresponds to the activation/deactivation
+            of the variant that has been processed
+
+        Raises:
+            KeyError: if name is not among known variants
+        """
+        spec = self.spec
+        args = []
+
+        if activation_value == 'prefix':
+            activation_value = lambda x: spec[x].prefix
+
+        # Defensively look that the name passed as argument is among
+        # variants
+        if name not in self.variants:
+            msg = '"{0}" is not a variant of "{1}"'
+            raise KeyError(msg.format(name, self.name))
+
+        # Create a list of pairs. Each pair includes a configuration
+        # option and whether or not that option is activated
+        if set(self.variants[name].values) == set((True, False)):
+            # BoolValuedVariant carry information about a single option.
+            # Nonetheless, for uniformity of treatment we'll package them
+            # in an iterable of one element.
+            condition = '+{name}'.format(name=name)
+            options = [(name, condition in spec)]
+        else:
+            condition = '{name}={value}'
+            options = [
+                (value, condition.format(name=name, value=value) in spec)
+                for value in self.variants[name].values
+            ]
+
+        # For each allowed value in the list of values
+        for option_value, activated in options:
+            # Search for an override in the package for this value
+            override_name = '{0}_or_{1}_{2}'.format(
+                activation_word, deactivation_word, option_value
+            )
+            line_generator = getattr(self, override_name, None)
+            # If not available use a sensible default
+            if line_generator is None:
+                def _default_generator(is_activated):
+                    if is_activated:
+                        line = '--{0}-{1}'.format(
+                            activation_word, option_value
+                        )
+                        if activation_value is not None and activation_value(option_value):  # NOQA=ignore=E501
+                            line += '={0}'.format(
+                                activation_value(option_value)
+                            )
+                        return line
+                    return '--{0}-{1}'.format(deactivation_word, option_value)
+                line_generator = _default_generator
+            args.append(line_generator(activated))
+        return args
+
+    def with_or_without(self, name, activation_value=None):
+        """Inspects a variant and returns the arguments that activate
+        or deactivate the selected feature(s) for the configure options.
+
+        This function works on all type of variants. For bool-valued variants
+        it will return by default ``--with-{name}`` or ``--without-{name}``.
+        For other kinds of variants it will cycle over the allowed values and
+        return either ``--with-{value}`` or ``--without-{value}``.
+
+        If activation_value is given, then for each possible value of the
+        variant, the option ``--with-{value}=activation_value(value)`` or
+        ``--without-{value}`` will be added depending on whether or not
+        ``variant=value`` is in the spec.
+
+        Args:
+            name (str): name of a valid multi-valued variant
+            activation_value (callable): callable that accepts a single
+                value and returns the parameter to be used leading to an entry
+                of the type ``--with-{name}={parameter}``.
+
+                The special value 'prefix' can also be assigned and will return
+                ``spec[name].prefix`` as activation parameter.
+
+        Returns:
+            list of arguments to configure
+        """
+        return self._activate_or_not(name, 'with', 'without', activation_value)
+
+    def enable_or_disable(self, name, activation_value=None):
+        """Same as :py:meth:`~.AutotoolsPackage.with_or_without` but substitute
+        ``with`` with ``enable`` and ``without`` with ``disable``.
+
+        Args:
+            name (str): name of a valid multi-valued variant
+            activation_value (callable): if present accepts a single value
+                and returns the parameter to be used leading to an entry of the
+                type ``--enable-{name}={parameter}``
+
+                The special value 'prefix' can also be assigned and will return
+                ``spec[name].prefix`` as activation parameter.
+
+        Returns:
+            list of arguments to configure
+        """
+        return self._activate_or_not(
+            name, 'enable', 'disable', activation_value
+        )
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 

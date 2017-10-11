@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,10 +30,9 @@ class PyPycurl(PythonPackage):
     objects identified by a URL from a Python program."""
 
     homepage = "http://pycurl.io/"
-    url      = "https://pypi.python.org/packages/source/p/pycurl/pycurl-7.43.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pycurl/pycurl-7.43.0.tar.gz"
 
     version('7.43.0', 'c94bdba01da6004fa38325e9bd6b9760')
 
     depends_on('python@2.6:')
-    depends_on('py-setuptools', type='build')
     depends_on('curl@7.19.0:')

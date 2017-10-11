@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,6 +27,8 @@ import codecs
 import functools
 import os
 import platform
+import shutil
+import sys
 import time
 import xml.dom.minidom
 import xml.etree.ElementTree as ET
@@ -41,6 +43,8 @@ from spack.fetch_strategy import FetchError
 from spack.package import PackageBase
 
 description = "build and install packages"
+section = "build"
+level = "short"
 
 
 def setup_parser(subparser):
@@ -58,20 +62,32 @@ the dependencies"""
         '-j', '--jobs', action='store', type=int,
         help="explicitly set number of make jobs. default is #cpus")
     subparser.add_argument(
-        '--keep-prefix', action='store_true', dest='keep_prefix',
+        '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
     subparser.add_argument(
-        '--keep-stage', action='store_true', dest='keep_stage',
+        '--keep-stage', action='store_true',
         help="don't remove the build stage if installation succeeds")
     subparser.add_argument(
-        '-n', '--no-checksum', action='store_true', dest='no_checksum',
+        '--restage', action='store_true',
+        help="if a partial install is detected, delete prior state")
+    subparser.add_argument(
+        '--show-log-on-error', action='store_true',
+        help="print full build log to stderr if build fails")
+    subparser.add_argument(
+        '--source', action='store_true', dest='install_source',
+        help="install source files in prefix")
+    subparser.add_argument(
+        '-n', '--no-checksum', action='store_true',
         help="do not check packages against checksum")
     subparser.add_argument(
-        '-v', '--verbose', action='store_true', dest='verbose',
+        '-v', '--verbose', action='store_true',
         help="display verbose build output while installing")
     subparser.add_argument(
-        '--fake', action='store_true', dest='fake',
+        '--fake', action='store_true',
         help="fake install. just remove prefix and create a fake file")
+    subparser.add_argument(
+        '-f', '--file', action='store_true',
+        help="install from file. Read specs to install from .yaml files")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -81,9 +97,18 @@ the dependencies"""
         nargs=argparse.REMAINDER,
         help="spec of the package to install"
     )
-    subparser.add_argument(
-        '--run-tests', action='store_true', dest='run_tests',
-        help="run package level tests during installation"
+    testing = subparser.add_mutually_exclusive_group()
+    testing.add_argument(
+        '--test', default=None,
+        choices=['root', 'all'],
+        help="""If 'root' is chosen, run package tests during
+installation for top-level packages (but skip tests for dependencies).
+if 'all' is chosen, run package tests during installation for all
+packages. If neither are chosen, don't run tests for any packages."""
+    )
+    testing.add_argument(
+        '--run-tests', action='store_true',
+        help='run package tests during installation (same as --test=all)'
     )
     subparser.add_argument(
         '--log-format',
@@ -305,46 +330,86 @@ def install(parser, args, **kwargs):
     kwargs.update({
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
+        'restage': args.restage,
+        'install_source': args.install_source,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,
-        'run_tests': args.run_tests,
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty
     })
 
+    if args.run_tests:
+        tty.warn("Deprecated option: --run-tests: use --test=all instead")
+
+    specs = spack.cmd.parse_specs(args.package)
+    if args.test == 'all' or args.run_tests:
+        spack.package_testing.test_all()
+    elif args.test == 'root':
+        for spec in specs:
+            spack.package_testing.test(spec.name)
+
     # Spec from cli
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    specs = []
+    if args.file:
+        for file in args.package:
+            with open(file, 'r') as f:
+                specs.append(spack.spec.Spec.from_yaml(f))
+    else:
+        specs = spack.cmd.parse_specs(args.package, concretize=True)
     if len(specs) == 0:
         tty.error('The `spack install` command requires a spec to install.')
 
     for spec in specs:
+        saved_do_install = PackageBase.do_install
+        decorator = lambda fn: fn
+
         # Check if we were asked to produce some log for dashboards
         if args.log_format is not None:
             # Compute the filename for logging
             log_filename = args.log_file
             if not log_filename:
                 log_filename = default_log_file(spec)
+
             # Create the test suite in which to log results
             test_suite = TestSuite(spec)
-            # Decorate PackageBase.do_install to get installation status
-            PackageBase.do_install = junit_output(
-                spec, test_suite
-            )(PackageBase.do_install)
+
+            # Temporarily decorate PackageBase.do_install to monitor
+            # recursive calls.
+            decorator = junit_output(spec, test_suite)
 
         # Do the actual installation
-        if args.things_to_install == 'dependencies':
-            # Install dependencies as-if they were installed
-            # for root (explicit=False in the DB)
-            kwargs['explicit'] = False
-            for s in spec.dependencies():
-                p = spack.repo.get(s)
-                p.do_install(**kwargs)
-        else:
-            package = spack.repo.get(spec)
-            kwargs['explicit'] = True
-            package.do_install(**kwargs)
+        try:
+            # decorate the install if necessary
+            PackageBase.do_install = decorator(PackageBase.do_install)
 
-        # Dump log file if asked to
+            if args.things_to_install == 'dependencies':
+                # Install dependencies as-if they were installed
+                # for root (explicit=False in the DB)
+                kwargs['explicit'] = False
+                for s in spec.dependencies():
+                    p = spack.repo.get(s)
+                    p.do_install(**kwargs)
+
+            else:
+                package = spack.repo.get(spec)
+                kwargs['explicit'] = True
+                package.do_install(**kwargs)
+
+        except InstallError as e:
+            if args.show_log_on_error:
+                e.print_context()
+                if not os.path.exists(e.pkg.build_log_path):
+                    tty.error("'spack install' created no log.")
+                else:
+                    sys.stderr.write('Full build log:\n')
+                    with open(e.pkg.build_log_path) as log:
+                        shutil.copyfileobj(log, sys.stderr)
+            raise
+
+        finally:
+            PackageBase.do_install = saved_do_install
+
+        # Dump test output if asked to
         if args.log_format is not None:
             test_suite.dump(log_filename)

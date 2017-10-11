@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Harminv(Package):
+class Harminv(AutotoolsPackage):
     """Harminv is a free program (and accompanying library) to solve the
     problem of harmonic inversion - given a discrete-time, finite-length
     signal that consists of a sum of finitely-many sinusoids (possibly
@@ -34,21 +34,18 @@ class Harminv(Package):
 
     homepage = "http://ab-initio.mit.edu/wiki/index.php/Harminv"
     url      = "http://ab-initio.mit.edu/harminv/harminv-1.4.tar.gz"
+    list_url = "http://ab-initio.mit.edu/harminv/old"
 
     version('1.4', 'b95e24a9bc7e07d3d2202d1605e9e86f')
 
     depends_on('blas')
     depends_on('lapack')
 
-    def install(self, spec, prefix):
-        config_args = [
-            '--prefix={0}'.format(prefix),
+    def configure_args(self):
+        spec = self.spec
+
+        return [
+            '--enable-shared',
             '--with-blas={0}'.format(spec['blas'].prefix.lib),
             '--with-lapack={0}'.format(spec['lapack'].prefix.lib),
-            '--enable-shared'
         ]
-
-        configure(*config_args)
-
-        make()
-        make('install')

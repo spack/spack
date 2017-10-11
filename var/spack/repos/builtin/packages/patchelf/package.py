@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,7 @@ class Patchelf(AutotoolsPackage):
     url = "http://nixos.org/releases/patchelf/patchelf-0.8/patchelf-0.8.tar.gz"
 
     list_url = "http://nixos.org/releases/patchelf/"
-    list_depth = 2
+    list_depth = 1
 
     version('0.9', '3c265508526760f233620f35d79c79fc')
     version('0.8', '407b229e6a681ffb0e2cdd5915cb2d01')

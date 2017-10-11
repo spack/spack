@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -49,14 +49,15 @@ _version_cache = {}
 
 
 def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
-    if compiler_path not in _version_cache:
+    key = (compiler_path, version_arg, regex)
+    if key not in _version_cache:
         compiler = Executable(compiler_path)
         output = compiler(version_arg, output=str, error=str)
 
         match = re.search(regex, output)
-        _version_cache[compiler_path] = match.group(1) if match else 'unknown'
+        _version_cache[key] = match.group(1) if match else 'unknown'
 
-    return _version_cache[compiler_path]
+    return _version_cache[key]
 
 
 def dumpversion(compiler_path):
@@ -265,11 +266,11 @@ class Compiler(object):
                 full_path, prefix, suffix = key
                 version = detect_version(full_path)
                 return (version, prefix, suffix, full_path)
-            except ProcessError, e:
+            except ProcessError as e:
                 tty.debug(
                     "Couldn't get version for compiler %s" % full_path, e)
                 return None
-            except Exception, e:
+            except Exception as e:
                 # Catching "Exception" here is fine because it just
                 # means something went wrong running a candidate executable.
                 tty.debug("Error while executing candidate compiler %s"

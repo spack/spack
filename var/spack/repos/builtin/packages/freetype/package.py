@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,14 +32,15 @@ class Freetype(AutotoolsPackage):
     of most vector and bitmap font formats."""
 
     homepage = "https://www.freetype.org/index.html"
-    url      = "http://download.savannah.gnu.org/releases/freetype/freetype-2.7.tar.gz"
+    url      = "http://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.gz"
 
+    version('2.7.1', '78701bee8d249578d83bb9a2f3aa3616')
     version('2.7',   '337139e5c7c5bd645fe130608e0fa8b5')
     version('2.5.3', 'cafe9f210e45360279c730d27bf071e9')
 
     depends_on('libpng')
     depends_on('bzip2')
-    depends_on('pkg-config@0.9.0:', type='build')
-  
+    depends_on('pkg-config@0.24:', type='build')
+
     def configure_args(self):
         return ['--with-harfbuzz=no']

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,10 +32,16 @@ class Astyle(MakefilePackage):
     """
 
     homepage = "http://astyle.sourceforge.net/"
-    url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    # homepage is dead use Gentoo Mirror
+    # url = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    url = "http://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
 
+    maintainers = ['davydden']
+
+    version('3.0.1',  'c301f09679efa2e1eb6e6b5fd33788b4')
+    version('2.06',   'ff588e7fcede824591cf5b9085df109d')
     version('2.05.1', '4142d178047d7040da3e0e2f1b030a1a')
-    version('2.04', '30b1193a758b0909d06e7ee8dd9627f6')
+    version('2.04',   '30b1193a758b0909d06e7ee8dd9627f6')
 
     parallel = False
 

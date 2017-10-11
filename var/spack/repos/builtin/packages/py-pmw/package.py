@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,6 +29,6 @@ class PyPmw(PythonPackage):
     """Pmw is a toolkit for building high-level compound widgets, or
        megawidgets, constructed using other widgets as component parts."""
     homepage = "https://pypi.python.org/pypi/Pmw"
-    url      = "https://pypi.python.org/packages/source/P/Pmw/Pmw-2.0.0.tar.gz"
+    url      = "https://pypi.io/packages/source/P/Pmw/Pmw-2.0.0.tar.gz"
 
     version('2.0.0', 'c7c3f26c4f5abaa99807edefee578fc0')

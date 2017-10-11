@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,7 +33,6 @@ class RXts(RPackage):
 
     homepage = "http://r-forge.r-project.org/projects/xts/"
     url      = "https://cran.r-project.org/src/contrib/xts_0.9-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/xts"
 
     version('0.9-7', 'a232e94aebfa654653a7d88a0503537b')
 

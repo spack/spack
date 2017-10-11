@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,6 +25,7 @@
 import pytest
 import shlex
 
+import spack
 import spack.spec as sp
 from spack.parse import Token
 from spack.spec import *
@@ -122,7 +123,7 @@ class TestSpecSyntax(object):
     def _check_raises(self, exc_type, items):
         for item in items:
             with pytest.raises(exc_type):
-                self.check_parse(item)
+                Spec(item)
 
     # ========================================================================
     # Parse checks
@@ -138,6 +139,12 @@ class TestSpecSyntax(object):
         self.check_parse("^zlib")
         self.check_parse("+foo")
         self.check_parse("arch=test-None-None", "platform=test")
+        self.check_parse('@2.7:')
+
+    def test_anonymous_specs_with_multiple_parts(self):
+        # Parse anonymous spec with multiple tokens
+        self.check_parse('@4.2: languages=go', 'languages=go @4.2:')
+        self.check_parse('@4.2: languages=go')
 
     def test_simple_dependence(self):
         self.check_parse("openmpi^hwloc")
@@ -225,113 +232,161 @@ class TestSpecSyntax(object):
         errors = ['x@@1.2', 'x ^y@@1.2', 'x@1.2::', 'x::']
         self._check_raises(SpecParseError, errors)
 
+    def _check_hash_parse(self, spec):
+        """Check several ways to specify a spec by hash."""
+        # full hash
+        self.check_parse(str(spec), '/' + spec.dag_hash())
+
+        # partial hash
+        self.check_parse(str(spec), '/ ' + spec.dag_hash()[:5])
+
+        # name + hash
+        self.check_parse(str(spec), spec.name + '/' + spec.dag_hash())
+
+        # name + version + space + partial hash
+        self.check_parse(
+            str(spec), spec.name + '@' + str(spec.version) +
+            ' /' + spec.dag_hash()[:6])
+
     def test_spec_by_hash(self, database):
         specs = database.mock.db.query()
-        hashes = [s._hash for s in specs]  # Preserves order of elements
+        assert len(specs)  # make sure something's in the DB
 
-        # Make sure the database is still the shape we expect
-        assert len(specs) > 3
-
-        self.check_parse(str(specs[0]), '/' + hashes[0])
-        self.check_parse(str(specs[1]), '/ ' + hashes[1][:5])
-        self.check_parse(str(specs[2]), specs[2].name + '/' + hashes[2])
-        self.check_parse(str(specs[3]),
-                         specs[3].name + '@' + str(specs[3].version) +
-                         ' /' + hashes[3][:6])
+        for spec in specs:
+            self._check_hash_parse(spec)
 
     def test_dep_spec_by_hash(self, database):
-        specs = database.mock.db.query()
-        hashes = [s._hash for s in specs]  # Preserves order of elements
+        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
+        zmpi = database.mock.db.query_one('zmpi')
+        fake = database.mock.db.query_one('fake')
 
-        # Make sure the database is still the shape we expect
-        assert len(specs) > 10
-        assert specs[4].name in specs[10]
-        assert specs[-1].name in specs[10]
+        assert 'fake' in mpileaks_zmpi
+        assert 'zmpi' in mpileaks_zmpi
 
-        spec1 = sp.Spec(specs[10].name + '^/' + hashes[4])
-        assert specs[4].name in spec1 and spec1[specs[4].name] == specs[4]
-        spec2 = sp.Spec(specs[10].name + '%' + str(specs[10].compiler) +
-                        ' ^ / ' + hashes[-1])
-        assert (specs[-1].name in spec2 and
-                spec2[specs[-1].name] == specs[-1] and
-                spec2.compiler == specs[10].compiler)
-        spec3 = sp.Spec(specs[10].name + '^/' + hashes[4][:4] +
-                        '^ / ' + hashes[-1][:5])
-        assert (specs[-1].name in spec3 and
-                spec3[specs[-1].name] == specs[-1] and
-                specs[4].name in spec3 and spec3[specs[4].name] == specs[4])
+        mpileaks_hash_fake = sp.Spec('mpileaks ^/' + fake.dag_hash())
+        assert 'fake' in mpileaks_hash_fake
+        assert mpileaks_hash_fake['fake'] == fake
+
+        mpileaks_hash_zmpi = sp.Spec(
+            'mpileaks %' + str(mpileaks_zmpi.compiler) +
+            ' ^ / ' + zmpi.dag_hash())
+        assert 'zmpi' in mpileaks_hash_zmpi
+        assert mpileaks_hash_zmpi['zmpi'] == zmpi
+        assert mpileaks_hash_zmpi.compiler == mpileaks_zmpi.compiler
+
+        mpileaks_hash_fake_and_zmpi = sp.Spec(
+            'mpileaks ^/' + fake.dag_hash()[:4] + '^ / ' + zmpi.dag_hash()[:5])
+        assert 'zmpi' in mpileaks_hash_fake_and_zmpi
+        assert mpileaks_hash_fake_and_zmpi['zmpi'] == zmpi
+
+        assert 'fake' in mpileaks_hash_fake_and_zmpi
+        assert mpileaks_hash_fake_and_zmpi['fake'] == fake
 
     def test_multiple_specs_with_hash(self, database):
-        specs = database.mock.db.query()
-        hashes = [s._hash for s in specs]  # Preserves order of elements
+        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
+        callpath_mpich2 = database.mock.db.query_one('callpath ^mpich2')
 
-        assert len(specs) > 3
+        # name + hash + separate hash
+        specs = sp.parse('mpileaks /' + mpileaks_zmpi.dag_hash() +
+                         '/' + callpath_mpich2.dag_hash())
+        assert len(specs) == 2
 
-        output = sp.parse(specs[0].name + '/' + hashes[0] + '/' + hashes[1])
-        assert len(output) == 2
-        output = sp.parse('/' + hashes[0] + '/' + hashes[1])
-        assert len(output) == 2
-        output = sp.parse('/' + hashes[0] + '/' + hashes[1] +
-                          ' ' + specs[2].name)
-        assert len(output) == 3
-        output = sp.parse('/' + hashes[0] +
-                          ' ' + specs[1].name + ' ' + specs[2].name)
-        assert len(output) == 3
-        output = sp.parse('/' + hashes[0] + ' ' +
-                          specs[1].name + ' / ' + hashes[1])
-        assert len(output) == 2
+        # 2 separate hashes
+        specs = sp.parse('/' + mpileaks_zmpi.dag_hash() +
+                         '/' + callpath_mpich2.dag_hash())
+        assert len(specs) == 2
+
+        # 2 separate hashes + name
+        specs = sp.parse('/' + mpileaks_zmpi.dag_hash() +
+                         '/' + callpath_mpich2.dag_hash() +
+                         ' callpath')
+        assert len(specs) == 3
+
+        # hash + 2 names
+        specs = sp.parse('/' + mpileaks_zmpi.dag_hash() +
+                         ' callpath' +
+                         ' callpath')
+        assert len(specs) == 3
+
+        # hash + name + hash
+        specs = sp.parse('/' + mpileaks_zmpi.dag_hash() +
+                         ' callpath' +
+                         ' / ' + callpath_mpich2.dag_hash())
+        assert len(specs) == 2
 
     def test_ambiguous_hash(self, database):
-        specs = database.mock.db.query()
-        hashes = [s._hash for s in specs]  # Preserves order of elements
+        x1 = Spec('a')
+        x1._hash = 'xy'
+        x1._concrete = True
+        x2 = Spec('a')
+        x2._hash = 'xx'
+        x2._concrete = True
+        database.mock.db.add(x1, spack.store.layout)
+        database.mock.db.add(x2, spack.store.layout)
 
-        # Make sure the database is as expected
-        assert hashes[1][:1] == hashes[2][:1] == 'b'
+        # ambiguity in first hash character
+        self._check_raises(AmbiguousHashError, ['/x'])
 
-        ambiguous_hashes = ['/b',
-                            specs[1].name + '/b',
-                            specs[0].name + '^/b',
-                            specs[0].name + '^' + specs[1].name + '/b']
-        self._check_raises(AmbiguousHashError, ambiguous_hashes)
+        # ambiguity in first hash character AND spec name
+        self._check_raises(AmbiguousHashError, ['a/x'])
 
     def test_invalid_hash(self, database):
-        specs = database.mock.db.query()
-        hashes = [s._hash for s in specs]  # Preserves order of elements
+        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
+        zmpi = database.mock.db.query_one('zmpi')
 
-        # Make sure the database is as expected
-        assert (hashes[0] != hashes[3] and
-                hashes[1] != hashes[4] and len(specs) > 4)
+        mpileaks_mpich = database.mock.db.query_one('mpileaks ^mpich')
+        mpich = database.mock.db.query_one('mpich')
 
-        inputs = [specs[0].name + '/' + hashes[3],
-                  specs[1].name + '^' + specs[4].name + '/' + hashes[0],
-                  specs[1].name + '^' + specs[4].name + '/' + hashes[1]]
-        self._check_raises(InvalidHashError, inputs)
+        # name + incompatible hash
+        self._check_raises(InvalidHashError, [
+            'zmpi /' + mpich.dag_hash(),
+            'mpich /' + zmpi.dag_hash()])
+
+        # name + dep + incompatible hash
+        self._check_raises(InvalidHashError, [
+            'mpileaks ^mpich /' + mpileaks_zmpi.dag_hash(),
+            'mpileaks ^zmpi /' + mpileaks_mpich.dag_hash()])
 
     def test_nonexistent_hash(self, database):
-        # This test uses database to make sure we don't accidentally access
-        # real installs, however unlikely
+        """Ensure we get errors for nonexistant hashes."""
         specs = database.mock.db.query()
-        hashes = [s._hash for s in specs]  # Preserves order of elements
 
-        # Make sure the database is as expected
-        assert 'abc123' not in [h[:6] for h in hashes]
+        # This hash shouldn't be in the test DB.  What are the odds :)
+        no_such_hash = 'aaaaaaaaaaaaaaa'
+        hashes = [s._hash for s in specs]
+        assert no_such_hash not in [h[:len(no_such_hash)] for h in hashes]
 
-        nonexistant_hashes = ['/abc123',
-                              specs[0].name + '/abc123']
-        self._check_raises(SystemExit, nonexistant_hashes)
+        self._check_raises(NoSuchHashError, [
+            '/' + no_such_hash,
+            'mpileaks /' + no_such_hash])
 
     def test_redundant_spec(self, database):
-        specs = database.mock.db.query()
-        hashes = [s._hash for s in specs]  # Preserves order of elements
+        """Check that redundant spec constraints raise errors.
 
-        # Make sure the database is as expected
-        assert len(specs) > 3
+        TODO (TG): does this need to be an error? Or should concrete
+        specs only raise errors if constraints cause a contradiction?
 
-        redundant_specs = ['/' + hashes[0] + '%' + str(specs[0].compiler),
-                           specs[1].name + '/' + hashes[1] +
-                           '@' + str(specs[1].version),
-                           specs[2].name + '/' + hashes[2] + '^ libelf',
-                           '/' + hashes[3] + ' cflags="-O3 -fPIC"']
+        """
+        mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')
+        callpath_zmpi = database.mock.db.query_one('callpath ^zmpi')
+        dyninst = database.mock.db.query_one('dyninst')
+
+        mpileaks_mpich2 = database.mock.db.query_one('mpileaks ^mpich2')
+
+        redundant_specs = [
+            # redudant compiler
+            '/' + mpileaks_zmpi.dag_hash() + '%' + str(mpileaks_zmpi.compiler),
+
+            # redudant version
+            'mpileaks/' + mpileaks_mpich2.dag_hash() +
+            '@' + str(mpileaks_mpich2.version),
+
+            # redundant dependency
+            'callpath /' + callpath_zmpi.dag_hash() + '^ libelf',
+
+            # redundant flags
+            '/' + dyninst.dag_hash() + ' cflags="-O3 -fPIC"']
+
         self._check_raises(RedundantSpecError, redundant_specs)
 
     def test_duplicate_variant(self):
@@ -478,3 +533,18 @@ class TestSpecSyntax(object):
             "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
+
+
+@pytest.mark.parametrize('spec,anon_spec,spec_name', [
+    ('openmpi languages=go', 'languages=go', 'openmpi'),
+    ('openmpi @4.6:', '@4.6:', 'openmpi'),
+    ('openmpi languages=go @4.6:', 'languages=go @4.6:', 'openmpi'),
+    ('openmpi @4.6: languages=go', '@4.6: languages=go', 'openmpi'),
+])
+def test_parse_anonymous_specs(spec, anon_spec, spec_name):
+
+    expected = parse(spec)
+    spec = parse_anonymous_spec(anon_spec, spec_name)
+
+    assert len(expected) == 1
+    assert spec in expected

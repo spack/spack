@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class BppSeq(Package):
+class BppSeq(CMakePackage):
     """Bio++ seq library."""
 
     homepage = "http://biopp.univ-montp2.fr/wiki/index.php/Installation"
@@ -33,10 +33,8 @@ class BppSeq(Package):
 
     version('2.2.0', '44adef0ff4d5ca4e69ccf258c9270633')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.6:', type='build')
     depends_on('bpp-core')
 
-    def install(self, spec, prefix):
-        cmake('-DBUILD_TESTING=FALSE', '.', *std_cmake_args)
-        make()
-        make('install')
+    def cmake_args(self):
+        return ['-DBUILD_TESTING=FALSE']

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 from glob import glob
-import os
 
 
 class Cuda(Package):
@@ -32,24 +31,17 @@ class Cuda(Package):
     by NVIDIA. It enables dramatic increases in computing performance by
     harnessing the power of the graphics processing unit (GPU).
 
-    Note: NVIDIA does not provide a download URL for CUDA so you will
-    need to download it yourself. Go to
-    https://developer.nvidia.com/cuda-downloads and select your Operating
-    System, Architecture, Distribution, and Version.  For the Installer
-    Type, select runfile and click Download. Spack will search your
-    current directory for this file. Alternatively, add this file to a
-    mirror so that Spack can find it. For instructions on how to set up a
-    mirror, see http://spack.readthedocs.io/en/latest/mirrors.html.
-
     Note: This package does not currently install the drivers necessary
     to run CUDA. These will need to be installed manually. See:
     http://docs.nvidia.com/cuda/cuda-getting-started-guide-for-linux for
-    details.
-
-    """
+    details."""
 
     homepage = "http://www.nvidia.com/object/cuda_home_new.html"
 
+    version('9.0.176', '7a00187b2ce5c5e350e68882f42dd507', expand=False,
+            url="https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda_9.0.176_384.81_linux-run")
+    version('8.0.61', '33e1bd980e91af4e55f3ef835c103f9b', expand=False,
+            url="https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run")
     version('8.0.44', '6dca912f9b7e2b7569b0074a41713640', expand=False,
             url="https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_linux-run")
     version('7.5.18', '4b3bcecf0dfc35928a0898793cf3e4c6', expand=False,
@@ -58,7 +50,7 @@ class Cuda(Package):
             url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
 
     def install(self, spec, prefix):
-        runfile = glob(os.path.join(self.stage.path, 'cuda*run'))[0]
+        runfile = glob(join_path(self.stage.path, 'cuda*run'))[0]
         chmod = which('chmod')
         chmod('+x', runfile)
         runfile = which(runfile)
@@ -70,8 +62,9 @@ class Cuda(Package):
         # for details.
 
         runfile(
-            '--silent',   # disable interactive prompts
-            '--verbose',  # create verbose log file
-            '--toolkit',  # install CUDA Toolkit
+            '--silent',         # disable interactive prompts
+            '--verbose',        # create verbose log file
+            '--override',       # override compiler version checks
+            '--toolkit',        # install CUDA Toolkit
             '--toolkitpath=%s' % prefix
         )

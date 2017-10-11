@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -37,7 +37,7 @@ class Libelf(AutotoolsPackage):
     version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
     version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
 
-    provides('elf')
+    provides('elf@0')
 
     def configure_args(self):
         args = ["--enable-shared",

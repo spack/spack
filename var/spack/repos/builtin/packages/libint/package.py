@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,25 +25,27 @@
 from spack import *
 
 
-class Libint(Package):
+class Libint(AutotoolsPackage):
     """Libint is a high-performance library for computing
-    Gaussian integrals in quantum mechanics."""
+    Gaussian integrals in quantum mechanics.
+    """
 
     homepage = "https://github.com/evaleev/libint"
-    url      = "https://github.com/evaleev/libint/archive/v2.1.0.tar.gz"
+    url = "https://github.com/evaleev/libint/archive/v2.1.0.tar.gz"
 
+    version('2.2.0', 'da37dab862fb0b97a7ed7d007695ef47')
     version('2.1.0', 'd0dcb985fe32ddebc78fe571ce37e2d6')
     version('1.1.6', '990f67b55f49ecc18f32c58da9240684')
     version('1.1.5', '379b7d0718ff398715d6898807adf628')
 
     # Build dependencies
     depends_on('autoconf@2.52:', type='build')
-    depends_on('automake',       type='build')
-    depends_on('libtool',        type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
     # Libint 2 dependencies
     depends_on('boost', when='@2:')
-    depends_on('gmp',   when='@2:')
+    depends_on('gmp', when='@2:')
 
     def url_for_version(self, version):
         base_url = "https://github.com/evaleev/libint/archive"
@@ -54,26 +56,37 @@ class Libint(Package):
         else:
             return "{0}/v{1}.tar.gz".format(base_url, version)
 
-    def install(self, spec, prefix):
-        # Generate configure
+    def autoreconf(self, spec, prefix):
         libtoolize()
         aclocal('-I', 'lib/autoconf')
         autoconf()
 
-        config_args = [
-            '--prefix={0}'.format(prefix),
-            '--enable-shared'
-        ]
+    @property
+    def optflags(self):
+        flags = '-O2'
 
         # Optimizations for the Intel compiler, suggested by CP2K
-        optflags = '-O2'
-        if self.compiler.name == 'intel':
-            optflags += ' -xAVX -axCORE-AVX2 -ipo'
-            if which('xiar'):
-                env['AR'] = 'xiar'
+        if '%intel' in self.spec:
+            # -xSSE2 will make it usable on old architecture
+            flags += ' -xSSE2 -xAVX -axCORE-AVX2 -ipo'
 
-        env['CFLAGS']   = optflags
-        env['CXXFLAGS'] = optflags
+        return flags
+
+    def setup_environment(self, build_env, run_env):
+        # Set optimization flags
+        build_env.set('CFLAGS', self.optflags)
+        build_env.set('CXXFLAGS', self.optflags)
+
+        # Change AR to xiar if we compile with Intel and we
+        # find the executable
+        if '%intel' in self.spec and which('xiar'):
+            build_env.set('AR', 'xiar')
+
+    def configure_args(self):
+
+        config_args = ['--enable-shared']
+
+        optflags = self.optflags
 
         # Optimization flag names have changed in libint 2
         if self.version < Version('2.0.0'):
@@ -93,12 +106,4 @@ class Libint(Package):
                 '--with-libint-max-am=5',
                 '--with-libderiv-max-am1=4'
             ])
-
-        configure(*config_args)
-        make()
-
-        # Testing suite was added in libint 2
-        if self.version >= Version('2.0.0'):
-            make('check')
-
-        make('install')
+        return config_args

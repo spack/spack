@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,6 +34,5 @@ class RCrayon(RPackage):
 
     homepage = "https://github.com/gaborcsardi/crayon"
     url      = "https://cran.r-project.org/src/contrib/crayon_1.3.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/crayon"
 
     version('1.3.2', 'fe29c6204d2d6ff4c2f9d107a03d0cb9')

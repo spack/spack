@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,10 +30,16 @@ class RRsqlite(RPackage):
     interface compliant with the DBI package. The source for the SQLite engine
     (version 3.8.6) is included."""
 
-    homepage = "https://github.com/rstats-db/RSQLite"
+    homepage = "https://cran.rstudio.com/web/packages/RSQLite/index.html"
     url      = "https://cran.r-project.org/src/contrib/RSQLite_1.0.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RSQLite"
-
-    version('1.0.0', 'e6cbe2709612b687c13a10d30c7bad45')
+    list_url = homepage
+    version('2.0', '63842410e78ccdfc52d4ee97992521d5')
 
     depends_on('r-dbi', type=('build', 'run'))
+    depends_on('r-bit64', type=('build', 'run'))
+    depends_on('r-blob', type=('build', 'run'))
+    depends_on('r-memoise', type=('build', 'run'))
+    depends_on('r-pkgconfig', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-bh', type=('build', 'run'))
+    depends_on('r-plogr', type=('build', 'run'))
