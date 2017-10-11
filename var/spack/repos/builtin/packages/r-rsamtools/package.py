@@ -47,3 +47,4 @@ class RRsamtools(RPackage):
     depends_on('r-zlibbioc', type=('build', 'run'))
     depends_on('r-bitops', type=('build', 'run'))
     depends_on('r-biocparallel', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.28.0')
