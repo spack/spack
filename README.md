@@ -1,7 +1,7 @@
 ![image](share/spack/logo/spack-logo-text-64.png "Spack")
 ============
 
-[![Build Status](https://travis-ci.org/LLNL/spack.svg?branch=develop)](https://travis-ci.org/LLNL/spack)
+[![Build Status](https://travis-ci.org/kaust-rc/spack.svg?branch=develop)](https://travis-ci.org/kaust-rc/spack)
 [![codecov](https://codecov.io/gh/LLNL/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/LLNL/spack)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 
