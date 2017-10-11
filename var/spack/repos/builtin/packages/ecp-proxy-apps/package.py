@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,43 +23,33 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
+import os
 from spack import *
 
 
-class Xsbench(MakefilePackage):
-    """XSBench is a mini-app representing a key computational
-       kernel of the Monte Carlo neutronics application OpenMC.
-       A full explanation of the theory and purpose of XSBench
-       is provided in docs/XSBench_Theory.pdf."""
+class EcpProxyApps(Package):
+    """This is a collection of packages that represents the official suite of
+       DOE/ECP proxy applications. This is a Spack bundle package that
+       installs the ECP proxy application suite.
+    """
 
-    homepage = "https://github.com/ANL-CESAR/XSBench/"
-    url = "https://github.com/ANL-CESAR/XSBench/archive/v13.tar.gz"
+    homepage = "https://exascaleproject.github.io/proxy-apps"
+
+    # Dummy url
+    url = 'https://github.com/exascaleproject/proxy-apps/archive/v0.9.tar.gz'
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('13', '72a92232d2f5777fb52f5ea4082aff37')
+    version('0.9', '395e9d79ae93e8ad71f1ec9773abdd43')
 
-    variant('mpi', default=False, description='Build with MPI support')
+    depends_on('miniamr@1.0', when='@0.9')
+    depends_on('xsbench@13', when='@0.9')
 
-    depends_on('mpi', when='+mpi')
-
-    build_directory = 'src'
-
-    @property
-    def build_targets(self):
-
-        targets = []
-
-        cflags = '-std=gnu99'
-        if '+mpi' in self.spec:
-            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
-
-        cflags += ' ' + self.compiler.openmp_flag
-        targets.append('CFLAGS={0}'.format(cflags))
-        targets.append('LDFLAGS=-lm')
-
-        return targets
-
+    # Dummy install for now,  will be removed when metapackage is available
     def install(self, spec, prefix):
-        mkdir(prefix.bin)
-        install('src/XSBench', prefix.bin)
+        with open(os.path.join(spec.prefix, 'package-list.txt'), 'w') as out:
+            for dep in spec.dependencies(deptype='build'):
+                out.write("%s\n" % dep.format(
+                    format_string='${PACKAGE} ${VERSION}'))
+                os.symlink(dep.prefix, os.path.join(spec.prefix, dep.name))
+            out.close()
