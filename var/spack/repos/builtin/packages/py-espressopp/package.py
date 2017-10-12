@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Espressopp(CMakePackage):
+class PyEspressopp(CMakePackage):
     """ESPResSo++ is an extensible, flexible, fast and parallel simulation
        software for soft matter research. It is a highly versatile software
        package for the scientific simulation and analysis of coarse-grained
