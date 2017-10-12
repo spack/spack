@@ -59,6 +59,7 @@ class Turbovnc(CMakePackage):
     depends_on("libxdamage", when='+x11deps')
     depends_on("libxcursor", when='+x11deps')
     depends_on("libxi", when='+java')
+    depends_on("libxt", when='+java')
     depends_on("libxxf86vm", when='+x11deps')
     depends_on("libxxf86misc", when='+x11deps')
     depends_on("xf86vidmodeproto", when='+x11deps')
