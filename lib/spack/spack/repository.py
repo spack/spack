@@ -142,7 +142,7 @@ class FastPackageChecker(Mapping):
             # Warn about invalid names that look like packages.
             if not valid_module_name(pkg_name):
                 msg = 'Skipping package at {0}. '
-                msg += '"{1]" is not a valid Spack module name.'
+                msg += '"{1}" is not a valid Spack module name.'
                 tty.warn(msg.format(pkg_dir, pkg_name))
                 continue
 
