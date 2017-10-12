@@ -73,6 +73,37 @@ configuration = spack.config.get_config('modules')
 #: Inspections that needs to be done on spec prefixes
 prefix_inspections = configuration.get('prefix_inspections', {})
 
+#: Valid tokens for naming scheme and env variable names
+_valid_tokens = (
+    'PACKAGE',
+    'VERSION',
+    'COMPILER',
+    'COMPILERNAME',
+    'COMPILERVER',
+    'ARCHITECTURE'
+)
+
+
+def _check_tokens_are_valid(format_string, message):
+    """Checks that the tokens used in the format string are valid in
+    the context of module file and environment variable naming.
+
+    Args:
+        format_string (str): string containing the format to be checked. This
+            is supposed to be a 'template' for ``Spec.format``
+
+        message (str): first sentence of the error message in case invalid
+            tokens are found
+
+    """
+    named_tokens = re.findall(r'\${(\w*)}', format_string)
+    invalid_tokens = [x for x in named_tokens if x not in _valid_tokens]
+    if invalid_tokens:
+        msg = message
+        msg += ' [{0}]. '.format(', '.join(invalid_tokens))
+        msg += 'Did you check your "modules.yaml" configuration?'
+        raise RuntimeError(msg)
+
 
 def update_dictionary_extending_lists(target, update):
     """Updates a dictionary, but extends lists instead of overriding them.
@@ -223,6 +254,12 @@ class BaseConfiguration(object):
             'naming_scheme',
             '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
         )
+
+        # Ensure the named tokens we are expanding are allowed, see
+        # issue #2884 for reference
+        msg = 'some tokens cannot be part of the module naming scheme'
+        _check_tokens_are_valid(scheme, message=msg)
+
         return scheme
 
     @property
@@ -521,14 +558,26 @@ class BaseContext(tengine.Context):
         blacklist = self.conf.environment_blacklist
 
         # We may have tokens to substitute in environment commands
+
+        # Prepare a suitable transformation dictionary for the names
+        # of the environment variables. This means turn the valid
+        # tokens uppercase.
+        transform = {}
+        for token in _valid_tokens:
+            transform[token] = str.upper
+
         for x in env:
-            x.name = self.spec.format(x.name)
+            # Ensure all the tokens are valid in this context
+            msg = 'some tokens cannot be expanded in an environment variable name'  # noqa: E501
+            _check_tokens_are_valid(x.name, message=msg)
+            # Transform them
+            x.name = self.spec.format(x.name, transform=transform)
             try:
                 # Not every command has a value
                 x.value = self.spec.format(x.value)
             except AttributeError:
                 pass
-            x.name = str(x.name).replace('-', '_').upper()
+            x.name = str(x.name).replace('-', '_')
 
         return [(type(x).__name__, x) for x in env if x.name not in blacklist]
 
