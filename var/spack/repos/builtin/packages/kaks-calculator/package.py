@@ -31,7 +31,7 @@ class KaksCalculator(MakefilePackage):
        include as many features as needed for accurately capturing evolutionary
        information in protein-coding sequences."""
 
-    homepage = "https://code.google.com/archive/p/kaks-calculator/"
+    homepage = "https://sourceforge.net/projects/kakscalculator2"
     url      = "https://downloads.sourceforge.net/project/kakscalculator2/KaKs_Calculator2.0.tar.gz"
 
     version('2.0', '956ec7bdb30fac7da3b5b2563151a85e')
