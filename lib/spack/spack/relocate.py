@@ -170,9 +170,9 @@ def modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir, relativ
     install_name_tool  -rpath old new binary
     """
     # avoid error message for libgcc_s
-    if 'libgcc_' in path_name:
+    if 'libgcc_' in cur_path_name:
         return
-    rpaths, deps, idpath = macho_get_paths(path_name)
+    rpaths, deps, idpath = macho_get_paths(cur_path_name)
     id = None
     nrpaths = []
     ndeps = []
