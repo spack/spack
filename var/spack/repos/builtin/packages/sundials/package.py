@@ -33,6 +33,7 @@ class Sundials(CMakePackage):
 
     homepage = "https://computation.llnl.gov/projects/sundials"
     url = "https://computation.llnl.gov/projects/sundials/download/sundials-2.7.0.tar.gz"
+    maintainers = ['cswoodward', 'gardner48']
 
     # ==========================================================================
     # Versions
@@ -48,20 +49,13 @@ class Sundials(CMakePackage):
     # ==========================================================================
 
     # SUNDIALS solvers
-    variant('cvode',  default=True,
-            description='Enable CVODE')
-    variant('cvodes', default=True,
-            description='Enable CVODES')
-    variant('arkode', default=True,
-            description='Enable ARKode')
-    variant('ida',    default=True,
-            description='Enable IDA')
-    variant('idas',   default=True,
-            description='Enable IDAS')
-    variant('kinsol', default=True,
-            description='Enable KINSOL')
+    sun_solvers = ['CVODE', 'CVODES', 'ARKODE', 'IDA', 'IDAS', 'KINSOL']
 
-    # Real precision type
+    for pkg in sun_solvers:
+        variant(pkg, default=True,
+                description='Enable %s solver' % pkg)
+
+    # Real type
     variant(
         'precision',
         default='double',
@@ -92,10 +86,8 @@ class Sundials(CMakePackage):
             description='Enable RAJA parallel vector')
 
     # External libraries
-    variant('blas',       default=False,
-            description='Enable external BLAS libraries')
     variant('lapack',     default=False,
-            description='Enable external LAPACK libraries')
+            description='Enable LAPACK direct solvers')
     variant('klu',        default=False,
             description='Enable KLU sparse, direct solver')
     variant('superlu-mt', default=False,
@@ -106,9 +98,9 @@ class Sundials(CMakePackage):
             description='Enable PETSc MPI parallel vector')
 
     # Library type
-    variant('shared',  default=True,
+    variant('shared', default=True,
             description='Build shared libraries')
-    variant('static',  default=True,
+    variant('static', default=True,
             description='Build static libraries')
 
     # Fortran interface
@@ -116,17 +108,17 @@ class Sundials(CMakePackage):
             description='Enable Fortran interface')
 
     # Examples
-    variant('examples-c', default=True,
+    variant('examples-c',       default=True,
             description='Enable C examples')
-    variant('examples-cxx', default=False,
+    variant('examples-cxx',     default=False,
             description='Enable C++ examples')
-    variant('examples-f77', default=True,
+    variant('examples-f77',     default=True,
             description='Enable Fortran 77 examples')
-    variant('examples-f90', default=False,
+    variant('examples-f90',     default=False,
             description='Enable Fortran 90 examples')
-    variant('examples-cuda', default=False,
+    variant('examples-cuda',    default=False,
             description='Enable CUDA examples')
-    variant('examples-raja', default=False,
+    variant('examples-raja',    default=False,
             description='Enable RAJA examples')
     variant('examples-install', default=True,
             description='Install examples')
@@ -134,10 +126,6 @@ class Sundials(CMakePackage):
     # Generic (std-c) math libraries (UNIX only)
     variant('generic-math', default=True,
             description='Use generic (std-c) math libraries on unix systems')
-
-    # xSDK options
-    variant('xsdk-defaults', default=False,
-            description='Use default xSDK configuration')
 
     # ==========================================================================
     # Conflicts
@@ -150,9 +138,7 @@ class Sundials(CMakePackage):
     # Options added after v2.7.0
     conflicts('+cuda',          when='@:2.7.0')
     conflicts('+raja',          when='@:2.7.0')
-    conflicts('+blas',          when='@:2.7.0')
     conflicts('+indextype',     when='@:2.7.0')
-    conflicts('+xsdk-defaults', when='@:2.7.0')
     conflicts('+examples-cuda', when='@:2.7.0')
     conflicts('+examples-raja', when='@:2.7.0')
 
@@ -170,12 +156,19 @@ class Sundials(CMakePackage):
     conflicts('+klu',        when='precision=extended')
     conflicts('+hypre',      when='+hypre@:2.12.0 precision=extended')
 
+    # External libraries that need to be built with MPI
+    conflicts('+hypre', when='~mpi')
+    conflicts('+petsc', when='~mpi')
+
+    # SuperLU_MT interface requires lapack for external blas (before v3.0.0)
+    conflicts('+superlu-mt', when='@:2.7.0 ~lapack')
+
     # ==========================================================================
     # Dependencies
     # ==========================================================================
 
     # Build dependencies
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.8.1:', type='build')
 
     # MPI related dependencies
     depends_on('mpi', when='+mpi')
@@ -187,13 +180,25 @@ class Sundials(CMakePackage):
     depends_on('raja', when='+raja')
 
     # External libraries
-    depends_on('hypre',              when='+hypre')
-    depends_on('petsc',              when='+petsc')
-    depends_on('blas',               when='+blas')
-    depends_on('lapack',             when='+lapack')
-    depends_on('suite-sparse',       when='+klu')
-    depends_on('superlu-mt+openmp',  when='+superlu-mt+openmp')
-    depends_on('superlu-mt+pthread', when='+superlu-mt+pthread')
+    depends_on('blas',         when='+lapack')
+    depends_on('lapack',       when='+lapack')
+    depends_on('suite-sparse', when='+klu')
+
+    # Require that external libraries built with the same precision
+    depends_on('petsc~double', when='+petsc precision=single')
+    depends_on('petsc+double', when='+petsc precision=double')
+
+    # Require that external libraries built with the same index type
+    depends_on('hypre~int64', when='+hypre indextype=int32_t')
+    depends_on('hypre+int64', when='+hypre indextype=int64_t')
+    depends_on('petsc~int64', when='+petsc indextype=int32_t')
+    depends_on('petsc+int64', when='+petsc indextype=int64_t')
+
+    # Require that PETSc is built with MPI
+    depends_on('petsc+mpi', when='+petsc')
+
+    # Require that SuperLU_MT built with external blas
+    depends_on('superlu-mt+blas', when='+superlu-mt')
 
     # ==========================================================================
     # SUNDIALS Settings
@@ -212,35 +217,27 @@ class Sundials(CMakePackage):
                                              'libgfortran.a', output=str))
             fortran_flag += ' ' + libgfortran.ld_flags
 
+        # List of CMake arguments
+        # Note: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE are set automatically
+        args = []
+
         # SUNDIALS solvers
-        args = [
-            '-DBUILD_CVODE=%s'  % on_off('+cvode'),
-            '-DBUILD_CVODES=%s' % on_off('+cvodes'),
-            '-DBUILD_ARKODE=%s' % on_off('+arkode'),
-            '-DBUILD_IDA=%s'    % on_off('+ida'),
-            '-DBUILD_IDAS=%s'   % on_off('+idas'),
-            '-DBUILD_KINSOL=%s' % on_off('+kinsol')
-        ]
+        for pkg in self.sun_solvers:
+            args.extend(['-DBUILD_%s=%s' % (pkg, on_off('+' + pkg))])
 
         # precision
-        if 'precision=single' in spec:
-            args.extend(['-DSUNDIALS_PRECISION=single'])
-        elif 'precision=double' in spec:
-            args.extend(['-DSUNDIALS_PRECISION=double'])
-        elif 'precision=extended' in spec:
-            args.extend(['-DSUNDIALS_PRECISION=extended'])
+        args.extend([
+            '-DSUNDIALS_PRECISION=%s' % spec.variants['precision'].value
+        ])
 
         # index type (after v2.7.0)
         if not spec.satisfies('@:2.7.0'):
-            if 'indextype=int32_t' in spec:
-                args.extend(['-DSUNDIALS_INDEX_TYPE=int32_t'])
-            elif 'indextype=int64_t' in spec:
-                args.extend(['-DSUNDIALS_INDEX_TYPE=int64_t'])
+            args.extend([
+                '-DSUNDIALS_INDEX_TYPE=%s' % spec.variants['indextype'].value
+            ])
 
         # Fortran interface
-        args.extend([
-            '-DFCMIX_ENABLE=%s' % on_off('+fcmix')
-        ])
+        args.extend(['-DFCMIX_ENABLE=%s' % on_off('+fcmix')])
 
         # library type
         args.extend([
@@ -259,95 +256,68 @@ class Sundials(CMakePackage):
             '-DOPENMP_ENABLE=%s'  % on_off('+openmp'),
             '-DPTHREAD_ENABLE=%s' % on_off('+pthread'),
             '-DCUDA_ENABLE=%s'    % on_off('+cuda'),
-            '-DRAJA_ENABLE=%s'    % on_off('+raja'),
+            '-DRAJA_ENABLE=%s'    % on_off('+raja')
         ])
 
         # MPI support
         if '+mpi' in spec:
-            args.extend([
-                '-DMPI_MPICC={0}'.format(spec['mpi'].mpicc)
-            ])
+            args.extend(['-DMPI_MPICC=%s' % spec['mpi'].mpicc])
             if 'examples-cxx' in spec:
-                args.extend([
-                    '-DMPI_MPICXX={0}'.format(spec['mpi'].mpicxx)
-                ])
+                args.extend(['-DMPI_MPICXX=%s' % spec['mpi'].mpicxx])
             if ('+fcmix' in spec) and ('+examples-f77' in spec):
-                args.extend([
-                    '-DMPI_MPIF77={0}'.format(spec['mpi'].mpif77)
-                ])
+                args.extend(['-DMPI_MPIF77=%s' % spec['mpi'].mpif77])
             if ('+fcmix' in spec) and ('+examples-f90' in spec):
-                args.extend([
-                    '-DMPI_MPIF90={0}'.format(spec['mpi'].mpifc)
-                ])
+                args.extend(['-DMPI_MPIF90=%s' % spec['mpi'].mpifc])
 
         # Building with LAPACK and BLAS
-        if not spec.satisfies('@:2.7.0'):
-            if '+blas' in spec:
-                args.extend([
-                    '-DBLAS_ENABLE=ON',
-                    '-DBLAS_LIBRARIES={0}'.format(spec['blas'].libs),
-                ])
-            if '+lapack' in spec:
-                args.extend([
-                    '-DLAPACK_ENABLE=ON',
-                    '-DLAPACK_LIBRARIES={0}'.format(spec['lapack'].libs),
-                ])
-        else:
-            if '+lapack' in spec:
-                args.extend([
-                    '-DLAPACK_ENABLE=ON',
-                    '-DLAPACK_LIBRARIES={0}'.format(
-                        (spec['lapack'].libs +
-                         spec['blas'].libs).joined(';')
-                    )
-                ])
+        if '+lapack' in spec:
+            args.extend([
+                '-DLAPACK_ENABLE=ON',
+                '-DLAPACK_LIBRARIES=%s'
+                % (spec['lapack'].libs + spec['blas'].libs).joined(';')
+            ])
 
         # Building with KLU
         if '+klu' in spec:
             args.extend([
                 '-DKLU_ENABLE=ON',
-                '-DKLU_INCLUDE_DIR={0}'.format(
-                    spec['suite-sparse'].prefix.include),
-                '-DKLU_LIBRARY_DIR={0}'.format(
-                    spec['suite-sparse'].prefix.lib),
+                '-DKLU_INCLUDE_DIR=%s' % spec['suite-sparse'].prefix.include,
+                '-DKLU_LIBRARY_DIR=%s' % spec['suite-sparse'].prefix.lib
             ])
 
         # Building with SuperLU_MT
         if '+superlu-mt' in spec:
+            if not spec.satisfies('@:2.7.0'):
+                args.extend([
+                    '-DBLAS_ENABLE=ON',
+                    '-DBLAS_LIBRARIES=%s' % spec['blas'].libs
+                ])
             args.extend([
                 '-DSUPERLUMT_ENABLE=ON',
-                '-DSUPERLUMT_INCLUDE_DIR={0}'.format(
-                    spec['superlu-mt'].prefix.include),
-                '-DSUPERLUMT_LIBRARY_DIR={0}'.format(
-                    spec['superlu-mt'].prefix.lib)
+                '-DSUPERLUMT_INCLUDE_DIR=%s'
+                % spec['superlu-mt'].prefix.include,
+                '-DSUPERLUMT_LIBRARY_DIR=%s'
+                % spec['superlu-mt'].prefix.lib
             ])
-            if '+openmp' in spec:
+            if spec.satisfies('^superlu-mt+openmp'):
                 args.append('-DSUPERLUMT_THREAD_TYPE=OpenMP')
-            elif '+pthread' in spec:
-                args.append('-DSUPERLUMT_THREAD_TYPE=Pthread')
             else:
-                msg = 'You must choose either +openmp or +pthread when '
-                msg += 'building with SuperLU_MT'
-                raise RuntimeError(msg)
+                args.append('-DSUPERLUMT_THREAD_TYPE=Pthread')
 
         # Building with Hypre
         if '+hypre' in spec:
             args.extend([
                 '-DHYPRE_ENABLE=ON',
-                '-DHYPRE_INCLUDE_DIR={0}'.format(
-                    spec['hypre'].prefix.include),
-                '-DHYPRE_LIBRARY_DIR={0}'.format(
-                    spec['hypre'].prefix.lib)
+                '-DHYPRE_INCLUDE_DIR=%s' % spec['hypre'].prefix.include,
+                '-DHYPRE_LIBRARY_DIR=%s' % spec['hypre'].prefix.lib
             ])
 
         # Building with PETSc
         if '+petsc' in spec:
             args.extend([
                 '-DPETSC_ENABLE=ON',
-                '-DPETSC_INCLUDE_DIR={0}'.format(
-                    spec['petsc'].prefix.include),
-                '-DPETSC_LIBRARY_DIR={0}'.format(
-                    spec['petsc'].prefix.lib)
+                '-DPETSC_INCLUDE_DIR=%s' % spec['petsc'].prefix.include,
+                '-DPETSC_LIBRARY_DIR=%s' % spec['petsc'].prefix.lib
             ])
 
         # Examples
@@ -369,166 +339,6 @@ class Sundials(CMakePackage):
 
         args.extend([
             '-DEXAMPLES_INSTALL=%s' % on_off('+examples-install')
-        ])
-
-        return args
-
-    # ==========================================================================
-    # SUNDIALS xSDK Settings
-    # ==========================================================================
-
-    @when('xsdk-defaults=True')
-    def cmake_args(self):
-        spec = self.spec
-
-        def on_off(varstr):
-            return 'ON' if varstr in self.spec else 'OFF'
-
-        fortran_flag = self.compiler.pic_flag
-        if spec.satisfies('%clang platform=darwin'):
-            mpif77 = Executable(self.spec['mpi'].mpif77)
-            libgfortran = LibraryList(mpif77('--print-file-name',
-                                             'libgfortran.a', output=str))
-            fortran_flag += ' ' + libgfortran.ld_flags
-
-        # SUNDIALS solvers
-        args = [
-            '-DBUILD_CVODE=%s'  % on_off('+cvode'),
-            '-DBUILD_CVODES=%s' % on_off('+cvodes'),
-            '-DBUILD_ARKODE=%s' % on_off('+arkode'),
-            '-DBUILD_IDA=%s'    % on_off('+ida'),
-            '-DBUILD_IDAS=%s'   % on_off('+idas'),
-            '-DBUILD_KINSOL=%s' % on_off('+kinsol')
-        ]
-
-        # precision
-        if 'precision=single' in spec:
-            args.extend(['-DXSDK_PRECISION=single'])
-        elif 'precision=double' in spec:
-            args.extend(['-DXSDK_PRECISION=double'])
-        elif 'precision=extended' in spec:
-            args.extend(['-DXSDK_PRECISION=quad'])
-
-        # index type (after v2.7.0)
-        if 'indextype=int32_t' in spec:
-            args.extend(['-DXSDK_INDEX_SIZE=32'])
-        elif 'indextype=int64_t' in spec:
-            args.extend(['-DXSDK_INDEX_SIZE=64'])
-
-        # Fortran interface
-        args.extend([
-            '-DXSDK_ENABLE_FORTRAN=%s' % on_off('+fcmix')
-        ])
-
-        # library type
-        args.extend([
-            '-DBUILD_SHARED_LIBS=%s' % on_off('+shared'),
-            '-DBUILD_STATIC_LIBS=%s' % on_off('+static')
-        ])
-
-        # generic (std-c) math libraries
-        args.extend([
-            '-DUSE_GENERIC_MATH=%s' % on_off('+generic-math')
-        ])
-
-        # parallelism
-        args.extend([
-            '-DMPI_ENABLE=%s'     % on_off('+mpi'),
-            '-DOPENMP_ENABLE=%s'  % on_off('+openmp'),
-            '-DPTHREAD_ENABLE=%s' % on_off('+pthread'),
-            '-DCUDA_ENABLE=%s'    % on_off('+cuda'),
-            '-DRAJA_ENABLE=%s'    % on_off('+raja'),
-        ])
-
-        # MPI support
-        if '+mpi' in spec:
-            args.extend([
-                '-DMPI_MPICC={0}'.format(spec['mpi'].mpicc)
-            ])
-            if 'examples-cxx' in spec:
-                args.extend([
-                    '-DMPI_MPICXX={0}'.format(spec['mpi'].mpicxx)
-                ])
-            if ('+fcmix' in spec) and ('+examples-f77' in spec):
-                args.extend([
-                    '-DMPI_MPIF77={0}'.format(spec['mpi'].mpif77)
-                ])
-            if ('+fcmix' in spec) and ('+examples-f90' in spec):
-                args.extend([
-                    '-DMPI_MPIF90={0}'.format(spec['mpi'].mpifc)
-                ])
-
-        # Building with BLAS
-        if '+blas' in spec:
-            args.extend([
-                '-DTPL_ENABLE_BLAS=ON',
-                '-DTPL_BLAS_LIBRARIES={0}'.format(spec['blas'].libs),
-            ])
-
-        # Building with LAPACK
-        if '+lapack' in spec:
-            args.extend([
-                '-DTPL_ENABLE_LAPACK=ON',
-                '-DTPL_LAPACK_LIBRARIES={0}'.format(spec['lapack'].libs),
-            ])
-
-        # Building with KLU
-        if '+klu' in spec:
-            args.extend([
-                '-DTPL_ENABLE_KLU=ON',
-                '-DTPL_KLU_INCLUDE_DIRS={0}'.format(
-                    spec['suite-sparse'].prefix.include),
-                '-DTPL_KLU_LIBRARIES={0}'.format(
-                    spec['suite-sparse'].prefix.lib),
-            ])
-
-        # Building with SuperLU_MT
-        if '+superlu-mt' in spec:
-            args.extend([
-                '-DTPL_ENABLE_SUPERLUMT=ON',
-                '-DTPL_SUPERLUMT_INCLUDE_DIRS={0}'.format(
-                    spec['superlu-mt'].prefix.include),
-                '-DTPL_SUPERLUMT_LIBRARIES={0}'.format(
-                    spec['superlu-mt'].prefix.lib)
-            ])
-            if '+openmp' in spec:
-                args.append('-DTPL_SUPERLUMT_THREAD_TYPE=OpenMP')
-            elif '+pthread' in spec:
-                args.append('-DTPL_SUPERLUMT_THREAD_TYPE=Pthread')
-            else:
-                msg = 'You must choose either +openmp or +pthread when '
-                msg += 'building with SuperLU_MT'
-                raise RuntimeError(msg)
-
-        # Building with Hypre
-        if '+hypre' in spec:
-            args.extend([
-                '-DTPL_ENABLE_HYPRE=ON',
-                '-DTPL_HYPRE_INCLUDE_DIRS={0}'.format(
-                    spec['hypre'].prefix.include),
-                '-DTPL_HYPRE_LIBRARIES={0}'.format(
-                    spec['hypre'].prefix.lib)
-            ])
-
-        # Building with PETSc
-        if '+petsc' in spec:
-            args.extend([
-                '-DTPL_ENABLE_PETSC=ON',
-                '-DTPL_PETSC_INCLUDE_DIRS={0}'.format(
-                    spec['petsc'].prefix.include),
-                '-DTPL_PETSC_LIBRARIES={0}'.format(
-                    spec['petsc'].prefix.lib)
-            ])
-
-        # Examples
-        args.extend([
-            '-DEXAMPLES_ENABLE_C=%s'    % on_off('+examples-c'),
-            '-DEXAMPLES_ENABLE_CXX=%s'  % on_off('+examples-cxx'),
-            '-DEXAMPLES_ENABLE_F77=%s'  % on_off('+examples-f77'),
-            '-DEXAMPLES_ENABLE_F90=%s'  % on_off('+examples-f90'),
-            '-DEXAMPLES_ENABLE_CUDA=%s' % on_off('+examples-cuda'),
-            '-DEXAMPLES_ENABLE_RAJA=%s' % on_off('+examples-raja'),
-            '-DEXAMPLES_INSTALL=%s'     % on_off('+examples-install')
         ])
 
         return args
