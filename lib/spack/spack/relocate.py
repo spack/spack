@@ -158,7 +158,8 @@ def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
     return nrpaths, ndeps, id
 
 
-def modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir, relative):
+def modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir,
+                        relative):
     """
     Modify MachO binary path_name by replacing old_dir with new_dir
     or the relative path to spack install root.
