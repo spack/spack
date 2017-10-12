@@ -32,15 +32,15 @@ class KaksCalculator(MakefilePackage):
        information in protein-coding sequences."""
 
     homepage = "https://code.google.com/archive/p/kaks-calculator/"
-    url      = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/kaks-calculator/KaKs_Calculator1.2.tar.gz"
+    url      = "https://downloads.sourceforge.net/project/kakscalculator2/KaKs_Calculator2.0.tar.gz"
 
-    version('1.2', '4f89bf211a5a32adaf38a76ef63b46fd')
-
-    def url_for_version(self, version):
-        url = 'https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/kaks-calculator/KaKs_Calculator{0}.tar.gz'
-        return url.format(version)
+    version('2.0', '956ec7bdb30fac7da3b5b2563151a85e')
 
     build_directory = 'src'
+
+    def url_for_version(self, version):
+        url = 'https://downloads.sourceforge.net/project/kakscalculator2/KaKs_Calculator{0}.tar.gz'
+        return url.format(version)
 
     # include<string.h> needs added to header file for compilation to work
     def patch(self):
