@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 import os
 import shutil
 import tempfile
@@ -43,6 +44,8 @@ class Ncl(Package):
     patch('spack_ncl.patch')
     # Make ncl compile with hdf5 1.10
     patch('hdf5.patch')
+    # ymake-filter's buffer may overflow
+    patch('ymake-filter.patch')
 
     # This installation script is implemented according to this manual:
     # http://www.ncl.ucar.edu/Download/build_from_src.shtml
@@ -62,6 +65,7 @@ class Ncl(Package):
     depends_on('bison', type='build')
     depends_on('flex+lex')
     depends_on('libiconv')
+    depends_on('tcsh')
 
     # Also, the manual says that ncl requires zlib, but that comes as a
     # mandatory dependency of libpng, which is a mandatory dependency of cairo.
@@ -82,6 +86,9 @@ class Ncl(Package):
     depends_on('hdf5+szip')
     depends_on('szip')
 
+    # ESMF is only required at runtime (for ESMF_regridding.ncl)
+    depends_on('esmf', type='run')
+
     # In Spack, we also do not have an option to compile netcdf without DAP
     # support, so we will tell the ncl configuration script that we have it.
 
@@ -98,6 +105,23 @@ class Ncl(Package):
         md5='10aff8d7950f5e0e2fb6dd2e340be2c9',
         placement='triangle_src',
         when='+triangle')
+
+    def patch(self):
+        # Make configure scripts use Spack's tcsh
+        files = ['Configure'] + glob.glob('config/*')
+
+        filter_file('^#!/bin/csh -f', '#!/usr/bin/env csh', *files)
+
+    @run_before('install')
+    def filter_sbang(self):
+        # Filter sbang before install so Spack's sbang hook can fix it up
+        files = glob.glob('ncarg2d/src/bin/scripts/*')
+        files += glob.glob('ncarview/src/bin/scripts/*')
+        files += glob.glob('ni/src/scripts/*')
+
+        csh = join_path(self.spec['tcsh'].prefix.bin, 'csh')
+
+        filter_file('^#!/bin/csh', '#!{0}'.format(csh), *files)
 
     def install(self, spec, prefix):
 
@@ -165,7 +189,7 @@ class Ncl(Package):
             # Parent installation directory :
             '\'' + self.spec.prefix + '\'\n',
             # System temp space directory   :
-            '\'' + tempfile.mkdtemp(prefix='ncl_ncar_') + '\'\n',
+            '\'' + tempfile.gettempdir() + '\'\n',
             # Build NetCDF4 feature support (optional)?
             'y\n'
         ]

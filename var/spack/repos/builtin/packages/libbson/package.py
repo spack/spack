@@ -30,8 +30,10 @@ class Libbson(AutotoolsPackage):
     parsing, and iterating BSON documents."""
 
     homepage = "https://github.com/mongodb/libbson"
-    url      = "https://github.com/mongodb/libbson/releases/download/1.6.3/libbson-1.6.3.tar.gz"
+    url      = "https://github.com/mongodb/libbson/releases/download/1.7.0/libbson-1.7.0.tar.gz"
 
+    version('1.8.0', '8b3c64570eec721f951831958e707a5a')
+    version('1.7.0', 'e196ad77dd8458ebc1166e6135030b63')
     version('1.6.3', 'b7bdb314197106fcfb4af105a582d343')
     version('1.6.2', 'c128a2ae3e35295e1176465be60f19db')
     version('1.6.1', '4d6779451bc5764a7d4982c01e7bd8c2')

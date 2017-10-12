@@ -36,6 +36,6 @@ class Libxrender(AutotoolsPackage):
 
     depends_on('libx11@1.6:')
 
-    depends_on('renderproto@0.9:', type='build')
+    depends_on('renderproto@0.9:', type=('build', 'link'))
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')

@@ -44,6 +44,15 @@ def parser():
     return parser
 
 
+@pytest.fixture()
+def noop_install(monkeypatch):
+
+    def noop(*args, **kwargs):
+        return
+
+    monkeypatch.setattr(spack.package.PackageBase, 'do_install', noop)
+
+
 def test_install_package_and_dependency(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
@@ -62,6 +71,33 @@ def test_install_package_and_dependency(
 
     s = Spec('libdwarf').concretized()
     assert not spack.repo.get(s).stage.created
+
+
+@pytest.mark.usefixtures('noop_install', 'builtin_mock', 'config')
+def test_install_runtests():
+    assert not spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
+
+    install('--test=root', 'dttop')
+    assert not spack.package_testing._test_all
+    assert spack.package_testing.packages_to_test == set(['dttop'])
+
+    spack.package_testing.clear()
+
+    install('--test=all', 'a')
+    assert spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
+
+    spack.package_testing.clear()
+
+    install('--run-tests', 'a')
+    assert spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
+
+    spack.package_testing.clear()
+
+    assert not spack.package_testing._test_all
+    assert not spack.package_testing.packages_to_test
 
 
 def test_install_package_already_installed(
@@ -114,8 +150,8 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     assert "'install'\nAFTER INSTALL" in out
 
 
-def _test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
-                                        config, install_mockery, capfd):
+def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
+                                       config, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         out = install('build-error', fail_on_error=False)
@@ -142,3 +178,18 @@ def test_install_with_source(
         spec.prefix.share, 'trivial-install-test-package', 'src')
     assert filecmp.cmp(os.path.join(mock_archive.path, 'configure'),
                        os.path.join(src, 'configure'))
+
+
+def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
+                           config, install_mockery, capfd):
+    """Make sure --show-log-on-error works."""
+    with capfd.disabled():
+        out = install('--show-log-on-error', 'build-error',
+                      fail_on_error=False)
+    assert isinstance(install.error, spack.build_environment.ChildError)
+    assert install.error.pkg.name == 'build-error'
+    assert 'Full build log:' in out
+
+    errors = [line for line in out.split('\n')
+              if 'configure: error: cannot run C compiled programs' in line]
+    assert len(errors) == 2

@@ -23,16 +23,27 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack.modules
-from six import iteritems
+import spack.modules.common
+import llnl.util.tty as tty
+
+try:
+    enabled = spack.modules.common.configuration['enable']
+except KeyError:
+    tty.debug('NO MODULE WRITTEN: list of enabled module files is empty')
+    enabled = []
 
 
-def post_install(spec):
-    for item, cls in iteritems(spack.modules.module_types):
-        generator = cls(spec)
-        generator.write()
+def _for_each_enabled(spec, method_name):
+    """Calls a method for each enabled module"""
+    for name in enabled:
+        generator = spack.modules.module_types[name](spec)
+        try:
+            getattr(generator, method_name)()
+        except RuntimeError as e:
+            msg = 'cannot perform the requested {0} operation on module files'
+            msg += ' [{1}]'
+            tty.warn(msg.format(method_name, str(e)))
 
 
-def post_uninstall(spec):
-    for item, cls in iteritems(spack.modules.module_types):
-        generator = cls(spec)
-        generator.remove()
+post_install = lambda spec: _for_each_enabled(spec, 'write')
+post_uninstall = lambda spec: _for_each_enabled(spec, 'remove')
