@@ -57,7 +57,7 @@ def fetch(parser, args):
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         if args.missing or args.dependencies:
-            for s in spec.traverse(deptype_query=all):
+            for s in spec.traverse():
                 package = spack.repo.get(s)
                 if args.missing and package.installed:
                     continue

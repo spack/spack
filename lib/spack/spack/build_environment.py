@@ -518,7 +518,7 @@ def setup_package(pkg, dirty):
     load_external_modules(pkg)
 
 
-def fork(pkg, function, dirty):
+def fork(pkg, function, dirty, fake):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -529,6 +529,7 @@ def fork(pkg, function, dirty):
             process.
         dirty (bool): If True, do NOT clean the environment before
             building.
+        fake (bool): If True, skip package setup b/c it's not a real build
 
     Usage::
 
@@ -556,7 +557,8 @@ def fork(pkg, function, dirty):
             sys.stdin = input_stream
 
         try:
-            setup_package(pkg, dirty=dirty)
+            if not fake:
+                setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
         except StopIteration as e:

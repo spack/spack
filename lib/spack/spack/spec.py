@@ -1250,7 +1250,7 @@ class Spec(object):
                 yield get_spec(dspec)
 
     def traverse_edges(self, visited=None, d=0, deptype='all',
-                       deptype_query=default_deptype, dep_spec=None, **kwargs):
+                       dep_spec=None, **kwargs):
         """Generic traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
 
@@ -1301,9 +1301,7 @@ class Spec(object):
         cover = kwargs.get('cover', 'nodes')
         direction = kwargs.get('direction', 'children')
         order = kwargs.get('order', 'pre')
-
         deptype = canonical_deptype(deptype)
-        deptype_query = canonical_deptype(deptype_query)
 
         # Make sure kwargs have legal values; raise ValueError if not.
         def validate(name, val, allowed_values):
@@ -1356,7 +1354,6 @@ class Spec(object):
                     visited,
                     d=(d + 1),
                     deptype=deptype,
-                    deptype_query=deptype_query,
                     dep_spec=dspec,
                     **kwargs)
                 for elt in children:
@@ -1797,7 +1794,7 @@ class Spec(object):
             changed = any(changes)
             force = True
 
-        for s in self.traverse(deptype_query=all):
+        for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
             # configuration is constant throughout a spack run, and
@@ -1887,7 +1884,7 @@ class Spec(object):
         Only for internal use -- client code should use "concretize"
         unless there is a need to force a spec to be concrete.
         """
-        for s in self.traverse(deptype_query=all):
+        for s in self.traverse():
             if (not value) and s.concrete and s.package.installed:
                 continue
             s._normal = value
@@ -1912,11 +1909,10 @@ class Spec(object):
            returns them.
         """
         copy = kwargs.get('copy', True)
-        deptype_query = kwargs.get('deptype_query', 'all')
 
         flat_deps = {}
         try:
-            deptree = self.traverse(root=False, deptype_query=deptype_query)
+            deptree = self.traverse(root=False)
             for spec in deptree:
 
                 if spec.name not in flat_deps:
@@ -2175,7 +2171,7 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
         # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies(copy=False, deptype_query=all)
+        spec_deps = self.flat_dependencies(copy=False)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
