@@ -1,0 +1,22 @@
+From b787a6413d6d54c46db476176656fec108c57527 Mon Sep 17 00:00:00 2001
+From: Jianwen WEI <weijianwen@gmail.com>
+Date: Wed, 5 Apr 2017 19:53:51 +0800
+Subject: [PATCH] Add install() for ps-lite in CMake.
+
+---
+ CMakeLists.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e5d13d0..d68491c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -63,3 +63,8 @@ set(pslite_LINKER_LIBS ${pslite_LINKER_LIBS_L} PARENT_SCOPE)
+ set(pslite_LINKER_LIBS_RELEASE ${pslite_LINKER_LIBS_L_RELEASE} PARENT_SCOPE)
+ set(pslite_LINKER_LIBS_DEBUG ${pslite_LINKER_LIBS_L_DEBUG} PARENT_SCOPE)
+ set(pslite_INCLUDE_DIR ${pslite_INCLUDE_DIR_L} PARENT_SCOPE)
++
++install(TARGETS pslite ARCHIVE DESTINATION lib)
++install(DIRECTORY include DESTINATION .)
++install(DIRECTORY docs DESTINATION .)
++install(DIRECTORY make DESTINATION .)
