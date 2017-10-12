@@ -291,7 +291,9 @@ class Boost(Package):
         if spec.satisfies('%clang'):
             options.extend(['pch=off'])
             if '+clanglibcpp' in spec:
-                options.extend(['toolset=clang','cxxflags="-stdlib=libc++"','linkflags="-stdlib=libc++"'])
+                options.extend(['toolset=clang',
+                                'cxxflags="-stdlib=libc++"',
+                                'linkflags="-stdlib=libc++"'])
 
         return threadingOpts
 
