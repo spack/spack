@@ -22,17 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
-class RBiocgenerics(RPackage):
-    """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
+class RFutileLogger(RPackage):
+    """Provides a simple yet powerful logging utility. Based loosely on log4j,
+       futile.logger takes advantage of R idioms to make logging a convenient
+       and easy to use replacement for cat and print statements."""
+
+    homepage = "https://cran.rstudio.com/web/packages/futile.logger/index.html"
+    url      = "https://cran.rstudio.com/src/contrib/futile.logger_1.4.3.tar.gz"
     list_url = homepage
 
-    version('0.22.1', '19759052960991f065e6542851d56efa')
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+    version('1.4.3', 'ba0e8d2dfb5a970b51c21907bbf8bfc2')
 
-    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
+    depends_on('r-lambda-r', type=('build', 'run'))
+    depends_on('r-futile-options', type=('build', 'run'))

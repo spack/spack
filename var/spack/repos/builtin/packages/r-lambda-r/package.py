@@ -22,17 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
-class RBiocgenerics(RPackage):
-    """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
-    list_url = homepage
+class RLambdaR(RPackage):
+    """A language extension to efficiently write functional programs in R.
+       Syntax extensions include multi-part function definitions, pattern
+       matching, guard statements, built-in (optional) type safety."""
 
-    version('0.22.1', '19759052960991f065e6542851d56efa')
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+    homepage = "https://cran.rstudio.com/web/packages/lambda.r/index.html"
+    url      = "https://cran.rstudio.com/src/contrib/lambda.r_1.2.tar.gz"
 
-    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
+    version('1.2', 'bda49898b85ad5902880a31f43b432e2')

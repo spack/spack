@@ -25,21 +25,28 @@
 from spack import *
 
 
-class RAffy(RPackage):
-    """The package contains functions for exploratory oligonucleotide array
-       analysis. The dependence on tkWidgets only concerns few convenience
-       functions. 'affy' is fully functional without it."""
+class RGenomicranges(RPackage):
+    """The ability to efficiently represent and manipulate genomic annotations
+       and alignments is playing a central role when it comes to analyzing
+       high-throughput sequencing data (a.k.a. NGS data). The GenomicRanges
+       package defines general purpose containers for storing and manipulating
+       genomic intervals and variables defined along a genome. More specialized
+       containers for representing and manipulating short alignments against a
+       reference genome, or a matrix-like summarization of an experiment, are
+       defined in the GenomicAlignments and SummarizedExperiment packages
+       respectively. Both packages build on top of the GenomicRanges
+       infrastructure."""
 
-    homepage = "https://bioconductor.org/packages/affy/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/affy_1.54.0.tar.gz"
+    homepage = "https://bioconductor.org/packages/GenomicRanges/"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/GenomicRanges_1.28.5.tar.gz"
     list_url = homepage
 
-    version('1.54.0', '84270de80ca61bb14b6127a6f5390100')
+    version('1.28.6', '84c5a40e846b35e98d019ca39783cfe6')
+    version('1.28.5', '5b11897331c4371e09133ea3be125c03')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-affyio', type=('build', 'run'))
-    depends_on('r-biocinstaller', type=('build', 'run'))
-    depends_on('r-preprocesscore', type=('build', 'run'))
-    depends_on('r-zlibbioc', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.54.0')
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-genomeinfodb', type=('build', 'run'))
+    depends_on('r-xvector', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.28.5:1.28.6')

@@ -22,17 +22,29 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
-class RBiocgenerics(RPackage):
-    """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
+class RRsamtools(RPackage):
+    """This package provides an interface to the 'samtools', 'bcftools', and
+       'tabix' utilities (see 'LICENCE') for manipulating SAM (Sequence
+       Alignment / Map), FASTA, binary variant call (BCF) and compressed
+       indexed tab-delimited (tabix) files."""
+
+    homepage = "https://bioconductor.org/packages/Rsamtools/"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/Rsamtools_1.28.0.tar.gz"
     list_url = homepage
 
-    version('0.22.1', '19759052960991f065e6542851d56efa')
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+    version('1.28.0', '313bceac68edec07f2ee466520461d35')
 
-    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
+    depends_on('r-genomeinfodb', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-biostrings', type=('build', 'run'))
+    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-xvector', type=('build', 'run'))
+    depends_on('r-zlibbioc', type=('build', 'run'))
+    depends_on('r-bitops', type=('build', 'run'))
+    depends_on('r-biocparallel', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.28.0')

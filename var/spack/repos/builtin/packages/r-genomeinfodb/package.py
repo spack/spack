@@ -22,17 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
-class RBiocgenerics(RPackage):
-    """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
+class RGenomeinfodb(RPackage):
+    """Contains data and functions that define and allow translation between
+       different chromosome sequence naming conventions (e.g., "chr1"
+       versus "1"), including a function that attempts to place sequence
+       names in their natural, rather than lexicographic, order."""
+
+    homepage = "https://bioconductor.org/packages/GenomeInfoDb/"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/GenomeInfoDb_1.12.2.tar.gz"
     list_url = homepage
 
-    version('0.22.1', '19759052960991f065e6542851d56efa')
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+    version('1.12.3', '035e120026904df964a79617a8b3e6c6')
+    version('1.12.2', '55b5399d9c8c58b093dfa5f69f8ce2cc')
 
-    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
+    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-rcurl', type=('build', 'run'))
+    depends_on('r-genomeinfodbdata', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.12.2:1.12.3')

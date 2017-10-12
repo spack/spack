@@ -22,17 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
-class RBiocgenerics(RPackage):
-    """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
-    list_url = homepage
+class PyMappy(PythonPackage):
+    """Mappy provides a convenient interface to minimap2."""
 
-    version('0.22.1', '19759052960991f065e6542851d56efa')
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+    homepage = "https://pypi.python.org/pypi/mappy"
+    url      = "https://pypi.io/packages/source/m/mappy/mappy-2.2.tar.gz"
 
-    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
+    version('2.2', 'dfc2aefe98376124beb81ce7dcefeccb')
+
+    depends_on('zlib')

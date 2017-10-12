@@ -22,17 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
-class RBiocgenerics(RPackage):
-    """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
+class RMatrixstats(RPackage):
+    """High-performing functions operating on rows and columns of matrices,
+       e.g. col / rowMedians(), col / rowRanks(), and col / rowSds(). Functions
+       optimized per data type and for subsetted calculations such that both
+       memory usage and processing time is minimized. There are also optimized
+       vector-based methods, e.g. binMeans(), madDiff() and
+       weightedMedian()."""
+
+    homepage = "https://cran.rstudio.com/web/packages/matrixStats/index.html"
+    url      = "https://cran.rstudio.com/src/contrib/matrixStats_0.52.2.tar.gz"
     list_url = homepage
 
-    version('0.22.1', '19759052960991f065e6542851d56efa')
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
-
-    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
+    version('0.52.2', '41b987d3ae96ee6895875c413adcba3c')

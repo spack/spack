@@ -22,17 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
-class RBiocgenerics(RPackage):
-    """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
-    list_url = homepage
+class Minimap2(MakefilePackage):
+    """Minimap2 is a versatile sequence alignment program that aligns DNA or
+       mRNA sequences against a large reference database."""
 
-    version('0.22.1', '19759052960991f065e6542851d56efa')
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+    homepage = "https://github.com/lh3/minimap2"
+    url      = "https://github.com/lh3/minimap2/releases/download/v2.2/minimap2-2.2.tar.bz2"
 
-    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
+    version('2.2', '5b68e094f4fa3dfbd9b37d5b654b7715')
+
+    depends_on('py-mappy', type=('build', 'run'))
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('minimap2', prefix.bin)

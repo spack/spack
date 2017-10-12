@@ -22,17 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
 from spack import *
 
 
-class RBiocgenerics(RPackage):
-    """S4 generic functions needed by many Bioconductor packages."""
-    homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
+class RBiocparallel(RPackage):
+    """This package provides modified versions and novel implementation of
+       functions for parallel evaluation, tailored to use with Bioconductor
+       objects."""
+
+    homepage = "https://bioconductor.org/packages/BiocParallel/"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/BiocParallel_1.10.1.tar.gz"
     list_url = homepage
 
-    version('0.22.1', '19759052960991f065e6542851d56efa')
-    version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+    version('1.10.1', '0b587026c0e2c5945be1d84deb12d7dd')
 
-    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
+    depends_on('r-futile-logger', type=('build', 'run'))
+    depends_on('r-snow', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.10.1')
