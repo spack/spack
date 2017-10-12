@@ -33,6 +33,7 @@ class RSummarizedexperiment(RPackage):
 
     homepage = "https://bioconductor.org/packages/SummarizedExperiment/"
     url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/SummarizedExperiment_1.6.5.tar.gz"
+    list_url = homepage
 
     version('1.6.5', '8f7d534e37cfda1e3e145ec7609c61f5')
 
@@ -43,3 +44,4 @@ class RSummarizedexperiment(RPackage):
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.6.5')
