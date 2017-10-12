@@ -158,6 +158,9 @@ dirty = _config.get('dirty', False)
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
 
+package_testing = spack.package_prefs.PackageTesting()
+
+
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
@@ -174,6 +177,7 @@ __all__ = []
 
 from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
+from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.qmake import QMakePackage
@@ -190,6 +194,7 @@ __all__ += [
     'on_package_attributes',
     'Package',
     'MakefilePackage',
+    'AspellDictPackage',
     'AutotoolsPackage',
     'CMakePackage',
     'QMakePackage',
@@ -204,8 +209,11 @@ __all__ += [
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
 
-from spack.spec import Spec, alldeps
-__all__ += ['Spec', 'alldeps']
+from spack.spec import Spec
+__all__ += ['Spec']
+
+from spack.dependency import all_deptypes
+__all__ += ['all_deptypes']
 
 from spack.multimethod import when
 __all__ += ['when']

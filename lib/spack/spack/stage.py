@@ -662,6 +662,9 @@ class DIYStage(object):
     def restage(self):
         tty.die("Cannot restage DIY stage.")
 
+    def create(self):
+        self.created = True
+
     def destroy(self):
         # No need to destroy DIY stage.
         pass
