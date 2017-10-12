@@ -147,7 +147,7 @@ class Boost(Package):
     depends_on('zlib', when='+iostreams')
 
     conflicts('+taggedlayout', when='+versionedlayout')
-    
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
