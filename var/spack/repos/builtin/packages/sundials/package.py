@@ -65,13 +65,10 @@ class Sundials(CMakePackage):
     )
 
     # Index type
-    variant(
-        'indextype',
-        default='int64_t',
-        description='index integer type',
-        values=('int32_t', 'int64_t'),
-        multi=False
-    )
+    # NOTE: Default to True until v3.0.0 is final as only 64bit integers are
+    # supported before v3.0.0.
+    variant('int64', default=True,
+            description='Use 64bit integers for indices')
 
     # Parallelism
     variant('mpi',     default=True,
@@ -138,13 +135,13 @@ class Sundials(CMakePackage):
     # Options added after v2.7.0
     conflicts('+cuda',          when='@:2.7.0')
     conflicts('+raja',          when='@:2.7.0')
-    conflicts('+indextype',     when='@:2.7.0')
+    conflicts('~int64',         when='@:2.7.0')
     conflicts('+examples-cuda', when='@:2.7.0')
     conflicts('+examples-raja', when='@:2.7.0')
 
     # External libraries incompatible with 64-bit indices
-    conflicts('+lapack', when='@3.0.0-beta-2: indextype=int64_t')
-    conflicts('+hypre',  when='+hypre@:2.6.1a indextype=int64_t')
+    conflicts('+lapack', when='@3.0.0-beta-2: +int64')
+    conflicts('+hypre',  when='+hypre@:2.6.1a +int64')
 
     # External libraries incompatible with single precision
     conflicts('+klu',   when='precision=single')
@@ -189,10 +186,10 @@ class Sundials(CMakePackage):
     depends_on('petsc+double', when='+petsc precision=double')
 
     # Require that external libraries built with the same index type
-    depends_on('hypre~int64', when='+hypre indextype=int32_t')
-    depends_on('hypre+int64', when='+hypre indextype=int64_t')
-    depends_on('petsc~int64', when='+petsc indextype=int32_t')
-    depends_on('petsc+int64', when='+petsc indextype=int64_t')
+    depends_on('hypre~int64', when='+hypre ~int64')
+    depends_on('hypre+int64', when='+hypre +int64')
+    depends_on('petsc~int64', when='+petsc ~int64')
+    depends_on('petsc+int64', when='+petsc +int64')
 
     # Require that PETSc is built with MPI
     depends_on('petsc+mpi', when='+petsc')
@@ -232,9 +229,10 @@ class Sundials(CMakePackage):
 
         # index type (after v2.7.0)
         if not spec.satisfies('@:2.7.0'):
-            args.extend([
-                '-DSUNDIALS_INDEX_TYPE=%s' % spec.variants['indextype'].value
-            ])
+            if '+int64' in spec:
+                args.extend(['-DSUNDIALS_INDEX_TYPE=int64_t'])
+            else:
+                args.extend(['-DSUNDIALS_INDEX_TYPE=int32_t'])
 
         # Fortran interface
         args.extend(['-DFCMIX_ENABLE=%s' % on_off('+fcmix')])
