@@ -47,3 +47,4 @@ class RBiomart(RPackage):
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.32.1')
