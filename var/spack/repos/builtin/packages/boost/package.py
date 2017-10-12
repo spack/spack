@@ -137,12 +137,16 @@ class Boost(Package):
             description="Build the Boost Graph library")
     variant('taggedlayout', default=False,
             description="Augment library names with build options")
+    variant('versionedlayout', default=False,
+            description="Augment library layout with versioned subdirs")
 
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
     depends_on('zlib', when='+iostreams')
+
+    conflicts('+taggedlayout', when='+versionedlayout')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
@@ -266,6 +270,8 @@ class Boost(Package):
 
         if '+taggedlayout' in spec:
             layout = 'tagged'
+        elif '+versionedlayout' in spec:
+            layout = 'versioned'
         else:
             if len(threadingOpts) > 1:
                 raise RuntimeError("Cannot build both single and " +

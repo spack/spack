@@ -40,7 +40,7 @@ class Xsdk(Package):
     url      = 'https://bitbucket.org/saws/saws/get/master.tar.gz'
 
     version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
-    version('xsdk-0.3.0-rc1', 'a52dc710c744afa0b71429b8ec9425bc',preferred=True)
+    version('0.3.0-rc1', 'a52dc710c744afa0b71429b8ec9425bc',preferred=True)
     version('xsdk-0.2.0', 'a52dc710c744afa0b71429b8ec9425bc')
 
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
@@ -57,6 +57,8 @@ class Xsdk(Package):
     depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
                when='@develop')
 
+    depends_on('petsc@3.8.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
+               when='@0.3.0-rc1')
     depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
                when='@xsdk-0.2.0')
     depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',

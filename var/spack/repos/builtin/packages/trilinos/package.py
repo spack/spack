@@ -23,9 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.operating_systems.mac_os import macOS_version
 import os
 import sys
-import platform
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -586,7 +586,7 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_FEI=OFF'
             ])
 
-        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+        if macOS_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:
