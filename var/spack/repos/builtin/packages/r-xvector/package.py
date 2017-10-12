@@ -39,3 +39,4 @@ class RXvector(RPackage):
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@0.16.0')
