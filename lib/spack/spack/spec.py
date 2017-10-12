@@ -1250,7 +1250,7 @@ class Spec(object):
                 yield get_spec(dspec)
 
     def traverse_edges(self, visited=None, d=0, deptype='all',
-                       deptype_query=default_deptype, dep_spec=None, **kwargs):
+                       dep_spec=None, **kwargs):
         """Generic traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
 
@@ -1301,9 +1301,7 @@ class Spec(object):
         cover = kwargs.get('cover', 'nodes')
         direction = kwargs.get('direction', 'children')
         order = kwargs.get('order', 'pre')
-
         deptype = canonical_deptype(deptype)
-        deptype_query = canonical_deptype(deptype_query)
 
         # Make sure kwargs have legal values; raise ValueError if not.
         def validate(name, val, allowed_values):
@@ -1356,7 +1354,6 @@ class Spec(object):
                     visited,
                     d=(d + 1),
                     deptype=deptype,
-                    deptype_query=deptype_query,
                     dep_spec=dspec,
                     **kwargs)
                 for elt in children:
@@ -1612,6 +1609,10 @@ class Spec(object):
         if self.name in visited:
             return False
 
+        if self.concrete:
+            visited.add(self.name)
+            return False
+
         changed = False
 
         # Concretize deps first -- this is a bottom-up process.
@@ -1793,7 +1794,7 @@ class Spec(object):
             changed = any(changes)
             force = True
 
-        for s in self.traverse(deptype_query=all):
+        for s in self.traverse():
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
             # configuration is constant throughout a spack run, and
@@ -1805,6 +1806,9 @@ class Spec(object):
             if s.namespace is None:
                 s.namespace = spack.repo.repo_for_pkg(s.name).namespace
 
+            if s.concrete:
+                continue
+
             # Add any patches from the package to the spec.
             patches = []
             for cond, patch_list in s.package_class.patches.items():
@@ -1812,16 +1816,21 @@ class Spec(object):
                     for patch in patch_list:
                         patches.append(patch.sha256)
             if patches:
-                # Special-case: keeps variant values unique but ordered.
-                s.variants['patches'] = MultiValuedVariant('patches', ())
-                mvar = s.variants['patches']
-                mvar._value = mvar._original_value = tuple(dedupe(patches))
+                mvar = s.variants.setdefault(
+                    'patches', MultiValuedVariant('patches', ())
+                )
+                mvar.value = patches
+                # FIXME: Monkey patches mvar to store patches order
+                mvar._patches_in_order_of_appearance = patches
 
         # Apply patches required on dependencies by depends_on(..., patch=...)
         for dspec in self.traverse_edges(deptype=all,
                                          cover='edges', root=False):
             pkg_deps = dspec.parent.package_class.dependencies
             if dspec.spec.name not in pkg_deps:
+                continue
+
+            if dspec.spec.concrete:
                 continue
 
             patches = []
@@ -1832,15 +1841,13 @@ class Spec(object):
                             for patch in patch_list:
                                 patches.append(patch.sha256)
             if patches:
-                # note that we use a special multi-valued variant and
-                # keep the patches ordered.
-                if 'patches' not in dspec.spec.variants:
-                    mvar = MultiValuedVariant('patches', ())
-                    dspec.spec.variants['patches'] = mvar
-                else:
-                    mvar = dspec.spec.variants['patches']
-                mvar._value = mvar._original_value = tuple(
-                    dedupe(list(mvar._value) + patches))
+                mvar = dspec.spec.variants.setdefault(
+                    'patches', MultiValuedVariant('patches', ())
+                )
+                mvar.value = mvar.value + tuple(patches)
+                # FIXME: Monkey patches mvar to store patches order
+                l = getattr(mvar, '_patches_in_order_of_appearance', [])
+                mvar._patches_in_order_of_appearance = dedupe(l + patches)
 
         for s in self.traverse():
             if s.external_module:
@@ -1877,7 +1884,9 @@ class Spec(object):
         Only for internal use -- client code should use "concretize"
         unless there is a need to force a spec to be concrete.
         """
-        for s in self.traverse(deptype_query=all):
+        for s in self.traverse():
+            if (not value) and s.concrete and s.package.installed:
+                continue
             s._normal = value
             s._concrete = value
 
@@ -1900,11 +1909,10 @@ class Spec(object):
            returns them.
         """
         copy = kwargs.get('copy', True)
-        deptype_query = kwargs.get('deptype_query', 'all')
 
         flat_deps = {}
         try:
-            deptree = self.traverse(root=False, deptype_query=deptype_query)
+            deptree = self.traverse(root=False)
             for spec in deptree:
 
                 if spec.name not in flat_deps:
@@ -2067,6 +2075,9 @@ class Spec(object):
         # caller, it's a copy from _evaluate_dependency_conditions. If it
         # comes from a vdep, it's a defensive copy from _find_provider.
         if dep.name not in spec_deps:
+            if self.concrete:
+                return False
+
             spec_deps[dep.name] = dep
             changed = True
         else:
@@ -2160,7 +2171,7 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_or_raise()
         # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies(copy=False, deptype_query=all)
+        spec_deps = self.flat_dependencies(copy=False)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
@@ -2523,7 +2534,11 @@ class Spec(object):
             return []
 
         patches = []
-        for sha256 in self.variants['patches'].value:
+
+        # FIXME: The private attribute below is attached after
+        # FIXME: concretization to store the order of patches somewhere.
+        # FIXME: Needs to be refactored in a cleaner way.
+        for sha256 in self.variants['patches']._patches_in_order_of_appearance:
             patch = self.package.lookup_patch(sha256)
             if patch:
                 patches.append(patch)
@@ -2531,8 +2546,9 @@ class Spec(object):
 
             # if not found in this package, check immediate dependents
             # for dependency patches
-            for dep in self._dependents:
-                patch = dep.parent.package.lookup_patch(sha256)
+            for dep_spec in self._dependents.values():
+                patch = dep_spec.parent.package.lookup_patch(sha256)
+
                 if patch:
                     patches.append(patch)
 
@@ -2821,9 +2837,10 @@ class Spec(object):
         return colorize_spec(self)
 
     def format(self, format_string='$_$@$%@+$+$=', **kwargs):
-        """
-        Prints out particular pieces of a spec, depending on what is
-        in the format string.  The format strings you can provide are::
+        """Prints out particular pieces of a spec, depending on what is
+        in the format string.
+
+        The format strings you can provide are::
 
             $_   Package name
             $.   Full package name (with namespace)
@@ -2865,13 +2882,36 @@ class Spec(object):
 
         Anything else is copied verbatim into the output stream.
 
-        *Example:*  ``$_$@$+`` translates to the name, version, and options
-        of the package, but no dependencies, arch, or compiler.
+        Args:
+            format_string (str): string containing the format to be expanded
+
+            **kwargs (dict): the following list of keywords is supported
+
+                - color (bool): True if returned string is colored
+
+                - transform (dict): maps full-string formats to a callable \
+                that accepts a string and returns another one
+
+        Examples:
+
+            The following line:
+
+            .. code-block:: python
+
+                s = spec.format('$_$@$+')
+
+            translates to the name, version, and options of the package, but no
+            dependencies, arch, or compiler.
 
         TODO: allow, e.g., ``$6#`` to customize short hash length
         TODO: allow, e.g., ``$//`` for full hash.
         """
         color = kwargs.get('color', False)
+
+        # Dictionary of transformations for named tokens
+        token_transforms = {}
+        token_transforms.update(kwargs.get('transform', {}))
+
         length = len(format_string)
         out = StringIO()
         named = escape = compiler = False
@@ -2948,39 +2988,55 @@ class Spec(object):
                     named_str += c
                     continue
                 named_str = named_str.upper()
+
+                # Retrieve the token transformation from the dictionary.
+                #
+                # The default behavior is to leave the string unchanged
+                # (`lambda x: x` is the identity function)
+                token_transform = token_transforms.get(named_str, lambda x: x)
+
                 if named_str == 'PACKAGE':
                     name = self.name if self.name else ''
-                    write(fmt % self.name, '@')
+                    write(fmt % token_transform(name), '@')
                 if named_str == 'VERSION':
                     if self.versions and self.versions != _any_version:
-                        write(fmt % str(self.versions), '@')
+                        write(fmt % token_transform(str(self.versions)), '@')
                 elif named_str == 'COMPILER':
                     if self.compiler:
-                        write(fmt % self.compiler, '%')
+                        write(fmt % token_transform(self.compiler), '%')
                 elif named_str == 'COMPILERNAME':
                     if self.compiler:
-                        write(fmt % self.compiler.name, '%')
+                        write(fmt % token_transform(self.compiler.name), '%')
                 elif named_str in ['COMPILERVER', 'COMPILERVERSION']:
                     if self.compiler:
-                        write(fmt % self.compiler.versions, '%')
+                        write(
+                            fmt % token_transform(self.compiler.versions),
+                            '%'
+                        )
                 elif named_str == 'COMPILERFLAGS':
                     if self.compiler:
-                        write(fmt % str(self.compiler_flags), '%')
+                        write(
+                            fmt % token_transform(str(self.compiler_flags)),
+                            '%'
+                        )
                 elif named_str == 'OPTIONS':
                     if self.variants:
-                        write(fmt % str(self.variants), '+')
+                        write(fmt % token_transform(str(self.variants)), '+')
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture and str(self.architecture):
-                        write(fmt % str(self.architecture), '=')
+                        write(
+                            fmt % token_transform(str(self.architecture)),
+                            '='
+                        )
                 elif named_str == 'SHA1':
                     if self.dependencies:
-                        out.write(fmt % str(self.dag_hash(7)))
+                        out.write(fmt % token_transform(str(self.dag_hash(7))))
                 elif named_str == 'SPACK_ROOT':
-                    out.write(fmt % spack.prefix)
+                    out.write(fmt % token_transform(spack.prefix))
                 elif named_str == 'SPACK_INSTALL':
-                    out.write(fmt % spack.store.root)
+                    out.write(fmt % token_transform(spack.store.root))
                 elif named_str == 'PREFIX':
-                    out.write(fmt % self.prefix)
+                    out.write(fmt % token_transform(self.prefix))
                 elif named_str.startswith('HASH'):
                     if named_str.startswith('HASH:'):
                         _, hashlen = named_str.split(':')

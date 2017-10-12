@@ -34,6 +34,7 @@ class Ninja(Package):
     homepage = "https://ninja-build.org/"
     url      = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
 
+    version('1.8.2', '5fdb04461cc7f5d02536b3bfc0300166')
     version('1.7.2', '7b482218757acbaeac4d4d54a3cd94e1')
     version('1.6.0', '254133059f2da79d8727f654d7198f43')
 

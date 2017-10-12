@@ -167,12 +167,6 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
-    for mod in compiler.modules:
-        # Fixes issue https://github.com/LLNL/spack/issues/3153
-        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-            load_module("cce")
-        load_module(mod)
-
     compiler.setup_custom_environment(pkg, env)
 
     return env
@@ -191,9 +185,9 @@ def set_build_environment_variables(pkg, env, dirty):
         dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
-    build_deps      = pkg.spec.dependencies(deptype=('build', 'test'))
-    link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
-    build_link_deps = list(build_deps) + list(link_deps)
+    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
 
     build_prefixes      = [dep.prefix for dep in build_deps]
@@ -311,9 +305,6 @@ def set_build_environment_variables(pkg, env, dirty):
             pcdir = join_path(prefix, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
-
-    if pkg.architecture.target.module_name:
-        load_module(pkg.architecture.target.module_name)
 
     return env
 
@@ -484,7 +475,7 @@ def setup_package(pkg, dirty):
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
-    load_external_modules(pkg)
+
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
     for dspec in pkg.spec.traverse(order='post', root=False, deptype='build'):
@@ -511,8 +502,23 @@ def setup_package(pkg, dirty):
     validate(spack_env, tty.warn)
     spack_env.apply_modifications()
 
+    # All module loads that otherwise would belong in previous functions
+    # have to occur after the spack_env object has its modifications applied.
+    # Otherwise the environment modifications could undo module changes, such
+    # as unsetting LD_LIBRARY_PATH after a module changes it.
+    for mod in pkg.compiler.modules:
+        # Fixes issue https://github.com/LLNL/spack/issues/3153
+        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+            load_module("cce")
+        load_module(mod)
 
-def fork(pkg, function, dirty):
+    if pkg.architecture.target.module_name:
+        load_module(pkg.architecture.target.module_name)
+
+    load_external_modules(pkg)
+
+
+def fork(pkg, function, dirty, fake):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -523,6 +529,7 @@ def fork(pkg, function, dirty):
             process.
         dirty (bool): If True, do NOT clean the environment before
             building.
+        fake (bool): If True, skip package setup b/c it's not a real build
 
     Usage::
 
@@ -550,7 +557,8 @@ def fork(pkg, function, dirty):
             sys.stdin = input_stream
 
         try:
-            setup_package(pkg, dirty=dirty)
+            if not fake:
+                setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
         except StopIteration as e:
