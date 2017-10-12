@@ -137,7 +137,8 @@ class Boost(Package):
             description="Build the Boost Graph library")
     variant('taggedlayout', default=False,
             description="Augment library names with build options")
-
+    variant('versionedlayout', default=False,
+            description="Augment library layout to build into sub directories with version numbers")
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
@@ -265,7 +266,12 @@ class Boost(Package):
                                "multithreaded} must be enabled")
 
         if '+taggedlayout' in spec:
+            if '+versionedlayout' in spec:
+                raise RuntimeError("You cannot specify both versioned 
+                                   "and tagged layouts")
             layout = 'tagged'
+        elif '+versionedlayout' in spec:
+            layout = 'versioned'
         else:
             if len(threadingOpts) > 1:
                 raise RuntimeError("Cannot build both single and " +
