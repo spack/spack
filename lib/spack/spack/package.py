@@ -1320,19 +1320,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # First, install dependencies recursively.
         if install_deps:
             tty.debug('Installing {0} dependencies'.format(self.name))
-            for dep in self.spec.dependencies():
+            for dep in self.spec.traverse(order='post', root=False):
                 dep.package.do_install(
+                    install_deps=False,
+                    explicit=False,
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
                     install_source=install_source,
-                    install_deps=install_deps,
                     fake=fake,
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
                     dirty=dirty,
-                    **kwargs
-                )
+                    **kwargs)
 
         tty.msg('Installing %s' % self.name)
 
