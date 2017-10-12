@@ -42,3 +42,4 @@ class RAffy(RPackage):
     depends_on('r-biocinstaller', type=('build', 'run'))
     depends_on('r-preprocesscore', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.54.0')
