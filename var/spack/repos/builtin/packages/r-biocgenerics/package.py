@@ -31,4 +31,8 @@ class RBiocgenerics(RPackage):
     homepage = "https://www.bioconductor.org/packages/BiocGenerics/"
     url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.22.0.tar.gz"
     list_url = homepage
+
+    version('0.22.1', '19759052960991f065e6542851d56efa')
     version('0.22.0', 'ef910f2011c0652e1f5fdf3b14219490')
+
+    depends_on('r@3.4.0:3.4.9', when='@0.22.0:0.22.1')
