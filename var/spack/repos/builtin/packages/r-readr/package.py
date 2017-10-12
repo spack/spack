@@ -40,3 +40,4 @@ class RReadr(RPackage):
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-hms', type=('build', 'run'))
     depends_on('r-r6', type=('build', 'run'))
+    depends_on('r-bh', type=('build', 'run'))
