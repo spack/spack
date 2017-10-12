@@ -46,7 +46,7 @@ class Xsdk(Package):
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
     depends_on('hypre@develop~internal-superlu', when='@develop')
 
-    depends_on('mfem@3.3.1-rc1', when='@xsdk-0.3.0')
+    depends_on('mfem@3.3.1-rc1', when='@0.3.0-rc1')
     depends_on('mfem@3.3.1-rc1', when='@develop')
 
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
