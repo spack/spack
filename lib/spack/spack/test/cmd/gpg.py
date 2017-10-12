@@ -98,6 +98,7 @@ def test_gpg(gpg, tmpdir, testing_gpg_directory):
 
     # List the keys.
     # TODO: Test the output here.
+    gpg('list')
     gpg('list', '--trusted')
     gpg('list', '--signing')
 
