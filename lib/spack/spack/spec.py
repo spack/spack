@@ -876,16 +876,11 @@ class SpecBuildInterface(ObjectWrapper):
 
 
 class DependencyConstraints(object):
-    def __init__(self, spec=None, copy=False):
-        if copy:
-            resolve = lambda x: x.copy(deps=False)
-        else:
-            resolve = lambda x: x
-
+    def __init__(self, spec=None):
         context = {}
         if spec:
             for dep in spec.visible_dependencies():
-                context[dep.name] = resolve(dep)
+                context[dep.name] = dep
         self.contexts = [context]
 
     def copy(self):
@@ -1839,8 +1834,9 @@ class Spec(object):
         changed = True
         force = False
 
-        dep_constraints = DependencyConstraints(self, copy=True)
-        user_specified_deps = set(self.traverse(root=False))
+        dep_constraints = DependencyConstraints(self)
+        user_specified_deps = set(
+            x.copy(deps=False) for x in self.traverse(root=False))
         self._dependencies.clear()
         while changed:
             changes = (self._normalize(dep_constraints, force),
@@ -2209,7 +2205,7 @@ class Spec(object):
         return changed
 
     def normalize(self):
-        dep_constraints = DependencyConstraints(self, copy=True)
+        dep_constraints = DependencyConstraints(self)
         self._dependencies.clear()
         self._normalize(dep_constraints, force=True)
         # Don't check if all user-specified deps are satisfied here because
