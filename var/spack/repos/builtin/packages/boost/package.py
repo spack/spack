@@ -139,6 +139,7 @@ class Boost(Package):
             description="Augment library names with build options")
     variant('versionedlayout', default=False,
             description="Augment library layout with versioned subdirs")
+
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
