@@ -59,7 +59,7 @@ class Sundials(CMakePackage):
     variant(
         'precision',
         default='double',
-        description='''real type precision''',
+        description='real type precision',
         values=('single', 'double', 'extended'),
         multi=False
     )
@@ -68,7 +68,7 @@ class Sundials(CMakePackage):
     variant(
         'indextype',
         default='int64_t',
-        description='''index integer type''',
+        description='index integer type',
         values=('int32_t', 'int64_t'),
         multi=False
     )
