@@ -23,26 +23,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.operating_systems.mac_os import macOS_version
-import sys
 
 
-class Bison(AutotoolsPackage):
-    """Bison is a general-purpose parser generator that converts
-    an annotated context-free grammar into a deterministic LR or
-    generalized LR (GLR) parser employing LALR(1) parser tables."""
+class PyMappy(PythonPackage):
+    """Mappy provides a convenient interface to minimap2."""
 
-    homepage = "http://www.gnu.org/software/bison/"
-    url      = "http://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.gz"
+    homepage = "https://pypi.python.org/pypi/mappy"
+    url      = "https://pypi.io/packages/source/m/mappy/mappy-2.2.tar.gz"
 
-    version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
-    version('2.7',   'ded660799e76fb1667d594de1f7a0da9')
+    version('2.2', 'dfc2aefe98376124beb81ce7dcefeccb')
 
-    depends_on('m4', type=('build', 'run'))
-
-    patch('pgi.patch', when='@3.0.4')
-
-    if sys.platform == 'darwin' and macOS_version() >= Version('10.13'):
-        patch('secure_snprintf.patch', level=0, when='@3.0.4')
-
-    build_directory = 'spack-build'
+    depends_on('zlib')

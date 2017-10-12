@@ -23,26 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.operating_systems.mac_os import macOS_version
-import sys
 
 
-class Bison(AutotoolsPackage):
-    """Bison is a general-purpose parser generator that converts
-    an annotated context-free grammar into a deterministic LR or
-    generalized LR (GLR) parser employing LALR(1) parser tables."""
+class Libpcap(AutotoolsPackage):
+    "libpcap is a portable library in C/C++ for packet capture"
+    homepage = "http://www.tcpdump.org/"
+    list_url = "http://www.tcpdump.org/release/"
+    url      = "http://www.tcpdump.org/release/libpcap-1.8.1.tar.gz"
 
-    homepage = "http://www.gnu.org/software/bison/"
-    url      = "http://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.gz"
-
-    version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
-    version('2.7',   'ded660799e76fb1667d594de1f7a0da9')
-
-    depends_on('m4', type=('build', 'run'))
-
-    patch('pgi.patch', when='@3.0.4')
-
-    if sys.platform == 'darwin' and macOS_version() >= Version('10.13'):
-        patch('secure_snprintf.patch', level=0, when='@3.0.4')
-
-    build_directory = 'spack-build'
+    version('1.8.1', '3d48f9cd171ff12b0efd9134b52f1447')
