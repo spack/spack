@@ -61,7 +61,11 @@ class PyEspressopp(CMakePackage):
     depends_on("doxygen", when="+dg", type='build')
 
     def cmake_args(self):
-        return ['-DEXTERNAL_MPI4PY=ON', '-DEXTERNAL_BOOST=ON']
+        return [
+            '-DEXTERNAL_MPI4PY=ON',
+            '-DEXTERNAL_BOOST=ON',
+            '-DWITH_RC_FILES=OFF'
+        ]
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
