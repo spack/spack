@@ -42,3 +42,4 @@ class RSimpleaffy(RPackage):
     depends_on('r-affy', type=('build', 'run'))
     depends_on('r-genefilter', type=('build', 'run'))
     depends_on('r-gcrma', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.52.0')
