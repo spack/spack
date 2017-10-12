@@ -158,7 +158,7 @@ def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
     return nrpaths, ndeps, id
 
 
-def modify_macho_object(path_name, old_dir, new_dir, relative):
+def modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir, relative):
     """
     Modify MachO binary path_name by replacing old_dir with new_dir
     or the relative path to spack install root.
@@ -177,7 +177,7 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
     nrpaths = []
     ndeps = []
     if relative:
-        nrpaths, ndeps, id = macho_make_paths_relative(path_name,
+        nrpaths, ndeps, id = macho_make_paths_relative(orig_path_name,
                                                        old_dir, rpaths,
                                                        deps, idpath)
     else:
@@ -185,13 +185,13 @@ def modify_macho_object(path_name, old_dir, new_dir, relative):
                                                  deps, idpath)
     install_name_tool = Executable('install_name_tool')
     if id:
-        install_name_tool('-id', id, path_name, output=str, err=str)
+        install_name_tool('-id', id, cur_path_name, output=str, err=str)
 
     for orig, new in zip(deps, ndeps):
-        install_name_tool('-change', orig, new, path_name)
+        install_name_tool('-change', orig, new, cur_path_name)
 
     for orig, new in zip(rpaths, nrpaths):
-        install_name_tool('-rpath', orig, new, path_name)
+        install_name_tool('-rpath', orig, new, cur_path_name)
     return
 
 
@@ -262,7 +262,8 @@ def make_binary_relative(cur_path_name, orig_path_name, old_dir):
     """
     if platform.system() == 'Darwin':
         new_dir = ''
-        modify_macho_object(path_name, old_dir, new_dir, relative=True)
+        modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir,
+                            relative=True)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(cur_path_name)
         new_rpaths = get_relative_rpaths(orig_path_name, old_dir, orig_rpaths)
