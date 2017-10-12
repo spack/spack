@@ -256,7 +256,7 @@ def relocate_binary(path_name, old_dir, new_dir):
         tty.die("Relocation not implemented for %s" % platform.system())
 
 
-def make_binary_relative(path_name, old_dir):
+def make_binary_relative(cur_path_name, orig_path_name, old_dir):
     """
     Make RPATHs relative to old_dir in given elf or mach-o file path_name
     """
@@ -264,9 +264,9 @@ def make_binary_relative(path_name, old_dir):
         new_dir = ''
         modify_macho_object(path_name, old_dir, new_dir, relative=True)
     elif platform.system() == 'Linux':
-        orig_rpaths = get_existing_elf_rpaths(path_name)
-        new_rpaths = get_relative_rpaths(path_name, old_dir, orig_rpaths)
-        modify_elf_object(path_name, orig_rpaths, new_rpaths)
+        orig_rpaths = get_existing_elf_rpaths(cur_path_name)
+        new_rpaths = get_relative_rpaths(orig_path_name, old_dir, orig_rpaths)
+        modify_elf_object(cur_path_name, orig_rpaths, new_rpaths)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
