@@ -11,6 +11,8 @@ class Totalview(Package):
     licensed = True
     only_binary = True
 
+    version('2017.2.11')
+
     version('8.15.10-2')
 
     def install(self, spec, prefix):
