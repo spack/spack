@@ -146,8 +146,8 @@ class DefaultConcretizer(object):
             return False
 
         # List of versions we could consider, in sorted order
-        pkg = spec.package
-        usable = [v for v in pkg.versions
+        pkg_versions = spec.package_class.versions
+        usable = [v for v in pkg_versions
                   if any(v.satisfies(sv) for sv in spec.versions)]
 
         yaml_prefs = PackagePrefs(spec.name, 'version')
@@ -165,7 +165,7 @@ class DefaultConcretizer(object):
             -yaml_prefs(v),
 
             # The preferred=True flag (packages or packages.yaml or both?)
-            pkg.versions.get(Version(v)).get('preferred', False),
+            pkg_versions.get(Version(v)).get('preferred', False),
 
             # ------- Regular case: use latest non-develop version by default.
             # Avoid @develop version, which would otherwise be the "largest"
