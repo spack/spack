@@ -32,6 +32,7 @@
 #
 from spack import *
 import os
+from contextlib import contextmanager
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -186,7 +187,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def filter_config_dot_pm(self):
         """Run after install so that Config.pm records the compiler that Spack
         built the package with.  If this isn't done, $Config{cc} will
-        be set to Spack's cc wrapper script.
+        be set to Spack's cc wrapper script.  These files are read-only, which
+        frustrates filter_file on some filesystems (NFSv4), so make them
+        temporarily writable.
         """
 
         kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
@@ -196,18 +199,28 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
                              'print is_loaded(Config)', output=str)
 
-        match = 'cc *=>.*'
-        substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
-        filter_file(match, substitute, config_dot_pm, **kwargs)
+        with self.make_tmp_writable(config_dot_pm):
+            match = 'cc *=>.*'
+            substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+            filter_file(match, substitute, config_dot_pm, **kwargs)
 
         # And the path Config_heavy.pl
         d = os.path.dirname(config_dot_pm)
         config_heavy = join_path(d, 'Config_heavy.pl')
 
-        match = '^cc=.*'
-        substitute = "cc='{cc}'".format(cc=self.compiler.cc)
-        filter_file(match, substitute, config_heavy, **kwargs)
+        with self.make_tmp_writable(config_heavy):
+            match = '^cc=.*'
+            substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+            filter_file(match, substitute, config_heavy, **kwargs)
 
-        match = '^ld=.*'
-        substitute = "ld='{ld}'".format(ld=self.compiler.cc)
-        filter_file(match, substitute, config_heavy, **kwargs)
+            match = '^ld=.*'
+            substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+            filter_file(match, substitute, config_heavy, **kwargs)
+
+    @contextmanager
+    def make_tmp_writable(self, path):
+        """Temporarily make a file writable, then reset"""
+        perm = os.stat(path).st_mode
+        os.chmod(path, perm | 0o222)
+        yield
+        os.chmod(path, perm)
