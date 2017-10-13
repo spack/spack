@@ -199,7 +199,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
                              'print is_loaded(Config)', output=str)
 
-        with self.make_tmp_writable(config_dot_pm):
+        with self.make_briefly_writable(config_dot_pm):
             match = 'cc *=>.*'
             substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
             filter_file(match, substitute, config_dot_pm, **kwargs)
@@ -208,7 +208,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         d = os.path.dirname(config_dot_pm)
         config_heavy = join_path(d, 'Config_heavy.pl')
 
-        with self.make_tmp_writable(config_heavy):
+        with self.make_briefly_writable(config_heavy):
             match = '^cc=.*'
             substitute = "cc='{cc}'".format(cc=self.compiler.cc)
             filter_file(match, substitute, config_heavy, **kwargs)
@@ -218,7 +218,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             filter_file(match, substitute, config_heavy, **kwargs)
 
     @contextmanager
-    def make_tmp_writable(self, path):
+    def make_briefly_writable(self, path):
         """Temporarily make a file writable, then reset"""
         perm = os.stat(path).st_mode
         os.chmod(path, perm | 0o222)
