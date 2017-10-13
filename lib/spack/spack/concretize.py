@@ -202,30 +202,30 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
-    def _concretize_arch_component(self, platform, spec):
-        """ Concretizes the specified component of the architecture in a
-        spec.
+    def synchronize_os_and_target(self, platform, spec):
+        """Synchronize operating system and target in an arch spec.
 
-        On heterogeneous architectures it will look and see if the first
-        component will match the second component ie if the os is for the
-        front end then it will be sure to match the target with the front end.
-        On architectures with one single architecture it should work the same
-        since both front end and back end are equivalent.
+        Heterogeneous architectures have different front end and back end
+        targets and operating systems. This function makes sure so that
+        the operating system and targets match their respective 'end'. In
+        other words, it doesn't make much sense to have a front end os with
+        a back end target, so we sync the two components to match.
+
 
         Args:
-            component (str):      which component to check and set in arch spec
             platform  (Platform): platform object to help set the attributes of
                                   architecture
             spec      (Spec):     spec object to set the architecture on.
 
         Returns:
-            Returns True if any of the components were set. If all components
-            are present then return False. True represents a change happened
-            and False represents no change."""
+            Returns True if either target or os were set. If both the target
+            and os are present then return False."""
+
         if spec.architecture.concrete:
             return False
 
         architecture = spec.architecture
+        copy = architecture.copy()
 
         frontend_os = str(platform.operating_system("fe"))
         frontend_target = str(platform.target("fe"))
@@ -233,9 +233,11 @@ class DefaultConcretizer(object):
         backend_target = str(platform.target("be"))
 
         # set any frontend architecture if os or target are frontend
-        if architecture.target == frontend_target:
+        if (architecture.target == frontend_target
+                and not architecture.platform_os):
             architecture.platform_os = frontend_os
-        if architecture.platform_os == frontend_os:
+        if (not architecture.target
+                and architecture.platform_os  == frontend_os):
             architecture.target = frontend_target
 
         # set any backend architecture if os or target are backend
@@ -244,7 +246,7 @@ class DefaultConcretizer(object):
         if not architecture.platform_os:
             architecture.platform_os = backend_os
 
-        return True  # spec changed
+        return copy == architecture  # spec changed
 
     def concretize_architecture(self, spec):
         """If the spec's architecture is already concrete then return False.
@@ -273,14 +275,13 @@ class DefaultConcretizer(object):
 
         platform = spack.architecture.get_platform(spec.architecture.platform)
 
-        spec_changed = self._concretize_arch_component(platform, spec)
+        spec_changed = self.synchronize_os_and_target(platform, spec)
 
         if not spec.architecture.concrete:
-            if sys_arch == front_arch:
-                insufficient_arch = [sys_arch]
-            else:
-                insufficient_arch = [sys_arch, front_arch]
-            raise InsufficientArchitectureInfoError(spec, insufficient_arch)
+            arch_set = set([sys_arch, front_arch, other_arch])
+            source_archs = sorted(x for x in arch_set if x)
+            raise InsufficientArchitectureInfoError(spec, source_archs)
+
         return spec_changed
 
     def concretize_variants(self, spec):

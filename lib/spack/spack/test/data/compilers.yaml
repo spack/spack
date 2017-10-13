@@ -114,12 +114,3 @@ compilers:
       cflags: -O3
       cxxflags: -O3
     modules: 'None'
-- compiler:
-    spec: gcc@4.7.2
-    operating_system: debian6
-    paths:
-      cc: /path/to/gcc-5
-      cxx: /path/to/g++-5
-      f77: None
-      fc: None
-    modules: 'None'
