@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Espressopp(CMakePackage):
+class PyEspressopp(CMakePackage):
     """ESPResSo++ is an extensible, flexible, fast and parallel simulation
        software for soft matter research. It is a highly versatile software
        package for the scientific simulation and analysis of coarse-grained
@@ -61,7 +61,11 @@ class Espressopp(CMakePackage):
     depends_on("doxygen", when="+dg", type='build')
 
     def cmake_args(self):
-        return ['-DEXTERNAL_MPI4PY=ON', '-DEXTERNAL_BOOST=ON']
+        return [
+            '-DEXTERNAL_MPI4PY=ON',
+            '-DEXTERNAL_BOOST=ON',
+            '-DWITH_RC_FILES=OFF'
+        ]
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
