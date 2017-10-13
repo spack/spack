@@ -35,10 +35,12 @@ class Pflotran(AutotoolsPackage):
 
     version('develop', git='https://bitbucket.org/pflotran/pflotran')
     version('xsdk-0.2.0', git='https://bitbucket.org/pflotran/pflotran', tag='master')
+    version('xsdk-0.3.0', git='https://bitbucket.org/pflotran/pflotran', tag='master')
 
     depends_on('mpi')
     depends_on('hdf5@1.8.12:+mpi+fortran')
     depends_on('petsc@develop+hdf5+metis', when='@develop')
     depends_on('petsc@xsdk-0.2.0+hdf5+metis', when='@xsdk-0.2.0')    
+    depends_on('petsc@3.8.0:+hdf5+metis', when='@xsdk-0.3.0')    
 
     parallel = False

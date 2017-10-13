@@ -49,9 +49,12 @@ class Xsdk(Package):
     depends_on('mfem@3.3.2-rc2', when='@0.3.0-rc1')
     depends_on('mfem@3.3.2-rc2', when='@develop')
 
+    depends_on('superlu-dist@5.0.0', when='@0.3.0-rc1')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('superlu-dist@develop', when='@develop')
 
+    depends_on('trilinos@12.12.1+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
+               when='@0.3.0-rc1')
     depends_on('trilinos@xsdk-0.2.0+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
                when='@xsdk-0.2.0')
     depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
@@ -64,11 +67,15 @@ class Xsdk(Package):
     depends_on('petsc@develop+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
                when='@develop')
 
+    depends_on('pflotran@xsdk-0.3.0', when='@0.3.0-rc1')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('pflotran@develop', when='@develop')
 
+    depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.3.0-rc1')
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('alquimia@develop', when='@develop')
+
+    depends_on('sundials', when='@0.3.0-rc1')
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
