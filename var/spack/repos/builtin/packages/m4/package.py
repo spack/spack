@@ -48,8 +48,13 @@ class M4(AutotoolsPackage):
         spec = self.spec
         args = ['--enable-c++']
 
+        # CFLAGS handling
+        cflags = copy.deepcopy(optflags[self.spec.compiler.name])
         if spec.satisfies('%clang') and not spec.satisfies('platform=darwin'):
-            args.append('CFLAGS=-rtlib=compiler-rt')
+            cflags.append('-rtlib=compiler-rt')
+        if spec.satisfies('%intel'):
+            cflags.append('-no-gcc')
+        args.append('CFLAGS = {0}'.format(' '.join(cflags)))
 
         if '+sigsegv' in spec:
             args.append('--with-libsigsegv-prefix={0}'.format(
