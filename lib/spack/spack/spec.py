@@ -2060,6 +2060,9 @@ class Spec(object):
             index = ProviderIndex([dep], restrict=True)
             items = list(spec_deps.items())
             for name, vspec in items:
+                if not vspec.virtual:
+                    continue
+
                 if index.providers_for(vspec):
                     vspec._replace_with(dep)
                     del spec_deps[vspec.name]
