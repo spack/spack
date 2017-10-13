@@ -60,9 +60,6 @@ class Lbann(CMakePackage):
         CPPFLAGS = []
         CPPFLAGS.append('-DLBANN_SET_EL_RNG')
 
-        CPPFLAGS.append('-DDATATYPE={0}'.format(
-            int(spec.variants['dtype'].value)))
-
         args = [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
@@ -77,6 +74,7 @@ class Lbann(CMakePackage):
             '-DELEMENTAL_MATH_LIBS={0}'.format(
                 spec['elemental'].libs),
             '-DSEQ_INIT:BOOL=%s' % ('+seq_init' in spec),
+            '-DDATATYPE={0}'.format(int(spec.variants['dtype'].value)),
             '-DVERBOSE=0',
             '-DLBANN_HOME=.',
             '-DLBANN_VER=spack']
