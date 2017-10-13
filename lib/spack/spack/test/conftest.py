@@ -361,12 +361,15 @@ def refresh_db_on_exit(database):
 def install_mockery(tmpdir, config, builtin_mock):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     layout = spack.store.layout
+    extensions = spack.store.extensions
     db = spack.store.db
     new_opt = str(tmpdir.join('opt'))
 
     # Use a fake install directory to avoid conflicts bt/w
     # installed pkgs and mock packages.
     spack.store.layout = spack.directory_layout.YamlDirectoryLayout(new_opt)
+    spack.store.extensions = spack.directory_layout.YamlExtensionsLayout(
+        new_opt, spack.store.layout)
     spack.store.db = spack.database.Database(new_opt)
 
     # We use a fake package, so skip the checksum.
@@ -376,6 +379,7 @@ def install_mockery(tmpdir, config, builtin_mock):
     spack.do_checksum = True
     # Restore Spack's layout.
     spack.store.layout = layout
+    spack.store.extensions = extensions
     spack.store.db = db
 
 
