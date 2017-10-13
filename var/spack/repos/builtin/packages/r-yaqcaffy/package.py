@@ -32,7 +32,9 @@ class RYaqcaffy(RPackage):
 
     homepage = "http://bioconductor.org/packages/yaqcaffy/"
     url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/yaqcaffy_1.36.0.tar.gz"
+    list_url = homepage
 
     version('1.36.0', '73bea4305aa6b1fc9d49881b95bcda42')
 
     depends_on('r-simpleaffy', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.36.0')
