@@ -60,7 +60,7 @@ class Lbann(CMakePackage):
         CPPFLAGS = []
         CPPFLAGS.append('-DLBANN_SET_EL_RNG')
 
-        CPPFLAGS.append('-DLBANN_DATATYPE={0}'.format(
+        CPPFLAGS.append('-DDATATYPE={0}'.format(
             int(spec.variants['dtype'].value)))
 
         args = [
