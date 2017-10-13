@@ -33,14 +33,12 @@ class Openblas(MakefilePackage):
     homepage = 'http://www.openblas.net'
     url = 'http://github.com/xianyi/OpenBLAS/archive/v0.2.19.tar.gz'
 
-    version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch="develop")
     version('0.2.20', '48637eb29f5b492b91459175dcc574b1')
     version('0.2.19', '28c998054fd377279741c6f0b9ea7941')
     version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
-
     version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
 
     variant(
