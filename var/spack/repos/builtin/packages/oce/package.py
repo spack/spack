@@ -92,7 +92,8 @@ class Oce(Package):
                 '-DOCE_OSX_USE_COCOA:BOOL=ON',
             ])
 
-        if macOS_version() >= Version('10.12'):
+        if platform.system() == 'Darwin' and (
+           macOS_version() >= Version('10.12')):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:
