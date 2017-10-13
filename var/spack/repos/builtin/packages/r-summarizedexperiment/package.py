@@ -25,21 +25,23 @@
 from spack import *
 
 
-class RSimpleaffy(RPackage):
-    """Provides high level functions for reading Affy .CEL files,
-       phenotypic data, and then computing simple things with it, such as
-       t-tests, fold changes and the like. Makes heavy use of the affy
-       library. Also has some basic scatter plot functions and mechanisms
-       for generating high resolution journal figures..."""
+class RSummarizedexperiment(RPackage):
+    """The SummarizedExperiment container contains one or more assays, each
+       represented by a matrix-like object of numeric or other mode. The rows
+       typically represent genomic ranges of interest and the columns
+       represent samples."""
 
-    homepage = "http://bioconductor.org/packages/simpleaffy/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/simpleaffy_2.52.0.tar.gz"
+    homepage = "https://bioconductor.org/packages/SummarizedExperiment/"
+    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/SummarizedExperiment_1.6.5.tar.gz"
+    list_url = homepage
 
-    version('2.52.0', 'aa305099a57b3d868be53dc8c539b74e')
+    version('1.6.5', '8f7d534e37cfda1e3e145ec7609c61f5')
 
-    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-affy', type=('build', 'run'))
-    depends_on('r-genefilter', type=('build', 'run'))
-    depends_on('r-gcrma', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.52.0')
+    depends_on('r-delayedarray', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-genomeinfodb', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.6.5')
