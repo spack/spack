@@ -34,7 +34,7 @@ class Mesa(AutotoolsPackage):
     list_url = "https://mesa.freedesktop.org/archive"
     list_depth = 2
 
-    version('17.1.5', '6cf936fbcaadd98924298a7009e8265d')
+    version('17.1.5', '6cf936fbcaadd98924298a7009e8265d', url='https://mesa.freedesktop.org/archive/mesa-17.1.5.tar.xz')
     version('17.1.4', 'be2ef7c9edec23b07f74f6512a6a6fa5')
     version('17.1.3', '1946a93d543bc219427e2bebe2ac4752')
     version('17.1.1', 'a4844bc6052578574f9629458bcbb749')
