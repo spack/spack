@@ -96,7 +96,7 @@ def test(parser, args, unknown_args):
         pytest.main(['-h'])
         return
 
-    # pytest.ini lives in the root of the sapck repository.
+    # pytest.ini lives in the root of the spack repository.
     with working_dir(spack.prefix):
         # --list and --long-list print the test output better.
         if args.list or args.long_list:
