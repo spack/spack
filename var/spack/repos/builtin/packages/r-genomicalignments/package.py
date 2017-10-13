@@ -32,10 +32,10 @@ class RGenomicalignments(RPackage):
     detection, and working with the nucleotide content of the alignments."""
 
     homepage = "https://bioconductor.org/packages/GenomicAlignments/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/GenomicAlignments_1.12.2.tar.gz"
+    url      = "https://git.bioconductor.org/packages/GenomicAlignments"
     list_url = homepage
 
-    version('1.12.2', 'c4d38b87090bc2e5747574c3e3daedad')
+    version('1.12.2', git='https://git.bioconductor.org/packages/GenomicAlignments', commit='b5d6f19e4a89b6c1c3e9e58e5ea4eb13870874ef')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
