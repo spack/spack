@@ -46,7 +46,7 @@ import re
 import shutil
 import copy
 from functools import wraps
-from six import string_types, with_metaclass
+from six import string_types
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir, mkdirp
@@ -78,17 +78,18 @@ def _needs_stage(fun):
     return wrapper
 
 
-class FSMeta(type):
-    """This metaclass registers all fetch strategies in a list."""
-    def __init__(cls, name, bases, dict):
-        type.__init__(cls, name, bases, dict)
-        if cls.enabled:
-            all_strategies.append(cls)
+def fetcher(cls):
+    """Registers a fetch strategy
+
+    Args:
+        cls (FetchStrategy): fetcher class to be registered
+    """
+    all_strategies.append(cls)
+    return cls
 
 
-class FetchStrategy(with_metaclass(FSMeta, object)):
+class FetchStrategy(object):
     """Superclass of all fetch strategies."""
-    enabled = False  # Non-abstract subclasses should be enabled.
     required_attributes = None  # Attributes required in version() args.
 
     def __init__(self):
@@ -174,11 +175,11 @@ class FetchStrategyComposite(object):
             return component_ids
 
 
+@fetcher
 class URLFetchStrategy(FetchStrategy):
     """FetchStrategy that pulls source code from a URL for an archive,
        checks the archive against a checksum,and decompresses the archive.
     """
-    enabled = True
     required_attributes = ['url']
 
     def __init__(self, url=None, digest=None, **kwargs):
@@ -417,6 +418,7 @@ class URLFetchStrategy(FetchStrategy):
             return "[no url]"
 
 
+@fetcher
 class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
 
@@ -507,6 +509,7 @@ class VCSFetchStrategy(FetchStrategy):
         return "%s<%s>" % (self.__class__, self.url)
 
 
+@fetcher
 class GoFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that employs the `go get` infrastructure.
 
@@ -517,7 +520,6 @@ class GoFetchStrategy(VCSFetchStrategy):
 
     Go get does not natively support versions, they can be faked with git
     """
-    enabled = True
     required_attributes = ('go', )
 
     def __init__(self, **kwargs):
@@ -565,6 +567,7 @@ class GoFetchStrategy(VCSFetchStrategy):
         return "[go] %s" % self.url
 
 
+@fetcher
 class GitFetchStrategy(VCSFetchStrategy):
 
     """
@@ -583,7 +586,6 @@ class GitFetchStrategy(VCSFetchStrategy):
         * ``tag``: Particular tag to check out
         * ``commit``: Particular commit hash in the repo
     """
-    enabled = True
     required_attributes = ('git', )
 
     def __init__(self, **kwargs):
@@ -733,6 +735,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         return "[git] %s" % self.url
 
 
+@fetcher
 class SvnFetchStrategy(VCSFetchStrategy):
 
     """Fetch strategy that gets source code from a subversion repository.
@@ -745,7 +748,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
            version('name', svn='http://www.example.com/svn/trunk',
                    revision='1641')
     """
-    enabled = True
     required_attributes = ['svn']
 
     def __init__(self, **kwargs):
@@ -825,6 +827,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return "[svn] %s" % self.url
 
 
+@fetcher
 class HgFetchStrategy(VCSFetchStrategy):
 
     """
@@ -845,7 +848,6 @@ class HgFetchStrategy(VCSFetchStrategy):
 
         * ``revision``: Particular revision, branch, or tag.
     """
-    enabled = True
     required_attributes = ['hg']
 
     def __init__(self, **kwargs):
