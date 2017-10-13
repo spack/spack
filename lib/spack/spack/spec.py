@@ -1337,27 +1337,26 @@ class Spec(object):
 
         # Edge traversal yields but skips children of visited nodes
         if not (key in visited and cover == 'edges'):
+            visited.add(key)
+
             # This code determines direction and yields the children/parents
             if direction == 'children':
-                successors = self.dependencies_dict(deptype)
-                succ = lambda s: s.spec
+                where = self._dependencies
+                succ = lambda dspec: dspec.spec
             elif direction == 'parents':
-                successors = self.dependents_dict(deptype)
-                succ = lambda s: s.parent
+                where = self._dependents
+                succ = lambda dspec: dspec.parent
             else:
                 raise ValueError('Invalid traversal direction: %s' % direction)
 
-            visited.add(key)
-            for name, dspec in sorted(successors.items()):
-                child = successors[name]
-                children = succ(child).traverse_edges(
-                    visited,
-                    d=(d + 1),
-                    deptype=deptype,
-                    dep_spec=dspec,
-                    **kwargs)
-                for elt in children:
-                    yield elt
+            for name, dspec in sorted(where.items()):
+                dt = dspec.deptypes
+                if dt and not any(d in deptype for d in dt):
+                    continue
+
+                for child in succ(dspec).traverse_edges(
+                        visited, d + 1, deptype, dspec, **kwargs):
+                    yield child
 
         # Postorder traversal yields after successors
         if yield_me and order == 'post':
