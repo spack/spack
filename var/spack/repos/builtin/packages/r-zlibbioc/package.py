@@ -36,3 +36,4 @@ class RZlibbioc(RPackage):
     url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/zlibbioc_1.22.0.tar.gz"
 
     version('1.22.0', '2e9496b860270d2e73d1305b8c6c69a5')
+    depends_on('r@3.4.0:3.4.9', when='@1.22.0')
