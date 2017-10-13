@@ -48,6 +48,7 @@ class Paraview(CMakePackage):
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt (gui) support')
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
+    variant('examples', default=False, description="Build examples")
 
     depends_on('python@2:2.8', when='+python')
     depends_on('py-numpy', when='+python', type='run')
@@ -113,6 +114,7 @@ class Paraview(CMakePackage):
             '-DVTK_RENDERING_BACKEND:STRING=%s' % rendering,
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
+            '-DBUILD_EXAMPLES:BOOL=%s' % variant_bool('+examples'),
             '-DVTK_USE_SYSTEM_FREETYPE:BOOL=ON',
             '-DVTK_USE_SYSTEM_HDF5:BOOL=OFF',
             '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
