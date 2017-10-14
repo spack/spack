@@ -113,7 +113,9 @@ class DefaultConcretizer(object):
 
         # Find the nearest spec in the dag that has a compiler.  We'll
         # use that spec to calibrate compiler compatibility.
-        abi_exemplar = find_spec(spec, lambda x: x.compiler, spec.root)
+        abi_exemplar = find_spec(spec, lambda x: x.compiler)
+        if abi_exemplar is None:
+            abi_exemplar = spec.root
 
         # Sort candidates from most to least compatibility.
         #   We reverse because True > False.
