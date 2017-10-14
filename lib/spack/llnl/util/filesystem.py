@@ -42,6 +42,7 @@ from llnl.util.lang import dedupe
 
 __all__ = [
     'FileFilter',
+    'FileList',
     'HeaderList',
     'LibraryList',
     'ancestor',
