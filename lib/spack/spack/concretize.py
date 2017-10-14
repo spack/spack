@@ -37,7 +37,6 @@ from __future__ import print_function
 from six import iteritems
 from spack.version import *
 from itertools import chain
-from ordereddict_backport import OrderedDict
 from functools_backport import reverse_order
 
 import spack
@@ -80,17 +79,15 @@ class DefaultConcretizer(object):
         # For each candidate package, if it has externals, add those
         # to the usable list.  if it's not buildable, then *only* add
         # the externals.
-        #
-        # Use an OrderedDict to avoid duplicates (use it like a set)
-        usable = OrderedDict()
+        usable = []
         for cspec in candidates:
             if is_spec_buildable(cspec):
-                usable[cspec] = True
+                usable.append(cspec)
 
             externals = spec_externals(cspec)
             for ext in externals:
                 if ext.satisfies(spec):
-                    usable[ext] = True
+                    usable.append(ext)
 
         # If nothing is in the usable list now, it's because we aren't
         # allowed to build anything.
