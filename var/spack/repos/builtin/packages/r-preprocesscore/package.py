@@ -33,3 +33,4 @@ class RPreprocesscore(RPackage):
     list_url = homepage
 
     version('1.38.1', '5085ba98cbab4686f1eb86971f1eecd6')
+    depends_on('r@3.4.0:3.4.9', when='@1.38.1')
