@@ -57,8 +57,8 @@ def test_install_package_and_dependency(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
 
-    tmpdir.chdir()
-    install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
+    with tmpdir.as_cwd():
+        install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -104,9 +104,9 @@ def test_install_package_already_installed(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
 
-    tmpdir.chdir()
-    install('libdwarf')
-    install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
+    with tmpdir.as_cwd():
+        install('libdwarf')
+        install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
