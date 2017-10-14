@@ -984,14 +984,15 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.cache_local()
 
     def do_stage(self, mirror_only=False):
-        """Unpacks the fetched tarball, then changes into the expanded tarball
-           directory."""
+        """Unpacks and expands the fetched tarball."""
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
         self.do_fetch(mirror_only)
         self.stage.expand_archive()
-        self.stage.chdir_to_source()
+
+        if not os.listdir(self.stage.path):
+            raise FetchError("Archive was empty for %s" % self.name)
 
     @classmethod
     def lookup_patch(cls, sha256):
@@ -1059,8 +1060,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             tty.msg("Patching failed last time. Restaging.")
             self.stage.restage()
 
-        self.stage.chdir_to_source()
-
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
             tty.msg("Already patched %s" % self.name)
@@ -1073,7 +1072,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         patched = False
         for patch in patches:
             try:
-                patch.apply(self.stage)
+                with working_dir(self.stage.source_path):
+                    patch.apply(self.stage)
                 tty.msg('Applied patch %s' % patch.path_or_url)
                 patched = True
             except:
@@ -1084,7 +1084,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         if has_patch_fun:
             try:
-                self.patch()
+                with working_dir(self.stage.source_path):
+                    self.patch()
                 tty.msg("Ran patch() for %s" % self.name)
                 patched = True
             except spack.multimethod.NoSuchMethodError:
@@ -1384,23 +1385,23 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                         install_tree(self.stage.source_path, src_target)
 
                     # Do the real install in the source directory.
-                    self.stage.chdir_to_source()
+                    with working_dir(self.stage.source_path):
+                        # Save the build environment in a file before building.
+                        dump_environment(self.env_path)
 
-                    # Save the build environment in a file before building.
-                    dump_environment(self.env_path)
+                        # Spawn a daemon that reads from a pipe and redirects
+                        # everything to log_path
+                        with log_output(self.log_path, echo, True) as logger:
+                            for phase_name, phase_attr in zip(
+                                    self.phases, self._InstallPhase_phases):
 
-                    # Spawn a daemon that reads from a pipe and redirects
-                    # everything to log_path
-                    with log_output(self.log_path, echo, True) as logger:
-                        for phase_name, phase_attr in zip(
-                                self.phases, self._InstallPhase_phases):
+                                with logger.force_echo():
+                                    tty.msg(
+                                        "Executing phase: '%s'" % phase_name)
 
-                            with logger.force_echo():
-                                tty.msg("Executing phase: '%s'" % phase_name)
-
-                            # Redirect stdout and stderr to daemon pipe
-                            phase = getattr(self, phase_attr)
-                            phase(self.spec, self.prefix)
+                                # Redirect stdout and stderr to daemon pipe
+                                phase = getattr(self, phase_attr)
+                                phase(self.spec, self.prefix)
 
                     echo = logger.echo
                     self.log()

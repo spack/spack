@@ -72,13 +72,14 @@ def test_fetch(
         finally:
             spack.insecure = False
 
-        assert os.path.exists('configure')
-        assert is_exe('configure')
+        with working_dir(pkg.stage.source_path):
+            assert os.path.exists('configure')
+            assert is_exe('configure')
 
-        with open('configure') as f:
-            contents = f.read()
-        assert contents.startswith('#!/bin/sh')
-        assert 'echo Building...' in contents
+            with open('configure') as f:
+                contents = f.read()
+            assert contents.startswith('#!/bin/sh')
+            assert 'echo Building...' in contents
 
 
 def test_hash_detection(checksum_type):
