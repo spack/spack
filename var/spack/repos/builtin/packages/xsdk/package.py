@@ -43,6 +43,7 @@ class Xsdk(Package):
     version('0.3.0-rc1', 'a52dc710c744afa0b71429b8ec9425bc', preferred=True)
     version('xsdk-0.2.0', 'a52dc710c744afa0b71429b8ec9425bc')
 
+    depends_on('hypre@2.12.1~internal-superlu', when='@0.3.0-rc1')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
     depends_on('hypre@develop~internal-superlu', when='@develop')
 
