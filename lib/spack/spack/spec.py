@@ -1178,20 +1178,13 @@ class Spec(object):
     @property
     def root(self):
         """Follow dependent links and find the root of this spec's DAG.
-           In spack specs, there should be a single root (the package being
-           installed).  This will throw an assertion error if that is not
-           the case.
+
+        Spack specs have a single root (the package being installed).
         """
         if not self._dependents:
             return self
 
-        # If the spec has multiple dependents, ensure that they all
-        # lead to the same place.  Spack shouldn't deal with any DAGs
-        # with multiple roots, so something's wrong if we find one.
-        depiter = iter(self._dependents.values())
-        first_root = next(depiter).parent.root
-        assert(all(first_root is d.parent.root for d in depiter))
-        return first_root
+        return next(iter(self._dependents.values())).parent.root
 
     @property
     def package(self):
