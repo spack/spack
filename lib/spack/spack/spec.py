@@ -2338,7 +2338,6 @@ class Spec(object):
 
     def common_dependencies(self, other):
         """Return names of dependencies that self an other have in common."""
-        # XXX(deptype): handle deptypes via deptype kwarg.
         common = set(
             s.name for s in self.traverse(root=False))
         common.intersection_update(
@@ -2469,8 +2468,13 @@ class Spec(object):
         """
         other = self._autospec(other)
 
+        # If there are no constraints to satisfy, we're done.
+        if not other._dependencies:
+            return True
+
         if strict:
-            if other._dependencies and not self._dependencies:
+            # if we have no dependencies, we can't satisfy any constraints.
+            if not self._dependencies:
                 return False
 
             selfdeps = self.traverse(root=False)
@@ -2479,9 +2483,9 @@ class Spec(object):
                        for dep in otherdeps):
                 return False
 
-        elif not self._dependencies or not other._dependencies:
-            # if either spec doesn't restrict dependencies then both are
-            # compatible.
+        elif not self._dependencies:
+            # if not strict, this spec *could* eventually satisfy the
+            # constraints on other.
             return True
 
         # Handle first-order constraints directly
