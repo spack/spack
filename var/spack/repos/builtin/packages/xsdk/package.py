@@ -71,7 +71,7 @@ class Xsdk(Package):
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('pflotran@develop', when='@develop')
 
-    depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.3.0-rc1')
+    depends_on('alquimia@xsdk-0.3.0', when='@0.3.0-rc1')
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('alquimia@develop', when='@develop')
 
