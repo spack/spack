@@ -291,11 +291,13 @@ def test_relocate_macho():
     assert (needs_binary_relocation('Mach-O') is True)
     macho_get_paths('/bin/bash')
     shutil.copyfile('/bin/bash', 'bash')
-    modify_macho_object('bash', '/usr', '/opt', False)
-    modify_macho_object('bash', '/usr', '/opt', True)
+    modify_macho_object('bash', '/bin/bash', '/usr', '/opt', False)
+    modify_macho_object('bash', '/bin/bash', '/usr', '/opt', True)
     shutil.copyfile('/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
-    modify_macho_object('libncurses.5.4.dylib', '/usr', '/opt', False)
-    modify_macho_object('libncurses.5.4.dylib', '/usr', '/opt', True)
+    modify_macho_object('libncurses.5.4.dylib',
+                        '/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', False)
+    modify_macho_object('libncurses.5.4.dylib',
+                        '/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', True)
 
 
 @pytest.mark.skipif(sys.platform != 'linux2',
