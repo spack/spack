@@ -35,6 +35,7 @@ class Oce(Package):
     homepage = "https://github.com/tpaviot/oce"
     url = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
 
+    version('0.18.2', '6dfd68e459e2c62387579888a867281f')
     version('0.18.1', '2a7597f4243ee1f03245aeeb02d00956')
     version('0.18',   '226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
     version('0.17.2', 'bf2226be4cd192606af677cf178088e5')
