@@ -17,7 +17,6 @@ packages:
   all:
     compiler: [gcc, intel, pgi, clang, xl, nag]
     providers:
-    providers:
       awk: [gawk]
       blas: [openblas]
       daal: [intel-daal]
