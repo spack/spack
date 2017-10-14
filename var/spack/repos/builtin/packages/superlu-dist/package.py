@@ -35,6 +35,7 @@ class SuperluDist(Package):
 
     version('develop', git='https://github.com/xiaoyeli/superlu_dist', tag='master')
     version('xsdk-0.2.0', git='https://github.com/xiaoyeli/superlu_dist', tag='xsdk-0.2.0')
+    version('5.2.1', 'af857778ffeb04aea02aa4843e6e8e1d')
     version('5.1.3', '3a9e88a8469aa7f319f0364364b8da35')
     version('5.1.1', '12638c631733a27dcbd87110e9f9cb1e')
     version('5.1.0', '6bb86e630bd4bd8650243aed8fd92eb9')
@@ -76,7 +77,9 @@ class SuperluDist(Package):
                 '' if '%pgi' in spec else '-std=c99',
                 spec['parmetis'].headers.cpp_flags,
                 spec['metis'].headers.cpp_flags,
-                '-D_LONGINT' if '+int64' in spec else ''),
+                '-D_LONGINT' if '+int64' in spec and not
+                self.spec.satisfies('@5.2.0:') else ''),
+            'XSDK_INDEX_SIZE = %s' % ('64' if '+int64' in spec else '32'),
             'NOOPTS       = %s -std=c99' % (
                 self.compiler.pic_flag),
             'FORTRAN      = {0}'.format(self.spec['mpi'].mpif77),
