@@ -36,6 +36,7 @@ class Gsl(AutotoolsPackage):
     homepage = "http://www.gnu.org/software/gsl"
     url      = "http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-2.3.tar.gz"
 
+    version('2.4',   'dba736f15404807834dc1c7b93e83b92')
     version('2.3',   '905fcbbb97bc552d1037e34d200931a0')
     version('2.2.1', '3d90650b7cfe0a6f4b29c2d7b0f86458')
     version('2.1',   'd8f70abafd3e9f0bae03c52d1f4e8de5')
