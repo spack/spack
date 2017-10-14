@@ -17,6 +17,7 @@ packages:
   all:
     compiler: [gcc, intel, pgi, clang, xl, nag]
     providers:
+    providers:
       awk: [gawk]
       blas: [openblas]
       daal: [intel-daal]
@@ -24,12 +25,13 @@ packages:
       golang: [gcc]
       ipp: [intel-ipp]
       java: [jdk]
-      lapack: [lapack]
-      pil: [py-pillow]
+      lapack: [openblas]
+      mkl: [intel-mkl]
       mpe: [mpe2]
       mpi: [openmpi, mpich]
       opencl: [pocl]
       openfoam: [openfoam-com, openfoam-org, foam-extend]
+      pil: [py-pillow]
       scalapack: [netlib-scalapack]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
