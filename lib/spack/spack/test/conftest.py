@@ -193,7 +193,7 @@ def config(configuration_dir):
 
 
 @pytest.fixture(scope='module')
-def database(tmpdir_factory, builtin_mock, config):
+def database(mock_stage, tmpdir_factory, builtin_mock, config):
     """Creates a mock database with some packages installed note that
     the ref count for dyninst here will be 3, as it's recycled
     across each install.
@@ -296,9 +296,19 @@ def refresh_db_on_exit(database):
     database.refresh()
 
 
+@pytest.fixture(scope='session')
+def mock_stage(tmpdir_factory):
+    """Mocks up a fake stage directory for use by tests."""
+    stage_path = spack.stage_path
+    new_stage = str(tmpdir_factory.mktemp('mock_stage'))
+    spack.stage_path = new_stage
+    yield
+    spack.stage_path = stage_path
+
+
 @pytest.fixture()
-def install_mockery(tmpdir, config, builtin_mock):
-    """Hooks a fake install directory and a fake db into Spack."""
+def install_mockery(mock_stage, tmpdir, config, builtin_mock):
+    """Hooks a fake install directory, DB, and stage directory into Spack."""
     layout = spack.store.layout
     db = spack.store.db
     new_opt = str(tmpdir.join('opt'))
@@ -340,7 +350,7 @@ def mock_fetch(mock_archive):
 
 
 @pytest.fixture(scope='session')
-def mock_archive():
+def mock_archive(mock_stage):
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
@@ -386,7 +396,7 @@ def mock_archive():
 
 
 @pytest.fixture(scope='session')
-def mock_git_repository():
+def mock_git_repository(mock_stage):
     """Creates a very simple git repository with two branches and
     two commits.
     """
@@ -463,7 +473,7 @@ def mock_git_repository():
 
 
 @pytest.fixture(scope='session')
-def mock_hg_repository():
+def mock_hg_repository(mock_stage):
     """Creates a very simple hg repository with two commits."""
     hg = spack.util.executable.which('hg', required=True)
     stage = spack.stage.Stage('mock-hg-stage')
@@ -511,7 +521,7 @@ def mock_hg_repository():
 
 
 @pytest.fixture(scope='session')
-def mock_svn_repository():
+def mock_svn_repository(mock_stage):
     """Creates a very simple svn repository with two commits."""
     svn = spack.util.executable.which('svn', required=True)
     svnadmin = spack.util.executable.which('svnadmin', required=True)
@@ -582,7 +592,6 @@ def mock_svn_repository():
 
 
 class MockPackage(object):
-
     def __init__(self, name, dependencies, dependency_types, conditions=None,
                  versions=None):
         self.name = name
@@ -610,7 +619,6 @@ class MockPackage(object):
 
 
 class MockPackageMultiRepo(object):
-
     def __init__(self, packages):
         self.spec_to_pkg = dict((x.name, x) for x in packages)
         self.spec_to_pkg.update(
