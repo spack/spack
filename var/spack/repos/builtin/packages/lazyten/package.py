@@ -29,55 +29,72 @@ import os
 class Lazyten(CMakePackage):
     """Lightweight linear algebra library based on lazy matrices"""
 
+    homepage = "http://lazyten.org"
+    url = "https://github.com/lazyten/lazyten/archive/v0.4.1.tar.gz"
     maintainers = ['mfherbst']
 
-    homepage = "http://lazyten.org"
-    url      = "https://github.com/lazyten/lazyten/archive/v0.4.1.tar.gz"
-
+    #
+    # Versions
+    #
     version('0.4.1', 'd06f7996144e1bf1b0aee82c2af36e83')
     version("develop", git="https://github.com/lazyten/lazyten.git",
             branch="master")
 
+    #
+    # Variants
+    #
+    # Library build type
     variant("build_type", default="DebugRelease",
             description="The build type to build",
             values=("Debug", "Release", "DebugRelease"))
-    variant("examples", default=False,
-            description="Compile examples")
+    variant("shared", default=True,
+            description="Build shared libraries (else the static one)")
+
+    # Features
     variant("arpack", default=True,
             description="Build with Arpack support")
 
-    # Build dependencies
-    depends_on("cmake@3.0:", type="build")
+    # Components
+    variant("examples", default=False,
+            description="Compile examples")
 
+    #
+    # Conflicts
+    #
     # Only builds on clang > 3.5 and gcc > 4.8
-    conflicts("%intel", msg="lazyten only builds with gcc and clang")
+    conflicts("%intel", msg="krims only builds with gcc and clang")
     conflicts("%gcc@:4.8")
     conflicts("%clang@:3.5")
 
+    #
+    # Dependencies
+    #
+    depends_on("cmake@3:", type="build")
+
     depends_on("krims@develop", when="@develop")
-    depends_on("krims@0.2.1", when="@0.4.1")
+    depends_on("krims@0.2.1",   when="@0.4.1")
 
     depends_on("blas")
     depends_on("lapack")
-    depends_on("armadillo@4.000:")
-    depends_on("arpack-ng", when="+arpack")
+    depends_on("armadillo@4:")
+    depends_on("arpack-ng",     when="+arpack")
 
+    #
+    # Settings and cmake cache
+    #
     def cmake_args(self):
         spec = self.spec
 
         args = [
-            # TODO Always disable tests for now
-            "-DLAZYTEN_ENABLE_TESTS=OFF",
-            # TODO Only build shared libs for now
-            "-DBUILD_SHARED_LIBS=ON",
-            #
             "-DAUTOCHECKOUT_MISSING_REPOS=OFF",
+            #
+            "-DBUILD_SHARED_LIBS=" + str("+shared" in spec),
             "-DDRB_MACHINE_SPECIFIC_OPTIM_Release=ON",  # Adds -march=native
+            #
+            # TODO Hard-disable tests for now, since rapidcheck not in Spack
+            "-DLAZYTEN_ENABLE_TESTS=OFF",
+            "-DLAZYTEN_ENABLE_EXAMPLES=" + str("+examples" in spec),
         ]
-
-        # Check if examples should be built.
-        value = "ON" if "+examples" in spec else "OFF"
-        args.append("-DLAZYTEN_ENABLE_EXAMPLES=" + value)
 
         # Tell lazyten where to look for the krims cmake config
         # and targets files
