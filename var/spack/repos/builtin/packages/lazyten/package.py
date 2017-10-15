@@ -27,7 +27,7 @@ import os
 
 
 class Lazyten(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """Lightweight linear algebra library based on lazy matrices"""
 
     maintainers = ['mfherbst']
 
