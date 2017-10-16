@@ -36,6 +36,7 @@ class Xios(Package):
             svn='https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
     version('910', revision=910, 
             svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-1.0')
+    version('trunk', svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
 
     variant('mode', values=('debug','dev','prod'), default='dev',
             description='Build for debugging, development or production')
