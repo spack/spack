@@ -104,7 +104,7 @@ class Esmf(MakefilePackage):
         # bin/binO/Linux.gfortran.64.default.default
         os.environ['ESMF_INSTALL_BINDIR'] = 'bin'
         os.environ['ESMF_INSTALL_LIBDIR'] = 'lib'
-        os.environ['ESMF_INSTALL_MODDIR'] = 'mod'
+        os.environ['ESMF_INSTALL_MODDIR'] = 'include'
 
         ############
         # Compiler #
