@@ -76,6 +76,9 @@ def setup_parser(subparser):
     install.set_defaults(func=installtarball)
 
     listcache = subparsers.add_parser('list')
+    listcache.add_argument('-q', '--quiet',  action='store_true',
+                           help="list only the hash(es) for " +
+                           "matching packages and name")
     listcache.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to search for")
@@ -198,20 +201,28 @@ def install_tarball(spec, args):
 
 
 def listspecs(args):
-    specs, links = bindist.get_specs()
+    specs, links = bindist.get_specs(args.quiet)
     if args.packages:
         pkgs = set(args.packages)
         for pkg in pkgs:
-            tty.msg("buildcache spec(s) matching %s \n" % pkg)
+            if not args.quiet:
+                tty.msg("buildcache spec(s) matching %s \n" % pkg)
             for spec in sorted(specs):
                 if re.search("^" + re.escape(pkg), str(spec)):
-                    tty.msg('run "spack buildcache install /%s"' %
-                            spec.dag_hash(7) + ' to install  %s\n' %
-                            spec.format())
+                    if args.quiet:
+                        tty.msg("/%s %s" % (spec.dag_hash(7), spec.format()))
+                    else:
+                        tty.msg('run "spack buildcache install /%s"' %
+                                spec.dag_hash(7) + ' to install  %s\n' %
+                                spec.format())
     else:
-        tty.msg("buildcache specs ")
+        if not args.quiet:
+            tty.msg("buildcache specs ")
         for spec in sorted(specs):
-            tty.msg('run "spack buildcache install /%s" to install  %s\n' %
+            if args.quiet:
+                tty.msg("/%s %s" % (spec.dag_hash(7), spec.format()))
+            else:
+                tty.msg('run "spack buildcache install /%s" to install  %s\n' %
                     (spec.dag_hash(7), spec.format()))
 
 
