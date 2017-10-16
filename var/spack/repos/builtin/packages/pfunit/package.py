@@ -46,7 +46,8 @@ class Pfunit(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
-        args = []
+        args = ['-DINSTALL_DIR=%s' % self.spec.prefix,
+                '-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % self.spec.prefix.include]
         if self.spec.satisfies('+mpi'):
             args.append('-DMPI=YES')
         else:
