@@ -195,14 +195,17 @@ class Openmpi(AutotoolsPackage):
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('hwloc', default='internal' , values=('internal', 'external'),
+            description='internal  : forces OpemMPI to use its internal copy of hwloc.      '
+                        'external  : forces OpemMPI to use an external installation of hwloc.')
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
 
-    depends_on('hwloc')
-    depends_on('hwloc +cuda', when='+cuda')
+    depends_on('hwloc', when='hwloc=external')
+    depends_on('hwloc +cuda', when='hwloc=external +cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
 
@@ -301,8 +304,10 @@ class Openmpi(AutotoolsPackage):
         config_args.extend(self.with_or_without('schedulers'))
 
         # Hwloc support
-        if spec.satisfies('@1.5.2:'):
+        if spec.satisfies('@1.5.2:') and spec.satisfies('hwloc=external'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
+        else:
+            config_args.append('--with-hwloc=internal')
 
         # Java support
         if spec.satisfies('@1.7.4:'):
