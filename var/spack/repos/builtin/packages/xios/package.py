@@ -30,6 +30,7 @@ class Xios(Package):
     """XML-IO-SERVER library for IO management of climate models."""
 
     homepage = "https://forge.ipsl.jussieu.fr/ioserver/wiki"
+    url = "https://forge.ipsl.jussieu.fr/ioserver"
 
     version('1307', revision=1307,
             svn='https://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
