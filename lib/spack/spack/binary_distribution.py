@@ -411,7 +411,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     relocate_package(installpath)
 
 
-def get_specs():
+def get_specs(quiet=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
@@ -428,14 +428,16 @@ def get_specs():
         url = mirrors[key]
         if url.startswith('file'):
             mirror = url.replace('file://', '') + '/build_cache'
-            tty.msg("Finding buildcaches in %s" % mirror)
+            if not quiet:
+                tty.msg("Finding buildcaches in %s" % mirror)
             files = os.listdir(mirror)
             for file in files:
                 if re.search('spec.yaml', file):
                     link = 'file://' + mirror + '/' + file
                     urls.add(link)
         else:
-            tty.msg("Finding buildcaches on %s" % url)
+            if not quiet:
+                tty.msg("Finding buildcaches on %s" % url)
             p, links = spider(url + "/build_cache")
             for link in links:
                 if re.search("spec.yaml", link) and re.search(path, link):
@@ -443,7 +445,7 @@ def get_specs():
         for link in urls:
             with Stage(link, name="build_cache", keep=True) as stage:
                 try:
-                    stage.fetch()
+                    stage.fetch(quiet=quiet)
                 except fs.FetchError:
                     continue
                 with open(stage.save_filename, 'r') as f:
