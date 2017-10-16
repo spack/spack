@@ -150,6 +150,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     assert "'install'\nAFTER INSTALL" in out
 
 
+@pytest.mark.disable_clean_stage_check
 def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
                                        config, install_mockery, capfd):
     # capfd interferes with Spack's capturing
@@ -161,6 +162,7 @@ def test_install_output_on_build_error(builtin_mock, mock_archive, mock_fetch,
     assert 'configure: error: cannot run C compiled programs.' in out
 
 
+@pytest.mark.disable_clean_stage_check
 def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
                                         config, install_mockery):
     out = install('failing-build', fail_on_error=False)
@@ -169,6 +171,7 @@ def test_install_output_on_python_error(builtin_mock, mock_archive, mock_fetch,
     assert 'raise InstallError("Expected failure.")' in out
 
 
+@pytest.mark.disable_clean_stage_check
 def test_install_with_source(
         builtin_mock, mock_archive, mock_fetch, config, install_mockery):
     """Verify that source has been copied into place."""
@@ -180,6 +183,7 @@ def test_install_with_source(
                        os.path.join(src, 'configure'))
 
 
+@pytest.mark.disable_clean_stage_check
 def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
                            config, install_mockery, capfd):
     """Make sure --show-log-on-error works."""

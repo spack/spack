@@ -26,11 +26,12 @@
 import collections
 import os
 
+from llnl.util.filesystem import join_path, working_dir
+
 import pytest
 import spack
 import spack.stage
 import spack.util.executable
-from llnl.util.filesystem import join_path, working_dir
 from spack.stage import Stage
 
 
@@ -236,24 +237,20 @@ class TestStage(object):
         check_destroy(stage, self.stage_name)
 
     def test_no_search_if_default_succeeds(
-            self, mock_archive, failing_search_fn
-    ):
-        with Stage(
-                mock_archive.url,
-                name=self.stage_name,
-                search_fn=failing_search_fn
-        ) as stage:
+            self, mock_archive, failing_search_fn):
+        stage = Stage(mock_archive.url,
+                      name=self.stage_name,
+                      search_fn=failing_search_fn)
+        with stage:
             stage.fetch()
         check_destroy(stage, self.stage_name)
 
     def test_no_search_mirror_only(
-            self, failing_fetch_strategy, failing_search_fn
-    ):
-        with Stage(
-                failing_fetch_strategy,
-                name=self.stage_name,
-                search_fn=failing_search_fn
-        ) as stage:
+            self, failing_fetch_strategy, failing_search_fn):
+        stage = Stage(failing_fetch_strategy,
+                      name=self.stage_name,
+                      search_fn=failing_search_fn)
+        with stage:
             try:
                 stage.fetch(mirror_only=True)
             except spack.fetch_strategy.FetchError:
@@ -261,11 +258,10 @@ class TestStage(object):
         check_destroy(stage, self.stage_name)
 
     def test_search_if_default_fails(self, failing_fetch_strategy, search_fn):
-        with Stage(
-                failing_fetch_strategy,
-                name=self.stage_name,
-                search_fn=search_fn
-        ) as stage:
+        stage = Stage(failing_fetch_strategy,
+                      name=self.stage_name,
+                      search_fn=search_fn)
+        with stage:
             try:
                 stage.fetch(mirror_only=False)
             except spack.fetch_strategy.FetchError:
@@ -303,40 +299,43 @@ class TestStage(object):
         check_destroy(stage, self.stage_name)
 
     def test_no_keep_without_exceptions(self, mock_archive):
-        with Stage(
-                mock_archive.url, name=self.stage_name, keep=False
-        ) as stage:
+        stage = Stage(mock_archive.url, name=self.stage_name, keep=False)
+        with stage:
             pass
         check_destroy(stage, self.stage_name)
 
+    @pytest.mark.disable_clean_stage_check
     def test_keep_without_exceptions(self, mock_archive):
-        with Stage(
-                mock_archive.url, name=self.stage_name, keep=True
-        ) as stage:
+        stage = Stage(mock_archive.url, name=self.stage_name, keep=True)
+        with stage:
             pass
         path = get_stage_path(stage, self.stage_name)
         assert os.path.isdir(path)
 
+    @pytest.mark.disable_clean_stage_check
     def test_no_keep_with_exceptions(self, mock_archive):
         class ThisMustFailHere(Exception):
             pass
+
+        stage = Stage(mock_archive.url, name=self.stage_name, keep=False)
         try:
-            with Stage(
-                    mock_archive.url, name=self.stage_name, keep=False
-            ) as stage:
+            with stage:
                 raise ThisMustFailHere()
+
         except ThisMustFailHere:
             path = get_stage_path(stage, self.stage_name)
             assert os.path.isdir(path)
 
+    @pytest.mark.disable_clean_stage_check
     def test_keep_exceptions(self, mock_archive):
         class ThisMustFailHere(Exception):
             pass
+
+        stage = Stage(mock_archive.url, name=self.stage_name, keep=True)
         try:
-            with Stage(
-                    mock_archive.url, name=self.stage_name, keep=True
-            ) as stage:
+            with stage:
                 raise ThisMustFailHere()
+
         except ThisMustFailHere:
             path = get_stage_path(stage, self.stage_name)
             assert os.path.isdir(path)

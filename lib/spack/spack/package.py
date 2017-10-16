@@ -1405,6 +1405,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
                     echo = logger.echo
                     self.log()
+
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self.spec)
 
