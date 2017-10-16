@@ -771,16 +771,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     @property
     def stage(self):
+        """Get the build staging area for this package.
+
+        This automatically instantiates a ``Stage`` object if the package
+        doesn't have one yet, but it does not create the Stage directory
+        on the filesystem.
+        """
         if not self.spec.concrete:
             raise ValueError("Can only get a stage for a concrete package.")
         if self._stage is None:
             self._stage = self._make_stage()
-
-        # Create stage on first access.  Needed because fetch, stage,
-        # patch, and install can be called independently of each
-        # other, so `with self.stage:` in do_install isn't sufficient.
-        self._stage.create()
-
         return self._stage
 
     @stage.setter
@@ -974,8 +974,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 raise FetchError("Will not fetch %s" %
                                  self.spec.format('$_$@'), ck_msg)
 
+        self.stage.create()
         self.stage.fetch(mirror_only)
-
         self._fetch_time = time.time() - start_time
 
         if spack.do_checksum and self.version in self.versions:
@@ -988,7 +988,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
-        self.do_fetch(mirror_only)
+        self.do_fetch(mirror_only)     # this will create the stage
         self.stage.expand_archive()
 
         if not os.listdir(self.stage.path):
@@ -1033,7 +1033,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if not self.spec.concrete:
             raise ValueError("Can only patch concrete packages.")
 
-        # Kick off the stage first.
+        # Kick off the stage first.  This creates the stage.
         self.do_stage()
 
         # Package can add its own patch function.
