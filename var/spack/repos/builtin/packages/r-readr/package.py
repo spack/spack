@@ -25,21 +25,19 @@
 from spack import *
 
 
-class RSimpleaffy(RPackage):
-    """Provides high level functions for reading Affy .CEL files,
-       phenotypic data, and then computing simple things with it, such as
-       t-tests, fold changes and the like. Makes heavy use of the affy
-       library. Also has some basic scatter plot functions and mechanisms
-       for generating high resolution journal figures..."""
+class RReadr(RPackage):
+    """The goal of 'readr' is to provide a fast and friendly way to read
+       rectangular data (like 'csv', 'tsv', and 'fwf'). It is designed to
+       flexibly parse many types of data found in the wild, while still cleanly
+       failing when data unexpectedly changes."""
 
-    homepage = "http://bioconductor.org/packages/simpleaffy/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/simpleaffy_2.52.0.tar.gz"
+    homepage = "https://cran.rstudio.com/web/packages/readr/index.html"
+    url      = "https://cran.rstudio.com/src/contrib/readr_1.1.1.tar.gz"
 
-    version('2.52.0', 'aa305099a57b3d868be53dc8c539b74e')
+    version('1.1.1', 'cffb6669664f6a0f6fe172542e64cb47')
 
-    depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-affy', type=('build', 'run'))
-    depends_on('r-genefilter', type=('build', 'run'))
-    depends_on('r-gcrma', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.52.0')
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-tibble', type=('build', 'run'))
+    depends_on('r-hms', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'))
+    depends_on('r-bh', type=('build', 'run'))

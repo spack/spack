@@ -1178,20 +1178,13 @@ class Spec(object):
     @property
     def root(self):
         """Follow dependent links and find the root of this spec's DAG.
-           In spack specs, there should be a single root (the package being
-           installed).  This will throw an assertion error if that is not
-           the case.
+
+        Spack specs have a single root (the package being installed).
         """
         if not self._dependents:
             return self
 
-        # If the spec has multiple dependents, ensure that they all
-        # lead to the same place.  Spack shouldn't deal with any DAGs
-        # with multiple roots, so something's wrong if we find one.
-        depiter = iter(self._dependents.values())
-        first_root = next(depiter).parent.root
-        assert(all(first_root is d.parent.root for d in depiter))
-        return first_root
+        return next(iter(self._dependents.values())).parent.root
 
     @property
     def package(self):
@@ -1337,27 +1330,26 @@ class Spec(object):
 
         # Edge traversal yields but skips children of visited nodes
         if not (key in visited and cover == 'edges'):
+            visited.add(key)
+
             # This code determines direction and yields the children/parents
             if direction == 'children':
-                successors = self.dependencies_dict(deptype)
-                succ = lambda s: s.spec
+                where = self._dependencies
+                succ = lambda dspec: dspec.spec
             elif direction == 'parents':
-                successors = self.dependents_dict(deptype)
-                succ = lambda s: s.parent
+                where = self._dependents
+                succ = lambda dspec: dspec.parent
             else:
                 raise ValueError('Invalid traversal direction: %s' % direction)
 
-            visited.add(key)
-            for name, dspec in sorted(successors.items()):
-                child = successors[name]
-                children = succ(child).traverse_edges(
-                    visited,
-                    d=(d + 1),
-                    deptype=deptype,
-                    dep_spec=dspec,
-                    **kwargs)
-                for elt in children:
-                    yield elt
+            for name, dspec in sorted(where.items()):
+                dt = dspec.deptypes
+                if dt and not any(d in deptype for d in dt):
+                    continue
+
+                for child in succ(dspec).traverse_edges(
+                        visited, d + 1, deptype, dspec, **kwargs):
+                    yield child
 
         # Postorder traversal yields after successors
         if yield_me and order == 'post':
@@ -2060,6 +2052,9 @@ class Spec(object):
             index = ProviderIndex([dep], restrict=True)
             items = list(spec_deps.items())
             for name, vspec in items:
+                if not vspec.virtual:
+                    continue
+
                 if index.providers_for(vspec):
                     vspec._replace_with(dep)
                     del spec_deps[vspec.name]
@@ -2343,7 +2338,6 @@ class Spec(object):
 
     def common_dependencies(self, other):
         """Return names of dependencies that self an other have in common."""
-        # XXX(deptype): handle deptypes via deptype kwarg.
         common = set(
             s.name for s in self.traverse(root=False))
         common.intersection_update(
@@ -2474,8 +2468,13 @@ class Spec(object):
         """
         other = self._autospec(other)
 
+        # If there are no constraints to satisfy, we're done.
+        if not other._dependencies:
+            return True
+
         if strict:
-            if other._dependencies and not self._dependencies:
+            # if we have no dependencies, we can't satisfy any constraints.
+            if not self._dependencies:
                 return False
 
             selfdeps = self.traverse(root=False)
@@ -2484,9 +2483,9 @@ class Spec(object):
                        for dep in otherdeps):
                 return False
 
-        elif not self._dependencies or not other._dependencies:
-            # if either spec doesn't restrict dependencies then both are
-            # compatible.
+        elif not self._dependencies:
+            # if not strict, this spec *could* eventually satisfy the
+            # constraints on other.
             return True
 
         # Handle first-order constraints directly
