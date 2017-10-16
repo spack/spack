@@ -164,4 +164,9 @@ OASIS_LIB=""
         install_tree('etc', spec.prefix.etc)
         install_tree('cfg', spec.prefix.cfg)
 
-# TODO: add a test?
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+         mpiexec = Executable(join_path(self.spec['mpi'].prefix.bin, 'mpiexec'))
+         with working_dir('inputs'):
+             mpiexec('-n', '2', join_path('..', 'bin', 'test_client.exe'))
