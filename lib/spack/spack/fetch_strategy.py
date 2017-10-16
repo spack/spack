@@ -199,11 +199,12 @@ class URLFetchStrategy(FetchStrategy):
         return self._curl
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, quiet=False):
         self.stage.chdir()
 
         if self.archive_file:
-            tty.msg("Already downloaded %s" % self.archive_file)
+            if not quiet:
+               tty.msg("Already downloaded %s" % self.archive_file)
             return
 
         save_file = None
@@ -212,7 +213,8 @@ class URLFetchStrategy(FetchStrategy):
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + '.part'
 
-        tty.msg("Fetching %s" % self.url)
+        if not quiet:
+            tty.msg("Fetching %s" % self.url)
 
         if partial_file:
             save_args = ['-C',
@@ -303,12 +305,14 @@ class URLFetchStrategy(FetchStrategy):
         return bool(self.digest)
 
     @_needs_stage
-    def expand(self):
+    def expand(self, quiet=False):
         if not self.expand_archive:
-            tty.msg("Skipping expand step for %s" % self.archive_file)
+            if not quiet:
+                tty.msg("Skipping expand step for %s" % self.archive_file)
             return
 
-        tty.msg("Staging archive: %s" % self.archive_file)
+        if not quiet:
+            tty.msg("Staging archive: %s" % self.archive_file)
 
         self.stage.chdir()
         if not self.archive_file:
@@ -409,7 +413,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         super(CacheURLFetchStrategy, self).__init__(*args, **kwargs)
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, quiet=False):
         path = re.sub('^file://', '', self.url)
 
         # check whether the cache file exists.
@@ -436,7 +440,8 @@ class CacheURLFetchStrategy(URLFetchStrategy):
                 raise
 
         # Notify the user how we fetched.
-        tty.msg('Using cached archive: %s' % path)
+        if not quiet:
+            tty.msg('Using cached archive: %s' % path)
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -529,10 +534,11 @@ class GoFetchStrategy(VCSFetchStrategy):
         return self._go
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, quiet=False):
         self.stage.chdir()
 
-        tty.msg("Trying to get go resource:", self.url)
+        if not quiet:
+            tty.msg("Trying to get go resource:", self.url)
 
         try:
             os.mkdir('go')
@@ -608,11 +614,12 @@ class GitFetchStrategy(VCSFetchStrategy):
         return bool(self.commit or self.tag)
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, quiet=False):
         self.stage.chdir()
 
         if self.stage.source_path:
-            tty.msg("Already fetched %s" % self.stage.source_path)
+            if not quiet:
+               tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
         args = ''
@@ -622,7 +629,8 @@ class GitFetchStrategy(VCSFetchStrategy):
             args = 'at tag %s' % self.tag
         elif self.branch:
             args = 'on branch %s' % self.branch
-        tty.msg("Trying to clone git repository: %s %s" % (self.url, args))
+        if not quiet:
+            tty.msg("Trying to clone git repository: %s %s" % (self.url, args))
 
         if self.commit:
             # Need to do a regular clone and check out everything if
@@ -748,14 +756,16 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return bool(self.revision)
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, quiet=False):
         self.stage.chdir()
 
         if self.stage.source_path:
-            tty.msg("Already fetched %s" % self.stage.source_path)
+            if not quiet:
+                tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
-        tty.msg("Trying to check out svn repository: %s" % self.url)
+        if not quiet:
+            tty.msg("Trying to check out svn repository: %s" % self.url)
 
         args = ['checkout', '--force', '--quiet']
         if self.revision:
@@ -844,17 +854,19 @@ class HgFetchStrategy(VCSFetchStrategy):
         return bool(self.revision)
 
     @_needs_stage
-    def fetch(self):
+    def fetch(self, quiet=False):
         self.stage.chdir()
 
         if self.stage.source_path:
-            tty.msg("Already fetched %s" % self.stage.source_path)
+            if not quiet:
+                tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
         args = []
         if self.revision:
             args.append('at revision %s' % self.revision)
-        tty.msg("Trying to clone Mercurial repository:", self.url, *args)
+        if not quiet:
+            tty.msg("Trying to clone Mercurial repository:", self.url, *args)
 
         args = ['clone']
 
