@@ -569,6 +569,9 @@ def _find_recursive(root, search_files):
     # found in a key, and reconstructing the stable order later.
     found_files = collections.defaultdict(list)
 
+    if not os.path.isdir(root):
+        return []
+
     for path, _, list_files in os.walk(root):
         for search_file in search_files:
             for list_file in list_files:
@@ -586,6 +589,9 @@ def _find_non_recursive(root, search_files):
     # The variable here is **on purpose** a defaultdict as os.list_dir
     # can return files in any order (does not preserve stability)
     found_files = collections.defaultdict(list)
+
+    if not os.path.isdir(root):
+        return []
 
     for list_file in os.listdir(root):
         for search_file in search_files:
