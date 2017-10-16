@@ -147,4 +147,11 @@ class Paraview(CMakePackage):
                 '-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON',
             ])
 
+        # Hide git from Paraview so it will not use `git describe`
+        # to find its own version number
+        if self.spec.satisfies('@5.4.0:5.4.1'):
+            cmake_args.extend([
+                '-DGIT_EXECUTABLE=FALSE'
+            ])
+
         return cmake_args
