@@ -25,13 +25,15 @@
 import collections
 import copy
 import os
-import re
 import shutil
+import re
 
 import ordereddict_backport
 
 import py
 import pytest
+
+from llnl.util.filesystem import remove_linked_tree
 
 import spack
 import spack.architecture
@@ -69,6 +71,64 @@ def no_chdir():
     yield
     if os.path.isdir(original_wd):
         assert os.getcwd() == original_wd
+
+
+@pytest.fixture(scope='session', autouse=True)
+def mock_stage(tmpdir_factory):
+    """Mocks up a fake stage directory for use by tests."""
+    stage_path = spack.stage_path
+    new_stage = str(tmpdir_factory.mktemp('mock_stage'))
+    spack.stage_path = new_stage
+    yield new_stage
+    spack.stage_path = stage_path
+
+
+@pytest.fixture(scope='session')
+def _ignore_stage_files():
+    """Session-scoped helper for check_for_leftover_stage_files.
+
+    Used to track which leftover files in the stage have been seen.
+    """
+    # to start with, ignore the .lock file at the stage root.
+    return set(['.lock'])
+
+
+def remove_whatever_it_is(path):
+    """Type-agnostic remove."""
+    if os.path.isfile(path):
+        os.remove(path)
+    elif os.path.islink(path):
+        remove_linked_tree(path)
+    else:
+        shutil.rmtree(path)
+
+
+@pytest.fixture(scope='function', autouse=True)
+def check_for_leftover_stage_files(request, mock_stage, _ignore_stage_files):
+    """Ensure that each test leaves a clean stage when done.
+
+    This can be disabled for tests that are expected to dirty the stage
+    by adding::
+
+        @pytest.mark.disable_clean_stage_check
+
+    to tests that need it.
+    """
+    yield
+
+    files_in_stage = set()
+    if os.path.exists(spack.stage_path):
+        files_in_stage = set(
+            os.listdir(spack.stage_path)) - _ignore_stage_files
+
+    if 'disable_clean_stage_check' in request.keywords:
+        # clean up after tests that are expected to be dirty
+        for f in files_in_stage:
+            path = os.path.join(spack.stage_path, f)
+            remove_whatever_it_is(path)
+    else:
+        _ignore_stage_files |= files_in_stage
+        assert not files_in_stage
 
 
 @pytest.fixture(autouse=True)
@@ -193,7 +253,7 @@ def config(configuration_dir):
 
 
 @pytest.fixture(scope='module')
-def database(mock_stage, tmpdir_factory, builtin_mock, config):
+def database(tmpdir_factory, builtin_mock, config):
     """Creates a mock database with some packages installed note that
     the ref count for dyninst here will be 3, as it's recycled
     across each install.
@@ -296,18 +356,8 @@ def refresh_db_on_exit(database):
     database.refresh()
 
 
-@pytest.fixture(scope='session')
-def mock_stage(tmpdir_factory):
-    """Mocks up a fake stage directory for use by tests."""
-    stage_path = spack.stage_path
-    new_stage = str(tmpdir_factory.mktemp('mock_stage'))
-    spack.stage_path = new_stage
-    yield
-    spack.stage_path = stage_path
-
-
 @pytest.fixture()
-def install_mockery(mock_stage, tmpdir, config, builtin_mock):
+def install_mockery(tmpdir, config, builtin_mock):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     layout = spack.store.layout
     db = spack.store.db
@@ -350,14 +400,13 @@ def mock_fetch(mock_archive):
 
 
 @pytest.fixture(scope='session')
-def mock_archive(mock_stage):
+def mock_archive(tmpdir_factory):
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
     tar = spack.util.executable.which('tar', required=True)
-    stage = spack.stage.Stage('mock-archive-stage')
 
-    tmpdir = py.path.local(stage.path)
+    tmpdir = tmpdir_factory.mktemp('mock-archive-dir')
     repo_name = 'mock-archive-repo'
     tmpdir.ensure(repo_name, dir=True)
     repodir = tmpdir.join(repo_name)
@@ -392,17 +441,16 @@ def mock_archive(mock_stage):
         url=('file://' + archive_file),
         archive_file=archive_file,
         path=str(repodir))
-    stage.destroy()
 
 
 @pytest.fixture(scope='session')
-def mock_git_repository(mock_stage):
+def mock_git_repository(tmpdir_factory):
     """Creates a very simple git repository with two branches and
     two commits.
     """
     git = spack.util.executable.which('git', required=True)
-    stage = spack.stage.Stage('mock-git-stage')
-    tmpdir = py.path.local(stage.path)
+
+    tmpdir = tmpdir_factory.mktemp('mock-git-repo-dir')
     repo_name = 'mock-git-repo'
     tmpdir.ensure(repo_name, dir=True)
     repodir = tmpdir.join(repo_name)
@@ -449,7 +497,6 @@ def mock_git_repository(mock_stage):
         r1_file = branch_file
 
     Bunch = spack.util.pattern.Bunch
-
     checks = {
         'master': Bunch(
             revision='master', file=r0_file, args={'git': str(repodir)}
@@ -469,15 +516,14 @@ def mock_git_repository(mock_stage):
 
     t = Bunch(checks=checks, url=url, hash=rev_hash, path=str(repodir))
     yield t
-    stage.destroy()
 
 
 @pytest.fixture(scope='session')
-def mock_hg_repository(mock_stage):
+def mock_hg_repository(tmpdir_factory):
     """Creates a very simple hg repository with two commits."""
     hg = spack.util.executable.which('hg', required=True)
-    stage = spack.stage.Stage('mock-hg-stage')
-    tmpdir = py.path.local(stage.path)
+
+    tmpdir = tmpdir_factory.mktemp('mock-hg-repo-dir')
     repo_name = 'mock-hg-repo'
     tmpdir.ensure(repo_name, dir=True)
     repodir = tmpdir.join(repo_name)
@@ -504,7 +550,6 @@ def mock_hg_repository(mock_stage):
         r1 = get_rev()
 
     Bunch = spack.util.pattern.Bunch
-
     checks = {
         'default': Bunch(
             revision=r1, file=r1_file, args={'hg': str(repodir)}
@@ -517,17 +562,15 @@ def mock_hg_repository(mock_stage):
     }
     t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
-    stage.destroy()
 
 
 @pytest.fixture(scope='session')
-def mock_svn_repository(mock_stage):
+def mock_svn_repository(tmpdir_factory):
     """Creates a very simple svn repository with two commits."""
     svn = spack.util.executable.which('svn', required=True)
     svnadmin = spack.util.executable.which('svnadmin', required=True)
-    stage = spack.stage.Stage('mock-svn-stage')
 
-    tmpdir = py.path.local(stage.path)
+    tmpdir = tmpdir_factory.mktemp('mock-svn-stage')
     repo_name = 'mock-svn-repo'
     tmpdir.ensure(repo_name, dir=True)
     repodir = tmpdir.join(repo_name)
@@ -563,26 +606,24 @@ def mock_svn_repository(mock_stage):
         r0 = '1'
         r1 = '2'
 
-        Bunch = spack.util.pattern.Bunch
+    Bunch = spack.util.pattern.Bunch
+    checks = {
+        'default': Bunch(
+            revision=r1, file=r1_file, args={'svn': url}),
+        'rev0': Bunch(
+            revision=r0, file=r0_file, args={
+                'svn': url, 'revision': r0})
+    }
 
-        checks = {
-            'default': Bunch(
-                revision=r1, file=r1_file, args={'svn': url}),
-            'rev0': Bunch(
-                revision=r0, file=r0_file, args={
-                    'svn': url, 'revision': r0})
-        }
+    def get_rev():
+        output = svn('info', output=str)
+        assert "Revision" in output
+        for line in output.split('\n'):
+            match = re.match(r'Revision: (\d+)', line)
+            if match:
+                return match.group(1)
 
-        def get_rev():
-            output = svn('info', output=str)
-            assert "Revision" in output
-            for line in output.split('\n'):
-                match = re.match(r'Revision: (\d+)', line)
-                if match:
-                    return match.group(1)
-
-        t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
-
+    t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
 
 
