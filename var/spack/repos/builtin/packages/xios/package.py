@@ -153,7 +153,8 @@ OASIS_LIB=""
         options = ['--full',
                    '--%s' % spec.variants['mode'].value,
                    '--arch', 'SPACK',
-                   '--netcdf_lib', 'netcdf4_par']
+                   '--netcdf_lib', 'netcdf4_par',
+                   '--job', str(make_jobs)]
 
         self.xios_env()
         self.xios_path()
