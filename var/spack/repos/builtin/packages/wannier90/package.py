@@ -42,9 +42,8 @@ class Wannier90(MakefilePackage):
     version('1.2', '764165971f0ee35ff16041320c2cbc29')
 
     depends_on('mpi')
-    depends_on('mkl', when='%intel')
-    depends_on('lapack', when='~intel')
-    depends_on('blas', when='~intel')
+    depends_on('lapack')
+    depends_on('blas')
 
     parallel = False
 
@@ -66,17 +65,13 @@ class Wannier90(MakefilePackage):
 
     def edit(self, spec, prefix):
 
-        if self.spec.satisfies('%intel'):
-            libs = '-lmkl_core -lmkl_intel_lp64 -lmkl_sequential -lpthread'
-        else:
-            lapack = self.spec['lapack'].libs
-            blas = self.spec['blas'].libs
-            libs = (lapack + blas).joined()
+        lapack = self.spec['lapack'].libs
+        blas = self.spec['blas'].libs
 
         substitutions = {
             '@F90': spack_fc,
             '@MPIF90': self.spec['mpi'].mpifc,
-            '@LIBS': libs
+            '@LIBS': (lapack + blas).joined()
         }
 
         template = join_path(
