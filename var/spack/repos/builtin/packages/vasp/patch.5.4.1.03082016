@@ -1,0 +1,619 @@
+diff -Naur ./arch/makefile.include.linux_gfortran ../patched/arch/makefile.include.linux_gfortran
+--- ./arch/makefile.include.linux_gfortran	2016-02-08 11:37:02.000000000 +0100
++++ ../patched/arch/makefile.include.linux_gfortran	2016-06-18 14:08:31.779244826 +0200
+@@ -2,8 +2,7 @@
+ CPP_OPTIONS= -DMPI -DHOST=\"IFC91_ompi\" -DIFC \
+              -DCACHE_SIZE=4000 -Davoidalloc \
+              -DMPI_BLOCK=8000 -DscaLAPACK -Duse_collective \
+-             -DnoAugXCmeta -Duse_bse_te \
+-             -Duse_shmem -Dtbdyn
++             -Duse_bse_te -Duse_shmem -Dtbdyn
+ 
+ CPP        = gcc -E -P -C $*$(FUFFIX) >$*$(SUFFIX) $(CPP_OPTIONS)
+ 
+diff -Naur ./arch/makefile.include.linux_intel ../patched/arch/makefile.include.linux_intel
+--- ./arch/makefile.include.linux_intel	2016-02-08 11:37:02.000000000 +0100
++++ ../patched/arch/makefile.include.linux_intel	2016-06-18 14:08:31.783244866 +0200
+@@ -2,13 +2,12 @@
+ CPP_OPTIONS= -DMPI -DHOST=\"IFC91_ompi\" -DIFC \
+              -DCACHE_SIZE=4000 -DPGF90 -Davoidalloc \
+              -DMPI_BLOCK=8000 -DscaLAPACK -Duse_collective \
+-             -DnoAugXCmeta -Duse_bse_te \
+-             -Duse_shmem -Dtbdyn
++             -Duse_bse_te -Duse_shmem -Dtbdyn
+ 
+ CPP        = fpp -f_com=no -free -w0  $*$(FUFFIX) $*$(SUFFIX) $(CPP_OPTIONS)
+ 
+ FC         = mpiifort
+-FCL        = mpiifort -mkl
++FCL        = mpiifort -mkl=sequential
+ 
+ FREE       = -free -names lowercase
+ 
+diff -Naur ./arch/makefile.include.linux_intel_cuda ../patched/arch/makefile.include.linux_intel_cuda
+--- ./arch/makefile.include.linux_intel_cuda	2016-02-08 11:37:02.000000000 +0100
++++ ../patched/arch/makefile.include.linux_intel_cuda	2016-06-18 14:08:31.787244907 +0200
+@@ -2,13 +2,12 @@
+ CPP_OPTIONS= -DMPI -DHOST=\"LinuxIFC\" -DIFC \
+              -DCACHE_SIZE=4000 -DPGF90 -Davoidalloc \
+              -DMPI_BLOCK=8000 -Duse_collective \
+-             -DnoAugXCmeta -Duse_bse_te \
+-             -Duse_shmem -Dkind8 
++             -Duse_bse_te -Duse_shmem -Dkind8 
+ 
+ CPP        = fpp -f_com=no -free -w0  $*$(FUFFIX) $*$(SUFFIX) $(CPP_OPTIONS)
+ 
+ FC         = mpiifort
+-FCL        = mpiifort -mkl -lstdc++
++FCL        = mpiifort -mkl=sequential -lstdc++
+ 
+ FREE       = -free -names lowercase
+ 
+diff -Naur ./arch/makefile.include.linux_intel_serial ../patched/arch/makefile.include.linux_intel_serial
+--- ./arch/makefile.include.linux_intel_serial	2016-02-08 11:37:02.000000000 +0100
++++ ../patched/arch/makefile.include.linux_intel_serial	2016-06-18 14:08:31.791244949 +0200
+@@ -1,12 +1,12 @@
+ # Precompiler options
+ CPP_OPTIONS= -DHOST=\"IFC91_ompi\" -DIFC \
+              -DCACHE_SIZE=4000 -DPGF90 -Davoidalloc \
+-             -DnoAugXCmeta -Duse_bse_te 
++             -Duse_bse_te 
+ 
+ CPP        = fpp -f_com=no -free -w0  $*$(FUFFIX) $*$(SUFFIX) $(CPP_OPTIONS)
+ 
+ FC         = ifort
+-FCL        = ifort -mkl
++FCL        = ifort -mkl=sequential
+ 
+ FREE       = -free -names lowercase
+ 
+diff -Naur ./src/fock.F ../patched/src/fock.F
+--- ./src/fock.F	2016-02-08 15:28:28.000000000 +0100
++++ ../patched/src/fock.F	2016-06-18 14:09:08.087620272 +0200
+@@ -2954,7 +2954,7 @@
+     TYPE (nonlr_struct), ALLOCATABLE :: FAST_AUG(:)
+     GDEF, ALLOCATABLE :: CPROJXYZ(:,:,:)
+ 
+-    INTEGER :: NT, NIS, NI,  LMMAXC, LBASE, L, LP, NIP, ISTAT
++    INTEGER :: NT, NIS, NI,  LMMAXC, LBASE, L, LP, NIP, ISTAT, NB_TOT
+     INTEGER ierror
+     TYPE( rotation_handle), POINTER :: ROT_HANDLE
+     TYPE (wavespin) WHF
+@@ -2992,6 +2992,17 @@
+     NGLB=NSTRIP*WHF%WDES%NB_PAR
+     IF (NBLOCK_FOCK>0) NGLB=MIN(NGLB,NBLOCK_FOCK)
+ 
++    ! only occupied bands need to be included in force evaluation
++    NB_TOT=0
++    DO ISP=1,WHF%WDES%ISPIN
++    DO NK=1,WHF%WDES%NKPTS
++    DO NPOS=1,WHF%WDES%NB_TOT
++       IF (ABS(W%FERTOT(NPOS, NK, ISP))>1E-10) NB_TOT=MAX(NB_TOT,NPOS)
++    ENDDO
++    ENDDO
++    ENDDO
++    NB_TOT=((NB_TOT+WHF%WDES%NB_PAR-1)/WHF%WDES%NB_PAR)*WHF%WDES%NB_PAR
++
+     IF (WHF%WDES%LOVERL) THEN
+        ! allocate all required structures
+        ALLOCATE(FAST_AUG(NDIR),CPROJXYZ(WHF%WDES%NPROD, WHF%WDES%NBANDS, NDIR), &
+@@ -3102,8 +3113,8 @@
+        ENDIF
+     ENDIF
+ 
+-    band:   DO NPOS=1,WHF%WDES%NB_TOT,NGLB
+-    NGLBN  =MIN(WHF%WDES%NB_TOT-NPOS+1,NGLB)
++    band:   DO NPOS=1,NB_TOT,NGLB
++    NGLBN  =MIN(NB_TOT-NPOS+1,NGLB)
+ !==========================================================================
+ ! fourier transform the bands to be accelerated to real space (CWRN)
+ ! then distribute the CWRN array to all nodes
+diff -Naur ./src/linear_optics.F ../patched/src/linear_optics.F
+--- ./src/linear_optics.F	2016-02-08 15:28:28.000000000 +0100
++++ ../patched/src/linear_optics.F	2016-06-18 14:09:09.511634998 +0200
+@@ -183,6 +183,15 @@
+        EMAX_COND=OMEGAMAX_OPTIC
+     ENDIF
+ 
++    CALL CHECK_OCCUPATIONS(W)
++    IF ((KPOINTS%ISMEAR<=-4).AND.(.NOT.IS_INSULATING())) THEN
++       CALL VTUTOR('W','TETNOMETAL',0.0_q,1, &
++       &           0,1,(0.0_q,0.0_q),1,.FALSE.,1,IO%IU6,2)
++       CALL VTUTOR('W','TETNOMETAL',0.0_q,1, &
++       &           0,1,(0.0_q,0.0_q),1,.FALSE.,1,IO%IU0,2)
++       RETURN
++    ENDIF
++
+     IF (IO%IU0>0) WRITE(IO%IU0,*) 'optical routines'
+ 
+     ! smaller values are dangerous and fail more often than not
+@@ -1593,7 +1602,7 @@
+       INTEGER I
+ 
+       NELOW=(EPS-8._q*SIGMA)/DELTAE+1
+-      ! use a least to points
++      ! use a least two points
+       NEHIG=(EPS+8._q*SIGMA)/DELTAE+2
+       IF (NELOW<0)     NELOW=0
+       IF (NELOW>NEDOS) NELOW=NEDOS
+@@ -1641,65 +1650,76 @@
+       TYPE (wavedes)        WDES
+       TYPE (wavespin)       W0
+       TYPE (kpoints_struct) KPOINTS
++
+       GDEFS :: CHAM1(:,:,:,:)
+       GDEFS :: CHAM2(:,:,:,:)
+-      INTEGER NEDOS
++
++      REAL(q) DOS(:)
++
+       REAL(q) OMEGA, DELTAE
++      INTEGER NEDOS
+ 
+     !local
+-      INTEGER ISP, NK, N1, N2, NC, N, NTRANS, NKPTS, NBCON, NBVAL, NBTOT, ISPIN, J
++      INTEGER ISP, NK, N1, N2, NC, N, NTRANS, NKPTS, NBCON, NBVAL, NBFULL, NBTOT, ISPIN, J
+       REAL(q) EMIN, EMAX, EFERMI, SUMWEI, SUME, CONST
+       TYPE (in_struct)      IO
+       TYPE (info_struct)    INFO
+       REAL(q), ALLOCATABLE :: AMP(:,:,:),ETRANS(:,:,:),DOST(:,:),DOSI(:,:), &
+                   FERWE(:,:,:),PAR(:,:,:,:,:),DOSPAR(:,:,:,:),WTKPT(:)
+-      REAL(q) DOS(:)
+ 
+-      NBTOT  = WDES%NB_TOT
+-      NBVAL  = MIN((NINT(INFO%NELECT)+1)/2, NBANDS_CDER)
+-      NBCON  = MAX(INT(0.85_q*(NBTOT - NBVAL)), 1)
+-      NTRANS = NBCON * NBVAL
+-      ISPIN  = WDES%ISPIN
+-      NKPTS  = KPOINTS%NKPTS
+-      CONST  = RYTOEV * 2 * AUTOA * 2 * TPI * PI / OMEGA
+-      EMIN   = 0._q
+-
+-      ALLOCATE( AMP(NTRANS,NKPTS,ISPIN), ETRANS(NTRANS,NKPTS,ISPIN) )
+-      ALLOCATE( DOST(NEDOS,ISPIN), DOSI(NEDOS,ISPIN))
+-      ALLOCATE( FERWE(NTRANS,NKPTS,ISPIN), WTKPT(NKPTS) )
+-      ALLOCATE( PAR(NTRANS,NKPTS,1,1,ISPIN), DOSPAR(NEDOS,1,1,ISPIN) )
+-     
++
+       DOS    = 0._q
+-      DOSI   = 0._q
+-      DOST   = 0._q
+-      AMP    = 0._q
+-      ETRANS = 0._q
+-      PAR    = 0._q
+-      DOSPAR = 0._q
+-
+-      DO ISP = 1, ISPIN
+-        DO NK = 1, NKPTS
+-          DO N1 = 1, NBVAL
+-            DO N2 = 1, NBCON
+-              J = (N1 - 1) * NBCON + N2
+-              NC = NBVAL + N2
+-              AMP(J,NK,ISP) = GCONJG(CHAM1(NC,N1,NK,ISP)) * CHAM2(NC,N1,NK,ISP) * CONST
+-              ETRANS(J,NK,ISP) = W0%CELTOT(NC,NK,ISP) - W0%CELTOT(N1,NK,ISP)
++
++      NBTOT  = WDES%NB_TOT
++
++      DO ISP = 1, WDES%ISPIN
++
++         NBVAL  = LAST_FILLED_OPTICS_NO_MOD(W0,ISP,0.01_q)
++         NBFULL = FIRST_EMPTY_OPTICS_NO_MOD(W0,ISP,0.99_q)-1
++
++         NBCON  = NBTOT-NBFULL
++         NTRANS = NBCON * NBVAL
++
++         NKPTS  = KPOINTS%NKPTS
++         CONST  = RYTOEV * 2 * AUTOA * TPI * PI / OMEGA * WDES%RSPIN
++         EMIN   = 0._q
++
++         ALLOCATE( AMP(NTRANS,NKPTS,1), ETRANS(NTRANS,NKPTS,1) )
++         ALLOCATE( DOST(NEDOS,1), DOSI(NEDOS,1))
++         ALLOCATE( FERWE(NTRANS,NKPTS,1), WTKPT(NKPTS) )
++         ALLOCATE( PAR(NTRANS,NKPTS,1,1,1), DOSPAR(NEDOS,1,1,1) )
++ 
++         DOSI   = 0._q
++         DOST   = 0._q
++         AMP    = 0._q
++         ETRANS = 0._q
++         PAR    = 0._q
++         DOSPAR = 0._q
++
++         DO NK = 1, NKPTS
++            DO N1 = 1, NBVAL
++               DO N2 = 1, NBCON
++                  J = (N1 - 1) * NBCON + N2
++                  NC = NBFULL + N2
++                  IF (NC>N1) &
++                  AMP(J,NK,1) = GCONJG(CHAM1(NC,N1,NK,ISP)) * CHAM2(NC,N1,NK,ISP) * CONST * &
++                                (W0%FERTOT(N1,NK,ISP)-W0%FERTOT(NC,NK,ISP))
++                  ETRANS(J,NK,1) = W0%CELTOT(NC,NK,ISP) - W0%CELTOT(N1,NK,ISP)
++               ENDDO
+             ENDDO
+-          ENDDO
+-        ENDDO
+-      ENDDO
++         ENDDO
+        
+-      CALL BZINTS_WEIGHT(0,FERWE,ETRANS,AMP,WTKPT,NTRANS,NTRANS, &
+-                     NKPTS,KPOINTS%IDTET,KPOINTS%NTET,ISPIN,KPOINTS%VOLWGT,EMIN,EMAX, &
+-                     DOST(1,1),DOSI(1,1),NEDOS,EFERMI, &
+-                     SUMWEI,SUME,IO%IU6,PAR,DOSPAR,NKPTS,1,1,1,0)
++         CALL BZINTS_WEIGHT(0,FERWE,ETRANS,AMP,WTKPT,NTRANS,NTRANS, &
++                        NKPTS,KPOINTS%IDTET,KPOINTS%NTET,1,KPOINTS%VOLWGT,EMIN,EMAX, &
++                        DOST(1,1),DOSI(1,1),NEDOS,EFERMI, &
++                        SUMWEI,SUME,IO%IU6,PAR,DOSPAR,NKPTS,1,1,1,0)
+ 
+-      DEALLOCATE(AMP, ETRANS )
+-      
+-      DO ISP = 1, ISPIN
+-         DOS(:) = DOS(:) + DOST(:,ISP)   
++     
++         DOS(:) = DOS(:) + DOST(:,1)   
++
++         DEALLOCATE(AMP, ETRANS, DOST, DOSI, FERWE, WTKPT, PAR, DOSPAR )
+       ENDDO
++ 
+ 
+     END SUBROUTINE EPSILON_IMAG_TET
+ 
+@@ -1780,7 +1800,11 @@
+ ! this line allows to overwrite the imaginary part by the
+ ! one obtained by the Kramers-Kronig relation (Hilbert transform)
+ ! it is broadended by a Lorenzian
+-      EPS_IMAG=EPS_IMAG_TMP
++! this option is only selected if CSHIFT is large compared to the 
++! grid spacing (if CSHIFT is too small, the folding does not work reliably)
++      IF (ABS(CSHIFT) >= DELTAE) THEN
++         EPS_IMAG=EPS_IMAG_TMP
++      ENDIF
+     END SUBROUTINE EPSILON_REAL
+ 
+ 
+@@ -2136,24 +2160,31 @@
+ 
+ !***********************************************************************
+ !  function LAST_FILLED_OPTICS returns the last filled band
+-!  modulo the number of bands done in parallel
+ !***********************************************************************
+ 
+-  FUNCTION LAST_FILLED_OPTICS_NO_MOD( W)
++  FUNCTION LAST_FILLED_OPTICS_NO_MOD( W, ISPIN, THRESH)
+     USE prec
+     USE wave
+     IMPLICIT NONE
+     TYPE (wavespin) W
+     INTEGER LAST_FILLED_OPTICS_NO_MOD
+-    INTEGER K1, ISP
++    INTEGER, OPTIONAL :: ISPIN
++    REAL(q), OPTIONAL :: THRESH
+   ! local
+-    INTEGER NB, NB_MAX
++    INTEGER ISP,K1,NB,NB_MAX
++    REAL(q) THRSH
++
++    THRSH=0.05_q
++    IF (PRESENT(THRESH)) THRSH=THRESH
+ 
+     NB_MAX=0
+     DO ISP=1,W%WDES%ISPIN
++       IF (PRESENT(ISPIN)) THEN
++          IF (ISP/=ISPIN) CYCLE
++       ENDIF
+        DO K1=1,W%WDES%NKPTS
+           DO NB=W%WDES%NB_TOT, 1, -1
+-             IF (W%FERTOT( NB, K1, ISP)>0.05 ) EXIT
++             IF (W%FERTOT( NB, K1, ISP)>THRSH) EXIT
+           ENDDO
+           NB_MAX=MAX(NB,NB_MAX)
+        ENDDO
+@@ -2163,6 +2194,41 @@
+     LAST_FILLED_OPTICS_NO_MOD=NB_MAX
+   END FUNCTION LAST_FILLED_OPTICS_NO_MOD
+ 
++!***********************************************************************
++!  function FIRST_EMPTY_OPTICS returns the first (partially) empty band
++!***********************************************************************
++
++  FUNCTION FIRST_EMPTY_OPTICS_NO_MOD( W, ISPIN, THRESH)
++    USE prec
++    USE wave
++    IMPLICIT NONE
++    TYPE (wavespin) W
++    INTEGER FIRST_EMPTY_OPTICS_NO_MOD
++    INTEGER, OPTIONAL :: ISPIN
++    REAL(q), OPTIONAL :: THRESH
++  ! local
++    INTEGER ISP,K1,NB,NB_MIN
++    REAL(q) THRSH
++
++    THRSH=0.95_q
++    IF (PRESENT(THRESH)) THRSH=THRESH
++
++    NB_MIN=W%WDES%NB_TOT
++    DO ISP=1,W%WDES%ISPIN
++       IF (PRESENT(ISPIN)) THEN
++          IF (ISP/=ISPIN) CYCLE
++       ENDIF
++       DO K1=1,W%WDES%NKPTS
++          DO NB=1,W%WDES%NB_TOT
++             IF (W%FERTOT( NB, K1, ISP)<THRSH) EXIT
++          ENDDO
++          NB_MIN=MIN(NB,NB_MIN)
++       ENDDO
++    ENDDO
++
++    ! round to next larger value modulo W%WDES%NB_PAR
++    FIRST_EMPTY_OPTICS_NO_MOD=NB_MIN
++  END FUNCTION FIRST_EMPTY_OPTICS_NO_MOD
+ 
+ !************************ SUBROUTINE WRT_CDER_BETWEEN_STATES ***********
+ !
+diff -Naur ./src/linear_response_NMR.F ../patched/src/linear_response_NMR.F
+--- ./src/linear_response_NMR.F	2016-02-08 15:28:28.000000000 +0100
++++ ../patched/src/linear_response_NMR.F	2016-06-18 14:09:09.563635534 +0200
+@@ -1713,7 +1713,9 @@
+             LLP=PP%LPS(CH2)
+             IF (LL == LLP .AND. LL>0 .AND. LL<=LDIMP ) THEN
+                IF (LZORA) THEN
+-                  KQ(:)=RYTOEV/(RYTOEV-POT(:)/CLIGHT/CLIGHT/2._q)*PP%WAE(:,CH1)*PP%WAE(:,CH2)-PP%WPS(:,CH1)*PP%WPS(:,CH2)
++                  ! ZORA: radially variant relativistic mass correction 1/(1-V(r)/2/c^2) in Hartree atomic units,
++                  ! in accordance with Eq. A13 of Yates et al., J. Chem. Phys. 118, 5746 (2003).
++                  KQ(:)=1._q/(1._q-POT(:)/(2._q*RYTOEV)/CLIGHT/CLIGHT/2._q)*PP%WAE(:,CH1)*PP%WAE(:,CH2)-PP%WPS(:,CH1)*PP%WPS(:,CH2)
+                   CALL SIMPI(PP%R,KQ,KQION)
+ !                 WRITE(*,*) 'QION=',PP%QION(CH1,CH2),'KQION=',KQION
+                ELSE
+diff -Naur ./src/nonl.F ../patched/src/nonl.F
+--- ./src/nonl.F	2016-02-08 15:28:29.000000000 +0100
++++ ../patched/src/nonl.F	2016-06-18 14:09:10.011640167 +0200
+@@ -27,7 +27,7 @@
+      REAL(q), POINTER ::QPROJ(:,:,:,:,:) ! projectors in reciprocal space for each k-point
+      COMPLEX(q),POINTER ::CREXP(:,:)  ! phase factor exp (i (G+k) R(ion))
+      REAL(q),  POINTER  ::POSION(:,:) ! positions (required for setup)
+-     REAL(q),  POINTER  ::VKPT_SHIFT(:,:) 
++     REAL(q),  POINTER  ::VKPT_SHIFT(:,:) => NULL()
+                                    ! k-point shift for each ion
+      COMPLEX(q),POINTER ::CQFAK(:,:)  ! i^l
+   END TYPE nonl_struct
+diff -Naur ./src/pead.F ../patched/src/pead.F
+--- ./src/pead.F	2016-02-08 15:28:29.000000000 +0100
++++ ../patched/src/pead.F	2016-06-18 14:09:10.535645586 +0200
+@@ -29,8 +29,8 @@
+      &   CALC_POLARIZATION,IMLNDET,DETS,SET_EV,CALC_OVERLAP,CALC_OVERLAP_, &
+      &   SET_PHASE_SHIFT,OVERL_AND_APPLY_PHASE_SHIFT,APPLY_PHASE_SHIFT_CPROJ, &
+      &   SET_PHASE_SHIFT_GRID,SET_PHASE_SHIFT_GRID_RSPACE,APPLY_PHASE_SHIFT_GRID, &
+-     &   CHECK_OCCUPATIONS,SETYLM_AUG2,SETDIJ_R,DUMP_HAM_PEAD,DUMP_HAM_FILE, &
+-     &   IS_INSULATING,LSKIP_EDOTP_DURING_ELMIN,GENERATE_KPOINTS_TRANS_FULL, &
++     &   SETYLM_AUG2,SETDIJ_R,DUMP_HAM_PEAD,DUMP_HAM_FILE, &
++     &   LSKIP_EDOTP_DURING_ELMIN,GENERATE_KPOINTS_TRANS_FULL, &
+      &   W1_ROTATE,WA_ROTATE,SETUP_STRINGS,CALC_EWFOR_AND_EWSIF,ONE_CENTRE_CHARGE, &
+      &   SETQIJB,OVERL_AND_APPLY_PHASE_SHIFT_C
+ 
+@@ -1784,6 +1784,16 @@
+ ! calculate macroscopic polarization
+ !=======================================================================
+       IF (LPEAD_CALC_POL()) THEN
++         IF (.NOT.IS_INSULATING()) THEN
++            CALL CHECK_OCCUPATIONS(W)
++            IF (.NOT.IS_INSULATING()) THEN
++               CALL VTUTOR('W','PEADPOLNOMETAL',0.0_q,1, &
++               &           0,1,(0.0_q,0.0_q),1,.FALSE.,1,IO%IU6,2)
++               CALL VTUTOR('W','PEADPOLNOMETAL',0.0_q,1, &
++               &           0,1,(0.0_q,0.0_q),1,.FALSE.,1,IO%IU0,2)
++               RETURN
++            ENDIF
++         ENDIF
+          CALL PEAD_POLARIZATION_CALC(W,P,CQIJ,LATT_CUR,T_INFO)
+ !        CALL PEAD_POLARIZATION_WRITE(IO,LATT_CUR,LWARNING=.TRUE.)
+          CALL PEAD_POLARIZATION_WRITE(IO,LATT_CUR)
+@@ -1793,6 +1803,16 @@
+ ! calculate the dielectric matrix
+ !=======================================================================
+       IF (LPEAD_CALC_EPS()) THEN
++         IF (.NOT.IS_INSULATING()) THEN
++            CALL CHECK_OCCUPATIONS(W)
++            IF (.NOT.IS_INSULATING()) THEN
++               CALL VTUTOR('W','PEADEPSNOMETAL',0.0_q,1, &
++               &           0,1,(0.0_q,0.0_q),1,.FALSE.,1,IO%IU6,2)
++               CALL VTUTOR('W','PEADEPSNOMETAL',0.0_q,1, &
++               &           0,1,(0.0_q,0.0_q),1,.FALSE.,1,IO%IU0,2)
++               RETURN
++            ENDIF
++         ENDIF
+ 
+          DRSCF=0 ; DRNSCF=0
+          BORN_SCF=0 ; BORN_NSCF=0
+@@ -2178,6 +2198,16 @@
+ ! response to electric field
+ !=======================================================================
+       IF (LPEAD_NONZERO_EFIELD()) THEN         
++         IF (.NOT.IS_INSULATING()) THEN
++            CALL CHECK_OCCUPATIONS(W)
++            IF (.NOT.IS_INSULATING()) THEN
++               CALL VTUTOR('W','PEADEPSNOMETAL',0.0_q,1, &
++               &           0,1,(0.0_q,0.0_q),1,.FALSE.,1,IO%IU6,2)
++               CALL VTUTOR('W','PEADEPSNOMETAL',0.0_q,1, &
++               &           0,1,(0.0_q,0.0_q),1,.FALSE.,1,IO%IU0,2)
++               RETURN
++            ENDIF
++         ENDIF
+          ! switch on the electric field
+          CALL PEAD_SWITCH_EFIELD_ON()
+          ! check the Zener field condition
+@@ -2872,7 +2902,7 @@
+       COMPLEX(q) WEIGHT
+ 
+       COMPLEX(q) S(W%WDES%NB_TOT,W%WDES%NB_TOT)
+-      COMPLEX(q), ALLOCATABLE :: SP(:,:)
++      GDEF, ALLOCATABLE :: SP(:,:)
+ 
+       INTEGER STRD
+       REAL(q) PRFAC
+@@ -2923,7 +2953,9 @@
+       ! set DWDK to zero
+       DWDK%CPTWFP=0
+       DWDK%CPROJ=0
+-
++#ifdef gammareal
++      LIMAGINARY_PART=.FALSE.
++#endif
+       deltak: DO SGN=1,-1,-2
+          ! add + < k | k+b_i >  or  - < k | k-b_i >
+          K1=K
+@@ -2950,7 +2982,9 @@
+          ENDIF
+ 
+ !        IF (LDOIO) CALL DUMP_HAM_PEAD(" inv S_k1_k2",W%WDES,S)
+-
++#ifdef gammareal
++         IF (SGN/=1) LIMAGINARY_PART=.TRUE.
++#endif
+          ! search for kpoint k2 in BZ
+          NQ=KPOINT_IN_FULL_GRID(K2,KPOINTS_FULL)
+             
+@@ -3034,8 +3068,15 @@
+             NSTRIP_RED_ACT=NSTRIP_ACT*DWDK%WDES1%NB_PAR
+ 
+             SP=0
++#ifndef gammareal
+             SP(1:NSTRIP_RED_ACT,:)=SGN*S(NPOS_RED:NPOS_RED+NSTRIP_RED_ACT-1,:)
+-
++#else
++            IF (.NOT.LIMAGINARY_PART) THEN
++               SP(1:NSTRIP_RED_ACT,:)=SGN*AIMAG(S(NPOS_RED:NPOS_RED+NSTRIP_RED_ACT-1,:))
++            ELSE
++               SP(1:NSTRIP_RED_ACT,:)=SGN* REAL(S(NPOS_RED:NPOS_RED+NSTRIP_RED_ACT-1,:))
++            ENDIF
++#endif
+ !           IF (LDOIO) CALL DUMP_HAM_PEAD(" SP",W%WDES,SP)
+ 
+             IF (DWDK%WDES1%NPL_RED/=0) &
+@@ -3058,13 +3099,19 @@
+          CALL DELWAVA(WHAM)
+          DEALLOCATE(SV)
+       ENDDO deltak
+-
++#ifdef gammareal
++      LIMAGINARY_PART=.FALSE.
++#endif
+       ! redistribute DWDK from "over pw components" to
+       ! "over bands"
+       CALL REDISTRIBUTE_PW(DWDK)
+       CALL REDISTRIBUTE_PROJ(DWDK)
+ 
++#ifndef gammareal
+       WEIGHT=-PRFAC*(0._q,0.5_q)/DK(I)/TPI
++#else
++      WEIGHT= PRFAC/DK(I)/TPI
++#endif
+ !     WEIGHT=CMPLX(0._q,0.5_q, q)*WP%WDES%RSPIN*WP%WDES%WTKPT(NK)/DK(I)/TPI
+ 
+       ! add DWDK to RPHI and RHPI_CPROJ
+@@ -4603,7 +4650,7 @@
+                NOCC(ISP)=N
+             ELSE
+                IF (N/=NOCC(ISP)) THEN
+-                  WRITE(*,*) 'CHECK_OCCUPATIONS: ERROR, system is not insulating.'
++!                 WRITE(*,*) 'CHECK_OCCUPATIONS: ERROR, system is not insulating.'
+                   LINSULATING=.FALSE.
+                   RETURN
+                ENDIF
+diff -Naur ./src/pseudo.F ../patched/src/pseudo.F
+--- ./src/pseudo.F	2016-02-08 15:28:29.000000000 +0100
++++ ../patched/src/pseudo.F	2016-06-18 14:09:10.619646454 +0200
+@@ -43,7 +43,7 @@
+      REAL(q),POINTER :: PSPTAUVAL(:)! kinetic energy density of valence electrons information in rec. space
+      REAL(q),POINTER :: PSPRHO(:)! atomic pseudo charge density in rec. space
+      REAL(q),POINTER :: PSPNL(:,:)  ! non local proj. rec. space
+-     REAL(q),POINTER :: PSPNL_SPLINE(:,:,:)  ! non local proj. rec. space spline fit
++     REAL(q),POINTER :: PSPNL_SPLINE(:,:,:) => NULL() ! non local proj. rec. space spline fit
+      REAL(q),POINTER :: PSPRNL(:,:,:) ! non local proj. real space
+      REAL(q),POINTER :: DION(:,:)! non local strength
+      REAL(q),POINTER :: QION(:,:)! spherical augmentation charge
+diff -Naur ./src/relativistic.F ../patched/src/relativistic.F
+--- ./src/relativistic.F	2016-02-08 15:28:29.000000000 +0100
++++ ../patched/src/relativistic.F	2016-06-18 14:09:10.743647736 +0200
+@@ -45,7 +45,7 @@
+       REAL(q) ksi(R%NMAX)
+       REAL(q), PARAMETER :: C = 137.037  ! speed of light in a.u.
+       REAL(q), PARAMETER :: INVMC2=7.45596E-6
+-!                           invmc2=hbar^2/2(m_e c)^2 in eV/A^2
++!                           invmc2=hbar^2/2(m_e c)^2 in A^2
+       INTEGER, PARAMETER :: LMAX=3, MMAX=LMAX*2+1
+       COMPLEX(q) DUMMY(MMAX,MMAX,3,LMAX)
+       COMPLEX(q) LS(MMAX,MMAX,4,LMAX)
+@@ -62,7 +62,7 @@
+ !     difference potentials (compared to isolated atom)
+ !     we need to evaluate a couple of terms
+ 
+-!     lets first calculate the Hatree potential of the core electrons
++!     lets first calculate the Hartree potential of the core electrons
+       CALL RAD_POT_HAR(0, R, APOT, RHOC, SUM)
+ !     add the potential of the nucleus (delta like charge Z at origin)
+       APOT=APOT*SCALE - FELECT/R%R*Z
+@@ -75,8 +75,13 @@
+       CALL GRAD(R,APOT,DPOT)
+ !     ksi(r)=  hbar^2/2(m_e c)^2 1/r d V(r)/d r
+ !     KSI(:)=INVMC2*DPOT(:)/ R%R 
++
++!     ZORA: includes a radially variant relativistic mass correction 1/(1-V(r)/2/c^2)^2 in Hartree atomic units,
++!     in accordance with for instance Eq. 42 of Lenthe et al., J. Chem. Phys. 99, 4597 (1993) and Eq. 6.16 in
++!     "the ZORA equation", Thesis of E. van Lenthe.)
+       DO I=1,R%NMAX
+-         KSI(I)=INVMC2*(RYTOEV/(RYTOEV-0.5_q*APOT(I)/C/C))*DPOT(I)/R%R(I)
++!        KSI(I)=INVMC2*(RYTOEV/(RYTOEV-0.5_q*APOT(I)/C/C))*DPOT(I)/R%R(I)
++         KSI(I)=INVMC2*(1._q/(1._q-APOT(I)/(2._q*RYTOEV)/C/C/2._q)**2)*DPOT(I)/R%R(I)
+       ENDDO
+ 
+ #ifdef debug
+diff -Naur ./src/tutor.F ../patched/src/tutor.F
+--- ./src/tutor.F	2016-02-08 15:28:29.000000000 +0100
++++ ../patched/src/tutor.F	2016-06-18 14:09:11.411654644 +0200
+@@ -853,6 +853,30 @@
+      &                  //'ry restarting your job with NCORE=1) |'
+       ENDIF
+ 
++      IF (LIO.AND. TOPIC(1:LTOPIC)=='PEADPOLNOMETAL') THEN
++         WRITE(IU,'(A)') '|      The calculation of the macroscopic po' &
++     &                 //'larization by means of the        |'
++         WRITE(IU,'(A)') '|      Berry-phase expressions (LCALCPOL=.TR' &
++     &                 //'UE.) requires your system to be   |'
++         WRITE(IU,'(A)') '|      insulating. This does not seem to be ' &
++     &                 //'the case.                         |'
++         WRITE(IU,'(A)') '|      VASP will skip this part of your job,' &
++     &                 //' sorry ...                        |'
++      ENDIF
++
++      IF (LIO.AND. TOPIC(1:LTOPIC)=='PEADEPSNOMETAL') THEN
++         WRITE(IU,'(A)') '|      The calculation of changes in the mac' &
++     &                 //'roscopic polarization due to the  |'
++         WRITE(IU,'(A)') '|      application of a finite electric fiel' &
++     &                 //'d, by means of the PEAD method    |'
++         WRITE(IU,'(A)') '|      (LCALCEPS=.TRUE. or EFIELD_PEAD/=0)  ' &
++     &                 //'requires your system to be        |'
++         WRITE(IU,'(A)') '|      insulating. This does not seem to be ' &
++     &                 //'the case.                         |'
++         WRITE(IU,'(A)') '|      VASP will skip this part of your job,' &
++     &                 //' sorry ...                        |'
++      ENDIF
++
+       IF (LIO.AND. TOPIC(1:LTOPIC)=='LINTET') THEN
+          WRITE(IU,'(A)') '|      The linear tetrahedron method can not ' &
+      &                 //' be used with the KPOINTS file   |'
+@@ -927,6 +951,17 @@
+      &                 //'. SOOO sorry...                   |'
+       ENDIF
+ 
++      IF (LIO.AND. TOPIC(1:LTOPIC)=='TETNOMETAL') THEN
++         WRITE(IU,'(A)') '|      Integration of the imaginary part of ' &
++     &                 //'the dielectric function by means  |'
++         WRITE(IU,'(A)') '|      of the tetrahedron method is not supp' &
++     &                 //'orted for metallic systems.       |'
++         WRITE(IU,'(A)') '|      VASP will skip the calculation of the' &
++     &                 //' optical properties.              |'
++         WRITE(IU,'(A)') '|      Please rerun with ISMEAR > -4.       ' &
++     &                 //'                                  |'
++      ENDIF
++
+       IF (LIO.AND. TOPIC(1:LTOPIC)=='POTIM large') THEN
+          WRITE(IU,'(A)') '|      Your timestep is larger than 0.1 Angs' &
+      &                 //'t.                                |'
