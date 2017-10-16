@@ -76,6 +76,12 @@ class Paraview(CMakePackage):
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
+    # Paraview defaults to using 'git describe' to find its own
+    # version number which can easily produce the wrong version
+    # for itself. This stops paraview from finding git and will
+    # then use its own version.txt file.
+    patch('get_version_without_git.patch', when='@5.4.0:5.4.1')
+
     # Broken gcc-detection - improved in 5.1.0, redundant later
     patch('gcc-compiler-pv501.patch', when='@:5.0.1')
 

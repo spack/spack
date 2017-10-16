@@ -1,0 +1,29 @@
+--- ParaView-v5.4.1.orig/CMake/ParaViewDetermineVersion.cmake	2017-10-12 14:36:02.000000000 -0600
++++ ParaView-v5.4.1/CMake/ParaViewDetermineVersion.cmake	2017-10-12 14:39:39.000000000 -0600
+@@ -36,16 +36,16 @@
+     # this function.
+     return ()
+   elseif (NOT PARAVIEW_GIT_DESCRIBE)
+-    if(EXISTS ${git_command})
+-      execute_process(
+-        COMMAND ${git_command} describe
+-        WORKING_DIRECTORY ${source_dir}
+-        RESULT_VARIABLE result
+-        OUTPUT_VARIABLE output
+-        ERROR_QUIET
+-        OUTPUT_STRIP_TRAILING_WHITESPACE
+-        ERROR_STRIP_TRAILING_WHITESPACE)
+-    endif()
++    #if(EXISTS ${git_command})
++    #  execute_process(
++    #    COMMAND ${git_command} describe
++    #    WORKING_DIRECTORY ${source_dir}
++    #    RESULT_VARIABLE result
++    #    OUTPUT_VARIABLE output
++    #    ERROR_QUIET
++    #    OUTPUT_STRIP_TRAILING_WHITESPACE
++    #    ERROR_STRIP_TRAILING_WHITESPACE)
++    #endif()
+   else()
+     set(result 0)
+     set(output ${PARAVIEW_GIT_DESCRIBE})
