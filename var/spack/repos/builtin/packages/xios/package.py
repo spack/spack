@@ -157,6 +157,11 @@ OASIS_LIB=""
         make_xios = Executable('./make_xios')
         make_xios(*options)
 
-# TODO: Use pkg-config or similar to get libraries needed for hdf5 (to support static linking)?
-# TODO: install to output directory? Or build in output directory?
+        mkdirp(spec.prefix)
+        install_tree('bin', spec.prefix.bin)
+        install_tree('lib', spec.prefix.lib)
+        install_tree('inc', spec.prefix.include)
+        install_tree('etc', spec.prefix.etc)
+        install_tree('cfg', spec.prefix.cfg)
+
 # TODO: add a test?
