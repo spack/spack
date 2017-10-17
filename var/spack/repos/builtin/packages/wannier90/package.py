@@ -67,7 +67,6 @@ class Wannier90(MakefilePackage):
 
         lapack = self.spec['lapack'].libs
         blas = self.spec['blas'].libs
-
         substitutions = {
             '@F90': spack_fc,
             '@MPIF90': self.spec['mpi'].mpifc,
