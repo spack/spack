@@ -221,6 +221,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def make_briefly_writable(self, path):
         """Temporarily make a file writable, then reset"""
         perm = os.stat(path).st_mode
-        os.chmod(path, perm | 0o222)
+        os.chmod(path, perm | 0o200)
         yield
         os.chmod(path, perm)
