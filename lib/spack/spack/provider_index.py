@@ -97,8 +97,8 @@ class ProviderIndex(object):
 
         assert(not spec.virtual)
 
-        pkg = spec.package
-        for provided_spec, provider_specs in iteritems(pkg.provided):
+        pkg_provided = spec.package_class.provided
+        for provided_spec, provider_specs in iteritems(pkg_provided):
             for provider_spec in provider_specs:
                 # TODO: fix this comment.
                 # We want satisfaction other than flags
