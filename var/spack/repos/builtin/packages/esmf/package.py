@@ -149,7 +149,9 @@ class Esmf(MakefilePackage):
         # ESMF_COMM must be set to indicate which MPI implementation
         # is used to build the ESMF library.
         if '+mpi' in spec:
-            if '^mvapich2' in spec:
+            if 'platform=cray' in self.spec:
+                os.environ['ESMF_COMM'] = 'mpi'
+            elif '^mvapich2' in spec:
                 os.environ['ESMF_COMM'] = 'mvapich2'
             elif '^mpich' in spec:
                 # FIXME: mpich or mpich2?
