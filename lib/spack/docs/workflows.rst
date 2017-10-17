@@ -170,7 +170,7 @@ of usage:
 
 .. code-block:: sh
 
-   #!/bin/sh
+   #!/bin/bash
 
    compilers=(
        %gcc
@@ -355,7 +355,7 @@ Transitive Dependencies
 
 In the script above, each ``spack module loads`` command generates a
 *single* ``module load`` line.  Transitive dependencies do not usually
-need to be loaded, only modules the user needs in in ``$PATH``.  This is
+need to be loaded, only modules the user needs in ``$PATH``.  This is
 because Spack builds binaries with RPATH.  Spack's RPATH policy has
 some nice features:
 
