@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-
+import os
 
 class Paraview(CMakePackage):
     """ParaView is an open-source, multi-platform data analysis and
@@ -90,10 +90,14 @@ class Paraview(CMakePackage):
             return self._urlfmt.format(version.up_to(2), version, '')
 
     def setup_environment(self, spack_env, run_env):
+        if os.path.isdir(self.prefix.lib64):
+            lib_dir = self.prefix.lib64
+        else:
+            lib_dir = self.prefix.lib
         paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
-        run_env.prepend_path('LIBRARY_PATH', join_path(self.prefix.lib,
+        run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
                              paraview_version))
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix.lib,
+        run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
                              paraview_version))
 
     def cmake_args(self):
