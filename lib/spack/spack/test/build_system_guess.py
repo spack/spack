@@ -70,7 +70,8 @@ def test_build_systems(url_and_build_system):
         guesser = spack.cmd.create.BuildSystemGuesser()
         guesser(stage, url)
         assert build_system == guesser.build_system
-        
+
+
 def test_build_systems_quiet(url_and_build_system):
     url, build_system = url_and_build_system
     with spack.stage.Stage(url) as stage:
