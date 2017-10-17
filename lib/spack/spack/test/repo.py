@@ -30,8 +30,10 @@ import pytest
 def test_repo_getpkg():
     repopath = spack.repository.RepoPath(spack.mock_packages_path)
     pkg_a = repopath.get('a')
+    pkg_a = repopath.get('builtin.mock.a')
 
-def test_repo_multi(tmpdir_factory):
+
+def test_repo_multi_getpkg(tmpdir_factory):
     repopath = spack.repository.RepoPath(spack.mock_packages_path)
     
     repo_namespace = 'extra_test_repo'
@@ -46,3 +48,22 @@ repo:
     extra_repo = spack.repository.Repo(str(repo_dir))
     repopath.put_first(extra_repo)
     pkg_a = repopath.get('a')
+    pkg_a = repopath.get('builtin.mock.a')
+
+
+def test_repo_multi_getpkgclass(tmpdir_factory):
+    repopath = spack.repository.RepoPath(spack.mock_packages_path)
+    
+    repo_namespace = 'extra_test_repo'
+    repo_dir = tmpdir_factory.mktemp(repo_namespace)
+    repo_dir.ensure('packages', dir=True)
+    
+    with open(str(repo_dir.join('repo.yaml')), 'w') as F:
+        F.write("""
+repo:
+  namespace: extra_test_repo
+""")
+    extra_repo = spack.repository.Repo(str(repo_dir))
+    repopath.put_first(extra_repo)
+    pkg_a = repopath.get_pkg_class('a')
+    pkg_a = repopath.get_pkg_class('builtin.mock.a')
