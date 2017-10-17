@@ -259,7 +259,7 @@ class TestStage(object):
             check_chdir(stage, self.stage_name)
             check_fetch(stage, self.stage_name)
         check_destroy(stage, self.stage_name)
-    
+
     # This is for coverage. To test correct functioning of the stage
     # you would need to check the tty output to confirm that output
     def test_quiet_fetch(self, mock_archive):
