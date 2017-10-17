@@ -89,6 +89,11 @@ class Paraview(CMakePackage):
         else:
             return self._urlfmt.format(version.up_to(2), version, '')
 
+    def setup_environment(self, spack_env, run_env):
+        paraview_version='paraview-%s' % self.spec.version.up_to(2)
+        run_env.prepend_path('LIBRARY_PATH', join_path(self.prefix.lib, paraview_version))
+        run_env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix.lib, paraview_version))
+
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
         spec = self.spec
