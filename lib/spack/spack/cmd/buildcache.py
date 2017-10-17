@@ -121,8 +121,7 @@ def createtarball(args):
             tty.msg('recursing dependencies')
             for d, node in spec.traverse(order='post',
                                          depth=True,
-                                         deptype=('link', 'run'),
-                                         deptype_query='run'):
+                                         deptype=('link', 'run')):
                 if not node.external:
                     tty.msg('adding dependency %s' % node.format())
                     specs.add(node)
