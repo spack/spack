@@ -31,7 +31,6 @@ class RAnnotate(RPackage):
     homepage = "https://www.bioconductor.org/packages/annotate/"
     url      = "https://git.bioconductor.org/packages/annotate"
     list_url = homepage
-
     version('1.54.0', git='https://git.bioconductor.org/packages/annotate', commit='860cc5b696795a31b18beaf4869f9c418d74549e')
 
     depends_on('r@3.4.0:3.4.9', when='@1.54.0')
