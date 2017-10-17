@@ -547,10 +547,7 @@ class RepoPath(object):
             name = spec.name
         else:
             # handle strings directly for speed instead of @_autospec'ing
-            try:
-                namespace, name = spec.split('.')
-            except ValueError:
-                name = spec
+            namespace, _, name = spec.rpartition('.')
 
         # If the spec already has a namespace, then return the
         # corresponding repo if we know about it.
