@@ -783,6 +783,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             dynamic_fetcher = fs.from_list_url(self)
             return [dynamic_fetcher] if dynamic_fetcher else []
 
+        # FIXME: This is the only place where search_fn is used
         stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path,
                       search_fn=download_search)
         return stage
@@ -1033,12 +1034,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                  self.spec.format('$_$@'), ck_msg)
 
         self.stage.create()
-        self.stage.fetch(mirror_only)
+
+        validate = spack.do_checksum and self.version in self.versions
+        self.stage.fetch(mirror_only, validate=validate)
         self._fetch_time = time.time() - start_time
-
-        if checksum and self.version in self.versions:
-            self.stage.check()
-
         self.stage.cache_local()
 
     def do_stage(self, mirror_only=False):

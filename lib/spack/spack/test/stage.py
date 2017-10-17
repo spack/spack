@@ -178,7 +178,7 @@ def failing_search_fn():
 def failing_fetch_strategy():
     """Returns a fetch strategy that fails."""
     class FailingFetchStrategy(spack.fetch_strategy.FetchStrategy):
-        def fetch(self):
+        def fetch(self, source_dir, validate=True, expand=True):
             raise spack.fetch_strategy.FailedDownloadError(
                 "<non-existent URL>",
                 "This implementation of FetchStrategy always fails"
@@ -228,7 +228,7 @@ class TestStage(object):
 
     def test_fetch(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
-            stage.fetch()
+            stage.fetch(validate=False)
             check_setup(stage, self.stage_name, mock_archive)
             check_fetch(stage, self.stage_name)
         check_destroy(stage, self.stage_name)
@@ -239,7 +239,7 @@ class TestStage(object):
                       name=self.stage_name,
                       search_fn=failing_search_fn)
         with stage:
-            stage.fetch()
+            stage.fetch(validate=False)
         check_destroy(stage, self.stage_name)
 
     def test_no_search_mirror_only(
@@ -249,7 +249,7 @@ class TestStage(object):
                       search_fn=failing_search_fn)
         with stage:
             try:
-                stage.fetch(mirror_only=True)
+                stage.fetch(mirror_only=True, validate=False)
             except spack.fetch_strategy.FetchError:
                 pass
         check_destroy(stage, self.stage_name)
@@ -260,7 +260,7 @@ class TestStage(object):
                       search_fn=search_fn)
         with stage:
             try:
-                stage.fetch(mirror_only=False)
+                stage.fetch(mirror_only=False, validate=False)
             except spack.fetch_strategy.FetchError:
                 pass
         check_destroy(stage, self.stage_name)
@@ -268,7 +268,7 @@ class TestStage(object):
 
     def test_expand_archive(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
-            stage.fetch()
+            stage.fetch(validate=False)
             check_setup(stage, self.stage_name, mock_archive)
             check_fetch(stage, self.stage_name)
             stage.expand_archive()
@@ -277,7 +277,7 @@ class TestStage(object):
 
     def test_restage(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
-            stage.fetch()
+            stage.fetch(validate=False)
             stage.expand_archive()
 
             with working_dir(stage.source_path):

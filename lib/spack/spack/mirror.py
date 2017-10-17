@@ -239,14 +239,12 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                     tty.msg("{name} : already added".format(name=name))
                 else:
                     spec_exists_in_mirror = False
-                    fetcher.fetch()
-                    if not kwargs.get('no_checksum', False):
-                        fetcher.check()
-                        tty.msg("{name} : checksum passed".format(name=name))
-
+                    validate = not kwargs.get('no_checksum', False)
+                    fetcher.search_archive_fn = stage.search_archive_fn
+                    fetcher.fetch(stage.path, validate=validate, expand=False)
                     # Fetchers have to know how to archive their files.  Use
                     # that to move/copy/create an archive in the mirror.
-                    fetcher.archive(archive_path)
+                    fetcher.archive(stage.path, archive_path)
                     tty.msg("{name} : added".format(name=name))
 
         if spec_exists_in_mirror:

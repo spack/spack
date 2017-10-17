@@ -159,8 +159,7 @@ class UrlPatch(Patch):
             os.path.basename(self.url))
 
         with spack.stage.Stage(fetcher, mirror_path=mirror) as patch_stage:
-            patch_stage.fetch()
-            patch_stage.check()
+            patch_stage.fetch(validate=True)
             patch_stage.cache_local()
 
             root = patch_stage.path

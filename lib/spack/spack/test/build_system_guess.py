@@ -66,7 +66,7 @@ def url_and_build_system(request, tmpdir):
 def test_build_systems(url_and_build_system):
     url, build_system = url_and_build_system
     with spack.stage.Stage(url) as stage:
-        stage.fetch()
+        stage.fetch(validate=False)
         guesser = spack.cmd.create.BuildSystemGuesser()
         guesser(stage, url)
         assert build_system == guesser.build_system
