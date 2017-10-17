@@ -259,6 +259,16 @@ class TestStage(object):
             check_chdir(stage, self.stage_name)
             check_fetch(stage, self.stage_name)
         check_destroy(stage, self.stage_name)
+    
+    # This is for coverage. To test correct functioning of the stage
+    # you would need to check the tty output to confirm that output
+    def test_quiet_fetch(self, mock_archive):
+        with Stage(mock_archive.url, name=self.stage_name) as stage:
+            stage.fetch(quiet=True)
+            check_setup(stage, self.stage_name, mock_archive)
+            check_chdir(stage, self.stage_name)
+            check_fetch(stage, self.stage_name)
+        check_destroy(stage, self.stage_name)
 
     def test_no_search_if_default_succeeds(
             self, mock_archive, failing_search_fn
