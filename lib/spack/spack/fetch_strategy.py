@@ -204,7 +204,7 @@ class URLFetchStrategy(FetchStrategy):
 
         if self.archive_file:
             if not quiet:
-               tty.msg("Already downloaded %s" % self.archive_file)
+                tty.msg("Already downloaded %s" % self.archive_file)
             return
 
         save_file = None
@@ -619,7 +619,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         if self.stage.source_path:
             if not quiet:
-               tty.msg("Already fetched %s" % self.stage.source_path)
+                tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
         args = ''
