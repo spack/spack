@@ -223,7 +223,7 @@ def listspecs(args):
                 tty.msg("/%s %s" % (spec.dag_hash(7), spec.format()))
             else:
                 tty.msg('run "spack buildcache install /%s" to install  %s\n' %
-                    (spec.dag_hash(7), spec.format()))
+                        (spec.dag_hash(7), spec.format()))
 
 
 def getkeys(args):
