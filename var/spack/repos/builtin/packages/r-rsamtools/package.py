@@ -35,7 +35,7 @@ class RRsamtools(RPackage):
     url      = "https://git.bioconductor.org/packages/Rsamtools"
     list_url = homepage
 
-    version('1.28.0', git='https://git.bioconductor.org/packages/Rsamtools', commit='fa5b6abef68175586f21add7927174786412472')
+    version('1.28.0', git='https://git.bioconductor.org/packages/Rsamtools', commit='dfa5b6abef68175586f21add7927174786412472')
 
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))
