@@ -29,6 +29,7 @@ import spack
 from llnl.util.filesystem import *
 from spack.spec import Spec
 from spack.version import ver
+from spack.fetch_strategy import GitFetchStrategy
 from spack.util.executable import which
 
 
@@ -36,15 +37,42 @@ pytestmark = pytest.mark.skipif(
     not which('git'), reason='requires git to be installed')
 
 
+@pytest.fixture(params=[None, '1.8.5.2', '1.8.5.1', '1.7.10', '1.7.0'])
+def git_version(request):
+    """Tests GitFetchStrategy behavior for different git versions.
+
+    GitFetchStrategy tries to optimize using features of newer git
+    versions, but needs to work with older git versions.  To ensure code
+    paths for old versions still work, we fake it out here and make it
+    use the backward-compatibility code paths with newer git versions.
+    """
+    git = which('git', required=True)
+    real_git_version = ver(git('--version', output=str).lstrip('git version '))
+
+    if request.param is None:
+        yield    # don't patch; run with the real git_version method.
+    else:
+        test_git_version = ver(request.param)
+        if test_git_version > real_git_version:
+            pytest.skip("Can't test clone logic for newer version of git.")
+
+        # patch the fetch strategy to think it's using a lower git version.
+        # we use this to test what we'd need to do with older git versions
+        # using a newer git installation.
+        git_version_method = GitFetchStrategy.git_version
+        GitFetchStrategy.git_version = test_git_version
+        yield
+        GitFetchStrategy.git_version = git_version_method
+
+
 @pytest.mark.parametrize("type_of_test", ['master', 'branch', 'tag', 'commit'])
 @pytest.mark.parametrize("secure", [True, False])
-def test_fetch(
-        type_of_test,
-        secure,
-        mock_git_repository,
-        config,
-        refresh_builtin_mock
-):
+def test_fetch(type_of_test,
+               secure,
+               mock_git_repository,
+               config,
+               refresh_builtin_mock,
+               git_version):
     """Tries to:
 
     1. Fetch the repo using a fetch strategy constructed with
