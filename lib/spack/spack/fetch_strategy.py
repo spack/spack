@@ -305,14 +305,12 @@ class URLFetchStrategy(FetchStrategy):
         return bool(self.digest)
 
     @_needs_stage
-    def expand(self, quiet=False):
+    def expand(self):
         if not self.expand_archive:
-            if not quiet:
-                tty.msg("Skipping expand step for %s" % self.archive_file)
+            tty.msg("Skipping expand step for %s" % self.archive_file)
             return
 
-        if not quiet:
-            tty.msg("Staging archive: %s" % self.archive_file)
+        tty.msg("Staging archive: %s" % self.archive_file)
 
         self.stage.chdir()
         if not self.archive_file:
