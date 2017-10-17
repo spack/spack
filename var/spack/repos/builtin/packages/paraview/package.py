@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Paraview(CMakePackage):
     """ParaView is an open-source, multi-platform data analysis and
     visualization application."""
