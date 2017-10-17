@@ -35,10 +35,11 @@ class REdger(RPackage):
        SAGE and CAGE."""
 
     homepage = "https://bioconductor.org/packages/edgeR/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/edgeR_3.18.1.tar.gz"
+    url      = "https://git.bioconductor.org/packages/edgeR"
     list_url = homepage
 
-    version('3.18.1', 'f074fe4d8f220efe27d61c0666e4b270')
+    version('3.18.1', git='https://git.bioconductor.org/packages/edgeR', commit='3fe91cfbc81a379510527abefeef538901e4b653')
 
     depends_on('r-limma', type=('build', 'run'))
     depends_on('r-locfit', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@3.18.1')
