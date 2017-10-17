@@ -68,7 +68,7 @@ def mock_fetch_cache(monkeypatch):
         def set_stage(self, stage):
             pass
 
-        def fetch(self):
+        def fetch(self, quiet=False):
             raise FetchError('Mock cache always fails for tests')
 
         def __str__(self):
