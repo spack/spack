@@ -374,7 +374,7 @@ class Stage(object):
         else:
             raise ChdirError("Setup failed: no such directory: " + self.path)
 
-    def fetch(self, mirror_only=False):
+    def fetch(self, mirror_only=False, quiet=False):
         """Downloads an archive or checks out code from a repository."""
         self.chdir()
 
@@ -436,7 +436,7 @@ class Stage(object):
             try:
                 fetcher.set_stage(self)
                 self.fetcher = fetcher
-                self.fetcher.fetch()
+                self.fetcher.fetch(quiet=quiet)
                 break
             except spack.fetch_strategy.NoCacheError as e:
                 # Don't bother reporting when something is not cached.
