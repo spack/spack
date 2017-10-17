@@ -280,6 +280,17 @@ class TestStage(object):
         ) as stage:
             stage.fetch()
         check_destroy(stage, self.stage_name)
+        
+    def test_no_search_if_default_succeeds_quiet(
+            self, mock_archive, failing_search_fn
+    ):
+        with Stage(
+                mock_archive.url,
+                name=self.stage_name,
+                search_fn=failing_search_fn
+        ) as stage:
+            stage.fetch(quiet=True)
+        check_destroy(stage, self.stage_name)
 
     def test_no_search_mirror_only(
             self, failing_fetch_strategy, failing_search_fn
@@ -311,6 +322,15 @@ class TestStage(object):
     def test_expand_archive(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
             stage.fetch()
+            check_setup(stage, self.stage_name, mock_archive)
+            check_fetch(stage, self.stage_name)
+            stage.expand_archive()
+            check_expand_archive(stage, self.stage_name, mock_archive)
+        check_destroy(stage, self.stage_name)
+        
+    def test_expand_archive_quiet(self, mock_archive):
+        with Stage(mock_archive.url, name=self.stage_name) as stage:
+            stage.fetch(quiet=True)
             check_setup(stage, self.stage_name, mock_archive)
             check_fetch(stage, self.stage_name)
             stage.expand_archive()
