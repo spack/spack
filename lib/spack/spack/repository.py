@@ -819,7 +819,7 @@ class Repo(object):
 
     @_autospec
     def get(self, spec, new=False):
-        if spec.virtual:
+        if not self.exists(spec.name):
             raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:
