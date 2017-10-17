@@ -30,8 +30,9 @@ class Singularity(AutotoolsPackage):
        Compute'"""
 
     homepage = "http://singularity.lbl.gov/"
-    url      = "https://github.com/singularityware/singularity/archive/2.3.1.tar.gz"
+    url      = "https://github.com/singularityware/singularity/archive/2.4.tar.gz"
 
+    version('2.4', 'd357ce68ef2f8149edd84155731531465dbe74148c37719f87f168fc39384377')
     version('2.3.1', '292ff7fe3db09c854b8accf42f763f62')
 
     depends_on('m4',       type='build')
