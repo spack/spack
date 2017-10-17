@@ -59,7 +59,7 @@ class Vasp(MakefilePackage):
     depends_on('mkl')
     depends_on('wannier90@1.2%intel')
 
-    parallel=False
+    parallel = False
 
     def setup_environment(self, spack_env, run_env):
 
@@ -75,9 +75,9 @@ class Vasp(MakefilePackage):
         shutil.copy('arch/makefile.include.linux_intel', 'makefile.include')
         makefile = FileFilter('makefile.include')
         makefile.filter('CPP_OPTIONS= .*', 'CPP_OPTIONS= DMPI -DHOST=\\"RC_Workstations\\" -DIFC \\')
-        makefile.filter('-DCACHE_SIZE=.*', '-DCACHE_SIZE=12000 -DPGF90 -Davoidalloc -DMPI_BLOCK=8000 -DscaLAPACK -Duse_collective \\') 
-        makefile.filter('-Duse_bse_te.*', '-Duse_bse_te -DnoAugXCmeta -Duse_shmem -Dtbdyn \\') 
-	makefile.filter('-Dtbdyn.*', '-DVASP2WANNIER90 -DRPROMU_DGEMV -DRACCMU_DGEMV -DnoSTOPCAR -Ddo_loops')
+        makefile.filter('-DCACHE_SIZE=.*', '-DCACHE_SIZE=12000 -DPGF90 -Davoidalloc -DMPI_BLOCK=8000 -DscaLAPACK -Duse_collective \\')
+        makefile.filter('-Duse_bse_te.*', '-Duse_bse_te -DnoAugXCmeta -Duse_shmem -Dtbdyn \\')
+        makefile.filter('-Dtbdyn.*', '-DVASP2WANNIER90 -DRPROMU_DGEMV -DRACCMU_DGEMV -DnoSTOPCAR -Ddo_loops')
         makefile.filter('FC         = .*', 'FC         = %s' % spec['mpi'].mpifc)
         makefile.filter('FCL        = .*', 'FCL        = %s -mkl=sequential' % spec['mpi'].mpifc)
         makefile.filter('FFLAGS     = .*', 'FFLAGS     = -assume byterecl')
@@ -95,8 +95,8 @@ class Vasp(MakefilePackage):
     def check_install(self):
 
         shutil.copytree('/opt/share/vasp/common/tests/vasptest', 'vasptest')
-	os.environ['VASP_TMPDIR'] = 'vasptest/tmp'
-	os.environ['VASPTEST_EXE'] = '%s/mpirun -np 4 %s/vasp' % (self.spec['mpi'].prefix.bin, self.spec.prefix.bin)
+        os.environ['VASP_TMPDIR'] = 'vasptest/tmp'
+        os.environ['VASPTEST_EXE'] = '%s/mpirun -np 4 %s/vasp' % (self.spec['mpi'].prefix.bin, self.spec.prefix.bin)
         with working_dir('vasptest'):
             behave = Executable('behave')
             behave('-s', '-c', '-k')
@@ -107,4 +107,3 @@ class Vasp(MakefilePackage):
         install('bin/vasp_std', prefix.bin+'/vasp')
         install('bin/vasp_gam', prefix.bin+'/vasp-gamma')
         install('bin/vasp_ncl', prefix.bin+'/vasp-so')
-
