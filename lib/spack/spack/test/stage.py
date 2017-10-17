@@ -280,7 +280,7 @@ class TestStage(object):
         ) as stage:
             stage.fetch()
         check_destroy(stage, self.stage_name)
-        
+
     def test_no_search_if_default_succeeds_quiet(
             self, mock_archive, failing_search_fn
     ):
@@ -327,7 +327,7 @@ class TestStage(object):
             stage.expand_archive()
             check_expand_archive(stage, self.stage_name, mock_archive)
         check_destroy(stage, self.stage_name)
-        
+
     def test_expand_archive_quiet(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
             stage.fetch(quiet=True)
