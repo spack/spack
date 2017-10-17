@@ -73,7 +73,7 @@ class Gettext(AutotoolsPackage):
             '--with-included-gettext',
             '--with-included-libcroco',
             '--without-emacs',
-            '--with-lispdir=%s/emacs/site-lisp/gettext' % prefix.share,
+            '--with-lispdir=%s/emacs/site-lisp/gettext' % self.prefix.share,
             '--without-cvs'
         ]
 
