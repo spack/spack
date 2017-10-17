@@ -27,6 +27,14 @@ import spack
 import pytest
 
 
+# Unlike the repo_path fixture defined in conftest, this has a test-level
+# scope rather than a session level scope, since we want to edit the
+# given RepoPath
+@pytest.fixture()
+def test_repo():
+    return spack.repository.RepoPath(spack.mock_packages_path)
+
+
 @pytest.fixture()
 def extra_repo(tmpdir_factory):
     repo_namespace = 'extra_test_repo'
@@ -41,18 +49,18 @@ repo:
     return spack.repository.Repo(str(repo_dir))
 
 
-def test_repo_getpkg(repo_path):
-    repo_path.get('a')
-    repo_path.get('builtin.mock.a')
+def test_repo_getpkg(test_repo):
+    test_repo.get('a')
+    test_repo.get('builtin.mock.a')
 
 
-def test_repo_multi_getpkg(repo_path, extra_repo):
-    repo_path.put_first(extra_repo)
-    repo_path.get('a')
-    repo_path.get('builtin.mock.a')
+def test_repo_multi_getpkg(test_repo, extra_repo):
+    test_repo.put_first(extra_repo)
+    test_repo.get('a')
+    test_repo.get('builtin.mock.a')
 
 
-def test_repo_multi_getpkgclass(repo_path, extra_repo):
-    repo_path.put_first(extra_repo)
-    repo_path.get_pkg_class('a')
-    repo_path.get_pkg_class('builtin.mock.a')
+def test_repo_multi_getpkgclass(test_repo, extra_repo):
+    test_repo.put_first(extra_repo)
+    test_repo.get_pkg_class('a')
+    test_repo.get_pkg_class('builtin.mock.a')
