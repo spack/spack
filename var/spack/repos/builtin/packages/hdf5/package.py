@@ -55,8 +55,6 @@ class Hdf5(AutotoolsPackage):
     variant('shared', default=True,
             description='Builds a shared version of the library')
 
-    variant('unsupported', default=False,
-            description='Allow unsupported combinations of configure options')
     variant('hl', default=False, description='Enable the high-level library')
     variant('cxx', default=False, description='Enable C++ support')
     variant('fortran', default=False, description='Enable Fortran support')
@@ -75,13 +73,22 @@ class Hdf5(AutotoolsPackage):
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
-    # According to ./configure --help thread-safe capabilities are:
-    # "Not compatible with the high-level library, Fortran, or C++ wrappers."
-    # (taken from hdf5@1.10.0patch1)
-    conflicts('+threadsafe', when='+cxx~unsupported')
-    conflicts('+mpi', when='+cxx~unsupported')
-    conflicts('+threadsafe', when='+fortran~unsupported')
-    conflicts('+threadsafe', when='+hl~unsupported')
+    # There are several officially unsupported combinations of the features:
+    # 1. Thread safety is not guaranteed via high-level C-API but in some cases
+    #    it works.
+    # conflicts('+threadsafe+hl')
+
+    # 2. Thread safety is not guaranteed via Fortran (CXX) API, but it's
+    #    possible for a dependency tree to contain a package that uses Fortran
+    #    (CXX) API in a single thread and another one that uses low-level C-API
+    #    in multiple threads. To allow for such scenarios, we don't specify the
+    #    following conflicts.
+    # conflicts('+threadsafe+cxx')
+    # conflicts('+threadsafe+fortran')
+
+    # 3. Parallel features are not supported via CXX API, but for the reasons
+    #    described in #2 we allow for such combination.
+    # conflicts('+mpi+cxx')
 
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
@@ -157,9 +164,11 @@ class Hdf5(AutotoolsPackage):
             raise RuntimeError(msg)
 
     def configure_args(self):
-        # Allow unsupported combinations of configure options only if a user
-        # has requested it explicitly with 'unsupported' variant.
-        extra_args = self.enable_or_disable('unsupported')
+        # Always enable this option. This does not actually enable any
+        # features: it only *allows* the user to specify certain
+        # combinations of other arguments. Enabling it just skips a
+        # sanity check in configure, so this doesn't merit a variant.
+        extra_args = ['--enable-unsupported']
         extra_args += self.enable_or_disable('threadsafe')
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
