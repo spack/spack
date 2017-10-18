@@ -91,8 +91,10 @@ class Bcl2fastq2(Package):
                 else:
                     tty.msg("Unpacking bcl2fastq2 tarball")
                     tty.msg("cwd sez: {0}".format(os.getcwd()))
-                    tarball = 'bcl2fastq2-v{0}.tar.gz'.format(self.version.dotted)
-                    shutil.move(join_path('spack-expanded-archive', tarball), '.')
+                    tarball = 'bcl2fastq2-v{0}.tar.gz'.format(
+                        self.version.dotted)
+                    shutil.move(join_path('spack-expanded-archive', tarball),
+                                '.')
                     os.rmdir('spack-expanded-archive')
                     tar = which('tar')
                     tar('-xf', tarball)
