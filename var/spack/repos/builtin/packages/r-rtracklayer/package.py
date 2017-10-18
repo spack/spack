@@ -49,5 +49,5 @@ class RRtracklayer(RPackage):
     depends_on('r-zlibbioc', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-rsamtools', type=('build', 'run'))
-    depends_on('r-genomicalignmets', type=('build', 'run'))
+    depends_on('r-genomicalignments', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.36.6')
