@@ -40,13 +40,9 @@ class Flang(CMakePackage):
                       sha256='e46d7ab305e5e95c51f4656d9b52058143cd85d859b312b3c80e93a02d54b4a5',
                       when='@4.0.1', level=1, working_dir='tools/clang'))
 
-    def patch(self):
-        # Don't use -Werror
-        # https://github.com/flang-compiler/flang/pull/85
-        filter_file(r'-Werror', '', 'CMakeLists.txt')
-
     def cmake_args(self):
         options = [
+            '-DWITH_WERROR=OFF',
             '-DCMAKE_C_COMPILER=%s' % os.path.join(
                 self.spec['llvm'].prefix.bin, 'clang'),
             '-DCMAKE_CXX_COMPILER=%s' % os.path.join(
