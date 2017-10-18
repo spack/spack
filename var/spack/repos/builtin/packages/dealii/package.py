@@ -98,20 +98,19 @@ class Dealii(CMakePackage):
     # depends_on("boost@1.59.0+thread+system+serialization+iostreams")
     # depends_on("boost+mpi", when='+mpi')
     # depends_on("boost+python", when='+python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
                when='@:8.4.2~mpi')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
                when='@:8.4.2+mpi')
     # since @8.5.0: (and @develop) python bindings are introduced:
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
                when='@8.5.0:~mpi~python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
                when='@8.5.0:+mpi~python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+python",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+python",
                when='@8.5.0:~mpi+python')
-    depends_on(
-        "boost@1.59.0:+thread+system+serialization+iostreams+mpi+python",
-        when='@8.5.0:+mpi+python')
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi+python",
+               when='@8.5.0:+mpi+python')
     depends_on("bzip2")
     depends_on("lapack")
     depends_on("muparser")
