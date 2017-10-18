@@ -61,9 +61,9 @@ class Pfunit(CMakePackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-         if self.spec.satisfies('+mpi'):
-             testdir = join_path('Examples', 'MPI_Halo')
-         else:
-             testdir = 'Examples'
-         with working_dir(testdir):
-             make('PFUNIT=%s' % self.spec.prefix)
+        if self.spec.satisfies('+mpi'):
+            testdir = join_path('Examples', 'MPI_Halo')
+        else:
+            testdir = 'Examples'
+        with working_dir(testdir):
+            make('PFUNIT=%s' % self.spec.prefix)
