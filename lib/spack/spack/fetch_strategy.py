@@ -62,7 +62,7 @@ from spack.util.executable import which
 from spack.util.string import comma_or
 from spack.version import Version, ver
 
-#: List of all fetch strategies
+#: List of all known fetch strategies
 all_strategies = []
 
 
@@ -76,33 +76,51 @@ def fetcher(cls):
     return cls
 
 
+def has_expanded_tree(directory):
+    """Checks if the input directory has at least one other
+    child subdirectory.
+
+    Args:
+         directory (path): directory where to search
+
+    Returns:
+        first subdirectory found or None
+    """
+    for p in [os.path.join(directory, f) for f in os.listdir(directory)]:
+        if os.path.isdir(p):
+            return p
+    return None
+
+
 class FetchStrategy(object):
-    """Superclass of all fetch strategies."""
+    """Defines the interface that all fetchers need to comply with"""
+
     #: Attributes required in version() args
     required_attributes = tuple()
     #: If set it will be used to save an archive to a specific filename
     save_filename = None
     #: Function used to search for the presence of an archive, set externally
-    search_archive_fn = lambda: None
+    search_archive_fn = None
 
     @property
     def archive_file(self):
         """Whatever the search function finds"""
-        # TODO: Check if it is a good idea to cache values here
         if not self.search_archive_fn:
             msg = 'cannot retrieve "archive_file" because fetcher '
             msg += 'has no attribute "search_archive_fn" set'
             raise AttributeError(msg)
         return self.search_archive_fn()
 
-    def fetch(self, source_dir, validate=True, expand=True):
+    def fetch(self, source_dir, validate=True, expanded_source_tree=any):
         """Fetches the source code archive or repository.
 
         Args:
             source_dir (path): directory where to save the source code
-            validate (bool): performs a validation of the downloaded archive
-            expand (bool): if True, the source code is expanded, if False
-                just an archive is there
+            validate (bool): if True, try to validate downloaded files whenever
+                possible
+            expanded_source_tree (bool or any): if True, the source code is
+                expanded, if False the source tree is granted not to be there.
+                If 'any' it depends on the defaults of the derived class
 
         Returns:
             absolute path of the archive file if any, else None
@@ -111,11 +129,6 @@ class FetchStrategy(object):
             FetchError: if anything goes wrong
 
         """
-
-    # FIXME: This does not really make sense for VCS, should I merge it
-    # FIXME: with the arguments of fetch?
-    def expand(self, source_dir):
-        """Expand the downloaded archive."""
 
     def reset(self, source_dir):
         """Revert to freshly downloaded state
@@ -149,9 +162,6 @@ class FetchStrategy(object):
         hash for a package using `str()`.
         """
         raise NotImplementedError
-
-    def __str__(self):  # Should be human readable URL.
-        return "FetchStrategy.__str___"
 
     # This method is used to match fetch strategies to version()
     # arguments in packages.
@@ -198,11 +208,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.digest:
             self.digest = digest
 
-        # FIXME: this can be moved later to the fetch call
-        self.expand_archive = kwargs.get('expand', True)
         self.extra_curl_options = kwargs.get('curl_options', [])
-
-        # FIXME: is this the right place to have this set?
         self.extension = kwargs.get('extension', None)
 
         if not self.url:
@@ -221,7 +227,7 @@ class URLFetchStrategy(FetchStrategy):
     def archive_basename(self):
         return os.path.basename(self.url)
 
-    def fetch(self, source_dir, validate=True, expand=True):
+    def fetch(self, source_dir, validate=True, expanded_source_tree=any):
         # FIXME: need to handle expand argument
 
         tty.msg('Fetching {0}'.format(self.url))
@@ -266,7 +272,6 @@ class URLFetchStrategy(FetchStrategy):
         with working_dir(source_dir):
             headers = curl(*curl_args, output=str, fail_on_error=False)
 
-        # FIXME: needs to be checked carefully
         if curl.returncode != 0:
             # clean up archive on failure.
             if self.archive_file:
@@ -277,8 +282,8 @@ class URLFetchStrategy(FetchStrategy):
 
             if curl.returncode == 22:
                 # This is a 404.  Curl will print the error.
-                raise FailedDownloadError(
-                    self.url, "URL %s was not found!" % self.url)
+                msg = "URL {0} was not found!".format(self.url)
+                raise FailedDownloadError(self.url, msg)
 
             elif curl.returncode == 60:
                 # This is a certificate error.  Suggest spack -k
@@ -294,12 +299,11 @@ class URLFetchStrategy(FetchStrategy):
             else:
                 # This is some other curl error.  Curl will print the
                 # error, but print a spack message too
-                raise FailedDownloadError(
-                    self.url,
-                    "Curl failed with error %d" % curl.returncode)
+                msg = 'Curl failed with error {0}'.format(curl.returncode)
+                raise FailedDownloadError(self.url, msg)
 
         # Check if we somehow got an HTML file rather than the archive we
-        # asked for.  We only look at the last content type, to handle
+        # asked for. We only look at the last content type, to handle
         # redirects properly.
         content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
                                    flags=re.IGNORECASE)
@@ -314,22 +318,26 @@ class URLFetchStrategy(FetchStrategy):
         if save_file:
             os.rename(partial_file, save_file)
 
-        # FIXME: check this
         if not os.path.exists(self.archive_file):
             raise FailedDownloadError(self.url)
 
+        # Checksum validation
         if validate:
             self._check()
+
+        # Archive expansion
+        et = has_expanded_tree(source_dir)
+        do_expansion = expanded_source_tree in (any, True)
+        if do_expansion and not et:
+            self._expand(source_dir)
+        elif do_expansion and et:
+            tty.msg('Already staged {0} in {1}'.format(self.name, source_dir))
 
     @property
     def cachable(self):
         return bool(self.digest)
 
-    def expand(self, source_dir):
-        if not self.expand_archive:
-            tty.msg("Skipping expand step for %s" % self.archive_file)
-            return
-
+    def _expand(self, source_dir):
         tty.msg("Staging archive: %s" % self.archive_file)
 
         if not self.archive_file:
@@ -344,8 +352,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # Expand all tarballs in their own directory to contain
         # exploding tarballs.
-        tarball_container = os.path.join(source_dir,
-                                         "spack-expanded-archive")
+        tarball_container = os.path.join(source_dir, 'spack-expanded-archive')
 
         mkdirp(tarball_container)
         with working_dir(tarball_container):
@@ -371,6 +378,8 @@ class URLFetchStrategy(FetchStrategy):
 
         if not files:
             os.rmdir(tarball_container)
+
+        tty.msg("Expanded archive in {0}".format(source_dir))
 
     def archive(self, source_dir, archive_abs_path):
         """Just moves this archive to the archive_abs_path."""
@@ -409,7 +418,7 @@ class URLFetchStrategy(FetchStrategy):
                 shutil.rmtree(abspath, ignore_errors=True)
 
         # Expand the archive again
-        self.expand(source_dir)
+        self._expand(source_dir)
 
     def __repr__(self):
         url = self.url if self.url else "no url"
@@ -426,10 +435,7 @@ class URLFetchStrategy(FetchStrategy):
 class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
 
-    def __init__(self, *args, **kwargs):
-        super(CacheURLFetchStrategy, self).__init__(*args, **kwargs)
-
-    def fetch(self, source_dir, validate=True, expand=True):
+    def fetch(self, source_dir, validate=True, expanded_source_tree=any):
         path = re.sub('^file://', '', self.url)
 
         # check whether the cache file exists.
@@ -480,30 +486,18 @@ class VCSFetchStrategy(FetchStrategy):
         for rt in rev_types:
             setattr(self, rt, kwargs.get(rt, None))
 
-    def search_repo_fn(self, root):
-        # FIXME: refactor this better
-        for p in [os.path.join(root, f) for f in os.listdir(root)]:
-            if os.path.isdir(p):
-                return p
-
-    def expand(self):
-        tty.debug("Source fetched with %s is already expanded." % self.name)
-
-    def archive(self, source_dir, archive_abs_path, **kwargs):
-
+    def _vcs_archive(
+            self, source_dir, archive_abs_path, exclude_patterns=None
+    ):
         assert (extension(archive_abs_path) == 'tar.gz')
-        # FIXME: this assertion can probably be removed
-        # FIXME: due to how the check is done
-        repo_dir = self.search_repo_fn(source_dir)
-        assert (repo_dir.startswith(source_dir))
+        repo_dir = has_expanded_tree(source_dir)
 
         tar = which('tar', required=True)
 
-        patterns = kwargs.get('exclude', None)
-        if patterns is not None:
-            if isinstance(patterns, six.string_types):
-                patterns = [patterns]
-            for p in patterns:
+        if exclude_patterns is not None:
+            if isinstance(exclude_patterns, six.string_types):
+                exclude_patterns = [exclude_patterns]
+            for p in exclude_patterns:
                 tar.add_default_arg('--exclude=%s' % p)
 
         with working_dir(source_dir):
@@ -549,7 +543,7 @@ class GoFetchStrategy(VCSFetchStrategy):
             self._go = which('go', required=True)
         return self._go
 
-    def fetch(self, source_dir, validate=True, expand=True):
+    def fetch(self, source_dir, validate=True, expanded_source_tree=any):
         tty.msg("Trying to get go resource:", self.url)
 
         with working_dir(source_dir):
@@ -562,10 +556,12 @@ class GoFetchStrategy(VCSFetchStrategy):
             self.go('get', '-v', '-d', self.url, env=env)
 
     def archive(self, source_dir, archive_abs_path):
-        super(GoFetchStrategy, self).archive(source_dir, archive_abs_path)
+        self._vcs_archive(
+            source_dir, archive_abs_path, exclude_patterns='.git'
+        )
 
     def reset(self, source_dir):
-        repo_dir = self.search_repo_fn(source_dir)
+        repo_dir = has_expanded_tree(source_dir)
         with working_dir(repo_dir):
             self.go('clean')
 
@@ -636,9 +632,9 @@ class GitFetchStrategy(VCSFetchStrategy):
         if output:
             return output.split()[0]
 
-    def fetch(self, source_dir, validate=True, expand=True):
+    def fetch(self, source_dir, validate=True, expanded_source_tree=any):
 
-        repo_dir = self.search_repo_fn(source_dir)
+        repo_dir = has_expanded_tree(source_dir)
         if repo_dir:
             tty.msg('Already fetched {0}'.format(repo_dir))
             return
@@ -664,7 +660,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                     git('clone', '--quiet', self.url)
 
             # Now a repository must be there
-            repo_dir = self.search_repo_fn(source_dir)
+            repo_dir = has_expanded_tree(source_dir)
             with working_dir(repo_dir):
                 if spack.config.get('config:debug'):
                     git('checkout', self.commit)
@@ -705,7 +701,7 @@ class GitFetchStrategy(VCSFetchStrategy):
                     git(*args)
 
                 # Now a repository must be there
-                repo_dir = self.search_repo_fn(source_dir)
+                repo_dir = has_expanded_tree(source_dir)
                 with working_dir(repo_dir):
                     # For tags, be conservative and check them out AFTER
                     # cloning.  Later git versions can do this with clone
@@ -731,10 +727,12 @@ class GitFetchStrategy(VCSFetchStrategy):
                         '--recursive')
 
     def archive(self, source_dir, archive_abs_path):
-        super(GitFetchStrategy, self).archive(source_dir, archive_abs_path)
+        self._vcs_archive(
+            source_dir, archive_abs_path, exclude_patterns='.git'
+        )
 
     def reset(self, source_dir):
-        repo_dir = self.search_repo_fn(source_dir)
+        repo_dir = has_expanded_tree(source_dir)
         with working_dir(repo_dir):
             if spack.config.get('config:debug'):
                 self.git('checkout', '.')
@@ -796,8 +794,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
             if line.startswith('Revision:'):
                 return line.split()[-1]
 
-    def fetch(self, source_dir, validate=True, expand=True):
-        repo_dir = self.search_repo_fn(source_dir)
+    def fetch(self, source_dir, validate=True, expanded_source_tree=any):
+        repo_dir = has_expanded_tree(source_dir)
         if repo_dir:
             tty.msg("Already fetched %s" % repo_dir)
             return
@@ -826,12 +824,13 @@ class SvnFetchStrategy(VCSFetchStrategy):
                 elif os.path.isdir(path):
                     shutil.rmtree(path, ignore_errors=True)
 
-    # FIXME: exclude .svn directories and similar
     def archive(self, source_dir, archive_abs_path):
-        super(SvnFetchStrategy, self).archive(source_dir, archive_abs_path)
+        self._vcs_archive(
+            source_dir, archive_abs_path, exclude_patterns='.svn'
+        )
 
     def reset(self, source_dir):
-        repo_dir = self.search_repo_fn(source_dir)
+        repo_dir = has_expanded_tree(source_dir)
         self._remove_untracked_files(repo_dir)
         with working_dir(repo_dir):
             self.svn('revert', '.', '-R')
@@ -900,8 +899,8 @@ class HgFetchStrategy(VCSFetchStrategy):
         if output:
             return output.strip()
 
-    def fetch(self, source_dir, validate=True, expand=True):
-        repo_dir = self.search_repo_fn(source_dir)
+    def fetch(self, source_dir, validate=True, expanded_source_tree=any):
+        repo_dir = has_expanded_tree(source_dir)
         if repo_dir:
             tty.msg("Already fetched %s" % repo_dir)
             return
@@ -925,11 +924,13 @@ class HgFetchStrategy(VCSFetchStrategy):
             self.hg(*args)
 
     def archive(self, source_dir, archive_abs_path):
-        super(HgFetchStrategy, self).archive(source_dir, archive_abs_path)
+        self._vcs_archive(
+            source_dir, archive_abs_path, exclude_patterns='.hg'
+        )
 
     def reset(self, source_dir):
         with working_dir(source_dir):
-            repo_dir = self.search_repo_fn(source_dir)
+            repo_dir = has_expanded_tree(source_dir)
             scrubbed = "scrubbed-source-tmp"
 
             args = ['clone']
@@ -1040,7 +1041,7 @@ class FsCache(object):
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
-    def store(self, fetcher, relativeDst):
+    def store(self, source_dir, fetcher, relativeDst):
         # skip fetchers that aren't cachable
         if not fetcher.cachable:
             return
@@ -1051,7 +1052,7 @@ class FsCache(object):
 
         dst = os.path.join(self.root, relativeDst)
         mkdirp(os.path.dirname(dst))
-        fetcher.archive(None, dst)
+        fetcher.archive(source_dir, dst)
 
     def fetcher(self, targetPath, digest, **kwargs):
         path = os.path.join(self.root, targetPath)

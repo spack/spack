@@ -178,7 +178,7 @@ def failing_search_fn():
 def failing_fetch_strategy():
     """Returns a fetch strategy that fails."""
     class FailingFetchStrategy(spack.fetch_strategy.FetchStrategy):
-        def fetch(self, source_dir, validate=True, expand=True):
+        def fetch(self, source_dir, validate=True, expanded_source_tree=True):
             raise spack.fetch_strategy.FailedDownloadError(
                 "<non-existent URL>",
                 "This implementation of FetchStrategy always fails"
@@ -268,17 +268,15 @@ class TestStage(object):
 
     def test_expand_archive(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
-            stage.fetch(validate=False)
+            stage.fetch(validate=False, expand=True)
             check_setup(stage, self.stage_name, mock_archive)
             check_fetch(stage, self.stage_name)
-            stage.expand_archive()
             check_expand_archive(stage, self.stage_name, mock_archive)
         check_destroy(stage, self.stage_name)
 
     def test_restage(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
-            stage.fetch(validate=False)
-            stage.expand_archive()
+            stage.fetch(validate=False, expand=True)
 
             with working_dir(stage.source_path):
                 check_expand_archive(stage, self.stage_name, mock_archive)

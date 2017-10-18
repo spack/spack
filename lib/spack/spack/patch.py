@@ -150,8 +150,10 @@ class UrlPatch(Patch):
         """
         # use archive digest for compressed archives
         fetch_digest = self.sha256
+        expand = False
         if self.archive_sha256:
             fetch_digest = self.archive_sha256
+            expand = True
 
         fetcher = fs.URLFetchStrategy(self.url, digest=fetch_digest)
         mirror = os.path.join(
@@ -159,12 +161,11 @@ class UrlPatch(Patch):
             os.path.basename(self.url))
 
         with spack.stage.Stage(fetcher, mirror_path=mirror) as patch_stage:
-            patch_stage.fetch(validate=True)
+            patch_stage.fetch(validate=True, expand=expand)
             patch_stage.cache_local()
 
             root = patch_stage.path
             if self.archive_sha256:
-                patch_stage.expand_archive()
                 root = patch_stage.source_path
 
             files = os.listdir(root)

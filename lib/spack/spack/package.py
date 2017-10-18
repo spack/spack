@@ -994,11 +994,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         spack.store.layout.remove_install_directory(self.spec)
 
-    def do_fetch(self, mirror_only=False):
-        """
-        Creates a stage directory and downloads the tarball for this package.
-        Working directory will be set to the stage directory.
-        """
+    def do_stage(self, mirror_only=False, expand=True):
+
         if not self.spec.concrete:
             raise ValueError("Can only fetch concrete packages.")
 
@@ -1025,20 +1022,26 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.create()
 
         validate = spack.do_checksum and self.version in self.versions
-        self.stage.fetch(mirror_only, validate=validate)
-        self._fetch_time = time.time() - start_time
-        self.stage.cache_local()
-
-    def do_stage(self, mirror_only=False):
-        """Unpacks and expands the fetched tarball."""
-        if not self.spec.concrete:
-            raise ValueError("Can only stage concrete packages.")
-
-        self.do_fetch(mirror_only)     # this will create the stage
-        self.stage.expand_archive()
+        self.stage.fetch(mirror_only, validate=validate, expand=expand)
 
         if not os.listdir(self.stage.path):
             raise FetchError("Archive was empty for %s" % self.name)
+
+        self._fetch_time = time.time() - start_time
+        self.stage.cache_local()
+
+    # FIXME: REMOVE
+    # def do_stage(self, expand=True, mirror_only=False):
+    #
+    #     """Unpacks and expands the fetched tarball."""
+    #     if not self.spec.concrete:
+    #         raise ValueError("Can only stage concrete packages.")
+    #
+    #     self.do_fetch(mirror_only)     # this will create the stage
+    #     self.stage.expand_archive()
+    #
+    #     if not os.listdir(self.stage.path):
+    #         raise FetchError("Archive was empty for %s" % self.name)
 
     @classmethod
     def lookup_patch(cls, sha256):

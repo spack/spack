@@ -50,22 +50,22 @@ def mirror_archive_filename(spec, fetcher, resourceId=None):
         raise ValueError("mirror.path requires spec with concrete version.")
 
     if isinstance(fetcher, fs.URLFetchStrategy):
-        if fetcher.expand_archive:
-            # If we fetch with a URLFetchStrategy, use URL's archive type
-            ext = url.determine_url_file_extension(fetcher.url)
 
-            # If the filename does not end with a normal suffix,
-            # see if the package explicitly declares the extension
-            if not ext:
-                ext = spec.package.versions[spec.package.version].get(
-                    'extension', None)
+        # If we fetch with a URLFetchStrategy, use URL's archive type
+        ext = url.determine_url_file_extension(fetcher.url)
 
-            if ext:
-                # Remove any leading dots
-                ext = ext.lstrip('.')
+        # If the filename does not end with a normal suffix,
+        # see if the package explicitly declares the extension
+        if not ext:
+            ext = spec.package.versions[spec.package.version].get(
+                'extension', None)
 
-            if not ext:
-                msg = """\
+        if ext:
+            # Remove any leading dots
+            ext = ext.lstrip('.')
+
+        if not ext:
+            msg = """\
 Unable to parse extension from {0}.
 
 If this URL is for a tarball but does not include the file extension
@@ -79,10 +79,7 @@ Spack not to expand it with the following syntax:
 
     version('1.2.3', 'hash', expand=False)
 """
-                raise MirrorError(msg.format(fetcher.url))
-        else:
-            # If the archive shouldn't be expanded, don't check extension.
-            ext = None
+            raise MirrorError(msg.format(fetcher.url))
     else:
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
@@ -241,7 +238,11 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                     spec_exists_in_mirror = False
                     validate = not kwargs.get('no_checksum', False)
                     fetcher.search_archive_fn = stage.search_archive_fn
-                    fetcher.fetch(stage.path, validate=validate, expand=False)
+                    fetcher.fetch(
+                        stage.path,
+                        validate=validate,
+                        expanded_source_tree=False
+                    )
                     # Fetchers have to know how to archive their files.  Use
                     # that to move/copy/create an archive in the mirror.
                     fetcher.archive(stage.path, archive_path)

@@ -196,6 +196,7 @@ class Stage(object):
 
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
+        self.default_fetcher.search_archive_fn = self.search_archive_fn
         self.search_fn = search_fn
         # used for mirrored archives of repositories.
         self.skip_checksum_for_mirror = True
@@ -362,19 +363,13 @@ class Stage(object):
         file, it will just return the stage path. If the archive needs
         to be expanded, it will return None when no archive is found.
         """
-        # FIXME: fetcher is an attribute that changes according to what
-        # FIXME: is the CURRENT fetcher. Probably this logic is better
-        # FIXME: to be distributed
-        if isinstance(self.fetcher, fs.URLFetchStrategy):
-            if not self.fetcher.expand_archive:
-                return self.path
-
         for p in [os.path.join(self.path, f) for f in os.listdir(self.path)]:
             if os.path.isdir(p):
                 return p
+
         return None
 
-    def fetch(self, mirror_only=False, validate=True):
+    def fetch(self, mirror_only=False, validate=True, expand=True):
         """Downloads an archive or checks out code from a repository."""
         fetchers = []
         if not mirror_only:
@@ -394,9 +389,9 @@ class Stage(object):
                 for f in dyn_fetchers:
                     yield f
 
-        # Check if the archive has been fetched already
-        if self.archive_file:
-            tty.msg('Already downloaded {0}'.format(self.archive_file))
+        # Check if the source tree is there already
+        if self.source_path and expand is True:
+            tty.msg('Already staged {0} in {1}'.format(self.name, self.path))
             return
 
         for fetcher in itertools.chain(fetchers, dynamic_fetchers()):
@@ -404,7 +399,9 @@ class Stage(object):
                 fetcher.save_filename = self.save_filename
                 fetcher.search_archive_fn = self.search_archive_fn
                 self.fetcher = fetcher
-                self.fetcher.fetch(self.path, validate=validate)
+                self.fetcher.fetch(
+                    self.path, validate=validate, expanded_source_tree=expand
+                )
                 break
             except spack.fetch_strategy.NoCacheError:
                 # Don't bother reporting when something is not cached.
@@ -435,11 +432,9 @@ class Stage(object):
         # then use the same digest.  `spack mirror` ensures that
         # the checksum will be the same.
         digest = None
-        expand = True
         extension = None
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             digest = self.default_fetcher.digest
-            expand = self.default_fetcher.expand_archive
             extension = self.default_fetcher.extension
 
         # Have to skip the checksum for things archived from
@@ -450,11 +445,11 @@ class Stage(object):
         for url in urls:
             fetchers.insert(
                 0, fs.URLFetchStrategy(
-                    url, digest, expand=expand, extension=extension))
+                    url, digest, extension=extension))
         if self.default_fetcher.cachable:
             fetchers.insert(
                 0, spack.caches.fetch_cache.fetcher(
-                    self.mirror_path, digest, expand=expand,
+                    self.mirror_path, digest,
                     extension=extension))
 
         return fetchers
@@ -475,21 +470,8 @@ class Stage(object):
     #        self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
-
-    def expand_archive(self):
-        """Changes to the stage directory and attempt to expand the downloaded
-        archive.  Fail if the stage is not set up or if the archive is not yet
-        downloaded."""
-        archive_dir = self.source_path
-        # FIXME: this is the only place where FetchStrategy.expand is called
-        # FIXME: probably can be refactored to be easier to read / reason about
-        if not archive_dir:
-            # Needs to update the archive file here
-            self.fetcher.expand(self.path)
-            tty.msg("Created stage in %s" % self.path)
-        else:
-            tty.msg("Already staged %s in %s" % (self.name, self.path))
+        # FIXME: probably need to pass self.path here
+        spack.caches.fetch_cache.store(self.path, self.fetcher, self.mirror_path)
 
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
@@ -547,17 +529,16 @@ class ResourceStage(Stage):
 
     def restage(self):
         super(ResourceStage, self).restage()
-        self._add_to_root_stage()
+        self._add_to_root_stage()def fetch(self, mirror_only=False, validate=True, expand=True):
+        super(ResourceStage, self).fetch(mirror_only, validate, expand)
 
-    def expand_archive(self):
-        super(ResourceStage, self).expand_archive()
+        if expand is True:
         self._add_to_root_stage()
 
     def _add_to_root_stage(self):
         """
         Move the extracted resource to the root stage (according to placement).
-        """
-        root_stage = self.root_stage
+        """root_stage = self.root_stage
         resource = self.resource
         placement = os.path.basename(self.source_path) \
             if resource.placement is None \
@@ -565,26 +546,27 @@ class ResourceStage(Stage):
         if not isinstance(placement, dict):
             placement = {'': placement}
 
-        target_path = os.path.join(
-            root_stage.source_path, resource.destination)
+            target_path = os.path.join(
+                root_stage.source_path, resource.destination)
 
-        try:
-            os.makedirs(target_path)
-        except OSError as err:
-            if err.errno == errno.EEXIST and os.path.isdir(target_path):
-                pass
-            else:
-                raise
+
+            try:
+                os.makedirs(target_path)
+            except OSError as err:
+                if err.errno == errno.EEXIST and os.path.isdir(target_path):# noqa: ignore=E501
+                    pass
+                else:
+                    raise
 
         for key, value in iteritems(placement):
             destination_path = os.path.join(target_path, value)
-            source_path = os.path.join(self.source_path, key)
+            source_path = os.path.join(self.source_path, key)    if not os.path.exists(destination_path):
 
-            if not os.path.exists(destination_path):
-                tty.info('Moving resource stage\n\tsource : '
-                         '{stage}\n\tdestination : {destination}'.format(
-                             stage=source_path, destination=destination_path
-                         ))
+                tty.info('Moving resource stage\n '
+                         '\tsource :{stage}\n'
+                        '\tdestination : {destination}'.format(
+                             stage=source_path, destination=destination_path)
+                         )
                 shutil.move(os.path.realpath(source_path), destination_path)
 
 

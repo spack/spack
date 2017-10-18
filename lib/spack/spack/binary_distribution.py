@@ -574,7 +574,7 @@ def get_specs(force=False):
                 os.remove(stage.save_filename)
             if not os.path.exists(stage.save_filename):
                 try:
-                    stage.fetch()
+                    stage.fetch(expand=False)
                 except fs.FetchError:
                     continue
             with open(stage.save_filename, 'r') as f:

@@ -70,7 +70,7 @@ def fetch(parser, args):
                 if package.spec.external:
                     continue
 
-                package.do_fetch(expand=False)
+                package.do_stage(expand=False)
 
         package = spack.repo.get(spec)
-        package.do_fetch(expand=False)
+        package.do_stage(expand=False)
