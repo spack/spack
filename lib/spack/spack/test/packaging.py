@@ -25,20 +25,22 @@
 """
 This test checks the binary packaging infrastructure
 """
-import pytest
-import spack
-import spack.store
-from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.spec import Spec
-import spack.binary_distribution as bindist
-from llnl.util.filesystem import join_path, mkdirp
-import argparse
-import spack.cmd.buildcache as buildcache
-from spack.relocate import *
 import os
 import stat
 import sys
 import shutil
+import pytest
+import argparse
+
+from llnl.util.filesystem import mkdirp
+
+import spack
+import spack.store
+import spack.binary_distribution as bindist
+import spack.cmd.buildcache as buildcache
+from spack.spec import Spec
+from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
+from spack.relocate import *
 from spack.util.executable import ProcessError
 
 
@@ -72,8 +74,8 @@ def test_packaging(mock_archive, tmpdir):
     spec.concretize()
     pkg = spack.repo.get(spec)
     fake_fetchify(pkg.fetcher, pkg)
-    mkdirp(join_path(pkg.prefix, "bin"))
-    patchelfscr = join_path(pkg.prefix, "bin", "patchelf")
+    mkdirp(os.path.join(pkg.prefix, "bin"))
+    patchelfscr = os.path.join(pkg.prefix, "bin", "patchelf")
     f = open(patchelfscr, 'w')
     body = """#!/bin/bash
 echo $PATH"""
@@ -91,14 +93,14 @@ echo $PATH"""
     pkg.do_install()
 
     # Put some non-relocatable file in there
-    filename = join_path(spec.prefix, "dummy.txt")
+    filename = os.path.join(spec.prefix, "dummy.txt")
     with open(filename, "w") as script:
         script.write(spec.prefix)
 
     # Create the build cache  and
     # put it directly into the mirror
 
-    mirror_path = join_path(tmpdir, 'test-mirror')
+    mirror_path = os.path.join(str(tmpdir), 'test-mirror')
     specs = [spec]
     spack.mirror.create(
         mirror_path, specs, no_checksum=True
@@ -286,16 +288,25 @@ def test_relocate():
 
 @pytest.mark.skipif(sys.platform != 'darwin',
                     reason="only works with Mach-o objects")
-def test_relocate_macho():
-    get_patchelf()
-    assert (needs_binary_relocation('Mach-O') is True)
-    macho_get_paths('/bin/bash')
-    shutil.copyfile('/bin/bash', 'bash')
-    modify_macho_object('bash', '/usr', '/opt', False)
-    modify_macho_object('bash', '/usr', '/opt', True)
-    shutil.copyfile('/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
-    modify_macho_object('libncurses.5.4.dylib', '/usr', '/opt', False)
-    modify_macho_object('libncurses.5.4.dylib', '/usr', '/opt', True)
+def test_relocate_macho(tmpdir):
+    with tmpdir.as_cwd():
+        get_patchelf()
+        assert (needs_binary_relocation('Mach-O') is True)
+
+        macho_get_paths('/bin/bash')
+        shutil.copyfile('/bin/bash', 'bash')
+
+        modify_macho_object('bash', '/bin/bash', '/usr', '/opt', False)
+        modify_macho_object('bash', '/bin/bash', '/usr', '/opt', True)
+
+        shutil.copyfile(
+            '/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
+        modify_macho_object(
+            'libncurses.5.4.dylib',
+            '/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', False)
+        modify_macho_object(
+            'libncurses.5.4.dylib',
+            '/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', True)
 
 
 @pytest.mark.skipif(sys.platform != 'linux2',

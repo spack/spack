@@ -59,20 +59,16 @@ class Armadillo(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        arpack = find_libraries('libarpack', root=spec[
-                                'arpack-ng'].prefix.lib64, shared=True)
-        superlu = find_libraries('libsuperlu', root=spec[
-                                 'superlu'].prefix, shared=False, recurse=True)
         return [
             # ARPACK support
-            '-DARPACK_LIBRARY={0}'.format(arpack.joined()),
+            '-DARPACK_LIBRARY={0}'.format(spec['arpack-ng'].libs.joined(";")),
             # BLAS support
-            '-DBLAS_LIBRARY={0}'.format(spec['blas'].libs.joined()),
+            '-DBLAS_LIBRARY={0}'.format(spec['blas'].libs.joined(";")),
             # LAPACK support
-            '-DLAPACK_LIBRARY={0}'.format(spec['lapack'].libs.joined()),
+            '-DLAPACK_LIBRARY={0}'.format(spec['lapack'].libs.joined(";")),
             # SuperLU support
             '-DSuperLU_INCLUDE_DIR={0}'.format(spec['superlu'].prefix.include),
-            '-DSuperLU_LIBRARY={0}'.format(superlu.joined()),
+            '-DSuperLU_LIBRARY={0}'.format(spec['superlu'].libs.joined(";")),
             # HDF5 support
             '-DDETECT_HDF5={0}'.format('ON' if '+hdf5' in spec else 'OFF')
         ]
