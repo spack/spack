@@ -26,6 +26,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.config
 
 description = "Bootstrap packages needed for spack to run smoothly"
 section = "admin"
@@ -72,7 +73,13 @@ def bootstrap(parser, args, **kwargs):
     # Define requirement dictionary defining general specs which need
     # to be satisfied, and the specs to install when the general spec
     # isn't satisfied.
-    requirement_dict = {'environment-modules': 'environment-modules~X'}
+    requirement_dict = {}
+
+    module_systems = spack.config.get_config('modules')['enable']
+    if 'tcl' in module_systems:
+        requirement_dict['environment-modules'] = 'environment-modules~X'
+    if 'lmod' in module_systems:
+        requirement_dict['lmod'] = 'lmod'
 
     for requirement in requirement_dict:
         installed_specs = spack.store.db.query(requirement)
