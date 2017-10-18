@@ -25,7 +25,7 @@
 from spack import *
 
 
-class RA4classif(RPackage)
+class RA4classif(RPackage):
     """Automated Affymetrix Array Analysis Classification Package."""
 
     homepage = "https://www.bioconductor.org/packages/a4Classif/"
