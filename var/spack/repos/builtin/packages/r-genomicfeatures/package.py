@@ -51,7 +51,7 @@ class RGenomicfeatures(RPackage):
     depends_on('r-rsqlite', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-xvector', type=('build', 'run'))
-    depends_on('r-biocstrings', type=('build', 'run'))
+    depends_on('r-biostrings', type=('build', 'run'))
     depends_on('r-rtracklayer', type=('build', 'run'))
     depends_on('r-biomart', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
