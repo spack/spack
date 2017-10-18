@@ -138,16 +138,13 @@ def mock_fetch_cache(monkeypatch):
     and raises on fetch.
     """
     class MockCache(object):
-        def store(self, source_dir, copyCmd, relativeDst):
+        def store(self, copyCmd, relativeDst):
             pass
 
         def fetcher(self, targetPath, digest, **kwargs):
             return MockCacheFetcher()
 
     class MockCacheFetcher(object):
-        def set_stage(self, stage):
-            pass
-
         def fetch(self, validate=True, expanded_source_tree=True):
             raise FetchError('Mock cache always fails for tests')
 

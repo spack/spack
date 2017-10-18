@@ -466,7 +466,7 @@ class Stage(object):
         return fetchers
 
     def cache_local(self):
-        spack.caches.fetch_cache.store(self.path, self.fetcher, self.mirror_path)
+        spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
 
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
@@ -566,8 +566,8 @@ class ResourceStage(Stage):
 
 
 @pattern.composite(method_list=[
-    'fetch', 'create', 'created', 'expand_archive', 'restage',
-    'destroy', 'cache_local'])
+    'fetch', 'create', 'created', 'restage', 'destroy', 'cache_local'
+])
 class StageComposite:
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
@@ -634,9 +634,6 @@ class DIYStage(object):
 
     def fetch(self, *args, **kwargs):
         tty.msg("No need to fetch for DIY.")
-
-    def expand_archive(self):
-        tty.msg("Using source directory: %s" % self.source_path)
 
     def restage(self):
         tty.die("Cannot restage DIY stage.")

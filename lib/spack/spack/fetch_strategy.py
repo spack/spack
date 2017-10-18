@@ -1054,7 +1054,7 @@ class FsCache(object):
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
-    def store(self, source_dir, fetcher, relativeDst):
+    def store(self, fetcher, relativeDst):
         # skip fetchers that aren't cachable
         if not fetcher.cachable:
             return
@@ -1065,7 +1065,7 @@ class FsCache(object):
 
         dst = os.path.join(self.root, relativeDst)
         mkdirp(os.path.dirname(dst))
-        fetcher.archive(source_dir, dst)
+        fetcher.archive(dst)
 
     def fetcher(self, targetPath, digest, **kwargs):
         path = os.path.join(self.root, targetPath)

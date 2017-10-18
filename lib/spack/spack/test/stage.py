@@ -228,7 +228,7 @@ class TestStage(object):
 
     def test_fetch(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
-            stage.fetch(validate=False)
+            stage.fetch(validate=False, expand=False)
             check_setup(stage, self.stage_name, mock_archive)
             check_fetch(stage, self.stage_name)
         check_destroy(stage, self.stage_name)
@@ -239,7 +239,7 @@ class TestStage(object):
                       name=self.stage_name,
                       search_fn=failing_search_fn)
         with stage:
-            stage.fetch(validate=False)
+            stage.fetch(validate=False, expand=False)
         check_destroy(stage, self.stage_name)
 
     def test_no_search_mirror_only(
@@ -249,7 +249,7 @@ class TestStage(object):
                       search_fn=failing_search_fn)
         with stage:
             try:
-                stage.fetch(mirror_only=True, validate=False)
+                stage.fetch(mirror_only=True, validate=False, expand=False)
             except spack.fetch_strategy.FetchError:
                 pass
         check_destroy(stage, self.stage_name)

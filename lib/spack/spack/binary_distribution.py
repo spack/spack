@@ -374,7 +374,7 @@ def download_tarball(spec):
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
         try:
-            stage.fetch(validate=False)
+            stage.fetch(validate=False, expand=False)
             return stage.save_filename
         except fs.FetchError:
             continue
@@ -574,7 +574,7 @@ def get_specs(force=False):
                 os.remove(stage.save_filename)
             if not os.path.exists(stage.save_filename):
                 try:
-                    stage.fetch(expand=False)
+                    stage.fetch(validate=False, expand=False)
                 except fs.FetchError:
                     continue
             with open(stage.save_filename, 'r') as f:
