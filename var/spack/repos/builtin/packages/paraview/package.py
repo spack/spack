@@ -141,10 +141,17 @@ class Paraview(CMakePackage):
                 '-DMPIEXEC:FILEPATH=%s/bin/mpiexec' % spec['mpi'].prefix
             ])
 
-        if 'darwin' in self.spec.architecture:
+        if 'darwin' in spec.architecture:
             cmake_args.extend([
                 '-DVTK_USE_X:BOOL=OFF',
                 '-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON',
+            ])
+
+        # Hide git from Paraview so it will not use `git describe`
+        # to find its own version number
+        if spec.satisfies('@5.4.0:5.4.1'):
+            cmake_args.extend([
+                '-DGIT_EXECUTABLE=FALSE'
             ])
 
         return cmake_args
