@@ -64,3 +64,13 @@ def test_repo_multi_getpkgclass(test_repo, extra_repo):
     test_repo.put_first(extra_repo)
     test_repo.get_pkg_class('a')
     test_repo.get_pkg_class('builtin.mock.a')
+
+
+def test_repo_pkg_with_unknown_namespace(test_repo):
+    with pytest.raises(spack.repository.UnknownNamespaceError):
+        test_repo.get('unknown.a')
+
+
+def test_repo_unknown_pkg(test_repo):
+    with pytest.raises(spack.repository.UnknownPackageError):
+        test_repo.get('builtin.mock.nonexistentpackage')
