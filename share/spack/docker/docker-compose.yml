@@ -1,0 +1,10 @@
+version: '3'
+services:
+  ubuntu:
+    build: ./spack_ubuntu
+    volumes:
+      - '../../..:/spack'
+  fedora:
+    build: ./spack_fedora
+    volumes:
+      - '../../..:/spack'
