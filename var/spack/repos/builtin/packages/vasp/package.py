@@ -46,10 +46,11 @@ class Vasp(MakefilePackage):
 
     homepage = "https://www.vasp.at"
 
+    version('5.4.4', '8ac646b108f974371eef398973373bf6')
     version('5.4.1', 'dfd537e43294e9df09c8b5c6916c6a2e')
 
-    patch('patch.5.4.1.14032016', level=0)
-    patch('patch.5.4.1.03082016', level=1)
+    patch('patch.5.4.1.14032016', level=0, when='@5.4.1')
+    patch('patch.5.4.1.03082016', level=1, when='@5.4.1')
 
     build_targets = ['all']
 
@@ -74,22 +75,28 @@ class Vasp(MakefilePackage):
     def edit(self, spec, prefix):
 
         shutil.copy('arch/makefile.include.linux_intel', 'makefile.include')
+
         makefile = FileFilter('makefile.include')
-        makefile.filter('CPP_OPTIONS= .*', 'CPP_OPTIONS= -DMPI -DHOST=\\"RC_Workstations\\" -DIFC \\')
-        makefile.filter('-DCACHE_SIZE=.*', '-DCACHE_SIZE=12000 -DPGF90 -Davoidalloc -DMPI_BLOCK=8000 -DscaLAPACK -Duse_collective \\')
-        makefile.filter('-Duse_bse_te.*', '-Duse_bse_te -DnoAugXCmeta -Duse_shmem -Dtbdyn \\')
-        makefile.filter('-Dtbdyn.*', '-DVASP2WANNIER90 -DRPROMU_DGEMV -DRACCMU_DGEMV -DnoSTOPCAR -Ddo_loops')
         makefile.filter('FC         = .*', 'FC         = %s' % spec['mpi'].mpifc)
-        makefile.filter('FCL        = .*', 'FCL        = %s -mkl=sequential' % spec['mpi'].mpifc)
-        makefile.filter('FFLAGS     = .*', 'FFLAGS     = -assume byterecl')
         makefile.filter('OFLAG      = .*', 'OFLAG      = -O2 -ip')
         makefile.filter('BLACS      = .*', 'BLACS      = -lmkl_blacs_openmpi_lp64')
         makefile.filter('LLIBS      = .*', 'LLIBS      = %s/lib/libwannier.a $(SCALAPACK) $(LAPACK) $(BLAS)' % self.spec['wannier90'].prefix)
         makefile.filter('CPP_LIB    = .*', 'CPP_LIB    = $(CPP) -DLONGCHAR')
         makefile.filter('CC_LIB     = .*', 'CC_LIB     = %s' % spec['mpi'].mpicc)
 
+        if spec.satisfies('@5.4.1'):
+            makefile.filter('CPP_OPTIONS= .*', 'CPP_OPTIONS= -DMPI -DHOST=\\"RC_Workstations\\" -DIFC \\')
+            makefile.filter('-DCACHE_SIZE=.*', '-DCACHE_SIZE=12000 -DPGF90 -Davoidalloc \\')
+            makefile.filter('-Duse_shmem.*', '-Duse_shmem -Dtbdyn -DVASP2WANNIER90 -DRPROMU_DGEMV -DRACCMU_DGEMV -DnoSTOPCAR -Ddo_loops')
+            makefile.filter('FCL        = .*', 'FCL        = %s -mkl=sequential' % spec['mpi'].mpifc)
+        else:
+            makefile.filter('CPP_OPTIONS= .*', 'CPP_OPTIONS= -DHOST=\\"RC_Workstations\\" -DIFC \\')
+            makefile.filter('-DCACHE_SIZE=.*', '-DCACHE_SIZE=12000 -DPGF90 \\')
+            makefile.filter('-Duse_shmem.*', '-Duse_shmem -DnoAugXCmeta -DVASP2WANNIER90 -DRPROMU_DGEMV -DRACCMU_DGEMV -DnoSTOPCAR -Ddo_loops')
+            makefile.filter('FCL        = .*', 'FCL        = %s -mkl=sequential -lstdc++' % spec['mpi'].mpifc)
+
         vdw_nl = FileFilter('src/vdw_nl.F')
-        vdw_nl.filter('vdw_kernel.bindat', '/opt/share/vasp/common/vdw_kernel.bindat')
+        vdw_nl.filter('file=\'vdw_kernel.bindat\'', 'file=\'/opt/share/vasp/common/vdw_kernel.bindat\'')
 
     @on_package_attributes(run_tests=True)
     @run_after('install')
