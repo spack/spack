@@ -219,15 +219,8 @@ class URLFetchStrategy(FetchStrategy):
     #: Overridden by instances to set the curl executable
     _curl = None
 
-    def __init__(self, url=None, digest=None, **kwargs):
-        # TODO: Is this trick used somewhere? If not, it would be cleaner
-        # TODO: not to have the same argument specified twice
-        # If URL or digest are provided in the kwargs, then prefer
-        # those values.
-        self.url = kwargs.get('url', None)
-        if not self.url:
-            self.url = url
-
+    def __init__(self, url, digest=None, **kwargs):
+        self.url = url
         self.digest = next(
             (kwargs[h] for h in crypto.hashes if h in kwargs), None
         )
@@ -236,9 +229,6 @@ class URLFetchStrategy(FetchStrategy):
 
         self.extra_curl_options = kwargs.get('curl_options', [])
         self.extension = kwargs.get('extension', None)
-
-        if not self.url:
-            raise ValueError("URLFetchStrategy requires a url for fetching.")
 
     @property
     def archive_basename(self):

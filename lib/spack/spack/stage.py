@@ -184,8 +184,6 @@ class Stage(object):
                  Pass True to keep the stage intact even if no
                  exceptions are raised.
         """
-        # TODO: fetch/stage coupling needs to be reworked -- the logic
-        # TODO: here is convoluted and not modular enough.
         if isinstance(url_or_fetch_strategy, string_types):
             self.fetcher = fs.from_url(url_or_fetch_strategy)
         elif isinstance(url_or_fetch_strategy, fs.FetchStrategy):
@@ -378,9 +376,6 @@ class Stage(object):
         if not mirror_only:
             fetchers.append(self.default_fetcher)
 
-        # TODO: move mirror logic out of here and clean it up!
-        # TODO: Or @alalazo may have some ideas about how to use a
-        # TODO: CompositeFetchStrategy here.
         if self.mirror_path:
             fetchers = self._insert_mirrors(fetchers)
 
