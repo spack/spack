@@ -242,7 +242,6 @@ class TestStage(object):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
             stage.fetch(quiet=True)
             check_setup(stage, self.stage_name, mock_archive)
-            check_chdir(stage, self.stage_name)
             check_fetch(stage, self.stage_name)
         check_destroy(stage, self.stage_name)
 
