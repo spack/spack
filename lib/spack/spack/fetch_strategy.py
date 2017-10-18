@@ -160,7 +160,6 @@ class FetchStrategy(object):
         return any(k in args for k in cls.required_attributes)
 
 
-# FIXME: Should be useless after refactoring
 @pattern.composite(interface=FetchStrategy)
 class FetchStrategyComposite(object):
     """Composite for a FetchStrategy object.

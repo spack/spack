@@ -595,9 +595,6 @@ class StageComposite:
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
     forwarded to it."""
-    #
-    # __enter__ and __exit__ delegate to all stages in the composite.
-    #
 
     def __enter__(self):
         for item in self:
@@ -608,6 +605,19 @@ class StageComposite:
         for item in reversed(self):
             item.keep = getattr(self, 'keep', False)
             item.__exit__(exc_type, exc_val, exc_tb)
+
+    @property
+    def fetcher(self):
+        """Computes and returns a fetcher for the composite stage.
+
+        The value of the fetcher is dynamic (may vary between calls
+        to the same object), and depends on the state of the various
+        ``fetcher`` attributes for all the items in the composite.
+        """
+        fetcher_composite = fs.FetchStrategyComposite()
+        for stage in self:
+            fetcher_composite.append(stage.fetcher)
+        return fetcher_composite
 
     #
     # Below functions act only on the *first* stage in the composite.

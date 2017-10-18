@@ -760,20 +760,24 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return spack.url.substitute_version(
             self.nearest_url(version), self.url_version(version))
 
-    def _make_resource_stage(self, root_stage, fetcher, resource):
-        resource_stage_folder = self._resource_stage(resource)
+    def _make_resource_stage(self, root_stage, resource):
+        resource_dir = '-'.join(
+            ['resource', resource.name, self.spec.dag_hash()]
+        )
         resource_mirror = spack.mirror.mirror_archive_path(
-            self.spec, fetcher, resource.name)
+            self.spec, resource.fetcher, resource.name
+        )
         stage = ResourceStage(resource.fetcher,
                               root=root_stage,
                               resource=resource,
-                              name=resource_stage_folder,
+                              name=resource_dir,
                               mirror_path=resource_mirror,
                               path=self.path)
         return stage
 
-    def _make_root_stage(self, fetcher):
+    def _make_root_stage(self):
         # Construct a mirror path (TODO: get this out of package.py)
+        fetcher = fs.for_package_version(self, self.version)
         mp = spack.mirror.mirror_archive_path(self.spec, fetcher)
         # Construct a path where the stage should build..
         s = self.spec
@@ -789,21 +793,28 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return stage
 
     def _make_stage(self):
-        # Construct a composite stage on top of the composite FetchStrategy
-        composite_fetcher = self.fetcher
+
+        # Root stage
         composite_stage = StageComposite()
-        resources = self._get_needed_resources()
-        for ii, fetcher in enumerate(composite_fetcher):
-            if ii == 0:
-                # Construct root stage first
-                stage = self._make_root_stage(fetcher)
-            else:
-                # Construct resource stage
-                resource = resources[ii - 1]  # ii == 0 is root!
-                stage = self._make_resource_stage(composite_stage[0], fetcher,
-                                                  resource)
+        composite_stage.append(self._make_root_stage())
+
+        # Resources if any
+        resources = []
+        # Select the resources that are needed for this build
+        for when_spec, resource_list in self.resources.items():
+            if when_spec in self.spec:
+                resources.extend(resource_list)
+        # Sorts the resources by the length of the string representing their
+        # destination. Since any nested resource must contain another
+        # resource's name in its path, it seems that should work
+        resources = sorted(resources, key=lambda res: len(res.destination))
+
+        for resource in resources:
+            resource_stage = self._make_resource_stage(
+                composite_stage[0], resource
+            )
             # Append the item to the composite
-            composite_stage.append(stage)
+            composite_stage.append(resource_stage)
 
         return composite_stage
 
@@ -840,31 +851,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         else:
             return os.path.join(self.stage.source_path, 'spack-build.out')
 
-    def _make_fetcher(self):
-        # Construct a composite fetcher that always contains at least
-        # one element (the root package). In case there are resources
-        # associated with the package, append their fetcher to the
-        # composite.
-        root_fetcher = fs.for_package_version(self, self.version)
-        fetcher = fs.FetchStrategyComposite()  # Composite fetcher
-        fetcher.append(root_fetcher)  # Root fetcher is always present
-        resources = self._get_needed_resources()
-        for resource in resources:
-            fetcher.append(resource.fetcher)
-        return fetcher
-
     @property
     def fetcher(self):
-        if not self.spec.versions.concrete:
-            raise ValueError(
-                "Can only get a fetcher for a package with concrete versions.")
-        if not self._fetcher:
-            self._fetcher = self._make_fetcher()
-        return self._fetcher
-
-    @fetcher.setter
-    def fetcher(self, f):
-        self._fetcher = f
+        return self.stage.fetcher
 
     def dependencies_of_type(self, *deptypes):
         """Get dependencies that can possibly have these deptypes.
@@ -1276,23 +1265,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Execute target
         inspect.getmodule(self).ninja(target)
-
-    def _get_needed_resources(self):
-        resources = []
-        # Select the resources that are needed for this build
-        for when_spec, resource_list in self.resources.items():
-            if when_spec in self.spec:
-                resources.extend(resource_list)
-        # Sorts the resources by the length of the string representing their
-        # destination. Since any nested resource must contain another
-        # resource's name in its path, it seems that should work
-        resources = sorted(resources, key=lambda res: len(res.destination))
-        return resources
-
-    def _resource_stage(self, resource):
-        pieces = ['resource', resource.name, self.spec.dag_hash()]
-        resource_stage_folder = '-'.join(pieces)
-        return resource_stage_folder
 
     @contextlib.contextmanager
     def _stage_and_write_lock(self):

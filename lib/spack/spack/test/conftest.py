@@ -46,7 +46,6 @@ import spack.stage
 import spack.util.executable
 import spack.util.pattern
 from spack.dependency import Dependency
-from spack.package import PackageBase
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
@@ -363,20 +362,17 @@ def install_mockery(tmpdir, config, mock_packages):
 
 
 @pytest.fixture()
-def mock_fetch(mock_archive):
-    """Fake the URL for a package so it downloads from a file."""
-    fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(mock_archive.url))
+def mock_fetch(mock_archive, monkeypatch):
+    """Substitutes the function used to construct a fetcher for a package
+    at a given version, with one that always fetch the mock archive.
+    """
 
-    @property
-    def fake_fn(self):
-        return fetcher
+    def always_mock_archive(pkg, version):
+        return URLFetchStrategy(mock_archive.url)
 
-    orig_fn = PackageBase.fetcher
-    PackageBase.fetcher = fake_fn
-    yield
-    PackageBase.fetcher = orig_fn
-
+    monkeypatch.setattr(
+        spack.fetch_strategy, 'for_package_version', always_mock_archive
+    )
 
 ##########
 # Fake archives and repositories

@@ -40,7 +40,7 @@ import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
 from spack.paths import mock_gpg_keys_path
-from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
+from spack.fetch_strategy import URLFetchStrategy
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import strings_contains_installroot
@@ -68,9 +68,8 @@ def has_gnupg2():
 
 def fake_fetchify(url, pkg):
     """Fake the URL for a package so it downloads from a file."""
-    fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(url))
-    pkg.fetcher = fetcher
+    root_stage = pkg.stage[0]
+    root_stage.fetcher = root_stage.default_fetcher = URLFetchStrategy(url)
 
 
 @pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
