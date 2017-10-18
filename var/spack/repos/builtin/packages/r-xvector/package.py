@@ -30,10 +30,10 @@ class RXvector(RPackage):
        an R external pointer, or on disk)."""
 
     homepage = "https://bioconductor.org/packages/XVector/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/XVector_0.16.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/XVector"
     list_url = homepage
 
-    version('0.16.0', '839426de12cbb570c85f27f8e7afb144')
+    version('0.16.0', git='https://git.bioconductor.org/packages/XVector', commit='54615888e1a559da4a81de33e934fc0f1c3ad99f')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
