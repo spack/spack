@@ -194,16 +194,12 @@ class Stage(object):
             raise ValueError(
                 "Can't construct Stage without url or fetch strategy")
 
-        # self.fetcher can change with mirrors.
-        self.default_fetcher = self.fetcher
-        self.default_fetcher.search_archive_fn = self.search_archive_fn
-        self.search_fn = search_fn
         # used for mirrored archives of repositories.
         self.skip_checksum_for_mirror = True
 
-        # TODO : this uses a protected member of tempfile, but seemed the only
-        # TODO : way to get a temporary name besides, the temporary link name
-        # TODO : won't be the same as the temporary stage area in tmp_root
+        # This uses a protected member of tempfile, but seemed the only
+        # way to get a temporary name besides, the temporary link name
+        # won't be the same as the temporary stage area in tmp_root
         self.name = name
         if name is None:
             self.name = _stage_prefix + next(tempfile._get_candidate_names())
@@ -215,6 +211,12 @@ class Stage(object):
             self.path = path
         else:
             self.path = os.path.join(spack.paths.stage_path, self.name)
+
+        # self.fetcher can change with mirrors.
+        self.default_fetcher = self.fetcher
+        self.default_fetcher.source_dir = self.path
+        self.default_fetcher.expected_archive_files = self.expected_archive_files  # noqa: ignore=E501
+        self.search_fn = search_fn
 
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
@@ -311,26 +313,24 @@ class Stage(object):
 
     @property
     def expected_archive_files(self):
-        """Possible archive file paths."""
+        """List of possible file names for the archive"""
         paths = []
-        # TODO: if the default fetcher is a URLFetchStrategy, the expected
-        # TODO: archive is path + basename
-        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.default_fetcher.url)))
 
-        # TODO: Then append mirror paths. This is used in 4 places in the code
-        # TODO: and it should be handled by the fetchers.
+        # The preferred file name is the one in the URL
+        if isinstance(self.default_fetcher, fs.URLFetchStrategy):
+            paths.append(self.default_fetcher.archive_basename)
+
+        # Then the one in the mirror, if any
         if self.mirror_path:
-            # FIXME: How does it work here?
-            paths.append(os.path.join(
-                self.path, os.path.basename(self.mirror_path)))
+            paths.append(os.path.basename(self.mirror_path))
 
         return paths
 
     @property
     def save_filename(self):
-        possible_filenames = self.expected_archive_files
+        possible_filenames = [
+            os.path.join(self.path, x) for x in self.expected_archive_files
+        ]
         if possible_filenames:
             # This prefers using the URL associated with the default fetcher if
             # available, so that the fetched resource name matches the remote
@@ -343,7 +343,10 @@ class Stage(object):
         return self.search_archive_fn()
 
     def search_archive_fn(self):
-        for path in self.expected_archive_files:
+        possible_archives = [
+            os.path.join(self.path, x) for x in self.expected_archive_files
+        ]
+        for path in possible_archives:
             if os.path.exists(path):
                 return path
         else:
@@ -387,6 +390,7 @@ class Stage(object):
             if self.search_fn and not mirror_only:
                 dyn_fetchers = self.search_fn()
                 for f in dyn_fetchers:
+                    f.source_dir = self.path
                     yield f
 
         # Check if the source tree is there already
@@ -397,10 +401,11 @@ class Stage(object):
         for fetcher in itertools.chain(fetchers, dynamic_fetchers()):
             try:
                 fetcher.save_filename = self.save_filename
-                fetcher.search_archive_fn = self.search_archive_fn
+                fetcher.source_dir = self.path
+                fetcher.expected_archive_files = self.expected_archive_files
                 self.fetcher = fetcher
                 self.fetcher.fetch(
-                    self.path, validate=validate, expanded_source_tree=expand
+                    validate=validate, expanded_source_tree=expand
                 )
                 break
             except spack.fetch_strategy.NoCacheError:
@@ -414,6 +419,15 @@ class Stage(object):
             errMessage = "All fetchers failed for %s" % self.name
             self.fetcher = self.default_fetcher
             raise fs.FetchError(errMessage, None)
+
+        if self.fetcher is not self.default_fetcher and \
+           self.skip_checksum_for_mirror:
+            tty.warn("Fetched from mirror without a checksum!",
+                     "This package is normally checked out from a version "
+                     "control system, but it has been archived on a spack "
+                     "mirror.  This means we cannot know a checksum for the "
+                     "tarball in advance. Be sure that your connection to "
+                     "this mirror is secure!")
 
     def _insert_mirrors(self, fetchers):
         fetchers = list(fetchers)
@@ -443,41 +457,27 @@ class Stage(object):
 
         # Add URL strategies for all the mirrors with the digest
         for url in urls:
-            fetchers.insert(
-                0, fs.URLFetchStrategy(
-                    url, digest, extension=extension))
+            f = fs.URLFetchStrategy(url, digest, extension=extension)
+            f.source_dir = self.path
+            fetchers.insert(0, f)
+
         if self.default_fetcher.cachable:
-            fetchers.insert(
-                0, spack.caches.fetch_cache.fetcher(
-                    self.mirror_path, digest,
-                    extension=extension))
+            f = spack.caches.fetch_cache.fetcher(
+                self.mirror_path, digest, extension=extension
+            )
+            f.source_dir = self.path
+            fetchers.insert(0, f)
 
         return fetchers
 
-    # FIXME: Put this check somewhere else
-    # def check(self):
-    #    """Check the downloaded archive against a checksum digest.
-    #       No-op if this stage checks code out of a repository."""
-    #    if self.fetcher is not self.default_fetcher and \
-    #       self.skip_checksum_for_mirror:
-    #        tty.warn("Fetching from mirror without a checksum!",
-    #                 "This package is normally checked out from a version "
-    #                 "control system, but it has been archived on a spack "
-    #                 "mirror.  This means we cannot know a checksum for the "
-    #                 "tarball in advance. Be sure that your connection to "
-    #                 "this mirror is secure!")
-    #    else:
-    #        self.fetcher.check()
-
     def cache_local(self):
-        # FIXME: probably need to pass self.path here
         spack.caches.fetch_cache.store(self.path, self.fetcher, self.mirror_path)
 
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
            the archive.
         """
-        self.fetcher.reset(self.path)
+        self.fetcher.reset()
 
     def create(self):
         """Creates the stage directory.

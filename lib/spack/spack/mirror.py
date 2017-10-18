@@ -217,6 +217,7 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
             # fetcher.archive(archive_path)
             for ii, stage in enumerate(spec.package.stage):
                 fetcher = stage.fetcher
+                fetcher.source_dir = stage.path
                 if ii == 0:
                     # create a subdirectory for the current package@version
                     archive_path = os.path.abspath(os.path.join(
@@ -237,15 +238,13 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                 else:
                     spec_exists_in_mirror = False
                     validate = not kwargs.get('no_checksum', False)
-                    fetcher.search_archive_fn = stage.search_archive_fn
+                    fetcher.expected_archive_files = stage.expected_archive_files # noqa: ignore=E501
                     fetcher.fetch(
-                        stage.path,
-                        validate=validate,
-                        expanded_source_tree=False
+                        validate=validate, expanded_source_tree=False
                     )
                     # Fetchers have to know how to archive their files.  Use
                     # that to move/copy/create an archive in the mirror.
-                    fetcher.archive(stage.path, archive_path)
+                    fetcher.archive(archive_path)
                     tty.msg("{name} : added".format(name=name))
 
         if spec_exists_in_mirror:

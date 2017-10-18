@@ -178,7 +178,7 @@ def failing_search_fn():
 def failing_fetch_strategy():
     """Returns a fetch strategy that fails."""
     class FailingFetchStrategy(spack.fetch_strategy.FetchStrategy):
-        def fetch(self, source_dir, validate=True, expanded_source_tree=True):
+        def fetch(self, validate=True, expanded_source_tree=True):
             raise spack.fetch_strategy.FailedDownloadError(
                 "<non-existent URL>",
                 "This implementation of FetchStrategy always fails"
