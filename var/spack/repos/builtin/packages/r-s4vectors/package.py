@@ -36,12 +36,10 @@ class RS4vectors(RPackage):
        package and in other Bioconductor infrastructure packages)."""
 
     homepage = "https://bioconductor.org/packages/S4Vectors/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/S4Vectors_0.14.4.tar.gz"
+    url      = "https://git.bioconductor.org/packages/S4Vectors"
     list_url = homepage
 
-    version('0.14.7', '3d7cc843d8fd56ec983d511f27a4ed57')
-    version('0.14.6', 'e40ba5de581fc54d70bd5c049415973c')
-    version('0.14.4', '08ccc46e6d39f3aa9091f868ecec1f70')
+    version('0.14.7', git='https://git.bioconductor.org/packages/S4Vectors', commit='40af17fe0b8e93b6a72fc787540d2961773b8e23')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@0.14.4:0.14.7')
+    depends_on('r@3.4.0:3.4.9', when='@0.14.7')
