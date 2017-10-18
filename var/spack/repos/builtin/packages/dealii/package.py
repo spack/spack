@@ -109,9 +109,8 @@ class Dealii(CMakePackage):
                when='@8.5.0:+mpi~python')
     depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+python",
                when='@8.5.0:~mpi+python')
-    depends_on(
-        "boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi+python",
-        when='@8.5.0:+mpi+python')
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi+python",
+               when='@8.5.0:+mpi+python')
     depends_on("bzip2")
     depends_on("lapack")
     depends_on("muparser")
