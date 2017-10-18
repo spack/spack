@@ -1355,6 +1355,20 @@ class Spec(object):
         if yield_me and order == 'post':
             yield return_val(dep_spec)
 
+    def prune_deps_by_name(self, prune_names, visited=None):
+        if not visited:
+            visited = set()
+        if id(self) in visited:
+            return
+        visited.add(id(self))
+        old_deps = self._dependencies
+        self._dependencies = DependencyMap()
+        for name, dspec in old_deps.items():
+            if name not in prune_names:
+                self._dependencies[name] = dspec
+        for dspec in self._dependencies.values():
+            dspec.spec.prune_deps_by_name(prune_names)
+
     @property
     def short_spec(self):
         """Returns a version of the spec with the dependencies hashed
