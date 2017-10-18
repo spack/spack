@@ -39,7 +39,7 @@ class RGenomicfeatures(RPackage):
     url      = "https://git.bioconductor.org/packages/GenomicFeatures"
     list_url = homepage
 
-    version('1.2.3', git='https://git.bioconductor.org/packages/GenomicFeatures', commit='ba92381ae93cb1392dad5e6acfab8f6c1d744834')
+    version('1.28.5', git='https://git.bioconductor.org/packages/GenomicFeatures', commit='ba92381ae93cb1392dad5e6acfab8f6c1d744834')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
@@ -55,3 +55,4 @@ class RGenomicfeatures(RPackage):
     depends_on('r-rtracklayer', type=('build', 'run'))
     depends_on('r-biomart', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.28.5')
