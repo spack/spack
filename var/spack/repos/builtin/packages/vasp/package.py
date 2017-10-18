@@ -46,9 +46,7 @@ class Vasp(MakefilePackage):
 
     homepage = "https://www.vasp.at"
 
-    url="file://{0}/vasp.5.4.1.05Feb16.tar.gz".format(os.getcwd())
-
-    version('5.4.1')
+    version('5.4.1', 'dfd537e43294e9df09c8b5c6916c6a2e')
 
     patch('patch.5.4.1.14032016', level=0)
     patch('patch.5.4.1.03082016', level=1)
@@ -60,6 +58,9 @@ class Vasp(MakefilePackage):
     depends_on('wannier90@1.2%intel')
 
     parallel = False
+
+    def url_for_version(self, version):
+        return 'file:///opt/sources/vasp/{0}/vasp.{0}.tar.gz'.format(version, version)
 
     def setup_environment(self, spack_env, run_env):
 
@@ -74,7 +75,7 @@ class Vasp(MakefilePackage):
 
         shutil.copy('arch/makefile.include.linux_intel', 'makefile.include')
         makefile = FileFilter('makefile.include')
-        makefile.filter('CPP_OPTIONS= .*', 'CPP_OPTIONS= DMPI -DHOST=\\"RC_Workstations\\" -DIFC \\')
+        makefile.filter('CPP_OPTIONS= .*', 'CPP_OPTIONS= -DMPI -DHOST=\\"RC_Workstations\\" -DIFC \\')
         makefile.filter('-DCACHE_SIZE=.*', '-DCACHE_SIZE=12000 -DPGF90 -Davoidalloc -DMPI_BLOCK=8000 -DscaLAPACK -Duse_collective \\')
         makefile.filter('-Duse_bse_te.*', '-Duse_bse_te -DnoAugXCmeta -Duse_shmem -Dtbdyn \\')
         makefile.filter('-Dtbdyn.*', '-DVASP2WANNIER90 -DRPROMU_DGEMV -DRACCMU_DGEMV -DnoSTOPCAR -Ddo_loops')
@@ -83,7 +84,7 @@ class Vasp(MakefilePackage):
         makefile.filter('FFLAGS     = .*', 'FFLAGS     = -assume byterecl')
         makefile.filter('OFLAG      = .*', 'OFLAG      = -O2 -ip')
         makefile.filter('BLACS      = .*', 'BLACS      = -lmkl_blacs_openmpi_lp64')
-        makefile.filter('LLIBS      = .*', 'LLIBS      = %s/libwannier.a $(SCALAPACK) $(LAPACK) $(BLAS)' % self.spec['wannier90'].prefix)
+        makefile.filter('LLIBS      = .*', 'LLIBS      = %s/lib/libwannier.a $(SCALAPACK) $(LAPACK) $(BLAS)' % self.spec['wannier90'].prefix)
         makefile.filter('CPP_LIB    = .*', 'CPP_LIB    = $(CPP) -DLONGCHAR')
         makefile.filter('CC_LIB     = .*', 'CC_LIB     = %s' % spec['mpi'].mpicc)
 
@@ -95,11 +96,9 @@ class Vasp(MakefilePackage):
     def check_install(self):
 
         shutil.copytree('/opt/share/vasp/common/tests/vasptest', 'vasptest')
-        os.environ['VASP_TMPDIR'] = 'vasptest/tmp'
-        os.environ['VASPTEST_EXE'] = '%s/mpirun -np 4 %s/vasp' % (self.spec['mpi'].prefix.bin, self.spec.prefix.bin)
         with working_dir('vasptest'):
-            behave = Executable('behave')
-            behave('-s', '-c', '-k')
+            spack_tests = Executable('spack.tests.sh')
+            spack_tests('--run')
 
     def install(self, spec, prefix):
 
