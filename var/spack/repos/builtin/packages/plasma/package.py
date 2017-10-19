@@ -81,7 +81,7 @@ class Plasma(MakefilePackage):
         # use $CC set by Spack
         targets.append("CC = {0}".format(self.compiler.cc))
 
-        if "^mkl" in spec:
+        if "^mkl" in self.spec:
             targets.append("MKLROOT = {0}/mkl".format(env["MKLROOT"]))
 
         # pass BLAS library flags
