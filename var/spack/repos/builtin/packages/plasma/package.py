@@ -38,7 +38,7 @@ class Plasma(MakefilePackage):
     conflicts("veclibfort")
 
     # only GCC 7+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:6.999")
+    conflicts("%gcc@:4.999")
     conflicts("%cce")
     conflicts("%clang")
     conflicts("%intel")
@@ -55,7 +55,7 @@ class Plasma(MakefilePackage):
 
         make_inc = FileFilter("make.inc")
 
-        if not spec.satisfies("^mkl"):
+        if "^mkl" not in spec:
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
 
         header_flags = ""
@@ -81,7 +81,7 @@ class Plasma(MakefilePackage):
         # use $CC set by Spack
         targets.append("CC = {0}".format(self.compiler.cc))
 
-        if self.spec.satisfies("^mkl"):
+        if "^mkl" in spec:
             targets.append("MKLROOT = {0}/mkl".format(env["MKLROOT"]))
 
         # pass BLAS library flags
