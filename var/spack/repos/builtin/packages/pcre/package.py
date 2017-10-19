@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -39,12 +39,18 @@ class Pcre(AutotoolsPackage):
 
     patch('intel.patch', when='@8.38')
 
+    variant('jit', default=False,
+            description='Enable JIT support.')
+
     variant('utf', default=True,
             description='Enable support for UTF-8/16/32, '
             'incompatible with EBCDIC.')
 
     def configure_args(self):
         args = []
+
+        if '+jit' in self.spec:
+            args.append('--enable-jit')
 
         if '+utf' in self.spec:
             args.append('--enable-utf')

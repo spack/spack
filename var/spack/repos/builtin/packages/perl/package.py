@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -32,6 +32,7 @@
 #
 from spack import *
 import os
+from contextlib import contextmanager
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -93,6 +94,23 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             '-Dloclibpth=' + self.spec['gdbm'].prefix.lib,
         ]
 
+        # Extensions are installed into their private tree via
+        # `INSTALL_BASE`/`--install_base` (see [1]) which results in a
+        # "predictable" installation tree that sadly does not match the
+        # Perl core's @INC structure.  This means that when activation
+        # merges the extension into the extendee[2], the directory tree
+        # containing the extensions is not on @INC and the extensions can
+        # not be found.
+        #
+        # This bit prepends @INC with the directory that is used when
+        # extensions are activated [3].
+        #
+        # [1] https://metacpan.org/pod/ExtUtils::MakeMaker#INSTALL_BASE
+        # [2] via the activate method in the PackageBase class
+        # [3] https://metacpan.org/pod/distribution/perl/INSTALL#APPLLIB_EXP
+        config_args.append('-Accflags=-DAPPLLIB_EXP=\\"' +
+                           self.prefix.lib.perl5 + '\\"')
+
         # Discussion of -fPIC for Intel at:
         # https://github.com/LLNL/spack/pull/3081 and
         # https://github.com/LLNL/spack/pull/4416
@@ -130,10 +148,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 make()
                 make('install')
 
-    def setup_environment(self, spack_env, run_env):
-        """Set PERL5LIB to support activation of Perl packages"""
-        run_env.set('PERL5LIB', join_path(self.prefix, 'lib', 'perl5'))
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
            any other perl extensions it depends on,
@@ -143,8 +157,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         for d in dependent_spec.traverse(
                 deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
-                perl_lib_dirs.append(join_path(d.prefix, 'lib', 'perl5'))
-                perl_bin_dirs.append(join_path(d.prefix, 'bin'))
+                perl_lib_dirs.append(d.prefix.lib.perl5)
+                perl_bin_dirs.append(d.prefix.bin)
         perl_bin_path = ':'.join(perl_bin_dirs)
         perl_lib_path = ':'.join(perl_lib_dirs)
         spack_env.prepend_path('PATH', perl_bin_path)
@@ -159,10 +173,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         """
 
         # perl extension builds can have a global perl executable function
-        module.perl = Executable(join_path(self.spec.prefix.bin, 'perl'))
+        module.perl = self.spec['perl'].command
 
         # Add variables for library directory
-        module.perl_lib_dir = join_path(dependent_spec.prefix, 'lib', 'perl5')
+        module.perl_lib_dir = dependent_spec.prefix.lib.perl5
 
         # Make the site packages directory for extensions,
         # if it does not exist already.
@@ -173,28 +187,40 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def filter_config_dot_pm(self):
         """Run after install so that Config.pm records the compiler that Spack
         built the package with.  If this isn't done, $Config{cc} will
-        be set to Spack's cc wrapper script.
+        be set to Spack's cc wrapper script.  These files are read-only, which
+        frustrates filter_file on some filesystems (NFSv4), so make them
+        temporarily writable.
         """
 
         kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
 
         # Find the actual path to the installed Config.pm file.
-        perl = Executable(join_path(prefix.bin, 'perl'))
+        perl = self.spec['perl'].command
         config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
                              'print is_loaded(Config)', output=str)
 
-        match = 'cc *=>.*'
-        substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
-        filter_file(match, substitute, config_dot_pm, **kwargs)
+        with self.make_briefly_writable(config_dot_pm):
+            match = 'cc *=>.*'
+            substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+            filter_file(match, substitute, config_dot_pm, **kwargs)
 
         # And the path Config_heavy.pl
         d = os.path.dirname(config_dot_pm)
         config_heavy = join_path(d, 'Config_heavy.pl')
 
-        match = '^cc=.*'
-        substitute = "cc='{cc}'".format(cc=self.compiler.cc)
-        filter_file(match, substitute, config_heavy, **kwargs)
+        with self.make_briefly_writable(config_heavy):
+            match = '^cc=.*'
+            substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+            filter_file(match, substitute, config_heavy, **kwargs)
 
-        match = '^ld=.*'
-        substitute = "ld='{ld}'".format(ld=self.compiler.cc)
-        filter_file(match, substitute, config_heavy, **kwargs)
+            match = '^ld=.*'
+            substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+            filter_file(match, substitute, config_heavy, **kwargs)
+
+    @contextmanager
+    def make_briefly_writable(self, path):
+        """Temporarily make a file writable, then reset"""
+        perm = os.stat(path).st_mode
+        os.chmod(path, perm | 0o200)
+        yield
+        os.chmod(path, perm)

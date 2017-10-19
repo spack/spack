@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,45 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 import pytest
+
 import spack
 import spack.store
-from spack.database import Database
-from spack.directory_layout import YamlDirectoryLayout
-from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.spec import Spec
 
-import os
 
-
-@pytest.fixture()
-def install_mockery(tmpdir, config, builtin_mock):
-    """Hooks a fake install directory and a fake db into Spack."""
-    layout = spack.store.layout
-    db = spack.store.db
-    # Use a fake install directory to avoid conflicts bt/w
-    # installed pkgs and mock packages.
-    spack.store.layout = YamlDirectoryLayout(str(tmpdir))
-    spack.store.db = Database(str(tmpdir))
-    # We use a fake package, so skip the checksum.
-    spack.do_checksum = False
-    yield
-    # Turn checksumming back on
-    spack.do_checksum = True
-    # Restore Spack's layout.
-    spack.store.layout = layout
-    spack.store.db = db
-
-
-def fake_fetchify(url, pkg):
-    """Fake the URL for a package so it downloads from a file."""
-    fetcher = FetchStrategyComposite()
-    fetcher.append(URLFetchStrategy(url))
-    pkg.fetcher = fetcher
-
-
-@pytest.mark.usefixtures('install_mockery')
-def test_install_and_uninstall(mock_archive):
+def test_install_and_uninstall(install_mockery, mock_fetch):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
     spec.concretize()
@@ -68,8 +38,6 @@ def test_install_and_uninstall(mock_archive):
 
     # Get the package
     pkg = spack.repo.get(spec)
-
-    fake_fetchify(mock_archive.url, pkg)
 
     try:
         pkg.do_install()
@@ -101,126 +69,138 @@ class MockStage(object):
         self.test_destroyed = False
 
     def __enter__(self):
+        self.create()
         return self
 
-    def __exit__(self, *exc):
-        return True
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.destroy()
 
     def destroy(self):
         self.test_destroyed = True
         self.wrapped_stage.destroy()
 
+    def create(self):
+        self.wrapped_stage.create()
+
     def __getattr__(self, attr):
         return getattr(self.wrapped_stage, attr)
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_partial_install_delete_prefix_and_stage(mock_archive):
-    spec = Spec('canfail')
-    spec.concretize()
+def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
+    spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
     instance_rm_prefix = pkg.remove_prefix
 
     try:
+        pkg.succeed = False
         spack.package.Package.remove_prefix = mock_remove_prefix
         with pytest.raises(MockInstallError):
             pkg.do_install()
         assert os.path.isdir(pkg.prefix)
         rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
         spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
-        setattr(pkg, 'succeed', True)
+
+        pkg.succeed = True
         pkg.stage = MockStage(pkg.stage)
+
         pkg.do_install(restage=True)
         assert rm_prefix_checker.removed
         assert pkg.stage.test_destroyed
         assert pkg.installed
+
     finally:
         spack.package.Package.remove_prefix = remove_prefix
-        pkg._stage = None
-        try:
-            delattr(pkg, 'succeed')
-        except AttributeError:
-            pass
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_partial_install_keep_prefix(mock_archive):
-    spec = Spec('canfail')
-    spec.concretize()
+def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
+    import sys
+    dependency = Spec('dependency-install')
+    dependency.concretize()
+    dependency.package.do_install()
+
+    dependency.package.patches['dependency-install'] = [
+        sys.modules['spack.patch'].Patch.create(
+            None, 'file://fake.patch', sha256='unused-hash')]
+
+    dependency_hash = dependency.dag_hash()
+    dependent = Spec('dependent-install ^/' + dependency_hash)
+    dependent.concretize()
+
+    assert dependent['dependency-install'] == dependency
+
+
+def test_installed_dependency_request_conflicts(
+        install_mockery, mock_fetch, refresh_builtin_mock):
+    dependency = Spec('dependency-install')
+    dependency.concretize()
+    dependency.package.do_install()
+
+    dependency_hash = dependency.dag_hash()
+    dependent = Spec(
+        'conflicting-dependent ^/' + dependency_hash)
+    with pytest.raises(spack.spec.UnsatisfiableSpecError):
+        dependent.concretize()
+
+
+@pytest.mark.disable_clean_stage_check
+def test_partial_install_keep_prefix(install_mockery, mock_fetch):
+    spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
+
     # Normally the stage should start unset, but other tests set it
     pkg._stage = None
-    fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
     try:
         # If remove_prefix is called at any point in this test, that is an
         # error
+        pkg.succeed = False  # make the build fail
         spack.package.Package.remove_prefix = mock_remove_prefix
         with pytest.raises(spack.build_environment.ChildError):
             pkg.do_install(keep_prefix=True)
         assert os.path.exists(pkg.prefix)
-        setattr(pkg, 'succeed', True)
+
+        pkg.succeed = True   # make the build succeed
         pkg.stage = MockStage(pkg.stage)
         pkg.do_install(keep_prefix=True)
         assert pkg.installed
         assert not pkg.stage.test_destroyed
+
     finally:
         spack.package.Package.remove_prefix = remove_prefix
-        pkg._stage = None
-        try:
-            delattr(pkg, 'succeed')
-        except AttributeError:
-            pass
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_second_install_no_overwrite_first(mock_archive):
-    spec = Spec('canfail')
-    spec.concretize()
+def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
+    spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    fake_fetchify(mock_archive.url, pkg)
     remove_prefix = spack.package.Package.remove_prefix
     try:
         spack.package.Package.remove_prefix = mock_remove_prefix
-        setattr(pkg, 'succeed', True)
+
+        pkg.succeed = True
         pkg.do_install()
         assert pkg.installed
+
         # If Package.install is called after this point, it will fail
-        delattr(pkg, 'succeed')
+        pkg.succeed = False
         pkg.do_install()
+
     finally:
         spack.package.Package.remove_prefix = remove_prefix
-        try:
-            delattr(pkg, 'succeed')
-        except AttributeError:
-            pass
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_store(mock_archive):
+def test_store(install_mockery, mock_fetch):
     spec = Spec('cmake-client').concretized()
-
-    for s in spec.traverse():
-        fake_fetchify(mock_archive.url, s.package)
-
     pkg = spec.package
-    try:
-        pkg.do_install()
-    except Exception:
-        pkg.remove_prefix()
-        raise
+    pkg.do_install()
 
 
-@pytest.mark.usefixtures('install_mockery')
-def test_failing_build(mock_archive):
+@pytest.mark.disable_clean_stage_check
+def test_failing_build(install_mockery, mock_fetch):
     spec = Spec('failing-build').concretized()
-
-    for s in spec.traverse():
-        fake_fetchify(mock_archive.url, s.package)
-
     pkg = spec.package
+
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install()
 

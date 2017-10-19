@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class Stc(AutotoolsPackage):
 
     version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
 
-    depends_on('jdk')
+    depends_on('java')
     depends_on('ant')
     depends_on('turbine')
 

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,7 +31,7 @@ class PyPsutil(PythonPackage):
     in Python."""
 
     homepage = "https://pypi.python.org/pypi/psutil"
-    url      = "https://pypi.python.org/packages/d9/c8/8c7a2ab8ec108ba9ab9a4762c5a0d67c283d41b13b5ce46be81fdcae3656/psutil-5.0.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/psutil/psutil-5.0.1.tar.gz"
 
     version('5.0.1', '153dc8be94badc4072016ceeac7808dc')
 

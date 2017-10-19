@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -40,3 +40,14 @@ class PyCdatLite(PythonPackage):
     depends_on("python@2.5:2.8", type=('build', 'run'))
     depends_on("py-numpy", type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+
+    phases = ['install']
+
+    def install(self, spec, prefix):
+        """Install everything from build directory."""
+        install_args = self.install_args(spec, prefix)
+        # Combine all phases into a single setup.py command,
+        # otherwise extensions are rebuilt without rpath by install phase:
+        self.setup_py('build_ext', '--rpath=%s' % ":".join(self.rpath),
+                      'build_py', 'build_scripts',
+                      'install', *install_args)

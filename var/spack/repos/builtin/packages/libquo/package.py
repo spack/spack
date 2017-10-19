@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,6 +34,8 @@ class Libquo(AutotoolsPackage):
     homepage = "https://github.com/lanl/libquo"
     url      = "https://github.com/lanl/libquo/archive/v1.2.9.tar.gz"
 
+    version('develop', git='https://github.com/lanl/libquo', branch='master')
+    version('1.3', '3ff74162837425a15ecf695ca0201e4a')
     version('1.2.9', 'ca82ab33f13e2b89983f81e7c02e98c2')
 
     depends_on('mpi')

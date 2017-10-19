@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Panda(Package):
+class Panda(CMakePackage):
     """PANDA: Parallel AdjaceNcy Decomposition Algorithm"""
     homepage = "http://comopt.ifi.uni-heidelberg.de/software/PANDA/index.html"
     url      = "http://comopt.ifi.uni-heidelberg.de/software/PANDA/downloads/panda-2016-03-07.tar"
@@ -35,11 +35,5 @@ class Panda(Package):
 
     # Note: Panda can also be built without MPI support
 
-    depends_on("cmake", type="build")
-    depends_on("mpi")
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake("..", *std_cmake_args)
-            make()
-            make("install")
+    depends_on('cmake@2.6.4:', type='build')
+    depends_on('mpi')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,8 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import sys
 import os
+import sys
 from spack import *
 
 
@@ -37,9 +37,15 @@ class Petsc(Package):
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
+    maintainers = ['balay', 'barrysmith']
+
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.8.0', '02680f1f78a0d4c5a9de80a366793eb8')
+    # FIXME: preferred is a workaround for concretizer bug. Remove when either
+    # concretizer is fixed or SLEPc 3.8 is out
+    version('3.7.7', 'c2cfb76677d32839810c4cf51a2f9cf5', preferred=True)
     version('3.7.6', '977aa84b85aa3146c695592cd0a11057')
     version('3.7.5', 'f00f6e6a3bac39052350dd47194b58a3')
     version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')

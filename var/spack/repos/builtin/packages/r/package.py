@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -40,6 +40,7 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    version('3.4.1', '3a79c01dc0527c62e80ffb1c489297ea')
     version('3.4.0', '75083c23d507b9c16d5c6afbd7a827e7')
     version('3.3.3', '0ac211ec15e813a24f8f4a5a634029a4')
     version('3.3.2', '2437014ef40641cdc9673e89c040b7a8')
@@ -83,7 +84,7 @@ class R(AutotoolsPackage):
     depends_on('libxt', when='+X')
     depends_on('curl')
     depends_on('pcre')
-    depends_on('jdk')
+    depends_on('java')
 
     patch('zlib.patch', when='@:3.3.2')
 

@@ -34,20 +34,16 @@ class Portage(CMakePackage):
     homepage = "http://portage.lanl.gov/"
     url      = "https://github.com/laristra/portage/tarball/v1.0"
 
+    # tarballs don't have submodules, so use git tags
+    version('1.1.1', git='https://github.com/laristra/portage', tag='v1.1.1', submodules=True)
+    version('1.1.0', git='https://github.com/laristra/portage', tag='v1.1.0', submodules=True)
     version('develop', git='https://github.com/laristra/portage', branch='master', submodules=True)
 
-    variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True, description='Support MPI')
 
     depends_on("cmake@3.1:", type='build')
     depends_on('mpi', when='+mpi')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
+    depends_on('lapack')
 
     def cmake_args(self):
         options = ['-DENABLE_UNIT_TESTS=ON', '-DENABLE_APP_TESTS=ON']
@@ -55,7 +51,9 @@ class Portage(CMakePackage):
         if '+mpi' in self.spec:
             options.extend([
                 '-DENABLE_MPI=ON',
-                '-DENABLE_MPI_CXX_BINDINGS=ON'
+                '-DENABLE_MPI_CXX_BINDINGS=ON',
+                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+                '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
             ])
         else:
             options.append('-DENABLE_MPI=OFF')

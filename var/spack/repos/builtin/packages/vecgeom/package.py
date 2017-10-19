@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,16 +36,7 @@ class Vecgeom(CMakePackage):
     version('0.3.rc', git='https://gitlab.cern.ch/VecGeom/VecGeom.git',
             tag='v0.3.rc')
 
-    variant('debug', default=False, description='Build debug version')
-
     depends_on('cmake@3.5:', type='build')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         options = [

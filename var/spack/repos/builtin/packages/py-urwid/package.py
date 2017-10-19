@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -28,7 +28,7 @@ from spack import *
 class PyUrwid(PythonPackage):
     """A full-featured console UI library"""
     homepage = "http://urwid.org/"
-    url      = "https://pypi.python.org/packages/source/u/urwid/urwid-1.3.0.tar.gz"
+    url      = "https://pypi.io/packages/source/u/urwid/urwid-1.3.0.tar.gz"
 
     version('1.3.0', 'a989acd54f4ff1a554add464803a9175')
 

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -57,7 +57,7 @@ def fetch(parser, args):
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         if args.missing or args.dependencies:
-            for s in spec.traverse(deptype_query=spack.alldeps):
+            for s in spec.traverse():
                 package = spack.repo.get(s)
                 if args.missing and package.installed:
                     continue

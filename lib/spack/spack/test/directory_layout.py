@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -55,8 +55,10 @@ def test_yaml_directory_layout_parameters(
     # Ensure default layout matches expected spec format
     layout_default = YamlDirectoryLayout(str(tmpdir))
     path_default = layout_default.relative_path_for_spec(spec)
-    assert(path_default ==
-           spec.format("${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"))   # NOQA: ignore=E501
+    assert(path_default == spec.format(
+        "${ARCHITECTURE}/"
+        "${COMPILERNAME}-${COMPILERVER}/"
+        "${PACKAGE}-${VERSION}-${HASH}"))
 
     # Test hash_length parameter works correctly
     layout_10 = YamlDirectoryLayout(str(tmpdir), hash_len=10)
@@ -133,6 +135,8 @@ def test_read_and_write_spec(
         # TODO: increase reuse of build dependencies.
         stored_deptypes = ('link', 'run')
         expected = spec.copy(deps=stored_deptypes)
+        expected._mark_concrete()
+
         assert expected.concrete
         assert expected == spec_from_file
         assert expected.eq_dag(spec_from_file)

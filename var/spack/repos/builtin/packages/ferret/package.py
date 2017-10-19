@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -98,7 +98,12 @@ class Ferret(Package):
         ln('-sf',
            libz_prefix + '/lib',
            libz_prefix + '/lib64')
-        os.environ['LDFLAGS'] = '-lquadmath'
+
+        if 'LDFLAGS' in env and env['LDFLAGS']:
+            env['LDFLAGS'] += ' ' + '-lquadmath'
+        else:
+            env['LDFLAGS'] = '-lquadmath'
+
         with working_dir('FERRET', create=False):
             os.environ['LD_X11'] = '-L/usr/lib/X11 -lX11'
             os.environ['HOSTTYPE'] = 'x86_64-linux'

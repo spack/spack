@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -47,8 +47,8 @@ class Parmgridgen(Package):
     def install(self, spec, prefix):
         make_opts = [
             'make=make',
-            'COPTIONS=-fPIC',
-            'LDOPTIONS=-fPIC',
+            'COPTIONS={0}'.format(self.compiler.pic_flag),
+            'LDOPTIONS={0}'.format(self.compiler.pic_flag),
             'CC={0}'.format(self.compiler.cc),
             'LD={0}'.format(self.compiler.cc),
             'LIBDIR=-L../..',

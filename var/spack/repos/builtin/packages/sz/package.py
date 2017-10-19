@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,11 +30,13 @@ class Sz(AutotoolsPackage):
     """Error-bounded Lossy Compressor for HPC Data."""
 
     homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
-    url      = "http://www.mcs.anl.gov/~shdi/download/sz-1.4.9-beta.tar.gz"
+    url      = "https://github.com/disheng222/SZ/archive/v1.4.11.0.tar.gz"
 
     version('develop', git='https://github.com/disheng222/SZ.git',
             branch='master')
-    version('1.4.9-beta', '8a00cddc39780c18d766215f69713f82')
+    version('1.4.11.0', '10dee28b3503821579ce35a50e352cc6')
+    version('1.4.10.0', '82e23dc5a51bcce1f70ba7e3b68a5965')
+    version('1.4.9.2',  '028ce90165b7a4c4051d4c0189f193c0')
 
     variant('fortran', default=False,
             description='Enable fortran compilation')

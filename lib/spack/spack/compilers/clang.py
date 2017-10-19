@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -42,18 +42,23 @@ class Clang(Compiler):
     cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['gfortran']
+    f77_names = ['flang', 'gfortran']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['gfortran']
+    fc_names = ['flang', 'gfortran']
 
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'clang/clang',
-                  'cxx': 'clang/clang++',
-                  # Use default wrappers for fortran, in case provided in
-                  # compilers.yaml
-                  'f77': 'clang/gfortran',
-                  'fc': 'clang/gfortran'}
+                  'cxx': 'clang/clang++'}
+
+    if sys.platform == 'darwin':
+        # Use default wrappers for fortran, in case provided in
+        # compilers.yaml
+        link_paths['f77'] = 'clang/gfortran'
+        link_paths['fc'] = 'clang/gfortran'
+    else:
+        link_paths['f77'] = 'clang/flang'
+        link_paths['fc'] = 'clang/flang'
 
     @property
     def is_apple(self):
@@ -169,7 +174,7 @@ class Clang(Compiler):
         if sys.platform == 'darwin':
             return cls.default_version('clang')
         else:
-            return 'unknown'
+            return cls.default_version(fc)
 
     @classmethod
     def f77_version(cls, f77):

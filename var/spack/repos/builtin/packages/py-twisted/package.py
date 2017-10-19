@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -28,7 +28,7 @@ from spack import *
 class PyTwisted(PythonPackage):
     """An asynchronous networking framework written in Python"""
     homepage = "https://twistedmatrix.com/"
-    url      = "https://pypi.python.org/packages/source/T/Twisted/Twisted-15.3.0.tar.bz2"
+    url      = "https://pypi.io/packages/source/T/Twisted/Twisted-15.3.0.tar.bz2"
 
     version('15.4.0', '5337ffb6aeeff3790981a2cd56db9655')
     version('15.3.0', 'b58e83da2f00b3352afad74d0c5c4599')

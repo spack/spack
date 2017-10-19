@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,8 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import shutil
 from spack import *
+import shutil
 
 
 class Comd(MakefilePackage):
@@ -37,20 +37,76 @@ class Comd(MakefilePackage):
     versions of CoMD will be released to incorporate the lessons learned from
     the co-design process."""
 
-    homepage = "http://exmatex.github.io/CoMD/"
+    tags = ['proxy-app']
 
-    version('master', git='https://github.com/exmatex/CoMD.git',
-            branch='master')
+    homepage = "http://www.exmatex.org/comd.html"
+    url      = "https://github.com/exmatex/CoMD/archive/master.tar.gz"
 
-    depends_on('mpi')
+    version('master', git='https://github.com/exmatex/CoMD.git', branch='master')
 
-    build_directory = 'src-mpi'
+    variant('serial', default=False, description='Build without MPI support')
+    variant('mpi', default=True, description='Build with MPI support')
+    variant('openmp', default=False, description='Build with OpenMP support')
+    variant('precision', default=True, description='Toggle Precesion Options')
+    variant('graphs', default=True, description='Enable graph visuals')
+
+    depends_on('mpi', when='+mpi')
+    depends_on('graphviz', when='+graphs')
+
+    conflicts('+openmp', when='~serial')
 
     def edit(self, spec, prefix):
-        with working_dir('src-mpi'):
-            filter_file(r'^CC\s*=.*', 'CC = %s' % self.spec['mpi'].mpicc,
-                        'Makefile.vanilla')
-            shutil.move('Makefile.vanilla', 'Makefile')
+        with working_dir('src-mpi') or working_dir('src-openmp'):
+            shutil.copy('Makefile.vanilla', 'Makefile')
+
+    @property
+    def build_targets(self):
+        targets = []
+        cflags = ' -std=c99 '
+        optflags = ' -g -O5 '
+        clib = ' -lm '
+        comd_variant = 'CoMD'
+        cc = spack_cc
+
+        if '+openmp' in self.spec:
+            targets.append('--directory=src-openmp')
+            comd_variant += '-openmp'
+            cflags += ' -fopenmp '
+            if '+mpi' in self.spec:
+                comd_variant += '-mpi'
+                targets.append('CC = {0}'.format(self.spec['mpi'].mpicc))
+            else:
+                targets.append('CC = {0}'.format('spack_cc'))
+
+        else:
+            targets.append('--directory=src-mpi')
+            if '+serial' in self.spec:
+                comd_variant += '-serial'
+                targets.append('CC = {0}'.format(cc))
+            else:
+                comd_variant += '-mpi'
+                targets.append('CC = {0}'.format(self.spec['mpi'].mpicc))
+        if '+mpi' in self.spec:
+            cflags += '-DDO_MPI'
+            targets.append(
+                'INCLUDES = {0}'.format(self.spec['mpi'].prefix.include))
+
+        if '+precision' in self.spec:
+            cflags += ' -DDOUBLE '
+        else:
+            cflags += ' -DSINGLE '
+
+        targets.append('CoMD_VARIANT = {0}'.format(comd_variant))
+        targets.append('CFLAGS = {0}'.format(cflags))
+        targets.append('OPTFLAGS = {0}'.format(optflags))
+        targets.append('C_LIB = {0}'.format(clib))
+
+        return targets
 
     def install(self, spec, prefix):
-        shutil.move('bin', prefix)
+        install_tree('bin', prefix.bin)
+        install_tree('examples', prefix.examples)
+        install_tree('pots', prefix.pots)
+        mkdirp(prefix.doc)
+        install('README.md', prefix.doc)
+        install('LICENSE.md', prefix.doc)

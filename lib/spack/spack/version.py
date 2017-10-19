@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -107,10 +107,6 @@ def coerced(method):
     return coercing_method
 
 
-def _numeric_lt(self0, other):
-    """Compares two versions, knowing they're both numeric"""
-
-
 class Version(object):
     """Class to represent versions"""
 
@@ -130,30 +126,90 @@ class Version(object):
         self.version = tuple(int_if_int(seg) for seg in segments)
 
         # Store the separators from the original version string as well.
-        # last element of separators is ''
-        self.separators = tuple(re.split(segment_regex, string)[1:-1])
+        self.separators = tuple(re.split(segment_regex, string)[1:])
 
     @property
     def dotted(self):
-        return '.'.join(str(x) for x in self.version)
+        """The dotted representation of the version.
+
+        Example:
+        >>> version = Version('1-2-3b')
+        >>> version.dotted
+        Version('1.2.3b')
+
+        Returns:
+            Version: The version with separator characters replaced by dots
+        """
+        return Version(self.string.replace('-', '.').replace('_', '.'))
 
     @property
     def underscored(self):
-        return '_'.join(str(x) for x in self.version)
+        """The underscored representation of the version.
+
+        Example:
+        >>> version = Version('1.2.3b')
+        >>> version.underscored
+        Version('1_2_3b')
+
+        Returns:
+            Version: The version with separator characters replaced by
+                underscores
+        """
+        return Version(self.string.replace('.', '_').replace('-', '_'))
 
     @property
     def dashed(self):
-        return '-'.join(str(x) for x in self.version)
+        """The dashed representation of the version.
+
+        Example:
+        >>> version = Version('1.2.3b')
+        >>> version.dashed
+        Version('1-2-3b')
+
+        Returns:
+            Version: The version with separator characters replaced by dashes
+        """
+        return Version(self.string.replace('.', '-').replace('_', '-'))
 
     @property
     def joined(self):
-        return ''.join(str(x) for x in self.version)
+        """The joined representation of the version.
+
+        Example:
+        >>> version = Version('1.2.3b')
+        >>> version.joined
+        Version('123b')
+
+        Returns:
+            Version: The version with separator characters removed
+        """
+        return Version(
+            self.string.replace('.', '').replace('-', '').replace('_', ''))
 
     def up_to(self, index):
-        """Return a version string up to the specified component, exclusive.
-           e.g., if this is 10.8.2, self.up_to(2) will return '10.8'.
+        """The version up to the specified component.
+
+        Examples:
+        >>> version = Version('1.23-4b')
+        >>> version.up_to(1)
+        Version('1')
+        >>> version.up_to(2)
+        Version('1.23')
+        >>> version.up_to(3)
+        Version('1.23-4')
+        >>> version.up_to(4)
+        Version('1.23-4b')
+        >>> version.up_to(-1)
+        Version('1.23-4')
+        >>> version.up_to(-2)
+        Version('1.23')
+        >>> version.up_to(-3)
+        Version('1')
+
+        Returns:
+            Version: The first index components of the version
         """
-        return '.'.join(str(x) for x in self[:index])
+        return self[:index]
 
     def lowest(self):
         return self
@@ -204,11 +260,9 @@ class Version(object):
             return self.version[idx]
 
         elif isinstance(idx, slice):
-            # Currently len(self.separators) == len(self.version) - 1
-            extendend_separators = self.separators + ('',)
             string_arg = []
 
-            pairs = zip(self.version[idx], extendend_separators[idx])
+            pairs = zip(self.version[idx], self.separators[idx])
             for token, sep in pairs:
                 string_arg.append(str(token))
                 string_arg.append(str(sep))

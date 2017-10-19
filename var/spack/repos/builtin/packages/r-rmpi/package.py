@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,9 +31,9 @@ class RRmpi(RPackage):
 
     homepage = "http://www.stats.uwo.ca/faculty/yu/Rmpi"
     url      = "https://cran.r-project.org/src/contrib/Rmpi_0.6-6.tar.gz"
+    list_url = "https://cran.rstudio.com/web/packages/Rmpi/index.html"
 
-    version('0.6-6', '59ae8ce62ff0ff99342d53942c745779')
-
+    version('0.6-6', 'a6fa2ff5e1cd513334b4e9e9e7a2286f')
     depends_on('mpi')
     depends_on('r@2.15.1:')
 
@@ -43,7 +43,9 @@ class RRmpi(RPackage):
     conflicts('^mvapich2')
     conflicts('^spectrum-mpi')
 
-    def configure_args(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+
         mpi_name = spec['mpi'].name
 
         # The type of MPI. Supported values are:

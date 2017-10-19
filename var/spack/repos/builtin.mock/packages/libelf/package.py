@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,11 +34,4 @@ class Libelf(Package):
     version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--enable-shared",
-                  "--disable-dependency-tracking",
-                  "--disable-debug")
-        make()
-
-        # The mkdir commands in libelf's intsall can fail in parallel
-        make("install", parallel=False)
+        touch(prefix.libelf)

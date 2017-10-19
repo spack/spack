@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Mitos(Package):
+class Mitos(CMakePackage):
     """Mitos is a library and a tool for collecting sampled memory
     performance data to view with MemAxes"""
 
@@ -40,10 +40,4 @@ class Mitos(Package):
     depends_on('dyninst@8.2.1:')
     depends_on('hwloc')
     depends_on('mpi')
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
-            make()
-            make("install")
+    depends_on('cmake@2.8:', type='build')

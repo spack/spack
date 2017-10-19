@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -37,7 +37,7 @@ class PyLockfile(PythonPackage):
        possibilities it provides than as production-quality code.
     """
     homepage = "https://pypi.python.org/pypi/lockfile"
-    url      = "https://pypi.python.org/packages/source/l/lockfile/lockfile-0.10.2.tar.gz"
+    url      = "https://pypi.io/packages/source/l/lockfile/lockfile-0.10.2.tar.gz"
 
     version('0.10.2', '1aa6175a6d57f082cd12e7ac6102ab15')
 

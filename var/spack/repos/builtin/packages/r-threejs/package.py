@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,7 +31,7 @@ class RThreejs(RPackage):
 
     homepage = "http://bwlewis.github.io/rthreejs"
     url      = "https://cran.r-project.org/src/contrib/threejs_0.2.2.tar.gz"
-
+    list_url = homepage
     version('0.2.2', '35c179b10813c5e4bd3e7827fae6627b')
 
     depends_on('r-htmlwidgets', type=('build', 'run'))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -36,7 +36,6 @@ from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 from spack.spec import CompilerSpec, ArchSpec
-from spack.util.environment import get_path
 
 description = "manage compilers"
 section = "system"
@@ -89,8 +88,6 @@ def compiler_find(args):
 
     """
     paths = args.add_paths
-    if not paths:
-        paths = get_path('PATH')
 
     # Don't initialize compilers config via compilers.get_compiler_config.
     # Just let compiler_find do the
