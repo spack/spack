@@ -220,6 +220,11 @@ class YamlFilesystemView(FilesystemView):
                       % spec.name)
             return False
 
+        if spec.external:
+            tty.warn(self._croot + 'Skipping external package: %s'
+                     % colorize_spec(spec))
+            return True
+
         try:
             if not spec.package.is_activated(self.extensions_layout):
                 spec.package.do_activate(
@@ -244,6 +249,11 @@ class YamlFilesystemView(FilesystemView):
             tty.error(self._croot + 'Package %s is an extension.'
                       % spec.name)
             return False
+
+        if spec.external:
+            tty.warn(self._croot + 'Skipping external package: %s'
+                     % colorize_spec(spec))
+            return True
 
         if self.check_added(spec):
             tty.warn(self._croot + 'Skipping already linked package: %s'
