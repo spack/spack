@@ -30,8 +30,10 @@ class Mesa(AutotoolsPackage):
      - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
-    url      = "https://mesa.freedesktop.org/archive/13.0.6/mesa-13.0.6.tar.xz"
+    url      = "https://mesa.freedesktop.org/archive/mesa-17.1.5.tar.xz"
     list_url = "https://mesa.freedesktop.org/archive"
+    _urlfmt = "https://mesa.freedesktop.org/archive/mesa-{0}.tar.xz"
+    _oldurlfmt = "https://mesa.freedesktop.org/archive/older-versions/{0}.x/{1}/mesa-{1}.tar.xz"
     list_depth = 2
 
     version('17.1.5', '6cf936fbcaadd98924298a7009e8265d')
@@ -82,6 +84,13 @@ class Mesa(AutotoolsPackage):
     depends_on('llvm@:3.9.1+link_dylib', when='@13:13.99+llvm')
     depends_on('llvm+link_dylib', when='+llvm')
     depends_on('libelf', when='+llvm')
+
+    def url_for_version(self, version):
+        """Handle Mesa version-based custom URLs."""
+        if version < Version('17.0.0'):
+            return self._oldurlfmt.format(version.up_to(1), version)
+        else:
+            return self._urlfmt.format(version)
 
     def configure_args(self):
         """Build drivers for platforms supported by spack;
