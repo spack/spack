@@ -28,7 +28,7 @@ import argparse
 import os
 
 import llnl.util.tty as tty
-import spack.build_environment as build_env
+import spack.build_environment as build_environment
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 
@@ -66,7 +66,7 @@ def build_env(parser, args):
         tty.die("spack env only takes one spec.")
     spec = specs[0]
 
-    build_env.setup_package(spec.package, args.dirty)
+    build_environment.setup_package(spec.package, args.dirty)
 
     if not cmd:
         # If no command act like the "env" command and print out env vars.
