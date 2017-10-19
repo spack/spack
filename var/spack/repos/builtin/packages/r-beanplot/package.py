@@ -26,7 +26,7 @@ from spack import *
 
 
 class RBeanplot(RPackage):
-    """Plots univariate comparison graphs, an alternative to 
+    """Plots univariate comparison graphs, an alternative to
        boxplot/stripchart/violin plot."""
 
     homepage = "https://cran.r-project.org/web/packages/beanplot/index.html"
