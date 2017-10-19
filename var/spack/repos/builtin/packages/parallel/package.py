@@ -43,7 +43,7 @@ class Parallel(AutotoolsPackage):
         # The Makefile has a 'test' target, but it does not work
         make('check')
 
-    depends_on('perl')
+    depends_on('perl', type=('build', 'run'))
 
     @run_before('install')
     def filter_sbang(self):
