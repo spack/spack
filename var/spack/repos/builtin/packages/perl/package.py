@@ -33,6 +33,8 @@
 from spack import *
 import os
 from contextlib import contextmanager
+import spack
+from llnl.util.lang import match_predicate
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -224,3 +226,40 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         os.chmod(path, perm | 0o200)
         yield
         os.chmod(path, perm)
+
+    # ========================================================================
+    # Handle specifics of activating and deactivating perl modules.
+    # ========================================================================
+
+    def perl_ignore(self, ext_pkg, args):
+        """Add some ignore files to activate/deactivate args."""
+        ignore_arg = args.get('ignore', lambda f: False)
+
+        # Many perl packages describe themselves in a perllocal.pod file,
+        # so the files conflict when multiple packages are activated.
+        # We could merge the perllocal.pod files in activated packages,
+        # but this is unnecessary for correct operation of perl.
+        # For simplicity, we simply ignore all perllocal.pod files:
+        patterns = [r'perllocal\.pod$']
+
+        return match_predicate(ignore_arg, patterns)
+
+    def activate(self, ext_pkg, **args):
+        ignore = self.perl_ignore(ext_pkg, args)
+        args.update(ignore=ignore)
+
+        super(Perl, self).activate(ext_pkg, **args)
+
+        exts = spack.store.layout.extension_map(self.spec)
+        exts[ext_pkg.name] = ext_pkg.spec
+
+    def deactivate(self, ext_pkg, **args):
+        ignore = self.perl_ignore(ext_pkg, args)
+        args.update(ignore=ignore)
+
+        super(Perl, self).deactivate(ext_pkg, **args)
+
+        exts = spack.store.layout.extension_map(self.spec)
+        # Make deactivate idempotent
+        if ext_pkg.name in exts:
+            del exts[ext_pkg.name]
