@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,9 +31,10 @@ class Htslib(AutotoolsPackage):
     homepage = "https://github.com/samtools/htslib"
     url      = "https://github.com/samtools/htslib/releases/download/1.3.1/htslib-1.3.1.tar.bz2"
 
+    version('1.6', 'd6fd14e208aca7e08cbe9072233d0af9')
     version('1.4', '2a22ff382654c033c40e4ec3ea880050')
     version('1.3.1', '16d78f90b72f29971b042e8da8be6843')
 
     depends_on('zlib')
     depends_on('bzip2', when="@1.4:")
-    depends_on('xz')
+    depends_on('xz', when="@1.4:")

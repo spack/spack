@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,7 +35,7 @@ class Amrex(CMakePackage):
 
     version('17.06', git='https://github.com/AMReX-Codes/amrex.git', commit='836d3c7')
     version('master', git='https://github.com/AMReX-Codes/amrex.git', tag='master')
-    version('develop', git='https://github.com/AMReX-Codes/amrex.git', tag='develop')
+    version('develop', git='https://github.com/AMReX-Codes/amrex.git', tag='development')
 
     variant('dims',
         default='3',

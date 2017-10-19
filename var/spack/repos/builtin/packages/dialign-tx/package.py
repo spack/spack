@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -48,3 +48,5 @@ class DialignTx(MakefilePackage):
         mkdirp(prefix.bin)
         with working_dir(self.build_directory):
             install('dialign-tx', prefix.bin)
+            # t-coffee recognizes as dialign-t
+            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))

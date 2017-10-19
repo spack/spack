@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -202,6 +202,25 @@ class PackagePrefs(object):
         spec = spack.spec.Spec("%s %s" % (pkg_name, variants))
         return dict((name, variant) for name, variant in spec.variants.items()
                     if name in pkg.variants)
+
+
+class PackageTesting(object):
+    def __init__(self):
+        self.packages_to_test = set()
+        self._test_all = False
+
+    def test(self, package_name):
+        self.packages_to_test.add(package_name)
+
+    def test_all(self):
+        self._test_all = True
+
+    def clear(self):
+        self._test_all = False
+        self.packages_to_test.clear()
+
+    def check(self, package_name):
+        return self._test_all or (package_name in self.packages_to_test)
 
 
 def spec_externals(spec):

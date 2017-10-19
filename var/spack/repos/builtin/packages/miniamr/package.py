@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class Miniamr(MakefilePackage):
     homepage = "https://mantevo.org"
     url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniAMR/miniAMR_1.0_all.tgz"
 
-    tags = ['proxy-app']
+    tags = ['proxy-app', 'ecp-proxy-app']
 
     version('1.0', '812e5aaaab99689a4e9381a3bbd718a6')
 

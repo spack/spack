@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,8 +35,11 @@ class PyMpi4py(PythonPackage):
     homepage = "https://pypi.python.org/pypi/mpi4py"
     url      = "https://pypi.io/packages/source/m/mpi4py/mpi4py-1.3.1.tar.gz"
 
+    version('develop', git='https://github.com/mpi4py/mpi4py.git', branch='master')
     version('2.0.0', '4f7d8126d7367c239fd67615680990e3')
     version('1.3.1', 'dbe9d22bdc8ed965c23a7ceb6f32fc3c')
 
+    depends_on('python@2.7:2.8,3.3:')
     depends_on('py-setuptools', type='build')
     depends_on('mpi')
+    depends_on('py-cython', when='@2.0.1:', type='build')

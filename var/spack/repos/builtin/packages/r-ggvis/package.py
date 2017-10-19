@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -31,8 +31,10 @@ class RGgvis(RPackage):
     and web graphics from 'vega'."""
 
     homepage = "http://ggvis.rstudio.com/"
-    url      = "https://cran.r-project.org/src/contrib/ggvis_0.4.2.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/ggvis_0.4.3.tar.gz"
+    list_url = homepage
 
+    version('0.4.3', '30297d464278a7974fb125bcc7d84e77')
     version('0.4.2', '039f45e5c7f1e0652779163d7d99f922')
 
     depends_on('r-assertthat', type=('build', 'run'))

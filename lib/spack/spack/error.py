@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -45,11 +45,27 @@ class SpackError(Exception):
         # traceback as a string and print it in the parent.
         self.traceback = None
 
+        # we allow exceptions to print debug info via print_context()
+        # before they are caught at the top level. If they *haven't*
+        # printed context early, we do it by default when die() is
+        # called, so we need to remember whether it's been called.
+        self.printed = False
+
     @property
     def long_message(self):
         return self._long_message
 
-    def die(self):
+    def print_context(self):
+        """Print extended debug information about this exception.
+
+        This is usually printed when the top-level Spack error handler
+        calls ``die()``, but it acn be called separately beforehand if a
+        lower-level error handler needs to print error context and
+        continue without raising the exception to the top level.
+        """
+        if self.printed:
+            return
+
         # basic debug message
         tty.error(self.message)
         if self.long_message:
@@ -66,6 +82,11 @@ class SpackError(Exception):
                 # run parent exception hook.
                 sys.excepthook(*sys.exc_info())
 
+        sys.stderr.flush()
+        self.printed = True
+
+    def die(self):
+        self.print_context()
         sys.exit(1)
 
     def __str__(self):
@@ -90,16 +111,6 @@ class UnsupportedPlatformError(SpackError):
 
     def __init__(self, message):
         super(UnsupportedPlatformError, self).__init__(message)
-
-
-class NoNetworkConnectionError(SpackError):
-    """Raised when an operation needs an internet connection."""
-
-    def __init__(self, message, url):
-        super(NoNetworkConnectionError, self).__init__(
-            "No network connection: " + str(message),
-            "URL was: " + str(url))
-        self.url = url
 
 
 class SpecError(SpackError):

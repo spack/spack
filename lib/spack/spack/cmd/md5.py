@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -42,13 +42,15 @@ def setup_parser(subparser):
                            help="files/urls to checksum")
 
 
-def compute_md5_checksum(url):
+def compute_checksum(url, algo):
+    algo = getattr(hashlib, algo)
+
     if not os.path.isfile(url):
         with Stage(url) as stage:
             stage.fetch()
-            value = spack.util.crypto.checksum(hashlib.md5, stage.archive_file)
+            value = spack.util.crypto.checksum(algo, stage.archive_file)
     else:
-        value = spack.util.crypto.checksum(hashlib.md5, url)
+        value = spack.util.crypto.checksum(algo, url)
     return value
 
 
@@ -61,7 +63,7 @@ def normalized(files):
         yield value
 
 
-def md5(parser, args):
+def do_checksum(parser, args, algo):
     if not args.files:
         setup_parser.parser.print_help()
         return 1
@@ -70,7 +72,7 @@ def md5(parser, args):
     results = []
     for url in urls:
         try:
-            checksum = compute_md5_checksum(url)
+            checksum = compute_checksum(url, algo)
             results.append((checksum, url))
         except FailedDownloadError as e:
             tty.warn("Failed to fetch %s" % url)
@@ -79,8 +81,12 @@ def md5(parser, args):
             tty.warn("Error when reading %s" % url)
             tty.warn("%s" % e)
 
-    # Dump the MD5s at last without interleaving them with downloads
+    # Dump the hashes last, without interleaving them with downloads
     checksum = 'checksum' if len(results) == 1 else 'checksums'
-    tty.msg("%d MD5 %s:" % (len(results), checksum))
+    tty.msg("%d %s %s:" % (len(results), algo, checksum))
     for checksum, url in results:
         print("{0}  {1}".format(checksum, url))
+
+
+def md5(parser, args):
+    do_checksum(parser, args, 'md5')

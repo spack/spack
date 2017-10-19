@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -72,22 +72,23 @@ def test_fetch(
         finally:
             spack.insecure = False
 
-        assert h() == t.revision
+        with working_dir(pkg.stage.source_path):
+            assert h() == t.revision
 
-        file_path = join_path(pkg.stage.source_path, t.file)
-        assert os.path.isdir(pkg.stage.source_path)
-        assert os.path.isfile(file_path)
+            file_path = join_path(pkg.stage.source_path, t.file)
+            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isfile(file_path)
 
-        os.unlink(file_path)
-        assert not os.path.isfile(file_path)
+            os.unlink(file_path)
+            assert not os.path.isfile(file_path)
 
-        untracked_file = 'foobarbaz'
-        touch(untracked_file)
-        assert os.path.isfile(untracked_file)
-        pkg.do_restage()
-        assert not os.path.isfile(untracked_file)
+            untracked_file = 'foobarbaz'
+            touch(untracked_file)
+            assert os.path.isfile(untracked_file)
+            pkg.do_restage()
+            assert not os.path.isfile(untracked_file)
 
-        assert os.path.isdir(pkg.stage.source_path)
-        assert os.path.isfile(file_path)
+            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isfile(file_path)
 
-        assert h() == t.revision
+            assert h() == t.revision

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -51,3 +51,13 @@ class Libpng(AutotoolsPackage):
     version('1.2.57', 'dfcda3603e29dcc11870c48f838ef75b')
 
     depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended
+
+    def configure_args(self):
+        args = [
+            # not honored, see
+            #   https://sourceforge.net/p/libpng/bugs/210/#33f1
+            # '--with-zlib=' + self.spec['zlib'].prefix,
+            'CFLAGS={0}'.format(self.spec['zlib'].headers.include_flags),
+            'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
+        ]
+        return args

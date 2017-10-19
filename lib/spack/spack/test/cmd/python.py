@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,5 +29,5 @@ python = SpackCommand('python')
 
 
 def test_python():
-    out, err = python('-c', 'import spack; print(spack.spack_version)')
+    out = python('-c', 'import spack; print(spack.spack_version)')
     assert out.strip() == str(spack.spack_version)

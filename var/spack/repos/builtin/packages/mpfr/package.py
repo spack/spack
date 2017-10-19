@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -42,3 +42,9 @@ class Mpfr(AutotoolsPackage):
 
     patch('vasprintf.patch', when='@3.1.5')
     patch('strtofr.patch',   when='@3.1.5')
+
+    def configure_args(self):
+        args = [
+            '--with-gmp=' + self.spec['gmp'].prefix,
+        ]
+        return args

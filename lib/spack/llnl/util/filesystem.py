@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -42,6 +42,7 @@ from llnl.util.lang import dedupe
 
 __all__ = [
     'FileFilter',
+    'FileList',
     'HeaderList',
     'LibraryList',
     'ancestor',
@@ -135,7 +136,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             raise
 
         finally:
-            if not backup:
+            if not backup and os.path.exists(backup_filename):
                 os.remove(backup_filename)
 
 
@@ -647,19 +648,6 @@ class FileList(collections.Sequence):
         """
         return list(dedupe(os.path.basename(x) for x in self.files))
 
-    @property
-    def names(self):
-        """Stable de-duplication of file names in the list without extensions
-
-        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
-        >>> h.names
-        ['a', 'b']
-
-        Returns:
-            list of strings: A list of files without extensions
-        """
-        return list(dedupe(x.split('.')[0] for x in self.basenames))
-
     def __getitem__(self, item):
         cls = type(self)
         if isinstance(item, numbers.Integral):
@@ -708,6 +696,34 @@ class HeaderList(FileList):
             list of strings: A list of header files
         """
         return self.files
+
+    @property
+    def names(self):
+        """Stable de-duplication of header names in the list without extensions
+
+        >>> h = HeaderList(['/dir1/a.h', '/dir2/b.h', '/dir3/a.h'])
+        >>> h.names
+        ['a', 'b']
+
+        Returns:
+            list of strings: A list of files without extensions
+        """
+        names = []
+
+        for x in self.basenames:
+            name = x
+
+            # Valid extensions include: ['.cuh', '.hpp', '.hh', '.h']
+            for ext in ['.cuh', '.hpp', '.hh', '.h']:
+                i = name.rfind(ext)
+                if i != -1:
+                    names.append(name[:i])
+                    break
+            else:
+                # No valid extension, should we still include it?
+                names.append(name)
+
+        return list(dedupe(names))
 
     @property
     def include_flags(self):
@@ -833,7 +849,24 @@ class LibraryList(FileList):
         Returns:
             list of strings: A list of library names
         """
-        return list(dedupe(x.split('.')[0][3:] for x in self.basenames))
+        names = []
+
+        for x in self.basenames:
+            name = x
+            if x.startswith('lib'):
+                name = x[3:]
+
+            # Valid extensions include: ['.dylib', '.so', '.a']
+            for ext in ['.dylib', '.so', '.a']:
+                i = name.rfind(ext)
+                if i != -1:
+                    names.append(name[:i])
+                    break
+            else:
+                # No valid extension, should we still include it?
+                names.append(name)
+
+        return list(dedupe(names))
 
     @property
     def search_flags(self):

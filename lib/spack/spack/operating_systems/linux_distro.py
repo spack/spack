@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -48,6 +48,11 @@ class LinuxDistro(OperatingSystem):
         # grab the first legal identifier in the version field.  On
         # debian you get things like 'wheezy/sid'; sid means unstable.
         # We just record 'wheezy' and don't get quite so detailed.
-        version = re.split(r'[^\w-]', version)[0]
+        version = re.split(r'[^\w-]', version)
+
+        if 'ubuntu' in distname:
+            version = '.'.join(version[0:2])
+        else:
+            version = version[0]
 
         super(LinuxDistro, self).__init__(distname, version)

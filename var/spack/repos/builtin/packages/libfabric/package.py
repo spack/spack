@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,3 +33,32 @@ class Libfabric(AutotoolsPackage):
     url      = "https://github.com/ofiwg/libfabric/releases/download/v1.5.0/libfabric-1.5.0.tar.gz"
 
     version('1.5.0', 'fda3e9b31ebe184f5157288d059672d6')
+
+    fabrics = ('psm',
+               'psm2',
+               'sockets',
+               'verbs',
+               'usnic',
+               'mxm',
+               'gni',
+               'xpmem',
+               'udp',
+               'rxm',
+               'rxd')
+
+    variant(
+       'fabrics',
+       default='sockets',
+       description='A list of enabled fabrics',
+       values=fabrics,
+       multi=True
+    )
+
+    def configure_args(self):
+        args = []
+
+        args.extend(['--enable-%s=%s' %
+                     (f, 'yes' if 'fabrics=%s' % f in self.spec else 'no')
+                     for f in self.fabrics])
+
+        return args

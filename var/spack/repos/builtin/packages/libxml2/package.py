@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -48,12 +48,15 @@ class Libxml2(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
+
+        args = ["--with-lzma=%s" % spec['xz'].prefix]
+
         if '+python' in spec:
-            python_args = [
+            args.extend([
                 '--with-python={0}'.format(spec['python'].home),
                 '--with-python-install-dir={0}'.format(site_packages_dir)
-            ]
+            ])
         else:
-            python_args = ['--without-python']
+            args.append('--without-python')
 
-        return python_args
+        return args

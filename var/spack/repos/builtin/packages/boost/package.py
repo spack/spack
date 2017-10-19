@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -41,15 +41,21 @@ class Boost(Package):
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
 
+    version('develop',
+            git='https://github.com/boostorg/boost.git',
+            branch='develop',
+            submodules=True)
+
+    version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d',
+            url='https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2')
+    version('1.65.0', '5512d3809801b0a1b9dd58447b70915d',
+            url='https://dl.bintray.com/boostorg/release/1.65.0/source/boost_1_65_0.tar.bz2')
     # NOTE: 1.64.0 seems fine for *most* applications, but if you need
     #       +python and +mpi, there seem to be errors with out-of-date
     #       API calls from mpi/python.
     #       See: https://github.com/LLNL/spack/issues/3963
     version('1.64.0', '93eecce2abed9d2442c9676914709349')
-
-    # Set previous release to preferred for now, can be removed
-    # once boost+python+mpi is fixed.
-    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847', preferred=True)
+    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
     version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
@@ -127,12 +133,18 @@ class Boost(Package):
             description="Build the Boost Graph library")
     variant('taggedlayout', default=False,
             description="Augment library names with build options")
+    variant('versionedlayout', default=False,
+            description="Augment library layout with versioned subdirs")
+    variant('clanglibcpp', default=False,
+            description='Compile with clang libc++ instead of libstdc++')
 
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
     depends_on('zlib', when='+iostreams')
+
+    conflicts('+taggedlayout', when='+versionedlayout')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
@@ -148,7 +160,7 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
-    patch('call_once_variadic.patch', when='@:1.56.0%gcc@5:')
+    patch('call_once_variadic.patch', when='@:1.55.9999%gcc@5:')
 
     # Patch fix for PGI compiler
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
@@ -256,6 +268,8 @@ class Boost(Package):
 
         if '+taggedlayout' in spec:
             layout = 'tagged'
+        elif '+versionedlayout' in spec:
+            layout = 'versioned'
         else:
             if len(threadingOpts) > 1:
                 raise RuntimeError("Cannot build both single and " +
@@ -278,6 +292,10 @@ class Boost(Package):
         #   https://svn.boost.org/trac/boost/ticket/12496
         if spec.satisfies('%clang'):
             options.extend(['pch=off'])
+            if '+clanglibcpp' in spec:
+                options.extend(['toolset=clang',
+                                'cxxflags="-stdlib=libc++"',
+                                'linkflags="-stdlib=libc++"'])
 
         return threadingOpts
 

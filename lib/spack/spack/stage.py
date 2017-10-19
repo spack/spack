@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -236,6 +236,10 @@ class Stage(object):
 
             self._lock = Stage.stage_locks[self.name]
 
+        # When stages are reused, we need to know whether to re-create
+        # it.  This marks whether it has been created/destroyed.
+        self.created = False
+
     def __enter__(self):
         """
         Entering a stage context will create the stage directory
@@ -362,18 +366,8 @@ class Stage(object):
                 return p
         return None
 
-    def chdir(self):
-        """Changes directory to the stage path. Or dies if it is not set
-        up."""
-        if os.path.isdir(self.path):
-            os.chdir(self.path)
-        else:
-            raise ChdirError("Setup failed: no such directory: " + self.path)
-
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
-        self.chdir()
-
         fetchers = []
         if not mirror_only:
             fetchers.append(self.default_fetcher)
@@ -474,18 +468,6 @@ class Stage(object):
         else:
             tty.msg("Already staged %s in %s" % (self.name, self.path))
 
-    def chdir_to_source(self):
-        """Changes directory to the expanded archive directory.
-           Dies with an error if there was no expanded archive.
-        """
-        path = self.source_path
-        if not path:
-            raise StageError("Attempt to chdir before expanding archive.")
-        else:
-            os.chdir(path)
-            if not os.listdir(path):
-                raise StageError("Archive was empty for %s" % self.name)
-
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
            the archive.
@@ -521,6 +503,7 @@ class Stage(object):
                 mkdirp(self.path)
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
+        self.created = True
 
     def destroy(self):
         """Removes this stage directory."""
@@ -531,6 +514,9 @@ class Stage(object):
             os.getcwd()
         except OSError:
             os.chdir(os.path.dirname(self.path))
+
+        # mark as destroyed
+        self.created = False
 
 
 class ResourceStage(Stage):
@@ -573,8 +559,9 @@ class ResourceStage(Stage):
                 shutil.move(source_path, destination_path)
 
 
-@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',
-                                'restage', 'destroy', 'cache_local'])
+@pattern.composite(method_list=[
+    'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
+    'destroy', 'cache_local'])
 class StageComposite:
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
@@ -604,9 +591,6 @@ class StageComposite:
     def path(self):
         return self[0].path
 
-    def chdir_to_source(self):
-        return self[0].chdir_to_source()
-
     @property
     def archive_file(self):
         return self[0].archive_file
@@ -623,12 +607,7 @@ class DIYStage(object):
         self.archive_file = None
         self.path = path
         self.source_path = path
-
-    def chdir(self):
-        if os.path.isdir(self.path):
-            os.chdir(self.path)
-        else:
-            raise ChdirError("Setup failed: no such directory: " + self.path)
+        self.created = True
 
     # DIY stages do nothing as context managers.
     def __enter__(self):
@@ -636,9 +615,6 @@ class DIYStage(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-
-    def chdir_to_source(self):
-        self.chdir()
 
     def fetch(self, *args, **kwargs):
         tty.msg("No need to fetch for DIY.")
@@ -651,6 +627,9 @@ class DIYStage(object):
 
     def restage(self):
         tty.die("Cannot restage DIY stage.")
+
+    def create(self):
+        self.created = True
 
     def destroy(self):
         # No need to destroy DIY stage.
@@ -686,10 +665,6 @@ class StageError(spack.error.SpackError):
 
 class RestageError(StageError):
     """"Error encountered during restaging."""
-
-
-class ChdirError(StageError):
-    """Raised when Spack can't change directories."""
 
 
 # Keep this in namespace for convenience

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,10 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
+
 import re
 import os
+import ssl
 import sys
 import traceback
+import hashlib
 
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
@@ -49,8 +53,9 @@ import spack
 import spack.error
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
+
 # Timeout in seconds for web requests
-TIMEOUT = 10
+_timeout = 10
 
 
 class LinkParser(HTMLParser):
@@ -105,6 +110,20 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         root = re.sub('/index.html$', '', root)
 
     try:
+        context = None
+        if sys.version_info < (2, 7, 9) or \
+                ((3,) < sys.version_info < (3, 4, 3)):
+            if not spack.insecure:
+                tty.warn("Spack will not check SSL certificates. You need to "
+                         "update your Python to enable certificate "
+                         "verification.")
+        else:
+            # We explicitly create default context to avoid error described in
+            # https://blog.sucuri.net/2016/03/beware-unverified-tls-certificates-php-python.html
+            context = ssl._create_unverified_context() \
+                if spack.insecure \
+                else ssl.create_default_context()
+
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
         # It would be nice to do this with the HTTP Accept header to avoid
@@ -112,7 +131,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
         # if you ask for a tarball with Accept: text/html.
         req = Request(url)
         req.get_method = lambda: "HEAD"
-        resp = urlopen(req, timeout=TIMEOUT)
+        resp = _urlopen(req, timeout=_timeout, context=context)
 
         if "Content-type" not in resp.headers:
             tty.debug("ignoring page " + url)
@@ -125,7 +144,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
         # Do the real GET request when we know it's just HTML.
         req.get_method = lambda: "GET"
-        response = urlopen(req, timeout=TIMEOUT)
+        response = _urlopen(req, timeout=_timeout, context=context)
         response_url = response.geturl()
 
         # Read the page and and stick it in the map we'll return
@@ -176,8 +195,15 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
 
     except URLError as e:
         tty.debug(e)
+
+        if isinstance(e.reason, ssl.SSLError):
+            tty.warn("Spack was unable to fetch url list due to a certificate "
+                     "verification problem. You can try running spack -k, "
+                     "which will not check SSL certificates. Use this at your "
+                     "own risk.")
+
         if raise_on_error:
-            raise spack.error.NoNetworkConnectionError(str(e), url)
+            raise NoNetworkConnectionError(str(e), url)
 
     except HTMLParseError as e:
         # This error indicates that Python's HTML parser sucks.
@@ -202,8 +228,16 @@ def _spider_wrapper(args):
     return _spider(*args)
 
 
-def spider(root_url, depth=0):
+def _urlopen(*args, **kwargs):
+    """Wrapper for compatibility with old versions of Python."""
+    # We don't pass 'context' parameter to urlopen because it
+    # was introduces only starting versions 2.7.9 and 3.4.3 of Python.
+    if 'context' in kwargs and kwargs['context'] is None:
+        del kwargs['context']
+    return urlopen(*args, **kwargs)
 
+
+def spider(root_url, depth=0):
     """Gets web pages from a root URL.
 
        If depth is specified (e.g., depth=2), then this will also follow
@@ -298,3 +332,105 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
                 continue
 
     return versions
+
+
+def get_checksums_for_versions(
+        url_dict, name, first_stage_function=None, keep_stage=False):
+    """Fetches and checksums archives from URLs.
+
+    This function is called by both ``spack checksum`` and ``spack
+    create``.  The ``first_stage_function`` argument allows the caller to
+    inspect the first downloaded archive, e.g., to determine the build
+    system.
+
+    Args:
+        url_dict (dict): A dictionary of the form: version -> URL
+        name (str): The name of the package
+        first_stage_function (callable): function that takes a Stage and a URL;
+            this is run on the stage of the first URL downloaded
+        keep_stage (bool): whether to keep staging area when command completes
+
+    Returns:
+        (str): A multi-line string containing versions and corresponding hashes
+
+    """
+    sorted_versions = sorted(url_dict.keys(), reverse=True)
+
+    # Find length of longest string in the list for padding
+    max_len = max(len(str(v)) for v in sorted_versions)
+    num_ver = len(sorted_versions)
+
+    tty.msg("Found {0} version{1} of {2}:".format(
+            num_ver, '' if num_ver == 1 else 's', name),
+            "",
+            *spack.cmd.elide_list(
+                ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
+                 for v in sorted_versions]))
+    print()
+
+    archives_to_fetch = tty.get_number(
+        "How many would you like to checksum?", default=1, abort='q')
+
+    if not archives_to_fetch:
+        tty.die("Aborted.")
+
+    versions = sorted_versions[:archives_to_fetch]
+    urls = [url_dict[v] for v in versions]
+
+    tty.msg("Downloading...")
+    version_hashes = []
+    i = 0
+    for url, version in zip(urls, versions):
+        try:
+            with spack.stage.Stage(url, keep=keep_stage) as stage:
+                # Fetch the archive
+                stage.fetch()
+                if i == 0 and first_stage_function:
+                    # Only run first_stage_function the first time,
+                    # no need to run it every time
+                    first_stage_function(stage, url)
+
+                # Checksum the archive and add it to the list
+                version_hashes.append((version, spack.util.crypto.checksum(
+                    hashlib.md5, stage.archive_file)))
+                i += 1
+        except spack.stage.FailedDownloadError:
+            tty.msg("Failed to fetch {0}".format(url))
+        except Exception as e:
+            tty.msg("Something failed on {0}, skipping.".format(url),
+                    "  ({0})".format(e))
+
+    if not version_hashes:
+        tty.die("Could not fetch any versions for {0}".format(name))
+
+    # Find length of longest string in the list for padding
+    max_len = max(len(str(v)) for v, h in version_hashes)
+
+    # Generate the version directives to put in a package.py
+    version_lines = "\n".join([
+        "    version('{0}', {1}'{2}')".format(
+            v, ' ' * (max_len - len(str(v))), h) for v, h in version_hashes
+    ])
+
+    num_hash = len(version_hashes)
+    tty.msg("Checksummed {0} version{1} of {2}".format(
+        num_hash, '' if num_hash == 1 else 's', name))
+
+    return version_lines
+
+
+class SpackWebError(spack.error.SpackError):
+    """Superclass for Spack web spidering errors."""
+
+
+class VersionFetchError(SpackWebError):
+    """Raised when we can't determine a URL to fetch a package."""
+
+
+class NoNetworkConnectionError(SpackWebError):
+    """Raised when an operation can't get an internet connection."""
+    def __init__(self, message, url):
+        super(NoNetworkConnectionError, self).__init__(
+            "No network connection: " + str(message),
+            "URL was: " + str(url))
+        self.url = url
