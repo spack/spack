@@ -35,7 +35,7 @@ class RSiggenes(RPackage):
     url      = "https://git.bioconductor.org/packages/siggenes"
     list_url = homepage
 
-     version('1.50.0', git='https://git.bioconductor.org/packages/siggenes', commit='b1818f26e1449005ffd971df6bda8da0303080bc')
+    version('1.50.0', git='https://git.bioconductor.org/packages/siggenes', commit='b1818f26e1449005ffd971df6bda8da0303080bc')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-multtest', type=('build', 'run'))
