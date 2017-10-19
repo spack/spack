@@ -31,7 +31,7 @@ import pytest
 # scope rather than a session level scope, since we want to edit the
 # given RepoPath
 @pytest.fixture()
-def test_repo():
+def repo_for_test():
     return spack.repository.RepoPath(spack.mock_packages_path)
 
 
@@ -49,28 +49,28 @@ repo:
     return spack.repository.Repo(str(repo_dir))
 
 
-def test_repo_getpkg(test_repo):
-    test_repo.get('a')
-    test_repo.get('builtin.mock.a')
+def test_repo_getpkg(repo_for_test):
+    repo_for_test.get('a')
+    repo_for_test.get('builtin.mock.a')
 
 
-def test_repo_multi_getpkg(test_repo, extra_repo):
-    test_repo.put_first(extra_repo)
-    test_repo.get('a')
-    test_repo.get('builtin.mock.a')
+def test_repo_multi_getpkg(repo_for_test, extra_repo):
+    repo_for_test.put_first(extra_repo)
+    repo_for_test.get('a')
+    repo_for_test.get('builtin.mock.a')
 
 
-def test_repo_multi_getpkgclass(test_repo, extra_repo):
-    test_repo.put_first(extra_repo)
-    test_repo.get_pkg_class('a')
-    test_repo.get_pkg_class('builtin.mock.a')
+def test_repo_multi_getpkgclass(repo_for_test, extra_repo):
+    repo_for_test.put_first(extra_repo)
+    repo_for_test.get_pkg_class('a')
+    repo_for_test.get_pkg_class('builtin.mock.a')
 
 
-def test_repo_pkg_with_unknown_namespace(test_repo):
+def test_repo_pkg_with_unknown_namespace(repo_for_test):
     with pytest.raises(spack.repository.UnknownNamespaceError):
-        test_repo.get('unknown.a')
+        repo_for_test.get('unknown.a')
 
 
-def test_repo_unknown_pkg(test_repo):
+def test_repo_unknown_pkg(repo_for_test):
     with pytest.raises(spack.repository.UnknownPackageError):
-        test_repo.get('builtin.mock.nonexistentpackage')
+        repo_for_test.get('builtin.mock.nonexistentpackage')
