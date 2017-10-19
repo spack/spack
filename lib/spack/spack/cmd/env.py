@@ -20,10 +20,10 @@ description = "group a subset of packages"
 section = "environment"
 level = "long"
 
-_db_dirname = fs.join_path(spack.var_path, 'contexts')
+_db_dirname = fs.join_path(spack.var_path, 'environments')
 
 
-class Context(object):
+class Environment(object):
     def __init__(self, name):
         self.name = name
         self.user_specs = list()
@@ -102,7 +102,7 @@ class Context(object):
         v -> x -> y
 
         Then if you upgrade y, you will start by re-concretizing w (and x).
-        This should make sure that v uses the same x as w if this context is
+        This should make sure that v uses the same x as w if this environment is
         supposed to reuse dependencies where possible. The difference compared
         to 'normal' concretization is that you want to keep things as similar
         as possible. I think the approach would be to go through all the
@@ -188,7 +188,7 @@ class Context(object):
 
     @staticmethod
     def from_dict(name, d):
-        c = Context(name)
+        c = Environment(name)
         c.user_specs = list(d['user_specs'])
         c.concretized_order = list(d['concretized_order'])
         specs_dict = d['concrete_specs']
@@ -243,29 +243,29 @@ def upgrade_dependency_version(spec, dep_name):
     return spec
 
 
-def write(context, new_repo=None, config_files=None):
+def write(environment, new_repo=None, config_files=None):
     """
-    config_files will overwrite any existing config files in the context.
+    config_files will overwrite any existing config files in the environment.
     """
-    tmp_new, dest, tmp_old = write_paths(context)
+    tmp_new, dest, tmp_old = write_paths(environment)
 
     if os.path.exists(tmp_new) or os.path.exists(tmp_old):
-        tty.die("Partial write state, run 'spack context repair'")
+        tty.die("Partial write state, run 'spack env repair'")
 
     fs.mkdirp(tmp_new)
-    # create one file for the context object
-    with open(fs.join_path(tmp_new, 'context.json'), 'w') as F:
-        sjson.dump(context.to_dict(), stream=F)
+    # create one file for the environment object
+    with open(fs.join_path(tmp_new, 'environment.json'), 'w') as F:
+        sjson.dump(environment.to_dict(), stream=F)
 
     dest_repo_dir = fs.join_path(tmp_new, 'repo')
     if new_repo:
         shutil.copytree(new_repo.root, dest_repo_dir)
-    elif os.path.exists(context.repo_path()):
-        shutil.copytree(context.repo_path(), dest_repo_dir)
+    elif os.path.exists(environment.repo_path()):
+        shutil.copytree(environment.repo_path(), dest_repo_dir)
 
     new_config_dir = fs.join_path(tmp_new, 'config')
-    if os.path.exists(context.config_path()):
-        shutil.copytree(context.config_path(), new_config_dir)
+    if os.path.exists(environment.config_path()):
+        shutil.copytree(environment.config_path(), new_config_dir)
     else:
         fs.mkdirp(new_config_dir)
 
@@ -282,22 +282,22 @@ def write(context, new_repo=None, config_files=None):
         shutil.rmtree(tmp_old)
 
 
-def write_paths(context):
-    tmp_new = fs.join_path(_db_dirname, "_" + context.name)
-    dest = context.path()
-    tmp_old = fs.join_path(_db_dirname, "." + context.name)
+def write_paths(environment):
+    tmp_new = fs.join_path(_db_dirname, "_" + environment.name)
+    dest = environment.path()
+    tmp_old = fs.join_path(_db_dirname, "." + environment.name)
     return tmp_new, dest, tmp_old
 
 
-def repair(context_name):
+def repair(environment_name):
     """
     Possibilities:
         tmp_new, dest
         tmp_new, tmp_old
         tmp_old, dest
     """
-    context = Context(context_name)
-    tmp_new, dest, tmp_old = write_paths(context)
+    environment = Environment(environment_name)
+    tmp_new, dest, tmp_old = write_paths(environment)
     if os.path.exists(tmp_old):
         if not os.path.exists(dest):
             shutil.move(tmp_new, dest)
@@ -313,34 +313,35 @@ def repair(context_name):
         shutil.rmtree(tmp_new)
 
 
-def read(context_name):
-    tmp_new, context_dir, tmp_old = write_paths(Context(context_name))
+def read(environment_name):
+    tmp_new, environment_dir, tmp_old = write_paths(
+        Environment(Environment_name))
 
     if os.path.exists(tmp_new) or os.path.exists(tmp_old):
-        tty.die("Partial write state, run 'spack context repair'")
+        tty.die("Partial write state, run 'spack env repair'")
 
-    with open(fs.join_path(context_dir, 'context.json'), 'r') as F:
-        context_dict = sjson.load(F)
-    context = Context.from_dict(context_name, context_dict)
+    with open(fs.join_path(environment_dir, 'environment.json'), 'r') as F:
+        environment_dict = sjson.load(F)
+    environment = Environment.from_dict(environment_name, environment_dict)
 
-    return context
+    return environment
 
 
-def context_create(args):
-    context = Context(args.context)
-    if os.path.exists(context.path()):
-        raise tty.die("Context already exists: " + args.context)
+def environment_create(args):
+    environment = Environment(args.environment)
+    if os.path.exists(environment.path()):
+        raise tty.die("Environment already exists: " + args.environment)
 
     init_config = None
     if args.init_file:
         with open(args.init_file) as F:
             init_config = syaml.load(F)
 
-    _context_create(args.context, init_config)
+    _environment_create(args.environment, init_config)
 
 
-def _context_create(name, init_config=None):
-    context = Context(name)
+def _environment_create(name, init_config=None):
+    environment = Environment(name)
 
     config_paths = None
     if init_config:
@@ -353,7 +354,7 @@ def _context_create(name, init_config=None):
                 config_sections[key] = val
 
         for user_spec in user_specs:
-            context.add(user_spec)
+            environment.add(user_spec)
         if config_sections:
             import tempfile
             tmp_cfg_dir = tempfile.mkdtemp()
@@ -366,66 +367,66 @@ def _context_create(name, init_config=None):
             with open(yaml_path, 'w') as F:
                 F.write(yaml_section)
 
-    write(context, config_files=config_paths)
+    write(environment, config_files=config_paths)
     if config_paths:
         shutil.rmtree(tmp_cfg_dir)
 
 
-def context_update_config(args):
-    context = Context(args.context)
-    write(context, config_files=args.config_files)
+def environment_update_config(args):
+    environment = Environment(args.environment)
+    write(environment, config_files=args.config_files)
 
 
-def context_add(args):
-    context = read(args.context)
+def environment_add(args):
+    environment = read(args.environment)
     for spec in spack.cmd.parse_specs(args.package):
-        context.add(spec.format())
-    write(context)
+        environment.add(spec.format())
+    write(environment)
 
 
-def context_remove(args):
-    context = read(args.context)
+def environment_remove(args):
+    environment = read(args.environment)
     for spec in spack.cmd.parse_specs(args.package):
-        context.remove(spec.format())
-    write(context)
+        environment.remove(spec.format())
+    write(environment)
 
 
-def context_concretize(args):
-    context = read(args.context)
-    _context_concretize(context)
+def environment_concretize(args):
+    environment = read(args.environment)
+    _environment_concretize(environment)
 
 
-def _context_concretize(context):
-    repo = prepare_repository(context)
-    prepare_config_scope(context)
+def _environment_concretize(environment):
+    repo = prepare_repository(environment)
+    prepare_config_scope(environment)
 
-    new_specs = context.concretize()
+    new_specs = environment.concretize()
     for spec in new_specs:
         for dep in spec.traverse():
-            dump_to_context_repo(dep, repo)
-    write(context, repo)
+            dump_to_environment_repo(dep, repo)
+    write(environment, repo)
 
 
-def context_install(args):
-    context = read(args.context)
-    prepare_repository(context)
-    context.install()
+def environment_install(args):
+    environment = read(args.environment)
+    prepare_repository(environment)
+    environment.install()
 
 
-def dump_to_context_repo(spec, repo):
+def dump_to_environment_repo(spec, repo):
     dest_pkg_dir = repo.dirname_for_package_name(spec.name)
     if not os.path.exists(dest_pkg_dir):
         spack.repo.dump_provenance(spec, dest_pkg_dir)
 
 
-def prepare_repository(context, remove=None):
+def prepare_repository(environment, remove=None):
     import tempfile
     repo_stage = tempfile.mkdtemp()
     new_repo_dir = fs.join_path(repo_stage, 'repo')
-    if os.path.exists(context.repo_path()):
-        shutil.copytree(context.repo_path(), new_repo_dir)
+    if os.path.exists(environment.repo_path()):
+        shutil.copytree(environment.repo_path(), new_repo_dir)
     else:
-        spack.repository.create_repo(new_repo_dir, context.name)
+        spack.repository.create_repo(new_repo_dir, environment.name)
     if remove:
         remove_dirs = []
         repo = Repo(new_repo_dir)
@@ -438,68 +439,69 @@ def prepare_repository(context, remove=None):
     return repo
 
 
-def prepare_config_scope(context):
-    tty.debug("Check for config scope at " + context.config_path())
-    if os.path.exists(context.config_path()):
-        tty.msg("Using config scope at " + context.config_path())
-        ConfigScope(context.name, context.config_path())
+def prepare_config_scope(environment):
+    tty.debug("Check for config scope at " + environment.config_path())
+    if os.path.exists(environment.config_path()):
+        tty.msg("Using config scope at " + environment.config_path())
+        ConfigScope(environment.name, environment.config_path())
 
 
-def context_relocate(args):
-    context = read(args.context)
-    prepare_repository(context)
-    context.reset_os_and_compiler(compiler=args.compiler)
-    write(context)
+def environment_relocate(args):
+    environment = read(args.environment)
+    prepare_repository(environment)
+    environment.reset_os_and_compiler(compiler=args.compiler)
+    write(environment)
 
 
-def context_list(args):
+def environment_list(args):
     # TODO? option to list packages w/ multiple instances?
-    context = read(args.context)
+    environment = read(args.environment)
     import sys
-    context.list(sys.stdout, args.include_deps)
+    environment.list(sys.stdout, args.include_deps)
 
 
-def context_stage(args):
-    context = read(args.context)
-    prepare_repository(context)
-    for spec in context.specs_by_hash.values():
+def environment_stage(args):
+    environment = read(args.environment)
+    prepare_repository(environment)
+    for spec in environment.specs_by_hash.values():
         for dep in spec.traverse():
             dep.package.do_stage()
 
 
-def context_list_modules(args):
-    context = read(args.context)
-    for module_file in context.get_modules():
+def environment_list_modules(args):
+    environment = read(args.environment)
+    for module_file in environment.get_modules():
         print(module_file)
 
 
-def context_upgrade_dependency(args):
-    context = read(args.context)
-    repo = prepare_repository(context, [args.dep_name])
-    new_dep = context.upgrade_dependency(args.dep_name, args.dry_run)
+def environment_upgrade_dependency(args):
+    environment = read(args.environment)
+    repo = prepare_repository(environment, [args.dep_name])
+    new_dep = environment.upgrade_dependency(args.dep_name, args.dry_run)
     if not args.dry_run and new_dep:
-        dump_to_context_repo(new_dep, repo)
-        write(context, repo)
+        dump_to_environment_repo(new_dep, repo)
+        write(environment, repo)
 
 
 def add_common_args(parser):
     parser.add_argument(
-        'context',
-        help="The context you are working with"
+        'environment',
+        help="The environment you are working with"
     )
 
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='context_command')
+    sp = subparser.add_subparsers(
+        metavar='SUBCOMMAND', dest='environment_command')
 
-    create_parser = sp.add_parser('create', help='Make a context')
+    create_parser = sp.add_parser('create', help='Make an environment')
     add_common_args(create_parser)
     create_parser.add_argument(
         '--init-file', dest='init_file',
         help='File with user specs to add and configuration yaml to use'
     )
 
-    add_parser = sp.add_parser('add', help='Add a spec to a context')
+    add_parser = sp.add_parser('add', help='Add a spec to an environment')
     add_common_args(add_parser)
     add_parser.add_argument(
         'package',
@@ -508,7 +510,7 @@ def setup_parser(subparser):
     )
 
     remove_parser = sp.add_parser(
-        'remove', help='Remove a spec from this context')
+        'remove', help='Remove a spec from this environment')
     add_common_args(remove_parser)
     remove_parser.add_argument(
         'package',
@@ -521,14 +523,14 @@ def setup_parser(subparser):
     add_common_args(concretize_parser)
 
     relocate_parser = sp.add_parser(
-        'relocate', help='Reconcretize context with new OS and/or compiler')
+        'relocate', help='Reconcretize environment with new OS and/or compiler')
     add_common_args(relocate_parser)
     relocate_parser.add_argument(
         '--compiler',
         help="Compiler spec to use"
     )
 
-    list_parser = sp.add_parser('list', help='List specs in a context')
+    list_parser = sp.add_parser('list', help='List specs in an environment')
     list_parser.add_argument(
         '--include-deps', action='store_true',
         dest='include_deps', help='Show dependencies of requested packages')
@@ -536,12 +538,13 @@ def setup_parser(subparser):
 
     modules_parser = sp.add_parser(
         'list-modules',
-        help='Show modules for for packages installed in a context')
+        help='Show modules for for packages installed in an environment')
     add_common_args(modules_parser)
 
     upgrade_parser = sp.add_parser(
         'upgrade',
-        help='Upgrade a dependency package in a context to the latest version')
+        help='''Upgrade a dependency package in an environment to the latest
+version''')
     add_common_args(upgrade_parser)
     upgrade_parser.add_argument(
         'dep_name', help='Dependency package to upgrade')
@@ -551,12 +554,12 @@ def setup_parser(subparser):
 
     stage_parser = sp.add_parser(
         'stage',
-        help='Download all source files for all packages in a context')
+        help='Download all source files for all packages in an environment')
     add_common_args(stage_parser)
 
     config_update_parser = sp.add_parser(
         'update-config',
-        help='Add config yaml file to context')
+        help='Add config yaml file to environment')
     add_common_args(config_update_parser)
     config_update_parser.add_argument(
         'config_files',
@@ -566,22 +569,22 @@ def setup_parser(subparser):
 
     install_parser = sp.add_parser(
         'install',
-        help='Install all concretized specs in a context')
+        help='Install all concretized specs in an environment')
     add_common_args(install_parser)
 
 
-def context(parser, args, **kwargs):
+def env(parser, args, **kwargs):
     action = {
-        'create': context_create,
-        'add': context_add,
-        'concretize': context_concretize,
-        'list': context_list,
-        'list-modules': context_list_modules,
-        'remove': context_remove,
-        'relocate': context_relocate,
-        'upgrade': context_upgrade_dependency,
-        'stage': context_stage,
-        'install': context_install,
-        'update-config': context_update_config,
+        'create': environment_create,
+        'add': environment_add,
+        'concretize': environment_concretize,
+        'list': environment_list,
+        'list-modules': environment_list_modules,
+        'remove': environment_remove,
+        'relocate': environment_relocate,
+        'upgrade': environment_upgrade_dependency,
+        'stage': environment_stage,
+        'install': environment_install,
+        'update-config': environment_update_config,
     }
-    action[args.context_command](args)
+    action[args.environment_command](args)
