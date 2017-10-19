@@ -60,13 +60,13 @@ class Bowtie2(Package):
             kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
 
             match = '^#!/usr/bin/env perl'
-            perl = join_path(self.spec['perl'].prefix.bin, 'perl')
+            perl = self.spec['perl'].command
             substitute = "#!{perl}".format(perl=perl)
             files = ['bowtie2', ]
             filter_file(match, substitute, *files, **kwargs)
 
             match = '^#!/usr/bin/env python'
-            python = join_path(self.spec['python'].prefix.bin, 'perl')
+            python = self.spec['python'].command
             substitute = "#!{python}".format(python=python)
             files = ['bowtie2-build', 'bowtie2-inspect']
             filter_file(match, substitute, *files, **kwargs)
