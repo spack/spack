@@ -24,6 +24,9 @@
 ##############################################################################
 import pytest
 
+from llnl.util.filesystem import working_dir
+
+import spack
 import spack.cmd
 from spack.main import SpackCommand
 from spack.util.executable import which
@@ -46,6 +49,15 @@ def test_blame_by_modtime(builtin_mock):
 def test_blame_by_percent(builtin_mock):
     """Sanity check the blame command to make sure it works."""
     out = blame('--percent', 'mpich')
+    assert 'LAST_COMMIT' in out
+    assert 'AUTHOR' in out
+    assert 'EMAIL' in out
+
+
+def test_blame_file(builtin_mock):
+    """Sanity check the blame command to make sure it works."""
+    with working_dir(spack.prefix):
+        out = blame('bin/spack')
     assert 'LAST_COMMIT' in out
     assert 'AUTHOR' in out
     assert 'EMAIL' in out

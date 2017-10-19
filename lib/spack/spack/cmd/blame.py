@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 import re
 
 import llnl.util.tty as tty
@@ -52,26 +53,34 @@ def setup_parser(subparser):
         help='show git blame output instead of summary')
 
     subparser.add_argument(
-        'package_name', help='name of package to show contributions for')
+        'package_name', help='name of package to show contributions for, '
+        'or path to a file in the spack repo')
 
 
 def blame(parser, args):
     # make sure this is a git repo
     if not spack_is_git_repo():
-        tty.die("This spack is not a git clone. Can't use 'spack pkg'")
+        tty.die("This spack is not a git clone. Can't use 'spack blame'")
     git = which('git', required=True)
 
-    # Get package and package file name
-    pkg = spack.repo.get(args.package_name)
-    package_py = pkg.module.__file__.rstrip('c')  # .pyc -> .py
+    # Get name of file to blame
+    blame_file = None
+    if os.path.isfile(args.package_name):
+        path = os.path.realpath(args.package_name)
+        if path.startswith(spack.prefix):
+            blame_file = path
+
+    if not blame_file:
+        pkg = spack.repo.get(args.package_name)
+        blame_file = pkg.module.__file__.rstrip('c')  # .pyc -> .py
 
     # get git blame for the package
     with working_dir(spack.prefix):
         if args.view == 'git':
-            git('blame', package_py)
+            git('blame', blame_file)
             return
         else:
-            output = git('blame', '--line-porcelain', package_py, output=str)
+            output = git('blame', '--line-porcelain', blame_file, output=str)
             lines = output.split('\n')
 
     # Histogram authors
