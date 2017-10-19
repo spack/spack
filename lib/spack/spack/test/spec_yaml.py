@@ -24,7 +24,7 @@
 ##############################################################################
 """Test YAML serialization for specs.
 
-YAML format preserves DAG informatoin in the spec.
+YAML format preserves DAG information in the spec.
 
 """
 from collections import Iterable, Mapping
