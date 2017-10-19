@@ -25,38 +25,16 @@
 from spack import *
 
 
-class Libxml2(AutotoolsPackage):
-    """Libxml2 is the XML C parser and toolkit developed for the Gnome
-       project (but usable outside of the Gnome platform), it is free
-       software available under the MIT License."""
-    homepage = "http://xmlsoft.org"
-    url      = "http://xmlsoft.org/sources/libxml2-2.9.2.tar.gz"
+class RAffyexpress(RPackage):
+    """The purpose of this package is to provide a comprehensive and
+    easy-to-use tool for quality assessment and to identify differentially
+    expressed genes in the Affymetrix gene expression data."""
 
-    version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
-    version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
-    version('2.7.8', '8127a65e8c3b08856093099b52599c86')
+    homepage = "https://www.bioconductor.org/packages/AffyExpress/"
+    url      = "https://git.bioconductor.org/packages/AffyExpress"
 
-    variant('python', default=False, description='Enable Python support')
+    version('1.42.0', git='https://git.bioconductor.org/packages/AffyExpress', commit='f5c5cf6173f4419e25f4aeff5e6b705a40abc371')
 
-    extends('python', when='+python',
-            ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
-            '(lib/xml2.*$)|(lib/cmake.*$)')
-    depends_on('zlib')
-    depends_on('xz')
-
-    depends_on('pkg-config@0.9.0:', type='build')
-
-    def configure_args(self):
-        spec = self.spec
-
-        args = ["--with-lzma=%s" % spec['xz'].prefix]
-
-        if '+python' in spec:
-            args.extend([
-                '--with-python={0}'.format(spec['python'].home),
-                '--with-python-install-dir={0}'.format(site_packages_dir)
-            ])
-        else:
-            args.append('--without-python')
-
-        return args
+    depends_on('r@3.4.0:3.4.9', when='@1.42.0')
+    depends_on('r-affy', type=('build', 'run'))
+    depends_on('r-limma', type=('build', 'run'))

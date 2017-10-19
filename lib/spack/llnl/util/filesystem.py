@@ -136,7 +136,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
             raise
 
         finally:
-            if not backup:
+            if not backup and os.path.exists(backup_filename):
                 os.remove(backup_filename)
 
 
