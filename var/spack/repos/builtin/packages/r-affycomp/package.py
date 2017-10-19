@@ -34,5 +34,5 @@ class RAffycomp(RPackage):
 
     version('1.52.0', git='https://git.bioconductor.org/packages/affycomp', commit='1b97a1cb21ec93bf1e5c88d5d55b988059612790')
 
-    depends_on('r@3.4.0:3.4.9', when='1.52.0')
+    depends_on('r@3.4.0:3.4.9', when='@1.52.0')
     depends_on('r-biobase', type=('build', 'run'))
