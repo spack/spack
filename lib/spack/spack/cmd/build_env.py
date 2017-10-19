@@ -44,7 +44,7 @@ def setup_parser(subparser):
         help="specs of package environment to emulate")
 
 
-def env(parser, args):
+def build_env(parser, args):
     if not args.spec:
         tty.die("spack env requires a spec.")
 
