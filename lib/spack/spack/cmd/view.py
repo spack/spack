@@ -241,7 +241,11 @@ def link_one(spec, path, link=os.symlink, verbose=False):
                     continue    # silence these
                 tty.warn("Skipping existing file: %s" % dst)
                 continue
-            link(src, dst)
+            if os.path.islink(src):
+                linkto = os.readlink(src)
+                os.symlink(linkto, dst)
+            else:
+                link(src, dst)
 
 
 def visitor_symlink(specs, args):
