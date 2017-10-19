@@ -35,7 +35,7 @@ class Pflotran(AutotoolsPackage):
 
     version('develop', git='https://bitbucket.org/pflotran/pflotran')
     version('xsdk-0.2.0', git='https://bitbucket.org/pflotran/pflotran', tag='master')
-    version('xsdk-0.3.0', git='https://bitbucket.org/pflotran/pflotran', tag='master')
+    version('xsdk-0.3.0', git='https://bitbucket.org/pflotran/pflotran', branch='release/xsdk-0.3.0')
 
     depends_on('mpi')
     depends_on('hdf5@1.8.12:+mpi+fortran')
