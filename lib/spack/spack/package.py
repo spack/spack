@@ -1030,19 +1030,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self._fetch_time = time.time() - start_time
         self.stage.cache_local()
 
-    # FIXME: REMOVE
-    # def do_stage(self, expand=True, mirror_only=False):
-    #
-    #     """Unpacks and expands the fetched tarball."""
-    #     if not self.spec.concrete:
-    #         raise ValueError("Can only stage concrete packages.")
-    #
-    #     self.do_fetch(mirror_only)     # this will create the stage
-    #     self.stage.expand_archive()
-    #
-    #     if not os.listdir(self.stage.path):
-    #         raise FetchError("Archive was empty for %s" % self.name)
-
     @classmethod
     def lookup_patch(cls, sha256):
         """Look up a patch associated with this package by its sha256 sum.
