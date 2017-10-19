@@ -26,7 +26,7 @@ from spack import *
 
 
 class RBumphunter(RPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Tools for finding bumps in genomic data"""
 
     homepage = "http://bioconductor.org/packages/bumphunter/"
     url      = "https://git.bioconductor.org/packages/bumphunter"
