@@ -25,38 +25,20 @@
 from spack import *
 
 
-class Libxml2(AutotoolsPackage):
-    """Libxml2 is the XML C parser and toolkit developed for the Gnome
-       project (but usable outside of the Gnome platform), it is free
-       software available under the MIT License."""
-    homepage = "http://xmlsoft.org"
-    url      = "http://xmlsoft.org/sources/libxml2-2.9.2.tar.gz"
+class RAffyilm(RPackage):
+    """affyILM is a preprocessing tool which estimates gene
+    expression levels for Affymetrix Gene Chips. Input from
+    physical chemistry is employed to first background subtract
+    intensities before calculating concentrations on behalf
+    of the Langmuir model."""
 
-    version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
-    version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
-    version('2.7.8', '8127a65e8c3b08856093099b52599c86')
+    homepage = "https://www.bioconductor.org/packages/affyILM/"
+    url      = "https://git.bioconductor.org/packages/affyILM"
 
-    variant('python', default=False, description='Enable Python support')
+    version('1.28.0', git='https://git.bioconductor.org/packages/affyILM', commit='307bee3ebc599e0ea4a1d6fa8d5511ccf8bef7de')
 
-    extends('python', when='+python',
-            ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
-            '(lib/xml2.*$)|(lib/cmake.*$)')
-    depends_on('zlib')
-    depends_on('xz')
-
-    depends_on('pkg-config@0.9.0:', type='build')
-
-    def configure_args(self):
-        spec = self.spec
-
-        args = ["--with-lzma=%s" % spec['xz'].prefix]
-
-        if '+python' in spec:
-            args.extend([
-                '--with-python={0}'.format(spec['python'].home),
-                '--with-python-install-dir={0}'.format(site_packages_dir)
-            ])
-        else:
-            args.append('--without-python')
-
-        return args
+    depends_on('r@3.4.0:3.4.9', when='@1.28.0')
+    depends_on('r-gcrma', type=('build', 'run'))
+    depends_on('r-affxparser', type=('build', 'run'))
+    depends_on('r-affy', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
