@@ -30,6 +30,15 @@ install = SpackCommand('install')
 view = SpackCommand('view')
 
 
+def test_view_external(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery):
+    install('externaltool')
+    viewpath = str(tmpdir.mkdir('view'))
+    output = view('symlink', viewpath, 'externaltool')
+    assert 'Skipping external package: externaltool' in output
+
+
 def test_view_extension(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):
