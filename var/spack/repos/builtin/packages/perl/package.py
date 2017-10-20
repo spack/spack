@@ -32,6 +32,9 @@
 #
 from spack import *
 import os
+from contextlib import contextmanager
+import spack
+from llnl.util.lang import match_predicate
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -186,7 +189,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def filter_config_dot_pm(self):
         """Run after install so that Config.pm records the compiler that Spack
         built the package with.  If this isn't done, $Config{cc} will
-        be set to Spack's cc wrapper script.
+        be set to Spack's cc wrapper script.  These files are read-only, which
+        frustrates filter_file on some filesystems (NFSv4), so make them
+        temporarily writable.
         """
 
         kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
@@ -196,18 +201,65 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         config_dot_pm = perl('-MModule::Loaded', '-MConfig', '-e',
                              'print is_loaded(Config)', output=str)
 
-        match = 'cc *=>.*'
-        substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
-        filter_file(match, substitute, config_dot_pm, **kwargs)
+        with self.make_briefly_writable(config_dot_pm):
+            match = 'cc *=>.*'
+            substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+            filter_file(match, substitute, config_dot_pm, **kwargs)
 
         # And the path Config_heavy.pl
         d = os.path.dirname(config_dot_pm)
         config_heavy = join_path(d, 'Config_heavy.pl')
 
-        match = '^cc=.*'
-        substitute = "cc='{cc}'".format(cc=self.compiler.cc)
-        filter_file(match, substitute, config_heavy, **kwargs)
+        with self.make_briefly_writable(config_heavy):
+            match = '^cc=.*'
+            substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+            filter_file(match, substitute, config_heavy, **kwargs)
 
-        match = '^ld=.*'
-        substitute = "ld='{ld}'".format(ld=self.compiler.cc)
-        filter_file(match, substitute, config_heavy, **kwargs)
+            match = '^ld=.*'
+            substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+            filter_file(match, substitute, config_heavy, **kwargs)
+
+    @contextmanager
+    def make_briefly_writable(self, path):
+        """Temporarily make a file writable, then reset"""
+        perm = os.stat(path).st_mode
+        os.chmod(path, perm | 0o200)
+        yield
+        os.chmod(path, perm)
+
+    # ========================================================================
+    # Handle specifics of activating and deactivating perl modules.
+    # ========================================================================
+
+    def perl_ignore(self, ext_pkg, args):
+        """Add some ignore files to activate/deactivate args."""
+        ignore_arg = args.get('ignore', lambda f: False)
+
+        # Many perl packages describe themselves in a perllocal.pod file,
+        # so the files conflict when multiple packages are activated.
+        # We could merge the perllocal.pod files in activated packages,
+        # but this is unnecessary for correct operation of perl.
+        # For simplicity, we simply ignore all perllocal.pod files:
+        patterns = [r'perllocal\.pod$']
+
+        return match_predicate(ignore_arg, patterns)
+
+    def activate(self, ext_pkg, **args):
+        ignore = self.perl_ignore(ext_pkg, args)
+        args.update(ignore=ignore)
+
+        super(Perl, self).activate(ext_pkg, **args)
+
+        exts = spack.store.layout.extension_map(self.spec)
+        exts[ext_pkg.name] = ext_pkg.spec
+
+    def deactivate(self, ext_pkg, **args):
+        ignore = self.perl_ignore(ext_pkg, args)
+        args.update(ignore=ignore)
+
+        super(Perl, self).deactivate(ext_pkg, **args)
+
+        exts = spack.store.layout.extension_map(self.spec)
+        # Make deactivate idempotent
+        if ext_pkg.name in exts:
+            del exts[ext_pkg.name]

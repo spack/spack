@@ -39,7 +39,6 @@ class Openblas(MakefilePackage):
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
-
     version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
 
     variant(
