@@ -296,7 +296,7 @@ def set_build_environment_variables(pkg, env, dirty):
     # Working directory for the spack command itself, for debug logs.
     if spack.debug:
         env.set(SPACK_DEBUG, 'TRUE')
-    env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set(SPACK_SHORT_SPEC, pkg.spec.format('${PACKAGE}-${HASH:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
