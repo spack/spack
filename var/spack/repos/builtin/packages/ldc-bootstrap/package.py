@@ -21,6 +21,7 @@ class LdcBootstrap(CMakePackage):
     homepage = "https://dlang.org/"
     url = "https://github.com/ldc-developers/ldc/releases/download/v0.17.4/ldc-0.17.4-src.tar.gz"
 
+    version('0.17.5', '9c8057a11ddd7a8f456d63860b51c133')
     # This is the last version that does not require a D compiler to bootstrap
     version('0.17.4', '000e006426d6094fabd2a2bdab0ff0b7')
 
@@ -30,6 +31,8 @@ class LdcBootstrap(CMakePackage):
     depends_on('curl')
     depends_on('libedit')
     depends_on('binutils')
+
+    depends_on('llvm@:4.0.1', when='@0.17.4')
 
     def setup_dependent_environment(self, build_env, run_env, dep_spec):
 

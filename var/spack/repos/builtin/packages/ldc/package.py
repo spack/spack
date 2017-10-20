@@ -19,6 +19,7 @@ class Ldc(CMakePackage):
     homepage = "https://dlang.org/"
     url      = "https://github.com/ldc-developers/ldc/releases/download/v1.3.0/ldc-1.3.0-src.tar.gz"
 
+    version('1.4.0', '2e863186094eda83d2ba7a247c7ec732')
     version('1.3.0', '537d992a361b0fd0440b24a5145c9107')
 
     variant(

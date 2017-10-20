@@ -23,6 +23,11 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=flake8
+    - stage: 'no changes in core'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=nochangesincore
     - stage: 'unit tests + documentation'
       python: '2.6'
       dist: trusty
@@ -117,8 +122,12 @@ jobs:
 
 stages:
   - 'style checks'
-  - 'unit tests + documentation'
-  - 'build tests'
+  - name: 'no changes in core'
+    if: head_branch =~ ^packages
+  - name: 'unit tests + documentation'
+    if: NOT head_branch =~ ^packages
+  - name: 'build tests'
+    if: NOT head_branch =~ ^packages
   - name: 'docker build'
     if: type = push AND branch IN (develop, master)
 

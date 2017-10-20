@@ -49,7 +49,7 @@ def test_changed_files(parser, flake8_package):
 
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.
-    files = changed_files(args)
+    files = changed_files(args.base, args.untracked, args.all)
     files = [os.path.join(spack.paths.prefix, path) for path in files]
 
     # There will likely be other files that have changed
