@@ -70,3 +70,20 @@ class Pfunit(CMakePackage):
             args.append('OPENMP=YES')
         with working_dir(self.build_directory):
             make(*args)
+
+    def compiler_vendor(self):
+        vendors = {'%gcc':'GNU', '%intel':'Intel', '%pgi':'PGI', '%nag':'NAG'}
+        for key, value in vendors.items():
+            if self.spec.satisfies(key):
+                return value
+        raise InstallError('Unsupported compiler.')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('PFUNIT', self.spec.prefix)
+        run_env.set('PFUNIT', self.spec.prefix)
+        spack_env.set('F90_VENDOR', self.compiler_vendor())
+        run_env.set('F90_VENDOR', self.compiler_vendor())
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('PFUNIT', self.spec.prefix)
+        spack_env.set('F90_VENDOR', self.compiler_vendor())
