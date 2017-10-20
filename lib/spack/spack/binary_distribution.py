@@ -447,6 +447,7 @@ def get_specs():
                     stage.fetch()
                 except fs.FetchError:
                     continue
+                stage.cache_local()
                 with open(stage.save_filename, 'r') as f:
                     # read the spec from the build cache file. All specs
                     # in build caches are concrete (as they aer built) so
@@ -499,3 +500,4 @@ def get_keys(install=False, yes_to_all=False):
                 else:
                     tty.msg('Will not add this key to trusted keys.'
                             'Use -y to override')
+
