@@ -63,6 +63,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     depends_on('gdbm')
 
+    # there has been a long fixed issue with 5.22.0 with regard to the ccflags
+    # definition.  It is well documented here:
+    # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch('protect-quotes-in-ccflags.patch', when='@5.22.0')
 
     # Installing cpanm alongside the core makes it safe and simple for
