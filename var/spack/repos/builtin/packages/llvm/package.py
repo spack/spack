@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-
+import sys
 
 class Llvm(CMakePackage):
     """The LLVM Project is a collection of modular and reusable compiler and
@@ -419,7 +419,7 @@ class Llvm(CMakePackage):
             cmake_args.append(
                 '-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))
 
-        if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
+        if spec.satisfies('@4.0.0:') and sys.platform == 'linux2':
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
 
         return cmake_args
