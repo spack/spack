@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Amrex(CMakePackage):
+class Amrex(AutotoolsPackage):
     """AMReX is the successor to BoxLib.
        It is a Block-Structured AMR Framework.
     """
@@ -43,44 +43,13 @@ class Amrex(CMakePackage):
         multi=False,
         description='Number of spatial dimensions')
 
-    variant('prec',
-        default='DOUBLE',
-        values=('FLOAT', 'DOUBLE'),
-        multi=False,
-        description='Floating point precision')
-
     variant('mpi', default=True, description='Enable MPI parallel support')
-    variant('openmp', default=False, description='Enable OpenMP parallel support')
-    variant('fortran', default=True, description='Enable Fortran support')
-    variant('debug', default=False, description='Enable debugging features')
-    variant('particles', default=False, description='Include particle classes in build')
 
     depends_on('mpi', when='+mpi')
 
-    def cmake_args(self):
+    def configure_args(self):
         spec = self.spec
 
-        cmake_args = [
-            '-DENABLE_POSITION_INDEPENDENT_CODE=ON',
-            '-DBL_SPACEDIM:INT=%d' % int(spec.variants['dims'].value),
-            '-DBL_PRECISION:STRING=%s' % spec.variants['prec'].value,
-            '-DENABLE_FMG=%s' % ('+fortran' in spec),
-            '-DENABLE_FBASELIB=%s' % ('+fortran' in spec),
-            '-DBL_DEBUG:INT=%d' % int('+debug' in spec),
-            '-DBL_USE_PARTICLES:INT=%d' % int('+particles' in spec),
-            '-DENABLE_MPI:INT=%d' % int('+mpi' in spec),
-            '-DENABLE_OpenMP:INT=%d' % int('+openmp' in spec),
-        ]
+        extra_args = ['--dim=%d' % int(spec.variants['dims'].value)]
 
-        if '+mpi' in spec:
-            cmake_args += [
-                '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
-                '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx
-            ]
-            if '+fortran' in spec:
-                cmake_args += [
-                    '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
-                ]
-            cmake_args += ['-DENABLE_FORTRAN_MPI=%s' % ('+fortran' in spec)]
-
-        return cmake_args
+        return extra_args
