@@ -102,11 +102,11 @@ class Environment(object):
         v -> x -> y
 
         Then if you upgrade y, you will start by re-concretizing w (and x).
-        This should make sure that v uses the same x as w if this environment is
-        supposed to reuse dependencies where possible. The difference compared
-        to 'normal' concretization is that you want to keep things as similar
-        as possible. I think the approach would be to go through all the
-        common_libs and common_bins, recognize the first time they get
+        This should make sure that v uses the same x as w if this environment
+        is supposed to reuse dependencies where possible. The difference
+        compared to 'normal' concretization is that you want to keep things as
+        similar as possible. I think the approach would be to go through all
+        the common_libs and common_bins, recognize the first time they get
         re-concretized, and then replace them manually where encountered later.
         """
         new_order = list()
@@ -523,7 +523,8 @@ def setup_parser(subparser):
     add_common_args(concretize_parser)
 
     relocate_parser = sp.add_parser(
-        'relocate', help='Reconcretize environment with new OS and/or compiler')
+        'relocate',
+        help='Reconcretize environment with new OS and/or compiler')
     add_common_args(relocate_parser)
     relocate_parser.add_argument(
         '--compiler',
