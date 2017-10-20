@@ -1,0 +1,16 @@
+#!/bin/bash -e
+#
+# Description:
+#     Exits 1 if there are changes in core, otherwise exits 0
+#
+# Usage:
+#     run-nochangesincore-tests
+#
+. "$(dirname $0)/setup.sh"
+
+# Move to root directory of Spack
+# Allows script to be run from anywhere
+cd "$SPACK_ROOT"
+
+# Run the spack-python script
+share/spack/qa/no_changes_in_core.py
