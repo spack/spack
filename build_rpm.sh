@@ -19,6 +19,11 @@ externpkgs=(
     cuda@6.5.14%gcc@4.8.5
     cuda@7.5.18%gcc@4.8.5
     cuda@8.0.61%gcc@4.8.5
+    cuda@9.0.176%gcc@4.8.5
+    cudnn@5.1^cuda@8.0.61%gcc@4.8.5
+    cudnn@5.1^cuda@9.0.176%gcc@4.8.5
+    cudnn@6.0^cuda@8.0.61%gcc@4.8.5
+    cudnn@6.0^cuda@9.0.176%gcc@4.8.5
     cmake@3.8.1%gcc@4.8.5
 )
 

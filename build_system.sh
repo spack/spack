@@ -48,9 +48,14 @@ s gcc@4.9.4~binutils    $cc
 s gcc@5.4.0~binutils    $cc
 s gcc@6.4.0~binutils    $cc
 s cmake         $cc
+s cuda@9.0.176  $cc
 s cuda@8.0.61   $cc
 s cuda@7.5.18   $cc
 s cuda@6.5.14   $cc
+s cudnn@5.1^cuda@8.0.61  $cc
+s cudnn@5.1^cuda@9.0.176 $cc
+s cudnn@6.0^cuda@8.0.61  $cc
+s cudnn@6.0^cuda@9.0.176 $cc
 s pgi@16.10     $cc
 s pgi@17.4      $cc
 s $jdk $cc
