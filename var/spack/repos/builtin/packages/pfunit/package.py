@@ -46,24 +46,27 @@ class Pfunit(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
-        args = ['-DINSTALL_DIR=%s' % self.spec.prefix,
-                '-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % self.spec.prefix.include]
-        if self.spec.satisfies('+mpi'):
-            args.append('-DMPI=YES')
+        spec = self.spec
+        args = ['-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include]
+        if spec.satisfies('+mpi'):
+            args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
+                         '-DMPI_Fortran_COMPILER=%s' % spec['mpi'].mpifc])
         else:
             args.append('-DMPI=NO')
-        if self.spec.satisfies('+openmp'):
+        if spec.satisfies('+openmp'):
             args.append('-DOPENMP=YES')
         else:
             args.append('-DOPENMP=NO')
         return args
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def check_build(self):
+    def check(self):
+        """Searches the CMake-generated Makefile for the target ``test``
+        and runs it if found.
+        """
+        args = ['tests']
         if self.spec.satisfies('+mpi'):
-            testdir = join_path('Examples', 'MPI_Halo')
-        else:
-            testdir = 'Examples'
-        with working_dir(testdir):
-            make('PFUNIT=%s' % self.spec.prefix)
+            args.append('MPI=YES')
+        if self.spec.satisfies('+openmp'):
+            args.append('OPENMP=YES')
+        with working_dir(self.build_directory):
+            make(*args)
