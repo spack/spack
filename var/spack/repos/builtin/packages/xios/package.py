@@ -44,6 +44,7 @@ class Xios(Package):
 
     depends_on('netcdf')
     depends_on('netcdf-fortran')
+    depends_on('hdf5')
     depends_on('mpi')
     depends_on('perl', type='build')
     depends_on('perl-uri-escape', type='build')
@@ -84,12 +85,15 @@ OASIS_LIB=""
         file = join_path('arch', 'arch-SPACK.fcm')
         spec = self.spec
         mode = spec.variants['mode'].value
+        param = dict()
+        param['CC'] = spec['mpi'].mpicc
+        param['FC'] = spec['mpi'].mpifc
 
         if spec.satisfies('%gcc') or spec.satisfies('%intel'):
             text = r"""
-%CCOMPILER      mpicc
-%FCOMPILER      mpif90
-%LINKER         mpif90  
+%CCOMPILER      {CC}
+%FCOMPILER      {FC}
+%LINKER         {FC}
 
 %BASE_CFLAGS    -ansi -w -D_GLIBCXX_USE_CXX11_ABI=0
 %PROD_CFLAGS    -O3 -DBOOST_DISABLE_ASSERTS
@@ -107,19 +111,20 @@ OASIS_LIB=""
 %CPP            cpp
 %FPP            cpp -P
 %MAKE           gmake
-"""
+""".format(**param)
         elif spec.satisfies('%cce'):
             # In the CC compiler prior to cce/8.3.7,
             # optimisation must be reduced to avoid a bug,
             # as reported by Mike Rezny at the UK Met Office:
             if spec.satisfies('%cce@8.3.7:'):
-                CC_OPT = {'CC_OPT_DEV': '-O2', 'CC_OPT_PROD': '-O3'}
+                param.update({'CC_OPT_DEV': '-O2', 'CC_OPT_PROD': '-O3'})
             else:
-                CC_OPT = {'CC_OPT_DEV': '-O1', 'CC_OPT_PROD': '-O1'}
+                param.update({'CC_OPT_DEV': '-O1', 'CC_OPT_PROD': '-O1'})
+
             text = r"""
-%CCOMPILER      CC
-%FCOMPILER      ftn
-%LINKER         CC
+%CCOMPILER      {CC}
+%FCOMPILER      {FC}
+%LINKER         {FC}
 
 %BASE_CFLAGS    -DMPICH_SKIP_MPICXX -h msglevel_4 -h zero -h gnu
 %PROD_CFLAGS    {CC_OPT_PROD} -DBOOST_DISABLE_ASSERTS
@@ -137,7 +142,7 @@ OASIS_LIB=""
 %CPP            cpp
 %FPP            cpp -P -CC
 %MAKE           gmake
-""".format(**CC_OPT)
+""".format(**param)
         else:
             raise InstallError('Unsupported compiler.')
 
