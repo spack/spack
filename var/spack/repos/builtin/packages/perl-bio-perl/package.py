@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import inspect
 
 
 class PerlBioPerl(PerlPackage):
@@ -61,10 +62,10 @@ class PerlBioPerl(PerlPackage):
 
         config_answers = ['n\n', 'a\n', 'n\n']
         config_answers_filename = 'spack-config.in'
-        perl = which('perl')
 
         with open(config_answers_filename, 'w') as f:
             f.writelines(config_answers)
 
         with open(config_answers_filename, 'r') as f:
-            perl('Build.PL', '--install_base=%s' % self.prefix, input=f)
+            inspect.getmodule(self).perl('Build.PL', '--install_base=%s' %
+                                         self.prefix, input=f)
