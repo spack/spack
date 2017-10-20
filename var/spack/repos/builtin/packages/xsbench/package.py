@@ -37,6 +37,7 @@ class Xsbench(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
+    version('14', '94d5d28eb031fd4ef35507c9c1862169')
     version('13', '72a92232d2f5777fb52f5ea4082aff37')
 
     variant('mpi', default=False, description='Build with MPI support')
