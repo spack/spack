@@ -11,8 +11,8 @@
 import sys
 import os.path
 
-import spack.spec
 import spack.cmd.flake8
+import spack.spec
 
 # Get the complete list of files that changed
 files = spack.cmd.flake8.changed_files(True)
