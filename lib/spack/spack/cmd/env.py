@@ -162,8 +162,8 @@ class Environment(object):
         module_files = list()
         environment_specs = self._get_environment_specs()
         for spec in environment_specs:
-            module = spack.modules.LmodModule(spec)
-            path = module.file_name
+            module = spack.modules.lmod.LmodModulefileWriter(spec)
+            path = module.layout.filename
             if os.path.exists(path):
                 module_files.append(path)
             else:
@@ -315,7 +315,7 @@ def repair(environment_name):
 
 def read(environment_name):
     tmp_new, environment_dir, tmp_old = write_paths(
-        Environment(Environment_name))
+        Environment(environment_name))
 
     if os.path.exists(tmp_new) or os.path.exists(tmp_old):
         tty.die("Partial write state, run 'spack env repair'")

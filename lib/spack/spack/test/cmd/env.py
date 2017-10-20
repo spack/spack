@@ -7,53 +7,50 @@ try:
 except ImportError:
     from io import StringIO
 
-import spack.cmd.context
+import spack.cmd.env
 import spack.util.spack_yaml as syaml
-from spack.cmd.context import (Context, prepare_repository,
-                               _context_concretize, prepare_config_scope,
-                               _context_create)
+from spack.cmd.env import (Environment, prepare_repository,
+                           _environment_concretize, prepare_config_scope,
+                           _environment_create)
 from spack.version import Version
-
-from spack.test.modules import lmod_factory  # NOQA: ignore=F401
 
 
 class TestContext(unittest.TestCase):
     def setUp(self):
-        self.context_dir = spack.cmd.context._db_dirname
-        spack.cmd.context._db_dirname = tempfile.mkdtemp()
+        self.env_dir = spack.cmd.env._db_dirname
+        spack.cmd.env._db_dirname = tempfile.mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(spack.cmd.context._db_dirname)
-        spack.cmd.context._db_dirname = self.context_dir
+        shutil.rmtree(spack.cmd.env._db_dirname)
+        spack.cmd.env._db_dirname = self.env_dir
 
     def test_add(self):
-        c = Context('test')
+        c = Environment('test')
         c.add('mpileaks')
         assert 'mpileaks' in c.user_specs
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_concretize(self):
-        c = Context('test')
+        c = Environment('test')
         c.add('mpileaks')
         c.concretize()
         env_specs = c._get_environment_specs()
         assert any(x.name == 'mpileaks' for x in env_specs)
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock',
-                             'install_mockery', 'mock_fetch', 'lmod_factory')
+                             'install_mockery', 'mock_fetch')
     def test_install(self):
-        c = Context('test')
+        c = Environment('test')
         c.add('cmake-client')
         c.concretize()
         c.install()
         env_specs = c._get_environment_specs()
         spec = next(x for x in env_specs if x.name == 'cmake-client')
         assert spec.package.installed
-        assert c.get_modules()
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_remove_after_concretize(self):
-        c = Context('test')
+        c = Environment('test')
         c.add('mpileaks')
         c.concretize()
         c.add('python')
@@ -64,7 +61,7 @@ class TestContext(unittest.TestCase):
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_reset_compiler(self):
-        c = Context('test')
+        c = Environment('test')
         c.add('mpileaks')
         c.concretize()
 
@@ -78,8 +75,8 @@ class TestContext(unittest.TestCase):
         assert new_spec.compiler != first_spec.compiler
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
-    def test_context_list(self):
-        c = Context('test')
+    def test_environment_list(self):
+        c = Environment('test')
         c.add('mpileaks')
         c.concretize()
         c.add('python')
@@ -93,7 +90,7 @@ class TestContext(unittest.TestCase):
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_upgrade_dependency(self):
-        c = Context('test')
+        c = Environment('test')
         c.add('mpileaks ^callpath@0.9')
         c.concretize()
 
@@ -115,8 +112,8 @@ packages:
         spack.package_prefs.PackagePrefs._packages_config_cache = None
         spack.package_prefs.PackagePrefs._spec_cache = {}
 
-        _context_create('test', syaml.load(StringIO(test_config)))
-        c = spack.cmd.context.read('test')
+        _environment_create('test', syaml.load(StringIO(test_config)))
+        c = spack.cmd.env.read('test')
         prepare_config_scope(c)
         c.concretize()
         assert any(x.satisfies('mpileaks@2.2')
@@ -124,18 +121,18 @@ packages:
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_to_dict(self):
-        c = Context('test')
+        c = Environment('test')
         c.add('mpileaks')
         c.concretize()
         context_dict = c.to_dict()
-        c_copy = Context.from_dict('test_copy', context_dict)
+        c_copy = Environment.from_dict('test_copy', context_dict)
         assert c.specs_by_hash == c_copy.specs_by_hash
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_prepare_repo(self):
-        c = Context('testx')
+        c = Environment('testx')
         c.add('mpileaks')
-        _context_concretize(c)
+        _environment_concretize(c)
         repo = None
         try:
             repo = prepare_repository(c)
