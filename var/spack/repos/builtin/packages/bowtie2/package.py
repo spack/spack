@@ -37,11 +37,11 @@ class Bowtie2(Package):
     version('2.3.0', '3ab33f30f00f3c30fec1355b4e569ea2')
     version('2.2.5', '51fa97a862d248d7ee660efc1147c75f')
 
-    depends_on('tbb', when='@:2.3.0')
-    depends_on('readline', when='@:2.3.1')
+    depends_on('tbb', when='@2.3.0:')
+    depends_on('readline', when='@2.3.1:')
     depends_on('perl', type='run')
     depends_on('python', type='run')
-    depends_on('zlib', when='@:2.3.1')
+    depends_on('zlib', when='@2.3.1:')
 
     patch('bowtie2-2.2.5.patch', when='@2.2.5', level=0)
     patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
