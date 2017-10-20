@@ -26,9 +26,9 @@ from spack import *
 
 
 class PerlTestDifferences(PerlPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Test strings and data structures and show differences if not ok"""
 
-    homepage = "http://www.example.com"
+    homepage = "http://search.cpan.org/~dcantrell/Test-Differences-0.64/lib/Test/Differences.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/D/DC/DCANTRELL/Test-Differences-0.64.tar.gz"
 
     version('0.64', 'ecfda620fe133e36a6e392d94ab8424d')
