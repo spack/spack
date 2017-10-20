@@ -46,7 +46,7 @@ def setup_parser(subparser):
 
 def build_env(parser, args):
     if not args.spec:
-        tty.die("spack env requires a spec.")
+        tty.die("spack build-env requires a spec.")
 
     # Specs may have spaces in them, so if they do, require that the
     # caller put a '--' between the spec and the command to be
@@ -63,7 +63,7 @@ def build_env(parser, args):
 
     specs = spack.cmd.parse_specs(spec, concretize=True)
     if len(specs) > 1:
-        tty.die("spack env only takes one spec.")
+        tty.die("spack build-env only takes one spec.")
     spec = specs[0]
 
     build_environment.setup_package(spec.package, args.dirty)
