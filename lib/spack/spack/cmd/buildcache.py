@@ -25,7 +25,6 @@
 import argparse
 
 import os
-import re
 import llnl.util.tty as tty
 
 import spack
@@ -47,9 +46,10 @@ display_args = {
 }
 
 error_message = """You can either:
-    a) use a more specific spec, or 
+    a) use a more specific spec, or
     b) use the package hash with a leading /
 """
+
 
 def setup_parser(subparser):
     setup_parser.parser = subparser
@@ -88,7 +88,7 @@ def setup_parser(subparser):
 
     listcache = subparsers.add_parser('list')
     listcache.add_argument('-f', '--force', action='store_true',
-                         help="force new download of specs")
+                           help="force new download of specs")
     listcache.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to search for")
@@ -102,8 +102,9 @@ def setup_parser(subparser):
         '-y', '--yes-to-all', action='store_true',
         help="answer yes to all trust questions")
     dlkeys.add_argument('-f', '--force', action='store_true',
-                         help="force new download of keys")
+                        help="force new download of keys")
     dlkeys.set_defaults(func=getkeys)
+
 
 def find_matching_specs(specs, allow_multiple_matches=False, force=False):
     """Returns a list of specs matching the not necessarily
@@ -142,6 +143,7 @@ def find_matching_specs(specs, allow_multiple_matches=False, force=False):
 
     return specs_from_cli
 
+
 def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
@@ -173,7 +175,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
             has_errors = True
 
         # No downloaded package matches the query
-        if len(matches) == 0 :
+        if len(matches) == 0:
             tty.error('%s does not match any downloaded packages.' % pkg)
             has_errors = True
 
@@ -182,6 +184,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
         tty.die(error_message)
 
     return specs_from_cli
+
 
 def createtarball(args):
     if not args.packages:
@@ -205,16 +208,17 @@ def createtarball(args):
     if args.rel:
         relative = True
 
-    matches=find_matching_specs(pkgs,False,False)
+    matches = find_matching_specs(pkgs, False, False)
     for match in matches:
         tty.msg('adding matching spec %s' % match.format())
         specs.add(match)
         tty.msg('recursing dependencies')
         for d, node in match.traverse(order='post',
-                                     depth=True,
-                                     deptype=('link', 'run')):
-            if node.external or node.virtual :
-                tty.msg('Skipping external or virtual dependency %s' % node.format())
+                                      depth=True,
+                                      deptype=('link', 'run')):
+            if node.external or node.virtual:
+                tty.msg('Skipping external or virtual dependency %s' %
+                        node.format())
             else:
                 tty.msg('adding dependency %s' % node.format())
                 specs.add(node)
@@ -259,7 +263,7 @@ def installtarball(args):
 def install_tarball(spec, args):
     s = spack.spec.Spec(spec)
     if s.external or s.virtual:
-        tty.warn("Skipping external or virtual package %s" %spec.format())
+        tty.warn("Skipping external or virtual package %s" % spec.format())
         return
     yes_to_all = False
     if args.yes_to_all:
@@ -307,7 +311,7 @@ def listspecs(args):
             for spec in sorted(specs):
                 if spec.satisfies(pkg):
                     tty.msg('spack buildcache install /%s\n' %
-                            spec.dag_hash(7) + 
+                            spec.dag_hash(7) +
                             '   to install %s' %
                             spec.format())
     else:

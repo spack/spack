@@ -505,4 +505,3 @@ def get_keys(install=False, yes_to_all=False, force=False):
                 else:
                     tty.msg('Will not add this key to trusted keys.'
                             'Use -y to override')
-
