@@ -189,6 +189,9 @@ echo $PATH"""
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
+    args = parser.parse_args(['list', '-f'])
+    buildcache.buildcache(parser, args)
+
     args = parser.parse_args(['list', 'trivial'])
     buildcache.buildcache(parser, args)
 
@@ -197,6 +200,9 @@ echo $PATH"""
                     mirror_path + '/external.key')
 
     args = parser.parse_args(['keys'])
+    buildcache.buildcache(parser, args)
+
+    args = parser.parse_args(['keys', '-f'])
     buildcache.buildcache(parser, args)
 
     # unregister mirror with spack config
