@@ -411,14 +411,62 @@ provides no Fortran compilers.  The user is therefore forced to use a
 mixed toolchain: XCode-provided Clang for C/C++ and GNU ``gfortran`` for
 Fortran.
 
-#. You need to make sure that command-line tools are installed. To that
-   end run ``$ xcode-select --install``.
+#. You need to make sure that Xcode is installed. Run the following command:
 
-#. Run ``$ spack compiler find`` to locate Clang.
+   .. code-block:: console
+
+      $ xcode-select --install
+
+
+   If the Xcode command-line tools are already installed, you will see an
+   error message:
+
+   .. code-block:: none
+
+      xcode-select: error: command line tools are already installed, use "Software Update" to install updates
+
+
+#. For most packages, the Xcode command-line tools are sufficient. However,
+   some packages like ``qt`` require the full Xcode suite. You can check
+   to see which you have installed by running:
+
+   .. code-block:: console
+
+      $ xcode-select -p
+
+
+   If the output is:
+
+   .. code-block:: none
+
+      /Applications/Xcode.app/Contents/Developer
+
+
+   you already have the full Xcode suite installed. If the output is:
+
+   .. code-block:: none
+
+      /Library/Developer/CommandLineTools
+
+
+   you only have the command-line tools installed. The full Xcode suite can
+   be installed through the App Store. Make sure you launch the Xcode
+   application and accept the license agreement before using Spack.
+   It may ask you to install additional components. Alternatively, the license
+   can be accepted through the command line:
+
+   .. code-block:: console
+
+      $ sudo xcodebuild -license accept
+
+
+   Note: the flag is ``-license``, not ``--license``.
+
+#. Run ``spack compiler find`` to locate Clang.
 
 #. There are different ways to get ``gfortran`` on macOS. For example, you can
-   install GCC with Spack (``$ spack install gcc``) or with Homebrew
-   (``$ brew install gcc``).
+   install GCC with Spack (``spack install gcc``) or with Homebrew
+   (``brew install gcc``).
 
 #. The only thing left to do is to edit ``~/.spack/compilers.yaml`` to provide
    the path to ``gfortran``:
@@ -434,7 +482,7 @@ Fortran.
             fc: /path/to/bin/gfortran
 
    If you used Spack to install GCC, you can get the installation prefix by
-   ``$ spack location -i gcc`` (this will only work if you have a single version
+   ``spack location -i gcc`` (this will only work if you have a single version
    of GCC installed). Whereas for Homebrew, GCC is installed in
    ``/usr/local/Cellar/gcc/x.y.z``.
 
