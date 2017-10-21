@@ -412,7 +412,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     relocate_package(installpath)
 
 
-def get_specs():
+def get_specs(force=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
@@ -443,10 +443,13 @@ def get_specs():
                     urls.add(link)
         for link in urls:
             with Stage(link, name="build_cache", keep=True) as stage:
-                try:
-                    stage.fetch()
-                except fs.FetchError:
-                    continue
+                if force and os.path.exists(stage.save_filename):
+                    os.remove(stage.save_filename)
+                if not os.path.exists(stage.save_filename):
+                    try:
+                        stage.fetch()
+                    except fs.FetchError:
+                        continue
                 with open(stage.save_filename, 'r') as f:
                     # read the spec from the build cache file. All specs
                     # in build caches are concrete (as they aer built) so
@@ -459,7 +462,7 @@ def get_specs():
     return specs, durls
 
 
-def get_keys(install=False, yes_to_all=False):
+def get_keys(install=False, yes_to_all=False, force=False):
     """
     Get pgp public keys available on mirror
     """
@@ -487,10 +490,13 @@ def get_keys(install=False, yes_to_all=False):
                     keys.add(link)
         for link in keys:
             with Stage(link, name="build_cache", keep=True) as stage:
-                try:
-                    stage.fetch()
-                except fs.FetchError:
-                    continue
+                if os.path.exists(stage.save_filename) and force:
+                    os.remove(stage.save_filename)
+                if not os.path.exists(stage.save_filename):
+                    try:
+                        stage.fetch()
+                    except fs.FetchError:
+                        continue
             tty.msg('Found key %s' % link)
             if install:
                 if yes_to_all:
