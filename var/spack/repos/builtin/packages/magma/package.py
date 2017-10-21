@@ -40,7 +40,8 @@ class Magma(CMakePackage):
             description='Enable Fortran bindings support')
 
     depends_on('lapack')
-
+    depends_on('cuda@9.0:',when='%gcc@6.0:6.9.9')
+    depends_on('cuda@8.0:',when='%gcc@5.0:')
     patch('ibm-xl.patch', when='@2.2:%xl')
     patch('ibm-xl.patch', when='@2.2:%xl_r')
 
