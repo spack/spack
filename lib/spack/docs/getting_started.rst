@@ -321,19 +321,6 @@ by adding the following to your ``packages.yaml`` file:
        compiler: [gcc@4.9.3]
 
 
-.. tip::
-
-    If you are building your own compiler, some users prefer to have a
-    Spack instance just for that.  For example, create a new Spack in
-    ``~/spack-tools`` and then run ``~/spack-tools/bin/spack install
-    gcc@4.9.3``.  Once the compiler is built, don't build anything
-    more in that Spack instance; instead, create a new "real" Spack
-    instance, configure Spack to use the compiler you've just built,
-    and then build your application software in the new Spack
-    instance.  Following this tip makes it easy to delete all your
-    Spack packages *except* the compiler.
-
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Compilers Requiring Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
