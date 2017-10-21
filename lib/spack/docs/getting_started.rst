@@ -35,6 +35,8 @@ Getting Spack is easy.  You can clone it from the `github repository
 
 This will create a directory called ``spack``.
 
+.. _add-spack-to-the-shell:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Add Spack to the Shell
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -321,6 +323,8 @@ by adding the following to your ``packages.yaml`` file:
        compiler: [gcc@4.9.3]
 
 
+.. _compilers-requiring-modules:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Compilers Requiring Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -472,6 +476,251 @@ Fortran.
    ``spack location -i gcc`` (this will only work if you have a single version
    of GCC installed). Whereas for Homebrew, GCC is installed in
    ``/usr/local/Cellar/gcc/x.y.z``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Case Study: Spack Installed LLVM with Modules and Mixed Toolchains
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+
+   This section assumes you have read the previous two sections
+   :ref:`compilers-requiring-modules` and :ref:`mixed-toolchains`.
+
+In this section we consider an installation of the ``llvm`` package, which will
+provide you with a fully-fledged ``clang`` / ``clang++`` toolchain, complete
+with the excellent `Sanitizers <clang_sanitizers_>`_,
+`Static Analyzer <clang_static_analyzer_>`_, and more.  At this point in time,
+LLVM does not provide a ``fortran`` compiler, so we will need to decide on what
+compiler we should use for the mixed toolchain component.  We will also need to
+make sure that the ``llvm`` module is loaded to ensure the correct libraries are
+linked against e.g., ``libiomp.so`` as provided by LLVM rather than one that may
+already be present on the system.
+
+.. _clang_sanitizers: https://clang.llvm.org/docs/UsersManual.html#controlling-code-generation
+
+.. _clang_static_analyzer: http://clang-analyzer.llvm.org/
+
+""""""""""""""""""""
+Step 1: Install LLVM
+""""""""""""""""""""
+
+This part is straight-forward, but be aware that the LLVM package does take
+considerably longer to compile than most packages in Spack (like GCC, it's a
+full-blown compiler and then some).  For the purposes of this demonstration, to
+make the module component clear, we have installed two versions of ``llvm``.
+
+1. The defaults for the LLVM package should be good for you, but since it will
+   take a long time, it's best to check first and make sure you will get what
+   you want
+
+   .. code-block:: console
+
+      $ spack info llvm
+
+2. The info command also shows us the versions we can choose from, at the time
+   of writing this the latest stable is 5.0.0, which is what Spack will choose
+   when we execute
+
+   .. code-block:: console
+
+      $ spack install llvm
+
+3. (Optional) You likely will only need one version, this is just for this
+   demonstration.  Note that one use case for installing this specific version
+   of LLVM is because CUDA 9 now supports ``clang@3.9.0`` as a host compiler,
+   which may be relevant for your cluster.
+
+   .. code-block:: console
+
+      $ spack install llvm@3.9.0
+
+""""""""""""""""""""""""""""""""""""""""
+Step 2: Inform Spack of the new Compiler
+""""""""""""""""""""""""""""""""""""""""
+
+.. note::
+
+   This tutorial assumes you have your environment setup, the ``spack load``
+   command cannot be used unless you have.  Refer to the
+   :ref:`add-spack-to-the-shell` section at the beginning of the document.
+
+To gain access to the new compiler(s) we have installed, it's as easy as
+
+.. code-block:: console
+
+   # Load the module associated with `llvm` (5.0.0 in this case)
+   $ spack load llvm
+
+   # Now that `clang` / `clang++` from `llvm@5.0.0` are in our $PATH,
+   # let `spack` do the heavy lifting
+   $ spack compiler find
+   ==> Added 1 new compiler to /home/user/.spack/linux/compilers.yaml
+    clang@5.0.0
+   ==> Compilers are defined in the following files:
+    /home/user/.spack/linux/compilers.yaml
+
+   # Since in this example we are also installing `clang@3.9.0`, we
+   # will get that in there now as well.  First unload the previous
+   # llvm, then load the next
+   $ spack unload llvm
+   $ spack load llvm@3.9.0
+
+   # Same as before, find the new compiler
+   $ spack compiler find
+   ==> Added 1 new compiler to /home/user/.spack/linux/compilers.yaml
+    clang@3.9.0
+   ==> Compilers are defined in the following files:
+    /home/user/.spack/linux/compilers.yaml
+
+   # Cleanup your environment
+   $ spack unload llvm@3.9.0
+
+"""""""""""""""""""""""""""""""""""""""
+Step 3: Tell Spack which Module to Load
+"""""""""""""""""""""""""""""""""""""""
+
+The machine this demonstration was written on has two specific details that will
+surface in the following:
+
+1. The operating system is Fedora 25, 64 bit.
+2. The ``$SPACK_ROOT`` is located at ``/opt/spack``.
+
+These will be different for your configuration.  At this point in time, the
+relevant section of ``/home/user/.spack/linux/compilers.yaml`` looks like this:
+
+.. code-block:: yaml
+
+   - compiler:
+       environment: {}
+       extra_rpaths: []
+       flags: {}
+       modules: []
+       operating_system: fedora25
+       paths:
+         cc: /opt/spack/opt/spack/linux-fedora25-x86_64/gcc-6.4.1/llvm-5.0.0-id4ljxr45ihmyys2qr76ce7o7ungrtag/bin/clang
+         cxx: /opt/spack/opt/spack/linux-fedora25-x86_64/gcc-6.4.1/llvm-5.0.0-id4ljxr45ihmyys2qr76ce7o7ungrtag/bin/clang++
+         f77:
+         fc:
+       spec: clang@5.0.0
+       target: x86_64
+   - compiler:
+       environment: {}
+       extra_rpaths: []
+       flags: {}
+       modules: []
+       operating_system: fedora25
+       paths:
+         cc: /opt/spack/opt/spack/linux-fedora25-x86_64/gcc-6.4.1/llvm-3.9.0-66qwczd6rumppz6qmzlxstuyhkajxa3i/bin/clang
+         cxx: /opt/spack/opt/spack/linux-fedora25-x86_64/gcc-6.4.1/llvm-3.9.0-66qwczd6rumppz6qmzlxstuyhkajxa3i/bin/clang++
+         f77:
+         fc:
+       spec: clang@3.9.0
+       target: x86_64
+
+In order to ensure that everything builds properly when specifying say
+``clang@5.0.0`` as the compiler, we will want to make sure that we modify the
+``modules: []`` list to contain the module that Spack has already generated.
+
+To find the correct module, which has already been generated by way of
+installing ``llvm``, we can perform the following:
+
+.. code-block:: console
+
+   # Recall that $SPACK_ROOT must be set, and in this example
+   # it is set to `/opt/spack`
+   #
+   # Recall also that your OS is different vvvvvvvvvvvvvvvvvvvvvv
+   $ ls -1 $SPACK_ROOT/share/spack/modules/linux-fedora25-x86_64/llvm-*
+   /opt/spack/share/spack/modules/linux-fedora25-x86_64/llvm-3.9.0-gcc-6.4.1-66qwczd
+   /opt/spack/share/spack/modules/linux-fedora25-x86_64/llvm-5.0.0-gcc-6.4.1-id4ljxr
+   # NOTE: gcc@6.4.1 is the compiler used to compile llvm          ^^^^^^^^^
+   #       That section, as well as the short hashes will be different for you.
+
+So for each new LLVM installation, we want to ensure that Spack will load the
+correct module before trying to compile any packages with it.
+
+.. tip::
+
+   ``modules: []`` is an empty YAML list.  We only need to add one module at
+   this point, but we will make a list.  Make sure that the hyphen (``-``)
+   is **directly** underneath the ``m`` of ``modules:``.
+
+**For** ``llvm@5.0.0``
+
+    .. code-block:: yaml
+
+       modules:
+       - llvm-5.0.0-gcc-6.4.1-id4ljxr
+
+**For** ``llvm@3.9.0``
+
+    .. code-block:: yaml
+
+       modules:
+       - llvm-3.9.0-gcc-6.4.1-66qwczd
+
+Now Spack will load the compiler's module before trying to compile any packages.
+
+"""""""""""""""""""""""""""""""""
+Step 4: Choose a Fortran Compiler
+"""""""""""""""""""""""""""""""""
+
+Since LLVM does not currently provide a Fortran compiler, you will want to make
+sure that you have one configured (many of the core HPC packages need one).  In
+this example, since Fedora 25 comes with a modern Fortran compiler via its
+package manager, this was used:
+
+.. code-block:: yaml
+
+   paths:
+     cc: /opt/spack/opt/spack/linux-fedora25-x86_64/gcc-6.4.1/llvm-5.0.0-id4ljxr45ihmyys2qr76ce7o7ungrtag/bin/clang
+     cxx: /opt/spack/opt/spack/linux-fedora25-x86_64/gcc-6.4.1/llvm-5.0.0-id4ljxr45ihmyys2qr76ce7o7ungrtag/bin/clang++
+     #    vvvvvvvvvvvvvvvvv
+     f77: /usr/bin/gfortran
+     fc:  /usr/bin/gfortran
+     #    ^^^^^^^^^^^^^^^^^
+
+However, many systems come with rather old versions of ``gfortran``.  You can
+try using them first, but a better option may be to install a newer version.
+For example, suppose you were working on a RHEL 6 cluster.
+
+**Option A**
+    Install one of the ``devtoolset`` collections, e.g., `Devtoolset/6 <dev6_>`_
+    and use the ``gfortran`` provided with that.  A typical installation would
+    produce the executable ``/opt/rh/devtoolset-6/root/usr/bin/gfortran``.  You
+    do **not** need to load the ``devtoolset-6`` module, and should only provide
+    the full path to the executable.
+
+    .. _dev6: https://www.softwarecollections.org/en/scls/rhscl/devtoolset-6/
+
+**Option B**
+    Try installing FLang with Spack (``spack info flang``).  You would then want
+    to add the module to ``modules`` as shown in Step 2 *in addition to* the
+    ``llvm`` module, as well as provide the absolute path to the ``flang``
+    executable.  Recall that finding that path is easiest if you
+
+    .. code-block:: console
+
+       # ^llvm@5.0.0 says 'the one compiled using this version of llvm'
+       $ spack load flang ^llvm@5.0.0
+
+       # This will show you the absolute path
+       $ which flang
+
+**Option C**
+    Install a newer version of GCC using Spack, and use that ``gfortran``.
+    Which version you choose is a personal decision, but we advise choosing
+    ``gcc@4.9.2`` or higher.  Since you are installing a full GCC, you may as
+    well install a newer one.
+
+    .. danger::
+
+       As before, you can ``spack load gcc`` and ``which gfortran``, but be
+       careful to **not** add the ``gcc`` module to the ``modules:`` list we
+       modified for the ``clang`` compilers.  **Only** provide the full path to
+       the ``gfortran`` executable.  If you load both modules, you will
+       undoubtedly receive many conflicts when trying to build other packages
+       with ``clang``.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Compiler Verification
@@ -944,14 +1193,14 @@ What follows are three steps describing how to install and use environment-modul
      ``spack install environment-modules~X`` (The ``~X`` variant builds without Xorg
      dependencies, but ``environment-modules`` works fine too.)
 
-#. Add ``modulecmd`` to ``PATH`` and create a ``module`` command. 
+#. Add ``modulecmd`` to ``PATH`` and create a ``module`` command.
 
    * If you are using ``bash`` or ``ksh``, Spack can currently do this for you as well.
      After installing ``environment-modules`` following the step
      above, source Spack's shell integration script. This will automatically
      detect the lack of ``modulecmd`` and ``module``, and use the installed
      ``environment-modules`` from ``spack bootstrap`` or ``spack install``.
-     
+
      .. code-block:: console
 
         # For bash/zsh users
@@ -959,7 +1208,7 @@ What follows are three steps describing how to install and use environment-modul
         $ . $SPACK_ROOT/share/spack/setup-env.sh
 
 
-   * If you prefer to do it manually,  you can activate with the following 
+   * If you prefer to do it manually,  you can activate with the following
      script (or apply the updates to your ``.bashrc`` file manually):
 
          .. code-block:: sh
@@ -975,7 +1224,7 @@ What follows are three steps describing how to install and use environment-modul
 
       This is added to your ``.bashrc`` (or similar) files, enabling Environment
       Modules when you log in.
-        
+
 #. Test that the ``module`` command is found with:
 
    .. code-block:: console
