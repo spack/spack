@@ -55,6 +55,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # Misc releases that people need
     version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
     version('5.22.1', '19295bbb775a3c36123161b9bf4892f1')
+    version('5.22.0', 'e32cb6a8dda0084f2a43dac76318d68d')
 
     # End of life releases
     version('5.20.3', 'd647d0ea5a7a8194c34759ab9f2610cd')
@@ -64,6 +65,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     extendable = True
 
     depends_on('gdbm')
+
+    # there has been a long fixed issue with 5.22.0 with regard to the ccflags
+    # definition.  It is well documented here:
+    # https://rt.perl.org/Public/Bug/Display.html?id=126468
+    patch('protect-quotes-in-ccflags.patch', when='@5.22.0')
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not

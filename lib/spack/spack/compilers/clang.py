@@ -202,7 +202,32 @@ class Clang(Compiler):
             return
 
         xcode_select = Executable('xcode-select')
+
+        # Get the path of the active developer directory
         real_root = xcode_select('--print-path', output=str).strip()
+
+        # The path name can be used to determine whether the full Xcode suite
+        # or just the command-line tools are installed
+        if real_root.endswith('Developer'):
+            # The full Xcode suite is installed
+            pass
+        else:
+            if real_root.endswith('CommandLineTools'):
+                # Only the command-line tools are installed
+                msg  = 'It appears that you have the Xcode command-line tools '
+                msg += 'but not the full Xcode suite installed.\n'
+
+            else:
+                # Xcode is not installed
+                msg  = 'It appears that you do not have Xcode installed.\n'
+
+            msg += 'In order to use Spack to build the requested application, '
+            msg += 'you need the full Xcode suite. It can be installed '
+            msg += 'through the App Store. Make sure you launch the '
+            msg += 'application and accept the license agreement.\n'
+
+            raise OSError(msg)
+
         real_root = os.path.dirname(os.path.dirname(real_root))
         developer_root = os.path.join(spack.stage_path,
                                       'xcode-select',

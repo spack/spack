@@ -54,7 +54,8 @@ def parser():
         ['rm', 'doesnotexist'],  # Try to remove a non existing module
         ['find', 'mpileaks'],  # Try to find a module with multiple matches
         ['find', 'doesnotexist'],  # Try to find a module with no matches
-        ['find', 'libelf'],  # Try to find a module wo specifying the type
+        # Try to find a module specifying more than one type
+        ['find', '-m', 'tcl', '-m', 'lmod', 'libelf'],
     ]
 )
 def failure_args(request):
