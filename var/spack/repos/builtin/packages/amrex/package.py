@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Amrex(AutotoolsPackage):
+class Amrex(Package):
     """AMReX is the successor to BoxLib.
        It is a Block-Structured AMR Framework.
     """
@@ -47,16 +47,9 @@ class Amrex(AutotoolsPackage):
 
     depends_on('mpi', when='+mpi')
 
-    def configure_args(self):
-        spec = self.spec
-
-        extra_args = ['--dim=%d' % int(spec.variants['dims'].value)]
-
-        return extra_args
-
-    @property
-    def build_targets(self):
-        spec = self.spec
+    def install(self, spec, prefix):
+        configure('--dim=%s' % int(spec.variants['dims'].value),
+                '--prefix=%s' % prefix)
         if spec.compiler.name == 'gcc':
             comp = "gnu"
         elif spec.compiler.name == 'intel':
@@ -65,6 +58,5 @@ class Amrex(AutotoolsPackage):
             comp = "nag"
         else:
             raise Exception("Unsupported compiler")
-
-        targets = ["COMP=%s" % comp]
-        return targets
+        make("COMP=%s" % comp)
+        make("COMP=%s" % comp, "install")
