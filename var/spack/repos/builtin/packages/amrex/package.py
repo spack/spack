@@ -53,3 +53,18 @@ class Amrex(AutotoolsPackage):
         extra_args = ['--dim=%d' % int(spec.variants['dims'].value)]
 
         return extra_args
+
+    @property
+    def build_targets(self):
+        spec = self.spec
+        if spec.compiler.name == 'gcc':
+            comp = "gnu"
+        elif spec.compiler.name == 'intel':
+            comp = "intel"
+        elif spec.compiler.name == 'nag':
+            comp = "nag"
+        else:
+            raise Exception("Unsupported compiler")
+
+        targets = ["COMP=%s" % comp]
+        return targets
