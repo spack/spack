@@ -1878,7 +1878,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """Try to find remote versions of this package using the
            list_url and any other URLs described in the package file."""
         if not self.all_urls:
-            raise VersionFetchError(self.__class__)
+            raise spack.util.web.VersionFetchError(self.__class__)
 
         try:
             return spack.util.web.find_versions_of_archive(
@@ -2022,7 +2022,7 @@ def dump_packages(spec, path):
                 source_repo = spack.repository.Repo(source_repo_root)
                 source_pkg_dir = source_repo.dirname_for_package_name(
                     node.name)
-            except RepoError:
+            except spack.repository.RepoError:
                 tty.warn("Warning: Couldn't copy in provenance for %s" %
                          node.name)
 
