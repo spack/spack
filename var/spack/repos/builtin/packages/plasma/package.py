@@ -63,7 +63,7 @@ class Plasma(MakefilePackage):
         for dep in ("blas", "lapack"):
             try:  # in case the dependency does not provide header flags
                 header_flags += " " + spec[dep].headers.cpp_flags
-            except:
+            except AttributeError:
                 pass
 
         make_inc.filter("CFLAGS +[+]=", "CFLAGS += " + header_flags + " ")

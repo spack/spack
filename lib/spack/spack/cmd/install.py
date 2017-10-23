@@ -286,7 +286,7 @@ def junit_output(spec, test_suite):
                     message='Unexpected exception thrown during install',
                     text=text
                 )
-            except:
+            except BaseException:
                 # Anything else is also an error
                 duration = time.time() - start_time
                 test_case.set_duration(duration)

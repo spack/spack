@@ -34,7 +34,7 @@ import spack.util.web
 from llnl.util.filesystem import mkdirp
 from spack.repository import Repo
 from spack.spec import Spec
-from spack.util.executable import which
+from spack.util.executable import which, ProcessError
 from spack.util.naming import mod_to_class
 from spack.util.naming import simplify_name, valid_fully_qualified_module_name
 from spack.url import UndetectableNameError, UndetectableVersionError
@@ -471,14 +471,14 @@ class BuildSystemGuesser:
             try:
                 unzip  = which('unzip')
                 output = unzip('-lq', stage.archive_file, output=str)
-            except:
+            except ProcessError:
                 output = ''
         else:
             try:
                 tar    = which('tar')
                 output = tar('--exclude=*/*/*', '-tf',
                              stage.archive_file, output=str)
-            except:
+            except ProcessError:
                 output = ''
         lines = output.split('\n')
 

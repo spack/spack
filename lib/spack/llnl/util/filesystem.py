@@ -130,7 +130,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
         try:
             for line in fileinput.input(filename, inplace=True):
                 print(re.sub(regex, repl, line.rstrip('\n')))
-        except:
+        except BaseException:
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
             raise
