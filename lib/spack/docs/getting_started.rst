@@ -661,6 +661,44 @@ correct module before trying to compile any packages with it.
 
 Now Spack will load the compiler's module before trying to compile any packages.
 
+.. warning::
+
+   In the above, we assumed the default TCL modules.  If you are using ``lmod``
+   with Spack, although ``lmod`` is capable of reading the TCL modules, it will
+   serve you best to use the Spack generated ``lmod`` modules.  More information
+   on Modules can be found in the :ref:`InstallEnvironmentModules` section.
+
+   In the example above, recall that the compiler that compiled LLVM was
+   ``gcc@6.4.1``, the operating system is ``linux-fedora25-x86_64``, and
+   ``$SPACK_ROOT`` is ``/opt/spack``.  The module files we will want to use,
+   then, are present in
+
+   +----------------+-----------------------+----------------------------+--------------------+
+   | ``SPACK_ROOT`` | Common Prefix         | Operating System           | What Compiled LLVM |
+   +================+=======================+============================+====================+
+   | ``/opt/spack`` | ``/share/spack/lmod`` | ``/linux-fedora25-x86_64`` | ``/gcc/6.4.1``     |
+   +----------------+-----------------------+----------------------------+--------------------+
+
+   For example, in the ``clang@3.9.0`` case, we would use
+
+   .. code-block:: yaml
+
+      - compiler:
+          environment:
+          # First, set the environment variable MODULEPATH
+          set:
+              "MODULEPATH": "/opt/spack/share/spack/lmod/linux-fedora25-x86_64/gcc/6.4.1"
+          extra_rpaths: []
+          flags: {}
+          # $MODULEPATH is now set so this module can be loaded
+          modules:
+          - llvm/3.9.0
+
+   If you have site-specific compiler modules (e.g., for ``gcc/6.4.1``), you
+   want to make sure to **not** load those.  All Spack generated compiler
+   modules use ``family("compiler")``, so as long as yours do as well there
+   would not be conflicts.  But it is safest to only load the module you need.
+
 """""""""""""""""""""""""""""""""
 Step 4: Choose a Fortran Compiler
 """""""""""""""""""""""""""""""""
@@ -1244,6 +1282,10 @@ version 8.5 with whatever version is installed on your system:
               paths:
                   tcl@8.5: /usr
               buildable: False
+
+.. tip::
+
+   Much more information on modules is available on the :ref:`modules` page.
 
 ^^^^^^^^^^^^^^^^^
 Package Utilities
