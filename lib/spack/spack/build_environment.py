@@ -677,11 +677,11 @@ def get_package_context(traceback, context=3):
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
-    l = frame.f_lineno - start
-    start_ctx = max(0, l - context)
-    sourcelines = sourcelines[start_ctx:l + context + 1]
+    fl = frame.f_lineno - start
+    start_ctx = max(0, fl - context)
+    sourcelines = sourcelines[start_ctx:fl + context + 1]
     for i, line in enumerate(sourcelines):
-        is_error = start_ctx + i == l
+        is_error = start_ctx + i == fl
         mark = ">> " if is_error else "   "
         marked = "  %s%-6d%s" % (mark, start_ctx + i, line.rstrip())
         if is_error:
