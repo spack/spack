@@ -41,3 +41,4 @@ class RGeoquery(RPackage):
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-httr', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.42.0')
