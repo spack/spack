@@ -189,12 +189,10 @@ def print_text_info(pkg):
         # Here we sort first on the fact that a version is marked
         # as preferred in the package, then on the fact that the
         # version is not develop, then lexicographically
-        l = [
-            (value.get('preferred', False), not key.isdevelop(), key)
-            for key, value in pkg.versions.items()
-        ]
-        l = sorted(l)
-        _, _, preferred = l.pop()
+        key_fn = lambda v: (pkg.versions[v].get('preferred', False),
+                            not v.isdevelop(),
+                            v)
+        preferred = sorted(pkg.versions, key=key_fn).pop()
 
         f = fs.for_package_version(pkg, preferred)
         line = version('    {0}'.format(pad(preferred))) + str(f)

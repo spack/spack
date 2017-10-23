@@ -37,7 +37,7 @@ from llnl.util.filesystem import find_libraries, find_headers
 def library_list():
     """Returns an instance of LibraryList."""
     # Test all valid extensions: ['.a', '.dylib', '.so']
-    l = [
+    libs = [
         '/dir1/liblapack.a',
         '/dir2/libpython3.6.dylib',  # name may contain periods
         '/dir1/libblas.a',
@@ -45,21 +45,21 @@ def library_list():
         'libmpi.so.20.10.1',  # shared object libraries may be versioned
     ]
 
-    return LibraryList(l)
+    return LibraryList(libs)
 
 
 @pytest.fixture()
 def header_list():
     """Returns an instance of header list"""
     # Test all valid extensions: ['.h', '.hpp', '.hh', '.cuh']
-    h = [
+    headers = [
         '/dir1/Python.h',
         '/dir2/date.time.h',
         '/dir1/pyconfig.hpp',
         '/dir3/core.hh',
         'pymem.cuh',
     ]
-    h = HeaderList(h)
+    h = HeaderList(headers)
     h.add_macro('-DBOOST_LIB_NAME=boost_regex')
     h.add_macro('-DBOOST_DYN_LINK')
     return h
@@ -129,11 +129,11 @@ class TestLibraryList(object):
             '/dir4/libnew.a'
         ]
         another = LibraryList(pylist)
-        l = library_list + another
-        assert len(l) == 7
+        both = library_list + another
+        assert len(both) == 7
 
-        # Invariant : l == l + l
-        assert l == l + l
+        # Invariant
+        assert both == both + both
 
         # Always produce an instance of LibraryList
         assert type(library_list + pylist) == type(library_list)
@@ -258,7 +258,7 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     # Now reverse the result and start discarding things
     # as soon as you have matches. In the end the list should
     # be emptied.
-    l = list(reversed(result))
+    L = list(reversed(result))
 
     # At this point make sure the search list is a sequence
     if isinstance(search_list, six.string_types):
@@ -267,11 +267,11 @@ def test_searching_order(search_fn, search_list, root, kwargs):
     # Discard entries in the order they appear in search list
     for x in search_list:
         try:
-            while fnmatch.fnmatch(l[-1], x) or x in l[-1]:
-                l.pop()
+            while fnmatch.fnmatch(L[-1], x) or x in L[-1]:
+                L.pop()
         except IndexError:
             # List is empty
             pass
 
     # List should be empty here
-    assert len(l) == 0
+    assert len(L) == 0

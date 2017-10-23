@@ -1844,8 +1844,8 @@ class Spec(object):
                 )
                 mvar.value = mvar.value + tuple(patches)
                 # FIXME: Monkey patches mvar to store patches order
-                l = getattr(mvar, '_patches_in_order_of_appearance', [])
-                mvar._patches_in_order_of_appearance = dedupe(l + patches)
+                p = getattr(mvar, '_patches_in_order_of_appearance', [])
+                mvar._patches_in_order_of_appearance = dedupe(p + patches)
 
         for s in self.traverse():
             if s.external_module:
