@@ -98,7 +98,7 @@ try:
     comm = MPI.COMM_WORLD
     if comm.size > 1:
         mpi = True
-except:
+except ImportError:
     pass
 
 
@@ -234,7 +234,7 @@ def mpi_multiproc_test(*functions):
     if include:
         try:
             functions[subcomm.rank](subcomm_barrier())
-        except:
+        except BaseException:
             # aborting is the best we can do for MPI tests without
             # hanging, since we're using MPI barriers. This will fail
             # early and it loses the nice pytest output, but at least it

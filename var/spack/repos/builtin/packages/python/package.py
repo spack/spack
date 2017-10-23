@@ -285,7 +285,7 @@ class Python(AutotoolsPackage):
                     Python._DISTUTIL_CACHE_FILENAME)
                 with open(output_filename, 'w') as output_file:
                     sjson.dump(self._distutil_vars, output_file)
-            except:
+            except Exception:
                 tty.warn("Failed to save metadata for distutils. This might "
                          "cause the extensions that are installed with "
                          "distutils to call compilers directly avoiding "
@@ -308,7 +308,7 @@ class Python(AutotoolsPackage):
                 if os.path.isfile(input_filename):
                     with open(input_filename) as input_file:
                         self._distutil_vars = sjson.load(input_file)
-            except:
+            except Exception:
                 pass
 
             if not self._distutil_vars:

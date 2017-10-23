@@ -410,8 +410,8 @@ class SpackCommand(object):
         except SystemExit as e:
             self.returncode = e.code
 
-        except:
-            self.error = sys.exc_info()[1]
+        except BaseException as e:
+            self.error = e
             if fail_on_error:
                 raise
 

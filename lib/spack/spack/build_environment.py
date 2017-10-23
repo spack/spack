@@ -567,7 +567,7 @@ def fork(pkg, function, dirty, fake):
             tty.msg(e.message)
             child_pipe.send(None)
 
-        except:
+        except BaseException:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
 
