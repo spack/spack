@@ -23,8 +23,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
 import llnl.util.tty as tty
+
+from spack.compiler import Compiler, get_compiler_version
 from spack.version import ver
 
 

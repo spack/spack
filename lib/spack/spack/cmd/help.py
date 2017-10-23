@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-from llnl.util.tty import colorize
+from llnl.util.tty.color import colorize
 
 description = "get help on spack and its commands"
 section = "help"

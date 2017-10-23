@@ -28,7 +28,7 @@ import textwrap
 
 from six.moves import zip_longest
 
-from llnl.util.tty.colify import *
+from llnl.util.tty.colify import colify
 
 import llnl.util.tty.color as color
 import spack

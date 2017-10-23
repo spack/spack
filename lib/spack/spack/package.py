@@ -39,6 +39,7 @@ import functools
 import inspect
 import os
 import re
+import shutil
 import sys
 import textwrap
 import time
@@ -60,15 +61,16 @@ import spack.url
 import spack.util.web
 import spack.multimethod
 
-from llnl.util.filesystem import *
-from llnl.util.lang import *
+from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
+from llnl.util.filesystem import working_dir, install_tree, install
+from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
-from spack.version import *
+from spack.version import Version
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]

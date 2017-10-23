@@ -62,15 +62,15 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import *
+from llnl.util.filesystem import join_path, mkdirp, install, install_tree
 
 import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
-from spack.util.environment import *
+from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
-from spack.util.log_parse import *
+from spack.util.log_parse import parse_log_events, make_log_context
 
 
 #

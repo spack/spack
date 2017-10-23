@@ -31,10 +31,10 @@ import shutil
 import tempfile
 import argparse
 
-from llnl.util.filesystem import *
+from llnl.util.filesystem import working_dir, mkdirp
 
 import spack
-from spack.util.executable import *
+from spack.util.executable import which
 
 
 description = "runs source code style checks on Spack. requires flake8"

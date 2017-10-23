@@ -27,14 +27,13 @@ import os
 import platform
 import re
 import sys
-from contextlib import closing
 
-import spack
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 from llnl.util.filesystem import force_remove
+
+import spack
 from spack import *
-from spack.util.environment import *
 from spack.util.prefix import Prefix
 import spack.util.spack_json as sjson
 
@@ -587,7 +586,7 @@ class Python(AutotoolsPackage):
             if not os.path.isfile(easy_pth):
                 continue
 
-            with closing(open(easy_pth)) as f:
+            with open(easy_pth) as f:
                 for line in f:
                     line = line.rstrip()
 
@@ -610,7 +609,7 @@ class Python(AutotoolsPackage):
                 os.remove(main_pth)
 
         else:
-            with closing(open(main_pth, 'w')) as f:
+            with open(main_pth, 'w') as f:
                 f.write("import sys; sys.__plen = len(sys.path)\n")
                 for path in paths:
                     f.write("{0}\n".format(path))

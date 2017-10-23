@@ -27,8 +27,7 @@ import inspect
 import os
 import os.path
 import shutil
-from os import stat
-from stat import *
+import stat
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -153,7 +152,7 @@ class AutotoolsPackage(PackageBase):
         if config_guess is not None:
             try:
                 check_call([config_guess], stdout=PIPE, stderr=PIPE)
-                mod = stat(my_config_guess).st_mode & 0o777 | S_IWUSR
+                mod = os.stat(my_config_guess).st_mode & 0o777 | stat.S_IWUSR
                 os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
                 return
