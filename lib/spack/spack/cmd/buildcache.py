@@ -25,7 +25,6 @@
 import argparse
 
 import os
-import re
 import llnl.util.tty as tty
 
 import spack
@@ -38,6 +37,18 @@ from spack.binary_distribution import NoVerifyException, NoChecksumException
 description = "Create, download and install build cache files."
 section = "caching"
 level = "long"
+
+# Arguments for display_specs when we find ambiguity
+display_args = {
+    'long': True,
+    'show_flags': True,
+    'variants': True
+}
+
+error_message = """You can either:
+    a) use a more specific spec, or
+    b) use the package hash with a leading /
+"""
 
 
 def setup_parser(subparser):
@@ -76,6 +87,8 @@ def setup_parser(subparser):
     install.set_defaults(func=installtarball)
 
     listcache = subparsers.add_parser('list')
+    listcache.add_argument('-f', '--force', action='store_true',
+                           help="force new download of specs")
     listcache.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to search for")
@@ -88,7 +101,89 @@ def setup_parser(subparser):
     dlkeys.add_argument(
         '-y', '--yes-to-all', action='store_true',
         help="answer yes to all trust questions")
+    dlkeys.add_argument('-f', '--force', action='store_true',
+                        help="force new download of keys")
     dlkeys.set_defaults(func=getkeys)
+
+
+def find_matching_specs(specs, allow_multiple_matches=False, force=False):
+    """Returns a list of specs matching the not necessarily
+       concretized specs given from cli
+
+    Args:
+        specs: list of specs to be matched against installed packages
+        allow_multiple_matches : if True multiple matches are admitted
+
+    Return:
+        list of specs
+    """
+    # List of specs that match expressions given via command line
+    specs_from_cli = []
+    has_errors = False
+    for spec in specs:
+        matching = spack.store.db.query(spec)
+        # For each spec provided, make sure it refers to only one package.
+        # Fail and ask user to be unambiguous if it doesn't
+        if not allow_multiple_matches and len(matching) > 1:
+            tty.error('{0} matches multiple packages:'.format(spec))
+            print()
+            spack.cmd.display_specs(matching, **display_args)
+            print()
+            has_errors = True
+
+        # No installed package matches the query
+        if len(matching) == 0 and spec is not any:
+            tty.error('{0} does not match any installed packages.'.format(
+                spec))
+            has_errors = True
+
+        specs_from_cli.extend(matching)
+    if has_errors:
+        tty.die(error_message)
+
+    return specs_from_cli
+
+
+def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
+    """Returns a list of specs matching the not necessarily
+       concretized specs given from cli
+
+    Args:
+        specs: list of specs to be matched against buildcaches on mirror
+        allow_multiple_matches : if True multiple matches are admitted
+
+    Return:
+        list of specs
+    """
+    # List of specs that match expressions given via command line
+    specs_from_cli = []
+    has_errors = False
+    specs = bindist.get_specs(force)
+    for pkg in pkgs:
+        matches = []
+        tty.msg("buildcache spec(s) matching %s \n" % pkg)
+        for spec in sorted(specs):
+            if spec.satisfies(pkg):
+                matches.append(spec)
+        # For each pkg provided, make sure it refers to only one package.
+        # Fail and ask user to be unambiguous if it doesn't
+        if not allow_multiple_matches and len(matches) > 1:
+            tty.error('%s matches multiple downloaded packages:' % pkg)
+            print()
+            spack.cmd.display_specs(matches, **display_args)
+            print()
+            has_errors = True
+
+        # No downloaded package matches the query
+        if len(matches) == 0:
+            tty.error('%s does not match any downloaded packages.' % pkg)
+            has_errors = True
+
+        specs_from_cli.extend(matches)
+    if has_errors:
+        tty.die(error_message)
+
+    return specs_from_cli
 
 
 def createtarball(args):
@@ -112,17 +207,22 @@ def createtarball(args):
         force = True
     if args.rel:
         relative = True
-    for pkg in pkgs:
-        for spec in spack.cmd.parse_specs(pkg, concretize=True):
-            specs.add(spec)
-            tty.msg('recursing dependencies')
-            for d, node in spec.traverse(order='post',
-                                         depth=True,
-                                         deptype=('link', 'run'),
-                                         deptype_query='run'):
-                if not node.external:
-                    tty.msg('adding dependency %s' % node.format())
-                    specs.add(node)
+
+    matches = find_matching_specs(pkgs, False, False)
+    for match in matches:
+        tty.msg('adding matching spec %s' % match.format())
+        specs.add(match)
+        tty.msg('recursing dependencies')
+        for d, node in match.traverse(order='post',
+                                      depth=True,
+                                      deptype=('link', 'run')):
+            if node.external or node.virtual:
+                tty.msg('Skipping external or virtual dependency %s' %
+                        node.format())
+            else:
+                tty.msg('adding dependency %s' % node.format())
+                specs.add(node)
+
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
         try:
@@ -148,14 +248,13 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.packages)
-    specs = bindist.get_specs()
-    matches = set()
-    for spec in specs:
-        for pkg in pkgs:
-            if re.match(re.escape(pkg), str(spec)):
-                matches.add(spec)
-            if re.match(re.escape(pkg), '/%s' % spec.dag_hash()):
-                matches.add(spec)
+    yes_to_all = False
+    if args.yes_to_all:
+        yes_to_all = True
+    force = False
+    if args.force:
+        force = True
+    matches = match_downloaded_specs(pkgs, yes_to_all, force)
 
     for match in matches:
         install_tarball(match, args)
@@ -163,10 +262,13 @@ def installtarball(args):
 
 def install_tarball(spec, args):
     s = spack.spec.Spec(spec)
+    if s.external or s.virtual:
+        tty.warn("Skipping external or virtual package %s" % spec.format())
+        return
     yes_to_all = False
-    force = False
     if args.yes_to_all:
         yes_to_all = True
+    force = False
     if args.force:
         force = True
     for d in s.dependencies():
@@ -198,20 +300,21 @@ def install_tarball(spec, args):
 
 
 def listspecs(args):
-    specs = bindist.get_specs()
+    specs = bindist.get_specs(args.force)
     if args.packages:
         pkgs = set(args.packages)
         for pkg in pkgs:
-            tty.msg("buildcache spec(s) matching %s \n" % pkg)
+            tty.msg("buildcache spec(s) matching %s \n" % pkgs)
             for spec in sorted(specs):
-                if re.search("^" + re.escape(pkg), str(spec)):
-                    tty.msg('run "spack buildcache install /%s"' %
-                            spec.dag_hash(7) + ' to install  %s\n' %
+                if spec.satisfies(pkg):
+                    tty.msg('spack buildcache install /%s\n' %
+                            spec.dag_hash(7) +
+                            '   to install %s' %
                             spec.format())
     else:
         tty.msg("buildcache specs ")
         for spec in sorted(specs):
-            tty.msg('run "spack buildcache install /%s" to install  %s\n' %
+            tty.msg('spack buildcache install /%s\n   to install %s' %
                     (spec.dag_hash(7), spec.format()))
 
 
@@ -222,7 +325,10 @@ def getkeys(args):
     yes_to_all = False
     if args.yes_to_all:
         yes_to_all = True
-    bindist.get_keys(install, yes_to_all)
+    force = False
+    if args.force:
+        force = True
+    bindist.get_keys(install, yes_to_all, force)
 
 
 def buildcache(parser, args):

@@ -142,7 +142,7 @@ class FastPackageChecker(Mapping):
             # Warn about invalid names that look like packages.
             if not valid_module_name(pkg_name):
                 msg = 'Skipping package at {0}. '
-                msg += '"{1]" is not a valid Spack module name.'
+                msg += '"{1}" is not a valid Spack module name.'
                 tty.warn(msg.format(pkg_dir, pkg_name))
                 continue
 
@@ -537,20 +537,27 @@ class RepoPath(object):
         sys.modules[fullname] = module
         return module
 
-    @_autospec
     def repo_for_pkg(self, spec):
         """Given a spec, get the repository for its package."""
-        # If the spec already has a namespace, then return the
-        # corresponding repo if we know about it.
-        if spec.namespace:
-            fullspace = '%s.%s' % (self.super_namespace, spec.namespace)
-            if fullspace not in self.by_namespace:
-                raise UnknownNamespaceError(spec.namespace)
-            return self.by_namespace[fullspace]
+        # We don't @_autospec this function b/c it's called very frequently
+        # and we want to avoid parsing str's into Specs unnecessarily.
+        if isinstance(spec, spack.spec.Spec):
+            # If the spec already has a namespace, then return the
+            # corresponding repo if we know about it.
+            if spec.namespace:
+                fullspace = '%s.%s' % (self.super_namespace, spec.namespace)
+                if fullspace not in self.by_namespace:
+                    raise UnknownNamespaceError(spec.namespace)
+                return self.by_namespace[fullspace]
+            name = spec.name
+
+        else:
+            # handle strings directly for speed instead of @_autospec'ing
+            name = spec
 
         # If there's no namespace, search in the RepoPath.
         for repo in self.repos:
-            if spec.name in repo:
+            if name in repo:
                 return repo
 
         # If the package isn't in any repo, return the one with

@@ -366,18 +366,8 @@ class Stage(object):
                 return p
         return None
 
-    def chdir(self):
-        """Changes directory to the stage path. Or dies if it is not set
-        up."""
-        if os.path.isdir(self.path):
-            os.chdir(self.path)
-        else:
-            raise ChdirError("Setup failed: no such directory: " + self.path)
-
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
-        self.chdir()
-
         fetchers = []
         if not mirror_only:
             fetchers.append(self.default_fetcher)
@@ -477,18 +467,6 @@ class Stage(object):
             tty.msg("Created stage in %s" % self.path)
         else:
             tty.msg("Already staged %s in %s" % (self.name, self.path))
-
-    def chdir_to_source(self):
-        """Changes directory to the expanded archive directory.
-           Dies with an error if there was no expanded archive.
-        """
-        path = self.source_path
-        if not path:
-            raise StageError("Attempt to chdir before expanding archive.")
-        else:
-            os.chdir(path)
-            if not os.listdir(path):
-                raise StageError("Archive was empty for %s" % self.name)
 
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
@@ -613,9 +591,6 @@ class StageComposite:
     def path(self):
         return self[0].path
 
-    def chdir_to_source(self):
-        return self[0].chdir_to_source()
-
     @property
     def archive_file(self):
         return self[0].archive_file
@@ -634,21 +609,12 @@ class DIYStage(object):
         self.source_path = path
         self.created = True
 
-    def chdir(self):
-        if os.path.isdir(self.path):
-            os.chdir(self.path)
-        else:
-            raise ChdirError("Setup failed: no such directory: " + self.path)
-
     # DIY stages do nothing as context managers.
     def __enter__(self):
         pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-
-    def chdir_to_source(self):
-        self.chdir()
 
     def fetch(self, *args, **kwargs):
         tty.msg("No need to fetch for DIY.")
@@ -661,6 +627,9 @@ class DIYStage(object):
 
     def restage(self):
         tty.die("Cannot restage DIY stage.")
+
+    def create(self):
+        self.created = True
 
     def destroy(self):
         # No need to destroy DIY stage.
@@ -696,10 +665,6 @@ class StageError(spack.error.SpackError):
 
 class RestageError(StageError):
     """"Error encountered during restaging."""
-
-
-class ChdirError(StageError):
-    """Raised when Spack can't change directories."""
 
 
 # Keep this in namespace for convenience

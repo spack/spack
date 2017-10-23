@@ -242,24 +242,24 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    prefix = join_path(outdir, os.path.basename(spec.prefix))
-    if os.path.exists(prefix):
-        shutil.rmtree(prefix)
-    install_tree(spec.prefix, prefix)
+    workdir = join_path(outdir, os.path.basename(spec.prefix))
+    if os.path.exists(workdir):
+        shutil.rmtree(workdir)
+    install_tree(spec.prefix, workdir)
 
     # create info for later relocation and create tar
-    write_buildinfo_file(prefix)
+    write_buildinfo_file(workdir)
 
     # optinally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if rel:
-        make_package_relative(prefix)
+        make_package_relative(workdir, spec.prefix)
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
-        tar.add(name='%s' % prefix,
-                arcname='%s' % os.path.basename(prefix))
+        tar.add(name='%s' % workdir,
+                arcname='%s' % os.path.basename(workdir))
     # remove copy of install directory
-    shutil.rmtree(prefix)
+    shutil.rmtree(workdir)
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
@@ -329,15 +329,16 @@ def download_tarball(spec):
     return None
 
 
-def make_package_relative(prefix):
+def make_package_relative(workdir, prefix):
     """
     Change paths in binaries to relative paths
     """
-    buildinfo = read_buildinfo_file(prefix)
+    buildinfo = read_buildinfo_file(workdir)
     old_path = buildinfo['buildpath']
     for filename in buildinfo['relocate_binaries']:
-        path_name = os.path.join(prefix, filename)
-        relocate.make_binary_relative(path_name, old_path)
+        orig_path_name = os.path.join(prefix, filename)
+        cur_path_name = os.path.join(workdir, filename)
+        relocate.make_binary_relative(cur_path_name, orig_path_name, old_path)
 
 
 def relocate_package(prefix):
@@ -413,7 +414,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     relocate_package(installpath)
 
 
-def get_specs():
+def get_specs(force=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
@@ -449,10 +450,13 @@ def get_specs():
     durls = defaultdict(list)
     for link in urls:
         with Stage(link, name="build_cache", keep=True) as stage:
-            try:
-                stage.fetch()
-            except fs.FetchError:
-                continue
+            if force and os.path.exists(stage.save_filename):
+                os.remove(stage.save_filename)
+            if not os.path.exists(stage.save_filename):
+                try:
+                    stage.fetch()
+                except fs.FetchError:
+                    continue
             with open(stage.save_filename, 'r') as f:
                 # read the spec from the build cache file. All specs
                 # in build caches are concrete (as they are built) so
@@ -465,7 +469,7 @@ def get_specs():
     return durls
 
 
-def get_keys(install=False, yes_to_all=False):
+def get_keys(install=False, yes_to_all=False, force=False):
     """
     Get pgp public keys available on mirror
     """
@@ -493,10 +497,13 @@ def get_keys(install=False, yes_to_all=False):
                     keys.add(link)
         for link in keys:
             with Stage(link, name="build_cache", keep=True) as stage:
-                try:
-                    stage.fetch()
-                except fs.FetchError:
-                    continue
+                if os.path.exists(stage.save_filename) and force:
+                    os.remove(stage.save_filename)
+                if not os.path.exists(stage.save_filename):
+                    try:
+                        stage.fetch()
+                    except fs.FetchError:
+                        continue
             tty.msg('Found key %s' % link)
             if install:
                 if yes_to_all:

@@ -49,6 +49,8 @@ class Dealii(CMakePackage):
     version('develop', git='https://github.com/dealii/dealii.git', branch='master')
 
     variant('mpi',      default=True,  description='Compile with MPI')
+    variant('assimp',   default=False,
+            description='Compile with Assimp')
     variant('arpack',   default=True,
             description='Compile with Arpack and PArpack (only with MPI)')
     variant('adol-c',   default=False,
@@ -96,20 +98,19 @@ class Dealii(CMakePackage):
     # depends_on("boost@1.59.0+thread+system+serialization+iostreams")
     # depends_on("boost+mpi", when='+mpi')
     # depends_on("boost+python", when='+python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
                when='@:8.4.2~mpi')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
                when='@:8.4.2+mpi')
     # since @8.5.0: (and @develop) python bindings are introduced:
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
                when='@8.5.0:~mpi~python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
                when='@8.5.0:+mpi~python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+python",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+python",
                when='@8.5.0:~mpi+python')
-    depends_on(
-        "boost@1.59.0:+thread+system+serialization+iostreams+mpi+python",
-        when='@8.5.0:+mpi+python')
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi+python",
+               when='@8.5.0:+mpi+python')
     depends_on("bzip2")
     depends_on("lapack")
     depends_on("muparser")
@@ -121,6 +122,7 @@ class Dealii(CMakePackage):
     depends_on("mpi",              when="+mpi")
     depends_on("adol-c@2.6.4:",    when='@9.0:+adol-c')
     depends_on("arpack-ng+mpi",    when='+arpack+mpi')
+    depends_on("assimp",           when='@9.0:+assimp')
     depends_on("doxygen+graphviz", when='+doc')
     depends_on("graphviz",         when='+doc')
     depends_on("gsl",              when='@8.5.0:+gsl')
@@ -143,11 +145,12 @@ class Dealii(CMakePackage):
     depends_on("slepc",            when='+slepc+petsc+mpi')
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("slepc~arpack",     when='+slepc+petsc+mpi+int64')
-    depends_on("sundials",         when='@9.0:+sundials')
+    depends_on("sundials~pthread", when='@9.0:+sundials')
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos",       when='+trilinos+mpi~int64')
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre", when="+trilinos+mpi+int64")
 
     # check that the combination of variants makes sense
+    conflicts('+assimp', when='@:8.5.1')
     conflicts('+nanoflann', when='@:8.5.1')
     conflicts('+sundials', when='@:8.5.1')
     conflicts('+adol-c', when='@:8.5.1')
@@ -284,6 +287,17 @@ class Dealii(CMakePackage):
         else:
             options.extend([
                 '-DDEAL_II_WITH_ARPACK=OFF'
+            ])
+
+        # Assimp
+        if '+assimp' in spec:
+            options.extend([
+                '-DDEAL_II_WITH_ASSIMP=ON',
+                '-DASSIMP_DIR=%s' % spec['assimp'].prefix
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_ASSIMP=OFF'
             ])
 
         # since Netcdf is spread among two, need to do it by hand:

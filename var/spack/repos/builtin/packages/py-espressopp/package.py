@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Espressopp(CMakePackage):
+class PyEspressopp(CMakePackage):
     """ESPResSo++ is an extensible, flexible, fast and parallel simulation
        software for soft matter research. It is a highly versatile software
        package for the scientific simulation and analysis of coarse-grained
@@ -36,6 +36,7 @@ class Espressopp(CMakePackage):
     url      = "https://github.com/espressopp/espressopp/tarball/v1.9.4.1"
 
     version('develop', git='https://github.com/espressopp/espressopp.git', branch='master')
+    version('1.9.5', '13a93c30b07132b5e5fa0d828aa17d79')
     version('1.9.4.1', '0da74a6d4e1bfa6a2a24fca354245a4f')
     version('1.9.4', 'f2a27993a83547ad014335006eea74ea')
 
@@ -60,7 +61,11 @@ class Espressopp(CMakePackage):
     depends_on("doxygen", when="+dg", type='build')
 
     def cmake_args(self):
-        return ['-DEXTERNAL_MPI4PY=ON', '-DEXTERNAL_BOOST=ON']
+        return [
+            '-DEXTERNAL_MPI4PY=ON',
+            '-DEXTERNAL_BOOST=ON',
+            '-DWITH_RC_FILES=OFF'
+        ]
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):

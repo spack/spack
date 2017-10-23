@@ -543,8 +543,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: Defaults to the empty string.
     license_url = ''
 
-    # Verbosity level, preserved across installs.
+    #: Verbosity level, preserved across installs.
     _verbose = None
+
+    #: index of patches by sha256 sum, built lazily
+    _patches_by_hash = None
 
     #: List of strings which contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
@@ -643,7 +646,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     @property
     def package_dir(self):
         """Return the directory where the package.py file lives."""
-        return os.path.dirname(self.module.__file__)
+        return os.path.abspath(os.path.dirname(self.module.__file__))
 
     @property
     def global_license_dir(self):
@@ -769,16 +772,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     @property
     def stage(self):
+        """Get the build staging area for this package.
+
+        This automatically instantiates a ``Stage`` object if the package
+        doesn't have one yet, but it does not create the Stage directory
+        on the filesystem.
+        """
         if not self.spec.concrete:
             raise ValueError("Can only get a stage for a concrete package.")
         if self._stage is None:
             self._stage = self._make_stage()
-
-        # Create stage on first access.  Needed because fetch, stage,
-        # patch, and install can be called independently of each
-        # other, so `with self.stage:` in do_install isn't sufficient.
-        self._stage.create()
-
         return self._stage
 
     @stage.setter
@@ -821,9 +824,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self._fetcher = f
 
     def dependencies_of_type(self, *deptypes):
-        """Get subset of the dependencies with certain types."""
-        return dict((name, conds) for name, conds in self.dependencies.items()
-                    if any(d in self.dependency_types[name] for d in deptypes))
+        """Get dependencies that can possibly have these deptypes.
+
+        This analyzes the package and determines which dependencies *can*
+        be a certain kind of dependency. Note that they may not *always*
+        be this kind of dependency, since dependencies can be optional,
+        so something may be a build dependency in one configuration and a
+        run dependency in another.
+        """
+        return dict(
+            (name, conds) for name, conds in self.dependencies.items()
+            if any(dt in self.dependencies[name][cond].type
+                   for cond in conds for dt in deptypes))
 
     @property
     def extendee_spec(self):
@@ -963,8 +975,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 raise FetchError("Will not fetch %s" %
                                  self.spec.format('$_$@'), ck_msg)
 
+        self.stage.create()
         self.stage.fetch(mirror_only)
-
         self._fetch_time = time.time() - start_time
 
         if spack.do_checksum and self.version in self.versions:
@@ -973,29 +985,66 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         self.stage.cache_local()
 
     def do_stage(self, mirror_only=False):
-        """Unpacks the fetched tarball, then changes into the expanded tarball
-           directory."""
+        """Unpacks and expands the fetched tarball."""
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
-        self.do_fetch(mirror_only)
+        self.do_fetch(mirror_only)     # this will create the stage
         self.stage.expand_archive()
-        self.stage.chdir_to_source()
+
+        if not os.listdir(self.stage.path):
+            raise FetchError("Archive was empty for %s" % self.name)
+
+    @classmethod
+    def lookup_patch(cls, sha256):
+        """Look up a patch associated with this package by its sha256 sum.
+
+        Args:
+            sha256 (str): sha256 sum of the patch to look up
+
+        Returns:
+            (Patch): ``Patch`` object with the given hash, or ``None`` if
+                not found.
+
+        To do the lookup, we build an index lazily.  This allows us to
+        avoid computing a sha256 for *every* patch and on every package
+        load.  With lazy hashing, we only compute hashes on lookup, which
+        usually happens at build time.
+
+        """
+        if cls._patches_by_hash is None:
+            cls._patches_by_hash = {}
+
+            # Add patches from the class
+            for cond, patch_list in cls.patches.items():
+                for patch in patch_list:
+                    cls._patches_by_hash[patch.sha256] = patch
+
+            # and patches on dependencies
+            for name, conditions in cls.dependencies.items():
+                for cond, dependency in conditions.items():
+                    for pcond, patch_list in dependency.patches.items():
+                        for patch in patch_list:
+                            cls._patches_by_hash[patch.sha256] = patch
+
+        return cls._patches_by_hash.get(sha256, None)
 
     def do_patch(self):
-        """Calls do_stage(), then applied patches to the expanded tarball if they
-           haven't been applied already."""
+        """Applies patches if they haven't been applied already."""
         if not self.spec.concrete:
             raise ValueError("Can only patch concrete packages.")
 
-        # Kick off the stage first.
+        # Kick off the stage first.  This creates the stage.
         self.do_stage()
 
         # Package can add its own patch function.
         has_patch_fun = hasattr(self, 'patch') and callable(self.patch)
 
+        # Get the patches from the spec (this is a shortcut for the MV-variant)
+        patches = self.spec.patches
+
         # If there are no patches, note it.
-        if not self.patches and not has_patch_fun:
+        if not patches and not has_patch_fun:
             tty.msg("No patches needed for %s" % self.name)
             return
 
@@ -1012,8 +1061,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             tty.msg("Patching failed last time. Restaging.")
             self.stage.restage()
 
-        self.stage.chdir_to_source()
-
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
             tty.msg("Already patched %s" % self.name)
@@ -1024,28 +1071,33 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Apply all the patches for specs that match this one
         patched = False
-        for spec, patch_list in self.patches.items():
-            if self.spec.satisfies(spec):
-                for patch in patch_list:
-                    try:
-                        patch.apply(self.stage)
-                        tty.msg('Applied patch %s' % patch.path_or_url)
-                        patched = True
-                    except:
-                        # Touch bad file if anything goes wrong.
-                        tty.msg('Patch %s failed.' % patch.path_or_url)
-                        touch(bad_file)
-                        raise
+        for patch in patches:
+            try:
+                with working_dir(self.stage.source_path):
+                    patch.apply(self.stage)
+                tty.msg('Applied patch %s' % patch.path_or_url)
+                patched = True
+            except:
+                # Touch bad file if anything goes wrong.
+                tty.msg('Patch %s failed.' % patch.path_or_url)
+                touch(bad_file)
+                raise
 
         if has_patch_fun:
             try:
-                self.patch()
+                with working_dir(self.stage.source_path):
+                    self.patch()
                 tty.msg("Ran patch() for %s" % self.name)
                 patched = True
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
                 # If there's no default it means we don't need to patch.
-                tty.msg("No patches needed for %s" % self.name)
+                if not patched:
+                    # if we didn't apply a patch from a patch()
+                    # directive, AND the patch function didn't apply, say
+                    # no patches are needed.  Otherwise, we already
+                    # printed a message for each patch.
+                    tty.msg("No patches needed for %s" % self.name)
             except:
                 tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
@@ -1221,7 +1273,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
-                   run_tests=False,
                    fake=False,
                    explicit=False,
                    dirty=None,
@@ -1246,7 +1297,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 suppresses it)
             make_jobs (int): Number of make jobs to use for install. Default
                 is ncpus
-            run_tests (bool): Run tests within the package's install()
             fake (bool): Don't really build; install fake stub files instead.
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
@@ -1282,20 +1332,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # First, install dependencies recursively.
         if install_deps:
             tty.debug('Installing {0} dependencies'.format(self.name))
-            for dep in self.spec.dependencies():
+            for dep in self.spec.traverse(order='post', root=False):
                 dep.package.do_install(
+                    install_deps=False,
+                    explicit=False,
                     keep_prefix=keep_prefix,
                     keep_stage=keep_stage,
                     install_source=install_source,
-                    install_deps=install_deps,
                     fake=fake,
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
-                    run_tests=run_tests,
                     dirty=dirty,
-                    **kwargs
-                )
+                    **kwargs)
 
         if (kwargs.get('use_cache', False) and
                 self.try_install_from_binary_cache(explicit)):
@@ -1305,7 +1354,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         tty.msg('Installing %s' % self.name)
 
         # Set run_tests flag before starting build.
-        self.run_tests = run_tests
+        self.run_tests = spack.package_testing.check(self.name)
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
@@ -1352,26 +1401,27 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                         install_tree(self.stage.source_path, src_target)
 
                     # Do the real install in the source directory.
-                    self.stage.chdir_to_source()
+                    with working_dir(self.stage.source_path):
+                        # Save the build environment in a file before building.
+                        dump_environment(self.env_path)
 
-                    # Save the build environment in a file before building.
-                    dump_environment(self.env_path)
+                        # Spawn a daemon that reads from a pipe and redirects
+                        # everything to log_path
+                        with log_output(self.log_path, echo, True) as logger:
+                            for phase_name, phase_attr in zip(
+                                    self.phases, self._InstallPhase_phases):
 
-                    # Spawn a daemon that reads from a pipe and redirects
-                    # everything to log_path
-                    with log_output(self.log_path, echo, True) as logger:
-                        for phase_name, phase_attr in zip(
-                                self.phases, self._InstallPhase_phases):
+                                with logger.force_echo():
+                                    tty.msg(
+                                        "Executing phase: '%s'" % phase_name)
 
-                            with logger.force_echo():
-                                tty.msg("Executing phase: '%s'" % phase_name)
-
-                            # Redirect stdout and stderr to daemon pipe
-                            phase = getattr(self, phase_attr)
-                            phase(self.spec, self.prefix)
+                                # Redirect stdout and stderr to daemon pipe
+                                phase = getattr(self, phase_attr)
+                                phase(self.spec, self.prefix)
 
                     echo = logger.echo
                     self.log()
+
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self.spec)
 
@@ -1396,7 +1446,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # Fork a child to do the actual installation
             # we preserve verbosity settings across installs.
             PackageBase._verbose = spack.build_environment.fork(
-                self, build_process, dirty=dirty)
+                self, build_process, dirty=dirty, fake=fake)
 
             # If we installed then we should keep the prefix
             keep_prefix = self.last_phase is None or keep_prefix
@@ -1847,7 +1897,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         try:
             return spack.util.web.find_versions_of_archive(
                 self.all_urls, self.list_url, self.list_depth)
-        except spack.error.NoNetworkConnectionError as e:
+        except spack.util.web.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:", e.url,
                     e.message)
 
@@ -1969,7 +2019,7 @@ def dump_packages(spec, path):
     # Note that we copy them in as they are in the *install* directory
     # NOT as they are in the repository, because we want a snapshot of
     # how *this* particular build was done.
-    for node in spec.traverse(deptype=spack.alldeps):
+    for node in spec.traverse(deptype=all):
         if node is not spec:
             # Locate the dependency package in the install tree and find
             # its provenance information.
@@ -2068,15 +2118,6 @@ class PackageVersionError(PackageError):
         super(PackageVersionError, self).__init__(
             "Cannot determine a URL automatically for version %s" % version,
             "Please provide a url for this version in the package.py file.")
-
-
-class VersionFetchError(PackageError):
-    """Raised when a version URL cannot automatically be determined."""
-
-    def __init__(self, cls):
-        super(VersionFetchError, self).__init__(
-            "Cannot fetch versions for package %s " % cls.__name__ +
-            "because it does not define any URLs to fetch.")
 
 
 class NoURLError(PackageError):
