@@ -52,7 +52,7 @@ class Lmod(AutotoolsPackage):
     version('6.3.7',  '0fa4d5a24c41cae03776f781aa2dedc1')
     version('6.0.1',  '91abf52fe5033bd419ffe2842ebe7af9')
 
-    depends_on('lua@5.2:')
+    depends_on('lua@5.1:')
     depends_on('lua-luaposix', type=('build', 'run'))
     depends_on('lua-luafilesystem', type=('build', 'run'))
     depends_on('tcl', type=('build', 'run'))
