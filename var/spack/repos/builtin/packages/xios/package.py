@@ -42,9 +42,9 @@ class Xios(Package):
             description='Build for debugging, development or production')
     # NOTE: oasis coupler could be supported with a variant
 
-    depends_on('netcdf')
-    depends_on('netcdf-fortran')
-    depends_on('hdf5')
+    depends_on('netcdf+mpi')
+    depends_on('netcdf-fortran^netcdf+mpi')
+    depends_on('hdf5+mpi')
     depends_on('mpi')
     depends_on('perl', type='build')
     depends_on('perl-uri-escape', type='build')
