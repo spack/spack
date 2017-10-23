@@ -73,8 +73,8 @@ from multiprocessing import Process
 import pytest
 
 from llnl.util.filesystem import join_path, touch
-from llnl.util.lock import *
 from spack.util.multiproc import Barrier
+from llnl.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
 
 
 #

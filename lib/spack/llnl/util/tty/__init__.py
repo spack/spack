@@ -32,7 +32,7 @@ import traceback
 from six import StringIO
 from six.moves import input
 
-from llnl.util.tty.color import *
+from llnl.util.tty.color import cprint, cwrite, cescape, clen
 
 _debug = False
 _verbose = False

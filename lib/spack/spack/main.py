@@ -38,7 +38,6 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.log import log_output
-from llnl.util.tty.color import *
 
 import spack
 import spack.cmd
