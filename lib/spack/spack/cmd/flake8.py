@@ -42,18 +42,34 @@ section = "developer"
 level = "long"
 
 
-"""List of directories to exclude from checks."""
+def is_package(f):
+    """Whether flake8 should consider a file as a core file or a package.
+
+    We run flake8 with different exceptions for the core and for
+    packages, since we allow `from spack import *` and poking globals
+    into packages.
+    """
+    return f.startswith('var/spack/repos/') or 'docs/tutorial/examples' in f
+
+
+#: List of directories to exclude from checks.
 exclude_directories = [spack.external_path]
 
-"""
-This is a dict that maps:
- filename pattern ->
-    a flake8 exemption code ->
-       list of patterns, for which matching lines should have codes applied.
-"""
-exemptions = {
+
+#: This is a dict that maps:
+#:  filename pattern ->
+#:     flake8 exemption code ->
+#:        list of patterns, for which matching lines should have codes applied.
+#:
+#: For each file, if the filename pattern matches, we'll add per-line
+#: exemptions if any patterns in the sub-dict match.
+pattern_exemptions = {
     # exemptions applied only to package.py files.
     r'package.py$': {
+        # Allow 'from spack import *' in packages, but no other wildcards
+        'F403': [
+            r'^from spack import \*$'
+        ],
         # Exempt lines with urls and descriptions from overlong line errors.
         'E501': [
             r'^\s*homepage\s*=',
@@ -87,10 +103,11 @@ exemptions = {
 }
 
 # compile all regular expressions.
-exemptions = dict((re.compile(file_pattern),
-                   dict((code, [re.compile(p) for p in patterns])
-                        for code, patterns in error_dict.items()))
-                  for file_pattern, error_dict in exemptions.items())
+pattern_exemptions = dict(
+    (re.compile(file_pattern),
+     dict((code, [re.compile(p) for p in patterns])
+          for code, patterns in error_dict.items()))
+    for file_pattern, error_dict in pattern_exemptions.items())
 
 
 def changed_files(args):
@@ -135,7 +152,7 @@ def changed_files(args):
     return sorted(changed)
 
 
-def add_exemptions(line, codes):
+def add_pattern_exemptions(line, codes):
     """Add a flake8 exemption to a line."""
     if line.startswith('#'):
         return line
@@ -163,7 +180,7 @@ def add_exemptions(line, codes):
 
 
 def filter_file(source, dest, output=False):
-    """Filter a single file through all the patterns in exemptions."""
+    """Filter a single file through all the patterns in pattern_exemptions."""
     with open(source) as infile:
         parent = os.path.dirname(dest)
         mkdirp(parent)
@@ -171,7 +188,9 @@ def filter_file(source, dest, output=False):
         with open(dest, 'w') as outfile:
             for line in infile:
                 line_errors = []
-                for file_pattern, errors in exemptions.items():
+
+                # pattern exemptions
+                for file_pattern, errors in pattern_exemptions.items():
                     if not file_pattern.search(source):
                         continue
 
@@ -182,7 +201,7 @@ def filter_file(source, dest, output=False):
                                 break
 
                 if line_errors:
-                    line = add_exemptions(line, line_errors)
+                    line = add_pattern_exemptions(line, line_errors)
 
                 outfile.write(line)
                 if output:
@@ -226,7 +245,6 @@ def flake8(parser, args):
         with working_dir(spack.prefix):
             if not file_list:
                 file_list = changed_files(args)
-            shutil.copy('.flake8', os.path.join(temp, '.flake8'))
 
         print('=======================================================')
         print('flake8: running flake8 code checks on spack.')
@@ -242,10 +260,23 @@ def flake8(parser, args):
             dest_path = os.path.join(temp, filename)
             filter_file(src_path, dest_path, args.output)
 
-        # run flake8 on the temporary tree.
+        # run flake8 on the temporary tree, once for core, once for pkgs
+        package_file_list = [f for f in file_list if is_package(f)]
+        file_list         = [f for f in file_list if not is_package(f)]
+
         with working_dir(temp):
-            output = flake8('--format', 'pylint', *file_list,
-                            fail_on_error=False, output=str)
+            output = ''
+            if file_list:
+                output += flake8(
+                    '--format', 'pylint',
+                    '--config=%s' % os.path.join(spack.prefix, '.flake8'),
+                    *file_list, fail_on_error=False, output=str)
+            if package_file_list:
+                output += flake8(
+                    '--format', 'pylint',
+                    '--config=%s' % os.path.join(spack.prefix,
+                                                 '.flake8_packages'),
+                    *package_file_list, fail_on_error=False, output=str)
 
         if args.root_relative:
             # print results relative to repo root.

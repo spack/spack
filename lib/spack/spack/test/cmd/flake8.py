@@ -34,6 +34,7 @@ from spack.cmd.flake8 import *
 from spack.repository import Repo
 
 
+
 @pytest.fixture(scope='module')
 def parser():
     """Returns the parser for the ``flake8`` command"""
