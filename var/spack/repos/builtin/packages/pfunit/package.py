@@ -38,8 +38,8 @@ class Pfunit(CMakePackage):
     version('master', branch='master',
             git='https://git.code.sf.net/p/pfunit/code')
 
-    variant('mpi', default=True, description='Enable MPI')
-    variant('openmp', default=True, description='Enable OpenMP')
+    variant('mpi', default=False, description='Enable MPI')
+    variant('openmp', default=False, description='Enable OpenMP')
 
     depends_on('python', type=('build','run'))
     depends_on('py-unittest2', type=('run'))
