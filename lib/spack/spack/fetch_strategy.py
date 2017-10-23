@@ -449,7 +449,7 @@ class VCSFetchStrategy(FetchStrategy):
 
         # Ensure that there's only one of the rev_types
         if sum(k in kwargs for k in rev_types) > 1:
-            raise FetchStrategyError(
+            raise ValueError(
                 "Supply only one of %s to fetch with %s" % (
                     comma_or(rev_types), name
                 ))
@@ -969,7 +969,7 @@ def from_list_url(pkg):
                 return URLFetchStrategy(url=url_from_list, digest=digest)
             except KeyError:
                 tty.msg("Can not find version %s in url_list" %
-                        self.version)
+                        pkg.version)
         except:
             tty.msg("Could not determine url from list_url.")
 

@@ -188,7 +188,7 @@ def colify(elts, **options):
     elif method == "uniform":
         config = config_uniform_cols(elts, console_cols, padding, cols)
     else:
-        raise ValueError("method must be one of: " + allowed_methods)
+        raise ValueError("method must be either 'variable' or 'uniform'")
 
     cols = config.cols
     rows = (len(elts) + cols - 1) // cols

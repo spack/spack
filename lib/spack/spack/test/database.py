@@ -105,6 +105,13 @@ def _check_db_sanity(install_db):
     _check_merkleiness()
 
 
+def _mock_install(spec):
+    s = spack.spec.Spec(spec)
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.do_install(fake=True)
+
+
 def _mock_remove(spec):
     specs = spack.store.db.query(spec)
     assert len(specs) == 1

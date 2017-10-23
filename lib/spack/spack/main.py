@@ -93,8 +93,8 @@ def set_working_dir():
     try:
         spack.spack_working_dir = os.getcwd()
     except OSError:
-        os.chdir(spack_prefix)
-        spack.spack_working_dir = spack_prefix
+        os.chdir(spack.spack_prefix)
+        spack.spack_working_dir = spack.spack_prefix
 
 
 def add_all_commands(parser):
