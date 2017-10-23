@@ -970,7 +970,7 @@ def from_list_url(pkg):
             except KeyError:
                 tty.msg("Can not find version %s in url_list" %
                         pkg.version)
-        except:
+        except BaseException:
             tty.msg("Could not determine url from list_url.")
 
 

@@ -167,7 +167,7 @@ def colify(elts, **options):
             r, c = env_size.split('x')
             console_rows, console_cols = int(r), int(c)
             tty = True
-        except:
+        except BaseException:
             pass
 
     # Use only one column if not a tty.

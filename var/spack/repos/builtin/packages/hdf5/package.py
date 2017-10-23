@@ -270,7 +270,7 @@ HDF5 version {version} {version}
             try:
                 check = Executable('./check')
                 output = check(output=str)
-            except:
+            except ProcessError:
                 output = ""
             success = output == expected
             if not success:
