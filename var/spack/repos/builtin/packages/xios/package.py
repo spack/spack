@@ -24,6 +24,7 @@
 ##############################################################################
 #
 from spack import *
+import os
 
 
 class Xios(Package):
@@ -178,6 +179,13 @@ OASIS_LIB=""
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-         mpiexec = Executable(join_path(self.spec['mpi'].prefix.bin, 'mpiexec'))
+         mpirun = os.getenv('MPIRUN')
+         if mpirun is None:
+           mpirun = 'mpiexec'
+         mpiexec = Executable(mpirun)
          with working_dir('inputs'):
-             mpiexec('-n', '2', join_path('..', 'bin', 'test_client.exe'))
+             try:
+                 mpiexec('-n', '2', join_path('..', 'bin', 'test_client.exe'))
+             except:
+                 raise InstallError('Test failed; defining MPIRUN variable may help.')
+
