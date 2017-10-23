@@ -124,7 +124,8 @@ class DirectoryLayout(object):
         _check_concrete(spec)
 
         path = self.relative_path_for_spec(spec)
-        assert(not path.startswith(self.root))
+        if not spec.external:
+            assert(not path.startswith(self.root))
         return os.path.join(self.root, path)
 
     def remove_install_directory(self, spec):
