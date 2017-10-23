@@ -1,0 +1,26 @@
+--- a/tests/Test_UnixProcess.F90	2017-10-23 10:30:49.000000000 +1100
++++ b/tests/Test_UnixProcess.F90	2017-10-23 13:12:14.640373378 +1100
+@@ -59,12 +59,23 @@
+    !------
+    subroutine testIsActive()
+       type (UnixProcess) :: process
++      real :: t1, t2
+ 
+       process = UnixProcess('sleep 10', runInBackground=.true.)
+       call assertTrue(process%isActive(),'hmm')
+       if (anyExceptions()) return
+ 
+       call process%terminate()
++
++      ! Allow a second for process to die:
++      call cpu_time(t1)
++      if (t1 .ge. 0) then
++        t2 = t1
++        do while (t2 .lt. (t1 + 1))
++          call cpu_time(t2)
++        end do
++      end if
++
+       call assertFalse(process%isActive(),'huh')
+       
+    end subroutine testIsActive

@@ -45,6 +45,8 @@ class Pfunit(CMakePackage):
     depends_on('py-unittest2', type=('run'))
     depends_on('mpi', when='+mpi')
 
+    patch('Test_UnixProcess_delay_after_kill.patch', when='@3.2.8')
+
     def cmake_args(self):
         spec = self.spec
         args = ['-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include]
