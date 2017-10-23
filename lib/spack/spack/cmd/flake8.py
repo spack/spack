@@ -111,6 +111,10 @@ def changed_files(args):
     if args.untracked:
         git_args.append(['ls-files', '--exclude-standard', '--other'])
 
+    # add everything if the user asked for it
+    if args.all:
+        git_args.append(['ls-files', '--exclude-standard'])
+
     excludes = [os.path.realpath(f) for f in exclude_directories]
     changed = set()
 
@@ -131,6 +135,33 @@ def changed_files(args):
     return sorted(changed)
 
 
+def add_exemptions(line, codes):
+    """Add a flake8 exemption to a line."""
+    if line.startswith('#'):
+        return line
+
+    line = line.rstrip('\n')
+
+    # Line is already ignored
+    if line.endswith('# noqa'):
+        return line + '\n'
+
+    orig_len = len(line)
+    exemptions = ','.join(sorted(set(codes)))
+
+    # append exemption to line
+    if '# noqa: ' in line:
+        line += ',{0}'.format(exemptions)
+    elif line:  # ignore noqa on empty lines
+        line += '  # noqa: {0}'.format(exemptions)
+
+    # if THIS made the line too long, add an exemption for that
+    if len(line) > 79 and orig_len <= 79:
+        line += ',E501'
+
+    return line + '\n'
+
+
 def filter_file(source, dest, output=False):
     """Filter a single file through all the patterns in exemptions."""
     with open(source) as infile:
@@ -139,10 +170,7 @@ def filter_file(source, dest, output=False):
 
         with open(dest, 'w') as outfile:
             for line in infile:
-                # Only strip newline characters
-                # We still want to catch trailing whitespace warnings
-                line = line.rstrip('\n')
-
+                line_errors = []
                 for file_pattern, errors in exemptions.items():
                     if not file_pattern.search(source):
                         continue
@@ -150,19 +178,15 @@ def filter_file(source, dest, output=False):
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
-                                if line.endswith('# noqa'):
-                                    # Line is already ignored
-                                    pass
-                                elif '# noqa: ' in line:
-                                    line += ',{0}'.format(code)
-                                else:
-                                    line += '  # noqa: {0}'.format(code)
+                                line_errors.append(code)
                                 break
 
-                oline = line + '\n'
-                outfile.write(oline)
+                if line_errors:
+                    line = add_exemptions(line, line_errors)
+
+                outfile.write(line)
                 if output:
-                    sys.stdout.write(oline)
+                    sys.stdout.write(line)
 
 
 def setup_parser(subparser):
@@ -170,6 +194,9 @@ def setup_parser(subparser):
         '-k', '--keep-temp', action='store_true',
         help="do not delete temporary directory where flake8 runs. "
              "use for debugging, to see filtered files")
+    subparser.add_argument(
+        '-a', '--all', action='store_true',
+        help="check all files, not just changed files")
     subparser.add_argument(
         '-o', '--output', action='store_true',
         help="send filtered files to stdout as well as temp files")
