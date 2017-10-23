@@ -213,25 +213,16 @@ function _spack_fn_exists() {
 	LANG= type $1 2>&1 | grep -q 'function'
 }
 
-need_module="no"
-if ! _spack_fn_exists use && ! _spack_fn_exists module; then
-	need_module="yes"
-fi;
-
 #
-# build and make available environment-modules
+# Create array of modules
 #
-if [ "${need_module}" = "yes" ]; then
-    #check if environment-modules is installed
-    module_prefix="$(spack location -i "environment-modules" 2>&1 || echo "not_installed")"
-    module_prefix=$(echo "${module_prefix}" | tail -n 1)
-    if [ "${module_prefix}" != "not_installed" ]; then
-        #activate it!
-        export MODULE_PREFIX=${module_prefix}
-        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
-        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
-    fi;
-fi;
+_spack_mod_N="$(spack config getraw modules enable LEN)"
+_spack_mod_N="$(expr ${_spack_mod_N} - 1)"
+_spack_mod_array=()
+for ((i=0;i<=${_spack_mod_N};i++)); do
+    mod_i="$(spack config getraw modules enable ${i})"
+    _spack_mod_array+=("${mod_i}")
+done;
 
 #
 # Set up modules and dotkit search paths in the user environment
@@ -241,13 +232,52 @@ _python_command=$(printf  "%s\\\n%s\\\n%s" \
 "print(\'_sp_sys_type={0}\'.format(spack.architecture.sys_type()))" \
 "print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'dotkit\'))))" \
 "print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'tcl\'))))"
+"print(\'_sp_lmod_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'lmod\'))))"
 )
 
 _assignment_command=$(spack-python -c "exec('${_python_command}')")
 eval ${_assignment_command}
 
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
-_spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+
+#
+# make module command available if an appropriate module system
+# is installed and the module command is not defined
+#
+if ! _spack_fn_exists module; then
+    # check whether lmod or tcl is the primary module system
+    mod=""
+    for mod_i in ${_spack_mod_array[@]}; do
+        if [[ "${mod_i}" == "tcl" || "${mod_i}" == "lmod" ]]; then
+            mod="${mod_i}"
+            break
+        fi;
+    done;
+    # Environment Modules is the primary module system
+    if [[ "${mod}" == "tcl" ]]; then
+        # Consider removing the tcl module path
+        _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
+        #check if environment-modules is installed
+        module_prefix="$(spack location -i "environment-modules" 2>&1 || echo "not_installed")"
+        module_prefix=$(echo "${module_prefix}" | tail -n 1)
+        if [ "${module_prefix}" != "not_installed" ]; then
+            #activate it!
+            export MODULE_PREFIX=${module_prefix}
+            _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
+            module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+        fi;
+    fi;
+    # LMOD is the primary module system
+    if [[ "${mod}" == "lmod" ]]; then
+        # Consider removing the tcl module path
+        _spack_pathadd MODULEPATH "${_sp_lmod_root%/}/$_sp_sys_type"
+        lmod_prefix="$(spack location -i "lmod" 2>&1 || echo "not_installed")"
+        lmod_prefix=$(echo "${lmod_prefix}" | tail -n 1)
+        if [ "${lmod_prefix}" != "not_installed" ]; then
+            source "${lmod_prefix}/lmod/lmod/init/${SPACK_SHELL}"
+        fi;
+    fi;
+fi;
 
 # Add programmable tab completion for Bash
 #
