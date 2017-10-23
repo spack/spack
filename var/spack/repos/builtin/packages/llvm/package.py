@@ -419,8 +419,8 @@ class Llvm(CMakePackage):
             cmake_args.append(
                 '-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))
 
-        if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
-            cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
+        if spec.satisfies('@4.0.0:') and spec.satisfies('+shared_libs'):
+            cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=0')
 
         return cmake_args
 
