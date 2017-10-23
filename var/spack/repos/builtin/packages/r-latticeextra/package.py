@@ -33,6 +33,7 @@ class RLatticeextra(RPackage):
 
     homepage = "http://latticeextra.r-forge.r-project.org/"
     url      = "https://cran.rstudio.com/src/contrib/latticeExtra_0.6-28.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/latticeExtra"
 
     version('0.6-28', '771938f25d0983763369b48a1153b26c')
 
