@@ -27,9 +27,13 @@ based on its URL.
 """
 
 import os
-
 import pytest
-from spack.url import *
+
+from spack.url import parse_name_offset, parse_version_offset
+from spack.url import parse_name_and_version, substitute_version
+from spack.url import strip_name_suffixes, strip_version_suffixes
+from spack.url import UndetectableVersionError
+from spack.version import Version
 
 
 @pytest.mark.parametrize('url,expected', [

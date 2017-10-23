@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 
 from spack import *
-from spack.package_test import *
-import os
+from spack.package_test import compile_c_and_execute, compare_output_file
 
 
 class Pocl(CMakePackage):

@@ -34,17 +34,17 @@ TODO: make this customizable and allow users to configure
       concretization  policies.
 """
 from __future__ import print_function
-from six import iteritems
-from spack.version import *
 from itertools import chain
 from functools_backport import reverse_order
+from six import iteritems
 
 import spack
 import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
-from spack.package_prefs import *
+from spack.version import ver, Version, VersionList, VersionRange
+from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
 
 class DefaultConcretizer(object):
@@ -65,7 +65,8 @@ class DefaultConcretizer(object):
         if spec.virtual:
             candidates = spack.repo.providers_for(spec)
             if not candidates:
-                raise UnsatisfiableProviderSpecError(candidates[0], spec)
+                raise spack.spec.UnsatisfiableProviderSpecError(
+                    candidates[0], spec)
 
             # Find nearest spec in the DAG (up then down) that has prefs.
             spec_w_prefs = find_spec(

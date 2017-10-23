@@ -58,14 +58,14 @@
 # WM_PROJECT_VERSION=plus naming internally.
 #
 ##############################################################################
-from spack import *
-from spack.environment import *
-import llnl.util.tty as tty
-
 import glob
 import re
 import shutil
 import os
+
+from spack import *
+import llnl.util.tty as tty
+
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [

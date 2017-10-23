@@ -26,7 +26,8 @@ import re
 import pytest
 from spack.url import UndetectableVersionError
 from spack.main import SpackCommand
-from spack.cmd.url import *
+from spack.cmd.url import name_parsed_correctly, version_parsed_correctly
+from spack.cmd.url import url_summary
 
 url = SpackCommand('url')
 

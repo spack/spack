@@ -28,7 +28,12 @@ import shlex
 import spack
 import spack.spec as sp
 from spack.parse import Token
-from spack.spec import *
+from spack.spec import Spec, parse, parse_anonymous_spec
+from spack.spec import SpecParseError, RedundantSpecError
+from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
+from spack.spec import DuplicateArchitectureError, DuplicateVariantError
+from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
+
 
 # Sample output for a complex lexing.
 complex_lex = [Token(sp.ID, 'mvapich_foo'),

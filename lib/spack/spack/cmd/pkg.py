@@ -32,7 +32,7 @@ from llnl.util.tty.colify import colify
 from llnl.util.filesystem import working_dir
 
 import spack
-from spack.util.executable import *
+from spack.util.executable import which
 from spack.cmd import spack_is_git_repo
 
 description = "query packages associated with particular git revisions"

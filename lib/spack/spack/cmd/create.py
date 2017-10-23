@@ -35,8 +35,10 @@ from llnl.util.filesystem import mkdirp
 from spack.repository import Repo
 from spack.spec import Spec
 from spack.util.executable import which
-from spack.util.naming import *
-from spack.url import *
+from spack.util.naming import mod_to_class
+from spack.util.naming import simplify_name, valid_fully_qualified_module_name
+from spack.url import UndetectableNameError, UndetectableVersionError
+from spack.url import parse_name, parse_version
 
 description = "create a new package file"
 section = "packaging"

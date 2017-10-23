@@ -49,8 +49,8 @@ from six import iteritems
 from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
-from llnl.util.lock import *
+from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.lock import Lock, WriteTransaction, ReadTransaction
 
 import spack.store
 import spack.repository

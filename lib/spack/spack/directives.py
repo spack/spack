@@ -60,7 +60,7 @@ import spack
 import spack.error
 import spack.spec
 import spack.url
-from spack.dependency import *
+from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.patch import Patch
 from spack.resource import Resource

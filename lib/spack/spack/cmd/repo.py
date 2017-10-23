@@ -30,7 +30,7 @@ import llnl.util.tty as tty
 
 import spack.spec
 import spack.config
-from spack.repository import *
+from spack.repository import Repo, create_repo, canonicalize_path, RepoError
 
 description = "manage package source repositories"
 section = "config"

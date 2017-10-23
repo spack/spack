@@ -31,8 +31,8 @@ import spack
 import spack.cmd
 import spack.util.crypto
 import spack.util.web
-from spack.util.naming import *
-from spack.version import *
+from spack.util.naming import valid_fully_qualified_module_name
+from spack.version import ver, Version
 
 description = "checksum available versions of a package"
 section = "packaging"

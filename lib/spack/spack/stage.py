@@ -35,14 +35,14 @@ from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 import llnl.util.lock
-from llnl.util.filesystem import *
+from llnl.util.filesystem import mkdirp, join_path, can_access
+from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
 import spack
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
-from spack.version import *
 from spack.util.path import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
 

@@ -45,14 +45,15 @@ import yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
+from llnl.util.filesystem import mkdirp, join_path, install
 
 import spack
 import spack.error
 import spack.spec
 from spack.provider_index import ProviderIndex
 from spack.util.path import canonicalize_path
-from spack.util.naming import *
+from spack.util.naming import NamespaceTrie, valid_module_name
+from spack.util.naming import mod_to_class, possible_spack_module_names
 
 #
 # Super-namespace for all packages.

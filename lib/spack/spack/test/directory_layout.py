@@ -26,11 +26,13 @@
 This test verifies that the Spack directory layout works properly.
 """
 import os
-
 import pytest
+
+from llnl.util.filesystem import join_path
+
 import spack
-from spack.directory_layout import (YamlDirectoryLayout,
-                                    InvalidDirectoryLayoutParametersError)
+from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import InvalidDirectoryLayoutParametersError
 from spack.repository import RepoPath
 from spack.spec import Spec
 

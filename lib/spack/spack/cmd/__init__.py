@@ -29,9 +29,9 @@ import re
 import sys
 
 import llnl.util.tty as tty
-from llnl.util.lang import *
-from llnl.util.tty.colify import *
-from llnl.util.tty.color import *
+from llnl.util.lang import attr_setdefault, index_by
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
 import spack

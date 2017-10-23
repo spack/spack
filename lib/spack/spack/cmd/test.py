@@ -31,7 +31,7 @@ import argparse
 import pytest
 from six import StringIO
 
-from llnl.util.filesystem import *
+from llnl.util.filesystem import working_dir
 from llnl.util.tty.colify import colify
 
 import spack

@@ -24,6 +24,7 @@
 ##############################################################################
 import re
 import shlex
+import sys
 import itertools
 from six import string_types
 

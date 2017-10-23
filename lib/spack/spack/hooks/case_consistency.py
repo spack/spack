@@ -28,11 +28,11 @@ import os
 import re
 import platform
 
-from llnl.util.filesystem import *
+from llnl.util.filesystem import working_dir
 
 import spack
 from spack.cmd import spack_is_git_repo
-from spack.util.executable import *
+from spack.util.executable import which, ProcessError
 
 
 def pre_run():

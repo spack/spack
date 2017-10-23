@@ -35,12 +35,12 @@
 # OpenFOAM distribution.
 #
 ##############################################################################
-from spack import *
-from spack.environment import *
+import os
+
 import llnl.util.tty as tty
 
-import os
-from spack.pkg.builtin.openfoam_com import *
+from spack import *
+from spack.pkg.builtin.openfoam_com import add_extra_files
 
 
 class OfAdiosWrite(Package):

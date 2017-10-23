@@ -25,7 +25,7 @@
 import os
 import pytest
 
-from llnl.util.filesystem import *
+from llnl.util.filesystem import working_dir, is_exe
 
 import spack
 from spack.spec import Spec

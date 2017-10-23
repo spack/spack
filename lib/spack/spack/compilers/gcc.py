@@ -23,7 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import llnl.util.tty as tty
-from spack.compiler import *
+
+import spack
+from spack.compiler import Compiler, get_compiler_version
 from spack.version import ver
 
 

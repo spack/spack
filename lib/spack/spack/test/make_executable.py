@@ -32,7 +32,7 @@ import shutil
 import tempfile
 import unittest
 
-from llnl.util.filesystem import *
+from llnl.util.filesystem import join_path
 from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
 

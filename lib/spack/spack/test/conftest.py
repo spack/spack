@@ -44,9 +44,10 @@ import spack.repository
 import spack.stage
 import spack.util.executable
 import spack.util.pattern
-from spack.dependency import *
+from spack.dependency import Dependency
 from spack.package import PackageBase
-from spack.fetch_strategy import *
+from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import FetchError
 from spack.spec import Spec
 from spack.version import Version
 

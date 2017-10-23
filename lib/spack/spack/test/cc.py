@@ -31,9 +31,9 @@ import unittest
 import tempfile
 import shutil
 
-from llnl.util.filesystem import *
 import spack
-from spack.util.executable import *
+from llnl.util.filesystem import mkdirp, join_path
+from spack.util.executable import Executable
 
 # Complicated compiler test command
 test_command = [

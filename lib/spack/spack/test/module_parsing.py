@@ -25,7 +25,11 @@
 import pytest
 import subprocess
 import os
-from spack.util.module_cmd import *
+from spack.util.module_cmd import get_path_from_module
+from spack.util.module_cmd import get_argument_from_module_line
+from spack.util.module_cmd import get_module_cmd_from_bash
+from spack.util.module_cmd import get_module_cmd, ModuleError
+
 
 typeset_func = subprocess.Popen('module avail',
                                 stdout=subprocess.PIPE,

@@ -30,9 +30,8 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.store
-from spack.spec import *
-from spack.dependency import *
-from spack.graph import *
+from spack.dependency import all_deptypes, canonical_deptype
+from spack.graph import graph_dot, graph_ascii
 
 description = "generate graphs of package dependency relationships"
 section = "basic"

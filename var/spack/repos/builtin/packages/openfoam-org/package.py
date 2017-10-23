@@ -53,15 +53,19 @@
 # - Combining +mgridgen with +int64 or +float32 probably won't work.
 #
 ##############################################################################
-from spack import *
-from spack.environment import *
-import llnl.util.tty as tty
-
 import glob
 import re
 import shutil
 import os
-from spack.pkg.builtin.openfoam_com import *
+
+import llnl.util.tty as tty
+
+from spack import *
+from spack.pkg.builtin.openfoam_com import add_extra_files
+from spack.pkg.builtin.openfoam_com import write_environ
+from spack.pkg.builtin.openfoam_com import rewrite_environ_files
+from spack.pkg.builtin.openfoam_com import mplib_content
+from spack.pkg.builtin.openfoam_com import OpenfoamArch
 
 
 class OpenfoamOrg(Package):
