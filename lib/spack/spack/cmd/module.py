@@ -179,7 +179,7 @@ def loads(module_types, specs, args):
     module_commands = {
         'tcl': 'module load ',
         'lmod': 'module load ',
-        'dotkit': 'dotkit use '
+        'dotkit': 'use '
     }
 
     d = {
