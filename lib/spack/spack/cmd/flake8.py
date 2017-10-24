@@ -264,6 +264,7 @@ def flake8(parser, args):
         package_file_list = [f for f in file_list if is_package(f)]
         file_list         = [f for f in file_list if not is_package(f)]
 
+        returncode = 0
         with working_dir(temp):
             output = ''
             if file_list:
@@ -271,12 +272,14 @@ def flake8(parser, args):
                     '--format', 'pylint',
                     '--config=%s' % os.path.join(spack.prefix, '.flake8'),
                     *file_list, fail_on_error=False, output=str)
+                returncode |= flake8.returncode
             if package_file_list:
                 output += flake8(
                     '--format', 'pylint',
                     '--config=%s' % os.path.join(spack.prefix,
                                                  '.flake8_packages'),
                     *package_file_list, fail_on_error=False, output=str)
+                returncode |= flake8.returncode
 
         if args.root_relative:
             # print results relative to repo root.
@@ -290,7 +293,7 @@ def flake8(parser, args):
             for line in output.split('\n'):
                 print(re.sub(r'^(.*): \[', cwd_relative, line))
 
-        if flake8.returncode != 0:
+        if returncode != 0:
             print('Flake8 found errors.')
             sys.exit(1)
         else:
