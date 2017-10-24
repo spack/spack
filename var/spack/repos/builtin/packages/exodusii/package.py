@@ -61,7 +61,7 @@ class Exodusii(Package):
         cc_path = spec['mpi'].mpicc if '+mpi' in spec else self.compiler.cc
         cxx_path = spec['mpi'].mpicxx if '+mpi' in spec else self.compiler.cxx
 
-        config_args = std_cmake_args[:]
+        config_args = std_cmake_args[2:]
         config_args.extend([
             # General Flags #
             '-DSEACASProj_ENABLE_CXX11:BOOL=OFF',
