@@ -31,9 +31,9 @@ class RDataTable(RPackage):
     columns and a fast file reader (fread). Offers a natural and flexible
     syntax, for faster development."""
 
-    homepage = "https://github.com/Rdatatable/data.table/wiki"
+    homepage = "https://cran.r-project.org/package=data.table"
     url      = "https://cran.r-project.org/src/contrib/data.table_1.10.0.tar.gz"
-    list_url = "https://CRAN.R-project.org/package=data.table"
+    list_url = homepage
 
     version('1.10.4-2', '4a2d3541f241088d0979522b4083a765')
     version('1.10.0', 'f0e08dd5ba1b3f46c59dd1574fe497c1')
