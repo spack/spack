@@ -146,8 +146,8 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
 
     # make sure that output from the actual package file appears in the
     # right place in the build log.
-    assert "BEFORE INSTALL\n==> './configure'" in out
-    assert "'install'\nAFTER INSTALL" in out
+    assert "BEFORE INSTALL\n==> Executing command: ('./configure'" in out
+    assert "'install')\nAFTER INSTALL" in out
 
 
 @pytest.mark.disable_clean_stage_check
