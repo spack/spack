@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,7 +29,7 @@ import os
 class PyShiboken(PythonPackage):
     """Shiboken generates bindings for C++ libraries using CPython."""
     homepage = "https://shiboken.readthedocs.org/"
-    url      = "https://pypi.python.org/packages/source/S/Shiboken/Shiboken-1.2.2.tar.gz"
+    url      = "https://pypi.io/packages/source/S/Shiboken/Shiboken-1.2.2.tar.gz"
 
     version('1.2.2', '345cfebda221f525842e079a6141e555')
 

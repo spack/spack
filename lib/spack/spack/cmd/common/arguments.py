@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -26,15 +26,23 @@
 import argparse
 
 import spack.cmd
-import spack.store
 import spack.modules
+import spack.spec
+import spack.store
 from spack.util.pattern import Args
+
 __all__ = ['add_common_arguments']
 
 _arguments = {}
 
 
 def add_common_arguments(parser, list_of_arguments):
+    """Extend a parser with extra arguments
+
+    Args:
+        parser: parser to be extended
+        list_of_arguments: arguments to be added to the parser
+    """
     for argument in list_of_arguments:
         if argument not in _arguments:
             message = 'Trying to add non existing argument "{0}" to a command'
@@ -74,6 +82,23 @@ class ConstraintAction(argparse.Action):
         return sorted(specs)
 
 
+class CleanOrDirtyAction(argparse.Action):
+    """Sets the dirty flag in the current namespace"""
+
+    def __init__(self, *args, **kwargs):
+        kwargs['default'] = spack.dirty
+        super(CleanOrDirtyAction, self).__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if option_string == '--clean':
+            setattr(namespace, self.dest, False)
+        elif option_string == '--dirty':
+            setattr(namespace, self.dest, True)
+        else:
+            msg = 'expected "--dirty" or "--clean" [got {0} instead]'
+            raise argparse.ArgumentError(msg.format(option_string))
+
+
 _arguments['constraint'] = Args(
     'constraint', nargs=argparse.REMAINDER, action=ConstraintAction,
     help='constraint to select a subset of installed packages')
@@ -81,8 +106,8 @@ _arguments['constraint'] = Args(
 _arguments['module_type'] = Args(
     '-m', '--module-type',
     choices=spack.modules.module_types.keys(),
-    default=list(spack.modules.module_types.keys())[0],
-    help='type of module files [default: %(default)s]')
+    action='append',
+    help='type of module file. More than one choice is allowed [default: tcl]')  # NOQA: ignore=E501
 
 _arguments['yes_to_all'] = Args(
     '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
@@ -93,12 +118,21 @@ _arguments['recurse_dependencies'] = Args(
     help='recursively traverse spec dependencies')
 
 _arguments['clean'] = Args(
-    '--clean', action='store_false', dest='dirty',
-    help='clean environment before installing package')
+    '--clean',
+    action=CleanOrDirtyAction,
+    dest='dirty',
+    help='sanitize the environment from variables that can affect how ' +
+         ' packages find libraries or headers',
+    nargs=0
+)
 
 _arguments['dirty'] = Args(
-    '--dirty', action='store_true', dest='dirty',
-    help='do NOT clean environment before installing')
+    '--dirty',
+    action=CleanOrDirtyAction,
+    dest='dirty',
+    help='maintain the current environment without trying to sanitize it',
+    nargs=0
+)
 
 _arguments['long'] = Args(
     '-l', '--long', action='store_true',
@@ -107,3 +141,7 @@ _arguments['long'] = Args(
 _arguments['very_long'] = Args(
     '-L', '--very-long', action='store_true',
     help='show full dependency hashes as well as versions')
+
+_arguments['tags'] = Args(
+    '-t', '--tags', action='append',
+    help='filter a package query by tags')

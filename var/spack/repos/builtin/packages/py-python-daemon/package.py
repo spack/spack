@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -38,7 +38,7 @@ class PyPythonDaemon(PythonPackage):
        to enter a daemon state.
     """
     homepage = "https://pypi.python.org/pypi/python-daemon/"
-    url      = "https://pypi.python.org/packages/source/p/python-daemon/python-daemon-2.0.5.tar.gz"
+    url      = "https://pypi.io/packages/source/p/python-daemon/python-daemon-2.0.5.tar.gz"
 
     version('2.0.5', '73e7f49f525c51fa4a995aea4d80de41')
 

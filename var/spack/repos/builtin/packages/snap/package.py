@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -58,5 +58,7 @@ class Snap(MakefilePackage):
                 makefile.filter('OPENMP = yes', 'OPENMP = no')
 
     def install(self, spec, prefix):
-        install('README.md', prefix)
+        mkdirp(prefix.bin)
+        install('src/gsnap', prefix.bin)
         install_tree('qasnap', prefix.qasnap)
+        install('README.md', prefix)

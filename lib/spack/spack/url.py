@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -290,6 +290,7 @@ def strip_name_suffixes(path, version):
         'install',
         'src',
         '(open)?[Ss]ources?',
+        '[._-]archive',
         '[._-]std',
 
         # Download version

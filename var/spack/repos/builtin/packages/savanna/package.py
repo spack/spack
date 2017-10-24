@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -43,7 +43,7 @@ class Savanna(MakefilePackage):
 
     depends_on('mpi')
     depends_on('stc')
-    depends_on('adios +fortran +staging')
+    depends_on('adios +fortran +zlib +sz +zfp +staging')
     depends_on('mpix-launch-swift')
     depends_on('tau', when='+tau')
 

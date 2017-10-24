@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -29,12 +29,16 @@ import platform
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
+from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant
-from spack.package import PackageBase, run_after
+from spack.package import PackageBase, InstallError, run_after
 
 
 class CMakePackage(PackageBase):
     """Specialized class for packages built using CMake
+
+    For more information on the CMake build system, see:
+    https://cmake.org/cmake/help/latest/
 
     This class provides three phases that can be overridden:
 
@@ -69,9 +73,19 @@ class CMakePackage(PackageBase):
 
     build_time_test_callbacks = ['check']
 
+    #: The build system generator to use.
+    #:
+    #: See ``cmake --help`` for a list of valid generators.
+    #: Currently, "Unix Makefiles" and "Ninja" are the only generators
+    #: that Spack supports. Defaults to "Unix Makefiles".
+    #:
+    #: See https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html
+    #: for more information.
+    generator = 'Unix Makefiles'
+
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
-            description='The build type to build',
+            description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('cmake', type='build')
@@ -101,13 +115,30 @@ class CMakePackage(PackageBase):
     def _std_args(pkg):
         """Computes the standard cmake arguments for a generic package"""
         try:
+            generator = pkg.generator
+        except AttributeError:
+            generator = 'Unix Makefiles'
+
+        # Make sure a valid generator was chosen
+        valid_generators = ['Unix Makefiles', 'Ninja']
+        if generator not in valid_generators:
+            msg  = "Invalid CMake generator: '{0}'\n".format(generator)
+            msg += "CMakePackage currently supports the following "
+            msg += "generators: '{0}'".format("', '".join(valid_generators))
+            raise InstallError(msg)
+
+        try:
             build_type = pkg.spec.variants['build_type'].value
         except KeyError:
             build_type = 'RelWithDebInfo'
 
-        args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
-                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
-                '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON']
+        args = [
+            '-G', generator,
+            '-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
+            '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
+            '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON'
+        ]
+
         if platform.mac_ver()[0]:
             args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
 
@@ -115,6 +146,12 @@ class CMakePackage(PackageBase):
         args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE')
         rpaths = ':'.join(spack.build_environment.get_rpaths(pkg))
         args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
+        # CMake's find_package() looks in CMAKE_PREFIX_PATH first, help CMake
+        # to find immediate link dependencies in right places:
+        deps = [d.prefix for d in
+                pkg.spec.dependencies(deptype=('build', 'link'))]
+        deps = filter_system_paths(deps)
+        args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
         return args
 
     @property
@@ -158,12 +195,18 @@ class CMakePackage(PackageBase):
     def build(self, spec, prefix):
         """Make the build targets"""
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make(*self.build_targets)
+            if self.generator == 'Unix Makefiles':
+                inspect.getmodule(self).make(*self.build_targets)
+            elif self.generator == 'Ninja':
+                inspect.getmodule(self).ninja(*self.build_targets)
 
     def install(self, spec, prefix):
         """Make the install targets"""
         with working_dir(self.build_directory):
-            inspect.getmodule(self).make(*self.install_targets)
+            if self.generator == 'Unix Makefiles':
+                inspect.getmodule(self).make(*self.install_targets)
+            elif self.generator == 'Ninja':
+                inspect.getmodule(self).ninja(*self.install_targets)
 
     run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
@@ -172,7 +215,10 @@ class CMakePackage(PackageBase):
         and runs it if found.
         """
         with working_dir(self.build_directory):
-            self._if_make_target_execute('test')
+            if self.generator == 'Unix Makefiles':
+                self._if_make_target_execute('test')
+            elif self.generator == 'Ninja':
+                self._if_ninja_target_execute('test')
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -76,14 +76,16 @@ class Openmpi(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org"
-    url = "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2"
+    url = "https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
-    version('2.1.1', 'ae542f5cf013943ffbbeb93df883731b')  # libmpi.so.20.10.1
-    version('2.1.0', '4838a5973115c44e14442c01d3f21d52')  # libmpi.so.20.10.0
+    version('3.0.0', '757d51719efec08f9f1a7f32d58b3305')  # libmpi.so.40.00.0
 
     # Still supported
+    version('2.1.2', 'ff2e55cc529802e7b0738cf87acd3ee4')  # libmpi.so.20.10.2
+    version('2.1.1', 'ae542f5cf013943ffbbeb93df883731b')  # libmpi.so.20.10.1
+    version('2.1.0', '4838a5973115c44e14442c01d3f21d52')  # libmpi.so.20.10.0
     version('2.0.3', '6c09e56ac2230c4f9abd8ba029f03edd')  # libmpi.so.20.0.3
     version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')  # libmpi.so.20.0.2
     version('2.0.1', '6f78155bd7203039d2448390f3b51c96')  # libmpi.so.20.0.1
@@ -201,7 +203,7 @@ class Openmpi(AutotoolsPackage):
 
     depends_on('hwloc')
     depends_on('hwloc +cuda', when='+cuda')
-    depends_on('jdk', when='+java')
+    depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
@@ -308,7 +310,7 @@ class Openmpi(AutotoolsPackage):
                 config_args.extend([
                     '--enable-java',
                     '--enable-mpi-java',
-                    '--with-jdk-dir={0}'.format(spec['jdk'].prefix)
+                    '--with-jdk-dir={0}'.format(spec['java'].prefix)
                 ])
             else:
                 config_args.extend([

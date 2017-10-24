@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,11 +25,52 @@
 import os
 
 import pytest
+import spack.environment as environment
 from spack import spack_root
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv
-from spack.util.environment import filter_system_paths
+from spack.util.environment import filter_system_paths, is_system_path
+
+
+def test_inspect_path(tmpdir):
+    inspections = {
+        'bin': ['PATH'],
+        'man': ['MANPATH'],
+        'share/man': ['MANPATH'],
+        'share/aclocal': ['ACLOCAL_PATH'],
+        'lib': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'lib64': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'include': ['CPATH'],
+        'lib/pkgconfig': ['PKG_CONFIG_PATH'],
+        'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
+        '': ['CMAKE_PREFIX_PATH']
+    }
+
+    tmpdir.mkdir('bin')
+    tmpdir.mkdir('lib')
+    tmpdir.mkdir('include')
+
+    env = environment.inspect_path(str(tmpdir), inspections)
+    names = [item.name for item in env]
+    assert 'PATH' in names
+    assert 'LIBRARY_PATH' in names
+    assert 'LD_LIBRARY_PATH' in names
+    assert 'CPATH' in names
+
+
+def test_exclude_paths_from_inspection():
+    inspections = {
+        'lib': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'lib64': ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        'include': ['CPATH']
+    }
+
+    env = environment.inspect_path(
+        '/usr', inspections, exclude=is_system_path
+    )
+
+    assert len(env) == 0
 
 
 @pytest.fixture()
@@ -89,7 +130,7 @@ def files_to_be_sourced():
     files = [
         os.path.join(datadir, 'sourceme_first.sh'),
         os.path.join(datadir, 'sourceme_second.sh'),
-        os.path.join(datadir, 'sourceme_parameters.sh intel64'),
+        os.path.join(datadir, 'sourceme_parameters.sh'),
         os.path.join(datadir, 'sourceme_unicode.sh')
     ]
 
@@ -224,7 +265,14 @@ def test_source_files(files_to_be_sourced):
     """Tests the construction of a list of environment modifications that are
     the result of sourcing a file.
     """
-    env = EnvironmentModifications.from_sourcing_files(*files_to_be_sourced)
+    env = EnvironmentModifications()
+    for filename in files_to_be_sourced:
+        if filename.endswith('sourceme_parameters.sh'):
+            env.extend(EnvironmentModifications.from_sourcing_file(
+                filename, 'intel64'))
+        else:
+            env.extend(EnvironmentModifications.from_sourcing_file(filename))
+
     modifications = env.group_by_name()
 
     # This is sensitive to the user's environment; can include

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -74,7 +74,10 @@ class Smc(MakefilePackage):
             makefile.filter('COMP := .*', 'COMP := Intel')
 
     def install(self, spec, prefix):
+        mkdirp(prefix.bin)
         files = glob.glob(join_path(self.build_directory, '*.exe'))
         for f in files:
-            install(f, prefix)
-        install('inputs_SMC', prefix)
+            install(f, prefix.bin)
+        install('inputs_SMC', prefix.bin)
+        install('README', prefix)
+        install('BoxLib.license.txt', prefix)

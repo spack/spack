@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,7 @@ class PyH5py(PythonPackage):
     HDF5 library from Python."""
 
     homepage = "https://pypi.python.org/pypi/h5py"
-    url      = "https://pypi.python.org/packages/source/h/h5py/h5py-2.4.0.tar.gz"
+    url      = "https://pypi.io/packages/source/h/h5py/h5py-2.4.0.tar.gz"
 
     version('2.6.0', 'ec476211bd1de3f5ac150544189b0bf4')
     version('2.5.0', '6e4301b5ad5da0d51b0a1e5ac19e3b74')

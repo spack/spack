@@ -14,27 +14,6 @@ see the default settings by looking at
 These settings can be overridden in ``etc/spack/config.yaml`` or
 ``~/.spack/config.yaml``.  See :ref:`configuration-scopes` for details.
 
-.. _config-file-variables:
-
-------------------------------
-Config file variables
-------------------------------
-
-You may notice some variables prefixed with ``$`` in the settings above.
-Spack understands several variables that can be used in values of
-configuration parameters.  They are:
-
-  * ``$spack``: path to the prefix of this spack installation
-  * ``$tempdir``: default system temporary directory (as specified in
-    Python's `tempfile.tempdir
-    <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
-    variable.
-  * ``$user``: name of the current user
-
-Note that, as with shell variables, you can write these as ``$varname``
-or with braces to distinguish the variable from surrounding characters:
-``${varname}``.
-
 --------------------
 ``install_tree``
 --------------------
@@ -126,8 +105,8 @@ When Spack builds a package, it creates a temporary directory within the
 
 After a package is successfully installed, Spack deletes the temporary
 directory it used to build.  Unsuccessful builds are not deleted, but you
-can manually purge them with :ref:`spack purge --stage
-<cmd-spack-purge>`.
+can manually purge them with :ref:`spack clean --stage
+<cmd-spack-clean>`.
 
 .. note::
 
@@ -142,8 +121,8 @@ can manually purge them with :ref:`spack purge --stage
 
 Location to cache downloaded tarballs and repositories.  By default these
 are stored in ``$spack/var/spack/cache``.  These are stored indefinitely
-by default. Can be purged with :ref:`spack purge --downloads
-<cmd-spack-purge>`.
+by default. Can be purged with :ref:`spack clean --downloads
+<cmd-spack-clean>`.
 
 --------------------
 ``misc_cache``
@@ -151,7 +130,7 @@ by default. Can be purged with :ref:`spack purge --downloads
 
 Temporary directory to store long-lived cache files, such as indices of
 packages available in repositories.  Defaults to ``~/.spack/cache``.  Can
-be purged with :ref:`spack purge --misc-cache <cmd-spack-purge>`.
+be purged with :ref:`spack clean --misc-cache <cmd-spack-clean>`.
 
 --------------------
 ``verify_ssl``

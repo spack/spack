@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.operating_systems.mac_os import macOS_version
 from llnl.util import tty
 
 import glob
@@ -40,6 +41,7 @@ class Gcc(AutotoolsPackage):
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
 
+    version('7.2.0', 'ff370482573133a7fcdd96cd2f552292')
     version('7.1.0', '6bf56a2bca9dac9dbbf8e8d1036964a8')
     version('6.4.0', '11ba51a0cfb8471927f387c8895fe232')
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
@@ -69,7 +71,7 @@ class Gcc(AutotoolsPackage):
             multi=True,
             description='Compilers and runtime libraries to build')
     variant('binutils',
-            default=sys.platform != 'darwin',
+            default=False,
             description='Build via binutils')
     variant('piclibs',
             default=False,
@@ -147,6 +149,10 @@ class Gcc(AutotoolsPackage):
     conflicts('languages=jit', when='@:4')
 
     if sys.platform == 'darwin':
+        # Fix parallel build on APFS filesystem
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
+        if macOS_version() >= Version('10.13'):
+            patch('darwin/apfs.patch', when='@7.2.0')
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
@@ -159,10 +165,10 @@ class Gcc(AutotoolsPackage):
 
     def url_for_version(self, version):
         url = 'http://ftp.gnu.org/gnu/gcc/gcc-{0}/gcc-{0}.tar.{1}'
-        suffix = 'bz2'
+        suffix = 'xz'
 
-        if version >= Version('6.4.0') and version < Version('7.1.0'):
-            suffix = 'xz'
+        if version < Version('6.4.0') or version == Version('7.1.0'):
+            suffix = 'bz2'
 
         return url.format(version, suffix)
 

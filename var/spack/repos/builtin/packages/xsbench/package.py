@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -35,8 +35,9 @@ class Xsbench(MakefilePackage):
     homepage = "https://github.com/ANL-CESAR/XSBench/"
     url = "https://github.com/ANL-CESAR/XSBench/archive/v13.tar.gz"
 
-    tags = ['proxy-app']
+    tags = ['proxy-app', 'ecp-proxy-app']
 
+    version('14', '94d5d28eb031fd4ef35507c9c1862169')
     version('13', '72a92232d2f5777fb52f5ea4082aff37')
 
     variant('mpi', default=False, description='Build with MPI support')

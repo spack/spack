@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.operating_systems.mac_os import macOS_version
 import platform
 
 
@@ -34,6 +35,7 @@ class Oce(Package):
     homepage = "https://github.com/tpaviot/oce"
     url = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
 
+    version('0.18.2', '6dfd68e459e2c62387579888a867281f')
     version('0.18.1', '2a7597f4243ee1f03245aeeb02d00956')
     version('0.18',   '226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
     version('0.17.2', 'bf2226be4cd192606af677cf178088e5')
@@ -61,7 +63,7 @@ class Oce(Package):
     # fix build with Xcode 8 "previous definition of CLOCK_REALTIME"
     # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643
     if (platform.system() == "Darwin") and (
-       '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12'):
+       macOS_version() == Version('10.12')):
         patch('sierra.patch', when='@0.17.2:0.18.0')
 
     def install(self, spec, prefix):
@@ -91,7 +93,8 @@ class Oce(Package):
                 '-DOCE_OSX_USE_COCOA:BOOL=ON',
             ])
 
-        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+        if platform.system() == 'Darwin' and (
+           macOS_version() >= Version('10.12')):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:

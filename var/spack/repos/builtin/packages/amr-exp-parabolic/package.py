@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -60,6 +60,21 @@ class AmrExpParabolic(MakefilePackage):
     build_directory = 'MiniApps/AMR_Adv_Diff_F90'
 
     def edit(self, spec, prefix):
+        def_file = FileFilter('Tools/F_mk/GMakedefs.mak')
+        def_file.filter('tdir = t/.*', 'tdir := t/$(suf)')
+        def_file.filter('hdir = t/.*', 'hdir := t/html')
+        def_file.filter('include $(BOXLIB_HOME)/Tools/F_mk/GMakeMPI.mak', '#')
+
+        if '+mpi' in spec:
+            def_file.filter('FC.*:=.*', 'FC = {0}'.format(spec['mpi'].mpifc))
+            def_file.filter('F90.*:=.*', 'F90 = {0}'.format(spec['mpi'].mpifc))
+            def_file.filter(
+                'mpi_include_dir =.*',
+                'mpi_include_dir = {0}'.format(spec['mpi'].prefix.include))
+            def_file.filter(
+                'mpi_lib_dir =.*',
+                'mpi_lib_dir = {0}'.format(spec['mpi'].prefix.lib))
+
         with working_dir(self.build_directory):
             makefile = FileFilter('GNUmakefile')
             if '+debug' in spec:
@@ -76,3 +91,5 @@ class AmrExpParabolic(MakefilePackage):
         files = glob.glob(join_path(self.build_directory, '*.exe'))
         for f in files:
             install(f, prefix.bin)
+        install('README.txt', prefix)
+        install('license.txt', prefix)

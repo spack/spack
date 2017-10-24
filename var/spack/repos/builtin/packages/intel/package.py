@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,181 +22,89 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
-import re
+
+from spack import *
+from spack.environment import EnvironmentModifications
 
 
-def filter_pick(input_list, regex_filter):
-    """Returns the items in input_list that are found in the regex_filter"""
-    return [l for l in input_list for m in (regex_filter(l),) if m]
-
-
-def unfilter_pick(input_list, regex_filter):
-    """Returns the items in input_list that are not found in the
-       regex_filter"""
-    return [l for l in input_list for m in (regex_filter(l),) if not m]
-
-
-def get_all_components():
-    """Returns a list of all the components associated with the downloaded
-       Intel package"""
-    all_components = []
-    with open("pset/mediaconfig.xml", "r") as f:
-        lines = f.readlines()
-        for line in lines:
-            if line.find('<Abbr>') != -1:
-                component = line[line.find('<Abbr>') + 6:line.find('</Abbr>')]
-                all_components.append(component)
-    return all_components
-
-
-class IntelInstaller(Package):
-    """Base package containing common methods for installing Intel software"""
-
-    homepage = "https://software.intel.com/en-us"
-    intel_components = "ALL"
-    license_comment = '#'
-    license_files = ['Licenses/license.lic']
-    license_vars = ['INTEL_LICENSE_FILE']
-    license_url = \
-        'https://software.intel.com/en-us/articles/intel-license-manager-faq'
-
-    @property
-    def license_required(self):
-        # The Intel libraries are provided without requiring a license as of
-        # version 2017.2. Trying to specify the license will fail. See
-        # https://software.intel.com/en-us/articles/free-mkl
-        if (self.spec.satisfies("intel-mkl@2017.2:") or
-            self.spec.satisfies("intel-daal@2017.2:") or
-            self.spec.satisfies("intel-mpi@2017.2:") or
-            self.spec.satisfies("intel-ipp@2017.2:")):
-            return False
-        return True
-
-    @property
-    def global_license_file(self):
-        """Returns the path where a global license file should be stored."""
-        if not self.license_files:
-            return
-        return join_path(self.global_license_dir, "intel",
-                         os.path.basename(self.license_files[0]))
-
-    def install(self, spec, prefix):
-
-        if not hasattr(self, "intel_prefix"):
-            self.intel_prefix = self.prefix
-
-        silent_config_filename = 'silent.cfg'
-        with open(silent_config_filename, 'w') as f:
-            f.write("""
-ACCEPT_EULA=accept
-PSET_MODE=install
-CONTINUE_WITH_INSTALLDIR_OVERWRITE=yes
-PSET_INSTALL_DIR=%s
-NONRPM_DB_DIR=%s
-CONTINUE_WITH_OPTIONAL_ERROR=yes
-COMPONENTS=%s
-""" % (self.intel_prefix, self.intel_prefix, self.intel_components))
-
-        # The Intel libraries are provided without requiring a license as of
-        # version 2017.2. Trying to specify the license will fail. See
-        # https://software.intel.com/en-us/articles/free-mkl
-        if not (spec.satisfies("intel-mkl@2017.2:") or
-                spec.satisfies("intel-daal@2017.2:") or
-                spec.satisfies("intel-mpi@2017.2:") or
-                spec.satisfies("intel-ipp@2017.2:")):
-            with open(silent_config_filename, 'a') as f:
-                f.write("""
-ACTIVATION_LICENSE_FILE=%s
-ACTIVATION_TYPE=license_file
-PHONEHOME_SEND_USAGE_DATA=no
-""" % (self.global_license_file))
-
-        install_script = Executable("./install.sh")
-        install_script('--silent', silent_config_filename)
-
-
-class Intel(IntelInstaller):
+class Intel(IntelPackage):
     """Intel Compilers."""
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
+    version('18.0.0', '31ba768fba6e7322957b03feaa3add28',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12067/parallel_studio_xe_2018_composer_edition.tgz')
     version('17.0.4', 'd03d351809e182c481dc65e07376d9a2',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
     version('17.0.3', '52344df122c17ddff3687f84ceb21623',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
-    version('17.0.2',     '2891ab1ece43eb61b6ab892f07c47f01',
+    version('17.0.2', '2891ab1ece43eb61b6ab892f07c47f01',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
-    version('17.0.1',     '1f31976931ed8ec424ac7c3ef56f5e85',
+    version('17.0.1', '1f31976931ed8ec424ac7c3ef56f5e85',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10978/parallel_studio_xe_2017_update1_composer_edition.tgz')
-    version('17.0.0',     'b67da0065a17a05f110ed1d15c3c6312',
+    version('17.0.0', 'b67da0065a17a05f110ed1d15c3c6312',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9656/parallel_studio_xe_2017_composer_edition.tgz')
-    version('16.0.4',      '2bc9bfc9be9c1968a6e42efb4378f40e',
+    version('16.0.4', '2bc9bfc9be9c1968a6e42efb4378f40e',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9785/parallel_studio_xe_2016_composer_edition_update4.tgz')
-    version('16.0.3',     '3208eeabee951fc27579177b593cefe9',
+    version('16.0.3', '3208eeabee951fc27579177b593cefe9',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9063/parallel_studio_xe_2016_composer_edition_update3.tgz')
-    version('16.0.2',     '1133fb831312eb519f7da897fec223fa',
+    version('16.0.2', '1133fb831312eb519f7da897fec223fa',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
 
-    variant('rpath', default=True, description="Add rpath to .cfg files")
+    variant('rpath', default=True, description='Add rpath to .cfg files')
 
-    def install(self, spec, prefix):
-        components = []
-        all_components = get_all_components()
-        regex = '(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
-        components = filter_pick(all_components, re.compile(regex).search)
+    components = [
+        # Common files
+        'intel-comp-',
+        'intel-openmp',
 
-        self.intel_components = ';'.join(components)
-        IntelInstaller.install(self, spec, prefix)
+        # C/C++
+        'intel-icc',
 
-        absbindir = os.path.split(os.path.realpath(os.path.join(
-            self.prefix.bin, "icc")))[0]
-        abslibdir = os.path.split(os.path.realpath(os.path.join(
-            self.prefix.lib, "intel64", "libimf.a")))[0]
+        # Fortran
+        'intel-ifort',
+    ]
 
-        # symlink or copy?
-        os.symlink(self.global_license_file,
-                   os.path.join(absbindir, "license.lic"))
+    @property
+    def license_files(self):
+        return [
+            'Licenses/license.lic',
+            join_path('compilers_and_libraries', 'linux', 'bin',
+                      'intel64', 'license.lic')
+        ]
 
-        if spec.satisfies('+rpath'):
-            for compiler_command in ["icc", "icpc", "ifort"]:
-                cfgfilename = os.path.join(absbindir, "%s.cfg" %
-                                           compiler_command)
-                with open(cfgfilename, "w") as f:
-                    f.write('-Xlinker -rpath -Xlinker %s\n' % abslibdir)
-
-        os.symlink(os.path.join(self.prefix.man, "common", "man1"),
-                   os.path.join(self.prefix.man, "man1"))
+    @run_after('install')
+    def rpath_configuration(self):
+        if '+rpath' in self.spec:
+            bin_dir = join_path(self.prefix, 'compilers_and_libraries',
+                                'linux', 'bin', 'intel64')
+            lib_dir = join_path(self.prefix, 'compilers_and_libraries',
+                                'linux', 'compiler', 'lib', 'intel64_lin')
+            for compiler in ['icc', 'icpc', 'ifort']:
+                cfgfilename = join_path(bin_dir, '{0}.cfg'.format(compiler))
+                with open(cfgfilename, 'w') as f:
+                    f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
     def setup_environment(self, spack_env, run_env):
+        """Adds environment variables to the generated module file.
 
-        # Remove paths that were guessed but are incorrect for this package.
-        run_env.remove_path('LIBRARY_PATH',
-                            join_path(self.prefix, 'lib'))
-        run_env.remove_path('LD_LIBRARY_PATH',
-                            join_path(self.prefix, 'lib'))
-        run_env.remove_path('CPATH',
-                            join_path(self.prefix, 'include'))
+        These environment variables come from running:
 
-        # Add the default set of variables
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'intel64'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'intel64'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib',
-                                       'intel64', 'gcc4.4'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib',
-                                       'intel64', 'gcc4.4'))
-        run_env.prepend_path('CPATH',
-                             join_path(self.prefix, 'tbb', 'include'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'mic'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'lib', 'mic'))
-        run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
-        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
+        .. code-block:: console
+
+           $ source bin/compilervars.sh intel64
+        """
+        # NOTE: Spack runs setup_environment twice, once pre-build to set up
+        # the build environment, and once post-installation to determine
+        # the environment variables needed at run-time to add to the module
+        # file. The script we need to source is only present post-installation,
+        # so check for its existence before sourcing.
+        # TODO: At some point we should split setup_environment into
+        # setup_build_environment and setup_run_environment to get around
+        # this problem.
+        compilervars = os.path.join(self.prefix.bin, 'compilervars.sh')
+
+        if os.path.isfile(compilervars):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(
+                compilervars, 'intel64'))

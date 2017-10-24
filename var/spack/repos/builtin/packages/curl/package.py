@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,6 +33,7 @@ class Curl(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://curl.haxx.se/download/curl-7.54.0.tar.bz2"
 
+    version('7.56.0', 'e0caf257103e0c77cee5be7e9ac66ca4')
     version('7.54.0', '89bb7ba87384dfbf4f1a3f953da42458')
     version('7.53.1', 'fb1f03a142236840c1a77c035fa4c542')
     version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')
@@ -49,6 +50,7 @@ class Curl(AutotoolsPackage):
 
     depends_on('openssl')
     depends_on('zlib')
+    depends_on('nghttp2')
 
     def configure_args(self):
         spec = self.spec
@@ -56,4 +58,5 @@ class Curl(AutotoolsPackage):
         return [
             '--with-zlib={0}'.format(spec['zlib'].prefix),
             '--with-ssl={0}'.format(spec['openssl'].prefix),
+            '--with-http2={0}'.format(spec['nghttp2'].prefix),
         ]

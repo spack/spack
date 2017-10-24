@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -93,7 +93,7 @@ class Octave(AutotoolsPackage):
     depends_on('gnuplot',      when='+gnuplot')
     depends_on('image-magick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
-    depends_on('jdk',          when='+jdk')        # TODO: requires Java 6 ?
+    depends_on('java',          when='+jdk')        # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
     # depends_on('opengl',      when='+opengl')    # TODO: add package
     depends_on('qhull',        when='+qhull')
@@ -186,9 +186,9 @@ class Octave(AutotoolsPackage):
 
         if '+jdk' in spec:
             config_args.extend([
-                "--with-java-homedir=%s"    % spec['jdk'].prefix,
-                "--with-java-includedir=%s" % spec['jdk'].prefix.include,
-                "--with-java-libdir=%s"     % spec['jdk'].prefix.lib
+                "--with-java-homedir=%s"    % spec['java'].prefix,
+                "--with-java-includedir=%s" % spec['java'].prefix.include,
+                "--with-java-libdir=%s"     % spec['java'].prefix.lib
             ])
         else:
             config_args.append("--disable-java")

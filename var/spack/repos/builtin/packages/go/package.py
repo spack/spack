@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -56,6 +56,7 @@ class Go(Package):
 
     extendable = True
 
+    version('1.9',   'da2d44ea384076efec43ee1f8b7d45d2')
     version('1.8.3', '64e9380e07bba907e26a00cf5fcbe77e')
     version('1.8.1', '409dd21e7347dd1ea9efe64a700073cc')
     version('1.8',   '7743960c968760437b6e39093cfe6f67')
@@ -106,6 +107,10 @@ class Go(Package):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
+        # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
+        # internal Spack wrappers and fail.
+        spack_env.set('CC_FOR_TARGET', self.compiler.cc)
+        spack_env.set('CXX_FOR_TARGET', self.compiler.cxx)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before go modules' install() methods.

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,11 +33,9 @@ class Canfail(Package):
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
+    succeed = False
+
     def install(self, spec, prefix):
-        try:
-            succeed = getattr(self, 'succeed')
-            if not succeed:
-                raise InstallError("'succeed' was false")
-            touch(join_path(prefix, 'an_installation_file'))
-        except AttributeError:
-            raise InstallError("'succeed' attribute was not set")
+        if not self.succeed:
+            raise InstallError("'succeed' was false")
+        touch(join_path(prefix, 'an_installation_file'))

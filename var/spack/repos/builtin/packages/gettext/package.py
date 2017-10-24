@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -73,7 +73,7 @@ class Gettext(AutotoolsPackage):
             '--with-included-gettext',
             '--with-included-libcroco',
             '--without-emacs',
-            '--with-lispdir=%s/emacs/site-lisp/gettext' % prefix.share,
+            '--with-lispdir=%s/emacs/site-lisp/gettext' % self.prefix.share,
             '--without-cvs'
         ]
 

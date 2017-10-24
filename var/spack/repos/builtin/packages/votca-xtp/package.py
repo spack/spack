@@ -34,13 +34,15 @@ class VotcaXtp(CMakePackage):
        This package contains the VOTCA exciton transport engine.
     """
     homepage = "http://www.votca.org"
-    # No release yet
-    # url      = "https://github.com/votca/xtp/tarball/v1.4"
+    url      = "https://github.com/votca/xtp/tarball/v1.4"
 
     version('develop', git='https://github.com/votca/xtp', branch='master')
+    version('1.4.1', '31a2dbd8bd48bf337bc88b20ab312050')
 
     depends_on("cmake@2.8:", type='build')
     depends_on("votca-tools@develop", when='@develop')
+    depends_on("votca-tools@1.4:1.4.999", when='@1.4:1.4.999')
     depends_on("votca-csg@develop", when='@develop')
+    depends_on("votca-csg@1.4:1.4.999", when='@1.4:1.4.999')
     depends_on("votca-ctp@develop", when='@develop')
     depends_on("votca-moo@develop", when='@develop')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -30,7 +30,7 @@ class PyMacs2(PythonPackage):
     """MACS2 Model-based Analysis of ChIP-Seq"""
 
     homepage = "https://github.com/taoliu/MACS"
-    url      = "https://pypi.python.org/packages/9f/99/a8ac96b357f6b0a6f559fe0f5a81bcae12b98579551620ce07c5183aee2c/MACS2-2.1.1.20160309.tar.gz"
+    url      = "https://pypi.io/packages/source/M/MACS2/MACS2-2.1.1.20160309.tar.gz"
 
     version('2.1.1.20160309', '2008ba838f83f34f8e0fddefe2a3a0159f4a740707c68058f815b31ddad53d26')
 
