@@ -83,11 +83,17 @@ class Netcdf(AutotoolsPackage):
 
     # Required for NetCDF-4 support
     depends_on("zlib@1.2.5:")
+
+    # Forward variants to hdf5
     depends_on('hdf5')
+    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5~mpi', when='~mpi')
 
     # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
     # https://github.com/Unidata/netcdf-c/issues/250
     depends_on('hdf5@:1.8', when='@:4.4.0')
+
+    conflicts('~mpi', when='+parallel-netcdf')
 
     def patch(self):
         try:
@@ -105,10 +111,6 @@ class Netcdf(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        # Workaround until variant forwarding works properly
-        if '+mpi' in spec and spec.satisfies('^hdf5~mpi'):
-            raise RuntimeError('Invalid spec. Package netcdf requires '
-                               'hdf5+mpi, but spec asked for hdf5~mpi.')
 
         # Environment variables
         CFLAGS   = []
