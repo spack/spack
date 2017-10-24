@@ -54,9 +54,9 @@ class Scalpel(MakefilePackage):
             match = '^#!/usr/bin/env perl'
             perl = self.spec['perl'].command
             substitute = "#!{perl}".format(perl=perl)
-            files = [ 'FindDenovos.pl', 'scalpel-export',
-                      'scalpel-discovery', 'FindVariants.pl',
-                      'FindSomatic.pl', ]
+            files = ['FindDenovos.pl', 'scalpel-export',
+                     'scalpel-discovery', 'FindVariants.pl',
+                     'FindSomatic.pl']
             filter_file(match, substitute, *files, **kwargs)
 
     # Scalpel doesn't actually *have* an install step.  The authors
@@ -85,15 +85,17 @@ class Scalpel(MakefilePackage):
         for d in dirs:
             install_tree(d, join_path(destdir, d))
 
-
-        install_tree('bamtools-2.3.0/bin', join_path(destdir, 'bamtools-2.3.0', 'bin'))
-        install_tree('bamtools-2.3.0/lib', join_path(destdir, 'bamtools-2.3.0', 'lib'))
+        install_tree('bamtools-2.3.0/bin',
+                     join_path(destdir, 'bamtools-2.3.0', 'bin'))
+        install_tree('bamtools-2.3.0/lib',
+                     join_path(destdir, 'bamtools-2.3.0', 'lib'))
 
         mkdirp(join_path(destdir, 'bcftools-1.1'))
         install('bcftools-1.1/bcftools', join_path(destdir, 'bcftools-1.1'))
 
         mkdirp(join_path(destdir, 'Microassembler'))
-        install('Microassembler/Microassembler', join_path(destdir, 'Microassembler'))
+        install('Microassembler/Microassembler',
+                join_path(destdir, 'Microassembler'))
 
         mkdirp(join_path(destdir, 'samtools-1.1'))
         install('samtools-1.1/samtools', join_path(destdir, 'samtools-1.1'))
