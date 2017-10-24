@@ -59,7 +59,6 @@ class Amg(MakefilePackage):
                 include_cflags.append('-DHYPRE_USING_PERSISTENT_COMM')
                 include_cflags.append('-DHYPRE_HOPSCOTCH')
 
-    
         if '+64bitglobals' in self.spec:
             include_cflags.append('-DHYPRE_BIGINT')
 
