@@ -41,7 +41,7 @@ class Amg2013(MakefilePackage):
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('assumedpartition', default=False, description='Use assumed partition (for thousands of processors)')
-    variant('64bitglobals', default=False, description='Use 64-bit integers for global variables')
+    variant('int64', default=False, description='Use 64-bit integers for global variables')
 
     depends_on('mpi')
 
@@ -60,7 +60,7 @@ class Amg2013(MakefilePackage):
         if '+assumedpartition' in self.spec:
             include_cflags.append('-DHYPRE_NO_GLOBAL_PARTITION')
 
-        if '+64bitglobals' in self.spec:
+        if '+int64' in self.spec:
             include_cflags.append('-DHYPRE_LONG_LONG')
 
         targets.append('INCLUDE_CFLAGS={0}'.format(' '.join(include_cflags)))
