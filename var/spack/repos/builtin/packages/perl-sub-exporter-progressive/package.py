@@ -25,12 +25,10 @@
 from spack import *
 
 
-class PerlBHooksEndofscope(PerlPackage):
-    """Execute code after a scope finished compilation."""
+class PerlSubExporterProgressive(PerlPackage):
+    """Progressive Sub::Exporter"""
 
-    homepage = "http://search.cpan.org/~ether/B-Hooks-EndOfScope-0.21/lib/B/Hooks/EndOfScope.pm"
-    url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/B-Hooks-EndOfScope-0.21.tar.gz"
+    homepage = "http://search.cpan.org/~frew/Sub-Exporter-Progressive-0.001013/lib/Sub/Exporter/Progressive.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/F/FR/FREW/Sub-Exporter-Progressive-0.001013.tar.gz"
 
-    version('0.21', 'df9dacbf55a01d7a444b1ebc616435ae')
-
-    depends_on('perl-sub-exporter-progressive', type=('build','run'))
+    version('0.001013', '72cf6acdd2a0a8b105821a4db98e4ebe')
