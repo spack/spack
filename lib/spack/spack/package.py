@@ -1351,6 +1351,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         if (kwargs.get('use_cache', False) and
                 self.try_install_from_binary_cache(explicit)):
             tty.msg('Installed %s from binary cache' % self.name)
+            print_pkg(self.prefix)
             return
 
         tty.msg('Installing %s' % self.name)
