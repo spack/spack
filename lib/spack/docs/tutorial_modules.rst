@@ -121,34 +121,6 @@ both formats using ``lmod`` as a tool.
     or meant to
     `extend the module system functionality <http://lmod.readthedocs.io/en/latest/010_user.html#module-hierarchy>`_.
 
-..
-  """"""""""""""""""""""""""""""""
-  System or personal module files?
-  """"""""""""""""""""""""""""""""
-
-  So far we have introduced module files, and sketched how they work.
-  However we didn't discuss how they are used and who is "in charge" of writing
-  them. As a matter of fact, most use-cases fall into one of two broad
-  categories:
-
-    * module files written by a user for its own personal use
-    * module files written by a facility staff member for system-wide use
-
-  Among the first are, for instance, developers that need to provide an easy access to the
-  "bleeding-edge" version of a software so that a restricted group of users could test it.
-  Among the second are people that maintain production versions of software on
-  HPC-clusters. *In any case, Spack's features are carefully designed to fully support both usages*.
-
-  ..
-     In particular:
-     * Support for external packages integrates well with module file generation (and this permits
-       to interface almost seamlessly with already existing software)
-     * :ref:`Shell support <shell-support>` permits to translate the common spec syntax into a module
-       file name. The result is that for personal installations
-
-
-.. TODO: most common use cases (developer on its own platform / sysadmin on a cluster)
-
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 How do we generate module files?
@@ -1385,3 +1357,172 @@ Both ``MPI`` and ``LAPACK`` providers will now benefict from the same safety fea
 Because we only compiled ``py-numpy`` with ``openblas`` the module
 is made inactive when we switch the ``LAPACK`` provider. The user
 environment is now consistent by design!
+
+----------------------
+Working with templates
+----------------------
+
+As briefly mentioned in the introduction, Spack uses `Jinja2 <http://jinja.pocoo.org/docs/2.9/>`_
+to generate each individual module file. This means that you have at your disposal
+all the flexibility that a template engine may give when it comes to customizing what
+gets generated!
+
+^^^^^^^^^^^^^^^^^^^^^
+Module file templates
+^^^^^^^^^^^^^^^^^^^^^
+
+The templates that Spack uses to generate module files are stored in the
+``templates/module`` directory, and they all share the same common structure.
+Usually, they start with a header that identifies the type of
+module being generated. In the case of hierarchical module files it's:
+
+.. literalinclude:: ../../../templates/modules/modulefile.lua
+  :language: jinja
+  :lines: 1-6
+
+The statements within double curly brackets ``{{ ... }}`` denote
+`expressions <http://jinja.pocoo.org/docs/2.9/templates/#expressions>`_
+that will be evaluated and substituted at module generation time.
+The rest of the file is then divided into
+`blocks <http://jinja.pocoo.org/docs/2.9/templates/#template-inheritance>`_
+that can be overridden or extended by users, if need be.
+`Control structures <http://jinja.pocoo.org/docs/2.9/templates/#list-of-control-structures>`_
+, delimited by ``{% ... %}``,
+are also permitted in the template language:
+
+.. literalinclude:: ../../../templates/modules/modulefile.lua
+  :language: jinja
+  :lines: 73-88
+
+The locations where Spack looks for templates are specified
+in ``config.yaml``:
+
+.. literalinclude:: ../../../etc/spack/defaults/config.yaml
+  :language: yaml
+  :lines: 21-24
+
+and can be extended by users to employ custom templates, as we'll see next.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Extend the default templates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's assume one of our software is protected by group membership:
+allowed users belong to the same linux group, and access is granted at group level.
+Wouldn't it be nice if people that are not
+yet entitled to use it could receive an helpful message at module load time
+that tells them who to contact in your organization to be inserted in the group?
+
+To automate the generation of module files with such site-specific behavior
+we'll start by extending the list of locations where Spack looks for module
+files. Let's create the file ``~/.spack/config.yaml`` with the content:
+
+.. code-block:: yaml
+
+  config:
+    template_dirs:
+      - $HOME/.spack/templates
+
+This tells Spack to search also another location when looking for template files.
+Next, we need to create our custom template extension in the folder listed above:
+
+.. code-block:: jinja
+
+  {% extends "modules/modulefile.lua" %}
+  {% block footer %}
+  -- Access is granted only to specific groups
+  if not isDir("{{ spec.prefix }}") then
+      LmodError (
+          "You don't have the necessary rights to run \"{{ spec.name }}\".\n\n",
+          "\tPlease write an e-mail to 1234@foo.com if you need further information on how to get access to it.\n"
+      )
+  end
+  {% endblock %}
+
+Let's name this file ``group-restricted.lua``. The line:
+
+.. code-block:: jinja
+
+  {% extends "modules/modulefile.lua" %}
+
+tells Jinja2 that we are reusing the standard template for hierarchical module files.
+The section:
+
+.. code-block:: jinja
+
+  {% block footer %}
+  -- Access is granted only to specific groups
+  if not isDir("{{ spec.prefix }}") then
+      LmodError (
+          "You don't have the necessary rights to run \"{{ spec.name }}\".\n\n",
+          "\tPlease write an e-mail to 1234@foo.com if you need further information on how to get access to it.\n"
+      )
+  end
+  {% endblock %}
+
+overrides the ``footer`` block.
+Finally, we need to add a couple of lines in ``modules.yaml`` to tell Spack which specs
+need to use the new custom template. For the sake of illustration let's assume
+it's ``netlib-scalapack``:
+
+.. code-block:: yaml
+  :emphasize-lines: 35-36
+
+  modules:
+    enable::
+      - lmod
+    lmod:
+      core_compilers:
+        - 'gcc@5.4.0'
+      hierarchy:
+        - mpi
+        - lapack
+      hash_length: 0
+      whitelist:
+        - gcc
+      blacklist:
+        - '%gcc@5.4.0'
+        - readline
+      all:
+        filter:
+          environment_blacklist: ['CPATH', 'LIBRARY_PATH']
+        environment:
+          set:
+            '${PACKAGE}_ROOT': '${PREFIX}'
+      gcc:
+        environment:
+          set:
+            CC: gcc
+            CXX: g++
+            FC: gfortran
+            F90: gfortran
+            F77: gfortran
+      openmpi:
+        environment:
+          set:
+            SLURM_MPI_TYPE: pmi2
+            OMPI_MCA_btl_openib_warn_default_gid_prefix: '0'
+      netlib-scalapack:
+        template: 'group-specific.lua'
+
+If we regenerate once again the module files:
+
+.. code-block:: console
+
+  root@module-file-tutorial:/# spack  module refresh -y -m lmod netlib-scalapack
+  ==> Regenerating lmod module files
+
+we'll find the following at the end of each ``netlib-scalapack`` module file:
+
+.. code-block:: lua
+
+  -- Access is granted only to specific groups
+  if not isDir("/usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/netlib-scalapack-2.0.2-ax6aza6vyepceyr3fihewp7rbr2vp7ym") then
+      LmodError (
+          "You don't have the necessary rights to run \"netlib-scalapack\".\n\n",
+          "\tPlease write an e-mail to 1234@foo.com if you need further information on how to get access to it.\n"
+      )
+  end
+
+and every user that doesn't have access to the software will now be redirected to
+the right e-mail address where to ask for it!
