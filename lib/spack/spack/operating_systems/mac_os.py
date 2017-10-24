@@ -23,8 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import platform as py_platform
+
 from spack.architecture import OperatingSystem
-from spack.version import *
+from spack.version import Version
 
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string

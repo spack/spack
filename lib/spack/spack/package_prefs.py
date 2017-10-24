@@ -30,7 +30,7 @@ from llnl.util.lang import classproperty
 import spack
 import spack.error
 from spack.util.path import canonicalize_path
-from spack.version import *
+from spack.version import VersionList
 
 
 _lesser_spec_types = {'compiler': spack.spec.CompilerSpec,

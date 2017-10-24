@@ -30,8 +30,9 @@ class RAffycomp(RPackage):
     expression measures for Affymetrix Oligonucleotide Arrays."""
 
     homepage = "https://www.bioconductor.org/packages/affycomp/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/affycomp_1.52.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/affycomp"
 
-    version('1.52.0', 'efa67e67701f2083fadbed99bf7d60b9')
+    version('1.52.0', git='https://git.bioconductor.org/packages/affycomp', commit='1b97a1cb21ec93bf1e5c88d5d55b988059612790')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.52.0')
     depends_on('r-biobase', type=('build', 'run'))

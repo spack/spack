@@ -115,13 +115,11 @@ class Mfem(Package):
     depends_on('parmetis', when='+superlu-dist')
     depends_on('metis@5:', when='+superlu-dist')
     depends_on('metis@5:', when='+suite-sparse ^suite-sparse@4.5:')
-    depends_on('hypre~internal-superlu', when='+mpi')
-    depends_on('hypre@develop~internal-superlu', when='+petsc +hypre')
 
     depends_on('sundials@2.7:+hypre', when='+sundials')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='@3.2: +superlu-dist')
-    depends_on('petsc@develop', when='+petsc')
+    depends_on('petsc@3.8:', when='+petsc')
 
     depends_on('mpfr', when='+mpfr')
     depends_on('cmake', when='^metis@5:', type='build')
