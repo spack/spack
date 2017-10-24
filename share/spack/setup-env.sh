@@ -238,7 +238,6 @@ _python_command=$(printf  "%s\\\n%s\\\n%s" \
 _assignment_command=$(spack-python -c "exec('${_python_command}')")
 eval ${_assignment_command}
 
-_spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 
 #
 # make module command available if an appropriate module system
@@ -275,6 +274,31 @@ if ! _spack_fn_exists module; then
         lmod_prefix=$(echo "${lmod_prefix}" | tail -n 1)
         if [ "${lmod_prefix}" != "not_installed" ]; then
             source "${lmod_prefix}/lmod/lmod/init/${SPACK_SHELL}"
+        fi;
+    fi;
+fi;
+
+#
+# make use command available if dotkit is installed
+# and the use command is not defined
+#
+if ! _spack_fn_exists use; then
+    # check whether dotkit is asked for
+    mod=""
+    for mod_i in ${_spack_mod_array[@]}; do
+        if [[ "${mod_i}" == "dotkit" ]]; then
+            mod="${mod_i}"
+        fi;
+    done;
+    # dotkit is installed
+    if [[ "${mod}" == "dotkit" ]]; then
+        _spack_pathadd DK_NODE "${_sp_dotkit_root%/}/$_sp_sys_type"
+        # check if dotkit is installed
+        dotkit_prefix="$(spack location -i "dotkit" 2>&1 || echo "not_installed")"
+        dotkit_prefix=$(echo "${dotkit_prefix}" | tail -n 1)
+        if [ "${dotkit_prefix}" != "not_installed" ]; then
+	     export DK_ROOT="${dotkit_prefix}"
+             eval `${DK_ROOT}/init`
         fi;
     fi;
 fi;
