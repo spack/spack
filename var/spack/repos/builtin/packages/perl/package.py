@@ -167,12 +167,17 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             if d.package.extends(self.spec):
                 perl_lib_dirs.append(d.prefix.lib.perl5)
                 perl_bin_dirs.append(d.prefix.bin)
-        perl_bin_path = ':'.join(perl_bin_dirs)
-        perl_lib_path = ':'.join(perl_lib_dirs)
-        spack_env.prepend_path('PATH', perl_bin_path)
-        spack_env.prepend_path('PERL5LIB', perl_lib_path)
-        run_env.prepend_path('PATH', perl_bin_path)
-        run_env.prepend_path('PERL5LIB', perl_lib_path)
+        print("perl--setup_dependent_environmenti perl_lib_dirs-->",perl_lib_dirs)
+        if perl_bin_dirs :
+            print("#### perl-bin-dirs  ###")
+            perl_bin_path = ':'.join(perl_bin_dirs)
+            spack_env.prepend_path('PATH', perl_bin_path)
+            run_env.prepend_path('PATH', perl_bin_path)
+        if perl_lib_dirs :
+            print("#### perl-lib-dirs  ###")
+            perl_lib_path = ':'.join(perl_lib_dirs)
+            spack_env.prepend_path('PERL5LIB', perl_lib_path)
+            run_env.prepend_path('PERL5LIB', perl_lib_path)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
