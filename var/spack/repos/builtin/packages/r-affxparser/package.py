@@ -36,7 +36,9 @@ class RAffxparser(RPackage):
     from a set of CEL files into a convenient list structure."""
 
     homepage = "https://www.bioconductor.org/packages/affxparser/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/affxparser_1.48.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/affxparser"
     list_url = homepage
 
-    version('1.48.0', '20ae3f61e3ea25c3baeabf949b1f1165')
+    version('1.48.0', git='https://git.bioconductor.org/packages/affxparser', commit='2461ea88f310b59c4a9a997a4b3dadedbd65a4aa')
+
+    depends_on('r@3.4.0:3.4.9', when='@1.48.0')

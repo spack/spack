@@ -30,8 +30,10 @@ class RLimma(RPackage):
     for microarray data."""
 
     homepage = "https://www.bioconductor.org/packages/limma/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/limma_3.32.6.tar.gz"
+    url      = "https://git.bioconductor.org/packages/limma"
     list_url = homepage
 
-    version('3.32.7', '9fb616ba50b4758307b0e89dbe3143d9')
+    version('3.32.10', git='https://git.bioconductor.org/packages/limma', commit='593edf28e21fe054d64137ae271b8a52ab05bc60')
     version('3.32.6', 'df5dc2b85189a24e939efa3a8e6abc41')
+
+    depends_on('r@3.4.0:3.4.9', when='@3.32.10')

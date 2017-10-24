@@ -42,10 +42,11 @@ class RAbaenrichment(RPackage):
     user-defined brain regions."""
 
     homepage = "https://bioconductor.org/packages/ABAEnrichment/"
-    url      = "https://bioconductor.org/packages/release/bioc/src/contrib/ABAEnrichment_1.6.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/ABAEnrichment"
 
-    version('1.6.0', '810eb4ee9ce2a5049babbb174dc8d588')
+    version('1.6.0', git='https://git.bioconductor.org/packages/ABAEnrichment', commit='d2a0467dcb7aa6e103e3b83dccd6510b0e142ac1')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.6.0')
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-gplots', type=('build', 'run'))
     depends_on('r-gtools', type=('build', 'run'))

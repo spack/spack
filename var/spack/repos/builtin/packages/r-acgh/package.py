@@ -32,10 +32,11 @@ class RAcgh(RPackage):
     printing and plotting aCGH objects."""
 
     homepage = "https://www.bioconductor.org/packages/aCGH/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/aCGH_1.54.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/aCGH"
 
-    version('1.54.0', '8e5bd1800b2760e46fcab4179c2e920c')
+    version('1.54.0', git='https://git.bioconductor.org/packages/aCGH', commit='be2ed339449f55c8d218e10c435e4ad356683693')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.54.0')
     depends_on('r-cluster', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-multtest', type=('build', 'run'))
