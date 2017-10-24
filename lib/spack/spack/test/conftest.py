@@ -46,7 +46,7 @@ import spack.stage
 import spack.util.executable
 import spack.util.pattern
 from spack.dependency import Dependency
-from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
+from spack.fetch_strategy import URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
 from spack.version import Version

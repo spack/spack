@@ -56,7 +56,6 @@ import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 
-from llnl.util.filesystem import *
 from spack.util.compression import decompressor_for, extension
 from spack.util.executable import which
 from spack.util.string import comma_or
@@ -360,7 +359,9 @@ class URLFetchStrategy(FetchStrategy):
         if do_expansion and not et:
             self._expand_archive(self.source_dir)
         elif do_expansion and et:
-            tty.msg('Already staged {0} in {1}'.format(self.name, source_dir))
+            tty.msg('Already staged {0} in {1}'.format(
+                self.name, self.source_dir
+            ))
 
     @property
     def cachable(self):
