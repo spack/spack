@@ -80,6 +80,8 @@ def bootstrap(parser, args, **kwargs):
         requirement_dict['environment-modules'] = 'environment-modules~X'
     if 'lmod' in module_systems:
         requirement_dict['lmod'] = 'lmod'
+    if 'dotkit' in module_systems:
+        requirement_dict['dotkit'] = 'dotkit'
 
     for requirement in requirement_dict:
         installed_specs = spack.store.db.query(requirement)
