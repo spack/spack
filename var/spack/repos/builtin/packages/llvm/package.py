@@ -435,3 +435,5 @@ class Llvm(CMakePackage):
     def post_install(self):
         with working_dir(self.build_directory):
             install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))
+            install_tree('../tools/clang/bindings/python/clang', 
+                         join_path(self.prefix, 'lib/python2.7/site-packages'))
