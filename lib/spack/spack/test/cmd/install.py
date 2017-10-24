@@ -28,8 +28,6 @@ import filecmp
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack
 import spack.cmd.install
 from spack.spec import Spec
@@ -199,38 +197,3 @@ def test_show_log_on_error(builtin_mock, mock_archive, mock_fetch,
     errors = [line for line in out.split('\n')
               if 'configure: error: cannot run C compiled programs' in line]
     assert len(errors) == 2
-
-
-def test_install_overwrite(
-        builtin_mock, mock_archive, mock_fetch, config, install_mockery
-):
-    # It's not possible to overwrite something that is not yet installed
-    with pytest.raises(AssertionError):
-        install('--overwrite', 'libdwarf')
-
-    # --overwrite requires a single spec
-    with pytest.raises(AssertionError):
-        install('--overwrite', 'libdwarf', 'libelf')
-
-    # Try to install a spec and then to reinstall it.
-    spec = Spec('libdwarf')
-    spec.concretize()
-
-    install('libdwarf')
-
-    assert os.path.exists(spec.prefix)
-    expected_md5 = fs.hash_directory(spec.prefix)
-
-    # Modify the first installation to be sure the content is not the same
-    # as the one after we reinstalled
-    with open(os.path.join(spec.prefix, 'only_in_old'), 'w') as f:
-        f.write('This content is here to differentiate installations.')
-
-    bad_md5 = fs.hash_directory(spec.prefix)
-
-    assert bad_md5 != expected_md5
-
-    install('--overwrite', '-y', 'libdwarf')
-    assert os.path.exists(spec.prefix)
-    assert fs.hash_directory(spec.prefix) == expected_md5
-    assert fs.hash_directory(spec.prefix) != bad_md5
