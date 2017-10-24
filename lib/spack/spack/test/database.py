@@ -27,14 +27,15 @@ These tests check the database is functioning properly,
 both in memory and in its file
 """
 import multiprocessing
-import os.path
-
+import os
 import pytest
+
+from llnl.util.tty.colify import colify
+
 import spack
 import spack.store
 from spack.test.conftest import MockPackageMultiRepo
 from spack.util.executable import Executable
-from llnl.util.tty.colify import colify
 
 
 def _print_ref_counts():
@@ -102,6 +103,13 @@ def _check_db_sanity(install_db):
         assert e == a
 
     _check_merkleiness()
+
+
+def _mock_install(spec):
+    s = spack.spec.Spec(spec)
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.do_install(fake=True)
 
 
 def _mock_remove(spec):

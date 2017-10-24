@@ -25,7 +25,7 @@
 import os
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.filesystem import mkdirp, working_dir
 
 import spack
 from spack.util.executable import ProcessError, which
@@ -47,7 +47,7 @@ def setup_parser(subparser):
 
 
 def get_origin_info(remote):
-    git_dir = join_path(spack.prefix, '.git')
+    git_dir = os.path.join(spack.prefix, '.git')
     git = which('git', required=True)
     try:
         branch = git('symbolic-ref', '--short', 'HEAD', output=str)
@@ -81,7 +81,7 @@ def clone(parser, args):
 
     mkdirp(prefix)
 
-    if os.path.exists(join_path(prefix, '.git')):
+    if os.path.exists(os.path.join(prefix, '.git')):
         tty.die("There already seems to be a git repository in %s" % prefix)
 
     files_in_the_way = os.listdir(prefix)
@@ -94,14 +94,14 @@ def clone(parser, args):
             "%s/bin/spack" % prefix,
             "%s/lib/spack/..." % prefix)
 
-    os.chdir(prefix)
-    git = which('git', required=True)
-    git('init', '--shared', '-q')
-    git('remote', 'add', 'origin', origin_url)
-    git('fetch', 'origin', '%s:refs/remotes/origin/%s' % (branch, branch),
-                           '-n', '-q')
-    git('reset', '--hard', 'origin/%s' % branch, '-q')
-    git('checkout', '-B', branch, 'origin/%s' % branch, '-q')
+    with working_dir(prefix):
+        git = which('git', required=True)
+        git('init', '--shared', '-q')
+        git('remote', 'add', 'origin', origin_url)
+        git('fetch', 'origin', '%s:refs/remotes/origin/%s' % (branch, branch),
+            '-n', '-q')
+        git('reset', '--hard', 'origin/%s' % branch, '-q')
+        git('checkout', '-B', branch, 'origin/%s' % branch, '-q')
 
-    tty.msg("Successfully created a new spack in %s" % prefix,
-            "Run %s/bin/spack to use this installation." % prefix)
+        tty.msg("Successfully created a new spack in %s" % prefix,
+                "Run %s/bin/spack to use this installation." % prefix)

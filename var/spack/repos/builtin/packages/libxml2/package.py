@@ -49,18 +49,20 @@ class Libxml2(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = []
+
+        args = ["--with-lzma=%s" % spec['xz'].prefix]
+
         if '+python' in spec:
-            config_args.extend([
+            args.extend([
                 '--with-python={0}'.format(spec['python'].home),
                 '--with-python-install-dir={0}'.format(site_packages_dir)
             ])
         else:
-            config_args.append('--without-python')
+            args.append('--without-python')
 
         if "+shared" in spec:
-            config_args.append("--enable-shared")
+            args.append("--enable-shared")
         else:
-            config_args.append("--disable-shared")
+            args.append("--disable-shared")
 
-        return config_args
+        return args

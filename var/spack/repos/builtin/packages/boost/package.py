@@ -135,6 +135,8 @@ class Boost(Package):
             description="Augment library names with build options")
     variant('versionedlayout', default=False,
             description="Augment library layout with versioned subdirs")
+    variant('clanglibcpp', default=False,
+            description='Compile with clang libc++ instead of libstdc++')
 
     depends_on('icu4c', when='+icu')
     depends_on('python', when='+python')
@@ -290,6 +292,10 @@ class Boost(Package):
         #   https://svn.boost.org/trac/boost/ticket/12496
         if spec.satisfies('%clang'):
             options.extend(['pch=off'])
+            if '+clanglibcpp' in spec:
+                options.extend(['toolset=clang',
+                                'cxxflags="-stdlib=libc++"',
+                                'linkflags="-stdlib=libc++"'])
 
         return threadingOpts
 
