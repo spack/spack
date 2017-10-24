@@ -26,7 +26,7 @@ from spack import *
 
 
 class PerlAlgorithmDiff(PerlPackage):
-    """Compute `intelligent' differences between two files / lists"""
+    """Compute 'intelligent' differences between two files / lists"""
 
     homepage = "http://search.cpan.org/~tyemq/Algorithm-Diff-1.1903/lib/Algorithm/Diff.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/T/TY/TYEMQ/Algorithm-Diff-1.1903.tar.gz"
