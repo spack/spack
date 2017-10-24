@@ -51,8 +51,8 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('3.3.2-rc2', git='https://github.com/mfem/mfem',
-            tag='v3.3.2-rc2')
+    version('3.3.2-rc3', git='https://github.com/mfem/mfem',
+            tag='v3.3.2-rc3')
 
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
