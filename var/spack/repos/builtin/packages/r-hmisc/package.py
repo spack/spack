@@ -51,4 +51,3 @@ class RHmisc(RPackage):
     depends_on('r-base64enc', type=('build', 'run'))
     depends_on('r-htmltable', type=('build', 'run'))
     depends_on('r-viridis', type=('build', 'run'))
-
