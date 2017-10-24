@@ -217,7 +217,7 @@ function _spack_fn_exists() {
 # Create array of modules
 #
 _spack_mod_N="$(spack config getraw modules enable LEN)"
-_spack_mod_N="$(expr ${_spack_mod_N} - 1)"
+_spack_mod_N="$(expr ${_spack_mod_N} - 1 | head -n 1)"
 _spack_mod_array=()
 for ((i=0;i<=${_spack_mod_N};i++)); do
     mod_i="$(spack config getraw modules enable ${i})"
