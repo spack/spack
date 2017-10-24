@@ -78,7 +78,7 @@ class Xsdk(Package):
 
     depends_on('sundials@3.0.0-beta-2~int64+hypre', when='@0.3.0-rc1')
 
-#   depends_on('plasma',when='@0.3.0-rc1 %gcc@7.0:')
+    depends_on('plasma',when='@0.3.0-rc1 %gcc@7.0:')
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
