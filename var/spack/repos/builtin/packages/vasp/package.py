@@ -98,8 +98,8 @@ class Vasp(MakefilePackage):
         vdw_nl = FileFilter('src/vdw_nl.F')
         vdw_nl.filter('file=\'vdw_kernel.bindat\'', 'file=\'/opt/share/vasp/common/vdw_kernel.bindat\'')
 
-    @on_package_attributes(run_tests=True)
     @run_after('install')
+    @on_package_attributes(run_tests=True)
     def check_install(self):
 
         shutil.copytree('/opt/share/vasp/common/tests/vasptest', 'vasptest')

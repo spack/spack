@@ -47,9 +47,13 @@ class Wannier90(MakefilePackage):
 
     parallel = False
 
-    build_targets = [
-        'wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'w90pov'
-    ]
+    @property
+    def build_targets(self):
+
+        if self.spec.satisfies('@1.2:'):
+            return ['wannier', 'lib']
+
+        return ['wannier', 'post', 'lib', 'w90chk2chk', 'w90vdw', 'w90pov']
 
     @property
     def makefile_name(self):
@@ -93,31 +97,32 @@ class Wannier90(MakefilePackage):
         )
 
         install(
-            join_path(self.stage.source_path, 'postw90.x'),
-            join_path(self.prefix.bin, 'postw90.x')
-        )
-
-        install(
             join_path(self.stage.source_path, 'libwannier.a'),
             join_path(self.prefix.lib, 'libwannier.a')
-        )
-
-        install(
-            join_path(self.stage.source_path, 'w90chk2chk.x'),
-            join_path(self.prefix.bin, 'w90chk2chk.x')
-        )
-
-        install(
-            join_path(self.stage.source_path, 'utility', 'w90vdw', 'w90vdw.x'),
-            join_path(self.prefix.bin, 'w90vdw.x')
-        )
-
-        install(
-            join_path(self.stage.source_path, 'utility', 'w90pov', 'w90pov'),
-            join_path(self.prefix.bin, 'w90pov')
         )
 
         install_tree(
             join_path(self.stage.source_path, 'pseudo'),
             join_path(self.prefix.bin, 'pseudo')
         )
+
+        if not self.spec.satisfies('@1.2:'):
+            install(
+                join_path(self.stage.source_path, 'postw90.x'),
+                join_path(self.prefix.bin, 'postw90.x')
+            )
+
+            install(
+                join_path(self.stage.source_path, 'w90chk2chk.x'),
+                join_path(self.prefix.bin, 'w90chk2chk.x')
+            )
+
+            install(
+                join_path(self.stage.source_path, 'utility', 'w90vdw', 'w90vdw.x'),
+                join_path(self.prefix.bin, 'w90vdw.x')
+            )
+
+            install(
+                join_path(self.stage.source_path, 'utility', 'w90pov', 'w90pov'),
+                join_path(self.prefix.bin, 'w90pov')
+            )
