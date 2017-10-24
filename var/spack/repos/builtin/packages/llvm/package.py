@@ -424,6 +424,13 @@ class Llvm(CMakePackage):
 
         return cmake_args
 
+    @run_before('build')
+    def pre_install(self):
+        with working_dir(self.build_directory):
+            make('install-LLVMTableGen')
+            make('install-LLVMDemangle')
+            make('install-LLVMSupport')
+
     @run_after('install')
     def post_install(self):
         with working_dir(self.build_directory):
