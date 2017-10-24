@@ -41,7 +41,7 @@ class Htslib(AutotoolsPackage):
     depends_on('bzip2', when="@1.4:")
     depends_on('xz', when="@1.4:")
 
-    depends_on('m4', when="@1.2:")
-    depends_on('autoconf', when="@1.2:")
-    depends_on('automake', when="@1.2:")
-    depends_on('libtool', when="@1.2:")
+    depends_on('m4', when="@1.2")
+    depends_on('autoconf', when="@1.2")
+    depends_on('automake', when="@1.2")
+    depends_on('libtool', when="@1.2")
