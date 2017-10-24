@@ -14,12 +14,22 @@ branches:
 jobs:
   fast_finish: true
   include:
-    - stage: 'flake8'
+    - stage: 'flake8 + documentation'
       python: '2.7'
       os: linux
       language: python
       env: TEST_SUITE=flake8
-    - stage: 'unit tests + documentation'
+    - stage: 'flake8 + documentation'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
+    - stage: 'no changes in core'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=nochangesincore
+    - stage: 'unit tests'
       python: '2.6'
       os: linux
       language: python
@@ -47,10 +57,6 @@ jobs:
     - os: osx
       language: generic
       env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
-    - python: '2.7'
-      os: linux
-      language: python
-      env: TEST_SUITE=doc
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
@@ -92,6 +98,16 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+
+stages:
+  - 'flake8 + documentation'
+  - name: 'no changes in core'
+    if: head_branch =~ ^packages
+  - name: 'unit tests'
+    if: NOT head_branch =~ ^packages
+  - name: 'build tests'
+    if: NOT head_branch =~ ^packages
+
 
 #=============================================================================
 # Environment
@@ -151,7 +167,7 @@ before_script:
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - codecov --env PY_VERSION
+  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PY_VERSION; fi
 
 #=============================================================================
 # Notifications
