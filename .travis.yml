@@ -19,7 +19,12 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=flake8
-    - stage: 'unit tests + documentation'
+    - stage: 'documentation'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
+    - stage: 'unit tests'
       python: '2.6'
       os: linux
       language: python
@@ -47,10 +52,6 @@ jobs:
     - os: osx
       language: generic
       env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
-    - python: '2.7'
-      os: linux
-      language: python
-      env: TEST_SUITE=doc
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
@@ -151,7 +152,9 @@ before_script:
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - codecov --env PY_VERSION
+  # Require coverage only if there have been changes in core
+  - . share/spack/setup-env.sh
+  - share/spack/qa/changes_in_core.py && codecov --env PY_VERSION
 
 #=============================================================================
 # Notifications
