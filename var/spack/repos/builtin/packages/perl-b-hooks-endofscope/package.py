@@ -33,4 +33,4 @@ class PerlBHooksEndofscope(PerlPackage):
 
     version('0.21', 'df9dacbf55a01d7a444b1ebc616435ae')
 
-    depends_on('perl-sub-exporter-progressive', type=('build','run'))
+    depends_on('perl-sub-exporter-progressive', type=('build', 'run'))

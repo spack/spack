@@ -32,5 +32,5 @@ class PerlDevelOverloadinfo(PerlPackage):
     url      = "http://search.cpan.org/CPAN/authors/id/I/IL/ILMARI/Devel-OverloadInfo-0.004.tar.gz"
 
     version('0.004', '97a27e31858b073daba54121d57be705')
- 
+
     depends_on('perl-mro-compat', type=('build', 'run'))

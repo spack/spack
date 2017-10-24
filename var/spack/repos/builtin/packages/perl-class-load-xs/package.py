@@ -26,7 +26,8 @@ from spack import *
 
 
 class PerlClassLoadXs(PerlPackage):
-    """This module provides an XS implementation for portions of Class::Load."""
+    """This module provides an XS implementation for portions of
+       Class::Load."""
 
     homepage = "http://search.cpan.org/~ether/Class-Load-XS-0.10/lib/Class/Load/XS.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Class-Load-XS-0.10.tar.gz"

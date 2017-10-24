@@ -37,7 +37,7 @@ class PerlTestCleannamespaces(PerlPackage):
     depends_on('perl-sub-exporter', type=('build', 'run'))
     depends_on('perl-module-runtime', type=('build', 'run'))
     depends_on('perl-test-needs', type=('build', 'run'))
-    depends_on('perl-test-deep', type=('build','run'))
+    depends_on('perl-test-deep', type=('build', 'run'))
     depends_on('perl-test-warnings', type=('build', 'run'))
     depends_on('perl-file-pushd', type=('build', 'run'))
     depends_on('perl-package-stash', type=('build', 'run'))
