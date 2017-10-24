@@ -287,8 +287,8 @@ def working_dir(dirname, **kwargs):
 @contextmanager
 def replace_directory_transaction(directory_name, tmp_root=None):
     """Moves a directory to a temporary space. If the operations executed
-    within the context manager don't raise deletes it, otherwise undoes
-    the move operation.
+    within the context manager don't raise an exception, the directory is
+    deleted. If there is an exception, the move is undone.
 
     Args:
         directory_name (path): absolute path of the directory name
