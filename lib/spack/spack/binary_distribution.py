@@ -447,7 +447,7 @@ def get_specs(force=False):
                 if re.search("spec.yaml", link) and re.search(path, link):
                     urls.add(link)
 
-    durls = defaultdict(list)
+    specs = set()
     for link in urls:
         with Stage(link, name="build_cache", keep=True) as stage:
             if force and os.path.exists(stage.save_filename):
@@ -463,10 +463,10 @@ def get_specs(force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = spack.spec.Spec.from_yaml(f)
                 spec._mark_concrete()
-                durls[spec].append(link)
+                specs.add(spec)
 
-    spack.binary_cache_retrieved_specs = durls
-    return durls
+    spack.binary_cache_retrieved_specs = specs
+    return specs
 
 
 def get_keys(install=False, yes_to_all=False, force=False):
