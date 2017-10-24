@@ -81,11 +81,8 @@ class Gcc(AutotoolsPackage):
             description='Strip executables to reduce installation size')
 
     # https://gcc.gnu.org/install/prerequisites.html
-    #depends_on('gmp@4.3.2:')
-    #depends_on('mpfr@2.4.2:')
-    #depends_on('mpc@0.8.1:', when='@4.5:')
-    #depends_on('isl@0.14', when='@5:5.9')
-    #depends_on('isl@0.15:', when='@6:')
+    # Note: GMP, MPFR, MPC & isl are downloaded as part of the build process
+    # so we don't need dependencies on their Spack packages.
     depends_on('zlib', when='@6:')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
@@ -179,9 +176,7 @@ class Gcc(AutotoolsPackage):
         # GCC tarballs contain a script that will automatically download
         # prerequisites (gmp, mpc, mpfr and isl) and unpack then into the
         # source tree.
-        # ToDo: figure out how to log debug messages...
-        print "--DEBUG-- CDW =", os.getcwd()
-
+        # See https://gcc.gnu.org/wiki/InstallingGCC
         fetch_prereqs = which( 'download_prerequisites', required=True, path='./contrib')
         fetch_prereqs()
 
@@ -217,11 +212,6 @@ class Gcc(AutotoolsPackage):
             '--enable-lto',
             '--with-quad'
         ]
-
-        # Use of the --with-mpfr and --with-gmp options isn't recommended by the
-        # gcc developers.  Execute the download_prerequisites command instead.
-        # '--with-mpfr={0}'.format(spec['mpfr'].prefix),
-        # '--with-gmp={0}'.format(spec['gmp'].prefix),
 
         # Use installed libz
         if self.version >= Version('6'):
