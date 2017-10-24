@@ -24,10 +24,12 @@
 ##############################################################################
 import re
 
-from spack.architecture import OperatingSystem
+import llnl.util.tty as tty
+
 import spack.spec
-from spack.util.multiproc import parmap
 import spack.compilers
+from spack.architecture import OperatingSystem
+from spack.util.multiproc import parmap
 from spack.util.module_cmd import get_module_cmd
 
 
