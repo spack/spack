@@ -74,10 +74,10 @@ class Scalpel(MakefilePackage):
 
         mkdirp(destdir)
 
-        files = [ 'FindSomatic.pl', 'HashesIO.pm', 'MLDBM.pm',
-                  'scalpel-export', 'Utils.pm', 'FindDenovos.pl',
-                  'FindVariants.pl', 'scalpel-discovery',
-                  'SequenceIO.pm', 'Usage.pm', ]
+        files = ['FindSomatic.pl', 'HashesIO.pm', 'MLDBM.pm',
+                 'scalpel-export', 'Utils.pm', 'FindDenovos.pl',
+                 'FindVariants.pl', 'scalpel-discovery',
+                 'SequenceIO.pm', 'Usage.pm']
         for f in files:
             install(f, destdir)
 
