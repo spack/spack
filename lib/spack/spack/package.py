@@ -1076,7 +1076,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     patch.apply(self.stage)
                 tty.msg('Applied patch %s' % patch.path_or_url)
                 patched = True
-            except:
+            except spack.error.SpackError:
                 # Touch bad file if anything goes wrong.
                 tty.msg('Patch %s failed.' % patch.path_or_url)
                 touch(bad_file)
@@ -1097,7 +1097,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
                     tty.msg("No patches needed for %s" % self.name)
-            except:
+            except spack.error.SpackError:
                 tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
                 raise
