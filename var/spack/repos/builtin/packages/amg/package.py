@@ -39,8 +39,8 @@ class Amg(MakefilePackage):
     version('develop', git=git, branch='master')
 
     variant('openmp', default=True, description='Build with OpenMP support')
-    variant('opt', default=False, description='Additional optimizations')
-    variant('64bitglobals', default=False, description='Use 64-bit integers for global variables')
+    variant('optflags', default=False, description='Additional optimizations')
+    variant('int64', default=False, description='Use 64-bit integers for global variables')
 
     depends_on('mpi')
 
@@ -55,11 +55,11 @@ class Amg(MakefilePackage):
             include_cflags.append('-DHYPRE_USING_OPENMP')
             include_cflags.append(self.compiler.openmp_flag)
             include_lflags.append(self.compiler.openmp_flag)
-            if '+opt' in self.spec:
+            if '+optflags' in self.spec:
                 include_cflags.append('-DHYPRE_USING_PERSISTENT_COMM')
                 include_cflags.append('-DHYPRE_HOPSCOTCH')
 
-        if '+64bitglobals' in self.spec:
+        if '+int64' in self.spec:
             include_cflags.append('-DHYPRE_BIGINT')
 
         targets.append('INCLUDE_CFLAGS={0}'.format(' '.join(include_cflags)))
