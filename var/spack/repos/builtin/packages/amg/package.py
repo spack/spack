@@ -25,22 +25,21 @@
 from spack import *
 
 
-class Amg2013(MakefilePackage):
-    """AMG2013 is a parallel algebraic multigrid solver for linear
-    systems arising from problems on unstructured grids.
-    It has been derived directly from the BoomerAMG solver in the
-    hypre library, a large linear solver library that is being developed
-    in the Center for Applied Scientific Computing (CASC) at LLNL.
+class Amg(MakefilePackage):
+    """AMG is a parallel algebraic multigrid solver for linear systems arising
+       from problems on unstructured grids.  The driver provided with AMG
+       builds linear systems for various 3-dimensional problems.
     """
-    tags = ['proxy-app']
-    homepage = "https://codesign.llnl.gov/amg2013.php"
-    url      = "https://codesign.llnl.gov/amg2013/amg2013.tgz"
+    tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('master', '9d918d2a69528b83e6e0aba6ba601fef',
-            url='https://codesign.llnl.gov/amg2013/amg2013.tgz')
+    homepage = "https://codesign.llnl.gov/amg2013.php"
+    git      = "https://github.com/LLNL/AMG"
+
+    version('1.0', git=git, tag='1.0')
+    version('develop', git=git, branch='master')
 
     variant('openmp', default=True, description='Build with OpenMP support')
-    variant('assumedpartition', default=False, description='Use assumed partition (for thousands of processors)')
+    variant('optflags', default=False, description='Additional optimizations')
     variant('int64', default=False, description='Use 64-bit integers for global variables')
 
     depends_on('mpi')
@@ -56,12 +55,12 @@ class Amg2013(MakefilePackage):
             include_cflags.append('-DHYPRE_USING_OPENMP')
             include_cflags.append(self.compiler.openmp_flag)
             include_lflags.append(self.compiler.openmp_flag)
-
-        if '+assumedpartition' in self.spec:
-            include_cflags.append('-DHYPRE_NO_GLOBAL_PARTITION')
+            if '+optflags' in self.spec:
+                include_cflags.append('-DHYPRE_USING_PERSISTENT_COMM')
+                include_cflags.append('-DHYPRE_HOPSCOTCH')
 
         if '+int64' in self.spec:
-            include_cflags.append('-DHYPRE_LONG_LONG')
+            include_cflags.append('-DHYPRE_BIGINT')
 
         targets.append('INCLUDE_CFLAGS={0}'.format(' '.join(include_cflags)))
         targets.append('INCLUDE_LFLAGS={0}'.format(' '.join(include_lflags)))
@@ -71,7 +70,5 @@ class Amg2013(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('test/amg2013', prefix.bin)
+        install('test/amg', prefix.bin)
         install_tree('docs', prefix.docs)
-        install('COPYRIGHT', prefix.docs)
-        install('COPYING.LESSER', prefix.docs)
