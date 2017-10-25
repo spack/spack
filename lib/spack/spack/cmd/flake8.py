@@ -115,9 +115,11 @@ def changed_files(args):
 
     git = which('git', required=True)
 
+    range = "{0}...".format(args.base)
+
     git_args = [
         # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', 'develop...'],
+        ['diff', '--name-only', '--diff-filter=ACMR', range],
         # Add changed files that have been staged but not yet committed
         ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
         # Add changed files that are unstaged
@@ -209,6 +211,9 @@ def filter_file(source, dest, output=False):
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-b', '--base', action='store', default='develop',
+        help="select base branch for collecting list of modified files")
     subparser.add_argument(
         '-k', '--keep-temp', action='store_true',
         help="do not delete temporary directory where flake8 runs. "
