@@ -35,7 +35,7 @@ class Flang(CMakePackage):
     version('develop', git='https://github.com/flang-compiler/flang', branch='master')
 
     depends_on(
-            "llvm+clang@4.0.1:5.0",
+            "llvm+clang@4.0.1,5.0",
         patches=[
             patch('https://github.com/llvm-mirror/clang/pull/33.diff',
                       sha256='e46d7ab305e5e95c51f4656d9b52058143cd85d859b312b3c80e93a02d54b4a5',
