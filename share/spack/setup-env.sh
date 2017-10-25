@@ -298,7 +298,7 @@ if ! _spack_fn_exists use; then
         dotkit_prefix=$(echo "${dotkit_prefix}" | tail -n 1)
         if [ "${dotkit_prefix}" != "not_installed" ]; then
 	     export DK_ROOT="${dotkit_prefix}"
-             eval `${DK_ROOT}/init`
+             eval `${DK_ROOT}/init` >& /dev/null
         fi;
     fi;
 fi;
