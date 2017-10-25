@@ -28,6 +28,7 @@ import os.path
 import pytest
 import spack.cmd.module as module
 import spack.modules as modules
+import spack.config
 
 
 def _get_module_files(args):
@@ -75,8 +76,11 @@ def test_exit_with_failure(parser, failure_args):
         module.module(parser, args)
 
 
+NO_TCL = 'tcl' not in spack.config.get_config('modules')['enable']
+
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
+@pytest.mark.skipif(NO_TCL, reason='TCL module system is not enabled')
 def test_remove_and_add_tcl(parser):
     """Tests adding and removing a tcl module file."""
 
@@ -101,6 +105,7 @@ def test_remove_and_add_tcl(parser):
 
 
 @pytest.mark.db
+@pytest.mark.skipif(NO_TCL, reason='TCL module system is not enabled')
 @pytest.mark.usefixtures('database')
 @pytest.mark.parametrize('cli_args', [
     ['--module-type', 'tcl', 'libelf'],
