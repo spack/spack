@@ -36,7 +36,7 @@ class Minitri(MakefilePackage):
     variant('mpi', default=True, description='Build with MPI support')
 
     depends_on('mpi', when="+mpi")
-    
+
     tags = ['proxy-app', 'ecp-proxy-app']
 
     @property
