@@ -81,11 +81,8 @@ class Gcc(AutotoolsPackage):
             description='Strip executables to reduce installation size')
 
     # https://gcc.gnu.org/install/prerequisites.html
-    depends_on('gmp@4.3.2:')
-    depends_on('mpfr@2.4.2:')
-    depends_on('mpc@0.8.1:', when='@4.5:')
-    depends_on('isl@0.14', when='@5:5.9')
-    depends_on('isl@0.15:', when='@6:')
+    # Note: GMP, MPFR, MPC & isl are downloaded as part of the build process
+    # so we don't need dependencies on their Spack packages.
     depends_on('zlib', when='@6:')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
@@ -176,6 +173,14 @@ class Gcc(AutotoolsPackage):
         spec = self.spec
         prefix = self.spec.prefix
 
+        # GCC tarballs contain a script that will automatically download
+        # prerequisites (gmp, mpc, mpfr and isl) and unpack then into the
+        # source tree.
+        # See https://gcc.gnu.org/wiki/InstallingGCC
+        fetch_prereqs = which('download_prerequisites', required=True,
+                              path='./contrib')
+        fetch_prereqs()
+
         # Fix a standard header file for OS X Yosemite that
         # is GCC incompatible by replacing non-GCC compliant macros
         if 'yosemite' in spec.architecture:
@@ -205,8 +210,6 @@ class Gcc(AutotoolsPackage):
             '--disable-multilib',
             '--enable-languages={0}'.format(
                 ','.join(spec.variants['languages'].value)),
-            '--with-mpfr={0}'.format(spec['mpfr'].prefix),
-            '--with-gmp={0}'.format(spec['gmp'].prefix),
             '--enable-lto',
             '--with-quad'
         ]
