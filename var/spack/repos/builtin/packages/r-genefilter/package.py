@@ -29,9 +29,11 @@ class RGenefilter(RPackage):
     """Some basic functions for filtering genes"""
 
     homepage = "https://bioconductor.org/packages/genefilter/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/genefilter_1.58.1.tar.gz"
+    url      = "https://git.bioconductor.org/packages/genefilter"
     list_url = homepage
-    version('1.58.1', 'bc1a90bdf93d8db994220545cd80f438')
+    version('1.58.1', git='https://git.bioconductor.org/packages/genefilter', commit='ace2556049677f60882adfe91f8cc96791556fc2')
+
+    depends_on('r@3.4.0:3.4.9', when='@1.58.1')
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-annotate', type=('build', 'run'))

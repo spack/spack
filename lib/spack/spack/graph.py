@@ -61,15 +61,16 @@ Note that ``graph_ascii`` assumes a single spec while ``graph_dot``
 can take a number of specs as input.
 
 """
+import sys
 
-from heapq import *
+from heapq import heapify, heappop, heappush
 from six import iteritems
 
-from llnl.util.lang import *
-from llnl.util.tty.color import *
+from llnl.util.tty.color import ColorStream
 
-from spack.spec import *
-from spack.dependency import *
+from spack.spec import Spec
+from spack.dependency import all_deptypes, canonical_deptype
+
 
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
