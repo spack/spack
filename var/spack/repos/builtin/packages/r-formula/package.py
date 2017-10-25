@@ -31,6 +31,8 @@ class RFormula(RPackage):
     side and/or multiple responses on the left-hand side."""
 
     homepage = "https://cran.r-project.org/package=Formula"
-    url      = "https://cran.r-project.org/src/contrib/Formula_1.2-1.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/Formula_1.2-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/Formula"
 
+    version('1.2-2', 'c69bb0522811cf8eb9f1cc6c3d182b6e')
     version('1.2-1', '2afb31e637cecd0c1106317aca1e4849')
