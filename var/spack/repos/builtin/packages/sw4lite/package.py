@@ -41,7 +41,7 @@ class Sw4lite(MakefilePackage):
 
     variant('openmp', default=True, description='Build with OpenMP support')
     variant('precision', default='double', values=('float', 'double'),
-                multi=False, description='Floating point precision')
+            multi=False, description='Floating point precision')
     variant('ckernel', default=False, description='C or Fortran kernel')
 
     depends_on('blas')
