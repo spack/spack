@@ -26,7 +26,7 @@ import os
 
 import pytest
 import spack
-from llnl.util.filesystem import *
+from llnl.util.filesystem import working_dir, join_path, touch
 from spack.spec import Spec
 from spack.version import ver
 from spack.util.executable import which

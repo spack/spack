@@ -39,6 +39,7 @@ import functools
 import inspect
 import os
 import re
+import shutil
 import sys
 import textwrap
 import time
@@ -60,8 +61,9 @@ import spack.url
 import spack.util.web
 import spack.multimethod
 
-from llnl.util.filesystem import *
-from llnl.util.lang import *
+from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
+from llnl.util.filesystem import working_dir, install_tree, install
+from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from spack import directory_layout
@@ -69,7 +71,7 @@ from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.build_environment import RedirectionInstallContext
 from spack.util.environment import dump_environment
-from spack.version import *
+from spack.version import Version
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -1085,7 +1087,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     patch.apply(self.stage)
                 tty.msg('Applied patch %s' % patch.path_or_url)
                 patched = True
-            except:
+            except spack.error.SpackError:
                 # Touch bad file if anything goes wrong.
                 tty.msg('Patch %s failed.' % patch.path_or_url)
                 touch(bad_file)
@@ -1106,7 +1108,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
                     tty.msg("No patches needed for %s" % self.name)
-            except:
+            except spack.error.SpackError:
                 tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
                 raise
@@ -1887,7 +1889,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """Try to find remote versions of this package using the
            list_url and any other URLs described in the package file."""
         if not self.all_urls:
-            raise VersionFetchError(self.__class__)
+            raise spack.util.web.VersionFetchError(self.__class__)
 
         try:
             return spack.util.web.find_versions_of_archive(
@@ -2032,7 +2034,7 @@ def dump_packages(spec, path):
                 source_repo = spack.repository.Repo(source_repo_root)
                 source_pkg_dir = source_repo.dirname_for_package_name(
                     node.name)
-            except RepoError:
+            except spack.repository.RepoError:
                 tty.warn("Warning: Couldn't copy in provenance for %s" %
                          node.name)
 

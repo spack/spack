@@ -28,7 +28,7 @@ where it makes sense.
 """
 import pytest
 
-from spack.version import *
+from spack.version import Version, ver
 
 
 def assert_ver_lt(a, b):

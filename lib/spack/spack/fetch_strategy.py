@@ -46,17 +46,17 @@ import re
 import shutil
 import copy
 from functools import wraps
-from six import string_types
-from six import with_metaclass
+from six import string_types, with_metaclass
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
+from llnl.util.filesystem import working_dir, mkdirp, join_path
+
 import spack
 import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
-from spack.util.executable import *
-from spack.util.string import *
+from spack.util.executable import which
+from spack.util.string import comma_or
 from spack.version import Version, ver
 from spack.util.compression import decompressor_for, extension
 
@@ -449,7 +449,7 @@ class VCSFetchStrategy(FetchStrategy):
 
         # Ensure that there's only one of the rev_types
         if sum(k in kwargs for k in rev_types) > 1:
-            raise FetchStrategyError(
+            raise ValueError(
                 "Supply only one of %s to fetch with %s" % (
                     comma_or(rev_types), name
                 ))
@@ -969,8 +969,8 @@ def from_list_url(pkg):
                 return URLFetchStrategy(url=url_from_list, digest=digest)
             except KeyError:
                 tty.msg("Can not find version %s in url_list" %
-                        self.version)
-        except:
+                        pkg.version)
+        except BaseException:
             tty.msg("Could not determine url from list_url.")
 
 

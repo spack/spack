@@ -40,8 +40,11 @@ import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.relocate import *
 from spack.util.executable import ProcessError
+from spack.relocate import needs_binary_relocation, get_patchelf
+from spack.relocate import substitute_rpath, get_relative_rpaths
+from spack.relocate import macho_replace_paths, macho_make_paths_relative
+from spack.relocate import modify_macho_object, macho_get_paths
 
 
 @pytest.fixture(scope='function')
@@ -189,6 +192,9 @@ echo $PATH"""
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
+    args = parser.parse_args(['list', '-f'])
+    buildcache.buildcache(parser, args)
+
     args = parser.parse_args(['list', 'trivial'])
     buildcache.buildcache(parser, args)
 
@@ -197,6 +203,9 @@ echo $PATH"""
                     mirror_path + '/external.key')
 
     args = parser.parse_args(['keys'])
+    buildcache.buildcache(parser, args)
+
+    args = parser.parse_args(['keys', '-f'])
     buildcache.buildcache(parser, args)
 
     # unregister mirror with spack config
