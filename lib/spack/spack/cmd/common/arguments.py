@@ -30,6 +30,7 @@ import spack.modules
 import spack.spec
 import spack.store
 from spack.util.pattern import Args
+import spack.config
 
 __all__ = ['add_common_arguments']
 
@@ -106,8 +107,10 @@ _arguments['constraint'] = Args(
 _arguments['module_type'] = Args(
     '-m', '--module-type',
     choices=spack.modules.module_types.keys(),
+    default=spack.config.get_config('modules')['enable'][0],
     action='append',
-    help='type of module file. More than one choice is allowed [default: tcl]')  # NOQA: ignore=E501
+    help="type of module file. More than one choice is allowed" +
+         " [default: %s]" % spack.config.get_config('modules')['enable'][0])
 
 _arguments['yes_to_all'] = Args(
     '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
