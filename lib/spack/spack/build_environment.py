@@ -63,7 +63,8 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import join_path, mkdirp, install, install_tree
+from llnl.util.filesystem import (join_path, mkdirp, install, install_tree,
+                                  working_dir)
 
 import spack
 import spack.store
@@ -463,7 +464,7 @@ def set_module_variables_for_package(pkg, module):
         m.cp = RedirectedCommand(which('cp'), pkg_ctxt, 2)
 
         # These are only set for redirected installations of pkg
-        m.working_dir  = pkg_ctxt.working_dir_redirect
+        m.working_dir = pkg_ctxt.working_dir_redirect
         m.open = pkg_ctxt.open_redirect
         m.force_symlink = pkg_ctxt.force_symlink_redirect
     else:
