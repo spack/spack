@@ -42,3 +42,19 @@ class Parallel(AutotoolsPackage):
     def check(self):
         # The Makefile has a 'test' target, but it does not work
         make('check')
+
+    depends_on('perl', type=('build', 'run'))
+
+    @run_before('install')
+    def filter_sbang(self):
+        """Run before install so that the standard Spack sbang install hook
+           can fix up the path to the perl binary.
+        """
+        perl = self.spec['perl'].command
+        kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+
+        with working_dir('src'):
+            match = '^#!/usr/bin/env perl|^#!/usr/bin/perl.*'
+            substitute = "#!{perl}".format(perl=perl)
+            files = ['parallel', 'niceload', 'parcat', 'sql', ]
+            filter_file(match, substitute, *files, **kwargs)
