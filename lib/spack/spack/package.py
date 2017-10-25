@@ -62,7 +62,7 @@ import spack.util.web
 import spack.multimethod
 
 from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
-from llnl.util.filesystem import working_dir, install_tree, install
+from llnl.util.filesystem import working_dir, install_tree
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
