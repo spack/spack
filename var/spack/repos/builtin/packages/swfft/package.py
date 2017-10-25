@@ -39,14 +39,9 @@ class Swfft(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    @property
-    def build_targets(self):
-        targets = ['DFFT_MPI_FLDFLAGS=-lmpi_cxx -lstdc++']
-
-        return targets
+    build_targets = ['default']
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('build/CheckDecomposition', prefix.bin)
         install('build/TestDfft', prefix.bin)
-        install('build/TestFDfft', prefix.bin)
