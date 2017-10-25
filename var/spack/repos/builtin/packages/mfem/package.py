@@ -115,7 +115,6 @@ class Mfem(Package):
     depends_on('lapack', when='+suite-sparse')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hypre', when='+hypre')
     depends_on('metis')
     depends_on('parmetis', when='+superlu-dist')
     depends_on('metis@5:', when='+superlu-dist')
