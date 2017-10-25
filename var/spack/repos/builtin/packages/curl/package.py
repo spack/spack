@@ -48,15 +48,18 @@ class Curl(AutotoolsPackage):
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
+    variant('nghttp2', default=False, description='build nghttp2 library (requires C++11)')
+
     depends_on('openssl')
     depends_on('zlib')
-    depends_on('nghttp2')
+    depends_on('nghttp2', when='+nghttp2')
 
     def configure_args(self):
         spec = self.spec
 
-        return [
+        args = [
             '--with-zlib={0}'.format(spec['zlib'].prefix),
-            '--with-ssl={0}'.format(spec['openssl'].prefix),
-            '--with-http2={0}'.format(spec['nghttp2'].prefix),
+            '--with-ssl={0}'.format(spec['openssl'].prefix)
         ]
+        args += self.with_or_without('nghttp2')
+        return args
