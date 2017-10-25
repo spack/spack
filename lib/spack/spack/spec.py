@@ -102,6 +102,7 @@ import ctypes
 import hashlib
 import itertools
 import os
+import re
 
 from operator import attrgetter
 from six import StringIO
@@ -109,8 +110,9 @@ from six import string_types
 from six import iteritems
 
 from llnl.util.filesystem import find_headers, find_libraries, is_exe
-from llnl.util.lang import *
-from llnl.util.tty.color import *
+from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
+from llnl.util.lang import check_kwargs
+from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
 
 import spack
 import spack.architecture
@@ -121,7 +123,7 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 
-from spack.dependency import *
+from spack.dependency import Dependency, all_deptypes, canonical_deptype
 from spack.util.module_cmd import get_path_from_module, load_module
 from spack.error import SpecError, UnsatisfiableSpecError
 from spack.provider_index import ProviderIndex
@@ -129,9 +131,13 @@ from spack.util.crypto import prefix_bits
 from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.util.spack_yaml import syaml_dict
-from spack.util.string import *
-from spack.variant import *
-from spack.version import *
+from spack.util.string import comma_or
+from spack.variant import MultiValuedVariant, AbstractVariant
+from spack.variant import BoolValuedVariant, substitute_abstract_variants
+from spack.variant import VariantMap, UnknownVariantError
+from spack.variant import DuplicateVariantError
+from spack.variant import UnsatisfiableVariantSpecError
+from spack.version import VersionList, VersionRange, Version, ver
 from yaml.error import MarkedYAMLError
 
 __all__ = [
@@ -1852,8 +1858,8 @@ class Spec(object):
                 )
                 mvar.value = mvar.value + tuple(patches)
                 # FIXME: Monkey patches mvar to store patches order
-                l = getattr(mvar, '_patches_in_order_of_appearance', [])
-                mvar._patches_in_order_of_appearance = dedupe(l + patches)
+                p = getattr(mvar, '_patches_in_order_of_appearance', [])
+                mvar._patches_in_order_of_appearance = dedupe(p + patches)
 
         for s in self.traverse():
             if s.external_module:

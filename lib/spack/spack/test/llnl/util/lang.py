@@ -25,7 +25,7 @@
 import pytest
 from datetime import datetime, timedelta
 
-from llnl.util.lang import *
+from llnl.util.lang import pretty_date, match_predicate
 
 
 def test_pretty_date():

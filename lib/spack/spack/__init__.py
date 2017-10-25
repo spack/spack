@@ -90,7 +90,7 @@ from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
 from spack.util.path import canonicalize_path
-
+from spack.package_prefs import PackageTesting
 
 #-----------------------------------------------------------------------------
 # Initialize various data structures & objects at the core of Spack.
@@ -158,7 +158,8 @@ dirty = _config.get('dirty', False)
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
 
-package_testing = spack.package_prefs.PackageTesting()
+# Needed for test dependencies
+package_testing = PackageTesting()
 
 
 #-----------------------------------------------------------------------------
