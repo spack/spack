@@ -2225,7 +2225,10 @@ class Spec(object):
             if not spec.virtual:
                 pkg_cls = spec.package_class
                 pkg_variants = pkg_cls.variants
-                not_existing = set(spec.variants) - set(pkg_variants)
+                # 'patches' is a variant that may be set on any package but is
+                # not necessarily recorded by the package's class
+                not_existing = set(spec.variants) - (
+                    set(pkg_variants) | set(['patches']))
                 if not_existing:
                     raise UnknownVariantError(spec.name, not_existing)
 
