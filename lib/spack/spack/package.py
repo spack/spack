@@ -66,6 +66,7 @@ from llnl.util.filesystem import working_dir, install_tree, install
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
+from llnl.util.tty.color import colorize
 from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
@@ -1337,7 +1338,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     dirty=dirty,
                     **kwargs)
 
-        tty.msg('Installing %s' % self.name)
+        tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
         # Set run_tests flag before starting build.
         self.run_tests = spack.package_testing.check(self.name)
