@@ -46,9 +46,7 @@ class Sw4lite(MakefilePackage):
         multi=False,
         description='Floating point precision')
     variant('ckernel',
-        default='no',
-        values=('yes', 'no'),
-        multi=False,
+        default=False,
         description='C or Fortran kernel')
 
     depends_on('blas')
@@ -74,7 +72,7 @@ class Sw4lite(MakefilePackage):
             cxxflags.append(self.compiler.openmp_flag)
             fflags.append(self.compiler.openmp_flag)
 
-        if spec.variants['ckernel'].value == 'yes':
+        if spec.variants['ckernel'].value == True:
             cxxflags.append('-DSW4_CROUTINES')
             targets.append('ckernel=yes')
 
@@ -87,7 +85,8 @@ class Sw4lite(MakefilePackage):
 
         targets.append('EXTRA_CXX_FLAGS=')
         targets.append('EXTRA_FORT_FLAGS=')
-        targets.append('EXTRA_LINK_FLAGS=-lblas -llapack -lifcore')
+        blas_lapack = spec['blas'].libs + spec['lapack'].libs
+        targets.append('EXTRA_LINK_FLAGS={0}'.format(blas_lapack.ld_flags))
 
         return targets
 
