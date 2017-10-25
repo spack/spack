@@ -26,7 +26,7 @@ Build caches are created via:
 
 .. code-block:: console
 
-   $ spack buildcache create
+   $ spack buildcache create spec
 
 
 ---------------------------------------
@@ -76,12 +76,12 @@ need to be adjusted for better re-locatability.
 Create tarball of installed Spack package and all dependencies.
 Tarballs are checksummed and signed if gpg2 is available.
 Places them in a directory ``build_cache`` that can be copied to a mirror.
-Commands like ``spack buildcache install`` will search it for pre-compiled packages.
+Commands like ``spack buildcache install`` will search Spack mirrors for build_cache to get the list of build caches.
 
 ==============  ========================================================================================================================
 Arguments       Description
 ==============  ========================================================================================================================
-``<packages>``  list of package specs or package hashes with leading ``/``
+``<specs>``     list of partial specs or hashes with a leading ``/`` to match from installed packages and used for creating build caches
 ``-d <path>``   directory in which ``build_cache`` directory is created, defaults to ``.``
 ``-f``          overwrite ``.spack`` file in ``build_cache`` directory if it exists
 ``-k <key>``    the key to sign package with. In the case where multiple keys exist, the package will be unsigned unless ``-k`` is used.
@@ -95,11 +95,11 @@ Arguments       Description
 
 Retrieves all specs for build caches available on a Spack mirror.
 
-==============  ==============================================================================
+==============  =====================================================================================
 Arguments       Description
-==============  ==============================================================================
-``<packages>``  string to be matched to matched to beginning of listed concretized short specs
-==============  ==============================================================================
+==============  =====================================================================================
+``<specs>``     list of partial package specs to be matched against specs downloaded for build caches
+==============  =====================================================================================
 
 E.g. ``spack buildcache list gcc`` with print only commands to install ``gcc`` package(s)
 
@@ -108,15 +108,15 @@ E.g. ``spack buildcache list gcc`` with print only commands to install ``gcc`` p
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Retrieves all specs for build caches available on a Spack mirror and installs build caches
-with specs matching the specs or hashes input.
+with specs matching the specs input.
 
-==============  ==============================================================
+==============  ==============================================================================================
 Arguments       Description
-==============  ==============================================================
-``<packages>``  list of package specs or package hashes with leading ``/``
+==============  ==============================================================================================
+``<specs>``     list of partial package specs or hashes with a leading ``/`` to be installed from build caches
 ``-f``          remove install directory if it exists before unpacking tarball
 ``-y``          answer yes to all to don't verify package with gpg questions
-==============  ==============================================================
+==============  ==============================================================================================
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack buildcache keys``
