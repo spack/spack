@@ -33,7 +33,7 @@ import spack.error
 import spack.spec
 import spack.architecture
 from spack.util.multiproc import parmap
-from spack.util.executable import *
+from spack.util.executable import Executable, ProcessError
 from spack.util.environment import get_path
 
 __all__ = ['Compiler', 'get_compiler_version']

@@ -155,7 +155,7 @@ def _read_specs_from_file(filename):
                 s.package
                 specs.append(s)
             except SpackError as e:
-                tty.die("Parse error in %s, line %d:" % (args.file, i + 1),
+                tty.die("Parse error in %s, line %d:" % (filename, i + 1),
                         ">>> " + string, str(e))
     return specs
 
@@ -182,7 +182,7 @@ def mirror_create(args):
         new_specs = set()
         for spec in specs:
             spec.concretize()
-            for s in spec.traverse(deptype_query=all):
+            for s in spec.traverse():
                 new_specs.add(s)
         specs = list(new_specs)
 

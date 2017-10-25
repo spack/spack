@@ -26,7 +26,12 @@
 import pytest
 import numbers
 
-from spack.variant import *
+from spack.variant import Variant, SingleValuedVariant, VariantMap
+from spack.variant import MultiValuedVariant, BoolValuedVariant
+from spack.variant import UnsatisfiableVariantSpecError
+from spack.variant import InconsistentValidationError
+from spack.variant import MultipleValuesInExclusiveVariantError
+from spack.variant import InvalidVariantValueError, DuplicateVariantError
 
 
 class TestMultiValuedVariant(object):

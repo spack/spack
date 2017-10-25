@@ -34,27 +34,32 @@ class Slepc(Package):
     homepage = "http://www.grycap.upv.es/slepc"
     url = "http://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
 
+    version('3.8.0', 'c58ccc4e852d1da01112466c48efa41f0839649f3a265925788237d76cd3d963')
     version('3.7.4', '2fb782844e3bc265a8d181c3c3e2632a4ca073111c874c654f1365d33ca2eb8a')
     version('3.7.3', '3ef9bcc645a10c1779d56b3500472ceb66df692e389d635087d30e7c46424df9')
     version('3.7.1', '670216f263e3074b21e0623c01bc0f562fdc0bffcd7bd42dd5d8edbe73a532c2')
     version('3.6.3', '384939d009546db37bc05ed81260c8b5ba451093bf891391d32eb7109ccff876')
     version('3.6.2', '2ab4311bed26ccf7771818665991b2ea3a9b15f97e29fd13911ab1293e8e65df')
+    version('develop', git='https://bitbucket.org/slepc/slepc.git')
 
     variant('arpack', default=True, description='Enables Arpack wrappers')
 
     # NOTE: make sure PETSc and SLEPc use the same python.
     depends_on('python@2.6:2.8', type='build')
-    depends_on('petsc@3.7:', when='@3.7.1:')
+    # Cannot mix release and development versions of SLEPc and PETSc:
+    depends_on('petsc@develop', when='@develop')
+    depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
+    depends_on('petsc@3.7:3.7.7', when='@3.7.1:3.7.4')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
     depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi~int64')
     depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi~int64')
 
     patch('install_name_371.patch', when='@3.7.1')
 
-    def install(self, spec, prefix):
-        if spec.satisfies('+arpack^petsc+int64'):
-            raise RuntimeError('Arpack can not be used with 64bit integers.')
+    # Arpack can not be used with 64bit integers.
+    conflicts('+arpack', when='^petsc+int64')
 
+    def install(self, spec, prefix):
         # set SLEPC_DIR for installation
         # Note that one should set the current (temporary) directory instead
         # its symlink in spack/stage/ !

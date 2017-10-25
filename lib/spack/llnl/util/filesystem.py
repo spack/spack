@@ -24,6 +24,7 @@
 ##############################################################################
 import collections
 import errno
+import hashlib
 import fileinput
 import fnmatch
 import glob
@@ -31,17 +32,19 @@ import numbers
 import os
 import re
 import shutil
-import six
 import stat
 import subprocess
 import sys
+import tempfile
 from contextlib import contextmanager
 
+import six
 from llnl.util import tty
 from llnl.util.lang import dedupe
 
 __all__ = [
     'FileFilter',
+    'FileList',
     'HeaderList',
     'LibraryList',
     'ancestor',
@@ -129,13 +132,13 @@ def filter_file(regex, repl, *filenames, **kwargs):
         try:
             for line in fileinput.input(filename, inplace=True):
                 print(re.sub(regex, repl, line.rstrip('\n')))
-        except:
+        except BaseException:
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
             raise
 
         finally:
-            if not backup:
+            if not backup and os.path.exists(backup_filename):
                 os.remove(backup_filename)
 
 
@@ -282,6 +285,60 @@ def working_dir(dirname, **kwargs):
 
 
 @contextmanager
+def replace_directory_transaction(directory_name, tmp_root=None):
+    """Moves a directory to a temporary space. If the operations executed
+    within the context manager don't raise an exception, the directory is
+    deleted. If there is an exception, the move is undone.
+
+    Args:
+        directory_name (path): absolute path of the directory name
+        tmp_root (path): absolute path of the parent directory where to create
+            the temporary
+
+    Returns:
+        temporary directory where ``directory_name`` has been moved
+    """
+    # Check the input is indeed a directory with absolute path.
+    # Raise before anything is done to avoid moving the wrong directory
+    assert os.path.isdir(directory_name), \
+        '"directory_name" must be a valid directory'
+    assert os.path.isabs(directory_name), \
+        '"directory_name" must contain an absolute path'
+
+    directory_basename = os.path.basename(directory_name)
+
+    if tmp_root is not None:
+        assert os.path.isabs(tmp_root)
+
+    tmp_dir = tempfile.mkdtemp(dir=tmp_root)
+    tty.debug('TEMPORARY DIRECTORY CREATED [{0}]'.format(tmp_dir))
+
+    shutil.move(src=directory_name, dst=tmp_dir)
+    tty.debug('DIRECTORY MOVED [src={0}, dest={1}]'.format(
+        directory_name, tmp_dir
+    ))
+
+    try:
+        yield tmp_dir
+    except (Exception, KeyboardInterrupt, SystemExit):
+        # Delete what was there, before copying back the original content
+        if os.path.exists(directory_name):
+            shutil.rmtree(directory_name)
+        shutil.move(
+            src=os.path.join(tmp_dir, directory_basename),
+            dst=os.path.dirname(directory_name)
+        )
+        tty.debug('DIRECTORY RECOVERED [{0}]'.format(directory_name))
+
+        msg = 'the transactional move of "{0}" failed.'
+        raise RuntimeError(msg.format(directory_name))
+    else:
+        # Otherwise delete the temporary directory
+        shutil.rmtree(tmp_dir)
+        tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
+
+
+@contextmanager
 def hide_files(*file_list):
     try:
         baks = ['%s.bak' % f for f in file_list]
@@ -291,6 +348,32 @@ def hide_files(*file_list):
     finally:
         for f, bak in zip(file_list, baks):
             shutil.move(bak, f)
+
+
+def hash_directory(directory):
+    """Hashes recursively the content of a directory.
+
+    Args:
+        directory (path): path to a directory to be hashed
+
+    Returns:
+        hash of the directory content
+    """
+    assert os.path.isdir(directory), '"directory" must be a directory!'
+
+    md5_hash = hashlib.md5()
+
+    # Adapted from https://stackoverflow.com/a/3431835/771663
+    for root, dirs, files in os.walk(directory):
+        for name in sorted(files):
+            filename = os.path.join(root, name)
+            # TODO: if caching big files becomes an issue, convert this to
+            # TODO: read in chunks. Currently it's used only for testing
+            # TODO: purposes.
+            with open(filename, 'rb') as f:
+                md5_hash.update(f.read())
+
+    return md5_hash.hexdigest()
 
 
 def touch(path):
