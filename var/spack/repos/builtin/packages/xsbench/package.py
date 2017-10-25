@@ -33,7 +33,7 @@ class Xsbench(MakefilePackage):
        is provided in docs/XSBench_Theory.pdf."""
 
     homepage = "https://github.com/ANL-CESAR/XSBench/"
-    url = "https://github.com/ANL-CESAR/XSBench/archive/v13.tar.gz"
+    url = "https://github.com/ANL-CESAR/XSBench/archive/v14.tar.gz"
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
