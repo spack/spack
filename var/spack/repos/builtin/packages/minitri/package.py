@@ -37,9 +37,6 @@ class Minitri(MakefilePackage):
 
     depends_on('mpi', when="+mpi")
 
-
-# Need to deal with compilers!! -- especially for serial
-
     @property
     def build_targets(self):
         targets = []
