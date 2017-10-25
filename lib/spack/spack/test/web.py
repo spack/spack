@@ -27,7 +27,7 @@ import os
 
 import spack
 from spack.util.web import spider, find_versions_of_archive
-from spack.version import *
+from spack.version import ver
 
 
 web_data_path = os.path.join(spack.test_path, 'data', 'web')

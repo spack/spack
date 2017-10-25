@@ -26,7 +26,7 @@ from spack import *
 
 
 class PerlDevelStacktrace(PerlPackage):
-    """An object representing a stack trace"""
+    """An object representing a stack trace."""
 
     homepage = "http://search.cpan.org/~drolsky/Devel-StackTrace-2.02/lib/Devel/StackTrace.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/Devel-StackTrace-2.02.tar.gz"
