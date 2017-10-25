@@ -73,6 +73,8 @@ class Llvm(CMakePackage):
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant('python', default=False, description="Install python bindings")
+    extends('python', when='+python')
 
     # Build dependency
     depends_on('cmake@3.4.3:', type='build')
@@ -429,5 +431,10 @@ class Llvm(CMakePackage):
 
     @run_after('install')
     def post_install(self):
+        if '+clang' in self.spec and '+python' in self.spec:
+            install_tree(
+                'tools/clang/bindings/python/clang',
+                join_path(site_packages_dir, 'clang'))
+
         with working_dir(self.build_directory):
             install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))
