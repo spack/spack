@@ -153,11 +153,11 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
         tty.msg("buildcache spec(s) matching %s \n" % pkg)
         for spec in sorted(specs):
             if pkg.startswith('/'):
-                pkghash=pkg.replace('/','')
+                pkghash = pkg.replace('/', '')
                 if spec.dag_hash(7) == pkghash:
                     matches.append(spec)
             else:
-                if spec.satisfies(pkg): 
+                if spec.satisfies(pkg):
                     matches.append(spec)
         # For each pkg provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
@@ -304,20 +304,22 @@ def listspecs(args):
     if args.packages:
         pkgs = set(args.packages)
         for pkg in pkgs:
-            tty.msg("buildcache spec(s) matching %s and commands to install them" % pkgs)
+            tty.msg(
+                "buildcache spec(s) matching %s and commands to install them" % pkgs)
             for spec in sorted(specs):
                 if spec.satisfies(pkg):
                     tty.msg('Enter\nspack buildcache install /%s\n' %
-                            spec.dag_hash(7)+
+                            spec.dag_hash(7) +
                             ' to install "%s"' %
                             spec.format())
     else:
         tty.msg("buildcache specs and commands to install them")
         for spec in sorted(specs):
             tty.msg('Enter\nspack buildcache install /%s\n' %
-                    spec.dag_hash(7)+
+                    spec.dag_hash(7) +
                     ' to install "%s"' %
                     spec.format())
+
 
 def getkeys(args):
     install = False
