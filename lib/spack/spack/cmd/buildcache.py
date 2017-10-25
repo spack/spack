@@ -304,8 +304,8 @@ def listspecs(args):
     if args.packages:
         pkgs = set(args.packages)
         for pkg in pkgs:
-            tty.msg("buildcache spec(s) matching %s " +
-                    "and commands to install them" % pkgs)
+            tty.msg("buildcache spec(s) matching " +
+                    "%s and commands to install them" % pkgs)
             for spec in sorted(specs):
                 if spec.satisfies(pkg):
                     tty.msg('Enter\nspack buildcache install /%s\n' %
