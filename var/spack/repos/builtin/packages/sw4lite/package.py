@@ -40,14 +40,9 @@ class Sw4lite(MakefilePackage):
     version('1.0', '3d911165f4f2ff6d5f9c1bd56ab6723f')
 
     variant('openmp', default=True, description='Build with OpenMP support')
-    variant('precision',
-        default='double',
-        values=('float', 'double'),
-        multi=False,
-        description='Floating point precision')
-    variant('ckernel',
-        default=False,
-        description='C or Fortran kernel')
+    variant('precision', default='double', values=('float', 'double'),
+                multi=False, description='Floating point precision')
+    variant('ckernel', default=False, description='C or Fortran kernel')
 
     depends_on('blas')
     depends_on('lapack')
@@ -72,7 +67,7 @@ class Sw4lite(MakefilePackage):
             cxxflags.append(self.compiler.openmp_flag)
             fflags.append(self.compiler.openmp_flag)
 
-        if spec.variants['ckernel'].value == True:
+        if spec.variants['ckernel'].value is True:
             cxxflags.append('-DSW4_CROUTINES')
             targets.append('ckernel=yes')
 
