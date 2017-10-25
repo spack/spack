@@ -26,7 +26,7 @@ from spack import *
 
 
 class Laghos(MakefilePackage):
-    """Laghos (LAGrangian High-Order Solver) is a miniapp that solves the
+    """Laghos (LAGrangian High-Order Solver) is a CEED miniapp that solves the
        time-dependent Euler equations of compressible gas dynamics in a moving
        Lagrangian frame using unstructured high-order finite element spatial
        discretization and explicit high-order time-stepping.
