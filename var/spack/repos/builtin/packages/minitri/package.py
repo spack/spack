@@ -36,15 +36,17 @@ class Minitri(MakefilePackage):
     variant('mpi', default=True, description='Build with MPI support')
 
     depends_on('mpi', when="+mpi")
+    
+    tags = ['proxy-app', 'ecp-proxy-app']
 
     @property
     def build_targets(self):
         targets = []
         if '+mpi' in self.spec:
-            targets.append('CC={0}'.format(self.compiler.cc))
+            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
             targets.append('--directory=miniTri/linearAlgebra/MPI')
         else:
-            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+            targets.append('CC={0}'.format(self.compiler.cc))
             targets.append('--directory=miniTri/linearAlgebra/serial')
 
         targets.append('--file=Makefile')
