@@ -29,8 +29,6 @@ import tarfile
 import yaml
 import shutil
 
-from collections import defaultdict
-
 import llnl.util.tty as tty
 from spack.util.gpg import Gpg
 from llnl.util.filesystem import mkdirp, join_path, install_tree
