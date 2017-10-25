@@ -31,6 +31,7 @@ import inspect
 import re
 
 import llnl.util.lang as lang
+import spack
 import spack.error as error
 from six import StringIO
 
@@ -592,7 +593,7 @@ def substitute_abstract_variants(spec):
         spec: spec on which to operate the substitution
     """
     for name, v in spec.variants.items():
-        if name == 'patches':
+        if name in spack.directives.reserved_names:
             continue
         pkg_variant = spec.package_class.variants[name]
         new_variant = pkg_variant.make_variant(v._original_value)
