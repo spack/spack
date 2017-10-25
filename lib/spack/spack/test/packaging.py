@@ -91,6 +91,7 @@ echo $PATH"""
     pkg = spack.repo.get(spec)
     fake_fetchify(mock_archive.url, pkg)
     pkg.do_install()
+    pkghash='/'+spec.dag_hash(7)
 
     # Put some non-relocatable file in there
     filename = os.path.join(spec.prefix, "dummy.txt")
@@ -130,7 +131,7 @@ echo $PATH"""
         pkg.do_uninstall(force=True)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', str(spec)])
+        args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # create build cache with relative path and signing
@@ -146,7 +147,7 @@ echo $PATH"""
         buildcache.install_tarball(spec, args)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', str(spec)])
+        args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
     else:
@@ -163,12 +164,12 @@ echo $PATH"""
         buildcache.install_tarball(spec, args)
 
         # test overwrite install without verification
-        args = parser.parse_args(['install', '-f', '-y', str(spec)])
+        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # create build cache with relative path
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', '-y', str(spec)])
+            ['create', '-d', mirror_path, '-f', '-r', '-y', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
@@ -179,7 +180,7 @@ echo $PATH"""
         buildcache.install_tarball(spec, args)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', '-y', str(spec)])
+        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
         buildcache.buildcache(parser, args)
 
     # Validate the relocation information
