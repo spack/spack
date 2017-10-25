@@ -33,7 +33,7 @@ class Minitri(MakefilePackage):
 
     version('1.0', '947e296ca408275232f47724267a85ce')
 
-    variant('mpi', default=False, description='Build with MPI support')
+    variant('mpi', default=True, description='Build with MPI support')
 
     depends_on('mpi', when="+mpi")
 
