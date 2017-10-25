@@ -30,6 +30,8 @@ import spack.cmd.module as module
 import spack.modules as modules
 import spack.config
 
+NO_TCL = 'tcl' not in spack.config.get_config('modules')['enable']
+
 
 def _get_module_files(args):
 
@@ -75,8 +77,6 @@ def test_exit_with_failure(parser, failure_args):
     with pytest.raises(SystemExit):
         module.module(parser, args)
 
-
-NO_TCL = 'tcl' not in spack.config.get_config('modules')['enable']
 
 @pytest.mark.db
 @pytest.mark.usefixtures('database')

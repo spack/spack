@@ -107,7 +107,7 @@ _arguments['constraint'] = Args(
 _arguments['module_type'] = Args(
     '-m', '--module-type',
     choices=spack.modules.module_types.keys(),
-    default=spack.config.get_config('modules')['enable'][0],
+    default=[spack.config.get_config('modules')['enable'][0]],
     action='append',
     help="type of module file. More than one choice is allowed" +
          " [default: %s]" % spack.config.get_config('modules')['enable'][0])
