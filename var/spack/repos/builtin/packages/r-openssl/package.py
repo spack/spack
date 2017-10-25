@@ -37,9 +37,11 @@ class ROpenssl(RPackage):
     generator, and 'bignum' math methods for manually performing crypto
     calculations on large multibyte integers."""
 
-    homepage = "https://github.com/jeroenooms/openssl#readme"
+    homepage = "https://CRAN.R-project.org/package=openssl"
     url      = "https://cran.r-project.org/src/contrib/openssl_0.9.6.tar.gz"
+    list_url = homepage
 
+    version('0.9.7', '86773824dce7d3d79abfef574ce2531a')
     version('0.9.6', '7ef137929d9dd07db690d35db242ba4b')
     version('0.9.4', '82a890e71ed0e74499878bedacfb8ccb')
 
