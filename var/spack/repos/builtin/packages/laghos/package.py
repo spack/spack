@@ -50,9 +50,9 @@ class Laghos(MakefilePackage):
 
         targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
         targets.append('CONFIG_MK=%s' % join_path(spec['mfem'].prefix,
-                            'share/mfem/config.mk'))
+                       'share/mfem/config.mk'))
         targets.append('TEST_MK=%s' % join_path(spec['mfem'].prefix,
-                            'share/mfem/test.mk'))
+                       'share/mfem/test.mk'))
 
         return targets
 
