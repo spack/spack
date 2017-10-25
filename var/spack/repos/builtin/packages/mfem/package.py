@@ -105,6 +105,7 @@ class Mfem(Package):
     conflicts('+superlu-dist', when='@:3.1')
     conflicts('+netcdf', when='@:3.1')
 
+    depends_on('hypre', when='+hypre')
     depends_on('blas', when='+lapack')
     depends_on('blas', when='+suite-sparse')
     depends_on('lapack', when='+lapack')
