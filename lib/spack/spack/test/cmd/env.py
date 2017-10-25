@@ -15,7 +15,7 @@ from spack.cmd.env import (Environment, prepare_repository,
 from spack.version import Version
 
 
-class TestContext(unittest.TestCase):
+class TestEnvironment(unittest.TestCase):
     def setUp(self):
         self.env_dir = spack.cmd.env._db_dirname
         spack.cmd.env._db_dirname = tempfile.mkdtemp()
