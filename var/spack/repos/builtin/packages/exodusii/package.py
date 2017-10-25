@@ -27,9 +27,6 @@ from spack import *
 # TODO: Add support for a C++11 enabled installation that filters out the
 # TODO: "C++11-Disabled" flag (but only if the spec compiler supports C++11).
 
-# TODO: Use variant forwarding to forward the 'mpi' variant to the direct
-# TODO: dependencies 'hdf5' and 'netcdf'.
-
 
 class Exodusii(CMakePackage):
     """Exodus II is a C++/Fortran library developed to store and retrieve
@@ -52,8 +49,10 @@ class Exodusii(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     # https://github.com/gsjaardema/seacas/blob/master/NetCDF-Mapping.md
-    depends_on('netcdf maxdims=65536 maxvars=524288')
-    depends_on('hdf5+shared')
+    depends_on('netcdf+mpi maxdims=65536 maxvars=524288', when='+mpi')
+    depends_on('netcdf~mpi maxdims=65536 maxvars=524288', when='~mpi')
+    depends_on('hdf5+shared+mpi', when='+mpi')
+    depends_on('hdf5+shared~mpi', when='~mpi')
 
     def cmake_args(self):
         spec = self.spec
