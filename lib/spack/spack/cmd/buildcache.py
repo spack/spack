@@ -154,7 +154,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
         for spec in sorted(specs):
             if pkg.startswith('/'):
                 pkghash = pkg.replace('/', '')
-                if spec.dag_hash(7) == pkghash:
+                if spec.dag_hash().startswith(pkghash):
                     matches.append(spec)
             else:
                 if spec.satisfies(pkg):
