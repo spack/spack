@@ -64,7 +64,7 @@ from six import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 from llnl.util.filesystem import (join_path, mkdirp, install, install_tree,
-                                  working_dir)
+                                  working_dir, force_symlink)
 
 import spack
 import spack.store
