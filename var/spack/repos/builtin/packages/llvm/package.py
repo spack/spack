@@ -390,7 +390,10 @@ class Llvm(CMakePackage):
                                '-DLLVM_TOOL_LLDB_BUILD:Bool=OFF'])
         if '+internal_unwind' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=OFF')
-        if '+libcxx' not in spec:
+        if '+libcxx' in spec:
+            if spec.satisfies('@3.9.0:'):
+                cmake_args.append('-DCLANG_DEFAULT_CXX_STDLIB=libc++')
+        else:
             cmake_args.append('-DLLVM_EXTERNAL_LIBCXX_BUILD:Bool=OFF')
             cmake_args.append('-DLLVM_EXTERNAL_LIBCXXABI_BUILD:Bool=OFF')
         if '+compiler-rt' not in spec:
