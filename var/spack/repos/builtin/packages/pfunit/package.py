@@ -46,6 +46,7 @@ class Pfunit(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     patch('Test_UnixProcess_delay_after_kill.patch', when='@3.2.8')
+    patch('CMakeLists.patch')
 
     def cmake_args(self):
         spec = self.spec

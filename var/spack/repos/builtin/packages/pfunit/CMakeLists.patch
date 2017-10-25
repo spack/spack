@@ -1,0 +1,21 @@
+--- a/source/CMakeLists.txt	2017-10-16 19:42:59.000000000 +1100
++++ b/source/CMakeLists.txt	2017-10-25 19:12:33.017486276 +1100
+@@ -1,6 +1,6 @@
+ cmake_minimum_required(VERSION 2.8)
+ 
+-SET (CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/mod)
++#SET (CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/mod)
+ 
+ find_package(PythonInterp REQUIRED) #Sets ${PYTHON_EXECUTABLE}
+ 
+@@ -90,8 +90,8 @@
+ 
+ add_library(pfunit STATIC ${SOURCES})
+ 
+-include_directories(${CMAKE_BINARY_DIR}/mod)
++#include_directories(${CMAKE_BINARY_DIR}/mod)
+ include_directories(${CMAKE_BINARY_DIR}/source)
+ 
+ INSTALL(TARGETS pfunit DESTINATION lib)
+-INSTALL(DIRECTORY  ${CMAKE_BINARY_DIR}/mod DESTINATION .)
++#INSTALL(DIRECTORY  ${CMAKE_BINARY_DIR}/mod DESTINATION .)
