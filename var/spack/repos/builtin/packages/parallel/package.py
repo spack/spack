@@ -58,4 +58,3 @@ class Parallel(AutotoolsPackage):
             substitute = "#!{perl}".format(perl=perl)
             files = ['parallel', 'niceload', 'parcat', 'sql', ]
             filter_file(match, substitute, *files, **kwargs)
-
