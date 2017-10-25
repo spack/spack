@@ -22,31 +22,40 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Laghos(Package):
-    """CEED miniapp that solves the time-dependent Euler equations using
-       MFEM"""
+class Laghos(MakefilePackage):
+    """Laghos (LAGrangian High-Order Solver) is a miniapp that solves the
+       time-dependent Euler equations of compressible gas dynamics in a moving
+       Lagrangian frame using unstructured high-order finite element spatial
+       discretization and explicit high-order time-stepping.
+    """
+    tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "https://github.com/CEED/Laghos"
+    homepage = "https://codesign.llnl.gov/laghos.php"
+    git      = "https://github.com/CEED/Laghos"
     url      = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
 
-    version('1.0',
-            'f58c6089e69ed11d111d63d2629c0e2616219e1d474ff2aee14529953d3e8bb0')
+    version('1.0', '107c2f693936723e764a4d404d33d44a')
+    version('develop', git=git, branch='master')
 
-    depends_on('mfem@3.3:+mpi')
+    depends_on('mpi')
+    depends_on('mfem@laghos-v1.0', when='@1.0')
+
+    @property
+    def build_targets(self):
+        targets = []
+        spec = self.spec
+
+        targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
+        targets.append('CONFIG_MK=%s' % join_path(spec['mfem'].prefix,
+                'share/mfem/config.mk'))
+        targets.append('TEST_MK=%s' % join_path(spec['mfem'].prefix,
+                'share/mfem/test.mk'))
+
+        return targets
 
     def install(self, spec, prefix):
-
-        options = [
-            'MFEM_DIR=%s' % spec['mfem'].prefix,
-            'CONFIG_MK=%s' % join_path(spec['mfem'].prefix, 'config.mk'),
-            'TEST_MK=%s' % join_path(spec['mfem'].prefix, 'test.mk'),
-        ]
-
-        install_options = ['PREFIX=%s' % prefix]
-
-        make(*options)
-        make('install', *install_options)
+        mkdirp(prefix.bin)
+        install('laghos', prefix.bin)

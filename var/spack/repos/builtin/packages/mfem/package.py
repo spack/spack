@@ -54,6 +54,9 @@ class Mfem(Package):
     version('3.3.2-rc2', git='https://github.com/mfem/mfem',
             tag='v3.3.2-rc2')
 
+    version('laghos-v1.0', git='https://github.com/mfem/mfem',
+            tag='laghos-v1.0')
+
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
             url='http://goo.gl/Vrpsns', extension='.tar.gz',
@@ -112,6 +115,7 @@ class Mfem(Package):
     depends_on('lapack', when='+suite-sparse')
 
     depends_on('mpi', when='+mpi')
+    depends_on('hypre', when='+hypre')
     depends_on('metis')
     depends_on('parmetis', when='+superlu-dist')
     depends_on('metis@5:', when='+superlu-dist')
