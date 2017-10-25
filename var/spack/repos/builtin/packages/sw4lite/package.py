@@ -85,8 +85,8 @@ class Sw4lite(MakefilePackage):
 
         targets.append('EXTRA_CXX_FLAGS=')
         targets.append('EXTRA_FORT_FLAGS=')
-        blas_lapack = spec['blas'].libs + spec['lapack'].libs
-        targets.append('EXTRA_LINK_FLAGS={0}'.format(blas_lapack.ld_flags))
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        targets.append('EXTRA_LINK_FLAGS={0}'.format(lapack_blas.ld_flags))
 
         return targets
 
