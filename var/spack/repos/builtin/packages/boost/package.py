@@ -153,14 +153,12 @@ class Boost(Package):
     patch('python_jam.patch', when='@1.56.0: ^python@3:')
     patch('python_jam_pre156.patch', when='@:1.55.0 ^python@3:')
 
-    # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
-    patch('boost_10125.patch', when='@1.55.0%gcc@5.0:5.9')
-
     # Patch fix for IBM XL compiler
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl_r')
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
-    patch('call_once_variadic.patch', when='@:1.55.9999%gcc@5:')
+    # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
+    patch('call_once_variadic.patch', when='@1.55.0:1.55.9999%gcc@5.0:5.9')
 
     # Patch fix for PGI compiler
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
