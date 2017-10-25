@@ -177,7 +177,8 @@ class Gcc(AutotoolsPackage):
         # prerequisites (gmp, mpc, mpfr and isl) and unpack then into the
         # source tree.
         # See https://gcc.gnu.org/wiki/InstallingGCC
-        fetch_prereqs = which( 'download_prerequisites', required=True, path='./contrib')
+        fetch_prereqs = which('download_prerequisites', required=True,
+                              path='./contrib')
         fetch_prereqs()
 
         # Fix a standard header file for OS X Yosemite that
