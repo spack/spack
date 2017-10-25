@@ -31,7 +31,7 @@ from spack import *
 # TODO: dependencies 'hdf5' and 'netcdf'.
 
 
-class Exodusii(Package):
+class Exodusii(CMakePackage):
     """Exodus II is a C++/Fortran library developed to store and retrieve
        data for finite element analyses. It's used for preprocessing
        (problem definition), postprocessing (results visualization), and
@@ -55,15 +55,20 @@ class Exodusii(Package):
     depends_on('netcdf maxdims=65536 maxvars=524288')
     depends_on('hdf5+shared')
 
-    patch('cmake-exodus.patch')
+    def cmake_args(self):
+        spec = self.spec
 
-    def install(self, spec, prefix):
         cc_path = spec['mpi'].mpicc if '+mpi' in spec else self.compiler.cc
         cxx_path = spec['mpi'].mpicxx if '+mpi' in spec else self.compiler.cxx
 
-        config_args = std_cmake_args[2:]
-        config_args.extend([
+        options = [
             # General Flags #
+            '-DSEACASProj_ENABLE_SEACASExodus=ON',
+            '-DSEACASProj_ENABLE_TESTS=ON',
+            '-DBUILD_SHARED_LIBS:BOOL=ON',
+            '-DTPL_ENABLE_Netcdf:BOOL=ON',
+            '-DHDF5_NO_SYSTEM_PATHS=ON',
+            '-DSEACASProj_SKIP_FORTRANCINTERFACE_VERIFY_TEST:BOOL=ON',
             '-DSEACASProj_ENABLE_CXX11:BOOL=OFF',
             '-DSEACASProj_ENABLE_Zoltan:BOOL=OFF',
             '-DHDF5_ROOT:PATH={0}'.format(spec['hdf5'].prefix),
@@ -73,14 +78,6 @@ class Exodusii(Package):
             '-DTPL_ENABLE_MPI={0}'.format('ON' if '+mpi' in spec else 'OFF'),
             '-DCMAKE_C_COMPILER={0}'.format(cc_path),
             '-DCMAKE_CXX_COMPILER={0}'.format(cxx_path),
-        ])
+        ]
 
-        build_directory = join_path(self.stage.source_path, 'spack-build')
-        source_directory = self.stage.source_path
-
-        with working_dir(build_directory, create=True):
-            mcmake = Executable(join_path(source_directory, 'cmake-exodus'))
-            mcmake(*config_args)
-
-            make()
-            make('install')
+        return options
