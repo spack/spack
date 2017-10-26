@@ -25,7 +25,7 @@
 from spack import *
 
 
-class ROrganismdb(RPackage):
+class ROrganismdbi(RPackage):
     """The package enables a simple unified interface to several annotation
        packages each of which has its own schema by taking advantage of the
        fact that each of these packages implements a select methods."""
