@@ -81,7 +81,7 @@ class Vasp(MakefilePackage):
         makefile.filter('OFLAG      = .*', 'OFLAG      = -O2 -ip')
         makefile.filter('BLACS      = .*', 'BLACS      = -lmkl_blacs_openmpi_lp64')
         makefile.filter('LLIBS      = .*', 'LLIBS      = %s/lib/libwannier.a $(SCALAPACK) $(LAPACK) $(BLAS)' % self.spec['wannier90'].prefix)
-        makefile.filter('OBJECTS    = .*', 'OBJECTS    = fftmpiw.o fftmpi_map.o fft3dlib.o fftw3d.o $(MKLROOT)/interfaces/fftw3xf/libfftw3xf_intel.a')
+        makefile.filter('OBJECTS    = .*', 'OBJECTS    = fftmpiw.o fftmpi_map.o fft3dlib.o fftw3d.o \\ $(MKLROOT)/interfaces/fftw3xf/libfftw3xf_intel.a')
         makefile.filter('CPP_LIB    = .*', 'CPP_LIB    = $(CPP) -DLONGCHAR')
         makefile.filter('CC_LIB     = .*', 'CC_LIB     = %s' % spec['mpi'].mpicc)
 
