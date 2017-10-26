@@ -81,7 +81,6 @@ class Vasp(MakefilePackage):
         makefile.filter('OFLAG      = .*', 'OFLAG      = -O2 -ip')
         makefile.filter('BLACS      = .*', 'BLACS      = -lmkl_blacs_openmpi_lp64')
         makefile.filter('LLIBS      = .*', 'LLIBS      = %s/lib/libwannier.a $(SCALAPACK) $(LAPACK) $(BLAS)' % self.spec['wannier90'].prefix)
-        makefile.filter('OBJECTS    = .*', 'OBJECTS    = fftmpiw.o fftmpi_map.o fft3dlib.o fftw3d.o \\ $(MKLROOT)/interfaces/fftw3xf/libfftw3xf_intel.a')
         makefile.filter('CPP_LIB    = .*', 'CPP_LIB    = $(CPP) -DLONGCHAR')
         makefile.filter('CC_LIB     = .*', 'CC_LIB     = %s' % spec['mpi'].mpicc)
 
@@ -91,6 +90,7 @@ class Vasp(MakefilePackage):
             makefile.filter('-Duse_shmem.*', '-Duse_shmem -Dtbdyn -DVASP2WANNIER90 -DRPROMU_DGEMV -DRACCMU_DGEMV -DnoSTOPCAR -Ddo_loops')
             makefile.filter('FCL        = .*', 'FCL        = %s -mkl=sequential' % spec['mpi'].mpifc)
         else:
+            makefile.filter('OBJECTS    = .*', 'OBJECTS    = fftmpiw.o fftmpi_map.o fft3dlib.o fftw3d.o $(MKLROOT)/interfaces/fftw3xf/libfftw3xf_intel.a')
             makefile.filter('CPP_OPTIONS= .*', 'CPP_OPTIONS= -DHOST=\\"RC_Workstations\\" -DIFC \\')
             makefile.filter('-DCACHE_SIZE=.*', '-DCACHE_SIZE=12000 -DPGF90 \\')
             makefile.filter('-Duse_shmem.*', '-Duse_shmem -DnoAugXCmeta -DVASP2WANNIER90 -DRPROMU_DGEMV -DRACCMU_DGEMV -DnoSTOPCAR -Ddo_loops')
