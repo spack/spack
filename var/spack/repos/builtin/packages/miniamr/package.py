@@ -36,7 +36,6 @@ class Miniamr(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-
     version('1.4.0', '3aab0247047a94e343709cf2e51cc46e')
 
     variant('mpi', default=True, description='Build with MPI support')
