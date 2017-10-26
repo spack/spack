@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Byobu(AutotoolsPackage):
     """Byobu: Text-based window manager and terminal multiplexer."""
 
