@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.main import SpackCommand
+import os.path
 
 activate = SpackCommand('activate')
 extensions = SpackCommand('extensions')
@@ -62,6 +63,26 @@ def test_view_extension(
     assert 'extension1@1.0' in view_activated
     assert 'extension1@2.0' not in view_activated
     assert 'extension2@1.0' not in view_activated
+    assert os.path.exists(os.path.join(viewpath, 'bin', 'extension1'))
+
+
+def test_view_extension_remove(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery):
+    install('extendee')
+    install('extension1@1.0')
+    viewpath = str(tmpdir.mkdir('view'))
+    view('symlink', viewpath, 'extension1@1.0')
+    view('remove', viewpath, 'extension1@1.0')
+    all_installed = extensions('--show', 'installed', 'extendee')
+    assert 'extension1@1.0' in all_installed
+    global_activated = extensions('--show', 'activated', 'extendee')
+    assert 'extension1@1.0' not in global_activated
+    view_activated = extensions('--show', 'activated',
+                                '-v', viewpath,
+                                'extendee')
+    assert 'extension1@1.0' not in view_activated
+    assert not os.path.exists(os.path.join(viewpath, 'bin', 'extension1'))
 
 
 def test_view_extension_global_activation(
@@ -89,6 +110,8 @@ def test_view_extension_global_activation(
     assert 'extension1@1.0' in view_activated
     assert 'extension1@2.0' not in view_activated
     assert 'extension2@1.0' not in view_activated
+    assert os.path.exists(os.path.join(viewpath, 'bin', 'extension1'))
+    assert not os.path.exists(os.path.join(viewpath, 'bin', 'extension2'))
 
 
 def test_view_extendee_with_global_activations(
