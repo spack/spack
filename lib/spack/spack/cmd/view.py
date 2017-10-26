@@ -202,17 +202,6 @@ def view(parser, args):
         # status and remove can map the name to packages in view
         specs = relaxed_disambiguate(args.specs, view)
 
-    activated = list(filter(lambda s: s.package.is_extension and
-                            s.package.is_activated(), specs))
-
-    if len(activated) > 0:
-        tty.error("Globally activated extensions cannot be used in "
-                  "conjunction with filesystem views. "
-                  "Please deactivate the following specs: ")
-        spack.cmd.display_specs(activated, flags=True, variants=True,
-                                long=args.verbose)
-        return
-
     with_dependencies = args.dependencies.lower() in ['true', 'yes']
 
     # Map action to corresponding functionality
