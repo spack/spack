@@ -85,6 +85,31 @@ def test_view_extension_remove(
     assert not os.path.exists(os.path.join(viewpath, 'bin', 'extension1'))
 
 
+def test_view_extension_conflict(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery):
+    install('extendee')
+    install('extension1@1.0')
+    install('extension1@2.0')
+    viewpath = str(tmpdir.mkdir('view'))
+    view('symlink', viewpath, 'extension1@1.0')
+    output = view('symlink', viewpath, 'extension1@2.0')
+    assert 'Package conflict detected' in output
+
+
+def test_view_extension_conflict_ignored(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery):
+    install('extendee')
+    install('extension1@1.0')
+    install('extension1@2.0')
+    viewpath = str(tmpdir.mkdir('view'))
+    view('symlink', viewpath, 'extension1@1.0')
+    view('symlink', viewpath, '-i', 'extension1@2.0')
+    with open(os.path.join(viewpath, 'bin', 'extension1'), 'r') as fin:
+        assert fin.read() == '1.0'
+
+
 def test_view_extension_global_activation(
         tmpdir, builtin_mock, mock_archive, mock_fetch, config,
         install_mockery):

@@ -39,5 +39,5 @@ class Extension1(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with open(os.path.join(prefix.bin, 'extension1'), 'w+'):
-            pass
+        with open(os.path.join(prefix.bin, 'extension1'), 'w+') as fout:
+            fout.write(str(spec.version))
