@@ -37,11 +37,12 @@ class Comd(MakefilePackage):
     versions of CoMD will be released to incorporate the lessons learned from
     the co-design process."""
 
-    tags = ['proxy-app']
+    tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "http://www.exmatex.org/comd.html"
-    url      = "https://github.com/exmatex/CoMD/archive/master.tar.gz"
+    url      = "https://github.com/exmatex/CoMD/archive/v1.1.tar.gz"
 
+    version('1.1', '5051310a8d2c93cccba63de40bcfaa78')
     version('master', git='https://github.com/exmatex/CoMD.git', branch='master')
 
     variant('serial', default=False, description='Build without MPI support')
