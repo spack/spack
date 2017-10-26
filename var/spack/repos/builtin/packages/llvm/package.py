@@ -421,7 +421,8 @@ class Llvm(CMakePackage):
 
         if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
-        if spec.satisfies('@3.8.0:') and spec.satisfies('+lldb') and spec['python'].external:
+        if (spec.satisfies('@3.8.0:') and spec.satisfies('+lldb')
+                and spec['python'].external):
             cmake_args.append('-DLLVM_LIBDIR_SUFFIX=64')
 
         return cmake_args
@@ -441,5 +442,5 @@ class Llvm(CMakePackage):
             # Install clang python bindings
             if os.path.exists('../tools/clang/bindings/python/clang'):
                 install_tree('../tools/clang/bindings/python/clang',
-                         join_path(self.prefix,
-                                   'lib/python2.7/site-packages/clang'))
+                             join_path(self.prefix,
+                                       'lib/python2.7/site-packages/clang'))
