@@ -43,7 +43,7 @@ class Comd(MakefilePackage):
     url      = "https://github.com/exmatex/CoMD/archive/v1.1.tar.gz"
 
     version('1.1', '5051310a8d2c93cccba63de40bcfaa78')
-    version('master', git='https://github.com/exmatex/CoMD.git', branch='master')
+    version('develop', git='https://github.com/exmatex/CoMD.git', branch='master')
 
     variant('serial', default=False, description='Build without MPI support')
     variant('mpi', default=True, description='Build with MPI support')
