@@ -167,7 +167,7 @@ def colify(elts, **options):
             r, c = env_size.split('x')
             console_rows, console_cols = int(r), int(c)
             tty = True
-        except:
+        except BaseException:
             pass
 
     # Use only one column if not a tty.
@@ -188,7 +188,7 @@ def colify(elts, **options):
     elif method == "uniform":
         config = config_uniform_cols(elts, console_cols, padding, cols)
     else:
-        raise ValueError("method must be one of: " + allowed_methods)
+        raise ValueError("method must be either 'variable' or 'uniform'")
 
     cols = config.cols
     rows = (len(elts) + cols - 1) // cols
