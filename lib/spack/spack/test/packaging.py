@@ -91,7 +91,7 @@ echo $PATH"""
     pkg = spack.repo.get(spec)
     fake_fetchify(mock_archive.url, pkg)
     pkg.do_install()
-    pkghash='/'+spec.dag_hash(7)
+    pkghash = '/' + spec.dag_hash(7)
 
     # Put some non-relocatable file in there
     filename = os.path.join(spec.prefix, "dummy.txt")
