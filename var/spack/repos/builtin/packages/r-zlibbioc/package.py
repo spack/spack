@@ -36,5 +36,5 @@ class RZlibbioc(RPackage):
     url      = "https://git.bioconductor.org/packages/zlibbioc"
     list_url = homepage
 
-    version('1.22.0', git='https://git.bioconductor.org/packages/yaqcaffy', commit='30377f830af2bc1ff17bbf3fdd2cb6442015fea5')
+    version('1.22.0', git='https://git.bioconductor.org/packages/zlibbioc', commit='30377f830af2bc1ff17bbf3fdd2cb6442015fea5')
     depends_on('r@3.4.0:3.4.9', when='@1.22.0')
