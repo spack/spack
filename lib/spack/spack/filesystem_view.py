@@ -260,6 +260,19 @@ class YamlFilesystemView(FilesystemView):
                      % colorize_spec(spec))
             return True
 
+        if spec.package.extendable:
+            # Check for globally activated extensions in the extendee that
+            # we're looking at.
+            activated = [p.spec for p in
+                         spack.store.db.activated_extensions_for(spec)]
+            if activated:
+                tty.error("Globally activated extensions cannot be used in "
+                          "conjunction with filesystem views. "
+                          "Please deactivate the following specs: ")
+                spack.cmd.display_specs(activated, flags=True, variants=True,
+                                        long=False)
+                return False
+
         tree = LinkTree(spec.prefix)
 
         if not self.ignore_conflicts:
