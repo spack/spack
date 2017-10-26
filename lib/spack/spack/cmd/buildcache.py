@@ -108,27 +108,26 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
-    for pkg in pkgs:
-        specs = spack.cmd.parse_specs(pkg)
-        for spec in specs:
-            matching = spack.store.db.query(spec)
-            # For each spec provided, make sure it refers to only one package.
-            # Fail and ask user to be unambiguous if it doesn't
-            if not allow_multiple_matches and len(matching) > 1:
-                tty.error('%s matches multiple installed packages:' % spec)
-                for match in matching:
-                    tty.msg('"%s"' % match.format())
-                has_errors = True
+    specs = spack.cmd.parse_specs(pkgs)
+    for spec in specs:
+        matching = spack.store.db.query(spec)
+        # For each spec provided, make sure it refers to only one package.
+        # Fail and ask user to be unambiguous if it doesn't
+        if not allow_multiple_matches and len(matching) > 1:
+            tty.error('%s matches multiple installed packages:' % spec)
+            for match in matching:
+                tty.msg('"%s"' % match.format())
+            has_errors = True
 
-            # No installed package matches the query
-            if len(matching) == 0 and spec is not any:
-                tty.error('{0} does not match any installed packages.'.format(
-                    spec))
-                has_errors = True
+        # No installed package matches the query
+        if len(matching) == 0 and spec is not any:
+            tty.error('{0} does not match any installed packages.'.format(
+                spec))
+            has_errors = True
 
-            specs_from_cli.extend(matching)
-        if has_errors:
-            tty.die('use one of the matching specs above')
+        specs_from_cli.extend(matching)
+    if has_errors:
+        tty.die('use one of the matching specs above')
 
     return specs_from_cli
 
