@@ -45,7 +45,6 @@ class Comd(MakefilePackage):
     version('1.1', '5051310a8d2c93cccba63de40bcfaa78')
     version('develop', git='https://github.com/exmatex/CoMD.git', branch='master')
 
-    variant('serial', default=False, description='Build without MPI support')
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('precision', default=True, description='Toggle Precesion Options')
@@ -54,7 +53,7 @@ class Comd(MakefilePackage):
     depends_on('mpi', when='+mpi')
     depends_on('graphviz', when='+graphs')
 
-    conflicts('+openmp', when='~serial')
+    conflicts('+openmp', when='mpi')
 
     def edit(self, spec, prefix):
         with working_dir('src-mpi') or working_dir('src-openmp'):
@@ -81,7 +80,7 @@ class Comd(MakefilePackage):
 
         else:
             targets.append('--directory=src-mpi')
-            if '+serial' in self.spec:
+            if '~mpi' in self.spec:
                 comd_variant += '-serial'
                 targets.append('CC = {0}'.format(cc))
             else:
