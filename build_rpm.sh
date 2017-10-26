@@ -16,14 +16,6 @@ externpkgs=(
     gradle@3.4%gcc@4.8.5
     ant@1.9.9%gcc@4.8.5
     sbt@0.13.12%gcc@4.8.5
-    cuda@6.5.14%gcc@4.8.5
-    cuda@7.5.18%gcc@4.8.5
-    cuda@8.0.61%gcc@4.8.5
-    cuda@9.0.176%gcc@4.8.5
-    cudnn@5.1^cuda@8.0.61%gcc@4.8.5
-    cudnn@5.1^cuda@9.0.176%gcc@4.8.5
-    cudnn@6.0^cuda@8.0.61%gcc@4.8.5
-    cudnn@6.0^cuda@9.0.176%gcc@4.8.5
     cmake@3.8.1%gcc@4.8.5
 )
 
@@ -42,8 +34,8 @@ mpis=(
 
 mpipkgs=(
     fftw@3.3.6-pl2+mpi+float+long_double+openmp
-    # gromacs@5.1.4+debug+mpi+plumed
-    # gromacs@5.1.4+debug+mpi+plumed+cuda
+    # gromacs@5.1.4+mpi+plumed
+    # gromacs@5.1.4+mpi+plumed+cuda
 )
 
 nonmpipkgs=(
@@ -55,6 +47,14 @@ nonmpipkgs=(
     perl@5.24.1
     sga@0.10.15
     boost@1.64.0
+    cuda@9.0.176
+    cuda@8.0.61
+    cuda@7.5.18
+    cuda@6.5.14
+    cudnn@5.1^cuda@8.0.61
+    cudnn@5.1^cuda@9.0.176
+    cudnn@6.0^cuda@8.0.61
+    cudnn@6.0^cuda@9.0.176
 )
 
 otherpkgs=(
@@ -111,5 +111,5 @@ done
 # Remove transit dependency
 for pkg in "${trandeps[@]}"
 do
-    spack uninstall -y --all $pkg
+    spack uninstall -y --all $pkg 2>&1 > /dev/null
 done

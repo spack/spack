@@ -65,24 +65,6 @@ packages:
         version: [0.13.12]
         buildable: False
 
-    cuda:
-        paths:
-            cuda@6.5.14%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-6.5.14-3avyaldl2uzrhqtgwe7lgw27zzjmwcmt
-            cuda@7.5.18%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-7.5.18-gyoxeh2obvptfuv4n42uwutqcdqcycco
-            cuda@8.0.61%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cuda-8.0.61-oehfcuf3do4bwagkarjurizvcsrl7y2q
-            cuda@9.0.176%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/9.0.176-pusmroeeme62xntggzjygame4htcbil7
-        version: [6.5.14, 7.5.18, 8.0.61, 9.0.176]
-        buildable: False
-
-    cudnn:
-        paths:
-            cudnn@5.1^cuda@8.0.61%gcc@4.8.5:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cudnn-5.1-lj6dz6qcxuyfnhtbdcjjsoglqoc5pdq3
-            cudnn@5.1^cuda@9.0.176%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cudnn-5.1-yyqgjzdvaliner6qeiw3oczaljmtq4d2
-            cudnn@6.0^cuda@8.0.61%gcc@4.8.5:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cudnn-6.0-dquls7daqqjozzvulzhbomjiiclg7rk3
-            cudnn@6.0^cuda@9.0.176%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cudnn-6.0-54r22qy2zaw6kvvbuu3iwqqtxbfyswkz
-        version: [5.1 6.0]
-        buildable: False
-
     pgi:
         paths:
             pgi@16.10%gcc@4.8.5~amd~java~mpi+network+nvidia~single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf
