@@ -50,7 +50,7 @@ from six import StringIO
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import *
+from llnl.util.tty.color import colorize
 
 import spack.error
 import spack.util.compression as comp

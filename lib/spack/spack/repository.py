@@ -45,14 +45,15 @@ import yaml
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
+from llnl.util.filesystem import mkdirp, join_path, install
 
 import spack
 import spack.error
 import spack.spec
 from spack.provider_index import ProviderIndex
 from spack.util.path import canonicalize_path
-from spack.util.naming import *
+from spack.util.naming import NamespaceTrie, valid_module_name
+from spack.util.naming import mod_to_class, possible_spack_module_names
 
 #
 # Super-namespace for all packages.
@@ -541,19 +542,21 @@ class RepoPath(object):
         """Given a spec, get the repository for its package."""
         # We don't @_autospec this function b/c it's called very frequently
         # and we want to avoid parsing str's into Specs unnecessarily.
+        namespace = None
         if isinstance(spec, spack.spec.Spec):
-            # If the spec already has a namespace, then return the
-            # corresponding repo if we know about it.
-            if spec.namespace:
-                fullspace = '%s.%s' % (self.super_namespace, spec.namespace)
-                if fullspace not in self.by_namespace:
-                    raise UnknownNamespaceError(spec.namespace)
-                return self.by_namespace[fullspace]
+            namespace = spec.namespace
             name = spec.name
-
         else:
             # handle strings directly for speed instead of @_autospec'ing
-            name = spec
+            namespace, _, name = spec.rpartition('.')
+
+        # If the spec already has a namespace, then return the
+        # corresponding repo if we know about it.
+        if namespace:
+            fullspace = '%s.%s' % (self.super_namespace, namespace)
+            if fullspace not in self.by_namespace:
+                raise UnknownNamespaceError(spec.namespace)
+            return self.by_namespace[fullspace]
 
         # If there's no namespace, search in the RepoPath.
         for repo in self.repos:
@@ -817,7 +820,7 @@ class Repo(object):
 
     @_autospec
     def get(self, spec, new=False):
-        if spec.virtual:
+        if not self.exists(spec.name):
             raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:

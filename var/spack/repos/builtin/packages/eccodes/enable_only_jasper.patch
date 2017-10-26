@@ -1,0 +1,26 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index bf4d78b..ea2f3e9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -162,8 +162,6 @@ if( ENABLE_JPG )
+     set(CMAKE_PREFIX_PATH ${_CMAKE_PREFIX_PATH})    # Restore CMAKE_PREFIX_PATH
+     set(CMAKE_WARN_DEPRECATED ON)  # Remove suppression
+ 
+-    find_package( OpenJPEG )
+-
+     if( JASPER_FOUND )
+         list( APPEND ECCODES_TPLS Jasper )
+         set( HAVE_JPEG 1 )
+@@ -172,12 +170,6 @@ if( ENABLE_JPG )
+         string(REGEX REPLACE "^([0-9]+)\\.[0-9]+\\.[0-9]+.*" "\\1" JASPER_VERSION_MAJOR "${JASPER_VERSION_STRING}")
+     endif()
+ 
+-    if( OPENJPEG_FOUND )
+-        list( APPEND ECCODES_TPLS OpenJPEG )
+-        set( HAVE_JPEG 1 )
+-        set( HAVE_LIBOPENJPEG 1 )
+-    endif()
+-
+ endif()
+ 
+ 

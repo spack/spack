@@ -184,7 +184,7 @@ Done.
             try:
                 check = Executable("./check")
                 output = check(output=str)
-            except:
+            except ProcessError:
                 output = ""
             success = output == expected
             if not success:

@@ -33,7 +33,7 @@
 """
 import yaml
 from yaml import Loader, Dumper
-from yaml.nodes import *
+from yaml.nodes import MappingNode, SequenceNode, ScalarNode
 from yaml.constructor import ConstructorError
 from ordereddict_backport import OrderedDict
 
