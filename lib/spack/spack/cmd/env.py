@@ -1,6 +1,7 @@
 import llnl.util.tty as tty
 import spack
 import llnl.util.filesystem as fs
+import spack.modules
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigScope
@@ -24,7 +25,7 @@ _db_dirname = fs.join_path(spack.var_path, 'environments')
 
 
 class Environment(object):
-    def __init__(self, name):
+    def __init__(self, name, module_factory=None):
         self.name = name
         self.user_specs = list()
         self.concretized_order = list()
@@ -35,6 +36,9 @@ class Environment(object):
         # Packages in this set must always appear as the dependency traced from
         # any root of run deps
         self.common_bins = dict()  # name -> hash
+        self.module_factory = (
+            module_factory or
+            (lambda spec: spack.modules.lmod.LmodModulefileWriter(spec)))
 
     def add(self, user_spec):
         query_spec = Spec(user_spec)
@@ -157,12 +161,10 @@ class Environment(object):
         return list(package_to_spec.values())
 
     def get_modules(self):
-        import spack.modules
-
         module_files = list()
         environment_specs = self._get_environment_specs()
         for spec in environment_specs:
-            module = spack.modules.lmod.LmodModulefileWriter(spec)
+            module = self.module_factory(spec)
             path = module.layout.filename
             if os.path.exists(path):
                 module_files.append(path)

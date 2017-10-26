@@ -8,6 +8,7 @@ except ImportError:
     from io import StringIO
 
 import spack.cmd.env
+import spack.modules
 import spack.util.spack_yaml as syaml
 from spack.cmd.env import (Environment, prepare_repository,
                            _environment_concretize, prepare_config_scope,
@@ -39,14 +40,19 @@ class TestEnvironment(unittest.TestCase):
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock',
                              'install_mockery', 'mock_fetch')
-    def test_install(self):
-        c = Environment('test')
+    def test_env_install(self):
+        module_factory = (
+            lambda spec: spack.modules.tcl.TclModulefileWriter(spec))
+
+        c = Environment('test', module_factory)
         c.add('cmake-client')
         c.concretize()
         c.install()
         env_specs = c._get_environment_specs()
         spec = next(x for x in env_specs if x.name == 'cmake-client')
         assert spec.package.installed
+
+        assert c.get_modules()
 
     @pytest.mark.usefixtures('config', 'refresh_builtin_mock')
     def test_remove_after_concretize(self):
