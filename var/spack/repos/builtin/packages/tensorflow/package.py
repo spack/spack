@@ -46,12 +46,11 @@ class Tensorflow(CMakePackage):
     depends_on('jsoncpp')#11086dd6a7eba04289944367ca82cea71299ed70
     depends_on('farmhash')#92e897b282426729f4724d91a637596c7e2fe28f-check
     depends_on('highwayhash')#dfcb97ca4fe9277bf9dc1802dd979b071896453b -check
-    depends_on('protobuf@ef927cc')#ef927cc428db7bf41d3a593a16a8f1a0fe6306c5
+    depends_on('protobuf')#ef927cc428db7bf41d3a593a16a8f1a0fe6306c5
 
     depends_on('swig@3.0.8')
     
-    build_directory = "tensorflow/contrib/cmake/spack-build"
-    root_cmakelists_dir = ".."
+    root_cmakelists_dir = "tensorflow/contrib/cmake"
 
     def mock_external(self, tfname, external_prefix):
         """TODO: Make docstring"""
