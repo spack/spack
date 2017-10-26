@@ -38,7 +38,7 @@ class Plasma(MakefilePackage):
     conflicts("veclibfort")
 
     # only GCC 7+ and higher have sufficient support for OpenMP 4+ tasks+deps
-    conflicts("%gcc@:4.999")
+    conflicts("%gcc@:4.8.99")
     conflicts("%cce")
     conflicts("%clang")
     conflicts("%intel")
