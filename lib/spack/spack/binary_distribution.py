@@ -243,7 +243,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     workdir = join_path(outdir, os.path.basename(spec.prefix))
     if os.path.exists(workdir):
         shutil.rmtree(workdir)
-    install_tree(spec.prefix, workdir)
+    install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
     write_buildinfo_file(workdir)
@@ -370,7 +370,6 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
             shutil.rmtree(installpath)
         else:
             raise NoOverwriteException(str(installpath))
-    mkdirp(installpath)
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')
     spackfile_path = os.path.join(stagepath, spackfile_name)
@@ -404,6 +403,8 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
         if bchecksum['hash'] != checksum:
             raise NoChecksumException()
 
+    # delay creating installpath until verification is complete
+    mkdirp(installpath)
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
         tar.extractall(path=join_path(installpath, '..'))
 
