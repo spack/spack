@@ -38,18 +38,6 @@ description = "Create, download and install build cache files."
 section = "caching"
 level = "long"
 
-# Arguments for display_specs when we find ambiguity
-display_args = {
-    'long': True,
-    'show_flags': True,
-    'variants': True
-}
-
-error_message = """You can either:
-    a) use a more specific spec, or
-    b) use the package hash with a leading /
-"""
-
 
 def setup_parser(subparser):
     setup_parser.parser = subparser
@@ -106,7 +94,7 @@ def setup_parser(subparser):
     dlkeys.set_defaults(func=getkeys)
 
 
-def find_matching_specs(specs, allow_multiple_matches=False, force=False):
+def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -120,15 +108,15 @@ def find_matching_specs(specs, allow_multiple_matches=False, force=False):
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
+    specs = spack.cmd.parse_specs(pkgs)
     for spec in specs:
         matching = spack.store.db.query(spec)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
-            tty.error('{0} matches multiple packages:'.format(spec))
-            print()
-            spack.cmd.display_specs(matching, **display_args)
-            print()
+            tty.error('%s matches multiple installed packages:' % spec)
+            for match in matching:
+                tty.msg('"%s"' % match.format())
             has_errors = True
 
         # No installed package matches the query
@@ -139,7 +127,7 @@ def find_matching_specs(specs, allow_multiple_matches=False, force=False):
 
         specs_from_cli.extend(matching)
     if has_errors:
-        tty.die(error_message)
+        tty.die('use one of the matching specs above')
 
     return specs_from_cli
 
@@ -163,15 +151,19 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
         matches = []
         tty.msg("buildcache spec(s) matching %s \n" % pkg)
         for spec in sorted(specs):
-            if spec.satisfies(pkg):
-                matches.append(spec)
+            if pkg.startswith('/'):
+                pkghash = pkg.replace('/', '')
+                if spec.dag_hash().startswith(pkghash):
+                    matches.append(spec)
+            else:
+                if spec.satisfies(pkg):
+                    matches.append(spec)
         # For each pkg provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matches) > 1:
             tty.error('%s matches multiple downloaded packages:' % pkg)
-            print()
-            spack.cmd.display_specs(matches, **display_args)
-            print()
+            for match in matches:
+                tty.msg('"%s"' % match.format())
             has_errors = True
 
         # No downloaded package matches the query
@@ -181,7 +173,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
 
         specs_from_cli.extend(matches)
     if has_errors:
-        tty.die(error_message)
+        tty.die('use one of the matching specs above')
 
     return specs_from_cli
 
@@ -210,18 +202,22 @@ def createtarball(args):
 
     matches = find_matching_specs(pkgs, False, False)
     for match in matches:
-        tty.msg('adding matching spec %s' % match.format())
-        specs.add(match)
-        tty.msg('recursing dependencies')
-        for d, node in match.traverse(order='post',
-                                      depth=True,
-                                      deptype=('link', 'run')):
-            if node.external or node.virtual:
-                tty.msg('Skipping external or virtual dependency %s' %
-                        node.format())
-            else:
-                tty.msg('adding dependency %s' % node.format())
-                specs.add(node)
+        if match.external or match.virtual:
+            tty.msg('skipping external or virtual spec %s' %
+                    match.format())
+        else:
+            tty.msg('adding matching spec %s' % match.format())
+            specs.add(match)
+            tty.msg('recursing dependencies')
+            for d, node in match.traverse(order='post',
+                                          depth=True,
+                                          deptype=('link', 'run')):
+                if node.external or node.virtual:
+                    tty.msg('skipping external or virtual dependency %s' %
+                            node.format())
+                else:
+                    tty.msg('adding dependency %s' % node.format())
+                    specs.add(node)
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
@@ -307,18 +303,21 @@ def listspecs(args):
     if args.packages:
         pkgs = set(args.packages)
         for pkg in pkgs:
-            tty.msg("buildcache spec(s) matching %s \n" % pkgs)
+            tty.msg("buildcache spec(s) matching " +
+                    "%s and commands to install them" % pkgs)
             for spec in sorted(specs):
                 if spec.satisfies(pkg):
-                    tty.msg('spack buildcache install /%s\n' %
+                    tty.msg('Enter\nspack buildcache install /%s\n' %
                             spec.dag_hash(7) +
-                            '   to install %s' %
+                            ' to install "%s"' %
                             spec.format())
     else:
-        tty.msg("buildcache specs ")
+        tty.msg("buildcache specs and commands to install them")
         for spec in sorted(specs):
-            tty.msg('spack buildcache install /%s\n   to install %s' %
-                    (spec.dag_hash(7), spec.format()))
+            tty.msg('Enter\nspack buildcache install /%s\n' %
+                    spec.dag_hash(7) +
+                    ' to install "%s"' %
+                    spec.format())
 
 
 def getkeys(args):
