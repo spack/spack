@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os.path
 
 
 class Extension1(Package):
@@ -38,3 +39,5 @@ class Extension1(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
+        with open(os.path.join(prefix.bin, 'extension1'), 'w+'):
+            pass
