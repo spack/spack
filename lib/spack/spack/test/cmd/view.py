@@ -89,3 +89,16 @@ def test_view_extension_global_activation(
     assert 'extension1@1.0' in view_activated
     assert 'extension1@2.0' not in view_activated
     assert 'extension2@1.0' not in view_activated
+
+
+def test_view_extendee_with_global_activations(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery):
+    install('extendee')
+    install('extension1@1.0')
+    install('extension1@2.0')
+    install('extension2@1.0')
+    viewpath = str(tmpdir.mkdir('view'))
+    activate('extension1@2.0')
+    output = view('symlink', viewpath, 'extension1@1.0')
+    assert 'Error: Globally activated extensions cannot be used' in output
