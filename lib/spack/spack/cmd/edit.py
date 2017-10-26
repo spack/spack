@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,14 +33,17 @@ from spack.spec import Spec
 from spack.repository import Repo
 
 description = "open package files in $EDITOR"
+section = "packaging"
+level = "short"
 
 
 def edit_package(name, repo_path, namespace):
     """Opens the requested package file in your favorite $EDITOR.
 
-    :param str name: The name of the package
-    :param str repo_path: The path to the repository containing this package
-    :param str namespace: A valid namespace registered with Spack
+    Args:
+        name (str): The name of the package
+        repo_path (str): The path to the repository containing this package
+        namespace (str): A valid namespace registered with Spack
     """
     # Find the location of the package
     if repo_path:

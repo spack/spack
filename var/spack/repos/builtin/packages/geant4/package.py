@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -41,7 +41,6 @@ class Geant4(CMakePackage):
     version('10.01.p03', '4fb4175cc0dabcd517443fbdccd97439')
 
     variant('qt', default=True, description='Enable Qt support')
-    variant('debug', default=False, description='Build debug version')
 
     depends_on('cmake@3.5:', type='build')
 
@@ -53,13 +52,6 @@ class Geant4(CMakePackage):
     depends_on("vecgeom")
     depends_on("xerces-c")
     depends_on("qt@4.8:", when="+qt")
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
 
     def cmake_args(self):
         spec = self.spec

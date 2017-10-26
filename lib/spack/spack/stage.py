@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,19 +29,20 @@ import hashlib
 import shutil
 import tempfile
 import getpass
-from urlparse import urljoin
+from six import string_types
+from six import iteritems
+from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 import llnl.util.lock
-from llnl.util.filesystem import *
-
-import spack.util.pattern as pattern
+from llnl.util.filesystem import mkdirp, join_path, can_access
+from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
 import spack
 import spack.config
-import spack.fetch_strategy as fs
 import spack.error
-from spack.version import *
+import spack.fetch_strategy as fs
+import spack.util.pattern as pattern
 from spack.util.path import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
 
@@ -84,7 +85,7 @@ def get_tmp_root():
     if _tmp_root is None:
         config = spack.config.get_config('config')
         candidates = config['build_stage']
-        if isinstance(candidates, basestring):
+        if isinstance(candidates, string_types):
             candidates = [candidates]
 
         path = _first_accessible_path(candidates)
@@ -188,7 +189,7 @@ class Stage(object):
         """
         # TODO: fetch/stage coupling needs to be reworked -- the logic
         # TODO: here is convoluted and not modular enough.
-        if isinstance(url_or_fetch_strategy, basestring):
+        if isinstance(url_or_fetch_strategy, string_types):
             self.fetcher = fs.from_url(url_or_fetch_strategy)
         elif isinstance(url_or_fetch_strategy, fs.FetchStrategy):
             self.fetcher = url_or_fetch_strategy
@@ -221,11 +222,12 @@ class Stage(object):
         self.keep = keep
 
         # File lock for the stage directory.  We use one file for all
-        # stage locks. See Spec.prefix_lock for details on this approach.
+        # stage locks. See spack.database.Database.prefix_lock for
+        # details on this approach.
         self._lock = None
         if lock:
             if self.name not in Stage.stage_locks:
-                sha1 = hashlib.sha1(self.name).digest()
+                sha1 = hashlib.sha1(self.name.encode('utf-8')).digest()
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = join_path(spack.stage_path, '.lock')
 
@@ -233,6 +235,10 @@ class Stage(object):
                     stage_lock_path, lock_id, 1)
 
             self._lock = Stage.stage_locks[self.name]
+
+        # When stages are reused, we need to know whether to re-create
+        # it.  This marks whether it has been created/destroyed.
+        self.created = False
 
     def __enter__(self):
         """
@@ -360,18 +366,8 @@ class Stage(object):
                 return p
         return None
 
-    def chdir(self):
-        """Changes directory to the stage path. Or dies if it is not set
-        up."""
-        if os.path.isdir(self.path):
-            os.chdir(self.path)
-        else:
-            raise ChdirError("Setup failed: no such directory: " + self.path)
-
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
-        self.chdir()
-
         fetchers = []
         if not mirror_only:
             fetchers.append(self.default_fetcher)
@@ -454,7 +450,7 @@ class Stage(object):
                      "control system, but it has been archived on a spack "
                      "mirror.  This means we cannot know a checksum for the "
                      "tarball in advance. Be sure that your connection to "
-                     "this mirror is secure!.")
+                     "this mirror is secure!")
         else:
             self.fetcher.check()
 
@@ -471,18 +467,6 @@ class Stage(object):
             tty.msg("Created stage in %s" % self.path)
         else:
             tty.msg("Already staged %s in %s" % (self.name, self.path))
-
-    def chdir_to_source(self):
-        """Changes directory to the expanded archive directory.
-           Dies with an error if there was no expanded archive.
-        """
-        path = self.source_path
-        if not path:
-            raise StageError("Attempt to chdir before expanding archive.")
-        else:
-            os.chdir(path)
-            if not os.listdir(path):
-                raise StageError("Archive was empty for %s" % self.name)
 
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
@@ -519,6 +503,7 @@ class Stage(object):
                 mkdirp(self.path)
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
+        self.created = True
 
     def destroy(self):
         """Removes this stage directory."""
@@ -529,6 +514,9 @@ class Stage(object):
             os.getcwd()
         except OSError:
             os.chdir(os.path.dirname(self.path))
+
+        # mark as destroyed
+        self.created = False
 
 
 class ResourceStage(Stage):
@@ -548,7 +536,7 @@ class ResourceStage(Stage):
         if not isinstance(placement, dict):
             placement = {'': placement}
         # Make the paths in the dictionary absolute and link
-        for key, value in placement.iteritems():
+        for key, value in iteritems(placement):
             target_path = join_path(
                 root_stage.source_path, resource.destination)
             destination_path = join_path(target_path, value)
@@ -571,8 +559,9 @@ class ResourceStage(Stage):
                 shutil.move(source_path, destination_path)
 
 
-@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',
-                                'restage', 'destroy', 'cache_local'])
+@pattern.composite(method_list=[
+    'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
+    'destroy', 'cache_local'])
 class StageComposite:
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
@@ -602,9 +591,6 @@ class StageComposite:
     def path(self):
         return self[0].path
 
-    def chdir_to_source(self):
-        return self[0].chdir_to_source()
-
     @property
     def archive_file(self):
         return self[0].archive_file
@@ -621,12 +607,7 @@ class DIYStage(object):
         self.archive_file = None
         self.path = path
         self.source_path = path
-
-    def chdir(self):
-        if os.path.isdir(self.path):
-            os.chdir(self.path)
-        else:
-            raise ChdirError("Setup failed: no such directory: " + self.path)
+        self.created = True
 
     # DIY stages do nothing as context managers.
     def __enter__(self):
@@ -634,9 +615,6 @@ class DIYStage(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-
-    def chdir_to_source(self):
-        self.chdir()
 
     def fetch(self, *args, **kwargs):
         tty.msg("No need to fetch for DIY.")
@@ -650,6 +628,9 @@ class DIYStage(object):
     def restage(self):
         tty.die("Cannot restage DIY stage.")
 
+    def create(self):
+        self.created = True
+
     def destroy(self):
         # No need to destroy DIY stage.
         pass
@@ -661,7 +642,7 @@ class DIYStage(object):
 def _get_mirrors():
     """Get mirrors from spack configuration."""
     config = spack.config.get_config('mirrors')
-    return [val for name, val in config.iteritems()]
+    return [val for name, val in iteritems(config)]
 
 
 def ensure_access(file=spack.stage_path):
@@ -685,9 +666,6 @@ class StageError(spack.error.SpackError):
 class RestageError(StageError):
     """"Error encountered during restaging."""
 
-
-class ChdirError(StageError):
-    """Raised when Spack can't change directories."""
 
 # Keep this in namespace for convenience
 FailedDownloadError = fs.FailedDownloadError

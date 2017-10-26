@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,8 @@ class RFormula(RPackage):
     side and/or multiple responses on the left-hand side."""
 
     homepage = "https://cran.r-project.org/package=Formula"
-    url      = "https://cran.r-project.org/src/contrib/Formula_1.2-1.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/Formula_1.2-2.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/Formula"
 
+    version('1.2-2', 'c69bb0522811cf8eb9f1cc6c3d182b6e')
     version('1.2-1', '2afb31e637cecd0c1106317aca1e4849')

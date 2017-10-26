@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,9 +38,12 @@ shebang_limit = 127
 
 def shebang_too_long(path):
     """Detects whether a file has a shebang line that is too long."""
-    with open(path, 'r') as script:
+    if not os.path.isfile(path):
+        return False
+
+    with open(path, 'rb') as script:
         bytes = script.read(2)
-        if bytes != '#!':
+        if bytes != b'#!':
             return False
 
         line = bytes + script.readline()
@@ -59,9 +62,16 @@ def filter_shebang(path):
     if original.startswith(new_sbang_line):
         return
 
+    # In the following, newlines have to be excluded in the regular expression
+    # else any mention of "lua" in the document will lead to spurious matches.
+
     # Use --! instead of #! on second line for lua.
-    if re.search(r'^#!(/[^/]*)*lua\b', original):
+    if re.search(r'^#!(/[^/\n]*)*lua\b', original):
         original = re.sub(r'^#', '--', original)
+
+    # Use //! instead of #! on second line for node.js.
+    if re.search(r'^#!(/[^/\n]*)*node\b', original):
+        original = re.sub(r'^#', '//', original)
 
     # Change non-writable files to be writable if needed.
     saved_mode = None
@@ -102,10 +112,14 @@ def filter_shebangs_in_directory(directory, filenames=None):
             filter_shebang(path)
 
 
-def post_install(pkg):
+def post_install(spec):
     """This hook edits scripts so that they call /bin/bash
-       $spack_prefix/bin/sbang instead of something longer than the
-       shebang limit."""
+    $spack_prefix/bin/sbang instead of something longer than the
+    shebang limit.
+    """
+    if spec.external:
+        tty.debug('SKIP: shebang filtering [external package]')
+        return
 
-    for directory, _, filenames in os.walk(pkg.prefix):
+    for directory, _, filenames in os.walk(spec.prefix):
         filter_shebangs_in_directory(directory, filenames)

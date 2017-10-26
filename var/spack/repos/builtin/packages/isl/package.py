@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,19 +25,19 @@
 from spack import *
 
 
-class Isl(Package):
-    """isl is a thread-safe C library for manipulating sets and
-    relations of integer points bounded by affine constraints."""
+class Isl(AutotoolsPackage):
+    """isl (Integer Set Library) is a thread-safe C library for manipulating
+    sets and relations of integer points bounded by affine constraints."""
+
     homepage = "http://isl.gforge.inria.fr"
-    url      = "http://isl.gforge.inria.fr/isl-0.14.tar.bz2"
+    url      = "http://isl.gforge.inria.fr/isl-0.18.tar.bz2"
 
     version('0.18', '11436d6b205e516635b666090b94ab32')
     version('0.14', 'acd347243fca5609e3df37dba47fd0bb')
 
-    depends_on("gmp")
+    depends_on('gmp')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-gmp-prefix=%s" % spec['gmp'].prefix)
-        make()
-        make("install")
+    def configure_args(self):
+        return [
+            '--with-gmp-prefix={0}'.format(self.spec['gmp'].prefix)
+        ]

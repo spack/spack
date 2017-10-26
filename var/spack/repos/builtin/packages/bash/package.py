@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,21 +25,27 @@
 from spack import *
 
 
-class Bash(Package):
+class Bash(AutotoolsPackage):
     """The GNU Project's Bourne Again SHell."""
 
     homepage = "https://www.gnu.org/software/bash/"
-    url      = "https://ftp.gnu.org/gnu/bash/bash-4.3.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/bash/bash-4.4.tar.gz"
 
+    version('4.4', '148888a7c95ac23705559b6f477dfe25')
     version('4.3', '81348932d5da294953e15d4814c74dd1')
 
-    depends_on('readline')
+    depends_on('ncurses')
+    depends_on('readline@5.0:')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-curses',
-                  '--with-installed-readline=%s' % spec['readline'].prefix)
+    def configure_args(self):
+        spec = self.spec
 
-        make()
-        make("tests")
-        make("install")
+        return [
+            'LIBS=-lncursesw',
+            '--with-curses',
+            '--enable-readline',
+            '--with-installed-readline={0}'.format(spec['readline'].prefix),
+        ]
+
+    def check(self):
+        make('tests')

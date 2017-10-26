@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,8 +30,11 @@ class PyAppdirs(PythonPackage):
     dirs, e.g. a "user data dir"."""
 
     homepage = "https://github.com/ActiveState/appdirs"
-    url      = "https://pypi.io/packages/source/a/appdirs/appdirs-1.4.0.tar.gz"
+    url      = "https://pypi.io/packages/source/a/appdirs/appdirs-1.4.3.tar.gz"
 
+    import_modules = ['appdirs']
+
+    version('1.4.3', '44c679904082a2133f5566c8a0d3ab42')
     version('1.4.0', '1d17b4c9694ab84794e228f28dc3275b')
 
     patch('setuptools-import.patch', when='@:1.4.0')

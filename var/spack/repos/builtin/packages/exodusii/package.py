@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,11 +27,8 @@ from spack import *
 # TODO: Add support for a C++11 enabled installation that filters out the
 # TODO: "C++11-Disabled" flag (but only if the spec compiler supports C++11).
 
-# TODO: Use variant forwarding to forward the 'mpi' variant to the direct
-# TODO: dependencies 'hdf5' and 'netcdf'.
 
-
-class Exodusii(Package):
+class Exodusii(CMakePackage):
     """Exodus II is a C++/Fortran library developed to store and retrieve
        data for finite element analyses. It's used for preprocessing
        (problem definition), postprocessing (results visualization), and
@@ -52,18 +49,25 @@ class Exodusii(Package):
     depends_on('mpi', when='+mpi')
 
     # https://github.com/gsjaardema/seacas/blob/master/NetCDF-Mapping.md
-    depends_on('netcdf maxdims=65536 maxvars=524288')
-    depends_on('hdf5+shared')
+    depends_on('netcdf+mpi maxdims=65536 maxvars=524288', when='+mpi')
+    depends_on('netcdf~mpi maxdims=65536 maxvars=524288', when='~mpi')
+    depends_on('hdf5+shared+mpi', when='+mpi')
+    depends_on('hdf5+shared~mpi', when='~mpi')
 
-    patch('cmake-exodus.patch')
+    def cmake_args(self):
+        spec = self.spec
 
-    def install(self, spec, prefix):
         cc_path = spec['mpi'].mpicc if '+mpi' in spec else self.compiler.cc
         cxx_path = spec['mpi'].mpicxx if '+mpi' in spec else self.compiler.cxx
 
-        config_args = std_cmake_args[:]
-        config_args.extend([
+        options = [
             # General Flags #
+            '-DSEACASProj_ENABLE_SEACASExodus=ON',
+            '-DSEACASProj_ENABLE_TESTS=ON',
+            '-DBUILD_SHARED_LIBS:BOOL=ON',
+            '-DTPL_ENABLE_Netcdf:BOOL=ON',
+            '-DHDF5_NO_SYSTEM_PATHS=ON',
+            '-DSEACASProj_SKIP_FORTRANCINTERFACE_VERIFY_TEST:BOOL=ON',
             '-DSEACASProj_ENABLE_CXX11:BOOL=OFF',
             '-DSEACASProj_ENABLE_Zoltan:BOOL=OFF',
             '-DHDF5_ROOT:PATH={0}'.format(spec['hdf5'].prefix),
@@ -73,14 +77,6 @@ class Exodusii(Package):
             '-DTPL_ENABLE_MPI={0}'.format('ON' if '+mpi' in spec else 'OFF'),
             '-DCMAKE_C_COMPILER={0}'.format(cc_path),
             '-DCMAKE_CXX_COMPILER={0}'.format(cxx_path),
-        ])
+        ]
 
-        build_directory = join_path(self.stage.source_path, 'spack-build')
-        source_directory = self.stage.source_path
-
-        with working_dir(build_directory, create=True):
-            mcmake = Executable(join_path(source_directory, 'cmake-exodus'))
-            mcmake(*config_args)
-
-            make()
-            make('install')
+        return options

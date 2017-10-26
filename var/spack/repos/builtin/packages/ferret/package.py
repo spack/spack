@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,17 +31,20 @@ class Ferret(Package):
     """Ferret is an interactive computer visualization and analysis environment
        designed to meet the needs of oceanographers and meteorologists
        analyzing large and complex gridded data sets."""
-    homepage = "http://ferret.noaa.gov/Ferret/"
-    url      = "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.tar.gz"
+    homepage = "http://ferret.pmel.noaa.gov/Ferret/home"
+    url      = "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v696.tar.gz"
 
-    version('6.96', '51722027c864369f41bab5751dfff8cc',
-            url="ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.tar.gz")
+    version('6.96', '51722027c864369f41bab5751dfff8cc')
 
     depends_on("hdf5~mpi~fortran")
     depends_on("netcdf~mpi")
     depends_on("netcdf-fortran")
     depends_on("readline")
     depends_on("zlib")
+
+    def url_for_version(self, version):
+        return "ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v{0}.tar.gz".format(
+            version.joined)
 
     def patch(self):
         hdf5_prefix = self.spec['hdf5'].prefix
@@ -95,7 +98,12 @@ class Ferret(Package):
         ln('-sf',
            libz_prefix + '/lib',
            libz_prefix + '/lib64')
-        os.environ['LDFLAGS'] = '-lquadmath'
+
+        if 'LDFLAGS' in env and env['LDFLAGS']:
+            env['LDFLAGS'] += ' ' + '-lquadmath'
+        else:
+            env['LDFLAGS'] = '-lquadmath'
+
         with working_dir('FERRET', create=False):
             os.environ['LD_X11'] = '-L/usr/lib/X11 -lX11'
             os.environ['HOSTTYPE'] = 'x86_64-linux'

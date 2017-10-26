@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,12 +29,13 @@ class Libxrender(AutotoolsPackage):
     """libXrender - library for the Render Extension to the X11 protocol."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXrender"
-    url      = "https://www.x.org/archive/individual/lib/libXrender-0.9.9.tar.gz"
+    url      = "https://www.x.org/archive/individual/lib/libXrender-0.9.10.tar.gz"
 
-    version('0.9.9', '0c797c4f2a7b782896bc223e6dac4333')
+    version('0.9.10', '98a14fc11aee08b4a1769426ab4b23a3')
+    version('0.9.9',  '0c797c4f2a7b782896bc223e6dac4333')
 
     depends_on('libx11@1.6:')
 
-    depends_on('renderproto@0.9:', type='build')
+    depends_on('renderproto@0.9:', type=('build', 'link'))
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('util-macros', type='build')

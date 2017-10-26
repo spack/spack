@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,10 +33,10 @@ class RGlmnet(RPackage):
     multinomial. The algorithm uses cyclical coordinate descent in a path-wise
     fashion, as described in the paper linked to via the URL below."""
 
-    homepage = "http://www.jstatsoft.org/v33/i01/"
-    url      = "https://cran.r-project.org/src/contrib/glmnet_2.0-5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/glmnet"
-
+    homepage = "https://cran.rstudio.com/web/packages/glmnet/index.html"
+    url      = "https://cran.rstudio.com/src/contrib/glmnet_2.0-13.tar.gz"
+    list_url = homepage
+    version('2.0-13', '1dd5636388df5c3a29207d0bf1253343')
     version('2.0-5', '049b18caa29529614cd684db3beaec2a')
 
     depends_on('r-matrix', type=('build', 'run'))

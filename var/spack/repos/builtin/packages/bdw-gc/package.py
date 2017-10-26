@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,13 +25,14 @@
 from spack import *
 
 
-class BdwGc(Package):
+class BdwGc(AutotoolsPackage):
     """The Boehm-Demers-Weiser conservative garbage collector is a garbage
     collecting replacement for C malloc or C++ new."""
 
     homepage = "http://www.hboehm.info/gc/"
-    url      = "http://www.hboehm.info/gc/gc_source/gc-7.4.4.tar.gz"
+    url      = "http://www.hboehm.info/gc/gc_source/gc-7.6.0.tar.gz"
 
+    version('7.6.0', 'bf46ccbdaccfa3186c2ab87191c8855a')
     version('7.4.4', '96d18b0448a841c88d56e4ab3d180297')
 
     variant('libatomic-ops', default=True,
@@ -39,15 +40,12 @@ class BdwGc(Package):
 
     depends_on('libatomic-ops', when='+libatomic-ops')
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+
         config_args = [
-            '--prefix={0}'.format(prefix),
             '--with-libatomic-ops={0}'.format(
                 'yes' if '+libatomic-ops' in spec else 'no')
         ]
 
-        configure(*config_args)
-
-        make()
-        make('check')
-        make('install')
+        return config_args

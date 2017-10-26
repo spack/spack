@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class OmptOpenmp(Package):
+class OmptOpenmp(CMakePackage):
     """LLVM/Clang OpenMP runtime with OMPT support. This is a fork of the
        OpenMPToolsInterface/LLVM-openmp fork of the official LLVM OpenMP
        mirror.  This library provides a drop-in replacement of the OpenMP
@@ -35,15 +35,10 @@ class OmptOpenmp(Package):
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
     url      = "http://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz"
 
-    version('0.1', '2334e6a84b52da41b27afd9831ed5370')
+    version('0.1', '59d6933a2e9b7d1423fb9c7c77d5663f')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.8:', type='build')
 
-    def install(self, spec, prefix):
-        with working_dir("runtime/build", create=True):
-            cmake('-DCMAKE_C_COMPILER=%s' % self.compiler.cc,
-                  '-DCMAKE_CXX_COMPILER=%s' % self.compiler.cxx,
-                  '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                  '..', *std_cmake_args)
-            make()
-            make("install")
+    conflicts('%gcc@:4.7')
+
+    root_cmakelists_dir = 'runtime'

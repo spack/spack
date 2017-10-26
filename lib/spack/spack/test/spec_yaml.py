@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,6 +27,8 @@
 YAML format preserves DAG informatoin in the spec.
 
 """
+from collections import Iterable, Mapping
+
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 from spack.spec import Spec
@@ -50,6 +52,16 @@ def test_normal_spec(builtin_mock):
     check_yaml_round_trip(spec)
 
 
+def test_external_spec(config, builtin_mock):
+    spec = Spec('externaltool')
+    spec.concretize()
+    check_yaml_round_trip(spec)
+
+    spec = Spec('externaltest')
+    spec.concretize()
+    check_yaml_round_trip(spec)
+
+
 def test_ambiguous_version_spec(builtin_mock):
     spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
     spec.normalize()
@@ -58,6 +70,12 @@ def test_ambiguous_version_spec(builtin_mock):
 
 def test_concrete_spec(config, builtin_mock):
     spec = Spec('mpileaks+debug~opt')
+    spec.concretize()
+    check_yaml_round_trip(spec)
+
+
+def test_yaml_multivalue():
+    spec = Spec('multivalue_variant foo="bar,baz"')
     spec.concretize()
     check_yaml_round_trip(spec)
 
@@ -78,8 +96,6 @@ def test_using_ordered_dict(builtin_mock):
     versions and processes.
     """
     def descend_and_check(iterable, level=0):
-        from spack.util.spack_yaml import syaml_dict
-        from collections import Iterable, Mapping
         if isinstance(iterable, Mapping):
             assert isinstance(iterable, syaml_dict)
             return descend_and_check(iterable.values(), level=level + 1)
@@ -95,7 +111,12 @@ def test_using_ordered_dict(builtin_mock):
     for spec in specs:
         dag = Spec(spec)
         dag.normalize()
+        from pprint import pprint
+        pprint(dag.to_node_dict())
+        break
+
         level = descend_and_check(dag.to_node_dict())
+
         # level just makes sure we are doing something here
         assert level >= 5
 

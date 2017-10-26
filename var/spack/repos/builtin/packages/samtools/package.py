@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,17 +33,21 @@ class Samtools(Package):
     homepage = "www.htslib.org"
     url = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
 
+    version('1.6', 'b756f05fd5d1a7042074417edb8c9aea')
+    version('1.4', '8cbd7d2a0ec16d834babcd6c6d85d691')
     version('1.3.1', 'a7471aa5a1eb7fc9cc4c6491d73c2d88')
     version('1.2', '988ec4c3058a6ceda36503eebecd4122')
 
-    depends_on("ncurses")
-    depends_on("htslib", when='@1.3.1:')  # htslib became standalone
-    depends_on('zlib', when='@1.2')       # needed for builtin htslib
+    depends_on('ncurses')
+    # htslib became standalone @1.3.1, must use corresponding version
+    depends_on('htslib@1.6',   when='@1.6')
+    depends_on('htslib@1.4',   when='@1.4')
+    depends_on('htslib@1.3.1', when='@1.3.1')
 
     def install(self, spec, prefix):
         if self.spec.version >= Version('1.3.1'):
             configure('--prefix={0}'.format(prefix), '--with-ncurses',
-                      'CURSES_LIB=-lncurses')
+                      'CURSES_LIB=-lncursesw')
             make()
             make('install')
         else:

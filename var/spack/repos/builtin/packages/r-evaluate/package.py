@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,10 +31,11 @@ class REvaluate(RPackage):
     """Parsing and evaluation tools that make it easy to recreate the command
     line behaviour of R."""
 
-    homepage = "https://github.com/hadley/evaluate"
-    url      = "https://cran.rstudio.com/src/contrib/evaluate_0.9.tar.gz"
+    homepage = "https://cran.r-project.org/package=evaluate"
+    url      = "https://cran.rstudio.com/src/contrib/evaluate_0.10.1.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/evaluate"
 
+    version('0.10.1', '1dde5a35e2b9d57f1b1bb16791b35ff5')
     version('0.10', 'c49326babf984a8b36e7e276da370ad2')
     version('0.9',  '877d89ce8a9ef7f403b1089ca1021775')
 

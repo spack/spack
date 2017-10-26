@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -53,16 +53,12 @@ class Charm(Package):
 
     # Communication mechanisms (choose exactly one)
     # TODO: Support Blue Gene/Q PAMI, Cray GNI, Cray shmem, CUDA
-    variant("mpi", default=True,
-            description="Use MPI as communication mechanism")
-    variant("multicore", default=False,
-            description="Disable inter-node communication")
-    variant("net", default=False,
-            description="Use net communication mechanism")
-    variant("netlrts", default=True,
-            description="Use netlrts communication mechanism")
-    variant("verbs", default=False,
-            description="Use Infiniband as communication mechanism")
+    variant(
+        'backend',
+        default='mpi',
+        values=('mpi', 'multicore', 'net', 'netlrts', 'verbs'),
+        description='Set the backend to use'
+    )
 
     # Other options
     # Something is off with PAPI -- there are build errors. Maybe
@@ -73,37 +69,17 @@ class Charm(Package):
                 "Enable SMP parallelism (does not work with +multicore)"))
     variant("tcp", default=False,
             description="Use TCP as transport mechanism (requires +net)")
+    variant("shared", default=True, description="Enable shared link support")
 
     # Note: We could add variants for AMPI, LIBS, bigemulator, msa, Tau
-    # Note: We could support shared libraries
 
-    depends_on("mpi", when="+mpi")
+    depends_on('mpi', when='backend=mpi')
     depends_on("papi", when="+papi")
 
     def install(self, spec, prefix):
         target = "charm++"
 
-        # Note: Turn this into a multi-valued variant, once these
-        # exist in Spack
-        if sum(["+mpi" in spec,
-                "+multicore" in spec,
-                "+net" in spec,
-                "+netlrts" in spec,
-                "+verbs" in spec]) != 1:
-            raise InstallError(
-                "Exactly one communication mechanism "
-                "(+mpi, +multicore, +net, +netlrts, or +verbs) "
-                "must be enabled")
-        if "+mpi" in spec:
-            comm = "mpi"
-        if "+multicore" in spec:
-            comm = "multicore"
-        if "+net" in spec:
-            comm = "net"
-        if "+netlrts" in spec:
-            comm = "netlrts"
-        if "+verbs" in spec:
-            comm = "verbs"
+        comm = spec.variants['backend'].value
 
         plat = sys.platform
         if plat.startswith("linux"):
@@ -139,30 +115,46 @@ class Charm(Package):
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack
         # here.
-        compiler = "gcc"
+        compiler = os.path.basename(self.compiler.cc)
 
-        options = [compiler,
-                   "--with-production",   # Note: turn this into a variant
-                   "-j%d" % make_jobs,
-                   "--destination=%s" % prefix]
-        if "+mpi" in spec:
-            options.append("--basedir=%s" % spec["mpi"].prefix)
+        options = [compiler]
+        if compiler == 'icc':
+            options.append('ifort')
+
+        options.extend([
+            "--with-production",   # Note: turn this into a variant
+            "-j%d" % make_jobs,
+            "--destination=%s" % prefix])
+
+        if 'backend=mpi' in spec:
+            # in intelmpi <prefix>/include and <prefix>/lib fails so --basedir
+            # cannot be used
+            options.extend([
+                '--incdir={0}'.format(incdir)
+                for incdir in spec["mpi"].headers.directories
+            ])
+            options.extend([
+                '--libdir={0}'.format(libdir)
+                for libdir in spec["mpi"].libs.directories
+            ])
         if "+papi" in spec:
             options.extend(["papi", "--basedir=%s" % spec["papi"].prefix])
         if "+smp" in spec:
-            if "+multicore" in spec:
+            if 'backend=multicore' in spec:
                 # This is a Charm++ limitation; it would lead to a
                 # build error
                 raise InstallError("Cannot combine +smp with +multicore")
             options.append("smp")
         if "+tcp" in spec:
-            if "+net" not in spec:
+            if 'backend=net' not in spec:
                 # This is a Charm++ limitation; it would lead to a
                 # build error
                 raise InstallError(
                     "The +tcp variant requires "
-                    "the +net communication mechanism")
+                    "the backend=net communication mechanism")
             options.append("tcp")
+        if "+shared" in spec:
+            options.append("--build-shared")
 
         # Call "make" via the build script
         # Note: This builds Charm++ in the "tmp" subdirectory of the
@@ -185,6 +177,6 @@ class Charm(Package):
                         shutil.copy2(filepath, tmppath)
                         os.remove(filepath)
                         os.rename(tmppath, filepath)
-                    except:
+                    except (IOError, OSError):
                         pass
         shutil.rmtree(join_path(prefix, "tmp"))

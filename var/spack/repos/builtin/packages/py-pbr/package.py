@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,8 +29,12 @@ class PyPbr(PythonPackage):
     """PBR is a library that injects some useful and sensible default
        behaviors into your setuptools run."""
     homepage = "https://pypi.python.org/pypi/pbr"
-    url      = "https://pypi.python.org/packages/source/p/pbr/pbr-1.8.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pbr/pbr-1.10.0.tar.gz"
 
+    version('1.10.0', '8e4968c587268f030e38329feb9c8f17')
     version('1.8.1', 'c8f9285e1a4ca6f9654c529b158baa3a')
 
     depends_on('py-setuptools', type='build')
+    # Only needed for py<3.4, however when='^python@:3.4.2' syntax might be
+    # broken, if this fails, remove the when-clause
+    depends_on('py-enum34', type='build', when='^python@:3.3')

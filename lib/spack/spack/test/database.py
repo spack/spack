@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,12 +27,15 @@ These tests check the database is functioning properly,
 both in memory and in its file
 """
 import multiprocessing
-import os.path
-
+import os
 import pytest
+
+from llnl.util.tty.colify import colify
+
 import spack
 import spack.store
-from llnl.util.tty.colify import colify
+from spack.test.conftest import MockPackageMultiRepo
+from spack.util.executable import Executable
 
 
 def _print_ref_counts():
@@ -86,14 +89,27 @@ def _check_merkleiness():
 
 def _check_db_sanity(install_db):
     """Utiilty function to check db against install layout."""
-    expected = sorted(spack.store.layout.all_specs())
+    pkg_in_layout = sorted(spack.store.layout.all_specs())
     actual = sorted(install_db.query())
 
-    assert len(expected) == len(actual)
-    for e, a in zip(expected, actual):
+    externals = sorted([x for x in actual if x.external])
+    nexpected = len(pkg_in_layout) + len(externals)
+
+    assert nexpected == len(actual)
+
+    non_external_in_db = sorted([x for x in actual if not x.external])
+
+    for e, a in zip(pkg_in_layout, non_external_in_db):
         assert e == a
 
     _check_merkleiness()
+
+
+def _mock_install(spec):
+    s = spack.spec.Spec(spec)
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.do_install(fake=True)
 
 
 def _mock_remove(spec):
@@ -101,6 +117,24 @@ def _mock_remove(spec):
     assert len(specs) == 1
     spec = specs[0]
     spec.package.do_uninstall(spec)
+
+
+def test_default_queries(database):
+    install_db = database.mock.db
+    rec = install_db.get_record('zmpi')
+
+    spec = rec.spec
+
+    libraries = spec['zmpi'].libs
+    assert len(libraries) == 1
+
+    headers = spec['zmpi'].headers
+    assert len(headers) == 1
+
+    command = spec['zmpi'].command
+    assert isinstance(command, Executable)
+    assert command.name == 'zmpi'
+    assert os.path.exists(command.path)
 
 
 def test_005_db_exists(database):
@@ -115,7 +149,7 @@ def test_005_db_exists(database):
 def test_010_all_install_sanity(database):
     """Ensure that the install layout reflects what we think it does."""
     all_specs = spack.store.layout.all_specs()
-    assert len(all_specs) == 13
+    assert len(all_specs) == 14
 
     # Query specs with multiple configurations
     mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
@@ -195,7 +229,7 @@ def test_050_basic_query(database):
     """Ensure querying database is consistent with what is installed."""
     install_db = database.mock.db
     # query everything
-    assert len(spack.store.db.query()) == 13
+    assert len(spack.store.db.query()) == 16
 
     # query specs with multiple configurations
     mpileaks_specs = install_db.query('mpileaks')
@@ -353,3 +387,38 @@ def test_110_no_write_with_exception_on_install(database):
     # reload DB and make sure cmake was not written.
     with install_db.read_transaction():
         assert install_db.query('cmake', installed=any) == []
+
+
+def test_115_reindex_with_packages_not_in_repo(database, refresh_db_on_exit):
+    install_db = database.mock.db
+
+    saved_repo = spack.repo
+    # Dont add any package definitions to this repository, the idea is that
+    # packages should not have to be defined in the repository once they are
+    # installed
+    mock_repo = MockPackageMultiRepo([])
+    try:
+        spack.repo = mock_repo
+        spack.store.db.reindex(spack.store.layout)
+        _check_db_sanity(install_db)
+    finally:
+        spack.repo = saved_repo
+
+
+def test_external_entries_in_db(database):
+    install_db = database.mock.db
+
+    rec = install_db.get_record('mpileaks ^zmpi')
+    assert rec.spec.external_path is None
+    assert rec.spec.external_module is None
+
+    rec = install_db.get_record('externaltool')
+    assert rec.spec.external_path == '/path/to/external_tool'
+    assert rec.spec.external_module is None
+    assert rec.explicit is False
+
+    rec.spec.package.do_install(fake=True, explicit=True)
+    rec = install_db.get_record('externaltool')
+    assert rec.spec.external_path == '/path/to/external_tool'
+    assert rec.spec.external_module is None
+    assert rec.explicit is True

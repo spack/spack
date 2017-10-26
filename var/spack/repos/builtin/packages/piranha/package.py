@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Piranha(Package):
+class Piranha(CMakePackage):
     """Piranha is a computer-algebra library for the symbolic manipulation of
     sparse multivariate polynomials and other closely-related symbolic objects
     (such as Poisson series)."""
@@ -40,7 +40,7 @@ class Piranha(Package):
             description='Build the Python bindings')
 
     # Build dependencies
-    depends_on('cmake@3.0:',  type='build')
+    depends_on('cmake@3.2.0:', type='build')
     extends('python',         when='+pyranha')
     depends_on('python@2.6:', type='build', when='+pyranha')
 
@@ -53,21 +53,8 @@ class Piranha(Package):
     depends_on('gmp')   # mpir is a drop-in replacement for this
     depends_on('mpfr')  # Could also be built against mpir
 
-    def install(self, spec, prefix):
-        options = []
-        options.extend(std_cmake_args)
-
-        # Python bindings
-        options.extend([
-            '-DBUILD_PYRANHA=%s' % (
-                'ON' if '+python' in spec else 'OFF'),
+    def cmake_args(self):
+        return [
+            '-DBUILD_PYRANHA=%s' % ('ON' if '+python' in self.spec else 'OFF'),
             '-DBUILD_TESTS:BOOL=ON',
-        ])
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *options)
-
-            make()
-            make('install')
-            if self.run_tests:
-                make('test')
+        ]

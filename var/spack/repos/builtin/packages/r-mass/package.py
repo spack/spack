@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,8 +29,9 @@ class RMass(RPackage):
     """Functions and datasets to support Venables and Ripley, "Modern Applied
     Statistics with S" (4th edition, 2002)."""
 
-    homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
-    url      = "https://cran.r-project.org/src/contrib/MASS_7.3-45.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/MASS"
+    homepage = "https://cran.r-project.org/web/packages/MASS/index.html"
+    url      = "https://cran.r-project.org/src/contrib/MASS_7.3-47.tar.gz"
+    list_url = homepage
 
+    version('7.3-47', '2ef69aa9e25c0a445661a9877e117594')
     version('7.3-45', 'aba3d12fab30f1793bee168a1efea88b')

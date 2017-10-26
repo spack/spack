@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,7 +27,12 @@ from spack import *
 
 class Scons(PythonPackage):
     """SCons is a software construction tool"""
-    homepage = "http://scons.org"
-    url      = "http://downloads.sourceforge.net/project/scons/scons/2.5.0/scons-2.5.0.tar.gz"
 
-    version('2.5.0', '9e00fa0df8f5ca5c5f5975b40e0ed354')
+    homepage = "http://scons.org"
+    url      = "https://pypi.io/packages/source/s/scons/scons-2.5.1.tar.gz"
+
+    version('2.5.1', '3eac81e5e8206304a9b4683c57665aa4')
+    version('2.5.0', 'bda5530a70a41a7831d83c8b191c021e')
+
+    # Python 3 is not supported
+    depends_on('python@:2.8', type=('build', 'run'))

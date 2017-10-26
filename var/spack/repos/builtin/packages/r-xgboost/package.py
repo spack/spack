@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,7 +38,6 @@ class RXgboost(RPackage):
 
     homepage = "https://github.com/dmlc/xgboost"
     url      = "https://cran.r-project.org/src/contrib/xgboost_0.6-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/xgboost"
 
     version('0.6-4', '86e517e3ce39f8a01de796920f6b425e')
     version('0.4-4', 'c24d3076058101a71de4b8af8806697c')

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,21 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import division
+
 import os
 import re
 import functools
 import collections
 import inspect
+from datetime import datetime
+from six import string_types
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
+
+
+class classproperty(property):
+    """classproperty decorator: like property but for classmethods."""
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
 
 
 def index_by(objects, *funcs):
     """Create a hierarchy of dictionaries by splitting the supplied
        set of objects on unique values of the supplied functions.
        Values are used as keys.  For example, suppose you have four
-       objects with attributes that look like this:
+       objects with attributes that look like this::
 
           a = Spec(name="boost",    compiler="gcc",   arch="bgqos_0")
           b = Spec(name="mrnet",    compiler="intel", arch="chaos_5_x86_64_ib")
@@ -48,15 +58,15 @@ def index_by(objects, *funcs):
                             lambda s: s.compiler)
           index2 = index_by(list_of_specs, lambda s: s.compiler)
 
-       ``index1'' now has two levels of dicts, with lists at the
-       leaves, like this:
+       ``index1`` now has two levels of dicts, with lists at the
+       leaves, like this::
 
            { 'bgqos_0'           : { 'gcc' : [a], 'xlc' : [c] },
              'chaos_5_x86_64_ib' : { 'intel' : [b, d] }
            }
 
-       And ``index2'' is a single level dictionary of lists that looks
-       like this:
+       And ``index2`` is a single level dictionary of lists that looks
+       like this::
 
            { 'gcc'    : [a],
              'intel'  : [b,d],
@@ -65,12 +75,12 @@ def index_by(objects, *funcs):
 
        If any elemnts in funcs is a string, it is treated as the name
        of an attribute, and acts like getattr(object, name).  So
-       shorthand for the above two indexes would be:
+       shorthand for the above two indexes would be::
 
            index1 = index_by(list_of_specs, 'arch', 'compiler')
            index2 = index_by(list_of_specs, 'compiler')
 
-       You can also index by tuples by passing tuples:
+       You can also index by tuples by passing tuples::
 
            index1 = index_by(list_of_specs, ('arch', 'compiler'))
 
@@ -80,7 +90,7 @@ def index_by(objects, *funcs):
         return objects
 
     f = funcs[0]
-    if isinstance(f, basestring):
+    if isinstance(f, str):
         f = lambda x: getattr(x, funcs[0])
     elif isinstance(f, tuple):
         f = lambda x: tuple(getattr(x, p) for p in funcs[0])
@@ -94,21 +104,6 @@ def index_by(objects, *funcs):
         result[key] = index_by(objects, *funcs[1:])
 
     return result
-
-
-def partition_list(elements, predicate):
-    """Partition a list into two lists, the first containing elements
-       for which the predicate evaluates to true, the second containing
-       those for which it is false.
-    """
-    trues = []
-    falses = []
-    for elt in elements:
-        if predicate(elt):
-            trues.append(elt)
-        else:
-            falses.append(elt)
-    return trues, falses
 
 
 def caller_locals():
@@ -197,7 +192,7 @@ class memoized(object):
 
 
 def list_modules(directory, **kwargs):
-    """Lists all of the modules, excluding __init__.py, in a
+    """Lists all of the modules, excluding ``__init__.py``, in a
        particular directory.  Listed packages have no particular
        order."""
     list_directories = kwargs.setdefault('directories', True)
@@ -219,14 +214,16 @@ def list_modules(directory, **kwargs):
 
 def key_ordering(cls):
     """Decorates a class with extra methods that implement rich comparison
-       operations and __hash__.  The decorator assumes that the class
-       implements a function called _cmp_key().  The rich comparison operations
-       will compare objects using this key, and the __hash__ function will
-       return the hash of this key.
+       operations and ``__hash__``.  The decorator assumes that the class
+       implements a function called ``_cmp_key()``.  The rich comparison
+       operations will compare objects using this key, and the ``__hash__``
+       function will return the hash of this key.
 
-       If a class already has __eq__, __ne__, __lt__, __le__, __gt__, or __ge__
-       defined, this decorator will overwrite them.  If the class does not
-       have a _cmp_key method, then this will raise a TypeError.
+       If a class already has ``__eq__``, ``__ne__``, ``__lt__``, ``__le__``,
+       ``__gt__``, or ``__ge__`` defined, this decorator will overwrite them.
+
+       Raises:
+           TypeError: If the class does not have a ``_cmp_key`` method
     """
     def setter(name, value):
         value.__name__ = name
@@ -257,9 +254,27 @@ def key_ordering(cls):
 
 
 @key_ordering
-class HashableMap(dict):
+class HashableMap(collections.MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
        a tuple of the values in the dictionary."""
+
+    def __init__(self):
+        self.dict = {}
+
+    def __getitem__(self, key):
+        return self.dict[key]
+
+    def __setitem__(self, key, value):
+        self.dict[key] = value
+
+    def __iter__(self):
+        return iter(self.dict)
+
+    def __len__(self):
+        return len(self.dict)
+
+    def __delitem__(self, key):
+        del self.dict[key]
 
     def _cmp_key(self):
         return tuple(sorted(self.values()))
@@ -315,18 +330,18 @@ def match_predicate(*args):
     """Utility function for making string matching predicates.
 
     Each arg can be a:
-        - regex
-        - list or tuple of regexes
-        - predicate that takes a string.
+    * regex
+    * list or tuple of regexes
+    * predicate that takes a string.
 
     This returns a predicate that is true if:
-        - any arg regex matches
-        - any regex in a list or tuple of regexes matches.
-        - any predicate in args matches.
+    * any arg regex matches
+    * any regex in a list or tuple of regexes matches.
+    * any predicate in args matches.
     """
     def match(string):
         for arg in args:
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 if re.search(arg, string):
                     return True
             elif isinstance(arg, list) or isinstance(arg, tuple):
@@ -358,19 +373,90 @@ def dedupe(sequence):
             seen.add(x)
 
 
+def pretty_date(time, now=None):
+    """Convert a datetime or timestamp to a pretty, relative date.
+
+    Args:
+        time (datetime or int): date to print prettily
+        now (datetime): dateimte for 'now', i.e. the date the pretty date
+            is relative to (default is datetime.now())
+
+    Returns:
+        (str): pretty string like 'an hour ago', 'Yesterday',
+            '3 months ago', 'just now', etc.
+
+    Adapted from https://stackoverflow.com/questions/1551382.
+
+    """
+    if now is None:
+        now = datetime.now()
+
+    if type(time) is int:
+        diff = now - datetime.fromtimestamp(time)
+    elif isinstance(time, datetime):
+        diff = now - time
+    else:
+        raise ValueError("pretty_date requires a timestamp or datetime")
+
+    second_diff = diff.seconds
+    day_diff = diff.days
+
+    if day_diff < 0:
+        return ''
+
+    if day_diff == 0:
+        if second_diff < 10:
+            return "just now"
+        if second_diff < 60:
+            return str(second_diff) + " seconds ago"
+        if second_diff < 120:
+            return "a minute ago"
+        if second_diff < 3600:
+            return str(second_diff // 60) + " minutes ago"
+        if second_diff < 7200:
+            return "an hour ago"
+        if second_diff < 86400:
+            return str(second_diff // 3600) + " hours ago"
+    if day_diff == 1:
+        return "yesterday"
+    if day_diff < 7:
+        return str(day_diff) + " days ago"
+    if day_diff < 28:
+        weeks = day_diff // 7
+        if weeks == 1:
+            return "a week ago"
+        else:
+            return str(day_diff // 7) + " weeks ago"
+    if day_diff < 365:
+        months = day_diff // 30
+        if months == 1:
+            return "a month ago"
+        elif months == 12:
+            months -= 1
+        return str(months) + " months ago"
+
+    diff = day_diff // 365
+    if diff == 1:
+        return "a year ago"
+    else:
+        return str(diff) + " years ago"
+
+
 class RequiredAttributeError(ValueError):
 
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)
 
 
-def duplicate_stream(original):
-    """Duplicates a stream  at the os level.
+class ObjectWrapper(object):
+    """Base class that wraps an object. Derived classes can add new behavior
+    while staying undercover.
 
-    :param stream original: original stream to be duplicated. Must have a
-        `fileno` callable attribute.
-
-    :return: duplicate of the original stream
-    :rtype: file like object
+    This class is modeled after the stackoverflow answer:
+    * http://stackoverflow.com/a/1445289/771663
     """
-    return os.fdopen(os.dup(original.fileno()))
+    def __init__(self, wrapped_object):
+        wrapped_cls = type(wrapped_object)
+        wrapped_name = wrapped_cls.__name__
+        self.__class__ = type(wrapped_name, (type(self), wrapped_cls), {})
+        self.__dict__ = wrapped_object.__dict__

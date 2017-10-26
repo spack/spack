@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,13 +30,15 @@ class PyCsvkit(PythonPackage):
     formats"""
 
     homepage = 'http://csvkit.rtfd.org/'
-    url      = "https://pypi.python.org/packages/source/c/csvkit/csvkit-0.9.1.tar.gz"
+    url      = "https://pypi.io/packages/source/c/csvkit/csvkit-0.9.1.tar.gz"
 
     version('0.9.1', '48d78920019d18846933ee969502fff6')
 
-    depends_on('py-dateutil', type=('build', 'run'))
-    depends_on('py-dbf', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-dateutil@2.2', type=('build', 'run'), when='@0.9.1')
+    depends_on('py-dateutil', type=('build', 'run'), when='@0.9.2:')
+    depends_on('py-dbf@0.94.003', type=('build', 'run'))
     depends_on('py-xlrd', type=('build', 'run'))
     depends_on('py-sqlalchemy', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-openpyxl', type=('build', 'run'))
+    depends_on('py-openpyxl@2.2.0-b1', type=('build', 'run'))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,32 +25,45 @@
 from spack import *
 
 
-class PkgConfig(Package):
+class PkgConfig(AutotoolsPackage):
     """pkg-config is a helper tool used when compiling applications
     and libraries"""
 
     homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    url = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz"
 
+    version('0.29.2', 'f6e931e319531b736fadc017f470e68a')
     version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
     version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
 
-    parallel = False
     variant('internal_glib', default=True,
             description='Builds with internal glib')
 
     # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch')
+    patch('g_date_strftime.patch', when='@:0.29.1')
 
-    def install(self, spec, prefix):
-        args = ["--prefix={0}".format(prefix),
-                "--enable-shared"]
-        if "+internal_glib" in spec:
+    parallel = False
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """spack built pkg-config on cray's requires adding /usr/local/
+        and /usr/lib64/  to PKG_CONFIG_PATH in order to access cray '.pc'
+        files.
+        Adds the ACLOCAL path for autotools."""
+        spack_env.append_path('ACLOCAL_PATH',
+                              join_path(self.prefix.share, 'aclocal'))
+        if 'platform=cray' in self.spec:
+            spack_env.append_path('PKG_CONFIG_PATH',
+                                  '/usr/lib64/pkgconfig')
+            spack_env.append_path('PKG_CONFIG_PATH',
+                                  '/usr/local/lib64/pkgconfig')
+
+    def configure_args(self):
+        config_args = ['--enable-shared']
+
+        if '+internal_glib' in self.spec:
             # There's a bootstrapping problem here;
             # glib uses pkg-config as well, so break
             # the cycle by using the internal glib.
-            args.append("--with-internal-glib")
-        configure(*args)
+            config_args.append('--with-internal-glib')
 
-        make()
-        make("install")
+        return config_args

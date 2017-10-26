@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,15 +29,24 @@ class Automake(AutotoolsPackage):
     """Automake -- make file builder part of autotools"""
 
     homepage = 'http://www.gnu.org/software/automake/'
-    url      = 'http://ftp.gnu.org/gnu/automake/automake-1.14.tar.gz'
+    url      = 'http://ftp.gnu.org/gnu/automake/automake-1.15.tar.gz'
 
+    version('1.15.1', '95df3f2d6eb8f81e70b8cb63a93c8853')
     version('1.15',   '716946a105ca228ab545fc37a70df3a3')
     version('1.14.1', 'd052a3e884631b9c7892f2efce542d75')
     version('1.11.6', '0286dc30295b62985ca51919202ecfcc')
 
     depends_on('autoconf', type='build')
+    depends_on('perl', type=('build', 'run'))
 
     build_directory = 'spack-build'
+
+    def patch(self):
+        # The full perl shebang might be too long
+        for file in ('aclocal', 'automake'):
+            filter_file('^#!@PERL@ -w',
+                        '#!/usr/bin/env perl',
+                        't/wrap/{0}.in'.format(file))
 
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))

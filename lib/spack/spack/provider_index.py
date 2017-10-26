@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,6 +26,7 @@
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
 from itertools import product as iproduct
+from six import iteritems
 from pprint import pformat
 
 import spack.util.spack_yaml as syaml
@@ -96,8 +97,8 @@ class ProviderIndex(object):
 
         assert(not spec.virtual)
 
-        pkg = spec.package
-        for provided_spec, provider_specs in pkg.provided.iteritems():
+        pkg_provided = spec.package_class.provided
+        for provided_spec, provider_specs in iteritems(pkg_provided):
             for provider_spec in provider_specs:
                 # TODO: fix this comment.
                 # We want satisfaction other than flags
@@ -145,8 +146,8 @@ class ProviderIndex(object):
                     if p_spec.satisfies(vspec, deps=False):
                         providers.update(spec_set)
 
-        # Return providers in order
-        return sorted(providers)
+        # Return providers in order. Defensively copy.
+        return sorted(s.copy() for s in providers)
 
     # TODO: this is pretty darned nasty, and inefficient, but there
     # are not that many vdeps in most specs.
@@ -201,7 +202,7 @@ class ProviderIndex(object):
     def from_yaml(stream):
         try:
             yfile = syaml.load(stream)
-        except MarkedYAMLError, e:
+        except MarkedYAMLError as e:
             raise spack.spec.SpackYAMLError(
                 "error parsing YAML ProviderIndex cache:", str(e))
 
@@ -288,7 +289,7 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
     """
     def mapiter(mappings):
         if isinstance(mappings, dict):
-            return mappings.iteritems()
+            return iteritems(mappings)
         else:
             return iter(mappings)
 

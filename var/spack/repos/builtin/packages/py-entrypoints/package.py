@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,16 +25,15 @@
 from spack import *
 
 
-class PyEntrypoints(Package):
+class PyEntrypoints(PythonPackage):
     """Discover and load entry points from installed packages."""
 
     homepage = "https://pypi.python.org/pypi/entrypoints"
-    url      = "https://files.pythonhosted.org/packages/f8/ad/0e77a853c745a15981ab51fa9a0cb4eca7a7a007b4c1970106ee6ba01e0c/entrypoints-0.2.2-py2.py3-none-any.whl"
+    url      = "https://pypi.io/packages/source/e/entrypoints/entrypoints-0.2.3.tar.gz"
 
-    version('0.2.2', '73bd7ce92c19b25dc5a20aff41be996a', expand=False)
+    import_modules = ['entrypoints']
 
-    depends_on('py-pip', type='build')
+    version('0.2.3', '0d3ad1b0130d91e3596ef3a59f25a56c')
 
-    def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('py-configparser', when='^python@:2.8', type=('build', 'run'))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,12 +26,17 @@ from spack import *
 
 
 class PyOpenpyxl(PythonPackage):
-    """A Python library to read/write Excel 2007 xlsx/xlsm files"""
+    """A Python library to read/write Excel 2010 xlsx/xlsm files"""
 
-    homepage = 'http://openpyxl.readthedocs.org/'
-    url      = "https://pypi.python.org/packages/source/o/openpyxl/openpyxl-2.4.0-a1.tar.gz"
+    homepage = "http://openpyxl.readthedocs.org/"
+    url      = "https://pypi.io/packages/source/o/openpyxl/openpyxl-2.4.5.tar.gz"
 
-    version('2.4.0-a1', 'e5ca6d23ceccb15115d45cdf26e736fc')
+    version('2.4.5', '3de13dc9b731e1a9dd61b873d9b35a8a')
+    version('2.2.0-b1', 'eeefabe384f6e53166c8c2e6abe5d11b')
 
-    depends_on('py-jdcal', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.0:3.1,3.3:')
+
     depends_on('py-setuptools', type='build')
+
+    depends_on('py-jdcal',      type=('build', 'run'))
+    depends_on('py-et-xmlfile', type=('build', 'run'))

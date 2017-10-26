@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,8 +31,9 @@ class RCluster(RPackage):
     (1990) "Finding Groups in Data"."""
 
     homepage = "https://cran.r-project.org/web/packages/cluster/index.html"
-    url      = "https://cran.r-project.org/src/contrib/cluster_2.0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
+    url      = "https://cran.rstudio.com/src/contrib/cluster_2.0.6.tar.gz"
+    list_url = homepage
 
+    version('2.0.6', 'e7d0660b05c65f4d886ebf7f046939ab')
     version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')
     version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')

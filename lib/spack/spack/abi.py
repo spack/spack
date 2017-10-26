@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,6 +29,7 @@ import spack.spec
 from spack.build_environment import dso_suffix
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
+from spack.compilers.clang import Clang
 from llnl.util.lang import memoized
 
 
@@ -44,7 +45,7 @@ class ABI(object):
     @memoized
     def _gcc_get_libstdcxx_version(self, version):
         """Returns gcc ABI compatibility info by getting the library version of
-           a compiler's libstdc++.so or libgcc_s.so"""
+           a compiler's libstdc++ or libgcc_s"""
         spec = CompilerSpec("gcc", version)
         compilers = spack.compilers.compilers_for_spec(spec)
         if not compilers:
@@ -62,8 +63,13 @@ class ABI(object):
         else:
             return None
         try:
-            output = rungcc("--print-file-name=%s" % libname,
-                            return_output=True)
+            # Some gcc's are actually clang and don't respond properly to
+            # --print-file-name (they just print the filename, not the
+            # full path).  Ignore these and expect them to be handled as clang.
+            if Clang.default_version(rungcc.exe[0]) != 'unknown':
+                return None
+
+            output = rungcc("--print-file-name=%s" % libname, output=str)
         except ProcessError:
             return None
         if not output:

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 from glob import glob
+import os
 
 
 class Highwayhash(MakefilePackage):
@@ -40,6 +41,22 @@ class Highwayhash(MakefilePackage):
     build_targets = ['all', 'libhighwayhash.a']
 
     def install(self, spec, prefix):
-        install('libhighwayhash.a', prefix.lib)
+        mkdirp(prefix.bin)
+        mkdirp(prefix.include)
+
+        # The following are CPU and compiler flag specific
+        if(os.path.exists('libhighwayhash.a')):
+            mkdirp(prefix.lib)
+            install('libhighwayhash.a', prefix.lib)
+        if(os.path.exists('highwayhash_test')):
+            install('highwayhash_test', prefix.bin)
+        if(os.path.exists('benchmark')):
+            install('benchmark', prefix.bin)
+
+        # Always installed
+        install('profiler_example', prefix.bin)
+        install('nanobenchmark_example', prefix.bin)
+        install('vector_test', prefix.bin)
+        install('sip_hash_test', prefix.bin)
         for i in glob('highwayhash/*.h'):
-            install(i, prefix.bin)
+            install(i, prefix.include)

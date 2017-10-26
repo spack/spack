@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,7 +32,8 @@ class LibgpgError(AutotoolsPackage):
        SmartCard Daemon and possibly more in the future. """
 
     homepage = "https://www.gnupg.org/related_software/libgpg-error"
-    url      = "http://gd.tuwien.ac.at/pub/gnupg/libgpg-error/libgpg-error-1.18.tar.bz2"
+    url = "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.27.tar.bz2"
 
+    version('1.27', '5217ef3e76a7275a2a3b569a12ddc989')
     version('1.21', 'ab0b5aba6d0a185b41d07bda804fd8b2')
     version('1.18', '12312802d2065774b787cbfc22cc04e9')

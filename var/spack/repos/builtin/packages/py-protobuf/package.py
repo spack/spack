@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,7 +34,7 @@ class PyProtobuf(PythonPackage):
     and using a variety of languages."""
 
     homepage = 'https://developers.google.com/protocol-buffers/'
-    url      = 'https://pypi.python.org/packages/source/p/protobuf/protobuf-3.0.0b2.tar.gz'
+    url      = 'https://pypi.io/packages/source/p/protobuf/protobuf-3.0.0b2.tar.gz'
 
     version('3.0.0b2', 'f0d3bd2394345a9af4a277cd0302ae83')
     version('2.6.1', '6bf843912193f70073db7f22e2ea55e2')

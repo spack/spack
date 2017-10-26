@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,7 +30,6 @@ class RThData(RPackage):
 
     homepage = "https://cran.r-project.org/package=TH.data"
     url      = "https://cran.r-project.org/src/contrib/TH.data_1.0-8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/TH.data"
 
     version('1.0-8', '2cc20acc8b470dff1202749b4bea55c4')
     version('1.0-7', '3e8b6b1a4699544f175215aed7039a94')

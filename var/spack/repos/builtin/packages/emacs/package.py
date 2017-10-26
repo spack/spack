@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,14 +31,23 @@ class Emacs(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/emacs"
     url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
 
+    version('25.3', '74ddd373dc52ac05ca7a8c63b1ddbf58')
+    version('25.2', '0a36d1cdbba6024d4dbbac027f87995f')
     version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
     variant('X', default=False, description="Enable an X toolkit")
-    variant('toolkit', default='gtk',
-            description="Select an X toolkit (gtk, athena)")
+    variant(
+        'toolkit',
+        default='gtk',
+        values=('gtk', 'athena'),
+        description="Select an X toolkit (gtk, athena)"
+    )
+
+    depends_on('pkg-config@0.9.0:', type='build')
 
     depends_on('ncurses')
+    depends_on('zlib')
     depends_on('libtiff', when='+X')
     depends_on('libpng', when='+X')
     depends_on('libxpm', when='+X')
@@ -49,12 +58,9 @@ class Emacs(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        args = []
+
         toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
-            if toolkit not in ('gtk', 'athena'):
-                raise InstallError("toolkit must be in (gtk, athena), not %s" %
-                                   toolkit)
             args = [
                 '--with-x',
                 '--with-x-toolkit={0}'.format(toolkit)

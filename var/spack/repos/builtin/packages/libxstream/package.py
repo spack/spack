@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,9 +31,9 @@ class Libxstream(Package):
     conditions.'''
 
     homepage = 'https://github.com/hfp/libxstream'
-    url      = 'https://github.com/hfp/libxstream.git'
+    url      = 'https://github.com/hfp/libxstream/archive/0.9.0.tar.gz'
 
-    version('0.9.0', git='https://github.com/hfp/libxstream.git')
+    version('0.9.0', 'fd74b7cf5f145ff4925d91be2809571c')
 
     def patch(self):
         kwargs = {'ignore_absent': False, 'backup': True, 'string': True}

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,7 +26,7 @@
 from spack import *
 
 
-class Hepmc(Package):
+class Hepmc(CMakePackage):
     """The HepMC package is an object oriented, C++ event record for
        High Energy Physics Monte Carlo generators and simulation."""
 
@@ -39,17 +39,10 @@ class Hepmc(Package):
     version('2.06.06', '102e5503537a3ecd6ea6f466aa5bc4ae')
     version('2.06.05', '2a4a2a945adf26474b8bdccf4f881d9c')
 
-    depends_on("cmake", type='build')
+    depends_on('cmake@2.6:', type='build')
 
-    def install(self, spec, prefix):
-        build_directory = join_path(self.stage.path, 'spack-build')
-        source_directory = self.stage.source_path
-        options = [source_directory]
-        options.append('-Dmomentum:STRING=GEV')
-        options.append('-Dlength:STRING=MM')
-        options.extend(std_cmake_args)
-
-        with working_dir(build_directory, create=True):
-            cmake(*options)
-            make()
-            make('install')
+    def cmake_args(self):
+        return [
+            '-Dmomentum:STRING=GEV',
+            '-Dlength:STRING=MM',
+        ]

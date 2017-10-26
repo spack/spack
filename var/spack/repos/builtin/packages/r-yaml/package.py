@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,6 +31,7 @@ class RYaml(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/yaml/index.html"
     url      = "https://cran.r-project.org/src/contrib/yaml_2.1.13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/yaml"
+    list_url = homepage
 
+    version('2.1.14', '2de63248e6a122c368f8e4537426e35c')
     version('2.1.13', 'f2203ea395adaff6bd09134666191d9a')

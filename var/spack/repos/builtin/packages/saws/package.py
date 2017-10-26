@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,9 +26,9 @@ from spack import *
 
 
 class Saws(AutotoolsPackage):
-    """The Scientific Application Web server (SAWs) turns any C or C++ 
-       scientific or engineering application code into a webserver, 
-       allowing one to examine (and even modify) the state of the 
+    """The Scientific Application Web server (SAWs) turns any C or C++
+       scientific or engineering application code into a webserver,
+       allowing one to examine (and even modify) the state of the
        simulation with any browser from anywhere."""
     homepage = "https://bitbucket.org/saws/saws/wiki/Home"
 

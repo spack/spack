@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.operating_systems.mac_os import macOS_version
 import platform
 
 
@@ -32,7 +33,10 @@ class Oce(Package):
     Open CASCADE library.
     """
     homepage = "https://github.com/tpaviot/oce"
+    url = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
 
+    version('0.18.2', '6dfd68e459e2c62387579888a867281f')
+    version('0.18.1', '2a7597f4243ee1f03245aeeb02d00956')
     version('0.18',   '226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
     version('0.17.2', 'bf2226be4cd192606af677cf178088e5')
     version('0.17.1', '36c67b87093c675698b483454258af91')
@@ -42,13 +46,11 @@ class Oce(Package):
 
     variant('tbb', default=True,
             description='Build with Intel Threading Building Blocks')
+    variant('X11', default=False,
+            description='Build with X11 enabled')
 
     depends_on('cmake@2.8:', type='build')
     depends_on('tbb', when='+tbb')
-
-    def url_for_version(self, version):
-        return 'https://github.com/tpaviot/oce/archive/OCE-%s.tar.gz' % (
-            version.dotted)
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0
     # and has to do with compiler optimization, see
@@ -58,11 +60,15 @@ class Oce(Package):
     # https://github.com/tpaviot/oce/commit/61cb965b9ffeca419005bc15e635e67589c421dd.patch
     patch('null.patch', when='@0.16:0.17.1')
 
+    # OCE depends on xlocale.h from glibc-headers but it was removed in 2.26,
+    # see https://github.com/tpaviot/oce/issues/675
+    patch('xlocale.patch', level=0, when='@0.18.1:')
+
     # fix build with Xcode 8 "previous definition of CLOCK_REALTIME"
     # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643
     if (platform.system() == "Darwin") and (
-       '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12'):
-        patch('sierra.patch', when='@0.17.2:0.18')
+       macOS_version() == Version('10.12')):
+        patch('sierra.patch', when='@0.17.2:0.18.0')
 
     def install(self, spec, prefix):
         options = []
@@ -72,7 +78,8 @@ class Oce(Package):
             '-DOCE_BUILD_SHARED_LIB:BOOL=ON',
             '-DCMAKE_BUILD_TYPE:STRING=Release',
             '-DOCE_DATAEXCHANGE:BOOL=ON',
-            '-DOCE_DISABLE_X11:BOOL=ON',
+            '-DOCE_DISABLE_X11:BOOL=%s' % (
+                'OFF' if '+X11' in spec else 'ON'),
             '-DOCE_DRAW:BOOL=OFF',
             '-DOCE_MODEL:BOOL=ON',
             '-DOCE_MULTITHREAD_LIBRARY:STRING=%s' % (
@@ -90,7 +97,8 @@ class Oce(Package):
                 '-DOCE_OSX_USE_COCOA:BOOL=ON',
             ])
 
-        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+        if platform.system() == 'Darwin' and (
+           macOS_version() >= Version('10.12')):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:

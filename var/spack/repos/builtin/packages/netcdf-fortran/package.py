@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,3 +35,16 @@ class NetcdfFortran(AutotoolsPackage):
     version('4.4.3', 'bfd4ae23a34635b273d3eb0d91cbde9e')
 
     depends_on('netcdf')
+
+    @property
+    def libs(self):
+        libraries = ['libnetcdff']
+
+        # This package installs both shared and static libraries. Permit
+        # clients to query which one they want.
+        query_parameters = self.spec.last_query.extra_parameters
+        shared = 'shared' in query_parameters
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=shared, recurse=True
+        )

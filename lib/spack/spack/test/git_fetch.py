@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,23 +26,53 @@ import os
 
 import pytest
 import spack
-from llnl.util.filesystem import *
+from llnl.util.filesystem import working_dir, join_path, touch
 from spack.spec import Spec
 from spack.version import ver
+from spack.fetch_strategy import GitFetchStrategy
+from spack.util.executable import which
 
 
-@pytest.fixture(params=['master', 'branch', 'tag', 'commit'])
-def type_of_test(request):
-    """Returns one of the test type available for the mock_git_repository"""
-    return request.param
+pytestmark = pytest.mark.skipif(
+    not which('git'), reason='requires git to be installed')
 
 
-def test_fetch(
-        type_of_test,
-        mock_git_repository,
-        config,
-        refresh_builtin_mock
-):
+@pytest.fixture(params=[None, '1.8.5.2', '1.8.5.1', '1.7.10', '1.7.0'])
+def git_version(request):
+    """Tests GitFetchStrategy behavior for different git versions.
+
+    GitFetchStrategy tries to optimize using features of newer git
+    versions, but needs to work with older git versions.  To ensure code
+    paths for old versions still work, we fake it out here and make it
+    use the backward-compatibility code paths with newer git versions.
+    """
+    git = which('git', required=True)
+    real_git_version = ver(git('--version', output=str).lstrip('git version '))
+
+    if request.param is None:
+        yield    # don't patch; run with the real git_version method.
+    else:
+        test_git_version = ver(request.param)
+        if test_git_version > real_git_version:
+            pytest.skip("Can't test clone logic for newer version of git.")
+
+        # patch the fetch strategy to think it's using a lower git version.
+        # we use this to test what we'd need to do with older git versions
+        # using a newer git installation.
+        git_version_method = GitFetchStrategy.git_version
+        GitFetchStrategy.git_version = test_git_version
+        yield
+        GitFetchStrategy.git_version = git_version_method
+
+
+@pytest.mark.parametrize("type_of_test", ['master', 'branch', 'tag', 'commit'])
+@pytest.mark.parametrize("secure", [True, False])
+def test_fetch(type_of_test,
+               secure,
+               mock_git_repository,
+               config,
+               refresh_builtin_mock,
+               git_version):
     """Tries to:
 
     1. Fetch the repo using a fetch strategy constructed with
@@ -55,30 +85,38 @@ def test_fetch(
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
     h = mock_git_repository.hash
+
     # Construct the package under test
     spec = Spec('git-test')
     spec.concretize()
     pkg = spack.repo.get(spec, new=True)
     pkg.versions[ver('git')] = t.args
+
     # Enter the stage directory and check some properties
     with pkg.stage:
-        pkg.do_stage()
-        assert h('HEAD') == h(t.revision)
+        try:
+            spack.insecure = secure
+            pkg.do_stage()
+        finally:
+            spack.insecure = False
 
-        file_path = join_path(pkg.stage.source_path, t.file)
-        assert os.path.isdir(pkg.stage.source_path)
-        assert os.path.isfile(file_path)
+        with working_dir(pkg.stage.source_path):
+            assert h('HEAD') == h(t.revision)
 
-        os.unlink(file_path)
-        assert not os.path.isfile(file_path)
+            file_path = join_path(pkg.stage.source_path, t.file)
+            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isfile(file_path)
 
-        untracked_file = 'foobarbaz'
-        touch(untracked_file)
-        assert os.path.isfile(untracked_file)
-        pkg.do_restage()
-        assert not os.path.isfile(untracked_file)
+            os.unlink(file_path)
+            assert not os.path.isfile(file_path)
 
-        assert os.path.isdir(pkg.stage.source_path)
-        assert os.path.isfile(file_path)
+            untracked_file = 'foobarbaz'
+            touch(untracked_file)
+            assert os.path.isfile(untracked_file)
+            pkg.do_restage()
+            assert not os.path.isfile(untracked_file)
 
-        assert h('HEAD') == h(t.revision)
+            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isfile(file_path)
+
+            assert h('HEAD') == h(t.revision)

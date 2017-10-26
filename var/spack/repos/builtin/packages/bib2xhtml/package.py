@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,9 +32,6 @@ class Bib2xhtml(Package):
     url = 'http://www.spinellis.gr/sw/textproc/bib2xhtml/bib2xhtml-v3.0-15-gf506.tar.gz'
 
     version('3.0-15-gf506', 'a26ba02fe0053bbbf2277bdf0acf8645')
-
-    def url_for_version(self, v):
-        return ('http://www.spinellis.gr/sw/textproc/bib2xhtml/bib2xhtml-v%s.tar.gz' % v)
 
     def install(self, spec, prefix):
         # Add the bst include files to the install directory

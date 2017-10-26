@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,10 +34,19 @@ class Bzip2(Package):
 
     homepage = "http://www.bzip.org"
     url      = "http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz"
+    list_url = "http://www.bzip.org/downloads.html"
 
     version('1.0.6', '00b516f4704d4a7cb50a1d97e6e8e15b')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
+
+    # override default implementation
+    @property
+    def libs(self):
+        shared = '+shared' in self.spec
+        return find_libraries(
+            'libbz2', root=self.prefix, shared=shared, recurse=True
+        )
 
     def patch(self):
         # bzip2 comes with two separate Makefiles for static and dynamic builds

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Cube(Package):
+class Cube(AutotoolsPackage):
     """Cube the profile viewer for Score-P and Scalasca profiles. It displays a
     multi-dimensional performance space consisting of the dimensions:
     - performance metric
@@ -36,26 +36,31 @@ class Cube(Package):
     homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
     url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz"
 
-    version('4.3.4', '50f73060f55311cb12c5b3cb354d59fa',
-            url='http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3.4.tar.gz')
-    version('4.3.3', '07e109248ed8ffc7bdcce614264a2909',
-            url='http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3.3.tar.gz')
-    version('4.2.3', '8f95b9531f5a8f8134f279c2767c9b20',
-            url="http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz")
+    version('4.3.5', 'e5dce986e3c6381ea3a5fcb66c553adc')
+    version('4.3.4', '50f73060f55311cb12c5b3cb354d59fa')
+    version('4.3.3', '07e109248ed8ffc7bdcce614264a2909')
+
+    version('4.2.3', '8f95b9531f5a8f8134f279c2767c9b20')
 
     variant('gui', default=False, description='Build CUBE GUI')
 
     depends_on('zlib')
-    depends_on('qt@4.6:', when='+gui')
 
-    def install(self, spec, prefix):
-        configure_args = ["--prefix=%s" % prefix,
-                          "--without-paraver"]
+    depends_on('qt@5:', when='@4.3.0:4.3.999 +gui')
+    depends_on('qt@4.8:', when='@4.2.0:4.2.999 +gui')
 
-        # TODO : need to handle cross compiling build
+    def url_for_version(self, version):
+        return 'http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/cube-{1}.tar.gz'.format(version.up_to(2), version)
+
+    def configure_args(self):
+        spec = self.spec
+
+        configure_args = ['--enable-shared']
+
         if '+gui' not in spec:
             configure_args.append('--without-gui')
 
-        configure(*configure_args)
-        make()
-        make("install", parallel=False)
+        return configure_args
+
+    def install(self, spec, prefix):
+        make('install', parallel=False)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,10 +28,9 @@ from spack import *
 class PyNumexpr(PythonPackage):
     """Fast numerical expression evaluator for NumPy"""
     homepage = "https://pypi.python.org/pypi/numexpr"
-    url      = "https://pypi.python.org/packages/source/n/numexpr/numexpr-2.4.6.tar.gz"
+    url      = "https://pypi.io/packages/source/n/numexpr/numexpr-2.6.1.tar.gz"
 
-    version('2.6.1', '6365245705b446426df9543ad218dd8e',
-            url="https://pypi.python.org/packages/c6/f0/11628fa4d332d8fe9ab0ba8e9bfe0e065fb6b5324859171ee72d84e079c0/numexpr-2.6.1.tar.gz")
+    version('2.6.1', '6365245705b446426df9543ad218dd8e')
     version('2.5',   '84f66cced45ba3e30dcf77a937763aaa')
     version('2.4.6', '17ac6fafc9ea1ce3eb970b9abccb4fbd')
 

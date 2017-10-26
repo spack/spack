@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,14 +38,19 @@ schema = {
         'config': {
             'type': 'object',
             'default': {},
-            'additionalProperties': False,
             'properties': {
                 'install_tree': {'type': 'string'},
+                'install_hash_length': {'type': 'integer', 'minimum': 1},
+                'install_path_scheme': {'type': 'string'},
                 'build_stage': {
                     'oneOf': [
                         {'type': 'string'},
                         {'type': 'array',
                          'items': {'type': 'string'}}],
+                },
+                'template_dirs': {
+                    'type': 'array',
+                    'items': {'type': 'string'}
                 },
                 'module_roots': {
                     'type': 'object',
@@ -61,6 +66,7 @@ schema = {
                 'verify_ssl': {'type': 'boolean'},
                 'checksum': {'type': 'boolean'},
                 'dirty': {'type': 'boolean'},
+                'build_jobs': {'type': 'integer', 'minimum': 1},
             }
         },
     },

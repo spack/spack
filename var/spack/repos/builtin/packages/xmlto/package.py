@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,8 +31,8 @@ class Xmlto(AutotoolsPackage):
     without remembering many long options and searching for the syntax of the
     backends."""
 
-    homepage = "http://cyberelk.net/tim/software/xmlto/"
-    url      = "https://fedorahosted.org/releases/x/m/xmlto/xmlto-0.0.28.tar.gz"
+    homepage = "https://pagure.io/xmlto"
+    url      = "https://releases.pagure.org/xmlto/xmlto-0.0.28.tar.gz"
 
     version('0.0.28', 'a1fefad9d83499a15576768f60f847c6')
 

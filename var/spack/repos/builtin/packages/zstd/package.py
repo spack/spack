@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Zstd(Package):
+class Zstd(MakefilePackage):
     """Zstandard, or zstd as short version, is a fast lossless compression
     algorithm, targeting real-time compression scenarios at zlib-level and
     better compression ratios."""
@@ -33,10 +33,8 @@ class Zstd(Package):
     homepage = "http://facebook.github.io/zstd/"
     url      = "https://github.com/facebook/zstd/archive/v1.1.2.tar.gz"
 
+    version('1.3.0', '888660a850e33c2dcc7c4f9d0b04d347')
     version('1.1.2', '4c57a080d194bdaac83f2d3251fc7ffc')
 
     def install(self, spec, prefix):
-        make()
-        if self.run_tests:
-            make('test')
         make('install', 'PREFIX={0}'.format(prefix))

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -42,5 +42,7 @@ class Qhull(CMakePackage):
 
     version('2012.1', 'd0f978c0d8dfb2e919caefa56ea2953c',
             url="http://www.qhull.org/download/qhull-2012.1-src.tgz")
+
+    patch('qhull-unused-intel-17.02.patch', when='@2015.2')
 
     depends_on('cmake@2.6:', type='build')

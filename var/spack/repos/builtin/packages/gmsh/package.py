@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,6 +38,7 @@ class Gmsh(CMakePackage):
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-2.11.0-source.tgz'
 
+    version('3.0.1',  '830b5400d9f1aeca79c3745c5c9fdaa2900cdb2fa319b664a5d26f7e615c749f')
     version('2.16.0', 'e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea')
     version('2.15.0', '992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
     version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
@@ -45,8 +46,6 @@ class Gmsh(CMakePackage):
 
     variant('shared',      default=True,
             description='Enables the build of shared libraries')
-    variant('debug',       default=False,
-            description='Builds the library in debug mode')
     variant('mpi',         default=True,
             description='Builds MPI support for parser and solver')
     variant('fltk',        default=False,
@@ -88,7 +87,7 @@ class Gmsh(CMakePackage):
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
 
         # Make sure GMSH picks up correct BlasLapack by providing linker flags
-        blas_lapack = spec['lapack'].lapack_libs + spec['blas'].blas_libs
+        blas_lapack = spec['lapack'].libs + spec['blas'].libs
         options.append(
             '-DBLAS_LAPACK_LIBRARIES={0}'.format(blas_lapack.ld_flags))
 
@@ -126,9 +125,6 @@ class Gmsh(CMakePackage):
         else:
             # Builds and installs static library
             options.append('-DENABLE_BUILD_LIB:BOOL=ON')
-
-        if '+debug' in spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
 
         if '+mpi' in spec:
             options.append('-DENABLE_MPI:BOOL=ON')

@@ -1,5 +1,5 @@
 #############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -74,14 +74,14 @@ class NetlibLapack(Package):
     def blas_libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['libblas'], root=self.prefix, shared=shared, recurse=True
+            'libblas', root=self.prefix, shared=shared, recurse=True
         )
 
     @property
     def lapack_libs(self):
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            ['liblapack'], root=self.prefix, shared=shared, recurse=True
+            'liblapack', root=self.prefix, shared=shared, recurse=True
         )
 
     def install_one(self, spec, prefix, shared):
@@ -113,7 +113,7 @@ class NetlibLapack(Package):
         if '+external-blas' in spec:
             cmake_args.extend([
                 '-DUSE_OPTIMIZED_BLAS:BOOL=ON',
-                '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].blas_libs.joined(';')
+                '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].libs.joined(';')
             ])
 
         cmake_args.extend(std_cmake_args)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,19 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
 import hashlib
 
 """Set of acceptable hashes that Spack will use."""
-_acceptable_hashes = [
-    hashlib.md5,
-    hashlib.sha1,
-    hashlib.sha224,
-    hashlib.sha256,
-    hashlib.sha384,
-    hashlib.sha512]
+hashes = dict((h, getattr(hashlib, h)) for h in [
+    'md5',
+    'sha1',
+    'sha224',
+    'sha256',
+    'sha384',
+    'sha512'])
 
 """Index for looking up hasher for a digest."""
-_size_to_hash = dict((h().digest_size, h) for h in _acceptable_hashes)
+_size_to_hash = dict((h().digest_size, h) for h in hashes.values())
 
 
 def checksum(hashlib_algo, filename, **kwargs):
@@ -43,7 +44,7 @@ def checksum(hashlib_algo, filename, **kwargs):
     """
     block_size = kwargs.get('block_size', 2**20)
     hasher = hashlib_algo()
-    with open(filename) as file:
+    with open(filename, 'rb') as file:
         while True:
             data = file.read(block_size)
             if not data:
@@ -104,11 +105,16 @@ class Checker(object):
 
 def prefix_bits(byte_array, bits):
     """Return the first <bits> bits of a byte array as an integer."""
+    if sys.version_info < (3,):
+        b2i = ord          # In Python 2, indexing byte_array gives str
+    else:
+        b2i = lambda b: b  # In Python 3, indexing byte_array gives int
+
     result = 0
     n = 0
     for i, b in enumerate(byte_array):
         n += 8
-        result = (result << 8) | ord(b)
+        result = (result << 8) | b2i(b)
         if n >= bits:
             break
 

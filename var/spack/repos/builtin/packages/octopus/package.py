@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,16 +30,10 @@ class Octopus(Package):
     theory code."""
 
     homepage = "http://www.tddft.org/programs/octopus/"
-    base_url = "http://www.tddft.org/programs/octopus/down.php?file="
+    url      = "http://www.tddft.org/programs/octopus/down.php?file=6.0/octopus-6.0.tar.gz"
 
     version('6.0', '5d1168c2a8d7fd9cb9492eaebaa7182e')
     version('5.0.1', '2b6392ab67b843f9d4ca7413fc07e822')
-
-    # Sample url is:
-    # "http://www.tddft.org/programs/octopus/down.php?file=5.0.1/octopus-5.0.1.tar.gz"
-    def url_for_version(self, version):
-        return '{0}/{1}/octopus-{1}.tar.gz'.format(Octopus.base_url, 
-                                                   version.dotted)
 
     variant('scalapack', default=False,
             description='Compile with Scalapack')
@@ -49,8 +43,8 @@ class Octopus(Package):
             description='Compile with ParMETIS')
     variant('netcdf', default=False,
             description='Compile with Netcdf')
-    variant('arpack-ng', default=False,
-            description='Compile with ARPACK-ng')
+    variant('arpack', default=False,
+            description='Compile with ARPACK')
 
     depends_on('blas')
     depends_on('gsl')
@@ -62,17 +56,15 @@ class Octopus(Package):
     depends_on('parmetis', when='+parmetis')
     depends_on('scalapack', when='+scalapack')
     depends_on('netcdf-fortran', when='+netcdf')
-    depends_on('arpack-ng', when='+arpack-ng')
+    depends_on('arpack-ng', when='+arpack')
 
     # optional dependencies:
     # TODO: parmetis, etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft
 
     def install(self, spec, prefix):
-        arpack = find_libraries(['libarpack'], root=spec[
-                                'arpack-ng'].prefix.lib, shared=True)
-        lapack = spec['lapack'].lapack_libs
-        blas = spec['blas'].blas_libs
+        lapack = spec['lapack'].libs
+        blas = spec['blas'].libs
         args = []
         args.extend([
             '--prefix=%s' % prefix,
@@ -96,23 +88,28 @@ class Octopus(Package):
         if '+netcdf' in spec:
             args.extend([
                 '--with-netcdf-prefix=%s' % spec['netcdf-fortran'].prefix,
-                '--with-netcdf-include=%s' % 
+                '--with-netcdf-include=%s' %
                 spec['netcdf-fortran'].prefix.include,
             ])
-        if '+arpack-ng' in spec:
+        if '+arpack' in spec:
+            arpack_libs = spec['arpack-ng'].libs.joined()
             args.extend([
-                '--with-arpack={0}'.format(arpack.joined()), 
+                '--with-arpack={0}'.format(arpack_libs),
             ])
+            if '+mpi' in spec['arpack-ng']:
+                args.extend([
+                    '--with-parpack={0}'.format(arpack_libs),
+                ])
+
         if '+scalapack' in spec:
             args.extend([
-                '--with-blacs=%s' % spec['scalapack'].scalapack_libs,
-                '--with-scalapack=%s' % spec['scalapack'].scalapack_libs,
+                '--with-blacs=%s' % spec['scalapack'].libs,
+                '--with-scalapack=%s' % spec['scalapack'].libs
             ])
+
             # --with-etsf-io-prefix=
             # --with-sparskit=${prefix}/lib/libskit.a
             # --with-pfft-prefix=${prefix} --with-mpifftw-prefix=${prefix}
-            # --with-parpack=${prefix}/lib/libparpack.dylib
-            # --with-parmetis-prefix=${prefix}
             # --with-berkeleygw-prefix=${prefix}
 
         # When preprocessor expands macros (i.e. CFLAGS) defined as quoted

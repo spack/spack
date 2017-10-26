@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+
 from spack import *
-from spack.package_test import *
-from spack.util.executable import Executable
-import os.path
+from spack.package_test import compile_c_and_execute, compare_output_file
 
 
 class Atlas(Package):
@@ -54,7 +54,13 @@ class Atlas(Package):
             url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
 
     variant('shared', default=True, description='Builds shared library')
-    variant('pthread', default=False, description='Use multithreaded libraries')
+
+    variant(
+        'threads', default='none',
+        description='Multithreading support',
+        values=('pthreads', 'none'),
+        multi=False
+    )
 
     provides('blas')
     provides('lapack')
@@ -110,14 +116,15 @@ class Atlas(Package):
                     make('shared_all')
 
             make("install")
-            self.install_test()
+            if self.run_tests:
+                self.install_test()
 
     @property
-    def blas_libs(self):
+    def libs(self):
         # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
         # serial BLAS), and all ATLAS symbols needed to support them. Whereas
         # libtatlas.[so,dylib,dll ] is parallel (multithreaded) version.
-        is_threaded = '+pthread' in self.spec
+        is_threaded = self.spec.satisfies('threads=pthreads')
         if '+shared' in self.spec:
             to_find = ['libtatlas'] if is_threaded else ['libsatlas']
             shared = True
@@ -135,10 +142,6 @@ class Atlas(Package):
             to_find, root=self.prefix, shared=shared, recurse=True
         )
 
-    @property
-    def lapack_libs(self):
-        return self.blas_libs
-
     def install_test(self):
         source_file = join_path(os.path.dirname(self.module.__file__),
                                 'test_cblas_dgemm.c')
@@ -146,7 +149,7 @@ class Atlas(Package):
                                  'test_cblas_dgemm.output')
 
         include_flags = ["-I%s" % self.spec.prefix.include]
-        link_flags = self.lapack_libs.ld_flags.split()
+        link_flags = self.libs.ld_flags.split()
 
         output = compile_c_and_execute(source_file, include_flags, link_flags)
         compare_output_file(output, blessed_file)

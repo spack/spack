@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,10 +27,12 @@ import os
 
 
 class Lua(Package):
-    """ The Lua programming language interpreter and library """
-    homepage = "http://www.lua.org"
-    url = "http://www.lua.org/ftp/lua-5.1.5.tar.gz"
+    """The Lua programming language interpreter and library."""
 
+    homepage = "http://www.lua.org"
+    url = "http://www.lua.org/ftp/lua-5.3.4.tar.gz"
+
+    version('5.3.4', '53a9c68bcc0eda58bdc2095ad5cdfc63')
     version('5.3.2', '33278c2ab5ee3c1a875be8d55c1ca2a1')
     version('5.3.1', '797adacada8d85761c079390ff1d9961')
     version('5.3.0', 'a1b0a7e92d0c85bbff7a8d27bf29f8af')
@@ -65,14 +67,14 @@ class Lua(Package):
              'MYLDFLAGS=-L%s -L%s' % (
                  spec['readline'].prefix.lib,
                  spec['ncurses'].prefix.lib),
-             'MYLIBS=-lncurses',
+             'MYLIBS=-lncursesw',
              'CC=%s -std=gnu99' % spack_cc,
              target)
         make('INSTALL_TOP=%s' % prefix,
              'MYLDFLAGS=-L%s -L%s' % (
                  spec['readline'].prefix.lib,
                  spec['ncurses'].prefix.lib),
-             'MYLIBS=-lncurses',
+             'MYLIBS=-lncursesw',
              'CC=%s -std=gnu99' % spack_cc,
              'install')
 
@@ -86,9 +88,9 @@ class Lua(Package):
         paths.append(os.path.join(path, '?', 'init.lua'))
         cpaths.append(os.path.join(path, '?.so'))
 
-    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         lua_paths = []
-        for d in extension_spec.traverse(
+        for d in dependent_spec.traverse(
                 deptypes=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
                 lua_paths.append(os.path.join(d.prefix, self.lua_lib_dir))
@@ -111,9 +113,9 @@ class Lua(Package):
         # Add LUA to PATH for dependent packages
         spack_env.prepend_path('PATH', self.prefix.bin)
 
-        # For run time environment set only the path for extension_spec and
+        # For run time environment set only the path for dependent_spec and
         # prepend it to LUAPATH
-        if extension_spec.package.extends(self.spec):
+        if dependent_spec.package.extends(self.spec):
             run_env.prepend_path('LUA_PATH', ';'.join(lua_patterns),
                                  separator=';')
             run_env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns),
@@ -143,13 +145,13 @@ class Lua(Package):
 
     @property
     def lua_lib_dir(self):
-        return os.path.join('lib', 'lua', self.version.up_to(2))
+        return os.path.join('lib', 'lua', str(self.version.up_to(2)))
 
     @property
     def lua_share_dir(self):
-        return os.path.join('share', 'lua', self.version.up_to(2))
+        return os.path.join('share', 'lua', str(self.version.up_to(2)))
 
-    def setup_dependent_package(self, module, ext_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """
         Called before lua modules's install() methods.
 

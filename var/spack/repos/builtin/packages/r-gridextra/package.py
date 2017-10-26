@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -29,10 +29,11 @@ class RGridextra(RPackage):
     """Provides a number of user-level functions to work with "grid" graphics,
     notably to arrange multiple grid-based plots on a page, and draw tables."""
 
-    homepage = "https://github.com/baptiste/gridextra"
+    homepage = "https://cran.r-project.org/package=gridExtra"
     url      = "https://cran.r-project.org/src/contrib/gridExtra_2.2.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gridExtra"
+    list_url = homepage
 
+    version('2.3', '01e0ea88610756a0fd3b260e83c9bd43')
     version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')
 
     depends_on('r-gtable', type=('build', 'run'))

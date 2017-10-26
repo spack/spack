@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,25 +25,24 @@
 from spack import *
 
 
-class LlvmLld(Package):
+class LlvmLld(CMakePackage):
     """lld - The LLVM Linker
        lld is a new set of modular code for creating linker tools."""
     homepage = "http://lld.llvm.org"
     url      = "http://llvm.org/releases/3.4/lld-3.4.src.tar.gz"
 
-    depends_on('llvm')
-
     version('3.4', '3b6a17e58c8416c869c14dd37682f78e')
 
-    depends_on('cmake', type='build')
+    depends_on('llvm')
+    depends_on('cmake@2.8:', type='build')
 
-    def install(self, spec, prefix):
-        env['CXXFLAGS'] = self.compiler.cxx11_flag
+    def cmake_args(self):
+        if 'CXXFLAGS' in env and env['CXXFLAGS']:
+            env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
+        else:
+            env['CXXFLAGS'] = self.compiler.cxx11_flag
 
-        with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DLLD_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
-                  '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
-                  *std_cmake_args)
-            make()
-            make("install")
+        return [
+            '-DLLD_PATH_TO_LLVM_BUILD=%s' % self.spec['llvm'].prefix,
+            '-DLLVM_MAIN_SRC_DIR=%s' % self.spec['llvm'].prefix,
+        ]

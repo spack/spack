@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Kealib(Package):
+class Kealib(CMakePackage):
     """An HDF5 Based Raster File Format
 
     KEALib provides an implementation of the GDAL data model.
@@ -46,16 +46,13 @@ class Kealib(Package):
 
     version('1.4.5', '112e9c42d980b2d2987a3c15d0833a5d')
 
-    depends_on("hdf5")
+    depends_on('hdf5')
+    depends_on('cmake@2.8.10:', type='build')
 
-    def install(self, spec, prefix):
-        with working_dir('trunk', create=False):
-            cmake_args = []
-            cmake_args.append("-DCMAKE_INSTALL_PREFIX=%s" % prefix)
-            cmake_args.append("-DHDF5_INCLUDE_DIR=%s" %
-                              spec['hdf5'].prefix.include)
-            cmake_args.append("-DHDF5_LIB_PATH=%s" % spec['hdf5'].prefix.lib)
-            cmake('.', *cmake_args)
+    root_cmakelists_dir = 'trunk'
 
-            make()
-            make("install")
+    def cmake_args(self):
+        return [
+            '-DHDF5_INCLUDE_DIR=%s' % self.spec['hdf5'].prefix.include,
+            '-DHDF5_LIB_PATH=%s' % self.spec['hdf5'].prefix.lib,
+        ]

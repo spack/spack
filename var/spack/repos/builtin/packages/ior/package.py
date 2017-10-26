@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,10 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Ior(Package):
+class Ior(AutotoolsPackage):
     """The IOR software is used for benchmarking parallel file systems
     using POSIX, MPI-IO, or HDF5 interfaces."""
 
@@ -38,20 +37,27 @@ class Ior(Package):
     variant('hdf5',  default=False, description='support IO with HDF5 backend')
     variant('ncmpi', default=False, description='support IO with NCMPI backend')
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
     depends_on('mpi')
-    depends_on('hdf5+mpi',   when='+hdf5')
-    depends_on('netcdf+mpi', when='+ncmpi')
+    depends_on('hdf5+mpi', when='+hdf5')
+    depends_on('parallel-netcdf', when='+ncmpi')
 
-    def install(self, spec, prefix):
-        os.system('./bootstrap')
+    @run_before('autoreconf')
+    def bootstrap(self):
+        Executable('./bootstrap')()
 
-        config_args = [
-            'MPICC=%s' % spec['mpi'].prefix.bin + '/mpicc',
-            '--prefix=%s' % prefix,
-        ]
+    def configure_args(self):
+        spec = self.spec
+        config_args = []
+
+        env['CC'] = spec['mpi'].mpicc
 
         if '+hdf5' in spec:
             config_args.append('--with-hdf5')
+            config_args.append('CFLAGS=-D H5_USE_16_API')
         else:
             config_args.append('--without-hdf5')
 
@@ -60,7 +66,4 @@ class Ior(Package):
         else:
             config_args.append('--without-ncmpi')
 
-        configure(*config_args)
-
-        make()
-        make('install')
+        return config_args

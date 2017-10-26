@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,7 +31,6 @@ class RCar(RPackage):
 
     homepage = "https://r-forge.r-project.org/projects/car/"
     url      = "https://cran.r-project.org/src/contrib/car_2.1-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/car"
 
     version('2.1-4', 'a66c307e8ccf0c336ed197c0f1799565')
     version('2.1-2', '0f78ad74ef7130126d319acec23951a0')

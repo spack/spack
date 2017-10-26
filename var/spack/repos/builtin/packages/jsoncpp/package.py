@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Jsoncpp(Package):
+class Jsoncpp(CMakePackage):
     """JsonCpp is a C++ library that allows manipulating JSON values,
     including serialization and deserialization to and from strings.
     It can also preserve existing comment in unserialization/serialization
@@ -36,14 +36,14 @@ class Jsoncpp(Package):
 
     version('1.7.3', 'aff6bfb5b81d9a28785429faa45839c5')
 
-    depends_on('cmake', type='build')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'MinSizeRel', 'Coverage'))
+
+    depends_on('cmake@3.1:', type='build')
+    # TODO: Add a 'test' deptype
     # depends_on('python', type='test')
 
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('..', '-DBUILD_SHARED_LIBS=ON', *std_cmake_args)
-
-            make()
-            if self.run_tests:
-                make('test')  # Python needed to run tests
-            make('install')
+    def cmake_args(self):
+        return ['-DBUILD_SHARED_LIBS=ON']

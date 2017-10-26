@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,13 +25,14 @@
 import re
 import os
 import sys
-import spack
-import spack.compiler as cpr
-from spack.compiler import *
-from spack.util.executable import *
-import llnl.util.tty as tty
-from spack.version import ver
 from shutil import copytree, ignore_patterns
+
+import llnl.util.tty as tty
+
+import spack
+from spack.compiler import Compiler, _version_cache
+from spack.util.executable import Executable
+from spack.version import ver
 
 
 class Clang(Compiler):
@@ -42,18 +43,23 @@ class Clang(Compiler):
     cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['gfortran']
+    f77_names = ['flang', 'gfortran']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['gfortran']
+    fc_names = ['flang', 'gfortran']
 
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'clang/clang',
-                  'cxx': 'clang/clang++',
-                  # Use default wrappers for fortran, in case provided in
-                  # compilers.yaml
-                  'f77': 'clang/gfortran',
-                  'fc': 'clang/gfortran'}
+                  'cxx': 'clang/clang++'}
+
+    if sys.platform == 'darwin':
+        # Use default wrappers for fortran, in case provided in
+        # compilers.yaml
+        link_paths['f77'] = 'clang/gfortran'
+        link_paths['fc'] = 'clang/gfortran'
+    else:
+        link_paths['f77'] = 'clang/flang'
+        link_paths['fc'] = 'clang/flang'
 
     @property
     def is_apple(self):
@@ -133,7 +139,7 @@ class Clang(Compiler):
             Target: x86_64-apple-darwin15.2.0
             Thread model: posix
         """
-        if comp not in cpr._version_cache:
+        if comp not in _version_cache:
             compiler = Executable(comp)
             output = compiler('--version', output=str, error=str)
 
@@ -148,9 +154,9 @@ class Clang(Compiler):
                 if match:
                     ver = match.group(1)
 
-            cpr._version_cache[comp] = ver
+            _version_cache[comp] = ver
 
-        return cpr._version_cache[comp]
+        return _version_cache[comp]
 
     def _find_full_path(self, path):
         basename = os.path.basename(path)
@@ -164,21 +170,12 @@ class Clang(Compiler):
 
     @classmethod
     def fc_version(cls, fc):
-        version = get_compiler_version(
-            fc, '-dumpversion',
-            # older gfortran versions don't have simple dumpversion output.
-            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
-        # This is horribly ad hoc, we need to map from gcc/gfortran version
-        # to clang version, but there could be multiple clang
-        # versions that work for a single gcc/gfortran version
+        # We could map from gcc/gfortran version to clang version, but on macOS
+        # we normally mix any version of gfortran with any version of clang.
         if sys.platform == 'darwin':
-            clangversionfromgcc = {'6.2.0': '8.0.0-apple'}
+            return cls.default_version('clang')
         else:
-            clangversionfromgcc = {}
-        if version in clangversionfromgcc:
-            return clangversionfromgcc[version]
-        else:
-            return 'unknown'
+            return cls.default_version(fc)
 
     @classmethod
     def f77_version(cls, f77):
@@ -206,7 +203,32 @@ class Clang(Compiler):
             return
 
         xcode_select = Executable('xcode-select')
+
+        # Get the path of the active developer directory
         real_root = xcode_select('--print-path', output=str).strip()
+
+        # The path name can be used to determine whether the full Xcode suite
+        # or just the command-line tools are installed
+        if real_root.endswith('Developer'):
+            # The full Xcode suite is installed
+            pass
+        else:
+            if real_root.endswith('CommandLineTools'):
+                # Only the command-line tools are installed
+                msg  = 'It appears that you have the Xcode command-line tools '
+                msg += 'but not the full Xcode suite installed.\n'
+
+            else:
+                # Xcode is not installed
+                msg  = 'It appears that you do not have Xcode installed.\n'
+
+            msg += 'In order to use Spack to build the requested application, '
+            msg += 'you need the full Xcode suite. It can be installed '
+            msg += 'through the App Store. Make sure you launch the '
+            msg += 'application and accept the license agreement.\n'
+
+            raise OSError(msg)
+
         real_root = os.path.dirname(os.path.dirname(real_root))
         developer_root = os.path.join(spack.stage_path,
                                       'xcode-select',

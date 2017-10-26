@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -28,9 +28,15 @@ from spack import *
 class PyPygments(PythonPackage):
     """Pygments is a syntax highlighting package written in Python."""
 
-    homepage = "https://pypi.python.org/pypi/pygments"
-    url      = "https://pypi.python.org/packages/source/P/Pygments/Pygments-2.0.1.tar.gz"
+    homepage = "http://pygments.org/"
+    url      = "https://pypi.io/packages/source/P/Pygments/Pygments-2.2.0.tar.gz"
 
+    import_modules = [
+        'pygments', 'pygments.filters', 'pygments.formatters',
+        'pygments.lexers', 'pygments.styles'
+    ]
+
+    version('2.2.0', '13037baca42f16917cbd5ad2fab50844')
     version('2.1.3', 'ed3fba2467c8afcda4d317e4ef2c6150')
     version('2.0.1', 'e0daf4c14a4fe5b630da765904de4d6c')
     version('2.0.2', '238587a1370d62405edabd0794b3ec4a')

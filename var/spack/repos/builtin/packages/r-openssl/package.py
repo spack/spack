@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -37,10 +37,11 @@ class ROpenssl(RPackage):
     generator, and 'bignum' math methods for manually performing crypto
     calculations on large multibyte integers."""
 
-    homepage = "https://github.com/jeroenooms/openssl#readme"
+    homepage = "https://CRAN.R-project.org/package=openssl"
     url      = "https://cran.r-project.org/src/contrib/openssl_0.9.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/openssl"
+    list_url = homepage
 
+    version('0.9.7', '86773824dce7d3d79abfef574ce2531a')
     version('0.9.6', '7ef137929d9dd07db690d35db242ba4b')
     version('0.9.4', '82a890e71ed0e74499878bedacfb8ccb')
 

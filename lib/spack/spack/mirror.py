@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,14 +33,14 @@ to download packages directly from a mirror (e.g., on an intranet).
 import sys
 import os
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
+from llnl.util.filesystem import mkdirp, join_path
 
 import spack
 import spack.error
 import spack.url as url
 import spack.fetch_strategy as fs
 from spack.spec import Spec
-from spack.version import *
+from spack.version import VersionList
 from spack.util.compression import allowed_archive
 
 
@@ -53,13 +53,33 @@ def mirror_archive_filename(spec, fetcher, resourceId=None):
         if fetcher.expand_archive:
             # If we fetch with a URLFetchStrategy, use URL's archive type
             ext = url.determine_url_file_extension(fetcher.url)
-            ext = ext or spec.package.versions[spec.package.version].get(
-                'extension', None)
-            ext = ext.lstrip('.')
+
+            # If the filename does not end with a normal suffix,
+            # see if the package explicitly declares the extension
             if not ext:
-                raise MirrorError(
-                    "%s version does not specify an extension" % spec.name +
-                    " and could not parse extension from %s" % fetcher.url)
+                ext = spec.package.versions[spec.package.version].get(
+                    'extension', None)
+
+            if ext:
+                # Remove any leading dots
+                ext = ext.lstrip('.')
+
+            if not ext:
+                msg = """\
+Unable to parse extension from {0}.
+
+If this URL is for a tarball but does not include the file extension
+in the name, you can explicitly declare it with the following syntax:
+
+    version('1.2.3', 'hash', extension='tar.gz')
+
+If this URL is for a download like a .jar or .whl that does not need
+to be expanded, or an uncompressed installation script, you can tell
+Spack not to expand it with the following syntax:
+
+    version('1.2.3', 'hash', expand=False)
+"""
+                raise MirrorError(msg.format(fetcher.url))
         else:
             # If the archive shouldn't be expanded, don't check extension.
             ext = None
@@ -117,13 +137,10 @@ def get_matching_versions(specs, **kwargs):
 
 
 def suggest_archive_basename(resource):
-    """
-    Return a tentative basename for an archive.
+    """Return a tentative basename for an archive.
 
-    Raises an exception if the name is not an allowed archive type.
-
-    :param fetcher:
-    :return:
+    Raises:
+        RuntimeError: if the name is not an allowed archive type.
     """
     basename = os.path.basename(resource.fetcher.url)
     if not allowed_archive(basename):
@@ -207,14 +224,14 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                     # create a subdirectory for the current package@version
                     archive_path = os.path.abspath(join_path(
                         mirror_root, mirror_archive_path(spec, fetcher)))
-                    name = spec.format("$_$@")
+                    name = spec.cformat("$_$@")
                 else:
                     resource = stage.resource
                     archive_path = os.path.abspath(join_path(
                         mirror_root,
                         mirror_archive_path(spec, fetcher, resource.name)))
                     name = "{resource} ({pkg}).".format(
-                        resource=resource.name, pkg=spec.format("$_$@"))
+                        resource=resource.name, pkg=spec.cformat("$_$@"))
                 subdir = os.path.dirname(archive_path)
                 mkdirp(subdir)
 
@@ -241,8 +258,8 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
         if spack.debug:
             sys.excepthook(*sys.exc_info())
         else:
-            tty.warn("Error while fetching %s"
-                     % spec.format('$_$@'), e.message)
+            tty.warn(
+                "Error while fetching %s" % spec.cformat('$_$@'), e.message)
         categories['error'].append(spec)
 
 

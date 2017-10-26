@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,8 +38,10 @@ class RStringi(RPackage):
 
     homepage = "http://www.gagolewski.com/software/stringi/"
     url      = "https://cran.r-project.org/src/contrib/stringi_1.1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/stringi"
+    list_url = "https://cran.r-project.org/web/packages/stringi/index.html"
 
+    version('1.1.5', '0d5ec30ae368ab1b87a36fee3e228e7b')
+    version('1.1.3', '3b89cee3b5ef7c031077cd7707718e07')
     version('1.1.2', '0ec2faa62643e1900734c0eaf5096648')
     version('1.1.1', '32b919ee3fa8474530c4942962a6d8d9')
 
