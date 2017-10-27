@@ -68,6 +68,9 @@ class Elemental(CMakePackage):
             values=('Debug', 'Release'))
     variant('blas', default='openblas', values=('openblas', 'mkl'),
             description='Enable the use of OpenBlas/MKL')
+    variant('mpfr', default=False,
+            description='Support GNU MPFR\'s'
+            'arbitrary-precision floating-point arithmetic')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('blas', when='~openmp_blas ~int64_blas')
@@ -88,9 +91,9 @@ class Elemental(CMakePackage):
     depends_on('scalapack', when='+scalapack ~int64_blas')
     extends('python', when='+python')
     depends_on('python@:2.8', when='+python')
-    depends_on('gmp')
-    depends_on('mpc')
-    depends_on('mpfr')
+    depends_on('gmp', when='+mpfr')
+    depends_on('mpc', when='+mpfr')
+    depends_on('mpfr', when='+mpfr')
 
     patch('elemental_cublas.patch', when='+cublas')
     patch('cmake_0.87.7.patch', when='@0.87.7')
@@ -126,7 +129,6 @@ class Elemental(CMakePackage):
             '-DEL_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
             '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec)]
 
-        libfortran
         if self.spec.satisfies('%intel'):
             ifort = env['SPACK_F77']
             intel_bin = os.path.dirname(ifort)
@@ -136,11 +138,11 @@ class Elemental(CMakePackage):
         elif self.spec.satisfies('%gcc'):
             # see <stage_folder>/debian/rules as an example:
             mpif77 = Executable(spec['mpi'].mpif77)
-            libgfortran = LibraryList(mpif77('--print-file-name',
-                                             'libgfortran.%s' % dso_suffix,
-                                             output=str))
+            libfortran = LibraryList(mpif77('--print-file-name',
+                                            'libgfortran.%s' % dso_suffix,
+                                            output=str))
         if libfortran:
-          args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
+            args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
 
         # If using 64bit int BLAS libraries, elemental has to build
         # them internally
