@@ -47,4 +47,4 @@ class ROrganismdbi(RPackage):
     depends_on('r-rbgl', type=('build', 'run'))
     depends_on('r-dbi', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9',when='@1.18.1')
+    depends_on('r@3.4.0:3.4.9', when='@1.18.1')
