@@ -48,6 +48,8 @@ class Lbann(CMakePackage):
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug', 
                when=('build_type=Debug'))
     depends_on('cuda', when='+gpu')
+    depends_on('cudnn', when='+gpu')
+    depends_on('cub', when='+gpu')
     depends_on('mpi')
     depends_on('hwloc')
     depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib', when='+opencv')
@@ -65,8 +67,10 @@ class Lbann(CMakePackage):
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
             '-DWITH_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DWITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
+            '-DcuDNN_DIR={0}'.format(spec['cudnn'].prefix),
             '-DELEMENTAL_USE_CUBLAS:BOOL=%s' % (
                 '+cublas' in spec['elemental']),
+            '-DCUB_DIR={0}'.format(spec['cub'].prefix),
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(spec['elemental'].prefix),
