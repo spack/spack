@@ -53,7 +53,7 @@ class Comd(MakefilePackage):
     depends_on('mpi', when='+mpi')
     depends_on('graphviz', when='+graphs')
 
-    conflicts('+openmp', when='mpi')
+    conflicts('+openmp', when='+mpi')
 
     def edit(self, spec, prefix):
         with working_dir('src-mpi') or working_dir('src-openmp'):
