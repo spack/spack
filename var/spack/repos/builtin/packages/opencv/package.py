@@ -56,7 +56,7 @@ class Opencv(CMakePackage):
     variant('shared', default=True,
             description='Enables the build of shared libraries')
 
-    variant('eigen -mpfr', default=True, description='Activates support for eigen')
+    variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
     variant('jasper', default=True, description='Activates support for JasPer')
     variant('cuda', default=False, description='Activates support for CUDA')
@@ -76,7 +76,7 @@ class Opencv(CMakePackage):
     variant('tiff', default=False, description='Include TIFF support')
     variant('zlib', default=False, description='Build zlib from source')
 
-    depends_on('eigen', when='+eigen', type='build')
+    depends_on('eigen~mpfr', when='+eigen', type='build')
 
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
