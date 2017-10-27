@@ -126,19 +126,21 @@ class Elemental(CMakePackage):
             '-DEL_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
             '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec)]
 
+        libfortran
         if self.spec.satisfies('%intel'):
-            ifort=env['SPACK_F77']
-            intel_bin=os.path.dirname(ifort)
-            intel_root=os.path.dirname(intel_bin)
+            ifort = env['SPACK_F77']
+            intel_bin = os.path.dirname(ifort)
+            intel_root = os.path.dirname(intel_bin)
             libfortran = LibraryList('{0}/lib/intel64/libifcoremt.{1}'
                                      .format(intel_root, dso_suffix))
-        else:
+        elif self.spec.satisfies('%gcc'):
             # see <stage_folder>/debian/rules as an example:
             mpif77 = Executable(spec['mpi'].mpif77)
             libgfortran = LibraryList(mpif77('--print-file-name',
                                              'libgfortran.%s' % dso_suffix,
                                              output=str))
-        args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
+        if libfortran:
+          args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
 
         # If using 64bit int BLAS libraries, elemental has to build
         # them internally
