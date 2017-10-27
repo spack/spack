@@ -127,7 +127,8 @@ class Elemental(CMakePackage):
             '-DEL_DISABLE_PARMETIS:BOOL=%s'    % ('~parmetis' in spec),
             '-DEL_DISABLE_QUAD:BOOL=%s'        % ('~quad' in spec),
             '-DEL_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
-            '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec)]
+            '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
+            '-DEL_DISABLE_MPFR:BOOL=%s'        % ('~mpfr' in spec)]
 
         if self.spec.satisfies('%intel'):
             ifort = env['SPACK_F77']
