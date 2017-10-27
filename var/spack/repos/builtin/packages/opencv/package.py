@@ -56,7 +56,7 @@ class Opencv(CMakePackage):
     variant('shared', default=True,
             description='Enables the build of shared libraries')
 
-    variant('eigen', default=True, description='Activates support for eigen')
+    variant('eigen -mpfr', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
     variant('jasper', default=True, description='Activates support for JasPer')
     variant('cuda', default=False, description='Activates support for CUDA')
