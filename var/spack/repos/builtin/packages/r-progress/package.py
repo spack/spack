@@ -36,6 +36,6 @@ class RProgress(RPackage):
     url      = "https://cran.r-project.org/src/contrib/progress_1.1.2.tar.gz"
     list_url = homepage
 
-
+    version('1.1.2', 'b3698672896125137e0077bc97132428')
     depends_on('r-r6', type=('build', 'run'))
     depends_on('r-prettyunits', type=('build', 'run'))
