@@ -25,41 +25,12 @@
 from spack import *
 
 
-class Minife(MakefilePackage):
-    """Proxy Application. MiniFE is an proxy application
-       for unstructured implicit finite element codes.
-    """
+class RAgilp(RPackage):
+    """Agilent expression array processing package."""
 
-    homepage = "https://mantevo.org/"
-    url      = "https://github.com/Mantevo/miniFE/archive/v2.1.0.tar.gz"
+    homepage = "http://bioconductor.org/packages/agilp/"
+    url      = "https://git.bioconductor.org/packages/agilp"
 
-    tags = ['proxy-app', 'ecp-proxy-app']
+    version('3.8.0', git='https://git.bioconductor.org/packages/agilp', commit='c772a802af1b4c0741f2edd78053a0425160ea53')
 
-    version('2.1.0', '930a6b99c09722428a6f4d795b506a62')
-
-    variant('build', default='ref', description='Type of Parallelism',
-            values=('ref', 'openmp_ref', 'qthreads', 'kokkos'))
-
-    depends_on('mpi')
-    depends_on('qthreads', when='build=qthreads')
-
-    @property
-    def build_targets(self):
-        targets = [
-            '--directory={0}/src'.format(self.spec.variants['build'].value),
-            'CXX={0}'.format(self.spec['mpi'].mpicxx),
-            'CC={0}'.format(self.spec['mpi'].mpicc)
-        ]
-
-        return targets
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('{0}/src/Makefile'.format(
-                              self.spec.variants['build'].value))
-
-        makefile.filter('-fopenmp', self.compiler.openmp_flag, string=True)
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install('{0}/src/miniFE.x'.format(self.spec.variants['build'].value),
-                prefix.bin)
+    depends_on('r@3.4.0:3.4.9', when='@3.8.0')

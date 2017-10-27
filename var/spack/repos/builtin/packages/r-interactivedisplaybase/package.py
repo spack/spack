@@ -22,39 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import os
 from spack import *
 
 
-class EcpProxyApps(Package):
-    """This is a collection of packages that represents the official suite of
-       DOE/ECP proxy applications. This is a Spack bundle package that
-       installs the ECP proxy application suite.
-    """
+class RInteractivedisplaybase(RPackage):
+    """The interactiveDisplayBase package contains the the basic methods
+       needed to generate interactive Shiny based display methods for
+       Bioconductor objects."""
 
-    homepage = "https://exascaleproject.github.io/proxy-apps"
+    homepage = "https://bioconductor.org/packages/interactiveDisplayBase/"
+    url      = "https://git.bioconductor.org/packages/interactiveDisplayBase"
+    list_url = homepage
 
-    # Dummy url
-    url = 'https://github.com/exascaleproject/proxy-apps/archive/v0.9.tar.gz'
+    version('1.14.0', git='https://git.bioconductor.org/packages/interactiveDisplayBase', commit='e2ccc7eefdd904e3b1032dc6b3f4a28d08c1cd40')
 
-    tags = ['proxy-app', 'ecp-proxy-app']
-
-    version('0.9', '395e9d79ae93e8ad71f1ec9773abdd43')
-
-    depends_on('amg@1.0', when='@0.9')
-    depends_on('laghos@1.0', when='@0.9')
-    depends_on('miniamr@1.0', when='@0.9')
-    depends_on('minife@2.1.0', when='@0.9')
-    depends_on('minitri@1.0', when='@0.9')
-    depends_on('sw4lite@1.0', when='@0.9')
-    depends_on('xsbench@14', when='@0.9')
-
-    # Dummy install for now,  will be removed when metapackage is available
-    def install(self, spec, prefix):
-        with open(os.path.join(spec.prefix, 'package-list.txt'), 'w') as out:
-            for dep in spec.dependencies(deptype='build'):
-                out.write("%s\n" % dep.format(
-                    format_string='${PACKAGE} ${VERSION}'))
-                os.symlink(dep.prefix, os.path.join(spec.prefix, dep.name))
-            out.close()
+    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-shiny', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.14.0')

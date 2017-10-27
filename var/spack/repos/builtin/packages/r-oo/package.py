@@ -22,39 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import os
 from spack import *
 
 
-class EcpProxyApps(Package):
-    """This is a collection of packages that represents the official suite of
-       DOE/ECP proxy applications. This is a Spack bundle package that
-       installs the ECP proxy application suite.
-    """
+class ROo(RPackage):
+    """Methods and classes for object-oriented programming in R with
+    or without references. Large effort has been made on making
+    definition of methods as simple as possible with a minimum of
+    maintenance for package developers. The package has been developed
+    since 2001 and is now considered very stable. This is a
+    cross-platform package implemented in pure R that defines
+    standard S3 classes without any tricks."""
 
-    homepage = "https://exascaleproject.github.io/proxy-apps"
+    homepage = "https://github.com/HenrikBengtsson/R.oo"
+    url      = "https://cran.rstudio.com/src/contrib/R.oo_1.21.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/R.oo"
 
-    # Dummy url
-    url = 'https://github.com/exascaleproject/proxy-apps/archive/v0.9.tar.gz'
+    version('1.21.0', 'f0062095c763faaeba30558303f68bc3')
 
-    tags = ['proxy-app', 'ecp-proxy-app']
-
-    version('0.9', '395e9d79ae93e8ad71f1ec9773abdd43')
-
-    depends_on('amg@1.0', when='@0.9')
-    depends_on('laghos@1.0', when='@0.9')
-    depends_on('miniamr@1.0', when='@0.9')
-    depends_on('minife@2.1.0', when='@0.9')
-    depends_on('minitri@1.0', when='@0.9')
-    depends_on('sw4lite@1.0', when='@0.9')
-    depends_on('xsbench@14', when='@0.9')
-
-    # Dummy install for now,  will be removed when metapackage is available
-    def install(self, spec, prefix):
-        with open(os.path.join(spec.prefix, 'package-list.txt'), 'w') as out:
-            for dep in spec.dependencies(deptype='build'):
-                out.write("%s\n" % dep.format(
-                    format_string='${PACKAGE} ${VERSION}'))
-                os.symlink(dep.prefix, os.path.join(spec.prefix, dep.name))
-            out.close()
+    depends_on('r-methodss3', type=('build', 'run'))

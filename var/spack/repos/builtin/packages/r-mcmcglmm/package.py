@@ -22,39 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import os
 from spack import *
 
 
-class EcpProxyApps(Package):
-    """This is a collection of packages that represents the official suite of
-       DOE/ECP proxy applications. This is a Spack bundle package that
-       installs the ECP proxy application suite.
-    """
+class RMcmcglmm(RPackage):
+    """MCMC Generalised Linear Mixed Models."""
 
-    homepage = "https://exascaleproject.github.io/proxy-apps"
+    homepage = "https://cran.r-project.org/web/packages/MCMCglmm/index.html"
+    url      = "https://cran.r-project.org/src/contrib/MCMCglmm_2.25.tar.gz"
 
-    # Dummy url
-    url = 'https://github.com/exascaleproject/proxy-apps/archive/v0.9.tar.gz'
+    version('2.25', '260527ef6fecdd87f762fd07406d674a')
 
-    tags = ['proxy-app', 'ecp-proxy-app']
-
-    version('0.9', '395e9d79ae93e8ad71f1ec9773abdd43')
-
-    depends_on('amg@1.0', when='@0.9')
-    depends_on('laghos@1.0', when='@0.9')
-    depends_on('miniamr@1.0', when='@0.9')
-    depends_on('minife@2.1.0', when='@0.9')
-    depends_on('minitri@1.0', when='@0.9')
-    depends_on('sw4lite@1.0', when='@0.9')
-    depends_on('xsbench@14', when='@0.9')
-
-    # Dummy install for now,  will be removed when metapackage is available
-    def install(self, spec, prefix):
-        with open(os.path.join(spec.prefix, 'package-list.txt'), 'w') as out:
-            for dep in spec.dependencies(deptype='build'):
-                out.write("%s\n" % dep.format(
-                    format_string='${PACKAGE} ${VERSION}'))
-                os.symlink(dep.prefix, os.path.join(spec.prefix, dep.name))
-            out.close()
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-coda', type=('build', 'run'))
+    depends_on('r-ape', type=('build', 'run'))
+    depends_on('r-corpcor', type=('build', 'run'))
+    depends_on('r-tensora', type=('build', 'run'))
+    depends_on('r-cubature', type=('build', 'run'))

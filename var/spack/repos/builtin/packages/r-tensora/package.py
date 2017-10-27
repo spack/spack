@@ -22,39 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import os
 from spack import *
 
 
-class EcpProxyApps(Package):
-    """This is a collection of packages that represents the official suite of
-       DOE/ECP proxy applications. This is a Spack bundle package that
-       installs the ECP proxy application suite.
-    """
+class RTensora(RPackage):
+    """The package provides convenience functions for advance linear algebra
+       with tensors and computation with datasets of tensors on a higher level
+       abstraction."""
 
-    homepage = "https://exascaleproject.github.io/proxy-apps"
+    homepage = "https://cran.r-project.org/web/packages/tensorA/index.html"
+    url      = "https://cran.r-project.org/src/contrib/tensorA_0.36.tar.gz"
 
-    # Dummy url
-    url = 'https://github.com/exascaleproject/proxy-apps/archive/v0.9.tar.gz'
-
-    tags = ['proxy-app', 'ecp-proxy-app']
-
-    version('0.9', '395e9d79ae93e8ad71f1ec9773abdd43')
-
-    depends_on('amg@1.0', when='@0.9')
-    depends_on('laghos@1.0', when='@0.9')
-    depends_on('miniamr@1.0', when='@0.9')
-    depends_on('minife@2.1.0', when='@0.9')
-    depends_on('minitri@1.0', when='@0.9')
-    depends_on('sw4lite@1.0', when='@0.9')
-    depends_on('xsbench@14', when='@0.9')
-
-    # Dummy install for now,  will be removed when metapackage is available
-    def install(self, spec, prefix):
-        with open(os.path.join(spec.prefix, 'package-list.txt'), 'w') as out:
-            for dep in spec.dependencies(deptype='build'):
-                out.write("%s\n" % dep.format(
-                    format_string='${PACKAGE} ${VERSION}'))
-                os.symlink(dep.prefix, os.path.join(spec.prefix, dep.name))
-            out.close()
+    version('0.36', '01c0613491d9b46600bf403d7e3bdd80')
