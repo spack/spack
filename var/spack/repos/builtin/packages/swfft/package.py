@@ -32,7 +32,7 @@ class Swfft(MakefilePackage):
 
     homepage = 'https://xgitlab.cels.anl.gov/hacc/SWFFT'
 
-    url="https://xgitlab.cels.anl.gov/hacc/SWFFT/repository/v1.0/archive.tar.gz"
+    url = "https://xgitlab.cels.anl.gov/hacc/SWFFT/repository/v1.0/archive.tar.gz"
 
     version('1.0', '0fbc34544b97ba9c3fb19ef2d7a0f076')
     version('develop', git='https://xgitlab.cels.anl.gov/hacc/SWFFT',
