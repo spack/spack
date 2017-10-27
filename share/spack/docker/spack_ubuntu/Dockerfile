@@ -1,4 +1,3 @@
-
 FROM ubuntu
 MAINTAINER Omar Padron <omar.padron@kitware.com>
 
@@ -7,10 +6,21 @@ ENV DEBIAN_FRONTEND=noninteractive \
     FORCE_UNSAFE_CONFIGURE=1
 
 RUN apt-get -yqq update && apt-get -yqq install \
-    build-essential curl g++ gcc gfortran git gnupg2 lmod make python tcl && \
-    git clone git://github.com/llnl/spack.git /spack && \
+        build-essential     \
+        ca-certificates     \
+        curl                \
+        g++                 \
+        gcc                 \
+        gfortran            \
+        git                 \
+        gnupg2              \
+        lmod                \
+        make                \
+        openssh-server      \
+        python              \
+        tcl              && \
+    git clone --depth 1 git://github.com/llnl/spack.git /spack && \
     rm -rf /spack/.git && rm -rf /var/lib/apt/lists/*
-
 
 RUN echo "source /usr/share/lmod/lmod/init/bash" \
     > /etc/profile.d/spack.sh
@@ -18,8 +28,11 @@ RUN echo "source /spack/share/spack/setup-env.sh" \
     >> /etc/profile.d/spack.sh
 RUN echo "source /spack/share/spack/spack-completion.bash" \
     >> /etc/profile.d/spack.sh
+COPY handle-ssh.sh /etc/profile.d/handle-ssh.sh
 
-WORKDIR /spack
+RUN mkdir -p /root/.spack
+COPY modules.yaml /root/.spack/modules.yaml
+
+WORKDIR /root
 ENTRYPOINT ["bash"]
 CMD ["-l"]
-
