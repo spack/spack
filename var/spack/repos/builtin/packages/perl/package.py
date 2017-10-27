@@ -256,7 +256,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         super(Perl, self).activate(ext_pkg, **args)
 
-        exts = spack.store.layout.extension_map(self.spec)
+        extensions_layout = args.get("extensions_layout",
+                                     spack.store.extensions)
+
+        exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
     def deactivate(self, ext_pkg, **args):
@@ -265,7 +268,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         super(Perl, self).deactivate(ext_pkg, **args)
 
-        exts = spack.store.layout.extension_map(self.spec)
+        extensions_layout = args.get("extensions_layout",
+                                     spack.store.extensions)
+
+        exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
