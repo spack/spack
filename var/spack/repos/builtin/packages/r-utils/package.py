@@ -25,41 +25,14 @@
 from spack import *
 
 
-class Minife(MakefilePackage):
-    """Proxy Application. MiniFE is an proxy application
-       for unstructured implicit finite element codes.
-    """
+class RUtils(RPackage):
+    """Utility functions useful when programming and
+    developing R packages."""
 
-    homepage = "https://mantevo.org/"
-    url      = "https://github.com/Mantevo/miniFE/archive/v2.1.0.tar.gz"
+    homepage = "https://github.com/HenrikBengtsson/R.utils"
+    url      = "https://cran.rstudio.com/src/contrib/R.utils_2.5.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/R.utils"
 
-    tags = ['proxy-app', 'ecp-proxy-app']
+    version('2.5.0', 'a728ef3ceb35cafc4c39ea577cecc38b')
 
-    version('2.1.0', '930a6b99c09722428a6f4d795b506a62')
-
-    variant('build', default='ref', description='Type of Parallelism',
-            values=('ref', 'openmp_ref', 'qthreads', 'kokkos'))
-
-    depends_on('mpi')
-    depends_on('qthreads', when='build=qthreads')
-
-    @property
-    def build_targets(self):
-        targets = [
-            '--directory={0}/src'.format(self.spec.variants['build'].value),
-            'CXX={0}'.format(self.spec['mpi'].mpicxx),
-            'CC={0}'.format(self.spec['mpi'].mpicc)
-        ]
-
-        return targets
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('{0}/src/Makefile'.format(
-                              self.spec.variants['build'].value))
-
-        makefile.filter('-fopenmp', self.compiler.openmp_flag, string=True)
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install('{0}/src/miniFE.x'.format(self.spec.variants['build'].value),
-                prefix.bin)
+    depends_on('r-oo', type=('build', 'run'))

@@ -25,41 +25,37 @@
 from spack import *
 
 
-class Minife(MakefilePackage):
-    """Proxy Application. MiniFE is an proxy application
-       for unstructured implicit finite element codes.
+class Laghos(MakefilePackage):
+    """Laghos (LAGrangian High-Order Solver) is a CEED miniapp that solves the
+       time-dependent Euler equations of compressible gas dynamics in a moving
+       Lagrangian frame using unstructured high-order finite element spatial
+       discretization and explicit high-order time-stepping.
     """
-
-    homepage = "https://mantevo.org/"
-    url      = "https://github.com/Mantevo/miniFE/archive/v2.1.0.tar.gz"
-
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('2.1.0', '930a6b99c09722428a6f4d795b506a62')
+    homepage = "https://codesign.llnl.gov/laghos.php"
+    git      = "https://github.com/CEED/Laghos"
+    url      = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
 
-    variant('build', default='ref', description='Type of Parallelism',
-            values=('ref', 'openmp_ref', 'qthreads', 'kokkos'))
+    version('1.0', '107c2f693936723e764a4d404d33d44a')
+    version('develop', git=git, branch='master')
 
     depends_on('mpi')
-    depends_on('qthreads', when='build=qthreads')
+    depends_on('mfem@laghos-v1.0', when='@1.0')
 
     @property
     def build_targets(self):
-        targets = [
-            '--directory={0}/src'.format(self.spec.variants['build'].value),
-            'CXX={0}'.format(self.spec['mpi'].mpicxx),
-            'CC={0}'.format(self.spec['mpi'].mpicc)
-        ]
+        targets = []
+        spec = self.spec
+
+        targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
+        targets.append('CONFIG_MK=%s' % join_path(spec['mfem'].prefix,
+                       'share/mfem/config.mk'))
+        targets.append('TEST_MK=%s' % join_path(spec['mfem'].prefix,
+                       'share/mfem/test.mk'))
 
         return targets
 
-    def edit(self, spec, prefix):
-        makefile = FileFilter('{0}/src/Makefile'.format(
-                              self.spec.variants['build'].value))
-
-        makefile.filter('-fopenmp', self.compiler.openmp_flag, string=True)
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('{0}/src/miniFE.x'.format(self.spec.variants['build'].value),
-                prefix.bin)
+        install('laghos', prefix.bin)

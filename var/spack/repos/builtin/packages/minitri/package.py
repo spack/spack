@@ -25,41 +25,39 @@
 from spack import *
 
 
-class Minife(MakefilePackage):
-    """Proxy Application. MiniFE is an proxy application
-       for unstructured implicit finite element codes.
-    """
+class Minitri(MakefilePackage):
+    """A simple, triangle-based data analytics proxy application."""
 
-    homepage = "https://mantevo.org/"
-    url      = "https://github.com/Mantevo/miniFE/archive/v2.1.0.tar.gz"
+    homepage = "https://github.com/Mantevo/miniTri"
+    url      = "https://github.com/Mantevo/miniTri/archive/v1.0.tar.gz"
+
+    version('1.0', '947e296ca408275232f47724267a85ce')
+
+    variant('mpi', default=True, description='Build with MPI support')
+
+    depends_on('mpi', when="+mpi")
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('2.1.0', '930a6b99c09722428a6f4d795b506a62')
-
-    variant('build', default='ref', description='Type of Parallelism',
-            values=('ref', 'openmp_ref', 'qthreads', 'kokkos'))
-
-    depends_on('mpi')
-    depends_on('qthreads', when='build=qthreads')
-
     @property
     def build_targets(self):
-        targets = [
-            '--directory={0}/src'.format(self.spec.variants['build'].value),
-            'CXX={0}'.format(self.spec['mpi'].mpicxx),
-            'CC={0}'.format(self.spec['mpi'].mpicc)
-        ]
+        targets = []
+        if '+mpi' in self.spec:
+            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+            targets.append('--directory=miniTri/linearAlgebra/MPI')
+        else:
+            targets.append('CC={0}'.format(self.compiler.cc))
+            targets.append('--directory=miniTri/linearAlgebra/serial')
 
+        targets.append('--file=Makefile')
         return targets
 
-    def edit(self, spec, prefix):
-        makefile = FileFilter('{0}/src/Makefile'.format(
-                              self.spec.variants['build'].value))
-
-        makefile.filter('-fopenmp', self.compiler.openmp_flag, string=True)
-
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install('{0}/src/miniFE.x'.format(self.spec.variants['build'].value),
-                prefix.bin)
+        # Manual installation
+        mkdir(prefix.bin)
+        mkdir(prefix.doc)
+
+        if '+mpi' in spec:
+            install('miniTri/linearAlgebra/MPI/miniTri.exe', prefix.bin)
+        else:
+            install('miniTri/linearAlgebra/serial/miniTri.exe', prefix.bin)
