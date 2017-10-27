@@ -37,7 +37,7 @@ class RGgally(RPackage):
     url      = "https://cran.r-project.org/src/contrib/GGally_1.3.2.tar.gz"
     list_url = homepage
 
-    version('1.3.1', 'b1e5bb3b7b626a8fb25d25c8a2729d6a')
+    version('1.3.2', 'efe58133ba8431198af7afb6bcb76264')
 
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-gtable', type=('build', 'run'))
