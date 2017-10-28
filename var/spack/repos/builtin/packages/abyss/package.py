@@ -33,8 +33,11 @@ class Abyss(AutotoolsPackage):
     homepage = "http://www.bcgsc.ca/platform/bioinfo/software/abyss"
     url      = "https://github.com/bcgsc/abyss/archive/2.0.2.tar.gz"
 
-    version('2.0.2', '1623f55ad7f4586e80f6e74b1f27c798')
+    version('2.0.2', 'bb3f8cebf121312bf81789d963b4ecc5')
     version('1.5.2', '10d6d72d1a915e618d41a5cbbcf2364c')
+
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
 
     depends_on('mpi')
     depends_on('boost@:1.50.0,1.53.0:', when='@2.0.2:')
