@@ -960,7 +960,7 @@ def from_list_url(pkg):
        the specified package's version."""
     if pkg.list_url:
         try:
-            versions = pkg.fetch_remote_package_versions()
+            versions = pkg.fetch_remote_versions()
             try:
                 url_from_list = versions[pkg.version]
                 digest = None
