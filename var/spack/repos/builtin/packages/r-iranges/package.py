@@ -38,9 +38,10 @@ class RIranges(RPackage):
     i.e., collections of atomic vectors and DataFrames."""
 
     homepage = "https://www.bioconductor.org/packages/IRanges/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/IRanges_2.10.3.tar.gz"
+    url      = "https://git.bioconductor.org/packages/IRanges"
     list_url = homepage
-    version('2.10.3', '8fd2a39934de72affef35df8bdf53636')
+    version('2.10.5', git='https://git.bioconductor.org/packages/IRanges', commit='b00d1d5025e3c480d17c13100f0da5a0132b1614')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.10.5')
