@@ -4,7 +4,7 @@
 Module Files
 ============
 
-In this tutorial we'll introduce a few concepts that are fundamental
+In this tutorial, we'll introduce a few concepts that are fundamental
 to the generation of module files with Spack, and we'll guide you through
 the customization of both module files content and their layout on disk. In the end you
 should have a clear understanding of:
@@ -54,7 +54,7 @@ What are module files?
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Module files are an easy way to modify your environment in a controlled manner
-during a shell session. In general they contain the information needed to run an
+during a shell session. In general, they contain the information needed to run an
 application or use a library, and they work in conjunction with a tool that
 interprets them.
 Typical module files instruct this tool to modify the environment variables when a
@@ -99,7 +99,7 @@ provide various levels of support for them. Spack can generate natively:
 and can build `environment-modules <http://modules.sourceforge.net/>`_
 and `lmod <http://lmod.readthedocs.io/en/latest>`_ as support tools.
 Which of the format or tool suits best one's needs depends on each particular
-use-case. For the sake of illustration, in this tutorial we'll be working on
+use-case. For the sake of illustration, we'll be working on
 both formats using ``lmod`` as a tool.
 
 .. seealso::
@@ -153,17 +153,17 @@ Set up for the tutorial
 In order to showcase the capabilities of Spack's module file generation, we need to
 prepare a representative set of software to work with. This set includes different
 flavors of the same packages installed alongside each other and some
-:ref:`external packages <sec-external-packages>` (including MPI implementations).
+:ref:`external packages <sec-external-packages>`.
 
-We are not doing this just to make our life harder, and
-see how we can still get out of the situation thanks to Spack. The set-up is intended
-to mimic closely what happens on real HPC clusters, where some dependencies are provided
-by vendors (and are better not to be built again by Spack).
+The purpose of this setup is not to make our life harder but to demonstrate
+how Spack can help with similar situations, as they will happen on real HPC clusters.
+For instance, it's very common the case in which the MPI implementation
+is already provided by vendors and is better not to be built again by Spack.
 
-The best way to follow along is to use a docker image (see
+The best way to follow along is to use a Docker image (see
 :ref:`module_file_tutorial_use_docker`). If for any reason you prefer to work
 locally you should read instead :ref:`module_file_tutorial_work_locally` (but be aware
-that all the snippets afterwards come from the docker image, so your mileage may vary).
+that all the snippets afterwards come from the docker image, so your progress may vary).
 
 .. _module_file_tutorial_use_docker:
 
@@ -171,7 +171,7 @@ that all the snippets afterwards come from the docker image, so your mileage may
 Use a Docker image
 ^^^^^^^^^^^^^^^^^^
 
-The fastest way to set-up your environment is to :ref:`use a docker image <workflow_create_docker_image>`:
+The fastest way to set-up your environment is to :ref:`use a Docker image <workflow_create_docker_image>`:
 
 .. code-block:: console
 
@@ -241,9 +241,9 @@ Now we can source the setup file and activate the :ref:`shell support <shell-sup
 Add a new compiler
 """"""""""""""""""
 
-The second step is to build a recent compiler. On first use Spack
+The second step is to build a recent compiler. On first use, Spack
 scans the environment and picks up automatically the
-compiler(s) already available on the system. That's how it would look like
+compiler(s) already available on the system. That is how it would look like
 on Ubuntu 14.04:
 
 .. code-block:: console
@@ -272,7 +272,7 @@ it readily available:
 
   $ spack load gcc@7.2.0
 
-It may not be apparent, but the last command already employed the module files
+It may not be apparent, but the last command employed the module files
 generated automatically by Spack. What happens under the hood when you use
 the ``spack load`` command is:
 
@@ -1009,7 +1009,7 @@ Even if ``conflicts`` directives are carefully placed in module files, they:
   - need constant updates, for instance as soon as a new compiler or MPI library is installed
 
 `Hierarchical module files <http://lmod.readthedocs.io/en/latest/080_hierarchy.html>`_ try to
-overcome these shortcomings by showing at start-up only a a restricted view of what is
+overcome these shortcomings by showing at start-up only a restricted view of what is
 available on the system: more specifically only the software that has been installed with
 OS provided compilers. Among this software there will be other - usually more recent - compilers
 that, once loaded, will prepend new directories to ``MODULEPATH`` unlocking all the software
@@ -1330,7 +1330,7 @@ we can see that now we have additional components in the hierarchy:
   Use "module spider" to find all possible modules.
   Use "module keyword key1 key2 ..." to search for all possible modules matching any of the "keys".
 
-Both ``MPI`` and ``LAPACK`` providers will now benefict from the same safety features:
+Both ``MPI`` and ``LAPACK`` providers will now benefit from the same safety features:
 
 .. code-block:: console
 
