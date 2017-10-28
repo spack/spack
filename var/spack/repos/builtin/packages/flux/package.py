@@ -56,7 +56,17 @@ class Flux(AutotoolsPackage):
     depends_on("automake", type='build', when='@master')
     depends_on("libtool", type='build', when='@master')
 
+    def setup():
+        pass
+
+    @when('@master')
+    def setup(self):
+        # Allow git-describe to get last tag so flux-version works:
+        git = which('git')
+        git('pull', '--depth=50', '--tags')
+
     def autoreconf(self, spec, prefix):
+        self.setup()
         if os.path.exists('autogen.sh'):
             # Bootstrap with autotools
             bash = which('bash')
