@@ -36,7 +36,7 @@ class Likwid(Package):
 
     maintainers = ['davydden']
 
-    version('4.3.0', '8703a7b6902ea04a110499c81f72d4a5')
+    version('4.3.0', 'f6bdf12513af95bd6eefa9c68644e724')
     version('4.2.1', 'c408ddcf0317cdd894af4c580cd74294')
     version('4.2.0', 'e41ff334b8f032a323d941ce32907a75')
     version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
