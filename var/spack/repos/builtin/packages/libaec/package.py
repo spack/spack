@@ -33,10 +33,11 @@ class Libaec(CMakePackage):
     """
 
     homepage = 'https://gitlab.dkrz.de/k202009/libaec'
-    url = 'https://gitlab.dkrz.de/k202009/libaec/uploads/631e85bcf877c2dcaca9b2e6d6526339/libaec-1.0.0.tar.gz'
+    url = 'https://gitlab.dkrz.de/k202009/libaec/repository/archive.tar.gz?ref=v1.0.2'
     list_url = 'https://gitlab.dkrz.de/k202009/libaec/tags'
 
     provides('szip')
 
-    version('1.0.1', 'cdf70e2b8f9153ee644710bb441f9e1e')
-    version('1.0.0', 'a848b4e397ed210313183a5e92592e42')
+    version('1.0.2', '13fb9dca01f95e2794010312c8fe345a')
+    version('1.0.1', '2180d2525d679a5f7950e7867b70e06b')
+    version('1.0.0', 'ebc0b4e47fa4e1bd5783c2b1c960fe94')
