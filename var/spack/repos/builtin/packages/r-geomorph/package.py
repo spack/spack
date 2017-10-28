@@ -25,24 +25,19 @@
 from spack import *
 
 
-class RShiny(RPackage):
-    """Makes it incredibly easy to build interactive web applications with R.
-    Automatic "reactive" binding between inputs and outputs and extensive
-    pre-built widgets make it possible to build beautiful, responsive, and
-    powerful applications with minimal effort."""
+class RGeomorph(RPackage):
+    """Read, manipulate, and digitize landmark data, generate shape variables
+       via Procrustes analysis for points, curves and surfaces, perform shape
+       analyses, and provide graphical depictions of shapes and patterns of
+       shape variation."""
 
-    homepage = "http://shiny.rstudio.com/"
-    url      = "https://cran.rstudio.com/src/contrib/shiny_1.0.5.tar.gz"
-    list_url = homepage
+    homepage = "https://cran.r-project.org/package=geomorph"
+    url      = "https://cran.r-project.org/src/contrib/geomorph_3.0.5.tar.gz"
 
-    version('1.0.5', '419dd5d3ea0bd87a07f8f0b1ef14fc13')
-    version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
+    version('3.0.5', '240e69fe260ca3ef4d84b4281d61396c')
 
-    depends_on('r-httpuv', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-xtable', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-sourcetools', type=('build', 'run'))
+    depends_on('r-rgl', type=('build', 'run'))
+    depends_on('r-ape', type=('build', 'run'))
+    depends_on('r-jpeg', type=('build', 'run'))
+    depends_on('r-geiger', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
