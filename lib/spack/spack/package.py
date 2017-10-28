@@ -1891,13 +1891,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     @property
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
-        rpaths = [self.prefix.lib, self.prefix.lib64]
-        deps = self.spec.dependencies(deptype='link')
-        rpaths.extend(d.prefix.lib for d in deps
-                      if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64 for d in deps
-                      if os.path.isdir(d.prefix.lib64))
-        return rpaths
+        return spack.build_environment.get_rpaths(self)
 
     @property
     def rpath_args(self):
