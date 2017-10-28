@@ -62,5 +62,9 @@ class Flux(AutotoolsPackage):
             bash = which('bash')
             bash('./autogen.sh')
 
+    def setup_environment(self, spack_env, run_env):
+        #  Ensure ./fluxometer.lua can be found during flux's make check
+        spack_env.append_path('LUA_PATH', './?.lua', separator=';')
+
     def configure_args(self):
         return ['--disable-docs'] if '+docs' not in self.spec else []
