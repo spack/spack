@@ -69,7 +69,6 @@ class Lbann(CMakePackage):
             '-DWITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
             '-DELEMENTAL_USE_CUBLAS:BOOL=%s' % (
                 '+cublas' in spec['elemental']),
-            '-DCUB_DIR={0}'.format(spec['cub'].prefix),
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(spec['elemental'].prefix),
@@ -89,5 +88,9 @@ class Lbann(CMakePackage):
         if '+cudnn' in spec:
             args.extend(['-DcuDNN_DIR={0}'.format(
                 spec['cudnn'].prefix)])
+
+        if '+cudnn' in spec:
+            args.extend(['-DCUB_DIR={0}'.format(
+                spec['cub'].prefix)])
 
         return args
