@@ -150,8 +150,8 @@ them in the next sections.
 Set up for the tutorial
 -----------------------
 
-In order to showcase the capabilities of Spack's module file generation, we need to
-prepare a representative set of software to work with. This set includes different
+In order to showcase the capabilities of Spack's module file generation, we need
+a representative set of software to work with. This set must include different
 flavors of the same packages installed alongside each other and some
 :ref:`external packages <sec-external-packages>`.
 
@@ -160,10 +160,15 @@ how Spack can help with similar situations, as they will happen on real HPC clus
 For instance, it's very common the case in which the MPI implementation
 is already provided by vendors and is better not to be built again by Spack.
 
-The best way to follow along is to use a Docker image (see
-:ref:`module_file_tutorial_use_docker`). If for any reason you prefer to work
-locally you should read instead :ref:`module_file_tutorial_work_locally` (but be aware
-that all the snippets afterwards come from the docker image, so your progress may vary).
+The best way to follow along is to use a Docker image, which comes
+with Spack and all the software used in the following parts already
+pre-installed. If you want to proceed this way, read :ref:`module_file_tutorial_use_docker`.
+
+If you don't have Docker installed or for any other reason you
+prefer to work locally, follow instead :ref:`module_file_tutorial_work_locally`
+to know how to clone Spack and install the software. Be aware that in this case
+the set-up will take sensibly longer. Furthermore, all the snippets afterwards
+come from the Docker image, so your progress may vary.
 
 .. _module_file_tutorial_use_docker:
 
@@ -179,9 +184,31 @@ The fastest way to set-up your environment is to :ref:`use a Docker image <workf
   $ docker run -h module-file-tutorial -it alalazo/spack:module_tutorial
   root@module-file-tutorial:/#
 
-Those of you that want to build a similar container themselves can find the
-``Dockerfile`` and the other resources in the ``share/spack/docs/docker``
-folder of Spack.
+If you arrived at this point you should be ready to start, as all the software needed is
+pre-installed in the image:
+
+.. code-block:: console
+
+  root@module-file-tutorial:/# which spack
+  /usr/local/bin/spack
+  root@module-file-tutorial:/# spack find
+  ==> 46 installed packages.
+  -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
+  autoconf@2.69    gcc@7.2.0  git@2.9.4  isl@0.18         libtool@2.4.6  lua@5.3.4                lua-luaposix@33.4.0  mpc@1.0.3   ncurses@6.0  pkg-config@0.29.2  tcl@8.6.6
+  automake@1.15.1  gdbm@1.13  gmp@6.1.2  libsigsegv@2.11  lmod@7.7       lua-luafilesystem@1_6_3  m4@1.4.18            mpfr@3.1.5  perl@5.24.1  readline@7.0       zlib@1.2.11
+
+  -- linux-ubuntu16.04-x86_64 / gcc@7.2.0 -------------------------
+  bzip2@1.0.6  ncurses@6.0             netlib-scalapack@2.0.2  openblas@0.2.20  pkg-config@0.29.2  py-packaging@16.8   py-setuptools@35.0.2  readline@7.0
+  cmake@3.9.4  netlib-lapack@3.6.1     netlib-scalapack@2.0.2  openmpi@1.10.2   py-appdirs@1.4.3   py-pyparsing@2.2.0  py-six@1.10.0         sqlite@3.20.0
+  mpich@3.2    netlib-scalapack@2.0.2  netlib-scalapack@2.0.2  openssl@1.0.2k   py-numpy@1.13.1    py-scipy@0.19.1     python@2.7.14         zlib@1.2.11
+
+Go to :ref:`module_file_tutorial_non_hierarchical` to proceed with the tutorial.
+
+.. note::
+  Dockerfile for this image
+    Those of you that want to build a similar container themselves can find the
+    ``Dockerfile`` and the other resources in the ``share/spack/docs/docker``
+    folder of Spack.
 
 .. _module_file_tutorial_work_locally:
 
@@ -337,6 +364,8 @@ Finally we should install the software:
    $ spack install netlib-scalapack ^mpich ^netlib-lapack
    $ spack install py-scipy ^openblas
 
+
+.. _module_file_tutorial_non_hierarchical:
 
 -----------------------------
 Non-hierarchical module files
@@ -666,6 +695,8 @@ The final result should look like:
 
 .. code-block:: console
 
+  root@module-file-tutorial:/# spack module refresh --module-type tcl --delete-tree -y
+  ==> Regenerating tcl module files
   root@module-file-tutorial:/# module avail
 
   ----------------------------------------------------------------------------- /usr/local/share/spack/modules/linux-ubuntu16.04-x86_64 -----------------------------------------------------------------------------
@@ -1280,7 +1311,7 @@ After module files have been regenerated as usual:
 
   root@module-file-tutorial:/# module purge
 
-  root@module-file-tutorial:/# spack module refresh --delete-tree -y -mlmod
+  root@module-file-tutorial:/# spack module refresh --delete-tree -y -m lmod
   ==> Regenerating lmod module files
 
 we can see that now we have additional components in the hierarchy:
