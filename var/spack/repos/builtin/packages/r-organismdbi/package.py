@@ -25,24 +25,26 @@
 from spack import *
 
 
-class RShiny(RPackage):
-    """Makes it incredibly easy to build interactive web applications with R.
-    Automatic "reactive" binding between inputs and outputs and extensive
-    pre-built widgets make it possible to build beautiful, responsive, and
-    powerful applications with minimal effort."""
+class ROrganismdbi(RPackage):
+    """The package enables a simple unified interface to several annotation
+       packages each of which has its own schema by taking advantage of the
+       fact that each of these packages implements a select methods."""
 
-    homepage = "http://shiny.rstudio.com/"
-    url      = "https://cran.rstudio.com/src/contrib/shiny_1.0.5.tar.gz"
+    homepage = "https://bioconductor.org/packages/OrganismDbi/"
+    url      = "https://git.bioconductor.org/packages/OrganismDbi"
     list_url = homepage
 
-    version('1.0.5', '419dd5d3ea0bd87a07f8f0b1ef14fc13')
-    version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
+    version('1.18.1', git='https://git.bioconductor.org/packages/OrganismDbi', commit='ba2d1237256805e935d9534a0c6f1ded07b42e95')
 
-    depends_on('r-httpuv', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-xtable', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-sourcetools', type=('build', 'run'))
+    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on('r-genomicfeatures', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-biocinstaller', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-graph', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-rbgl', type=('build', 'run'))
+    depends_on('r-dbi', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.18.1')

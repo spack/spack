@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,27 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class RShiny(RPackage):
-    """Makes it incredibly easy to build interactive web applications with R.
-    Automatic "reactive" binding between inputs and outputs and extensive
-    pre-built widgets make it possible to build beautiful, responsive, and
-    powerful applications with minimal effort."""
+class Swfft(MakefilePackage):
+    """A stand-alone version of HACC's distributed-memory, pencil-decomposed,
+    parallel 3D FFT."""
 
-    homepage = "http://shiny.rstudio.com/"
-    url      = "https://cran.rstudio.com/src/contrib/shiny_1.0.5.tar.gz"
-    list_url = homepage
+    homepage = 'https://xgitlab.cels.anl.gov/hacc/SWFFT'
 
-    version('1.0.5', '419dd5d3ea0bd87a07f8f0b1ef14fc13')
-    version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
+    url = "https://xgitlab.cels.anl.gov/hacc/SWFFT/repository/v1.0/archive.tar.gz"
 
-    depends_on('r-httpuv', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-xtable', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-sourcetools', type=('build', 'run'))
+    version('1.0', '0fbc34544b97ba9c3fb19ef2d7a0f076')
+    version('develop', git='https://xgitlab.cels.anl.gov/hacc/SWFFT',
+            branch='master')
+
+    depends_on('mpi')
+
+    tags = ['proxy-app', 'ecp-proxy-app']
+
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        install('build/CheckDecomposition', prefix.bin)
+        install('build/TestDfft', prefix.bin)
