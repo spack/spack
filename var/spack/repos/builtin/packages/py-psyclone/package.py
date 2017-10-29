@@ -36,3 +36,24 @@ class PyPsyclone(PythonPackage):
     version('1.5.0', 'd84643ad51e737e4fd0b6cadd7c92aff')
 
     depends_on('py-setuptools', type='build')
+
+    depends_on('python', type=('build', 'run'))
+    depends_on('py-pyparsing', type=('build', 'run'))
+    depends_on('py-fparser', type=('build', 'run'))
+
+    # Use type='test' when available:
+    depends_on('py-numpy', type='build')
+    depends_on('py-nose', type='build')
+    depends_on('py-pytest', type='build')
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+         # Limit py.test to search inside the build tree:
+         touch('pytest.ini')
+         with working_dir('src'):
+             Executable('py.test')()
+
+    def setup_environment(self, spack_env, run_env):
+        # Allow testing with installed executables:
+        spack_env.prepend_path('PATH', self.prefix.bin)
