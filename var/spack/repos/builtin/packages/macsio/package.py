@@ -47,12 +47,11 @@ class Macsio(CMakePackage):
     variant('typhonio', default=False, description="Build TYPHONIO plugin")
     variant('scr', default=False, description="Build with SCR support")
 
-    depends_on('mpi')
+    depends_on('mpi', when="+mpi")
     depends_on('json-cwx')
     depends_on('silo', when="+silo")
     depends_on('hdf5', when="+hdf5")
     depends_on('scr', when="+scr")
-    ## TODO: Test these and add these to spack!
     depends_on('pdb', when="+pdb")
     depends_on('exodus', when="+exodus")
     depends_on('typhonio', when="+typhonio")
@@ -71,7 +70,5 @@ class Macsio(CMakePackage):
 
         if "+silo" in spec:
             cmake_args.apprend("-DWITH_SILO_PREFIX={0}".format(spec['silo'].prefix))
-
-        # TODO: add proper args
 
         return cmake_args
