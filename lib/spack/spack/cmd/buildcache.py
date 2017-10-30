@@ -146,7 +146,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
-    specs, links = bindist.get_specs(force)
+    specs = bindist.get_specs(force)
     for pkg in pkgs:
         matches = []
         tty.msg("buildcache spec(s) matching %s \n" % pkg)
@@ -296,10 +296,7 @@ def install_tarball(spec, args):
 
 
 def listspecs(args):
-    force = False
-    if args.force:
-        force = True
-    specs, links = bindist.get_specs(force)
+    specs = bindist.get_specs(args.force)
     if args.packages:
         pkgs = set(args.packages)
         for pkg in pkgs:
