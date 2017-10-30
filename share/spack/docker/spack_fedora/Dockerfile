@@ -1,4 +1,4 @@
-FROM fedora
+FROM fedora:24
 MAINTAINER Omar Padron <omar.padron@kitware.com>
 
 ENV SPACK_ROOT=/spack        \
