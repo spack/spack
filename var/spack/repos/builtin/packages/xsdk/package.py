@@ -50,7 +50,7 @@ class Xsdk(Package):
     depends_on('mfem@3.3.2-rc3+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.3.0-rc1')
     depends_on('mfem@3.3.2-rc3+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
 
-    depends_on('superlu-dist@5.2.1', when='@0.3.0-rc1')
+    depends_on('superlu-dist@5.2.2', when='@0.3.0-rc1')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('superlu-dist@develop', when='@develop')
 
