@@ -32,8 +32,10 @@ class Relion(CMakePackage):
     electron cryo-microscopy (cryo-EM)."""
 
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
-    url      = "https://github.com/3dem/relion/archive/2.0.3.tar.gz"
+    url      = "https://github.com/3dem/relion"
 
+    version('2.1', 'git=https://github.com/3dem/relion.git',
+    commit='e7607a869687b636d3c39e0d5b6a9cba930fc3b2')
     version('2.0.3', 'c61be5ef00848806278b341f43893f5d')
 
     variant('gui', default=True, description="build the gui")
