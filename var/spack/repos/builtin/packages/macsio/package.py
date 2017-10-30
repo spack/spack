@@ -56,19 +56,12 @@ class Macsio(CMakePackage):
     depends_on('exodus', when="+exodus")
     depends_on('typhonio', when="+typhonio")
 
-    def get_abs_path_rel_prefix(self, path):
-        # Return path if absolute, otherwise prepend prefix
-        if os.path.isabs(path):
-            return path
-        else:
-            return join_path(self.spec.prefix, path)
-
     def cmake_args(self):
         spec = self.spec
         cmake_args = []
 
         if "+silo" in spec:
-            cmake_args.apprend("-DWITH_SILO_PREFIX={0}"
+            cmake_args.append("-DWITH_SILO_PREFIX={0}"
                                .format(spec['silo'].prefix))
 
         return cmake_args
