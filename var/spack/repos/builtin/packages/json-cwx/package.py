@@ -31,6 +31,18 @@ class JsonCwx(AutotoolsPackage):
     homepage = "https://github.com/LLNL/json-cwx"
     url      = "https://github.com/LLNL/json-cwx/archive/0.12.tar.gz"
 
-    version('0.12', '30008dc17cd5f787dedd303c51367bb5a8885271')
+    version('0.12', '8ba44ef7f463f004b4b14c6d8d85a2b70db977a4')
+
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
 
     parallel = False
+
+    configure_directory = 'json-cwx'
+
+    def autoreconf(self, spec, prefix):
+    	with working_dir('json-cwx'):
+    		autogen = Executable("./autogen.sh")
+    		autogen()
