@@ -5,7 +5,7 @@ Using Docker for Spack Developers
 =================================
 
 This guide is intended for people who want to use our prepared docker
-environments to work on developing Spack or working on spack packages.  It is
+environments to work on developing Spack or working on spack packages. It is
 meant to serve as the companion documentation for the :ref:`packaging-guide`.
 
 To get started, all you need is the latest version of ``docker`` and

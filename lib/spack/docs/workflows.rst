@@ -1198,23 +1198,6 @@ In order to build and run the image, execute:
    # image run hook: the -l will make sure /etc/profile environments are loaded
    CMD        /bin/bash -l
 
-For examples of how we use docker in development, see
-:ref:`_docker_for_developers`.
-
-   .. note::
-
-      Note that on Mac OS and Windows, docker runs on a hypervisor that is not
-      allocated much memory by default, and some spack packages may fail to
-      build due to lack of memory. To work around this issue, consider
-      configuring your docker installation to use more of your host memory. In
-      some cases, you can also ease the memory pressure on parallel builds by
-      limiting the parallelism in your config.yaml.
-
-      .. code-block:: yaml
-
-         config:
-           build_jobs: 2
-
 ^^^^^^^^^^^^^^
 Best Practices
 ^^^^^^^^^^^^^^
@@ -1265,6 +1248,28 @@ Just use the `docker bootstraping mechanism <http://singularity.lbl.gov/quicksta
 
    %runscript
    exec /bin/bash -l
+
+""""""""""""""""""""""
+Docker for Development
+""""""""""""""""""""""
+
+For examples of how we use docker in development, see
+:ref:`_docker_for_developers`.
+
+"""""""""""""""""""""""""
+Docker on Windows and OSX
+"""""""""""""""""""""""""
+
+On Mac OS and Windows, docker runs on a hypervisor that is not allocated much
+memory by default, and some spack packages may fail to build due to lack of
+memory. To work around this issue, consider configuring your docker installation
+to use more of your host memory. In some cases, you can also ease the memory
+pressure on parallel builds by limiting the parallelism in your config.yaml.
+
+.. code-block:: yaml
+
+   config:
+     build_jobs: 2
 
 ------------------
 Upstream Bug Fixes
