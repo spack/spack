@@ -1803,6 +1803,20 @@ it installs include files to the ``h`` subdirectory, and libraries to the
        include_paths = ['h']
        lib_paths = ['modules', 'lib64']
 
+If your package has a unique layout or if it has some
+configuration-dependent paths, you can use expressions inside of your
+paths, like this for includes in ``$prefix/include/boost-1.61.0``::
+
+    class Boost(Package):
+        include_paths = ['include/boost-{version.dotted}']
+
+or like this for libraries in ``lib/versioned-libraries-1.61``::
+
+    class VersionedLibraries(Package):
+        lib_paths = ['lib/versioned-libraries-{version.up_to(2)}']
+
+you can use any expression in ``{}`` that would work on a ``Spec``
+object in a package.
 
 When you set ``include_paths`` and ``lib_paths`` this way, it changes the
 behavior of Spack's compiler wrappers.  The compiler wrappers include

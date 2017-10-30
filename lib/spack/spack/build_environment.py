@@ -99,14 +99,6 @@ SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
-def listify(str_or_seq):
-    """Ensure str_or_seq is a list if it's not iterable."""
-    if isinstance(str_or_seq, (list, tuple)):
-        return str_or_seq
-    else:
-        return [str_or_seq]
-
-
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can
        specify parallel or not on a per-invocation basis.  Using
@@ -223,28 +215,30 @@ def set_build_environment_variables(pkg, env, dirty):
 
     # These variables control compiler wrapper behavior
     # Include directories go into SPACK_INCLUDE_PATHS
-    dep_include_paths = [os.path.join(d.prefix, s) for d in build_deps
-                         for s in listify(d.package.include_paths)]
+    dep_include_paths = []
+    for d in build_deps:
+        dep_include_paths.extend(d.package.path_list('include_paths'))
     dep_include_paths = filter_nonexistant_paths(dep_include_paths)
     env.set_path(SPACK_INCLUDE_PATHS, dep_include_paths)
 
     # rpath directories go into SPACK_RPATHS.
     # These come from dependencies, compilers and the package prefix.
-    rpaths = [os.path.join(d.prefix, s) for d in rpath_deps
-              for s in listify(d.package.lib_paths)]
+    rpaths = []
+    for d in rpath_deps:
+        rpaths.extend(d.package.path_list('lib_paths'))
     if pkg.compiler.extra_rpaths:
         rpaths.extend(pkg.compiler.extra_rpaths)
     rpaths = filter_nonexistant_paths(rpaths)
 
     # root is not installed yet, so do this AFTER filtering
-    rpaths.extend([os.path.join(pkg.prefix, s)
-                   for s in listify(pkg.lib_paths)])
+    rpaths.extend(pkg.path_list('lib_paths'))
     env.set_path(SPACK_RPATHS, rpaths)
 
     # Link-time library directories go into SPACK_LIB_PATHS
     # These are always transitive, but RPATHs may not be.
-    dep_lib_paths = [os.path.join(d.prefix, s) for d in link_deps
-                     for s in listify(d.package.lib_paths)]
+    dep_lib_paths = []
+    for d in link_deps:
+        dep_lib_paths.extend(d.package.path_list('lib_paths'))
     dep_lib_paths = filter_nonexistant_paths(dep_lib_paths)
     env.set_path(SPACK_LIB_PATHS, dep_lib_paths)
 

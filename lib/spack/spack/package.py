@@ -732,6 +732,41 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return spack.url.substitute_version(
             self.nearest_url(version), self.url_version(version))
 
+    def path_list(self, attr_name):
+        """Get a path list attribute from a package.
+
+        Path list attributes can be a single string or a list, and they
+        can contain nested expressions that are evaluated on the
+        package's spec.  This allows specially constructed paths, e.g.,
+        this::
+
+            'lib/python{version.up_to(2)}/site-packages'
+
+        to be written by packagers and evaluated later, after the spec to
+        be installed is concretized.
+
+        The strnig above refers the Python ``site-packages`` directory in
+        the pythonX.Y subdirectory of lib within a prefix, which requires
+        that we know the version of the package that's installed.
+
+        Expressions in {} are evaluated as though they were attributes of
+        the ``Spec`` object.  e.g., ``spec.version.up_to(2)``.  The
+        lazily computed expressions can be useful, e.g., for packages
+        that have nonstandard directory layouts.::
+
+            class Boost(Package):
+                include_paths = ['include/boost-{version.dotted}']
+
+        """
+        # get path attribute as either a string or a list/tuple
+        paths = getattr(self, attr_name)
+        if not isinstance(paths, list):
+            paths = [paths]
+
+        # make relative paths absolute and format spec expressions.
+        return [os.path.join(self.prefix, self.spec.pyformat(p))
+                for p in paths]
+
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
         resource_mirror = spack.mirror.mirror_archive_path(

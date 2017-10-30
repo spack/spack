@@ -2841,6 +2841,31 @@ class Spec(object):
     def colorized(self):
         return colorize_spec(self)
 
+    def pyformat(self, string):
+        """Format a Spec with python expressions.
+
+        Args:
+            string (str): a string, potentially with format expressions in
+                curly braces
+
+        Returns:
+            (str): string with all format expressions replaced with
+                their evlauted value
+
+        Format strings are evaluated as though they were called on this
+        spec.  For example, this::
+
+            'lib/python{version.up_to(2)}/site-packages'
+
+        Might evaluate to ``'lib/python2.6/site-packages'`` if the
+        ``version`` attribute of this ``Spec`` is ``2.6``.  This syntax
+        is inteded for packagers and others who deal with Specs in
+        Python, not for end-user facing code.
+        """
+        def replacer(m):
+            return str(eval('self.%s' % m.group(1), {'self': self}, {}))
+        return re.sub(r'\{([^\}]*)\}', replacer, string)
+
     def format(self, format_string='$_$@$%@+$+$=', **kwargs):
         """Prints out particular pieces of a spec, depending on what is
         in the format string.
