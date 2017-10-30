@@ -41,6 +41,8 @@ class Libffs(CMakePackage):
     version('1.1.1', 'aa1c8ad5cf35e8cf76735e3a60891509')
     version('1.1', '561c6b3abc53e12b3c01192e8ef2ffbc')
 
+    depends_on('flex')
+    depends_on('bison')
     depends_on('gtkorvo-atl')
     depends_on('gtkorvo-dill')
     depends_on('gtkorvo-cercs-env')
