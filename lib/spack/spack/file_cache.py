@@ -25,8 +25,8 @@
 import os
 import shutil
 
-from llnl.util.filesystem import *
-from llnl.util.lock import *
+from llnl.util.filesystem import mkdirp, join_path
+from llnl.util.lock import Lock, ReadTransaction, WriteTransaction
 
 from spack.error import SpackError
 

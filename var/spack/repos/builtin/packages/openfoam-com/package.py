@@ -58,14 +58,14 @@
 # WM_PROJECT_VERSION=plus naming internally.
 #
 ##############################################################################
-from spack import *
-from spack.environment import *
-import llnl.util.tty as tty
-
 import glob
 import re
 import shutil
 import os
+
+from spack import *
+import llnl.util.tty as tty
+
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [
@@ -673,9 +673,9 @@ class OpenfoamArch(object):
                 platform += 'ia64'
             elif target == 'armv7l':
                 platform += 'ARM7'
-            elif target == ppc64:
+            elif target == 'ppc64':
                 platform += 'PPC64'
-            elif target == ppc64le:
+            elif target == 'ppc64le':
                 platform += 'PPC64le'
         elif platform == 'darwin':
             if target == 'x86_64':

@@ -243,7 +243,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     workdir = join_path(outdir, os.path.basename(spec.prefix))
     if os.path.exists(workdir):
         shutil.rmtree(workdir)
-    install_tree(spec.prefix, workdir)
+    install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
     write_buildinfo_file(workdir)
@@ -370,7 +370,6 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
             shutil.rmtree(installpath)
         else:
             raise NoOverwriteException(str(installpath))
-    mkdirp(installpath)
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')
     spackfile_path = os.path.join(stagepath, spackfile_name)
@@ -404,6 +403,8 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
         if bchecksum['hash'] != checksum:
             raise NoChecksumException()
 
+    # delay creating installpath until verification is complete
+    mkdirp(installpath)
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
         tar.extractall(path=join_path(installpath, '..'))
 
@@ -412,7 +413,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     relocate_package(installpath)
 
 
-def get_specs():
+def get_specs(force=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
@@ -443,10 +444,13 @@ def get_specs():
                     urls.add(link)
         for link in urls:
             with Stage(link, name="build_cache", keep=True) as stage:
-                try:
-                    stage.fetch()
-                except fs.FetchError:
-                    continue
+                if force and os.path.exists(stage.save_filename):
+                    os.remove(stage.save_filename)
+                if not os.path.exists(stage.save_filename):
+                    try:
+                        stage.fetch()
+                    except fs.FetchError:
+                        continue
                 with open(stage.save_filename, 'r') as f:
                     # read the spec from the build cache file. All specs
                     # in build caches are concrete (as they aer built) so
@@ -459,7 +463,7 @@ def get_specs():
     return specs, durls
 
 
-def get_keys(install=False, yes_to_all=False):
+def get_keys(install=False, yes_to_all=False, force=False):
     """
     Get pgp public keys available on mirror
     """
@@ -487,10 +491,13 @@ def get_keys(install=False, yes_to_all=False):
                     keys.add(link)
         for link in keys:
             with Stage(link, name="build_cache", keep=True) as stage:
-                try:
-                    stage.fetch()
-                except fs.FetchError:
-                    continue
+                if os.path.exists(stage.save_filename) and force:
+                    os.remove(stage.save_filename)
+                if not os.path.exists(stage.save_filename):
+                    try:
+                        stage.fetch()
+                    except fs.FetchError:
+                        continue
             tty.msg('Found key %s' % link)
             if install:
                 if yes_to_all:

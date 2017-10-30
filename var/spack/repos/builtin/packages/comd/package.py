@@ -37,14 +37,14 @@ class Comd(MakefilePackage):
     versions of CoMD will be released to incorporate the lessons learned from
     the co-design process."""
 
-    tags = ['proxy-app']
+    tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "http://www.exmatex.org/comd.html"
-    url      = "https://github.com/exmatex/CoMD/archive/master.tar.gz"
+    url      = "https://github.com/exmatex/CoMD/archive/v1.1.tar.gz"
 
-    version('master', git='https://github.com/exmatex/CoMD.git', branch='master')
+    version('1.1', '5051310a8d2c93cccba63de40bcfaa78')
+    version('develop', git='https://github.com/exmatex/CoMD.git', branch='master')
 
-    variant('serial', default=False, description='Build without MPI support')
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('precision', default=True, description='Toggle Precesion Options')
@@ -53,7 +53,7 @@ class Comd(MakefilePackage):
     depends_on('mpi', when='+mpi')
     depends_on('graphviz', when='+graphs')
 
-    conflicts('+openmp', when='~serial')
+    conflicts('+openmp', when='+mpi')
 
     def edit(self, spec, prefix):
         with working_dir('src-mpi') or working_dir('src-openmp'):
@@ -80,7 +80,7 @@ class Comd(MakefilePackage):
 
         else:
             targets.append('--directory=src-mpi')
-            if '+serial' in self.spec:
+            if '~mpi' in self.spec:
                 comd_variant += '-serial'
                 targets.append('CC = {0}'.format(cc))
             else:

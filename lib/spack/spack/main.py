@@ -38,7 +38,6 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.log import log_output
-from llnl.util.tty.color import *
 
 import spack
 import spack.cmd
@@ -94,8 +93,8 @@ def set_working_dir():
     try:
         spack.spack_working_dir = os.getcwd()
     except OSError:
-        os.chdir(spack_prefix)
-        spack.spack_working_dir = spack_prefix
+        os.chdir(spack.spack_prefix)
+        spack.spack_working_dir = spack.spack_prefix
 
 
 def add_all_commands(parser):
@@ -411,8 +410,8 @@ class SpackCommand(object):
         except SystemExit as e:
             self.returncode = e.code
 
-        except:
-            self.error = sys.exc_info()[1]
+        except BaseException as e:
+            self.error = e
             if fail_on_error:
                 raise
 

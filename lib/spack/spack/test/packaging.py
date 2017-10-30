@@ -40,8 +40,11 @@ import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.relocate import *
 from spack.util.executable import ProcessError
+from spack.relocate import needs_binary_relocation, get_patchelf
+from spack.relocate import substitute_rpath, get_relative_rpaths
+from spack.relocate import macho_replace_paths, macho_make_paths_relative
+from spack.relocate import modify_macho_object, macho_get_paths
 
 
 @pytest.fixture(scope='function')
@@ -91,6 +94,7 @@ echo $PATH"""
     pkg = spack.repo.get(spec)
     fake_fetchify(mock_archive.url, pkg)
     pkg.do_install()
+    pkghash = '/' + spec.dag_hash(7)
 
     # Put some non-relocatable file in there
     filename = os.path.join(spec.prefix, "dummy.txt")
@@ -130,7 +134,7 @@ echo $PATH"""
         pkg.do_uninstall(force=True)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', str(spec)])
+        args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # create build cache with relative path and signing
@@ -146,7 +150,7 @@ echo $PATH"""
         buildcache.install_tarball(spec, args)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', str(spec)])
+        args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
     else:
@@ -163,12 +167,12 @@ echo $PATH"""
         buildcache.install_tarball(spec, args)
 
         # test overwrite install without verification
-        args = parser.parse_args(['install', '-f', '-y', str(spec)])
+        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # create build cache with relative path
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', '-y', str(spec)])
+            ['create', '-d', mirror_path, '-f', '-r', '-y', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
@@ -179,7 +183,7 @@ echo $PATH"""
         buildcache.install_tarball(spec, args)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', '-y', str(spec)])
+        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
         buildcache.buildcache(parser, args)
 
     # Validate the relocation information
@@ -187,6 +191,9 @@ echo $PATH"""
     assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
 
     args = parser.parse_args(['list'])
+    buildcache.buildcache(parser, args)
+
+    args = parser.parse_args(['list', '-f'])
     buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['list', 'trivial'])
@@ -197,6 +204,9 @@ echo $PATH"""
                     mirror_path + '/external.key')
 
     args = parser.parse_args(['keys'])
+    buildcache.buildcache(parser, args)
+
+    args = parser.parse_args(['keys', '-f'])
     buildcache.buildcache(parser, args)
 
     # unregister mirror with spack config
