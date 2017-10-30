@@ -39,6 +39,8 @@ class IntelTbb(Package):
             url='https://github.com/01org/tbb/archive/2018_U1.tar.gz')
     version('2018.0', 'e54de69981905ad69eb9cf0226b9bf5f9a4ba065',
             url='https://github.com/01org/tbb/archive/2018.tar.gz')
+    version('2017.8', '488f049fd107d8b1f6ba59cf4aad881172525106',
+            url='https://github.com/01org/tbb/archive/2017_U8.tar.gz')
     version('2017.6', 'c0a722fd1ae66b40aeab25da6049086ef5f02f17',
             url='https://github.com/01org/tbb/archive/2017_U6.tar.gz')
     version('2017.5', '26f720729d322913912e99d1e4a36bd10625d3ca',

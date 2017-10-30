@@ -888,10 +888,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             return bool(self.extendees)
 
     def extends(self, spec):
+        '''
+        Returns True if this package extends the given spec.
+
+        If ``self.spec`` is concrete, this returns whether this package extends
+        the given spec.
+
+        If ``self.spec`` is not concrete, this returns whether this package may
+        extend the given spec.
+        '''
         if spec.name not in self.extendees:
             return False
         s = self.extendee_spec
-        return s and s.satisfies(spec)
+        return s and spec.satisfies(s)
 
     @property
     def activated(self):

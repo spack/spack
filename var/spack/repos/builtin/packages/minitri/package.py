@@ -43,10 +43,10 @@ class Minitri(MakefilePackage):
     def build_targets(self):
         targets = []
         if '+mpi' in self.spec:
-            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+            targets.append('CCC={0}'.format(self.spec['mpi'].mpicxx))
             targets.append('--directory=miniTri/linearAlgebra/MPI')
         else:
-            targets.append('CC={0}'.format(self.compiler.cc))
+            targets.append('CCC={0}'.format(self.compiler.cxx))
             targets.append('--directory=miniTri/linearAlgebra/serial')
 
         targets.append('--file=Makefile')
