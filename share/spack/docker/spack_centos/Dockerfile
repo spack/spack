@@ -35,6 +35,13 @@ RUN echo "source /spack/share/spack/setup-env.sh" \
 RUN echo "source /spack/share/spack/spack-completion.bash" \
     >> /etc/profile.d/spack.sh
 COPY handle-ssh.sh /etc/profile.d/handle-ssh.sh
+COPY handle-prompt.sh /etc/profile.d/handle-prompt.sh.tmp
+
+RUN (                                             \
+        echo "export DISTRO=$DISTRO"            ; \
+        cat /etc/profile.d/handle-prompt.sh.tmp ; \
+        rm  /etc/profile.d/handle-prompt.sh.tmp   \
+    ) > /etc/profile.d/handle-prompt.sh
 
 RUN mkdir -p /root/.spack
 COPY modules.yaml /root/.spack/modules.yaml
