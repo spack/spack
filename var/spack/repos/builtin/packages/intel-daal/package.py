@@ -35,6 +35,8 @@ class IntelDaal(IntelPackage):
 
     version('2018.0.128', '5779e670f67c33cc1c6cdcdca5e4636e',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12072/l_daal_2018.0.128.tgz")
+    version('2017.4.239', 'b47e9b92d948ee312e8a98170a1c0640',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12148/l_daal_2017.4.239.tgz")
     version('2017.3.196', '93221eaeb560917a129d42fb2cf02500',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11546/l_daal_2017.3.196.tgz")
     version('2017.2.174', 'f067d5d7b0f70914fba1f78da0361065',
