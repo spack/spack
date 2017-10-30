@@ -418,7 +418,7 @@ def get_specs(force=False):
     Get spec.yaml's for build caches available on mirror
     """
     if spack.binary_cache_retrieved_specs:
-        tty.msg("Using previously-retrieved specs")
+        tty.debug("Using previously-retrieved specs")
         previously_retrieved = spack.binary_cache_retrieved_specs
         return previously_retrieved
 
