@@ -40,7 +40,7 @@ class Macsio(CMakePackage):
             branch='cmake2')
 
     variant('mpi', default=True, description="Build MPI plugin")
-    variant('silo', default=False, description="Build with SILO plugin")
+    variant('silo', default=True, description="Build with SILO plugin")
     variant('hdf5', default=False, description="Build HDF5 plugin")
     variant('pdb', default=False, description="Build PDB plugin")
     variant('exodus', default=False, description="Build EXODUS plugin")
@@ -59,6 +59,12 @@ class Macsio(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         cmake_args = []
+
+        if "-mpi" in spec:
+            cmake_args.append("-DENABLE_MPI=OFF")
+
+        if "-silo" in spec:
+            cmake_args.append("-DENABLE_SILO=OFF")
 
         if "+silo" in spec:
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
