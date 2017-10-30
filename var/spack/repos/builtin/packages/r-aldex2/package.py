@@ -25,23 +25,27 @@
 from spack import *
 
 
-class RIranges(RPackage):
-    """Provides efficient low-level and highly
-    reusable S4 classes for storing,
-    manipulating and aggregating over annotated ranges of
-    integers. Implements an
-    algebra of range operations, including efficient
-    algorithms for finding overlaps
-    and nearest neighbors. Defines efficient list-like
-    classes for storing, transforming
-    and aggregating large grouped data,
-    i.e., collections of atomic vectors and DataFrames."""
+class RAldex2(RPackage):
+    """A differential abundance analysis for the comparison of
+    two or more conditions. For example, single-organism and
+    meta-RNA-seq high-throughput sequencing assays, or of
+    selected and unselected values from in-vitro sequence selections.
+    Uses a Dirichlet-multinomial model to infer abundance from counts,
+    that has been optimized for three or more experimental replicates.
+    Infers sampling variation and calculates the expected false
+    discovery rate given the biological and sampling variation
+    using the Wilcox rank test or Welches t-test (aldex.ttest) or
+    the glm and Kruskal Wallis tests (aldex.glm). Reports both P
+    and fdr values calculated by the Benjamini Hochberg correction."""
 
-    homepage = "https://www.bioconductor.org/packages/IRanges/"
-    url      = "https://git.bioconductor.org/packages/IRanges"
-    list_url = homepage
-    version('2.10.5', git='https://git.bioconductor.org/packages/IRanges', commit='b00d1d5025e3c480d17c13100f0da5a0132b1614')
+    homepage = "http://bioconductor.org/packages/ALDEx2/"
+    url      = "https://git.bioconductor.org/packages/ALDEx2"
 
-    depends_on('r-biocgenerics', type=('build', 'run'))
+    version('1.8.0', git='https://git.bioconductor.org/packages/ALDEx2', commit='24104824ca2402ad4f54fbf1ed9cee7fac2aaaf1')
+
+    depends_on('r@3.4.0:3.4.9', when='@1.8.0')
     depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.10.5')
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-summarizedexperiment', type=('build', 'run'))
+    depends_on('r-biocparallel', type=('build', 'run'))

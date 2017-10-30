@@ -24,25 +24,26 @@
 ##############################################################################
 from spack import *
 
+import os
+import spack
 
-class RShiny(RPackage):
-    """Makes it incredibly easy to build interactive web applications with R.
-    Automatic "reactive" binding between inputs and outputs and extensive
-    pre-built widgets make it possible to build beautiful, responsive, and
-    powerful applications with minimal effort."""
 
-    homepage = "http://shiny.rstudio.com/"
-    url      = "https://cran.rstudio.com/src/contrib/shiny_1.0.5.tar.gz"
-    list_url = homepage
+class UrlListTest(Package):
+    """Mock package with url_list."""
+    homepage = "http://www.url-list-example.com"
 
-    version('1.0.5', '419dd5d3ea0bd87a07f8f0b1ef14fc13')
-    version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
+    web_data_path = os.path.join(spack.test_path, 'data', 'web')
+    url = 'file://' + web_data_path + '/foo-0.0.0.tar.gz'
+    list_url = 'file://' + web_data_path + '/index.html'
+    list_depth = 3
 
-    depends_on('r-httpuv', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-xtable', type=('build', 'run'))
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-sourcetools', type=('build', 'run'))
+    version('0.0.0')
+    version('1.0.0')
+    version('3.0')
+    version('4.5')
+    version('2.0.0b2')
+    version('3.0a1')
+    version('4.5-rc5')
+
+    def install(self, spec, prefix):
+        pass
