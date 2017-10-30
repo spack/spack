@@ -31,6 +31,6 @@ class JsonCwx(AutotoolsPackage):
     homepage = "https://github.com/LLNL/json-cwx"
     url      = "https://github.com/LLNL/json-cwx/archive/0.12.tar.gz"
 
-    version('0.12', '30008dc17cd5f787dedd303c51367bb5a8885271')
+    version('0.12', '146b7525d545b036b7d7b667d6e7a3b5')
 
     parallel = False
