@@ -50,13 +50,15 @@ class Macsio(CMakePackage):
     variant('hdf5', default=False, description="Build HDF5 plugin")
     depends_on('hdf5', when="+hdf5")
 
+    # pdb is packaged with silo
     variant('pdb', default=False, description="Build PDB plugin")
+    depends_on('silo', when="+pdb")
+
     variant('exodus', default=False, description="Build EXODUS plugin")
     variant('typhonio', default=False, description="Build TYPHONIO plugin")
     variant('scr', default=False, description="Build with SCR support")
 
     depends_on('scr', when="+scr")
-    depends_on('pdb', when="+pdb")
     depends_on('exodus', when="+exodus")
     depends_on('typhonio', when="+typhonio")
 
@@ -74,4 +76,9 @@ class Macsio(CMakePackage):
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
                                .format(spec['silo'].prefix))
 
+        if "+pdb" in spec:
+            # pdb is a part of silo
+            cmake_args.append("-DENABLE_PDF=ON")
+            cmake_args.append("-DWITH_SILO_PREFIX={0}"
+                               .format(spec['silo'].prefix))
         return cmake_args
