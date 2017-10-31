@@ -55,7 +55,7 @@ class RGgbio(RPackage):
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-summarizedexperiment', type=('build', 'run'))
     depends_on('r-biostrings', type=('build', 'run'))
-    depends_on('r-rsamrools', type=('build', 'run'))
+    depends_on('r-rsamtools', type=('build', 'run'))
     depends_on('r-genomicalignments', type=('build', 'run'))
     depends_on('r-bsgenome', type=('build', 'run'))
     depends_on('r-variantannotation', type=('build', 'run'))
