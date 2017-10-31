@@ -400,6 +400,33 @@ Once your new configuration key is added to the schema, you can add it to
 the appropriate spack configuration file in ``etc/spack/defaults`` without
 spack throwing an error.
 
+-------------------------------
+Executing command line programs
+-------------------------------
+
+Spack offers the :meth:`spack.util.executable.Executable` class to
+facilitate the execution of command line programs easily using the python
+``subprocess`` interface.
+
+To create a function from which to access the ``foo`` command, use the following
+code. Creating the ``Executable`` object will not fail if the command does not
+exist, so you may want to check first or expect to catch errors.
+
+.. code-block:: python
+
+   foo = Executable('foo')
+   foo('-option')
+
+To redirect output to a string which is captured and passed out, use the
+following code. The output is given as a single unbroken string, so you
+will need to split it yourself.
+
+.. code-block:: python
+
+   foo = Executable('foo')
+   output = foo('-option', output=str)
+   lines = output.split('\n')
+
 ----------
 Unit tests
 ----------
