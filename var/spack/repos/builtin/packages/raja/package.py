@@ -29,6 +29,6 @@ class Raja(CMakePackage):
     """RAJA Parallel Framework."""
     homepage = "http://software.llnl.gov/RAJA/"
 
-    version('git', git='https://github.com/LLNL/RAJA.git', branch="master", submodules="True")
+    version('develop', git='https://github.com/LLNL/RAJA.git', branch="master", submodules="True")
 
     depends_on('cmake@3.3:', type='build')
