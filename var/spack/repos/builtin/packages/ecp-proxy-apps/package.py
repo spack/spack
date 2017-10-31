@@ -46,6 +46,7 @@ class EcpProxyApps(Package):
     depends_on('candle-benchmarks@1.0', when='@1.0')
     depends_on('comd@1.1', when='@1.0')
     depends_on('laghos@1.0', when='@1.0')
+    depends_on('macsio@0.99', when='@1.0')
     depends_on('miniamr@1.4.0', when='@1.0')
     depends_on('minife@2.1.0', when='@1.0')
     depends_on('minitri@1.0', when='@1.0')
