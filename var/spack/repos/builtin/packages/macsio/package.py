@@ -47,8 +47,13 @@ class Macsio(CMakePackage):
     variant('silo', default=True, description="Build with SILO plugin")
     depends_on('silo', when="+silo")
 
+    ## TODO: multi-level variants
     variant('hdf5', default=False, description="Build HDF5 plugin")
     depends_on('hdf5', when="+hdf5")
+    variant('zfp', default=False, description="Build HDF5 with ZFP compression")
+    variant('szip', default=False, description="Build HDF5 with SZIP compression")
+    #depends_on('hdf5+szip', when="+szip")
+    variant('zlib', default=False, description="Build HDF5 with ZLIB compression")
 
     # pdb is packaged with silo
     variant('pdb', default=False, description="Build PDB plugin")
@@ -83,6 +88,27 @@ class Macsio(CMakePackage):
             cmake_args.append("-DENABLE_PDF=ON")
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
                                .format(spec['silo'].prefix))
+        if "+hdf5" in spec:
+            cmake_args.append("-DENABLE_HDF5=ON")
+            cmake_args.append("-DWITH_HDF5_PREFIX={0}"
+                               .format(spec['hdf5'].prefix))
+            ## TODO: Multi-level variants
+            ## ZFP not in hdf5 spack package??
+            # if "+zfp" in spec:
+            #     cmake_args.append("-DENABLE_HDF5_ZFP")
+            #     cmake_args.append("-DWITH_ZFP_PREFIX={0}"
+            #                        .format(spec['silo'].prefix))
+            ## SZIP is an hdf5 spack variant
+            # if "+szip" in spec:
+            #     cmake_args.append("-DENABLE_HDF5_SZIP")
+            #     cmake_args.append("-DWITH_SZIP_PREFIX={0}"
+            #                        .format(spec['SZIP'].prefix))
+            ## ZLIB is on by default, @1.1.2
+            # if "+zlib" in spec:
+            #     cmake_args.append("-DENABLE_HDF5_ZLIB")
+            #     cmake_args.append("-DWITH_ZLIB_PREFIX={0}"
+            #                        .format(spec['silo'].prefix))
+
         ## TODO: typhonio not in spack
         # if "+typhonio" in spec:
         #     cmake_args.append("-DENABLE_TYPHONIO=ON")
