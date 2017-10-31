@@ -81,7 +81,7 @@ class Macsio(CMakePackage):
 
         if "+silo" in spec:
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
-                               .format(spec['silo'].prefix))
+                .format(spec['silo'].prefix))
 
         if "+pdb" in spec:
             # pdb is a part of silo
