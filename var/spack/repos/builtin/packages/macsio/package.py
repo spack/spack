@@ -55,12 +55,14 @@ class Macsio(CMakePackage):
     depends_on('silo', when="+pdb")
 
     variant('exodus', default=False, description="Build EXODUS plugin")
-    variant('typhonio', default=False, description="Build TYPHONIO plugin")
+    depends_on('exodusii', when="+exodus")
+
+    ## TODO: typhonio not in spack
+    # variant('typhonio', default=False, description="Build TYPHONIO plugin")
+    # depends_on('typhonio', when="+typhonio")
 
     variant('scr', default=False, description="Build with SCR support")
     depends_on('scr', when="+scr")
-    depends_on('exodus', when="+exodus")
-    depends_on('typhonio', when="+typhonio")
 
     def cmake_args(self):
         spec = self.spec
@@ -81,4 +83,18 @@ class Macsio(CMakePackage):
             cmake_args.append("-DENABLE_PDF=ON")
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
                                .format(spec['silo'].prefix))
+        ## TODO: typhonio not in spack
+        # if "+typhonio" in spec:
+        #     cmake_args.append("-DENABLE_TYPHONIO=ON")
+        #     cmake_args.append("-DWITH_TYPHONIO_PREFIX={0}"
+        #                        .format(spec['typhonio'].prefix))
+
+        if "+exodus" in spec:
+            cmake_args.append("-DENABLE_EXODUS=ON")
+            cmake_args.append("-DWITH_EXODUS_PREFIX={0}"
+                               .format(spec['exodusii'].prefix))
+            # exodus requires netcdf
+            cmake_args.append("-DWITH_NETCDF_PREFIX={0}"
+                               .format(spec['netcdf'].prefix))
+
         return cmake_args
