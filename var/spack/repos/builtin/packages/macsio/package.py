@@ -42,16 +42,19 @@ class Macsio(CMakePackage):
     depends_on('json-cwx')
 
     variant('mpi', default=True, description="Build MPI plugin")
+    depends_on('mpi', when="+mpi")
+
     variant('silo', default=True, description="Build with SILO plugin")
+    depends_on('silo', when="+silo")
+
     variant('hdf5', default=False, description="Build HDF5 plugin")
+    depends_on('hdf5', when="+hdf5")
+
     variant('pdb', default=False, description="Build PDB plugin")
     variant('exodus', default=False, description="Build EXODUS plugin")
     variant('typhonio', default=False, description="Build TYPHONIO plugin")
     variant('scr', default=False, description="Build with SCR support")
 
-    depends_on('mpi', when="+mpi")
-    depends_on('silo', when="+silo")
-    depends_on('hdf5', when="+hdf5")
     depends_on('scr', when="+scr")
     depends_on('pdb', when="+pdb")
     depends_on('exodus', when="+exodus")
