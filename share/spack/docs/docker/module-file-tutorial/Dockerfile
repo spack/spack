@@ -13,7 +13,7 @@ RUN apt-get update \
        ca-certificates \
        coreutils \
        curl \
-       emacs-nox \
+       emacs-nox vim nano \
        git \
        openmpi-bin openmpi-common libopenmpi-dev \
        python \
