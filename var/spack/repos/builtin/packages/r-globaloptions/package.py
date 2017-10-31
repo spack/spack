@@ -35,6 +35,6 @@ class RGlobaloptions(RPackage):
 
     version('0.0.12', '6c268b3b27874918ba62eb0f6aa0a3e5')
 
-    depends_on('r-testhat', type=('build', 'run'))
+    depends_on('r-testthat', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))
     depends_on('r-markdown', type=('build', 'run'))
