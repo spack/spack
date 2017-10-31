@@ -49,12 +49,12 @@ class Macsio(CMakePackage):
     variant('silo', default=True, description="Build with SILO plugin")
     depends_on('silo', when="+silo")
 
-    ## TODO: multi-level variants
+    # TODO: multi-level variants
     variant('hdf5', default=False, description="Build HDF5 plugin")
     depends_on('hdf5', when="+hdf5")
     variant('zfp', default=False, description="Build HDF5 with ZFP compression")
     variant('szip', default=False, description="Build HDF5 with SZIP compression")
-    #depends_on('hdf5+szip', when="+szip")
+    # depends_on('hdf5+szip', when="+szip")
     variant('zlib', default=False, description="Build HDF5 with ZLIB compression")
 
     # pdb is packaged with silo
@@ -64,7 +64,7 @@ class Macsio(CMakePackage):
     variant('exodus', default=False, description="Build EXODUS plugin")
     depends_on('exodusii', when="+exodus")
 
-    ## TODO: typhonio not in spack
+    # TODO: typhonio not in spack
     # variant('typhonio', default=False, description="Build TYPHONIO plugin")
     # depends_on('typhonio', when="+typhonio")
 
@@ -83,35 +83,35 @@ class Macsio(CMakePackage):
 
         if "+silo" in spec:
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
-                .format(spec['silo'].prefix))
+                              .format(spec['silo'].prefix))
 
         if "+pdb" in spec:
             # pdb is a part of silo
             cmake_args.append("-DENABLE_PDF=ON")
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
-                .format(spec['silo'].prefix))
+                              .format(spec['silo'].prefix))
         if "+hdf5" in spec:
             cmake_args.append("-DENABLE_HDF5=ON")
             cmake_args.append("-DWITH_HDF5_PREFIX={0}"
-                .format(spec['hdf5'].prefix))
-            ## TODO: Multi-level variants
-            ## ZFP not in hdf5 spack package??
+                              .format(spec['hdf5'].prefix))
+            # TODO: Multi-level variants
+            # ZFP not in hdf5 spack package??
             # if "+zfp" in spec:
             #     cmake_args.append("-DENABLE_HDF5_ZFP")
             #     cmake_args.append("-DWITH_ZFP_PREFIX={0}"
             #         .format(spec['silo'].prefix))
-            ## SZIP is an hdf5 spack variant
+            # SZIP is an hdf5 spack variant
             # if "+szip" in spec:
             #     cmake_args.append("-DENABLE_HDF5_SZIP")
             #     cmake_args.append("-DWITH_SZIP_PREFIX={0}"
             #         .format(spec['SZIP'].prefix))
-            ## ZLIB is on by default, @1.1.2
+            # ZLIB is on by default, @1.1.2
             # if "+zlib" in spec:
             #     cmake_args.append("-DENABLE_HDF5_ZLIB")
             #     cmake_args.append("-DWITH_ZLIB_PREFIX={0}"
             #         .format(spec['silo'].prefix))
 
-        ## TODO: typhonio not in spack
+        # TODO: typhonio not in spack
         # if "+typhonio" in spec:
         #     cmake_args.append("-DENABLE_TYPHONIO=ON")
         #     cmake_args.append("-DWITH_TYPHONIO_PREFIX={0}"
@@ -120,9 +120,9 @@ class Macsio(CMakePackage):
         if "+exodus" in spec:
             cmake_args.append("-DENABLE_EXODUS=ON")
             cmake_args.append("-DWITH_EXODUS_PREFIX={0}"
-                .format(spec['exodusii'].prefix))
+                              .format(spec['exodusii'].prefix))
             # exodus requires netcdf
             cmake_args.append("-DWITH_NETCDF_PREFIX={0}"
-                .format(spec['netcdf'].prefix))
+                              .format(spec['netcdf'].prefix))
 
         return cmake_args
