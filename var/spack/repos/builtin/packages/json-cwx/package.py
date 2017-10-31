@@ -43,6 +43,6 @@ class JsonCwx(AutotoolsPackage):
     configure_directory = 'json-cwx'
 
     def autoreconf(self, spec, prefix):
-    	with working_dir('json-cwx'):
-    		autogen = Executable("./autogen.sh")
-    		autogen()
+        with working_dir('json-cwx'):
+            autogen = Executable("./autogen.sh")
+            autogen()
