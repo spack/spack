@@ -253,6 +253,17 @@ The ``gmp`` package actually lives in
 but ``spack edit`` provides a much simpler shortcut and saves you the
 trouble of typing the full path.
 
+As examples for your inspiration, here are some packages which require some
+of the techniques discussed here to be properly installed. They should
+help instruct you how to solve problems you may encounter when you are
+creating a new package.
+
+* ``python``
+* ``py-yt``
+* ``rockstar``
+* ``node-js``
+* ``npm``
+
 ----------------------------
 Naming & directory structure
 ----------------------------
