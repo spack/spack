@@ -64,10 +64,10 @@ class Macsio(CMakePackage):
         spec = self.spec
         cmake_args = []
 
-        if "-mpi" in spec:
+        if "~mpi" in spec:
             cmake_args.append("-DENABLE_MPI=OFF")
 
-        if "-silo" in spec:
+        if "~silo" in spec:
             cmake_args.append("-DENABLE_SILO=OFF")
 
         if "+silo" in spec:
