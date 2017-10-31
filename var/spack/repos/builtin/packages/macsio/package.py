@@ -76,8 +76,11 @@ class Macsio(CMakePackage):
         if "~mpi" in spec:
             cmake_args.append("-DENABLE_MPI=OFF")
 
+        if "+mpi" in spec:
+            cmake_args.append("-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx)
+
         if "~silo" in spec:
-            cmake_args.append("-DENABLE_SILO=OFF")
+            cmake_args.append("-DENABLE_SILO_PLUGIN=OFF")
 
         if "+silo" in spec:
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
@@ -89,7 +92,7 @@ class Macsio(CMakePackage):
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
                 .format(spec['silo'].prefix))
         if "+hdf5" in spec:
-            cmake_args.append("-DENABLE_HDF5=ON")
+            cmake_args.append("-DENABLE_HDF5_PLUGIN=ON")
             cmake_args.append("-DWITH_HDF5_PREFIX={0}"
                 .format(spec['hdf5'].prefix))
             ## TODO: Multi-level variants
@@ -116,7 +119,7 @@ class Macsio(CMakePackage):
         #         .format(spec['typhonio'].prefix))
 
         if "+exodus" in spec:
-            cmake_args.append("-DENABLE_EXODUS=ON")
+            cmake_args.append("-DENABLE_EXODUS_PLUGIN=ON")
             cmake_args.append("-DWITH_EXODUS_PREFIX={0}"
                 .format(spec['exodusii'].prefix))
             # exodus requires netcdf
