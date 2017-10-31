@@ -2413,6 +2413,26 @@ the install locations of dependencies, or when you need to do something differen
 depending on the version, compiler, dependencies, etc. that your package is
 built with.  These parameters give you access to this type of information.
 
+^^^^^^^^^^^^^^^^^
+Adding new phases
+^^^^^^^^^^^^^^^^^
+
+Phases can be added before or after existing phases by using the ``run_before``
+and ``run_after`` decorators. Say you want to include some kind of build test
+or install test to be performed before or after installation of the package.
+You can declare a function you want to be run and then decorate it with one of
+these functions mentioning the phase you want the function to run before or
+after.
+
+.. code-block:: python
+
+   @run_after('install')
+   def check_install(self):
+        # Custom implementation goes here
+        pass
+
+:ref:`build-time-tests` Mentions this as well. See it for additional details.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Techniques for ad-hoc packages building systems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3363,6 +3383,8 @@ Now, after ``install()`` runs, Spack will check whether
 the build will fail and the install prefix will be removed.  If they
 succeed, Spack considers the build successful and keeps the prefix in
 place.
+
+.. _build-time-tests:
 
 ^^^^^^^^^^^^^^^^
 Build-time tests
