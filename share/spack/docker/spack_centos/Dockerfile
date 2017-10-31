@@ -1,13 +1,15 @@
-FROM fedora
+FROM centos
 MAINTAINER Omar Padron <omar.padron@kitware.com>
 
-ENV SPACK_ROOT=/spack \
-    FORCE_UNSAFE_CONFIGURE=1
+ENV SPACK_ROOT=/spack        \
+    FORCE_UNSAFE_CONFIGURE=1 \
+    DISTRO=centos
 
-RUN dnf update -y && \
-    dnf group install -y "C Development Tools and Libraries" && \
-    dnf install -y            \
-        @development-tools    \
+RUN yum update -y               && \
+    yum install -y epel-release && \
+    yum update -y               && \
+    yum groupinstall -y "Development Tools" && \
+    yum install -y            \
         curl                  \
         findutils             \
         gcc-c++               \
@@ -24,7 +26,7 @@ RUN dnf update -y && \
         python                \
         tcl                && \
     git clone --depth 1 git://github.com/llnl/spack.git /spack && \
-    rm -rf /spack/.git && dnf clean all
+    rm -rf /spack/.git /var/cache/yum && yum clean all
 
 RUN echo "source /usr/share/lmod/lmod/init/bash" \
     > /etc/profile.d/spack.sh

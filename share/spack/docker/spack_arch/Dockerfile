@@ -37,10 +37,13 @@ RUN echo "source /spack/share/spack/setup-env.sh" \
     >> /etc/profile.d/spack.sh
 RUN echo "source /spack/share/spack/spack-completion.bash" \
     >> /etc/profile.d/spack.sh
+
 COPY handle-ssh.sh /etc/profile.d/handle-ssh.sh
 
 RUN mkdir -p /root/.spack
 COPY modules.yaml /root/.spack/modules.yaml
+
+RUN rm -rf /root/*.*
 
 WORKDIR /root
 ENTRYPOINT ["bash"]

@@ -4,6 +4,10 @@ services:
     build: ./spack_arch
     volumes:
       - '../../..:/spack'
+  centos:
+    build: ./spack_centos
+    volumes:
+      - '../../..:/spack'
   fedora:
     build: ./spack_fedora
     volumes:
