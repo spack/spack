@@ -3023,6 +3023,13 @@ the two functions is that ``satisfies()`` tests whether spec
 constraints overlap at all, while ``in`` tests whether a spec or any
 of its dependencies satisfy the provided spec.
 
+^^^^^^^^^^^^^^^^
+Hash Calculation
+^^^^^^^^^^^^^^^^
+
+From a concretized spec, it's hash is calculated using the function
+``spec.dag_hash``. Have a look at it to see how this calculation is
+performed.
 
 .. _multimethods:
 
