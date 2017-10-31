@@ -31,15 +31,11 @@ class Macsio(CMakePackage):
     tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "http://llnl.github.io/MACSio"
+    url = "https://github.com/LLNL/MACSio/archive/1.0.tar.gz"
 
-    # NOTE: macsio-v0.9 is build with gmake and is not properly built here.
-    # url = "https://github.com/LLNL/MACSio/releases/download/v0.9/macsio-0.9.tar.gz"
-    # version('0.9', '6d4bf863c90975a3df54795c5abb9eb8f23d5aaf')
-
-    version('0.99', git='https://github.com/LLNL/MACSio.git', 
-            commit='46ef84dd1bcebb663d2d9b8fa58e48bc1cf37f68')
+    version('1.0', '90e8e00ea84af2a47bee387ad331dbde')
     version('develop', git='https://github.com/LLNL/MACSio.git',
-            branch='cmake2')
+            branch='master')
 
     variant('mpi', default=True, description="Build MPI plugin")
     variant('silo', default=True, description="Build with SILO plugin")
