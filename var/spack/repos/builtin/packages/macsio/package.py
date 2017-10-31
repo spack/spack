@@ -41,34 +41,28 @@ class Macsio(CMakePackage):
     version('develop', git='https://github.com/LLNL/MACSio.git',
             branch='cmake2')
 
-    depends_on('json-cwx')
-
     variant('mpi', default=True, description="Build MPI plugin")
-    depends_on('mpi', when="+mpi")
-
     variant('silo', default=True, description="Build with SILO plugin")
-    depends_on('silo', when="+silo")
-
-    # TODO: multi-level variants
+    # TODO: multi-level variants for hdf5
     variant('hdf5', default=False, description="Build HDF5 plugin")
-    depends_on('hdf5', when="+hdf5")
     variant('zfp', default=False, description="Build HDF5 with ZFP compression")
     variant('szip', default=False, description="Build HDF5 with SZIP compression")
-    # depends_on('hdf5+szip', when="+szip")
     variant('zlib', default=False, description="Build HDF5 with ZLIB compression")
-
-    # pdb is packaged with silo
     variant('pdb', default=False, description="Build PDB plugin")
-    depends_on('silo', when="+pdb")
-
     variant('exodus', default=False, description="Build EXODUS plugin")
-    depends_on('exodusii', when="+exodus")
-
+    variant('scr', default=False, description="Build with SCR support")
     # TODO: typhonio not in spack
     # variant('typhonio', default=False, description="Build TYPHONIO plugin")
-    # depends_on('typhonio', when="+typhonio")
 
-    variant('scr', default=False, description="Build with SCR support")
+    depends_on('json-cwx')
+    depends_on('mpi', when="+mpi")
+    depends_on('silo', when="+silo")
+    depends_on('hdf5', when="+hdf5")
+    # depends_on('hdf5+szip', when="+szip")
+    depends_on('exodusii', when="+exodus")
+    # pdb is packaged with silo
+    depends_on('silo', when="+pdb")
+    # depends_on('typhonio', when="+typhonio")
     depends_on('scr', when="+scr")
 
     def cmake_args(self):
