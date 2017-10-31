@@ -48,6 +48,8 @@ class Sw4lite(MakefilePackage):
     depends_on('lapack')
     depends_on('mpi')
 
+    parallel = False
+
     @property
     def build_targets(self):
         targets = []
@@ -81,7 +83,7 @@ class Sw4lite(MakefilePackage):
         targets.append('EXTRA_CXX_FLAGS=')
         targets.append('EXTRA_FORT_FLAGS=')
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
-        targets.append('EXTRA_LINK_FLAGS={0}'.format(lapack_blas.ld_flags))
+        targets.append('EXTRA_LINK_FLAGS={0} -lgfortran'.format(lapack_blas.ld_flags))
 
         return targets
 
