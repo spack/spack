@@ -74,6 +74,9 @@ the dependencies"""
         '--restage', action='store_true',
         help="if a partial install is detected, delete prior state")
     subparser.add_argument(
+        '--use-cache', action='store_true', dest='use_cache',
+        help="check for pre-built Spack packages in mirrors")
+    subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")
     subparser.add_argument(
@@ -410,7 +413,8 @@ def install(parser, args, **kwargs):
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty,
-        'skip_deps': skip_deps,
+        'use_cache': args.use_cache,
+        'skip_deps': skip_deps
     })
 
     if args.run_tests:
