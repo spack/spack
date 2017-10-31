@@ -56,8 +56,8 @@ class Macsio(CMakePackage):
 
     variant('exodus', default=False, description="Build EXODUS plugin")
     variant('typhonio', default=False, description="Build TYPHONIO plugin")
-    variant('scr', default=False, description="Build with SCR support")
 
+    variant('scr', default=False, description="Build with SCR support")
     depends_on('scr', when="+scr")
     depends_on('exodus', when="+exodus")
     depends_on('typhonio', when="+typhonio")
