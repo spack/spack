@@ -4,15 +4,23 @@ services:
     build: ./spack_arch
     volumes:
       - '../../..:/spack'
+    environment:
+      CUSTOM_PROMPT: "${CUSTOM_PROMPT:-0}"
   centos:
     build: ./spack_centos
     volumes:
       - '../../..:/spack'
+    environment:
+      CUSTOM_PROMPT: "${CUSTOM_PROMPT:-0}"
   fedora:
     build: ./spack_fedora
     volumes:
       - '../../..:/spack'
+    environment:
+      CUSTOM_PROMPT: "${CUSTOM_PROMPT:-0}"
   ubuntu:
     build: ./spack_ubuntu
     volumes:
       - '../../..:/spack'
+    environment:
+      CUSTOM_PROMPT: "${CUSTOM_PROMPT:-0}"
