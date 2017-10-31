@@ -84,7 +84,11 @@ class Plasma(MakefilePackage):
         if "^mkl" in self.spec:
             targets.append("MKLROOT = {0}/mkl".format(env["MKLROOT"]))
 
-        # pass BLAS library flags
-        targets.append("LIBS = {0}".format(self.spec["blas"].libs.ld_flags))
+        # some compilers do not explicitly link with -lm
+        system_libs = find_system_libraries(
+            ['libm']
+        )
+        # pass BLAS and libm library flags
+        targets.append("LIBS = {0}".format(self.spec["blas"].libs.ld_flags+' '+system_libs.ld_flags))
 
         return targets
