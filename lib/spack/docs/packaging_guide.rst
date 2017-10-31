@@ -2567,6 +2567,45 @@ if you want to run commands in that environment to test them out, you
 can use the :ref:`cmd-spack-env` command, documented
 below.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Methods for changing the Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack offers three functions which are automatically executed to change
+the environment in various situations. These can be useful for setting
+environment variables for an install procedure, or for dependents of a
+package to use. Each function is used in different situations. The links
+below go to the API documentation where details about what each function
+is for is listed.
+
+* ``setup_environment``: :meth:`spack.package.PackageBase.setup_environment`
+* ``setup_dependent_environment``: :meth:`spack.package.PackageBase.setup_dependent_environment`
+* ``setup_dependent_package``: :meth:`spack.package.PackageBase.setup_dependent_package`
+
+Two of the functions (``setup_environment`` and ``setup_dependent_environment``)
+take two arguments ``spack_env`` and ``run_env`` which are of type
+:meth:`spack.environment.EnvironmentModifications` which are used to store
+the environment modifications.
+
+To set a variable:
+
+.. code-block:: python
+
+   env.set('var_name', var_value)
+
+To prepend to a path to a variable:
+
+.. code-block:: python
+
+   env.prepend_path('var_name', path)
+
+To append to a path to a variable:
+
+.. code-block:: python
+
+   env.append_path('var_name', path)
+
+
 ^^^^^^^^^^^^^^^^^^^^^
 Failing the build
 ^^^^^^^^^^^^^^^^^^^^^
