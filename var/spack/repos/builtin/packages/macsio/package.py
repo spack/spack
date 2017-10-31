@@ -36,6 +36,8 @@ class Macsio(CMakePackage):
     # url = "https://github.com/LLNL/MACSio/releases/download/v0.9/macsio-0.9.tar.gz"
     # version('0.9', '6d4bf863c90975a3df54795c5abb9eb8f23d5aaf')
 
+    version('0.99', git='ttps://github.com/LLNL/MACSio.git', 
+            commit='46ef84dd1bcebb663d2d9b8fa58e48bc1cf37f68')
     version('develop', git='https://github.com/LLNL/MACSio.git',
             branch='cmake2')
 
