@@ -32,5 +32,7 @@ class RSegmented(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=segmented"
     url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
+    list_url = homepage
 
+    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
     version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
