@@ -25,14 +25,12 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RProxy(RPackage):
+    """Provides an extensible framework for the efficient calculation of
+       auto- and cross-proximities, along with implementations of the most
+       popular ones."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
+    homepage = "https://cran.r-project.org/package=proxy"
+    url      = "https://cran.rstudio.com/src/contrib/proxy_0.4-19.tar.gz"
     list_url = homepage
-
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('0.4-19', '279a01a1cc12ed50208c98196d78a5d7')

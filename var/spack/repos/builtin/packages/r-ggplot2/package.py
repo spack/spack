@@ -47,6 +47,6 @@ class RGgplot2(RPackage):
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-plyr@1.7.1:', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
-    depends_on('r-scales@0.4.1', type=('build', 'run'))
+    depends_on('r-scales@0.4.1:', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-lazyeval', type=('build', 'run'))

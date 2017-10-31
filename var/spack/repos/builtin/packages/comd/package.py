@@ -40,10 +40,10 @@ class Comd(MakefilePackage):
     tags = ['proxy-app', 'ecp-proxy-app']
 
     homepage = "http://www.exmatex.org/comd.html"
-    url      = "https://github.com/exmatex/CoMD/archive/v1.1.tar.gz"
+    url      = "https://github.com/ECP-copa/CoMD/archive/v1.1.tar.gz"
 
     version('1.1', '5051310a8d2c93cccba63de40bcfaa78')
-    version('develop', git='https://github.com/exmatex/CoMD.git', branch='master')
+    version('develop', git='https://github.com/ECP-copa/CoMD', branch='master')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
