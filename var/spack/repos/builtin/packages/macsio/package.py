@@ -76,9 +76,6 @@ class Macsio(CMakePackage):
         if "~mpi" in spec:
             cmake_args.append("-DENABLE_MPI=OFF")
 
-        if "+mpi" in spec:
-            cmake_args.append("-DCMAKE_CXX_COMPILER=%s" % spec["mpi"].mpicxx)
-
         if "~silo" in spec:
             cmake_args.append("-DENABLE_SILO_PLUGIN=OFF")
 
