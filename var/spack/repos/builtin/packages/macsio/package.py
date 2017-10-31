@@ -85,7 +85,7 @@ class Macsio(CMakePackage):
 
         if "+pdb" in spec:
             # pdb is a part of silo
-            cmake_args.append("-DENABLE_PDF=ON")
+            cmake_args.append("-DENABLE_PDB_PLUGIN=ON")
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
                 .format(spec['silo'].prefix))
         if "+hdf5" in spec:
