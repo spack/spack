@@ -76,7 +76,7 @@ class Xsdk(Package):
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('alquimia@develop', when='@develop')
 
-    depends_on('sundials@3.0.0-beta-2~int64+hypre', when='@0.3.0-rc1')
+    depends_on('sundials@3.0.0~int64+hypre', when='@0.3.0-rc1')
     # FIXME: #5778 %@gcc7.0: should also work?
     depends_on('plasma',when='@0.3.0-rc1 %gcc@7:')
 
