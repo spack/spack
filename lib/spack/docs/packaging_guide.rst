@@ -447,6 +447,9 @@ Alternately, you might use a hybrid release-version / date scheme.
 For example, ``@1.3.2016.08.31`` would mean the version from the
 ``1.3`` branch, as of August 31, 2016.
 
+
+.. _VersionURLs:
+
 ^^^^^^^^^^^^
 Version URLs
 ^^^^^^^^^^^^
@@ -2809,9 +2812,59 @@ special parameters to ``configure``, like
 need to supply special compiler flags depending on the compiler.  All
 of this information is available in the spec.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
-Testing spec constraints
-^^^^^^^^^^^^^^^^^^^^^^^^
+Spec objects contain a number of useful members which can be accessed from
+every concretized spec, we detail a few of them here.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installation Location (``spec.prefix``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is the prefix in which the spec is or will be installed. You can
+access common sub-directories in this prefix like ``bin`` and ``lib`` by
+access the member of the same name.
+
+.. code-block:: python
+
+   spec.prefix
+   spec.prefix.bin
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Spec Version (``spec.version``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is the version of the spec if it has been concretized. You can
+manipulate this version object as described in section :ref:`VersionURLs`.
+This is useful for install procedures which change depending on which
+version of the spec you're using.
+
+^^^^^^^^^^^^^^^^^^^^^^
+Accessing Dependencies
+^^^^^^^^^^^^^^^^^^^^^^
+
+You may need to get at some file or binary that's in the installation
+prefix of one of your dependencies. You can do that by sub-scripting
+the spec:
+
+.. code-block:: python
+
+   spec['mpi']
+
+The value in the brackets needs to be some package name, and spec
+needs to depend on that package, or the operation will fail.  For
+example, the above code will fail if the ``spec`` doesn't depend on
+``mpi``.  The value returned is itself just another ``Spec`` object,
+so you can do all the same things you would do with the package's
+own spec:
+
+.. code-block:: python
+
+   spec['mpi'].prefix.bin
+   spec['mpi'].version
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Testing spec constraints (``spec.satisfies``)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can test whether your spec is configured a certain way by using
 the ``satisfies`` method.  For example, if you want to check whether
@@ -2881,35 +2934,12 @@ the two functions is that ``satisfies()`` tests whether spec
 constraints overlap at all, while ``in`` tests whether a spec or any
 of its dependencies satisfy the provided spec.
 
-^^^^^^^^^^^^^^^^^^^^^^
-Accessing Dependencies
-^^^^^^^^^^^^^^^^^^^^^^
-
-You may need to get at some file or binary that's in the installation
-prefix of one of your dependencies. You can do that by sub-scripting
-the spec:
-
-.. code-block:: python
-
-   spec['mpi']
-
-The value in the brackets needs to be some package name, and spec
-needs to depend on that package, or the operation will fail.  For
-example, the above code will fail if the ``spec`` doesn't depend on
-``mpi``.  The value returned is itself just another ``Spec`` object,
-so you can do all the same things you would do with the package's
-own spec:
-
-.. code-block:: python
-
-   spec['mpi'].prefix.bin
-   spec['mpi'].version
 
 .. _multimethods:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 Multimethods and ``@when``
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 Spack allows you to make multiple versions of instance functions in
 packages, based on whether the package's spec satisfies particular
