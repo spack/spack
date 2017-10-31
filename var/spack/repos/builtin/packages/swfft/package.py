@@ -39,6 +39,7 @@ class Swfft(MakefilePackage):
             branch='master')
 
     depends_on('mpi')
+    depends_on('fftw')
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
