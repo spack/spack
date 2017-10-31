@@ -340,6 +340,66 @@ Whenever you add/remove/rename a command or flags for an existing command,
 make sure to update Spack's `Bash tab completion script
 <https://github.com/adamjstewart/spack/blob/develop/share/spack/spack-completion.bash>`_.
 
+-------------
+Configuration
+-------------
+
+Spack's configuration system allows the dynamic setting of variables to
+influence its operation. Knowing how to change how these configuration
+files are laid out and how to access their values is crucial to writing
+new Spack functionality.
+
+As discussed in :ref:`configuration`, Spack's configuration files are
+written in several YAML files which define a number of scopes. These are
+
+* ``compilers``
+* ``config``
+* ``mirrors``
+* ``modules``
+* ``packages``
+* ``repos``
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Accessing Configuration Settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack.config.get_config`` function is used to access information in
+a configuration scope:
+
+.. code-block:: python
+
+   config_scope = spack.config.get_config("config")
+
+The resulting object is a dictionary containing the key-value pairs stored in
+the configuration files. For instance, if the following is in a YAML file:
+
+.. code-block:: yaml
+
+   config:
+     verify_ssl: true
+
+Then to access it, use the following code:
+
+.. code-block:: python
+
+   config_scope = spack.config.get_config("config")
+   print(config_scope['verify_ssl'])
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding New Configuration Settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Occasionally, new configuration options need to be added. To do this, you
+must first add them to the YAML file definitions files which you can find
+in the directory ``lib/spack/spack/schema``. Each config scope has its own
+schema file of the same name. Each file is formatted according to the
+json schema style, and a good tutorial describing the format is
+`Here <https://spacetelescope.github.io/understanding-json-schema/basics.html>`_
+
+Once your new configuration key is added to the schema, you can add it to
+the appropriate spack configuration file in ``etc/spack/defaults`` without
+spack throwing an error.
+
 ----------
 Unit tests
 ----------
