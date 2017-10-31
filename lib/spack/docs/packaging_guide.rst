@@ -2413,6 +2413,36 @@ the install locations of dependencies, or when you need to do something differen
 depending on the version, compiler, dependencies, etc. that your package is
 built with.  These parameters give you access to this type of information.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Techniques for ad-hoc packages building systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some packages do not use common build systems or even any build system
+at all. Here are a few strategies to deal with such packages.
+
+"""""""""""""""""""""""""""""
+Packages with no build system
+"""""""""""""""""""""""""""""
+
+These packages often just need to be copied to their 'installed' location.
+In these cases, it is recommended to use the ``copy_tree`` command from
+the ``distutils.dir_util`` module.
+
+.. code-block:: python
+
+   from distutils.dir_util import copy_tree
+
+   copy_tree(".", prefix)
+
+Beware because some packages use symbolic links. In which case it should be:
+
+.. code-block:: python
+
+   from distutils.dir_util import copy_tree
+
+   copy_tree(".", prefix, preserve_symlinks=1)
+
+
 .. _install-environment:
 
 -----------------------
