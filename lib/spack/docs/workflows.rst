@@ -1254,7 +1254,7 @@ Docker for Development
 """"""""""""""""""""""
 
 For examples of how we use docker in development, see
-:ref:`_docker_for_developers`.
+:ref:`docker_for_developers`.
 
 """""""""""""""""""""""""
 Docker on Windows and OSX

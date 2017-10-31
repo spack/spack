@@ -1,12 +1,16 @@
 .. _docker_for_developers:
 
-=================================
-Using Docker for Spack Developers
-=================================
+=====================
+Docker for Developers
+=====================
 
 This guide is intended for people who want to use our prepared docker
 environments to work on developing Spack or working on spack packages. It is
 meant to serve as the companion documentation for the :ref:`packaging-guide`.
+
+--------
+Overview
+--------
 
 To get started, all you need is the latest version of ``docker`` and
 ``docker-compose``.
