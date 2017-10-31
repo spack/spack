@@ -39,6 +39,8 @@ class Macsio(CMakePackage):
     version('develop', git='https://github.com/LLNL/MACSio.git',
             branch='cmake2')
 
+    depends_on('json-cwx')
+
     variant('mpi', default=True, description="Build MPI plugin")
     variant('silo', default=True, description="Build with SILO plugin")
     variant('hdf5', default=False, description="Build HDF5 plugin")
@@ -48,7 +50,6 @@ class Macsio(CMakePackage):
     variant('scr', default=False, description="Build with SCR support")
 
     depends_on('mpi', when="+mpi")
-    depends_on('json-cwx')
     depends_on('silo', when="+silo")
     depends_on('hdf5', when="+hdf5")
     depends_on('scr', when="+scr")
