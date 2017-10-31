@@ -87,40 +87,40 @@ class Macsio(CMakePackage):
             # pdb is a part of silo
             cmake_args.append("-DENABLE_PDF=ON")
             cmake_args.append("-DWITH_SILO_PREFIX={0}"
-                               .format(spec['silo'].prefix))
+                .format(spec['silo'].prefix))
         if "+hdf5" in spec:
             cmake_args.append("-DENABLE_HDF5=ON")
             cmake_args.append("-DWITH_HDF5_PREFIX={0}"
-                               .format(spec['hdf5'].prefix))
+                .format(spec['hdf5'].prefix))
             ## TODO: Multi-level variants
             ## ZFP not in hdf5 spack package??
             # if "+zfp" in spec:
             #     cmake_args.append("-DENABLE_HDF5_ZFP")
             #     cmake_args.append("-DWITH_ZFP_PREFIX={0}"
-            #                        .format(spec['silo'].prefix))
+            #         .format(spec['silo'].prefix))
             ## SZIP is an hdf5 spack variant
             # if "+szip" in spec:
             #     cmake_args.append("-DENABLE_HDF5_SZIP")
             #     cmake_args.append("-DWITH_SZIP_PREFIX={0}"
-            #                        .format(spec['SZIP'].prefix))
+            #         .format(spec['SZIP'].prefix))
             ## ZLIB is on by default, @1.1.2
             # if "+zlib" in spec:
             #     cmake_args.append("-DENABLE_HDF5_ZLIB")
             #     cmake_args.append("-DWITH_ZLIB_PREFIX={0}"
-            #                        .format(spec['silo'].prefix))
+            #         .format(spec['silo'].prefix))
 
         ## TODO: typhonio not in spack
         # if "+typhonio" in spec:
         #     cmake_args.append("-DENABLE_TYPHONIO=ON")
         #     cmake_args.append("-DWITH_TYPHONIO_PREFIX={0}"
-        #                        .format(spec['typhonio'].prefix))
+        #         .format(spec['typhonio'].prefix))
 
         if "+exodus" in spec:
             cmake_args.append("-DENABLE_EXODUS=ON")
             cmake_args.append("-DWITH_EXODUS_PREFIX={0}"
-                               .format(spec['exodusii'].prefix))
+                .format(spec['exodusii'].prefix))
             # exodus requires netcdf
             cmake_args.append("-DWITH_NETCDF_PREFIX={0}"
-                               .format(spec['netcdf'].prefix))
+                .format(spec['netcdf'].prefix))
 
         return cmake_args
