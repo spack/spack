@@ -25,10 +25,13 @@
 from spack import *
 
 
-class Raja(CMakePackage):
-    """RAJA Parallel Framework."""
-    homepage = "http://software.llnl.gov/RAJA/"
+class RNnls(RPackage):
+    """An R interface to the Lawson-Hanson implementation of an
+    algorithm for non-negative least squares (NNLS). Also allows
+    the combination of non-negative and non-positive constraints."""
 
-    version('develop', git='https://github.com/LLNL/RAJA.git', branch="master", submodules="True")
+    homepage = "https://cran.r-project.org/package=nnls"
+    url      = "https://cran.rstudio.com/src/contrib/nnls_1.4.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/nnls"
 
-    depends_on('cmake@3.3:', type='build')
+    version('1.4', 'cdb3640120f73e0ccb6079108e0ef361')

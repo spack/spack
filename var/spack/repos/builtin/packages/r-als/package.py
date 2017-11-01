@@ -25,10 +25,20 @@
 from spack import *
 
 
-class Raja(CMakePackage):
-    """RAJA Parallel Framework."""
-    homepage = "http://software.llnl.gov/RAJA/"
+class RAls(RPackage):
+    """Alternating least squares is often used to resolve components
+    contributing to data with a bilinear structure; the basic
+    technique may be extended to alternating constrained least squares.
+    Commonly applied constraints include unimodality, non-negativity,
+    and normalization of components. Several data matrices may be
+    decomposed simultaneously by assuming that one of the two matrices
+    in the bilinear decomposition is shared between datasets."""
 
-    version('develop', git='https://github.com/LLNL/RAJA.git', branch="master", submodules="True")
+    homepage = "https://cran.r-project.org/package=ALS"
+    url      = "https://cran.rstudio.com/src/contrib/ALS_0.0.6.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/ALS"
 
-    depends_on('cmake@3.3:', type='build')
+    version('0.0.6', 'b72d97911e8ab7e4f8aed1a710b3d62d')
+
+    depends_on('r-iso', type=('build', 'run'))
+    depends_on('r-nnls', type=('build', 'run'))

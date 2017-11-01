@@ -25,10 +25,12 @@
 from spack import *
 
 
-class Raja(CMakePackage):
-    """RAJA Parallel Framework."""
-    homepage = "http://software.llnl.gov/RAJA/"
+class RIso(RPackage):
+    """Linear order and unimodal order (univariate) isotonic regression;
+    bivariate isotonic regression with linear order on both variables."""
 
-    version('develop', git='https://github.com/LLNL/RAJA.git', branch="master", submodules="True")
+    homepage = "https://cran.r-project.org/package=Iso"
+    url      = "https://cran.rstudio.com/src/contrib/Iso_0.0-17.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/Iso"
 
-    depends_on('cmake@3.3:', type='build')
+    version('0.0-17', 'bf99821efb6a44fa75fdbf5e5c4c91e4')
