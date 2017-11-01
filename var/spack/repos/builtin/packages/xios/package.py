@@ -43,10 +43,14 @@ class Xios(Package):
             description='Build for debugging, development or production')
     # NOTE: oasis coupler could be supported with a variant
 
+    patch('bld_limit_extern.patch', when='%gcc@7:')
+
     depends_on('netcdf+mpi')
     depends_on('netcdf-fortran^netcdf+mpi')
     depends_on('hdf5+mpi')
     depends_on('mpi')
+    depends_on('boost', when='%gcc@7:')
+    depends_on('blitz', when='%gcc@7:')
     depends_on('perl', type='build')
     depends_on('perl-uri-escape', type='build')
     depends_on('gmake', type='build')
