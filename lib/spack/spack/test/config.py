@@ -44,7 +44,6 @@ a_comps = {
                 "f77": None,
                 "fc": None
             },
-            'modules': None,
             'spec': 'gcc@4.7.3',
             'operating_system': 'CNL10'
         }},
@@ -55,7 +54,6 @@ a_comps = {
                 "f77": 'gfortran',
                 "fc": 'gfortran'
             },
-            'modules': None,
             'spec': 'gcc@4.5.0',
             'operating_system': 'CNL10'
         }},
@@ -70,7 +68,6 @@ a_comps = {
                 "cppflags": "-O0 -fpic",
                 "fflags": "-f77",
             },
-            'modules': None,
             'spec': 'gcc@4.2.2',
             'operating_system': 'CNL10'
         }},
@@ -80,7 +77,6 @@ a_comps = {
                 "cxx": "<overwritten>",
                 "f77": '<overwritten>',
                 "fc": '<overwritten>'},
-            'modules': None,
             'spec': 'clang@3.3',
             'operating_system': 'CNL10'
         }}
@@ -96,7 +92,6 @@ b_comps = {
                 "f77": None,
                 "fc": None
             },
-            'modules': None,
             'spec': 'icc@10.0',
             'operating_system': 'CNL10'
         }},
@@ -107,7 +102,6 @@ b_comps = {
                 "f77": 'ifort',
                 "fc": 'ifort'
             },
-            'modules': None,
             'spec': 'icc@11.1',
             'operating_system': 'CNL10'
         }},
@@ -122,7 +116,6 @@ b_comps = {
                 "cppflags": "-O3",
                 "fflags": "-f77rtl",
             },
-            'modules': None,
             'spec': 'icc@12.3',
             'operating_system': 'CNL10'
         }},
@@ -132,7 +125,6 @@ b_comps = {
                 "cxx": "<overwritten>",
                 "f77": '<overwritten>',
                 "fc": '<overwritten>'},
-            'modules': None,
             'spec': 'clang@3.3',
             'operating_system': 'CNL10'
         }}
