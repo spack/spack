@@ -76,7 +76,7 @@ class Opencv(CMakePackage):
     variant('tiff', default=False, description='Include TIFF support')
     variant('zlib', default=False, description='Build zlib from source')
 
-    depends_on('eigen', when='+eigen', type='build')
+    depends_on('eigen~mpfr', when='+eigen', type='build')
 
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
