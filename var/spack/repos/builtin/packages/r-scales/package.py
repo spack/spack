@@ -30,8 +30,10 @@ class RScales(RPackage):
     automatically determining breaks and labels for axes and legends."""
 
     homepage = "https://github.com/hadley/scales"
-    url      = "https://cran.r-project.org/src/contrib/scales_0.4.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/scales_0.5.0.tar.gz"
+    list_url = "https://cran.r-project.org/package=scales"
 
+    version('0.5.0', '435f6bd826c5cf8df703ffb8a6750fd1')
     version('0.4.1', '3fb2218866a7fe4c1f6e66790876f85a')
     version('0.4.0', '7b5602d9c55595901192248bca25c099')
 
@@ -41,3 +43,5 @@ class RScales(RPackage):
     depends_on('r-munsell', type=('build', 'run'))
     depends_on('r-labeling', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'))
+    depends_on('r-viridislite', type=('build', 'run'))

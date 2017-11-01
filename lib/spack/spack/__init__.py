@@ -90,7 +90,7 @@ from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
 from spack.util.path import canonicalize_path
-
+from spack.package_prefs import PackageTesting
 
 #-----------------------------------------------------------------------------
 # Initialize various data structures & objects at the core of Spack.
@@ -134,6 +134,9 @@ misc_cache_path = canonicalize_path(
 misc_cache = FileCache(misc_cache_path)
 
 
+binary_cache_retrieved_specs = set()
+
+
 #: Directories where to search for templates
 template_dirs = spack.config.get_config('config')['template_dirs']
 template_dirs = [canonicalize_path(x) for x in template_dirs]
@@ -158,7 +161,8 @@ dirty = _config.get('dirty', False)
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
 
-package_testing = spack.package_prefs.PackageTesting()
+# Needed for test dependencies
+package_testing = PackageTesting()
 
 
 #-----------------------------------------------------------------------------

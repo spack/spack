@@ -49,8 +49,8 @@ from six import iteritems
 from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
-from llnl.util.lock import *
+from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.lock import Lock, WriteTransaction, ReadTransaction
 
 import spack.store
 import spack.repository
@@ -491,7 +491,7 @@ class Database(object):
 
                 self._check_ref_counts()
 
-            except:
+            except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
                 raise
@@ -544,7 +544,7 @@ class Database(object):
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
             os.rename(temp_file, self._index_path)
-        except:
+        except BaseException:
             # Clean up temp file if something goes wrong.
             if os.path.exists(temp_file):
                 os.remove(temp_file)

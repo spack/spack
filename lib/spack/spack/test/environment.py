@@ -47,7 +47,6 @@ def test_inspect_path(tmpdir):
         '': ['CMAKE_PREFIX_PATH']
     }
 
-    tmpdir.chdir()
     tmpdir.mkdir('bin')
     tmpdir.mkdir('lib')
     tmpdir.mkdir('include')
