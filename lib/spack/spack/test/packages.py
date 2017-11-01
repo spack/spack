@@ -28,7 +28,7 @@ import pytest
 from llnl.util.filesystem import join_path
 from spack.repository import Repo
 from spack.util.naming import mod_to_class
-from spack.spec import *
+from spack.spec import Spec
 
 
 @pytest.mark.usefixtures('config', 'builtin_mock')

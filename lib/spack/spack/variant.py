@@ -592,10 +592,9 @@ def substitute_abstract_variants(spec):
         spec: spec on which to operate the substitution
     """
     for name, v in spec.variants.items():
-        pkg_cls = type(spec.package)
-        pkg_variant = spec.package.variants[name]
+        pkg_variant = spec.package_class.variants[name]
         new_variant = pkg_variant.make_variant(v._original_value)
-        pkg_variant.validate_or_raise(new_variant, pkg_cls)
+        pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
 
 

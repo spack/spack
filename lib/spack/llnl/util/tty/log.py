@@ -166,7 +166,7 @@ def _file_descriptors_work(*streams):
         for stream in streams:
             stream.fileno()
         return True
-    except:
+    except BaseException:
         return False
 
 
@@ -310,7 +310,7 @@ class log_output(object):
             # need to pass this b/c multiprocessing closes stdin in child.
             try:
                 input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
-            except:
+            except BaseException:
                 input_stream = None  # just don't forward input if this fails
 
             self.process = multiprocessing.Process(
@@ -483,7 +483,7 @@ class log_output(object):
                             force_echo = True
                         if xoff in controls:
                             force_echo = False
-        except:
+        except BaseException:
             tty.error("Exception occurred in writer daemon!")
             traceback.print_exc()
 

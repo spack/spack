@@ -29,9 +29,11 @@ class RGridextra(RPackage):
     """Provides a number of user-level functions to work with "grid" graphics,
     notably to arrange multiple grid-based plots on a page, and draw tables."""
 
-    homepage = "https://github.com/baptiste/gridextra"
+    homepage = "https://cran.r-project.org/package=gridExtra"
     url      = "https://cran.r-project.org/src/contrib/gridExtra_2.2.1.tar.gz"
+    list_url = homepage
 
+    version('2.3', '01e0ea88610756a0fd3b260e83c9bd43')
     version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')
 
     depends_on('r-gtable', type=('build', 'run'))

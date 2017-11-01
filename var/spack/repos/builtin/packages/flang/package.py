@@ -35,18 +35,20 @@ class Flang(CMakePackage):
     version('develop', git='https://github.com/flang-compiler/flang', branch='master')
 
     depends_on(
-        "llvm+clang",
-        patches=patch('https://github.com/llvm-mirror/clang/pull/33.diff',
+            "llvm+clang@4.0.1,5.0.0",
+        patches=[
+            patch('https://github.com/llvm-mirror/clang/pull/33.diff',
                       sha256='e46d7ab305e5e95c51f4656d9b52058143cd85d859b312b3c80e93a02d54b4a5',
-                      when='@4.0.1', level=1, working_dir='tools/clang'))
-
-    def patch(self):
-        # Don't use -Werror
-        # https://github.com/flang-compiler/flang/pull/85
-        filter_file(r'-Werror', '', 'CMakeLists.txt')
+                      when='@4.0.1', level=1, working_dir='tools/clang'),
+            patch('https://github.com/llvm-mirror/clang/pull/35.diff',
+                      sha256='7f39555783993f78b75c380ca5ef167c1d8b88cc75c6542f6c94e0b6acfb7c5d',
+                      when='@5.0.0', level=1, working_dir='tools/clang')
+        ]
+    )
 
     def cmake_args(self):
         options = [
+            '-DWITH_WERROR=OFF',
             '-DCMAKE_C_COMPILER=%s' % os.path.join(
                 self.spec['llvm'].prefix.bin, 'clang'),
             '-DCMAKE_CXX_COMPILER=%s' % os.path.join(

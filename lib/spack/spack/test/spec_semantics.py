@@ -26,8 +26,10 @@ import spack.architecture
 import itertools
 import pytest
 
-from spack.spec import *
-from spack.variant import *
+from spack.spec import Spec, UnsatisfiableSpecError
+from spack.spec import substitute_abstract_variants, parse_anonymous_spec
+from spack.variant import InvalidVariantValueError
+from spack.variant import MultipleValuesInExclusiveVariantError
 
 
 def target_factory(spec_string, target_concrete):

@@ -62,15 +62,15 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import *
+from llnl.util.filesystem import join_path, mkdirp, install, install_tree
 
 import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
-from spack.util.environment import *
+from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
-from spack.util.log_parse import *
+from spack.util.log_parse import parse_log_events, make_log_context
 
 
 #
@@ -519,7 +519,7 @@ def setup_package(pkg, dirty):
     load_external_modules(pkg)
 
 
-def fork(pkg, function, dirty):
+def fork(pkg, function, dirty, fake):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -530,6 +530,7 @@ def fork(pkg, function, dirty):
             process.
         dirty (bool): If True, do NOT clean the environment before
             building.
+        fake (bool): If True, skip package setup b/c it's not a real build
 
     Usage::
 
@@ -557,7 +558,8 @@ def fork(pkg, function, dirty):
             sys.stdin = input_stream
 
         try:
-            setup_package(pkg, dirty=dirty)
+            if not fake:
+                setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
         except StopIteration as e:
@@ -566,7 +568,7 @@ def fork(pkg, function, dirty):
             tty.msg(e.message)
             child_pipe.send(None)
 
-        except:
+        except BaseException:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
 
@@ -676,11 +678,11 @@ def get_package_context(traceback, context=3):
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
-    l = frame.f_lineno - start
-    start_ctx = max(0, l - context)
-    sourcelines = sourcelines[start_ctx:l + context + 1]
+    fl = frame.f_lineno - start
+    start_ctx = max(0, fl - context)
+    sourcelines = sourcelines[start_ctx:fl + context + 1]
     for i, line in enumerate(sourcelines):
-        is_error = start_ctx + i == l
+        is_error = start_ctx + i == fl
         mark = ">> " if is_error else "   "
         marked = "  %s%-6d%s" % (mark, start_ctx + i, line.rstrip())
         if is_error:

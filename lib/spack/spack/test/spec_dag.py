@@ -31,7 +31,7 @@ import spack.architecture
 import spack.package
 
 from spack.spec import Spec
-from spack.dependency import *
+from spack.dependency import all_deptypes, Dependency, canonical_deptype
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 from spack.test.concretize_preferences import concretize_scope  # NOQA: ignore=F401

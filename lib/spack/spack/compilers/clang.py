@@ -25,13 +25,14 @@
 import re
 import os
 import sys
-import spack
-import spack.compiler as cpr
-from spack.compiler import *
-from spack.util.executable import *
-import llnl.util.tty as tty
-from spack.version import ver
 from shutil import copytree, ignore_patterns
+
+import llnl.util.tty as tty
+
+import spack
+from spack.compiler import Compiler, _version_cache
+from spack.util.executable import Executable
+from spack.version import ver
 
 
 class Clang(Compiler):
@@ -138,7 +139,7 @@ class Clang(Compiler):
             Target: x86_64-apple-darwin15.2.0
             Thread model: posix
         """
-        if comp not in cpr._version_cache:
+        if comp not in _version_cache:
             compiler = Executable(comp)
             output = compiler('--version', output=str, error=str)
 
@@ -153,9 +154,9 @@ class Clang(Compiler):
                 if match:
                     ver = match.group(1)
 
-            cpr._version_cache[comp] = ver
+            _version_cache[comp] = ver
 
-        return cpr._version_cache[comp]
+        return _version_cache[comp]
 
     def _find_full_path(self, path):
         basename = os.path.basename(path)
@@ -202,7 +203,32 @@ class Clang(Compiler):
             return
 
         xcode_select = Executable('xcode-select')
+
+        # Get the path of the active developer directory
         real_root = xcode_select('--print-path', output=str).strip()
+
+        # The path name can be used to determine whether the full Xcode suite
+        # or just the command-line tools are installed
+        if real_root.endswith('Developer'):
+            # The full Xcode suite is installed
+            pass
+        else:
+            if real_root.endswith('CommandLineTools'):
+                # Only the command-line tools are installed
+                msg  = 'It appears that you have the Xcode command-line tools '
+                msg += 'but not the full Xcode suite installed.\n'
+
+            else:
+                # Xcode is not installed
+                msg  = 'It appears that you do not have Xcode installed.\n'
+
+            msg += 'In order to use Spack to build the requested application, '
+            msg += 'you need the full Xcode suite. It can be installed '
+            msg += 'through the App Store. Make sure you launch the '
+            msg += 'application and accept the license agreement.\n'
+
+            raise OSError(msg)
+
         real_root = os.path.dirname(os.path.dirname(real_root))
         developer_root = os.path.join(spack.stage_path,
                                       'xcode-select',

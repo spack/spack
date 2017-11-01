@@ -73,6 +73,8 @@ class Llvm(CMakePackage):
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant('python', default=False, description="Install python bindings")
+    extends('python', when='+python')
 
     # Build dependency
     depends_on('cmake@3.4.3:', type='build')
@@ -166,6 +168,21 @@ class Llvm(CMakePackage):
                 'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+            }
+        },
+        {
+            'version': '5.0.0',
+            'md5': '5ce9c5ad55243347ea0fdb4c16754be0',
+            'resources': {
+                'compiler-rt': 'da735894133589cbc6052c8ef06b1230',
+                'openmp': '8be33c0f0a7ed3aab42be2f63988913d',
+                'polly': 'dcbd08450e895a42f3986e2fe6524c92',
+                'libcxx': 'a39241a3c9b4d2b7ce1246b9f527b400',
+                'libcxxabi': '0158528a5a0ae1c74821bae2195ea782',
+                'cfe': '699c448c6d6d0edb693c87beb1cc8c6e',
+                'clang-tools-extra': '0cda05d1a61becb393eb63746963d7f5',
+                'lldb': '8de19973d044ca2cfe325d4625a5cfef',
+                'libunwind': '98fb2c677068c6f36727fb1d5397bca3',
             }
         },
         {
@@ -375,7 +392,10 @@ class Llvm(CMakePackage):
                                '-DLLVM_TOOL_LLDB_BUILD:Bool=OFF'])
         if '+internal_unwind' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=OFF')
-        if '+libcxx' not in spec:
+        if '+libcxx' in spec:
+            if spec.satisfies('@3.9.0:'):
+                cmake_args.append('-DCLANG_DEFAULT_CXX_STDLIB=libc++')
+        else:
             cmake_args.append('-DLLVM_EXTERNAL_LIBCXX_BUILD:Bool=OFF')
             cmake_args.append('-DLLVM_EXTERNAL_LIBCXXABI_BUILD:Bool=OFF')
         if '+compiler-rt' not in spec:
@@ -411,5 +431,10 @@ class Llvm(CMakePackage):
 
     @run_after('install')
     def post_install(self):
+        if '+clang' in self.spec and '+python' in self.spec:
+            install_tree(
+                'tools/clang/bindings/python/clang',
+                join_path(site_packages_dir, 'clang'))
+
         with working_dir(self.build_directory):
             install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))
