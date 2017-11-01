@@ -77,8 +77,7 @@ class Xsdk(Package):
     depends_on('alquimia@develop', when='@develop')
 
     depends_on('sundials@3.0.0~int64+hypre', when='@0.3.0-rc1')
-    # FIXME: #5778 %@gcc7.0: should also work?
-    depends_on('plasma',when='@0.3.0-rc1 %gcc@7:')
+    depends_on('plasma',when='@0.3.0-rc1 %gcc@4.9:')
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
