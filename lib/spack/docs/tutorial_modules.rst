@@ -1535,7 +1535,7 @@ it's ``netlib-scalapack``:
             SLURM_MPI_TYPE: pmi2
             OMPI_MCA_btl_openib_warn_default_gid_prefix: '0'
       netlib-scalapack:
-        template: 'group-specific.lua'
+        template: 'group-restricted.lua'
 
 If we regenerate the module files one last time:
 
