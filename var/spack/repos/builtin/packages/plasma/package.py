@@ -62,7 +62,7 @@ class Plasma(MakefilePackage):
         make_inc = FileFilter("make.inc")
 
         ld_flags = self.spec["lapack"].libs.ld_flags + " " + \
-          self.spec["blas"].libs.ld_flags
+            self.spec["blas"].libs.ld_flags
 
         if "^mkl" not in spec:
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
@@ -107,7 +107,7 @@ class Plasma(MakefilePackage):
 
         # pass LAPACK, BLAS, and libm library flags
         targets.append("LIBS = {0} {1} {2} {3}".format(
-          self.spec["lapack"].libs.ld_flags,
-          self.spec["blas"].libs.ld_flags, ld_flags, system_libs.ld_flags))
+            self.spec["lapack"].libs.ld_flags,
+            self.spec["blas"].libs.ld_flags, ld_flags, system_libs.ld_flags))
 
         return targets

@@ -22,26 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
 
 
-class DocbookXml(Package):
-    """Docbook DTD XML files."""
-    homepage = "http://www.oasis-open.org/docbook"
-    url = "http://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip"
+class RPtw(RPackage):
+    """Parametric Time Warping aligns patterns, i.e. it aims to put
+    corresponding features at the same locations. The algorithm
+    searches for an optimal polynomial describing the warping. It is
+    possible to align one sample to a reference, several samples to
+    the same reference, or several samples to several references.
+    One can choose between calculating individual warpings, or one
+    global warping for a set of samples and one reference. Two
+    optimization criteria are implemented: RMS (Root Mean Square
+    error) and WCC (Weighted Cross Correlation). Both warping of
+    peak profiles and of peak lists are supported."""
 
-    version('4.5', '03083e288e87a7e829e437358da7ef9e')
+    homepage = "https://cran.r-project.org/package=ptw"
+    url      = "https://cran.rstudio.com/src/contrib/ptw_1.9-12.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/ptw"
 
-    def install(self, spec, prefix):
-        for item in os.listdir('.'):
-            src = os.path.abspath(item)
-            dst = os.path.join(prefix, item)
-            if os.path.isdir(item):
-                install_tree(src, dst, symlinks=True)
-            else:
-                install(src, dst)
+    version('1.9-12', 'ddff887752d789ea72db3ee235ae7c67')
 
-    def setup_environment(self, spack_env, run_env):
-        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
-        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+    depends_on('r-nloptr', type=('build', 'run'))
