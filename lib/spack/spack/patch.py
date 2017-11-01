@@ -56,7 +56,7 @@ class Patch(object):
     """
 
     @staticmethod
-    def create(pkg, path_or_url, level=1, **kwargs):
+    def create(pkg, path_or_url, level=1, working_dir=".", **kwargs):
         """
         Factory method that creates an instance of some class derived from
         Patch
@@ -65,23 +65,25 @@ class Patch(object):
             pkg: package that needs to be patched
             path_or_url: path or url where the patch is found
             level: patch level (default 1)
+            working_dir (str): dir to change to before applying (default '.')
 
         Returns:
             instance of some Patch class
         """
         # Check if we are dealing with a URL
         if '://' in path_or_url:
-            return UrlPatch(path_or_url, level, **kwargs)
+            return UrlPatch(path_or_url, level, working_dir, **kwargs)
         # Assume patches are stored in the repository
-        return FilePatch(pkg, path_or_url, level)
+        return FilePatch(pkg, path_or_url, level, working_dir)
 
-    def __init__(self, path_or_url, level):
+    def __init__(self, path_or_url, level, working_dir):
         # Check on level (must be an integer > 0)
         if not isinstance(level, int) or not level >= 0:
             raise ValueError("Patch level needs to be a non-negative integer.")
         # Attributes shared by all patch subclasses
         self.path_or_url = path_or_url
         self.level = level
+        self.working_dir = working_dir
         # self.path needs to be computed by derived classes
         # before a call to apply
         self.path = None
@@ -99,13 +101,14 @@ class Patch(object):
         patch = which("patch", required=True)
         with working_dir(stage.source_path):
             # Use -N to allow the same patches to be applied multiple times.
-            patch('-s', '-p', str(self.level), '-i', self.path)
+            patch('-s', '-p', str(self.level), '-i', self.path,
+                  "-d", self.working_dir)
 
 
 class FilePatch(Patch):
     """Describes a patch that is retrieved from a file in the repository"""
-    def __init__(self, pkg, path_or_url, level):
-        super(FilePatch, self).__init__(path_or_url, level)
+    def __init__(self, pkg, path_or_url, level, working_dir):
+        super(FilePatch, self).__init__(path_or_url, level, working_dir)
 
         pkg_dir = os.path.dirname(absolute_path_for_package(pkg))
         self.path = os.path.join(pkg_dir, path_or_url)
@@ -123,8 +126,8 @@ class FilePatch(Patch):
 
 class UrlPatch(Patch):
     """Describes a patch that is retrieved from a URL"""
-    def __init__(self, path_or_url, level, **kwargs):
-        super(UrlPatch, self).__init__(path_or_url, level)
+    def __init__(self, path_or_url, level, working_dir, **kwargs):
+        super(UrlPatch, self).__init__(path_or_url, level, working_dir)
         self.url = path_or_url
 
         self.archive_sha256 = None
@@ -186,7 +189,8 @@ class UrlPatch(Patch):
             # for a compressed archive, Need to check the patch sha256 again
             # and the patch is in a directory, not in the same place
             if self.archive_sha256:
-                if not Checker(self.sha256).check(self.path):
+                checker = Checker(self.sha256)
+                if not checker.check(self.path):
                     raise fs.ChecksumError(
                         "sha256 checksum failed for %s" % self.path,
                         "Expected %s but got %s" % (self.sha256, checker.sum))

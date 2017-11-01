@@ -35,10 +35,11 @@ class RAnnaffy(RPackage):
     using various criteria."""
 
     homepage = "https://www.bioconductor.org/packages/annaffy/"
-    url = "https://www.bioconductor.org/packages/release/bioc/src/contrib/annaffy_1.48.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/annaffy"
 
-    version('1.48.0', 'c51219a222b377403fe4bc08a6c57e7f')
+    version('1.48.0', git='https://git.bioconductor.org/packages/annaffy', commit='89a03c64ac9df5d963ed60b87893a3fffa6798a0')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.48.0')
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-go-db', type=('build', 'run'))
     depends_on('r-kegg-db', type=('build', 'run'))

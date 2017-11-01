@@ -34,7 +34,7 @@ class Adios2(CMakePackage):
     version('develop', branch='master',
             git='https://github.com/ornladios/ADIOS2.git')
 
-    version('2.0.0', '019115e5c6ac28bd0f4201f590f5d994')
+    version('2.0.0', 'da39655b51745d2c5f3f1e46c5abc4d7')
 
     variant('shared', default=True,
             description='Also build shared libraries')

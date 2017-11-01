@@ -1346,6 +1346,36 @@ It's generally easier to just structure your patch file so that it
 applies cleanly with ``-p1``, but if you're using a patch you didn't
 create yourself, ``level`` can be handy.
 
+"""""""""""""""
+``working_dir``
+"""""""""""""""
+
+This tells spack where to run the ``patch`` command.  By default,
+the working directory is the source path of the stage (``.``).
+However, sometimes patches are made with respect to a subdirectory
+and this is where the working directory comes in handy. Internally,
+the working directory is given to ``patch`` via the ``-d`` option.
+Let's take the example patch from above and assume for some reason,
+it can only be downloaded in the following form:
+
+.. code-block:: diff
+   :linenos:
+
+   --- a/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 12:05:44.806417000 -0800
+   +++ b/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 11:53:03.295622000 -0800
+   @@ -8,7 +8,7 @@
+     *   Copyright (C) 2008 Sun Microsystems, Lustre group
+     \*/
+
+   -#define _XOPEN_SOURCE 600
+   +//#define _XOPEN_SOURCE 600
+    #include <stdlib.h>
+    #include <malloc.h>
+    #include "ad_lustre.h"
+
+Hence, the patch needs to applied in the ``src/mpi`` subdirectory, and the
+``working_dir='src/mpi'`` option would exactly do that.
+
 ^^^^^^^^^^^^^^^^^^^^^
 Patch functions
 ^^^^^^^^^^^^^^^^^^^^^
@@ -2583,6 +2613,11 @@ passes those flags to the relevant environment variables (``CFLAGS``,
 ``CXXFLAGS``, etc) that are respected by the build system. For all other
 packages, the default behavior is to inject the flags directly into the
 compiler commands using Spack's compiler wrappers.
+
+.. warning::
+
+   The flag handling methods described in this section are in beta.
+   The exact semantics are liable to change to improve usability.
 
 Individual packages can override the default behavior for the flag
 handling.  Packages can define a ``default_flag_handler`` method that

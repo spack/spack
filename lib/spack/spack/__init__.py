@@ -90,7 +90,7 @@ from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
 from spack.util.path import canonicalize_path
-
+from spack.package_prefs import PackageTesting
 
 #-----------------------------------------------------------------------------
 # Initialize various data structures & objects at the core of Spack.
@@ -134,6 +134,9 @@ misc_cache_path = canonicalize_path(
 misc_cache = FileCache(misc_cache_path)
 
 
+binary_cache_retrieved_specs = set()
+
+
 #: Directories where to search for templates
 template_dirs = spack.config.get_config('config')['template_dirs']
 template_dirs = [canonicalize_path(x) for x in template_dirs]
@@ -158,7 +161,8 @@ dirty = _config.get('dirty', False)
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
 
-package_testing = spack.package_prefs.PackageTesting()
+# Needed for test dependencies
+package_testing = PackageTesting()
 
 
 #-----------------------------------------------------------------------------
@@ -177,6 +181,7 @@ __all__ = []
 
 from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
+from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.qmake import QMakePackage
@@ -193,6 +198,7 @@ __all__ += [
     'on_package_attributes',
     'Package',
     'MakefilePackage',
+    'AspellDictPackage',
     'AutotoolsPackage',
     'CMakePackage',
     'QMakePackage',

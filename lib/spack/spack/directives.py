@@ -60,7 +60,7 @@ import spack
 import spack.error
 import spack.spec
 import spack.url
-from spack.dependency import *
+from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.patch import Patch
 from spack.resource import Resource
@@ -410,7 +410,7 @@ def provides(*specs, **kwargs):
 
 
 @directive('patches')
-def patch(url_or_filename, level=1, when=None, **kwargs):
+def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
     """Packages can declare patches to apply to source.  You can
     optionally provide a when spec to indicate that a particular
     patch should only be applied when the package's spec meets
@@ -421,6 +421,7 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
         level (int): patch level (as in the patch shell command)
         when (Spec): optional anonymous spec that specifies when to apply
             the patch
+        working_dir (str): dir to change to before applying
 
     Keyword Args:
         sha256 (str): sha256 sum of the patch, used to verify the patch
@@ -437,7 +438,8 @@ def patch(url_or_filename, level=1, when=None, **kwargs):
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
         cur_patches.append(
-            Patch.create(pkg_or_dep, url_or_filename, level, **kwargs))
+            Patch.create(pkg_or_dep, url_or_filename, level,
+                         working_dir, **kwargs))
 
     return _execute_patch
 

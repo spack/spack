@@ -1,0 +1,16 @@
+--- Makefile.orig	2017-10-19 16:22:27.589185696 -0700
++++ Makefile	2017-10-19 16:23:26.094227199 -0700
+@@ -25,10 +25,10 @@
+ bindir = $(prefix)/bin
+ 
+ INC =
+-GCC_PREFIX = $(shell dirname `which gcc`)
++GCC_PREFIX =
+ GCC_SUFFIX =
+-CC ?= $(GCC_PREFIX)/gcc$(GCC_SUFFIX)
+-CPP ?= $(GCC_PREFIX)/g++$(GCC_SUFFIX)
++CC = cc
++CPP = c++
+ CXX ?= $(CPP)
+ HEADERS = $(wildcard *.h)
+ BOWTIE_MM = 1

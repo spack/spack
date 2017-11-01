@@ -43,7 +43,7 @@ class Opencv(CMakePackage):
     url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
 
     version('master', git="https://github.com/opencv/opencv.git", branch="master")
-    version('3.3.0',    'eeedaec282a70aa2ea1d5152a372c990')
+    version('3.3.0',    '98a4e4c6f23ec725e808a891dc11eec4')
     version('3.2.0',    'a43b65488124ba33dde195fea9041b70')
     version('3.1.0',    '70e1dd07f0aa06606f1bc0e3fa15abd3')
     version('2.4.13.2', 'fe52791ce523681a67036def4c25261b')
@@ -76,7 +76,7 @@ class Opencv(CMakePackage):
     variant('tiff', default=False, description='Include TIFF support')
     variant('zlib', default=False, description='Build zlib from source')
 
-    depends_on('eigen', when='+eigen', type='build')
+    depends_on('eigen~mpfr', when='+eigen', type='build')
 
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
