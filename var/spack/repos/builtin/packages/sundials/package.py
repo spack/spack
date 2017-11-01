@@ -195,6 +195,13 @@ class Sundials(CMakePackage):
     depends_on('superlu-mt+blas', when='+superlu-mt')
 
     # ==========================================================================
+    # Patches
+    # ==========================================================================
+
+    # remove OpenMP header file and function from hypre vector test code
+    patch('test_nvector_parhyp.patch', when='@2.7.0:')
+
+    # ==========================================================================
     # SUNDIALS Settings
     # ==========================================================================
 

@@ -51,8 +51,8 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('3.3.2-rc3', git='https://github.com/mfem/mfem',
-            tag='v3.3.2-rc3')
+    version('3.3.2-rc4', git='https://github.com/mfem/mfem',
+            tag='v3.3.2-rc4')
 
     version('laghos-v1.0', git='https://github.com/mfem/mfem',
             tag='laghos-v1.0')
@@ -126,7 +126,6 @@ class Mfem(Package):
     depends_on('petsc@3.8:', when='+petsc')
 
     depends_on('mpfr', when='+mpfr')
-    depends_on('cmake', when='^metis@5:', type='build')
     depends_on('netcdf', when='@3.2: +netcdf')
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
@@ -134,14 +133,6 @@ class Mfem(Package):
     depends_on('zlib', when='+gzstream')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
-
-    def check_variants(self, spec):
-        if 'metis@5:' in spec and '%clang' in spec and (
-                '^cmake %gcc' not in spec):
-            raise InstallError('To work around CMake bug with clang, must ' +
-                               'build mfem with mfem[+variants] %clang ' +
-                               '^cmake %gcc to force CMake to build with gcc')
-        return
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
@@ -151,7 +142,6 @@ class Mfem(Package):
     # configuration options. So, don't use CMake
     #
     def install(self, spec, prefix):
-        self.check_variants(spec)
 
         def yes_no(varstr):
             return 'YES' if varstr in self.spec else 'NO'

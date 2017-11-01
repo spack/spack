@@ -43,12 +43,15 @@ class Xsdk(Package):
     version('0.3.0-rc1', 'a52dc710c744afa0b71429b8ec9425bc', preferred=True)
     version('xsdk-0.2.0', 'a52dc710c744afa0b71429b8ec9425bc')
 
+    variant('debug', default=False, description='Compile in debug mode')
+    variant('cuda', default=False, description='Enable CUDA dependent packages')
+
     depends_on('hypre@2.12.1~internal-superlu', when='@0.3.0-rc1')
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0')
     depends_on('hypre@develop~internal-superlu', when='@develop')
 
-    depends_on('mfem@3.3.2-rc3+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.3.0-rc1')
-    depends_on('mfem@3.3.2-rc3+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
+    depends_on('mfem@3.3.2-rc4+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@0.3.0-rc1')
+    depends_on('mfem@3.3.2-rc4+mpi+hypre+superlu-dist+petsc+sundials+examples+miniapps', when='@develop')
 
     depends_on('superlu-dist@5.2.2', when='@0.3.0-rc1')
     depends_on('superlu-dist@xsdk-0.2.0', when='@xsdk-0.2.0')
@@ -77,15 +80,13 @@ class Xsdk(Package):
     depends_on('alquimia@develop', when='@develop')
 
     depends_on('sundials@3.0.0~int64+hypre', when='@0.3.0-rc1')
-    # FIXME: #5778 %@gcc7.0: should also work?
-    depends_on('plasma',when='@0.3.0-rc1 %gcc@7:')
+    depends_on('plasma',when='@0.3.0-rc1 %gcc@4.9:')
+    depends_on('magma',when='@0.3.0-rc1 +cuda')
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
     # depends_on('xsdktrilinos@xsdk-0.2.0', when='@xsdk-0.2.0')
     # depends_on('xsdktrilinos@develop', when='@develop')
-
-    variant('debug', default=False, description='Compile in debug mode')
 
     # How do we propagate debug flag to all depends on packages ?
     # If I just do spack install xsdk+debug will that propogate it down?

@@ -65,4 +65,9 @@ class Magma(CMakePackage):
                     '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77
                 ])
 
+        if spec.satisfies('^cuda@9.0:'):
+            options.extend([
+                '-DGPU_TARGET=sm30'
+            ])
+
         return options
