@@ -198,7 +198,7 @@ class Llvm(CMakePackage):
                 'clang-tools-extra': 'cfd46027a0ab7eed483dfcc803e86bd9',
                 'lldb': '908bdd777d3b527a914ba360477b8ab3',
                 'libunwind': 'b72ec95fb784e61f15d6196414b92f5e',
-                }
+            }
         },
         {
             'version': '4.0.0',
@@ -228,7 +228,7 @@ class Llvm(CMakePackage):
                 'clang-tools-extra': '1a01d545a064fcbc46a2f05f6880d3d7',
                 'lldb': '91399402f287d3f637db1207113deecb',
                 'libunwind': 'f273dd0ed638ad0601b23176a36f187b',
-                }
+            }
         },
         {
             'version': '3.9.0',
@@ -243,7 +243,7 @@ class Llvm(CMakePackage):
                 'clang-tools-extra': 'f4f663068c77fc742113211841e94d5e',
                 'lldb': '968d053c3c3d7297983589164c6999e9',
                 'libunwind': '3e5c87c723a456be599727a444b1c166',
-                }
+            }
         },
         {
             'version': '3.8.1',
@@ -258,7 +258,7 @@ class Llvm(CMakePackage):
                 'clang-tools-extra': '6e49f285d0b366cc3cab782d8c92d382',
                 'lldb': '9e4787b71be8e432fffd31e13ac87623',
                 'libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
-                }
+            }
         },
         {
             'version': '3.8.0',
@@ -273,7 +273,7 @@ class Llvm(CMakePackage):
                 'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
                 'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
                 'libunwind': '162ade468607f153cca12be90b5194fa',
-                }
+            }
         },
         {
             'version': '3.7.1',
@@ -288,7 +288,7 @@ class Llvm(CMakePackage):
                 'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
                 'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
                 'libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
-                }
+            }
         },
         {
             'version': '3.7.0',
@@ -303,7 +303,7 @@ class Llvm(CMakePackage):
                 'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
                 'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
                 'libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
-                }
+            }
         },
         {
             'version': '3.6.2',
@@ -342,7 +342,7 @@ class Llvm(CMakePackage):
                          svn=repo,
                          destination=resources[name]['destination'],
                          when='@%s%s' % (release['version'],
-                             resources[name].get('variant', "")),
+                                         resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
         else:
             version(release['version'], release['md5'], url=llvm_url % release)
@@ -353,7 +353,7 @@ class Llvm(CMakePackage):
                          md5=md5,
                          destination=resources[name]['destination'],
                          when='@%s%s' % (release['version'],
-                             resources[name].get('variant', "")),
+                                         resources[name].get('variant', "")),
                          placement=resources[name].get('placement', None))
 
     conflicts('+clang_extra', when='~clang')
@@ -426,8 +426,15 @@ class Llvm(CMakePackage):
 
         if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
-
         return cmake_args
+
+    @run_before('build')
+    def pre_install(self):
+        with working_dir(self.build_directory):
+            # When building shared libraries these need to be installed first
+            make('install-LLVMTableGen')
+            make('install-LLVMDemangle')
+            make('install-LLVMSupport')
 
     @run_after('install')
     def post_install(self):
