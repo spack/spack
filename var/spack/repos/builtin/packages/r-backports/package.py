@@ -25,14 +25,18 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RBackports(RPackage):
+    """Implementations of functions which have been introduced
+    in R since version 3.0.0. The backports are conditionally
+    exported which results in R resolving the function names to
+    the version shipped with R (if available) and uses the
+    implemented backports as fallback. This way package developers
+    can make use of the new functions without worrying about the
+    minimum required R version."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
+    homepage = "https://cran.r-project.org/package=backports"
+    url      = "https://cran.r-project.org/src/contrib/backports_1.1.1.tar.gz"
     list_url = homepage
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('1.1.1', '969543a0af32dc23bba9bb37ec82008c')
+    version('1.1.0', 'b97a71b026fd7ede0e449be93d160c17')

@@ -25,14 +25,17 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RProgress(RPackage):
+    """Configurable Progress bars, they may include percentage, elapsed time,
+       and/or the estimated completion time. They work in terminals, in
+       'Emacs' 'ESS', 'RStudio', 'Windows' 'Rgui' and the 'macOS' 'R.app'.
+       The package also provides a 'C++' 'API', that works with or without
+       'Rcpp'."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
+    homepage = "https://cran.r-project.org/package=progress"
+    url      = "https://cran.r-project.org/src/contrib/progress_1.1.2.tar.gz"
     list_url = homepage
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('1.1.2', 'b3698672896125137e0077bc97132428')
+    depends_on('r-r6', type=('build', 'run'))
+    depends_on('r-prettyunits', type=('build', 'run'))

@@ -25,14 +25,13 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RNnls(RPackage):
+    """An R interface to the Lawson-Hanson implementation of an
+    algorithm for non-negative least squares (NNLS). Also allows
+    the combination of non-negative and non-positive constraints."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
-    list_url = homepage
+    homepage = "https://cran.r-project.org/package=nnls"
+    url      = "https://cran.rstudio.com/src/contrib/nnls_1.4.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/nnls"
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('1.4', 'cdb3640120f73e0ccb6079108e0ef361')

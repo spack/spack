@@ -25,14 +25,26 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RAlpine(RPackage):
+    """Fragment sequence bias modeling and correction for RNA-seq
+    transcript abundance estimation."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
-    list_url = homepage
+    homepage = "http://bioconductor.org/packages/alpine/"
+    url      = "https://git.bioconductor.org/packages/alpine"
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('1.2.0', git='https://git.bioconductor.org/packages/alpine', commit='896872e6071769e1ac2cf786974edb8b875c45eb')
+
+    depends_on('r@3.4.0:3.4.9', when='@1.2.0')
+    depends_on('r-biostrings', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-genomicalignments', type=('build', 'run'))
+    depends_on('r-rsamtools', type=('build', 'run'))
+    depends_on('r-summarizedexperiment', type=('build', 'run'))
+    depends_on('r-genomicfeatures', type=('build', 'run'))
+    depends_on('r-speedglm', type=('build', 'run'))
+    depends_on('r-graph', type=('build', 'run'))
+    depends_on('r-rbgl', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-genomeinfodb', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))

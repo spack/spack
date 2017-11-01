@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2017, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,14 +25,18 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class CandleBenchmarks(Package):
+    """ECP-CANDLE Benchmarks"""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
-    list_url = homepage
+    homepage = "https://github.com/ECP-CANDLE/Benchmarks"
+    url      = "https://github.com/ECP-CANDLE/Benchmarks/archive/v1.0.tar.gz"
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    tags = ['proxy-app', 'ecp-proxy-app']
+
+    version('1.0', '6eced30dc15374bc9f90a86d0396e470')
+
+    # see #3244, but use external for now
+    # depends_on('tensorflow')
+
+    def install(self, spec, prefix):
+        install_tree(self.stage.source_path, prefix.bin)

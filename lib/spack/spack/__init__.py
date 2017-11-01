@@ -134,6 +134,9 @@ misc_cache_path = canonicalize_path(
 misc_cache = FileCache(misc_cache_path)
 
 
+binary_cache_retrieved_specs = set()
+
+
 #: Directories where to search for templates
 template_dirs = spack.config.get_config('config')['template_dirs']
 template_dirs = [canonicalize_path(x) for x in template_dirs]

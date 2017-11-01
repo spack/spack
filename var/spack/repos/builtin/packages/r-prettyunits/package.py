@@ -25,14 +25,16 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RPrettyunits(RPackage):
+    """Pretty, human readable formatting of quantities. Time intervals:
+       1337000 -> 15d 11h 23m 20s. Vague time intervals: 2674000 -> about
+       a month ago. Bytes: 1337 -> 1.34 kB."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
+    homepage = "https://cran.r-project.org/package=prettyunits"
+    url      = "https://cran.r-project.org/src/contrib/prettyunits_1.0.2.tar.gz"
     list_url = homepage
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('1.0.2', '0a091a297e8b37df54e7fcf28697ee50')
+
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-assertthat', type=('build', 'run'))

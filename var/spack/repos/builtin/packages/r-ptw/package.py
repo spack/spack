@@ -25,14 +25,22 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RPtw(RPackage):
+    """Parametric Time Warping aligns patterns, i.e. it aims to put
+    corresponding features at the same locations. The algorithm
+    searches for an optimal polynomial describing the warping. It is
+    possible to align one sample to a reference, several samples to
+    the same reference, or several samples to several references.
+    One can choose between calculating individual warpings, or one
+    global warping for a set of samples and one reference. Two
+    optimization criteria are implemented: RMS (Root Mean Square
+    error) and WCC (Weighted Cross Correlation). Both warping of
+    peak profiles and of peak lists are supported."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
-    list_url = homepage
+    homepage = "https://cran.r-project.org/package=ptw"
+    url      = "https://cran.rstudio.com/src/contrib/ptw_1.9-12.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/ptw"
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('1.9-12', 'ddff887752d789ea72db3ee235ae7c67')
+
+    depends_on('r-nloptr', type=('build', 'run'))

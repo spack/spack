@@ -25,14 +25,23 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RGgally(RPackage):
+    """The R package 'ggplot2' is a plotting system based on the grammar of
+       graphics. 'GGally' extends 'ggplot2' by adding several functions to
+       reduce the complexity of combining geometric objects with transformed
+       data. Some of these functions include a pairwise plot matrix, a two
+       group pairwise plot matrix, a parallel coordinates plot, a survival
+       plot, and several functions to plot networks."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
+    homepage = "https://cran.r-project.org/package=GGally"
+    url      = "https://cran.r-project.org/src/contrib/GGally_1.3.2.tar.gz"
     list_url = homepage
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('1.3.2', 'efe58133ba8431198af7afb6bcb76264')
+
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-gtable', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-progress', type=('build', 'run'))
+    depends_on('r-rcolorbrewer', type=('build', 'run'))
+    depends_on('r-reshape', type=('build', 'run'))

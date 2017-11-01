@@ -25,14 +25,15 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RSpeedglm(RPackage):
+    """Fitting linear models and generalized linear models to
+    large data sets by updating algorithms."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
-    list_url = homepage
+    homepage = "https://cran.r-project.org/package=speedglm"
+    url      = "https://cran.rstudio.com/src/contrib/speedglm_0.3-2.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/speedglm"
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('0.3-2', 'c4874d4c2a677d657a335186ebb63131')
+
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))

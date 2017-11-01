@@ -25,14 +25,12 @@
 from spack import *
 
 
-class RSegmented(RPackage):
-    """Given a regression model, segmented 'updates' the model by adding
-    one or more segmented (i.e., piecewise-linear) relationships. Several
-    variables with multiple breakpoints are allowed."""
+class RIso(RPackage):
+    """Linear order and unimodal order (univariate) isotonic regression;
+    bivariate isotonic regression with linear order on both variables."""
 
-    homepage = "https://CRAN.R-project.org/package=segmented"
-    url      = "https://cran.r-project.org/src/contrib/segmented_0.5-1.4.tar.gz"
-    list_url = homepage
+    homepage = "https://cran.r-project.org/package=Iso"
+    url      = "https://cran.rstudio.com/src/contrib/Iso_0.0-17.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/Iso"
 
-    version('0.5-2.2', '1511ec365aea289d5f0a574f6d10d2d6')
-    version('0.5-1.4', 'f9d76ea9e22ef5f40aa126b697351cae')
+    version('0.0-17', 'bf99821efb6a44fa75fdbf5e5c4c91e4')

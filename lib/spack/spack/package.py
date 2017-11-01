@@ -60,6 +60,7 @@ import spack.repository
 import spack.url
 import spack.util.web
 import spack.multimethod
+import spack.binary_distribution as binary_distribution
 
 from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
 from llnl.util.filesystem import working_dir, install_tree, install
@@ -1266,6 +1267,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 message = '{s.name}@{s.version} : marking the package explicit'
                 tty.msg(message.format(s=self))
 
+    def try_install_from_binary_cache(self, explicit):
+        tty.msg('Searching for binary cache of %s' % self.name)
+        specs = binary_distribution.get_specs()
+        if self.spec not in specs:
+            return False
+        tty.msg('Installing %s from binary cache' % self.name)
+        tarball = binary_distribution.download_tarball(self.spec)
+        binary_distribution.extract_tarball(
+            self.spec, tarball, yes_to_all=False, force=False)
+        spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
+        return True
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -1348,6 +1361,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     **kwargs)
 
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
+
+        if kwargs.get('use_cache', False):
+            if self.try_install_from_binary_cache(explicit):
+                tty.msg('Successfully installed %s from binary cache'
+                        % self.name)
+                print_pkg(self.prefix)
+                return
+
+            tty.msg('No binary for %s found: installing from source'
+                    % self.name)
 
         # Set run_tests flag before starting build.
         self.run_tests = spack.package_testing.check(self.name)

@@ -25,28 +25,29 @@
 from spack import *
 
 
-class RGgplot2(RPackage):
-    """An implementation of the grammar of graphics in R. It combines the
-    advantages of both base and lattice graphics: conditioning and shared axes
-    are handled automatically, and you can still build up a plot step by step
-    from multiple data sources. It also implements a sophisticated
-    multidimensional conditioning system and a consistent interface to map data
-    to aesthetic attributes. See http://ggplot2.org for more information,
-    documentation and examples."""
+class RSomaticsignatures(RPackage):
+    """The SomaticSignatures package identifies mutational signatures of
+       single nucleotide variants (SNVs). It provides a infrastructure related
+       to the methodology described in Nik-Zainal (2012, Cell), with
+       flexibility in the matrix decomposition algorithms."""
 
-    homepage = "http://ggplot2.org/"
-    url      = "https://cran.r-project.org/src/contrib/ggplot2_2.2.1.tar.gz"
+    homepage = "https://bioconductor.org/packages/SomaticSignatures/"
+    url      = "https://git.bioconductor.org/packages/SomaticSignatures"
+    list_url = homepage
 
-    version('2.2.1', '14c5a3507bc123c6e7e9ad3bef7cee5c')
-    version('2.1.0', '771928cfb97c649c720423deb3ec7fd3')
+    version('2.12.1', git='https://git.bioconductor.org/packages/SomaticSignatures', commit='932298c6877d076004de5541cec85a14e819517a')
 
-    depends_on('r@3.1:')
-
-    depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-gtable@0.1.1:', type=('build', 'run'))
-    depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-plyr@1.7.1:', type=('build', 'run'))
+    depends_on('r-variantannotation', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-nmf', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-genomeinfodb', type=('build', 'run'))
+    depends_on('r-biostrings', type=('build', 'run'))
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-ggbio', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
-    depends_on('r-scales@0.4.1:', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-lazyeval', type=('build', 'run'))
+    depends_on('r-pcamethods', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-proxy', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.12.1')
