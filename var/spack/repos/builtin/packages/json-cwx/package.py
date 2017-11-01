@@ -22,26 +22,27 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
 
 
-class DocbookXml(Package):
-    """Docbook DTD XML files."""
-    homepage = "http://www.oasis-open.org/docbook"
-    url = "http://www.oasis-open.org/docbook/xml/4.5/docbook-xml-4.5.zip"
+class JsonCwx(AutotoolsPackage):
+    """JSON-C with Extensions"""
 
-    version('4.5', '03083e288e87a7e829e437358da7ef9e')
+    homepage = "https://github.com/LLNL/json-cwx"
+    url      = "https://github.com/LLNL/json-cwx/archive/0.12.tar.gz"
 
-    def install(self, spec, prefix):
-        for item in os.listdir('.'):
-            src = os.path.abspath(item)
-            dst = os.path.join(prefix, item)
-            if os.path.isdir(item):
-                install_tree(src, dst, symlinks=True)
-            else:
-                install(src, dst)
+    version('0.12', '8ba44ef7f463f004b4b14c6d8d85a2b70db977a4')
 
-    def setup_environment(self, spack_env, run_env):
-        catalog = os.path.join(self.spec.prefix, 'catalog.xml')
-        run_env.set('XML_CATALOG_FILES', catalog, separator=' ')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+
+    parallel = False
+
+    configure_directory = 'json-cwx'
+
+    def autoreconf(self, spec, prefix):
+        with working_dir('json-cwx'):
+            autogen = Executable("./autogen.sh")
+            autogen()
