@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import glob
-import os
 
 
 class Guidance(MakefilePackage):
@@ -47,8 +46,8 @@ class Guidance(MakefilePackage):
     conflicts('%gcc@6.2.0:')
 
     def edit(self, spec, prefix):
-        with working_dir('www'):
-            for dir in 'Guidance', 'Selecton', 'bioSequence_scripts_and_constants':
+        for dir in 'Guidance', 'Selecton', 'bioSequence_scripts_and_constants':
+            with working_dir(join_path('www', dir)):
                 files = glob.iglob('*.pl')
                 for file in files:
                     perl = FileFilter(file)
