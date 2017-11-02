@@ -51,6 +51,6 @@ class Xqilla(AutotoolsPackage):
                          '--with-pic'])
 
         if '+debug' in self.spec:
-            args.extend('--enable-debug')
+            args.append('--enable-debug')
 
         return args
