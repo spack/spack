@@ -50,7 +50,7 @@ class Repeatmasker(Package):
         #
         # <PRESS ENTER TO CONTINUE>
         # Enter perl path
-        # Enter installation path
+        # Enter where repeatmasker is being configured from
         # Enter trf path
         # Add a Search Engine:
         #    1. CrossMatch
