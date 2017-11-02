@@ -30,7 +30,7 @@ Package class Hierarchy
 
 The above diagram gives a high level view of the class hierarchy and how each
 package relates. Each subclass inherits from the `PackageBaseClass` super class.
-The bulk of the work is done in this super` class which includes fetching,
+The bulk of the work is done in this super class which includes fetching,
 extracting to a staging directory and installing. Each subclass thus adds 
 additional functionality that includes adding the correct parameters for the
 build system. In the following sections, we will go over examples of how to
