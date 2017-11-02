@@ -460,7 +460,9 @@ def set_or_unset_not_first(variable, changes, errstream):
     modifications have already been requested.
     """
     indexes = [ii for ii, item in enumerate(changes)
-               if ii != 0 and type(item) in [SetEnv, UnsetEnv]]
+               if ii != 0 and
+               not item.args.get('force', False) and
+               type(item) in [SetEnv, UnsetEnv]]
     if indexes:
         good = '\t    \t{context} at {filename}:{lineno}'
         nogood = '\t--->\t{context} at {filename}:{lineno}'
