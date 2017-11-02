@@ -328,7 +328,7 @@ class TestStage(object):
         os.mkdir(join_path(root_stage.source_path, 'resource-dir'))
         preexisting_file = join_path(
             root_stage.source_path, 'resource-dir/foo')
-        with open(preexisting_file, 'w') as F:
+        with open(preexisting_file, 'w'):
             pass
 
         resource_stage.setup_source()

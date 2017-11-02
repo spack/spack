@@ -25,7 +25,7 @@
 import re
 import os
 from itertools import product
-from spack.util.executable import which, Executable
+from spack.util.executable import which
 
 # Supported archive extensions.
 PRE_EXTS = ["tar"]
