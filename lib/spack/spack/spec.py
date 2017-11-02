@@ -1374,7 +1374,12 @@ class Spec(object):
 
     @property
     def prefix(self):
+        if hasattr(self, 'test_prefix'):
+            return Prefix(self.test_prefix)
         return Prefix(spack.store.layout.path_for_spec(self))
+
+    def _set_test_prefix(self, val):
+        self.test_prefix = val
 
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
