@@ -199,6 +199,23 @@ def mock_expand_resource(tmpdir):
 
 
 @pytest.fixture()
+def composite_stage_with_expanding_resource(
+        mock_archive, mock_expand_resource):
+    composite_stage = StageComposite()
+    root_stage = Stage(mock_archive.url)
+    composite_stage.append(root_stage)
+
+    test_resource_fetcher = spack.fetch_strategy.from_kwargs(
+        url=mock_expand_resource.url)
+    test_resource = Resource(
+        'test_resource', test_resource_fetcher, None, 'resource-dir')
+    resource_stage = ResourceStage(
+        test_resource_fetcher, root_stage, test_resource)
+    composite_stage.append(resource_stage)
+    return composite_stage, root_stage, resource_stage
+
+
+@pytest.fixture()
 def failing_search_fn():
     """Returns a search function that fails! Always!"""
     def _mock():
@@ -279,19 +296,11 @@ class TestStage(object):
     @pytest.mark.disable_clean_stage_check
     @pytest.mark.usefixtures('tmpdir_for_stage')
     def test_composite_stage_with_expand_resource_empty_existing_destination(
-            self, mock_archive, mock_expand_resource):
-        composite_stage = StageComposite()
-        root_stage = Stage(mock_archive.url)
-        composite_stage.append(root_stage)
+            self, mock_archive, mock_expand_resource,
+            composite_stage_with_expanding_resource):
 
-        test_resource_fetcher = spack.fetch_strategy.from_kwargs(
-            url=mock_expand_resource.url)
-        test_resource = Resource(
-            'test_resource', test_resource_fetcher, None, 'resource-dir')
-        resource_stage = ResourceStage(
-            test_resource_fetcher, root_stage, test_resource)
-        composite_stage.append(resource_stage)
-
+        composite_stage, root_stage, resource_stage = (
+            composite_stage_with_expanding_resource)
         composite_stage.create()
         composite_stage.fetch()
         root_stage.setup_source()
@@ -302,6 +311,29 @@ class TestStage(object):
             file_path = join_path(
                 root_stage.source_path, 'resource-dir', fname)
             assert os.path.exists(file_path)
+
+    @pytest.mark.disable_clean_stage_check
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_composite_stage_with_expand_resource_nonempty_existing_dest(
+            self, mock_archive, mock_expand_resource,
+            composite_stage_with_expanding_resource):
+
+        composite_stage, root_stage, resource_stage = (
+            composite_stage_with_expanding_resource)
+        composite_stage.create()
+        composite_stage.fetch()
+        root_stage.setup_source()
+        os.mkdir(join_path(root_stage.source_path, 'resource-dir'))
+        preexisting_file = join_path(
+            root_stage.source_path, 'resource-dir/foo')
+        with open(preexisting_file, 'w') as F:
+            pass
+
+        resource_stage.setup_source()
+        for fname in mock_expand_resource.files:
+            file_path = join_path(
+                root_stage.source_path, 'resource-dir', fname)
+            assert not os.path.exists(file_path)
 
     def test_setup_and_destroy_no_name_without_tmp(self, mock_archive):
         with Stage(mock_archive.url) as stage:

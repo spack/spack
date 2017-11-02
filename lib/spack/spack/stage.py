@@ -25,7 +25,6 @@
 import os
 import sys
 import errno
-import filecmp
 import hashlib
 import shutil
 import tempfile
@@ -607,14 +606,9 @@ class ResourceStage(Stage):
                 for src_path in src_paths:
                     shutil.move(src_path, destination_path)
             else:
-                if (not os.path.isfile(source_path) or
-                    not os.path.isfile(destination_path) or
-                    not filecmp.cmp(
-                        source_path, destination_path, shallow=False)):
-
-                    tty.warn('{0} exists as a file or nonempty directory, '
-                             'not moving {1}'.format(
-                                 destination_path, source_path))
+                tty.warn('{0} exists as a file or nonempty directory, '
+                         'not moving {1}'.format(
+                             destination_path, source_path))
 
 
 @pattern.composite(method_list=[
