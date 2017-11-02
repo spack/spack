@@ -32,7 +32,7 @@ class RHttr(RPackage):
 
     homepage = "https://github.com/hadley/httr"
     url      = "https://cran.r-project.org/src/contrib/httr_1.2.1.tar.gz"
-    list_url = "https://cran.r-project.org/package=httr"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/httr"
 
     version('1.3.1', '5acfb6b2a6f2f26cd6dfad0458fe3351')
     version('1.2.1', 'c469948dedac9ab3926f23cf484b33d9')

@@ -32,7 +32,7 @@ class RPrettyunits(RPackage):
 
     homepage = "https://cran.r-project.org/package=prettyunits"
     url      = "https://cran.r-project.org/src/contrib/prettyunits_1.0.2.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/prettyunits"
 
     version('1.0.2', '0a091a297e8b37df54e7fcf28697ee50')
 

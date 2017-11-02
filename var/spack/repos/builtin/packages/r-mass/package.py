@@ -31,7 +31,7 @@ class RMass(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/MASS/index.html"
     url      = "https://cran.r-project.org/src/contrib/MASS_7.3-47.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/MASS"
 
     version('7.3-47', '2ef69aa9e25c0a445661a9877e117594')
     version('7.3-45', 'aba3d12fab30f1793bee168a1efea88b')
