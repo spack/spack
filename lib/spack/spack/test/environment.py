@@ -27,6 +27,7 @@ import os
 import pytest
 import spack.environment as environment
 from spack import spack_root
+from spack.build_environment import apply_compiler_env_modifications
 from spack.environment import EnvironmentModifications
 from spack.environment import RemovePath, PrependPath, AppendPath
 from spack.environment import SetEnv, UnsetEnv
@@ -83,7 +84,8 @@ def prepare_environment_for_tests():
     os.environ['PATH_LIST'] = '/path/second:/path/third'
     os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'  # NOQA: ignore=E501
     yield
-    for x in ('UNSET_ME', 'EMPTY_PATH_LIST', 'PATH_LIST', 'REMOVE_PATH_LIST'):
+    for x in ('UNSET_ME', 'EMPTY_PATH_LIST', 'PATH_LIST',
+              'REMOVE_PATH_LIST', 'NEWLY_CREATED_PATH_LIST'):
         if x in os.environ:
             del os.environ[x]
 
@@ -151,6 +153,19 @@ def test_set(env):
     assert str(3) == os.environ['B']
 
 
+def test_compiler_set(prepare_environment_for_tests):
+    """Tests setting values in the environment by the commands from compiler
+    configuration."""
+
+    apply_compiler_env_modifications([
+        ['set', 'A', 'dummy value'],
+        ['set', 'B', '3']
+    ])
+
+    assert 'dummy value' == os.environ['A']
+    assert str(3) == os.environ['B']
+
+
 def test_append_flags(env):
     """Tests appending to a value in the environment."""
 
@@ -171,6 +186,19 @@ def test_unset(env):
     assert 'foo' == os.environ['UNSET_ME']
     env.unset('UNSET_ME')
     env.apply_modifications()
+
+    # Trying to retrieve is after deletion should cause a KeyError
+    with pytest.raises(KeyError):
+        os.environ['UNSET_ME']
+
+
+def test_compiler_unset(prepare_environment_for_tests):
+    """Tests unsetting values in the environment by the commands from compiler
+    configuration."""
+
+    # Assert that the target variable is there and unset it
+    assert 'foo' == os.environ['UNSET_ME']
+    apply_compiler_env_modifications([['unset', 'UNSET_ME']])
 
     # Trying to retrieve is after deletion should cause a KeyError
     with pytest.raises(KeyError):
@@ -234,6 +262,31 @@ def test_path_manipulation(env):
     assert os.environ['NEWLY_CREATED_PATH_LIST'] == expected
 
     assert os.environ['REMOVE_PATH_LIST'] == '/a/b:/a/c:/a/d:/f/g'
+
+
+def test_compiler_path_manipulation(prepare_environment_for_tests):
+    """Tests manipulating list of paths in the environment by the commands
+    from compiler configuration."""
+
+    apply_compiler_env_modifications([
+        ['append-path', 'PATH_LIST', '/path/last'],
+        ['prepend-path', 'PATH_LIST', '/path/first'],
+        ['append-path', 'EMPTY_PATH_LIST', '/path/middle'],
+        ['append-path', 'EMPTY_PATH_LIST', '/path/last'],
+        ['prepend-path', 'EMPTY_PATH_LIST', '/path/first'],
+        ['append-path', 'NEWLY_CREATED_PATH_LIST', '/path/middle'],
+        ['append-path', 'NEWLY_CREATED_PATH_LIST', '/path/last'],
+        ['prepend-path', 'NEWLY_CREATED_PATH_LIST', '/path/first']
+    ])
+
+    expected = '/path/first:/path/second:/path/third:/path/last'
+    assert os.environ['PATH_LIST'] == expected
+
+    expected = '/path/first:/path/middle:/path/last'
+    assert os.environ['EMPTY_PATH_LIST'] == expected
+
+    expected = '/path/first:/path/middle:/path/last'
+    assert os.environ['NEWLY_CREATED_PATH_LIST'] == expected
 
 
 def test_extra_arguments(env):

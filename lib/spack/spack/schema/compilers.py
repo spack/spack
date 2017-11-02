@@ -81,18 +81,49 @@ schema = {
                                               {'type': 'null'},
                                               {'type': 'array'}]},
                         'environment': {
-                            'type': 'object',
-                            'default': {},
-                            'additionalProperties': False,
-                            'properties': {
-                                'set': {
-                                    'type': 'object',
-                                    'patternProperties': {
-                                        r'\w[\w-]*': {  # variable name
-                                            'type': 'string'
-                                        }
+                            'type': 'array',
+                            'default': [],
+                            'items': {
+                                'anyOf': [
+                                    {
+                                        'type': 'array',
+                                        'additionalItems': False,
+                                        'minItems': 3,
+                                        'items': [
+                                            {
+                                                # Commands with 2 arguments
+                                                'type': 'string',
+                                                'enum': ['set',
+                                                         'append-path',
+                                                         'prepend-path']
+                                            },
+                                            {
+                                                # Variable name
+                                                'type': 'string'
+                                            },
+                                            {
+                                                # Variable value
+                                                'type': 'string'
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        'type': 'array',
+                                        'additionalItems': False,
+                                        'minItems': 2,
+                                        'items': [
+                                            {
+                                                # Commands with 1 argument
+                                                'type': 'string',
+                                                'enum': ['unset']
+                                            },
+                                            {
+                                                # Variable name
+                                                'type': 'string'
+                                            }
+                                        ]
                                     }
-                                }
+                                ]
                             }
                         },
                         'extra_rpaths': {

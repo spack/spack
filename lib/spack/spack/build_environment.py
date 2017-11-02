@@ -57,7 +57,6 @@ import os
 import shutil
 import sys
 import traceback
-from six import iteritems
 from six import StringIO
 
 import llnl.util.tty as tty
@@ -248,19 +247,8 @@ def set_build_environment_variables(pkg, env, dirty):
             if '/macports/' in p:
                 env.remove_path('PATH', p)
 
-    # Set environment variables if specified for
-    # the given compiler
+    # Pass extra RPATHs to the wrapper.
     compiler = pkg.compiler
-    environment = compiler.environment
-    if 'set' in environment:
-        env_to_set = environment['set']
-        for key, value in iteritems(env_to_set):
-            env.set('SPACK_ENV_SET_%s' % key, value)
-            env.set('%s' % key, value)
-        # Let shell know which variables to set
-        env_variables = ":".join(env_to_set.keys())
-        env.set('SPACK_ENV_TO_SET', env_variables)
-
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
@@ -443,6 +431,43 @@ def load_external_modules(pkg):
             load_module(dep.external_module)
 
 
+def apply_compiler_env_modifications(environment):
+    """Apply environment modifications specified in the environment section of
+    the compiler configuration.
+
+        Args:
+            environment (list): environment section of the compiler
+                configuration
+
+    """
+    class WarnWithHeader:
+        def __init__(self, header=None, prefix=None):
+            self.header = header
+            self.prefix = '' if prefix is None else prefix
+            self.header_was_printed = header is None
+
+        def __call__(self, message, *args, **kwargs):
+            if not self.header_was_printed:
+                tty.warn(self.header)
+                self.header_was_printed = True
+            tty.warn(self.prefix + message, *args, **kwargs)
+
+    compiler_env = EnvironmentModifications()
+    for command in environment:
+        if 'set' == command[0]:
+            compiler_env.set(command[1], command[2])
+        elif 'unset' == command[0]:
+            compiler_env.unset(command[1])
+        elif 'prepend-path' == command[0]:
+            compiler_env.prepend_path(command[1], command[2])
+        elif 'append-path' == command[0]:
+            compiler_env.append_path(command[1], command[2])
+    validate(compiler_env,
+             WarnWithHeader('Check \'environment\' section of the compiler '
+                            'configuration:', '\t'))
+    compiler_env.apply_modifications()
+
+
 def setup_package(pkg, dirty):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
@@ -513,6 +538,8 @@ def setup_package(pkg, dirty):
         if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
             load_module("cce")
         load_module(mod)
+
+    apply_compiler_env_modifications(pkg.compiler.environment)
 
     if pkg.architecture.target.module_name:
         load_module(pkg.architecture.target.module_name)
