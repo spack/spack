@@ -91,6 +91,7 @@ SPACK_PREFIX = 'SPACK_PREFIX'
 SPACK_INSTALL = 'SPACK_INSTALL'
 SPACK_DEBUG = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC = 'SPACK_SHORT_SPEC'
+SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 
 
@@ -297,6 +298,7 @@ def set_build_environment_variables(pkg, env, dirty):
     if spack.debug:
         env.set(SPACK_DEBUG, 'TRUE')
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
