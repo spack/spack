@@ -25,17 +25,18 @@
 from spack import *
 
 
-class TheSilverSearcher(AutotoolsPackage):
-    """Fast recursive grep alternative"""
+class RGetoptlong(RPackage):
+    """This is yet another command-line argument parser which wraps the
+       powerful Perl module Getopt::Long and with some adaptation for easier
+       use in R. It also provides a simple way for variable interpolation in
+       R."""
 
-    homepage = "http://geoff.greer.fm/ag/"
-    url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
+    homepage = "https://cran.rstudio.com/web/packages/GetoptLong/index.html"
+    url      = "https://cran.rstudio.com/src/contrib/GetoptLong_0.1.6.tar.gz"
+    list_url = homepage
 
-    version('2.1.0', '3e7207b060424174323236932bf76ec2')
-    version('0.32.0', '3fdfd5836924246073d5344257a06823')
-    version('0.30.0', '95e2e7859fab1156c835aff7413481db')
+    version('0.1.6', 'e4b964d0817cb6c6a707297b21405749')
 
-    depends_on('pcre')
-    depends_on('xz')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
+    depends_on('r-rjson', type=('build', 'run'))
+    depends_on('r-globaloptions', type=('build', 'run'))
+    depends_on('perl')

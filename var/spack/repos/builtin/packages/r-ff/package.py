@@ -25,17 +25,14 @@
 from spack import *
 
 
-class TheSilverSearcher(AutotoolsPackage):
-    """Fast recursive grep alternative"""
+class RFf(RPackage):
+    """memory-efficient storage of large data on disk and
+    fast access functions."""
 
-    homepage = "http://geoff.greer.fm/ag/"
-    url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
+    homepage = "http://ff.r-forge.r-project.org/"
+    url      = "https://cran.rstudio.com/src/contrib/ff_2.2-13.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ff"
 
-    version('2.1.0', '3e7207b060424174323236932bf76ec2')
-    version('0.32.0', '3fdfd5836924246073d5344257a06823')
-    version('0.30.0', '95e2e7859fab1156c835aff7413481db')
+    version('2.2-13', '4adf8840d24cb6e2927a3ef885c86fcd')
 
-    depends_on('pcre')
-    depends_on('xz')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
+    depends_on('r-bit', type=('build', 'run'))
