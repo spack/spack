@@ -53,5 +53,8 @@ class PyFparser(PythonPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
+         # Ensure that pytest.ini exists inside the source tree,
+         # otherwise an external pytest.ini can cause havoc:
+         touch('pytest.ini')
          with working_dir('src'):
              Executable('py.test')()
