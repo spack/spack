@@ -285,9 +285,9 @@ def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):
     pages = {}
     links = set()
     for lurl in list_urls:
-        p, l = spider(lurl, depth=list_depth)
-        pages.update(p)
-        links.update(l)
+        pg, lnk = spider(lurl, depth=list_depth)
+        pages.update(pg)
+        links.update(lnk)
 
     # Scrape them for archive URLs
     regexes = []

@@ -55,13 +55,14 @@ class Hdf5(AutotoolsPackage):
     variant('shared', default=True,
             description='Builds a shared version of the library')
 
-    variant('cxx', default=True, description='Enable C++ support')
-    variant('fortran', default=True, description='Enable Fortran support')
+    variant('hl', default=False, description='Enable the high-level library')
+    variant('cxx', default=False, description='Enable C++ support')
+    variant('fortran', default=False, description='Enable Fortran support')
+    variant('threadsafe', default=False,
+            description='Enable thread-safe capabilities')
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
-    variant('threadsafe', default=False,
-            description='Enable thread-safe capabilities')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
@@ -72,11 +73,22 @@ class Hdf5(AutotoolsPackage):
     depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
-    # According to ./configure --help thread-safe capabilities are:
-    # "Not compatible with the high-level library, Fortran, or C++ wrappers."
-    # (taken from hdf5@1.10.0patch1)
-    conflicts('+threadsafe', when='+cxx')
-    conflicts('+threadsafe', when='+fortran')
+    # There are several officially unsupported combinations of the features:
+    # 1. Thread safety is not guaranteed via high-level C-API but in some cases
+    #    it works.
+    # conflicts('+threadsafe+hl')
+
+    # 2. Thread safety is not guaranteed via Fortran (CXX) API, but it's
+    #    possible for a dependency tree to contain a package that uses Fortran
+    #    (CXX) API in a single thread and another one that uses low-level C-API
+    #    in multiple threads. To allow for such scenarios, we don't specify the
+    #    following conflicts.
+    # conflicts('+threadsafe+cxx')
+    # conflicts('+threadsafe+fortran')
+
+    # 3. Parallel features are not supported via CXX API, but for the reasons
+    #    described in #2 we allow for such combination.
+    # conflicts('+mpi+cxx')
 
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
@@ -147,80 +159,71 @@ class Hdf5(AutotoolsPackage):
 
     @run_before('configure')
     def fortran_check(self):
-        spec = self.spec
-        if '+fortran' in spec and not self.compiler.fc:
+        if '+fortran' in self.spec and not self.compiler.fc:
             msg = 'cannot build a Fortran variant without a Fortran compiler'
             raise RuntimeError(msg)
 
     def configure_args(self):
-        spec = self.spec
-        # Handle compilation after spec validation
-        extra_args = []
-
         # Always enable this option. This does not actually enable any
         # features: it only *allows* the user to specify certain
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
-        extra_args.append("--enable-unsupported")
+        extra_args = ['--enable-unsupported']
+        extra_args += self.enable_or_disable('threadsafe')
+        extra_args += self.enable_or_disable('cxx')
+        extra_args += self.enable_or_disable('hl')
+        extra_args += self.enable_or_disable('fortran')
 
-        if spec.satisfies('@1.10:'):
-            if '+debug' in spec:
+        if '+szip' in self.spec:
+            extra_args.append('--with-szlib=%s' % self.spec['szip'].prefix)
+        else:
+            extra_args.append('--without-szlib')
+
+        if self.spec.satisfies('@1.10:'):
+            if '+debug' in self.spec:
                 extra_args.append('--enable-build-mode=debug')
             else:
                 extra_args.append('--enable-build-mode=production')
         else:
-            if '+debug' in spec:
+            if '+debug' in self.spec:
                 extra_args.append('--enable-debug=all')
             else:
                 extra_args.append('--enable-production')
 
-        if '+shared' in spec:
+            # '--enable-fortran2003' no longer exists as of version 1.10.0
+            if '+fortran' in self.spec:
+                extra_args.append('--enable-fortran2003')
+            else:
+                extra_args.append('--disable-fortran2003')
+
+        if '+shared' in self.spec:
             extra_args.append('--enable-shared')
         else:
             extra_args.append('--disable-shared')
             extra_args.append('--enable-static-exec')
 
-        if '+cxx' in spec:
-            extra_args.append('--enable-cxx')
+        if '+pic' in self.spec:
+            extra_args += ['%s=%s' % (f, self.compiler.pic_flag)
+                           for f in ['CFLAGS', 'CXXFLAGS', 'FCFLAGS']]
 
-        if '+fortran' in spec:
-            extra_args.append('--enable-fortran')
-            # '--enable-fortran2003' no longer exists as of version 1.10.0
-            if spec.satisfies('@:1.8.16'):
-                extra_args.append('--enable-fortran2003')
-
-        if '+pic' in spec:
-            extra_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
-            extra_args.append('CXXFLAGS={0}'.format(self.compiler.pic_flag))
-            extra_args.append('FCFLAGS={0}'.format(self.compiler.pic_flag))
-
-        if '+mpi' in spec:
+        if '+mpi' in self.spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
             # together. There doesn't seem to be a real reason for this, except
             # that parts of the MPI interface are not accessible via the C++
             # interface. Since they are still accessible via the C interface,
             # this is not actually a problem.
-            extra_args.extend([
-                "--enable-parallel",
-                "CC=%s" % spec['mpi'].mpicc
-            ])
+            extra_args += ['--enable-parallel',
+                           'CC=%s' % self.spec['mpi'].mpicc]
 
-            if '+cxx' in spec:
-                extra_args.append("CXX=%s" % spec['mpi'].mpicxx)
+            if '+cxx' in self.spec:
+                extra_args.append('CXX=%s' % self.spec['mpi'].mpicxx)
 
-            if '+fortran' in spec:
-                extra_args.append("FC=%s" % spec['mpi'].mpifc)
+            if '+fortran' in self.spec:
+                extra_args.append('FC=%s' % self.spec['mpi'].mpifc)
 
-        if '+szip' in spec:
-            extra_args.append("--with-szlib=%s" % spec['szip'].prefix)
+        extra_args.append('--with-zlib=%s' % self.spec['zlib'].prefix)
 
-        if '+threadsafe' in spec:
-            extra_args.extend([
-                '--enable-threadsafe',
-                '--disable-hl',
-            ])
-
-        return ["--with-zlib=%s" % spec['zlib'].prefix] + extra_args
+        return extra_args
 
     @run_after('configure')
     def patch_postdeps(self):
@@ -270,7 +273,7 @@ HDF5 version {version} {version}
             try:
                 check = Executable('./check')
                 output = check(output=str)
-            except:
+            except ProcessError:
                 output = ""
             success = output == expected
             if not success:

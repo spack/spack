@@ -33,7 +33,7 @@ import spack.error
 import spack.spec
 import spack.architecture
 from spack.util.multiproc import parmap
-from spack.util.executable import *
+from spack.util.executable import Executable, ProcessError
 from spack.util.environment import get_path
 
 __all__ = ['Compiler', 'get_compiler_version']
@@ -125,7 +125,6 @@ class Compiler(object):
         def check(exe):
             if exe is None:
                 return None
-            exe = self._find_full_path(exe)
             _verify_executables(exe)
             return exe
 
@@ -285,17 +284,6 @@ class Compiler(object):
         # does not spoil the intented precedence.
         successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
-
-    def _find_full_path(self, path):
-        """Return the actual path for a tool.
-
-        Some toolchains use forwarding executables (particularly Xcode-based
-        toolchains) which can be manipulated by external environment variables.
-        This method should be used to extract the actual path used for a tool
-        by finding out the end executable the forwarding executables end up
-        running.
-        """
-        return path
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""

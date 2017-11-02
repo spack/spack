@@ -39,6 +39,7 @@ import functools
 import inspect
 import os
 import re
+import shutil
 import sys
 import textwrap
 import time
@@ -59,16 +60,19 @@ import spack.repository
 import spack.url
 import spack.util.web
 import spack.multimethod
+import spack.binary_distribution as binary_distribution
 
-from llnl.util.filesystem import *
-from llnl.util.lang import *
+from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
+from llnl.util.filesystem import working_dir, install_tree, install
+from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
+from llnl.util.tty.color import colorize
 from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
-from spack.version import *
+from spack.version import Version
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -885,10 +889,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             return bool(self.extendees)
 
     def extends(self, spec):
+        '''
+        Returns True if this package extends the given spec.
+
+        If ``self.spec`` is concrete, this returns whether this package extends
+        the given spec.
+
+        If ``self.spec`` is not concrete, this returns whether this package may
+        extend the given spec.
+        '''
         if spec.name not in self.extendees:
             return False
         s = self.extendee_spec
-        return s and s.satisfies(spec)
+        return s and spec.satisfies(s)
 
     @property
     def activated(self):
@@ -1076,7 +1089,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     patch.apply(self.stage)
                 tty.msg('Applied patch %s' % patch.path_or_url)
                 patched = True
-            except:
+            except spack.error.SpackError:
                 # Touch bad file if anything goes wrong.
                 tty.msg('Patch %s failed.' % patch.path_or_url)
                 touch(bad_file)
@@ -1097,7 +1110,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
                     tty.msg("No patches needed for %s" % self.name)
-            except:
+            except spack.error.SpackError:
                 tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
                 raise
@@ -1254,6 +1267,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 message = '{s.name}@{s.version} : marking the package explicit'
                 tty.msg(message.format(s=self))
 
+    def try_install_from_binary_cache(self, explicit):
+        tty.msg('Searching for binary cache of %s' % self.name)
+        specs = binary_distribution.get_specs()
+        if self.spec not in specs:
+            return False
+        tty.msg('Installing %s from binary cache' % self.name)
+        tarball = binary_distribution.download_tarball(self.spec)
+        binary_distribution.extract_tarball(
+            self.spec, tarball, yes_to_all=False, force=False)
+        spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
+        return True
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -1335,7 +1360,17 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     dirty=dirty,
                     **kwargs)
 
-        tty.msg('Installing %s' % self.name)
+        tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
+
+        if kwargs.get('use_cache', False):
+            if self.try_install_from_binary_cache(explicit):
+                tty.msg('Successfully installed %s from binary cache'
+                        % self.name)
+                print_pkg(self.prefix)
+                return
+
+            tty.msg('No binary for %s found: installing from source'
+                    % self.name)
 
         # Set run_tests flag before starting build.
         self.run_tests = spack.package_testing.check(self.name)
@@ -1876,7 +1911,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """Try to find remote versions of this package using the
            list_url and any other URLs described in the package file."""
         if not self.all_urls:
-            raise VersionFetchError(self.__class__)
+            raise spack.util.web.VersionFetchError(self.__class__)
 
         try:
             return spack.util.web.find_versions_of_archive(
@@ -2020,7 +2055,7 @@ def dump_packages(spec, path):
                 source_repo = spack.repository.Repo(source_repo_root)
                 source_pkg_dir = source_repo.dirname_for_package_name(
                     node.name)
-            except RepoError:
+            except spack.repository.RepoError:
                 tty.warn("Warning: Couldn't copy in provenance for %s" %
                          node.name)
 

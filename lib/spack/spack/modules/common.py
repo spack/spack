@@ -154,13 +154,13 @@ def dependencies(spec, request='all'):
     # FIXME : step among nodes that refer to the same package?
     seen = set()
     seen_add = seen.add
-    l = sorted(
+    deps = sorted(
         spec.traverse(order='post',
                       cover='nodes',
                       deptype=('link', 'run'),
                       root=False),
         reverse=True)
-    return [x for x in l if not (x in seen or seen_add(x))]
+    return [d for d in deps if not (d in seen or seen_add(d))]
 
 
 def merge_config_rules(configuration, spec):
@@ -204,8 +204,8 @@ def merge_config_rules(configuration, spec):
 
     # Which instead we want to mark as prerequisites
     prerequisite_strategy = spec_configuration.get('prerequisites', 'none')
-    l = dependencies(spec, prerequisite_strategy)
-    spec_configuration['prerequisites'] = l
+    spec_configuration['prerequisites'] = dependencies(
+        spec, prerequisite_strategy)
 
     # Attach options that are spec-independent to the spec-specific
     # configuration
@@ -274,7 +274,7 @@ class BaseConfiguration(object):
         """List of environment modifications that should be done in the
         module.
         """
-        l = spack.environment.EnvironmentModifications()
+        env_mods = spack.environment.EnvironmentModifications()
         actions = self.conf.get('environment', {})
 
         def process_arglist(arglist):
@@ -287,9 +287,9 @@ class BaseConfiguration(object):
 
         for method, arglist in actions.items():
             for args in process_arglist(arglist):
-                getattr(l, method)(*args)
+                getattr(env_mods, method)(*args)
 
-        return l
+        return env_mods
 
     @property
     def suffixes(self):
@@ -379,12 +379,12 @@ class BaseConfiguration(object):
         return self.conf.get('filter', {}).get('environment_blacklist', {})
 
     def _create_list_for(self, what):
-        l = []
+        whitelist = []
         for item in self.conf[what]:
             conf = type(self)(item)
             if not conf.blacklisted:
-                l.append(item)
-        return l
+                whitelist.append(item)
+        return whitelist
 
     @property
     def verbose(self):
@@ -592,8 +592,8 @@ class BaseContext(tengine.Context):
 
     def _create_module_list_of(self, what):
         m = self.conf.module
-        l = getattr(self.conf, what)
-        return [m.make_layout(x).use_name for x in l]
+        return [m.make_layout(x).use_name
+                for x in getattr(self.conf, what)]
 
     @tengine.context_property
     def verbose(self):

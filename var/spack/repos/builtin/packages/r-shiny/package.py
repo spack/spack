@@ -45,3 +45,4 @@ class RShiny(RPackage):
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-r6', type=('build', 'run'))
+    depends_on('r-sourcetools', type=('build', 'run'))

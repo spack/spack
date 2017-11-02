@@ -39,9 +39,8 @@ class Sundials(CMakePackage):
     # Versions
     # ==========================================================================
 
-    version('3.0.0-beta-2',
-            git='https://github.com/LLNL/sundials.git', tag='v3.0.0-beta-2')
-    version('2.7.0', 'c304631b9bc82877d7b0e9f4d4fd94d3', preferred=True)
+    version('3.0.0', '5163a44cedd7398bddda442ba00313b8')
+    version('2.7.0', 'c304631b9bc82877d7b0e9f4d4fd94d3')
     version('2.6.2', '3deeb0ede9f514184c6bd83ecab77d95')
 
     # ==========================================================================
@@ -65,9 +64,7 @@ class Sundials(CMakePackage):
     )
 
     # Index type
-    # NOTE: Default to True until v3.0.0 is final as only 64bit integers are
-    # supported before v3.0.0.
-    variant('int64', default=True,
+    variant('int64', default=False,
             description='Use 64bit integers for indices')
 
     # Parallelism
@@ -140,7 +137,7 @@ class Sundials(CMakePackage):
     conflicts('+examples-raja', when='@:2.7.0')
 
     # External libraries incompatible with 64-bit indices
-    conflicts('+lapack', when='@3.0.0-beta-2: +int64')
+    conflicts('+lapack', when='@3.0.0: +int64')
     conflicts('+hypre',  when='+hypre@:2.6.1a +int64')
 
     # External libraries incompatible with single precision
@@ -182,12 +179,14 @@ class Sundials(CMakePackage):
     depends_on('suite-sparse', when='+klu')
 
     # Require that external libraries built with the same precision
-    depends_on('petsc~double', when='+petsc precision=single')
-    depends_on('petsc+double', when='+petsc precision=double')
+    depends_on('petsc~double~complex', when='+petsc precision=single')
+    depends_on('petsc+double~complex', when='+petsc precision=double')
 
     # Require that external libraries built with the same index type
+    depends_on('hypre', when='+hypre')
     depends_on('hypre~int64', when='+hypre ~int64')
     depends_on('hypre+int64', when='+hypre +int64')
+    depends_on('petsc', when='+petsc')
     depends_on('petsc~int64', when='+petsc ~int64')
     depends_on('petsc+int64', when='+petsc +int64')
 
@@ -227,8 +226,8 @@ class Sundials(CMakePackage):
             '-DSUNDIALS_PRECISION=%s' % spec.variants['precision'].value
         ])
 
-        # index type (after v2.7.0)
-        if not spec.satisfies('@:2.7.0'):
+        # index type (v3.0.0 or later)
+        if spec.satisfies('@3.0.0:'):
             if '+int64' in spec:
                 args.extend(['-DSUNDIALS_INDEX_TYPE=int64_t'])
             else:
@@ -285,7 +284,7 @@ class Sundials(CMakePackage):
 
         # Building with SuperLU_MT
         if '+superlu-mt' in spec:
-            if not spec.satisfies('@:2.7.0'):
+            if spec.satisfies('@3.0.0:'):
                 args.extend([
                     '-DBLAS_ENABLE=ON',
                     '-DBLAS_LIBRARIES=%s' % spec['blas'].libs
@@ -319,7 +318,7 @@ class Sundials(CMakePackage):
             ])
 
         # Examples
-        if not spec.satisfies('@:2.7.0'):
+        if spec.satisfies('@3.0.0:'):
             args.extend([
                 '-DEXAMPLES_ENABLE_C=%s'    % on_off('+examples-c'),
                 '-DEXAMPLES_ENABLE_CXX=%s'  % on_off('+examples-cxx'),

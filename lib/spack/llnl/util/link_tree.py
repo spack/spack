@@ -26,7 +26,8 @@
 
 import os
 import shutil
-from llnl.util.filesystem import *
+
+from llnl.util.filesystem import traverse_tree, mkdirp, touch
 
 __all__ = ['LinkTree']
 

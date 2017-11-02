@@ -98,21 +98,21 @@ class Dealii(CMakePackage):
     # depends_on("boost@1.59.0+thread+system+serialization+iostreams")
     # depends_on("boost+mpi", when='+mpi')
     # depends_on("boost+python", when='+python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
                when='@:8.4.2~mpi')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
                when='@:8.4.2+mpi')
     # since @8.5.0: (and @develop) python bindings are introduced:
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
                when='@8.5.0:~mpi~python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
                when='@8.5.0:+mpi~python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+python",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+python",
                when='@8.5.0:~mpi+python')
-    depends_on(
-        "boost@1.59.0:+thread+system+serialization+iostreams+mpi+python",
-        when='@8.5.0:+mpi+python')
-    depends_on("bzip2")
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi+python",
+               when='@8.5.0:+mpi+python')
+    # bzip2 is not needed since 9.0
+    depends_on("bzip2", when='@:8.99')
     depends_on("lapack")
     depends_on("muparser")
     depends_on("suite-sparse")
@@ -175,10 +175,6 @@ class Dealii(CMakePackage):
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
-            # Cmake may still pick up system's bzip2, fix this:
-            '-DBZIP2_FOUND=true',
-            '-DBZIP2_INCLUDE_DIRS=%s' % spec['bzip2'].prefix.include,
-            '-DBZIP2_LIBRARIES=%s' % spec['bzip2'].libs.joined(';'),
             # CMake's FindBlas/Lapack may pickup system's blas/lapack instead
             # of Spack's. Be more specific to avoid this.
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
@@ -191,6 +187,14 @@ class Dealii(CMakePackage):
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix
         ])
+
+        if spec.satisfies('@:8.99'):
+            options.extend([
+                # Cmake may still pick up system's bzip2, fix this:
+                '-DBZIP2_FOUND=true',
+                '-DBZIP2_INCLUDE_DIRS=%s' % spec['bzip2'].prefix.include,
+                '-DBZIP2_LIBRARIES=%s' % spec['bzip2'].libs.joined(';')
+            ])
 
         # Set recommended flags for maximum (matrix-free) performance, see
         # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
