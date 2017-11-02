@@ -90,10 +90,10 @@ class Adios(AutotoolsPackage):
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
-    depends_on('sz', when='+sz')
+    depends_on('sz@:1.4.10', when='+sz')
     depends_on('zfp@:0.5.0', when='+zfp')
     # optional transports & file converters
-    depends_on('hdf5@1.8:+mpi', when='+hdf5')
+    depends_on('hdf5@1.8:+hl+mpi', when='+hdf5')
     depends_on('netcdf', when='+netcdf')
     depends_on('libevpath', when='staging=flexpath')
     depends_on('dataspaces+mpi', when='staging=dataspaces')
