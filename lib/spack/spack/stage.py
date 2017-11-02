@@ -360,11 +360,19 @@ class Stage(object):
         """
         if isinstance(self.fetcher, fs.URLFetchStrategy):
             if not self.fetcher.expand_archive:
-                return self.path
+                return self.archive_file
 
-        for p in [os.path.join(self.path, f) for f in os.listdir(self.path)]:
+        paths = list(os.path.join(self.path, f) for f in os.listdir(self.path))
+
+        for p in paths:
             if os.path.isdir(p):
                 return p
+
+        # The archive may expand to a single file rather than a directory
+        non_archives = set(paths) - set([self.archive_file])
+        if len(non_archives) == 1:
+            return next(iter(non_archives))
+
         return None
 
     def fetch(self, mirror_only=False):
@@ -531,12 +539,7 @@ class ResourceStage(Stage):
         super(ResourceStage, self).setup_source()
         root_stage = self.root_stage
         resource = self.resource
-        if (isinstance(self.fetcher, fs.URLFetchStrategy) and
-            not self.fetcher.expand_archive):
-
-            placement = {self.archive_file: resource.placement or
-                         os.path.basename(self.archive_file)}
-        elif resource.placement is None:
+        if resource.placement is None:
             placement = os.path.basename(self.source_path)
         else:
             placement = resource.placement
@@ -551,7 +554,10 @@ class ResourceStage(Stage):
         # Make the paths in the dictionary absolute and link
         for key, value in iteritems(placement):
             destination_path = join_path(target_root, value)
-            source_path = join_path(self.source_path, key)
+            if os.path.isfile(self.source_path):
+                source_path = self.source_path
+            else:
+                source_path = join_path(self.source_path, key)
 
             dst_dir = os.path.dirname(destination_path)
             try:
