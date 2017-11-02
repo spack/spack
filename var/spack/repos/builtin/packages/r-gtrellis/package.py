@@ -25,17 +25,22 @@
 from spack import *
 
 
-class TheSilverSearcher(AutotoolsPackage):
-    """Fast recursive grep alternative"""
+class RGtrellis(RPackage):
+    """Genome level Trellis graph visualizes genomic data conditioned by
+       genomic categories (e.g. chromosomes). For each genomic category,
+       multiple dimensional data which are represented as tracks describe
+       different features from different aspects. This package provides high
+       flexibility to arrange genomic categories and to add self-defined
+       graphics in the plot."""
 
-    homepage = "http://geoff.greer.fm/ag/"
-    url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
+    homepage = "https://bioconductor.org/packages/gtrellis/"
+    url      = "https://git.bioconductor.org/packages/gtrellis"
+    list_url = homepage
 
-    version('2.1.0', '3e7207b060424174323236932bf76ec2')
-    version('0.32.0', '3fdfd5836924246073d5344257a06823')
-    version('0.30.0', '95e2e7859fab1156c835aff7413481db')
+    version('1.8.0', git='https://git.bioconductor.org/packages/gtrellis', commit='f813b420a008c459f63a2a13e5e64c5507c4c472')
 
-    depends_on('pcre')
-    depends_on('xz')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-circlize', type=('build', 'run'))
+    depends_on('r-getoptlong', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.8.0')

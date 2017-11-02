@@ -183,8 +183,10 @@ class Sundials(CMakePackage):
     depends_on('petsc+double~complex', when='+petsc precision=double')
 
     # Require that external libraries built with the same index type
+    depends_on('hypre', when='+hypre')
     depends_on('hypre~int64', when='+hypre ~int64')
     depends_on('hypre+int64', when='+hypre +int64')
+    depends_on('petsc', when='+petsc')
     depends_on('petsc~int64', when='+petsc ~int64')
     depends_on('petsc+int64', when='+petsc +int64')
 

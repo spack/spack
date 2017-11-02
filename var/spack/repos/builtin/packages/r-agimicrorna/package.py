@@ -25,17 +25,17 @@
 from spack import *
 
 
-class TheSilverSearcher(AutotoolsPackage):
-    """Fast recursive grep alternative"""
+class RAgimicrorna(RPackage):
+    """Processing and Analysis of Agilent microRNA data."""
 
-    homepage = "http://geoff.greer.fm/ag/"
-    url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/AgiMicroRna/"
+    url      = "https://git.bioconductor.org/packages/AgiMicroRna"
 
-    version('2.1.0', '3e7207b060424174323236932bf76ec2')
-    version('0.32.0', '3fdfd5836924246073d5344257a06823')
-    version('0.30.0', '95e2e7859fab1156c835aff7413481db')
+    version('2.26.0', git='https://git.bioconductor.org/packages/AgiMicroRna', commit='6dd74bae47986f2a23d03e3f1f9f78f701dd8053')
 
-    depends_on('pcre')
-    depends_on('xz')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
+    depends_on('r@3.4.0:3.4.9', when='@2.26.0')
+    depends_on('r-affycoretools', type=('build', 'run'))
+    depends_on('r-preprocesscore', type=('build', 'run'))
+    depends_on('r-affy', type=('build', 'run'))
+    depends_on('r-limma', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
