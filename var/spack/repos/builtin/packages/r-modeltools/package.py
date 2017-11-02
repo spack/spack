@@ -30,5 +30,6 @@ class RModeltools(RPackage):
 
     homepage = "https://cran.r-project.org/package=modeltools"
     url      = "https://cran.r-project.org/src/contrib/modeltools_0.2-21.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/modeltools"
 
     version('0.2-21', '3bf56b2e7bf78981444385d87eeccdd7')

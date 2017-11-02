@@ -32,6 +32,7 @@ class RHexbin(RPackage):
 
     homepage = "http://github.com/edzer/hexbin"
     url      = "https://cran.r-project.org/src/contrib/hexbin_1.27.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/hexbin"
 
     version('1.27.1', '7f380390c6511e97df10a810a3b3bb7c')
 

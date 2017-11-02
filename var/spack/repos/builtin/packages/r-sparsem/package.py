@@ -32,6 +32,7 @@ class RSparsem(RPackage):
 
     homepage = "http://www.econ.uiuc.edu/~roger/research/sparse/sparse.html"
     url      = "https://cran.r-project.org/src/contrib/SparseM_1.74.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/SparseM"
 
     version('1.74', 'a16c9b7db172dfd2b7b6508c48e81a5d')
     version('1.7',  '7b5b0ab166a0929ef6dcfe1d97643601')

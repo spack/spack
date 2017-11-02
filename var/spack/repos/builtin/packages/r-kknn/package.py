@@ -31,6 +31,7 @@ class RKknn(RPackage):
 
     homepage = "https://cran.r-project.org/package=kknn"
     url      = "https://cran.r-project.org/src/contrib/kknn_1.3.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/kknn"
 
     version('1.3.1', '372cd84f618cd5005f8c4c5721755117')
 

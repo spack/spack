@@ -30,6 +30,7 @@ class RDendextend(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=dendextend"
     url      = "https://cran.r-project.org/src/contrib/dendextend_1.5.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/dendextend"
 
     version('1.5.2', '1134869d94005727c63cf3037e2f1bbf')
 

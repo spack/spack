@@ -31,6 +31,7 @@ class RRmarkdown(RPackage):
 
     homepage = "http://rmarkdown.rstudio.com/"
     url      = "https://cran.r-project.org/src/contrib/rmarkdown_1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rmarkdown"
 
     version('1.0', '264aa6a59e9680109e38df8270e14c58')
 

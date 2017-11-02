@@ -33,6 +33,7 @@ class RMagic(RPackage):
 
     homepage = "https://cran.r-project.org/"
     url      = "https://cran.r-project.org/src/contrib/magic_1.5-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/magic"
 
     version('1.5-6', 'a68e5ced253b2196af842e1fc84fd029')
 

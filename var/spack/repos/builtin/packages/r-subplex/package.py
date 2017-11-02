@@ -30,5 +30,6 @@ class RSubplex(RPackage):
 
     homepage = "https://cran.r-project.org/package=subplex"
     url      = "https://cran.r-project.org/src/contrib/subplex_1.4-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/subplex"
 
     version('1.4-1', '2ed963dbbb1dbef47ebec7003f39a117')

@@ -31,6 +31,7 @@ class RQuantmod(RPackage):
 
     homepage = "http://www.quantmod.com/"
     url      = "https://cran.r-project.org/src/contrib/quantmod_0.4-5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/quantmod"
 
     version('0.4-5', 'cab3c409e4de3df98a20f1ded60f3631')
 

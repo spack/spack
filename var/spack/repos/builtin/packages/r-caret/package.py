@@ -31,6 +31,7 @@ class RCaret(RPackage):
 
     homepage = "https://github.com/topepo/caret/"
     url      = "https://cran.r-project.org/src/contrib/caret_6.0-73.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/caret"
 
     version('6.0-73', 'ca869e3357b5358f028fb926eb62eb70')
     version('6.0-70', '202d7abb6a679af716ea69fb2573f108')

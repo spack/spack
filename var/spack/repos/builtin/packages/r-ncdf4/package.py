@@ -43,6 +43,7 @@ class RNcdf4(RPackage):
 
     homepage = "http://cirrus.ucsd.edu/~pierce/ncdf"
     url      = "https://cran.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ncdf4"
 
     version('1.15', 'cd60dadbae3be31371e1ed40ddeb420a')
 

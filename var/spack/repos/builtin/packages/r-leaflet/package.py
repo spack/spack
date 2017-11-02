@@ -32,6 +32,7 @@ class RLeaflet(RPackage):
 
     homepage = "http://rstudio.github.io/leaflet/"
     url      = "https://cran.r-project.org/src/contrib/leaflet_1.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/leaflet"
 
     version('1.0.1', '7f3d8b17092604d87d4eeb579f73d5df')
 

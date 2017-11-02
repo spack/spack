@@ -31,5 +31,6 @@ class RNcbit(RPackage):
 
     homepage = "https://cran.r-project.org/package=ncbit"
     url      = "https://cran.r-project.org/src/contrib/ncbit_2013.03.29.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ncbit"
 
     version('2013.03.29', '29582d7e5c8bbf9683c57c4f6ac3e891')

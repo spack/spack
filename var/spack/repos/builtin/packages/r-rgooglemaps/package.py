@@ -33,6 +33,7 @@ class RRgooglemaps(RPackage):
 
     homepage = "https://cran.r-project.org/package=RgoogleMaps"
     url      = "https://cran.r-project.org/src/contrib/RgoogleMaps_1.2.0.7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RgoogleMaps"
 
     version('1.2.0.7', '2e1df804f0331b4122d841105f0c7ea5')
 

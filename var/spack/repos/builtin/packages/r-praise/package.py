@@ -31,5 +31,6 @@ class RPraise(RPackage):
 
     homepage = "https://github.com/gaborcsardi/praise"
     url      = "https://cran.r-project.org/src/contrib/praise_1.0.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/praise"
 
     version('1.0.0', '9318724cec0454884b5f762bee2da6a1')

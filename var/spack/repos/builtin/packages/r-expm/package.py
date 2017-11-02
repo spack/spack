@@ -31,5 +31,6 @@ class RExpm(RPackage):
 
     homepage = "http://R-Forge.R-project.org/projects/expm"
     url      = "https://cran.r-project.org/src/contrib/expm_0.999-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/expm"
 
     version('0.999-2', 'e05fa3f995754af92bd03227625da984')

@@ -30,6 +30,7 @@ class RGeiger(RPackage):
 
     homepage = "https://cran.r-project.org/package=geiger"
     url      = "https://cran.r-project.org/src/contrib/geiger_2.0.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/geiger"
 
     version('2.0.6', 'e5e1a407ea56805227d0f91bf6d95afc')
 

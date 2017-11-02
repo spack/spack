@@ -30,6 +30,7 @@ class RTarifx(RPackage):
 
     homepage = "https://cran.r-project.org/package=taRifx"
     url      = "https://cran.r-project.org/src/contrib/taRifx_1.0.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/taRifx"
 
     version('1.0.6', '7e782e04bd69d929b29f91553382e6a2')
 
