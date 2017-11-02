@@ -25,7 +25,7 @@
 import re
 import os
 from itertools import product
-from spack.util.executable import which
+from spack.util.executable import which, Executable
 
 # Supported archive extensions.
 PRE_EXTS = ["tar"]
@@ -49,10 +49,25 @@ def decompressor_for(path, extension=None):
         return unzip
     if extension and re.match(r'gz', extension):
         gunzip = which('gunzip', required=True)
-        return gunzip
+        return Gunzip(gunzip)
     tar = which('tar', required=True)
     tar.add_default_arg('-xf')
     return tar
+
+
+class Gunzip(object):
+    """gunzip (and gzip in decompression mode) don't operate on symlinks to
+       archives without additional arguments. This invokes the gunzip exe
+       to write to stdout, and redirects stdout to an automatically-chosen
+       filename (derived from stripping the extension from the archive name).
+    """
+    def __init__(self, gunzip_exe):
+        self.gunzip_exe = gunzip_exe
+
+    def __call__(self, archive_path):
+        args = ['-c', archive_path]
+        target_path = strip_extension(archive_path)
+        self.gunzip_exe(*args, output=target_path)
 
 
 def strip_extension(path):
