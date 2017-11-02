@@ -437,13 +437,14 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         if self.filesystem.file_exists(filename):
             self.filesystem.remove(filename)
 
+        # TODO: gz archives are decompressed with 'gzip' or 'gunzip', and
+        # both do not decompress symlinks without the -f option or
+        # redirecting to stdout; the "-f" option has undesirable added
+        # effects. stdout redirection would require modifying the
+        # compression.decompressor_for method (since the decompressor
+        # type is transparent to the caller)
         if self.expand_archive and not extension(path) == 'gz':
             # Symlink to local cached archive.
-            # TODO: gz archives are decompressed with 'gzip' or 'gunzip', and
-            # both do not decompress symlinks without the -f option or
-            # redirecting to stdout; the "-f" option has undesirable side
-            # effects. stdout redirection does not interact well with Spack's
-            # executable wrapper
             self.filesystem.symlink(path, filename)
         else:
             self.filesystem.copy(path, filename)
