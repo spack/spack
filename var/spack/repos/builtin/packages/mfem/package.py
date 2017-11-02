@@ -51,8 +51,8 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('3.3.2-rc4', git='https://github.com/mfem/mfem',
-            tag='v3.3.2-rc4')
+    version('3.3.2-rc5', git='https://github.com/mfem/mfem',
+            tag='v3.3.2-rc5')
 
     version('laghos-v1.0', git='https://github.com/mfem/mfem',
             tag='laghos-v1.0')
