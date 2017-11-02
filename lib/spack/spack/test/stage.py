@@ -207,6 +207,8 @@ def composite_stage_with_expanding_resource(
 
     test_resource_fetcher = spack.fetch_strategy.from_kwargs(
         url=mock_expand_resource.url)
+    # Specify that the resource files are to be placed in the 'resource-dir'
+    # directory
     test_resource = Resource(
         'test_resource', test_resource_fetcher, None, 'resource-dir')
     resource_stage = ResourceStage(
