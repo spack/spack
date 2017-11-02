@@ -166,3 +166,106 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs):
     assert not os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
 
     assert os.path.exists(join_path(view_dir, 'bin/py-ext-tool'))
+
+
+@pytest.fixture()
+def perl_and_extension_dirs(tmpdir):
+    perl_dirs = {
+        'bin/': {
+            'perl': None
+        },
+        'lib/': {
+            'site_perl/': {
+                '5.24.1/': {
+                    'x86_64-linux/': None
+                }
+            }
+        }
+    }
+
+    perl_name = 'perl'
+    perl_prefix = tmpdir.join(perl_name)
+    create_dir_structure(perl_prefix, perl_dirs)
+
+    perl_spec = spack.spec.Spec('perl@5.24.1')
+    perl_spec._concrete = True
+    perl_spec.package.spec._set_test_prefix(str(perl_prefix))
+
+    ext_dirs = {
+        'bin/': {
+            'perl-ext-tool': None
+        },
+        'lib/': {
+            'site_perl/': {
+                '5.24.1/': {
+                    'x86_64-linux/': {
+                        'TestExt/': {
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    ext_name = 'perl-extension'
+    ext_prefix = tmpdir.join(ext_name)
+    create_dir_structure(ext_prefix, ext_dirs)
+
+    return str(perl_prefix), str(ext_prefix)
+
+
+def test_perl_activation(tmpdir):
+    # Note the lib directory is based partly on the perl version
+    perl_spec = spack.spec.Spec('perl@5.24.1')
+    perl_spec._concrete = True
+
+    perl_name = 'perl'
+    tmpdir.ensure(perl_name, dir=True)
+
+    perl_prefix = str(tmpdir.join(perl_name))
+    # Set the prefix on the package's spec reference because that is a copy of
+    # the original spec
+    perl_spec.package.spec._set_test_prefix(perl_prefix)
+
+    ext_name = 'perl-extension'
+    tmpdir.ensure(ext_name, dir=True)
+    ext_pkg = FakeExtensionPackage(ext_name, str(tmpdir.join(ext_name)))
+
+    perl_pkg = perl_spec.package
+    perl_pkg.activate(ext_pkg)
+
+
+def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs):
+    perl_prefix, ext_prefix = perl_and_extension_dirs
+
+    perl_spec = spack.spec.Spec('perl@5.24.1')
+    perl_spec._concrete = True
+    perl_spec.package.spec._set_test_prefix(perl_prefix)
+
+    ext_pkg = FakeExtensionPackage('perl-extension', ext_prefix)
+
+    perl_pkg = perl_spec.package
+    perl_pkg.activate(ext_pkg)
+
+    assert os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
+
+
+def test_perl_activation_view(tmpdir, perl_and_extension_dirs):
+    perl_prefix, ext_prefix = perl_and_extension_dirs
+
+    perl_spec = spack.spec.Spec('perl@5.24.1')
+    perl_spec._concrete = True
+    perl_spec.package.spec._set_test_prefix(perl_prefix)
+
+    ext_pkg = FakeExtensionPackage('perl-extension', ext_prefix)
+
+    view_dir = str(tmpdir.join('view'))
+    layout = YamlDirectoryLayout(view_dir)
+    view = YamlFilesystemView(view_dir, layout)
+
+    perl_pkg = perl_spec.package
+    perl_pkg.activate(ext_pkg, extensions_layout=view.extensions_layout)
+
+    assert not os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
+
+    assert os.path.exists(join_path(view_dir, 'bin/perl-ext-tool'))
