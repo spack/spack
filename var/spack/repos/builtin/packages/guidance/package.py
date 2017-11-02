@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import glob
+import os
 
 
 class Guidance(MakefilePackage):
@@ -46,22 +47,12 @@ class Guidance(MakefilePackage):
     conflicts('%gcc@6.2.0:')
 
     def edit(self, spec, prefix):
-        with working_dir(join_path('www', 'Guidance')):
-            files = glob.iglob('*.pl')
-            for file in files:
-                perl = FileFilter(file)
-                perl.filter('#!/usr/bin/perl -w', '#!/usr/bin/env perl')
-        with working_dir(join_path('www', 'Selecton')):
-            files = glob.iglob('*.pl')
-            for file in files:
-                perl = FileFilter(file)
-                perl.filter('#!/usr/bin/perl -w', '#!/usr/bin/env perl')
-        with working_dir(join_path('www',
-                                   'bioSequence_scripts_and_constants')):
-            files = glob.iglob('*.pl')
-            for file in files:
-                perl = FileFilter(file)
-                perl.filter('#!/usr/bin/perl -w', '#!/usr/bin/env perl')
+        with working_dir('www'):
+            for dir in 'Guidance', 'Selecton', 'bioSequence_scripts_and_constants':
+                files = glob.iglob('*.pl')
+                for file in files:
+                    perl = FileFilter(file)
+                    perl.filter('#!/usr/bin/perl -w', '#!/usr/bin/env perl')
 
     def install(self, spac, prefix):
         mkdir(prefix.bin)
