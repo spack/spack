@@ -25,17 +25,22 @@
 from spack import *
 
 
-class TheSilverSearcher(AutotoolsPackage):
-    """Fast recursive grep alternative"""
+class RComplexheatmap(RPackage):
+    """Complex heatmaps are efficient to visualize associations between
+       different sources of data sets and reveal potential structures. Here
+       the ComplexHeatmap package provides a highly flexible way to arrange
+       multiple heatmaps and supports self-defined annotation graphics."""
 
-    homepage = "http://geoff.greer.fm/ag/"
-    url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
+    homepage = "https://bioconductor.org/packages/ComplexHeatmap/"
+    url      = "https://git.bioconductor.org/packages/ComplexHeatmap"
+    list_url = homepage
 
-    version('2.1.0', '3e7207b060424174323236932bf76ec2')
-    version('0.32.0', '3fdfd5836924246073d5344257a06823')
-    version('0.30.0', '95e2e7859fab1156c835aff7413481db')
+    version('1.14.0', git='https://git.bioconductor.org/packages/ComplexHeatmap', commit='0acd8974fb5cedde8cd96efea6dfa39324d25b34')
 
-    depends_on('pcre')
-    depends_on('xz')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
+    depends_on('r-circlize', type=('build', 'run'))
+    depends_on('r-getoptlong', type=('build', 'run'))
+    depends_on('r-colorspace', type=('build', 'run'))
+    depends_on('r-rcolorbrewer', type=('build', 'run'))
+    depends_on('r-dendextend', type=('build', 'run'))
+    depends_on('r-globaloptions', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.14.0')

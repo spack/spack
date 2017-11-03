@@ -2225,7 +2225,10 @@ class Spec(object):
             if not spec.virtual:
                 pkg_cls = spec.package_class
                 pkg_variants = pkg_cls.variants
-                not_existing = set(spec.variants) - set(pkg_variants)
+                # reserved names are variants that may be set on any package
+                # but are not necessarily recorded by the package's class
+                not_existing = set(spec.variants) - (
+                    set(pkg_variants) | set(spack.directives.reserved_names))
                 if not_existing:
                     raise UnknownVariantError(spec.name, not_existing)
 

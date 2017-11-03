@@ -25,17 +25,19 @@
 from spack import *
 
 
-class TheSilverSearcher(AutotoolsPackage):
-    """Fast recursive grep alternative"""
+class RAlsace(RPackage):
+    """Alternating Least Squares (or Multivariate Curve Resolution)
+    for analytical chemical data, in particular hyphenated data where
+    the first direction is a retention time axis, and the second a
+    spectral axis. Package builds on the basic als function from the
+    ALS package and adds functionality for high-throughput analysis,
+    including definition of time windows, clustering of profiles,
+    retention time correction, etcetera."""
 
-    homepage = "http://geoff.greer.fm/ag/"
-    url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/alsace/"
+    url      = "https://git.bioconductor.org/packages/alsace"
 
-    version('2.1.0', '3e7207b060424174323236932bf76ec2')
-    version('0.32.0', '3fdfd5836924246073d5344257a06823')
-    version('0.30.0', '95e2e7859fab1156c835aff7413481db')
+    version('1.12.0', git='https://git.bioconductor.org/packages/alsace', commit='1364c65bbff05786d05c02799fd44fd57748fae3')
 
-    depends_on('pcre')
-    depends_on('xz')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
+    depends_on('r-als', type=('build', 'run'))
+    depends_on('r-ptw', type=('build', 'run'))

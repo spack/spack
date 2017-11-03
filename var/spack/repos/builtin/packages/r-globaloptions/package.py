@@ -25,17 +25,16 @@
 from spack import *
 
 
-class TheSilverSearcher(AutotoolsPackage):
-    """Fast recursive grep alternative"""
+class RGlobaloptions(RPackage):
+    """It provides more controls on the option values such as validation and
+       filtering on the values, making options invisible or private."""
 
-    homepage = "http://geoff.greer.fm/ag/"
-    url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz"
+    homepage = "https://cran.r-project.org/package=GlobalOptions"
+    url      = "https://cran.rstudio.com/src/contrib/GlobalOptions_0.0.12.tar.gz"
+    list_url = homepage
 
-    version('2.1.0', '3e7207b060424174323236932bf76ec2')
-    version('0.32.0', '3fdfd5836924246073d5344257a06823')
-    version('0.30.0', '95e2e7859fab1156c835aff7413481db')
+    version('0.0.12', '6c268b3b27874918ba62eb0f6aa0a3e5')
 
-    depends_on('pcre')
-    depends_on('xz')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
+    depends_on('r-testthat', type=('build', 'run'))
+    depends_on('r-knitr', type=('build', 'run'))
+    depends_on('r-markdown', type=('build', 'run'))
