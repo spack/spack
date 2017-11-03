@@ -24,11 +24,24 @@
 ##############################################################################
 from spack.main import SpackCommand
 import os.path
+import pytest
 
 activate = SpackCommand('activate')
 extensions = SpackCommand('extensions')
 install = SpackCommand('install')
 view = SpackCommand('view')
+
+
+@pytest.mark.parametrize('cmd', ['hardlink', 'symlink', 'hard', 'add'])
+def test_view_link_type(
+        tmpdir, builtin_mock, mock_archive, mock_fetch, config,
+        install_mockery, cmd):
+    install('libdwarf')
+    viewpath = str(tmpdir.mkdir('view_{0}'.format(cmd)))
+    view(cmd, viewpath, 'libdwarf')
+    package_prefix = os.path.join(viewpath, 'libdwarf')
+    assert os.path.exists(package_prefix)
+    assert os.path.islink(package_prefix) == (not cmd.startswith('hard'))
 
 
 def test_view_external(

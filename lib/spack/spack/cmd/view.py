@@ -177,7 +177,7 @@ def view(parser, args):
     view = YamlFilesystemView(
         path, spack.store.layout,
         ignore_conflicts=getattr(args, "ignore_conflicts", False),
-        link=os.hardlink if args.action in ["hardlink", "hard"]
+        link=os.link if args.action in ["hardlink", "hard"]
         else os.symlink,
         verbose=args.verbose)
 
