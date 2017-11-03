@@ -526,8 +526,18 @@ class ResourceStage(Stage):
         self.root_stage = root
         self.resource = resource
 
+    def restage(self):
+        super(ResourceStage, self).restage()
+        self._add_to_root_stage()
+
     def expand_archive(self):
         super(ResourceStage, self).expand_archive()
+        self._add_to_root_stage()
+
+    def _add_to_root_stage(self):
+        """
+        Move the extracted resource to the root stage (according to placement).
+        """
         root_stage = self.root_stage
         resource = self.resource
         placement = os.path.basename(self.source_path) \
@@ -535,23 +545,23 @@ class ResourceStage(Stage):
             else resource.placement
         if not isinstance(placement, dict):
             placement = {'': placement}
-        # Make the paths in the dictionary absolute and link
+
+        target_path = join_path(
+            root_stage.source_path, resource.destination)
+
+        try:
+            os.makedirs(target_path)
+        except OSError as err:
+            if err.errno == errno.EEXIST and os.path.isdir(target_path):
+                pass
+            else:
+                raise
+
         for key, value in iteritems(placement):
-            target_path = join_path(
-                root_stage.source_path, resource.destination)
             destination_path = join_path(target_path, value)
             source_path = join_path(self.source_path, key)
 
-            try:
-                os.makedirs(target_path)
-            except OSError as err:
-                if err.errno == errno.EEXIST and os.path.isdir(target_path):
-                    pass
-                else:
-                    raise
-
             if not os.path.exists(destination_path):
-                # Create a symlink
                 tty.info('Moving resource stage\n\tsource : '
                          '{stage}\n\tdestination : {destination}'.format(
                              stage=source_path, destination=destination_path
