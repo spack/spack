@@ -23,24 +23,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import distutils.dir_util
 
 
-class Bdftopcf(AutotoolsPackage):
-    """bdftopcf is a font compiler for the X server and font server.  Fonts
-    in Portable Compiled Format can be read by any architecture, although
-    the file is structured to allow one particular architecture to read
-    them directly without reformatting.  This allows fast reading on the
-    appropriate machine, but the files are still portable (but read more
-    slowly) on other machines."""
+class Arlecore(Package):
+    """An Integrated Software for Population Genetics Data Analysis"""
 
-    homepage = "http://cgit.freedesktop.org/xorg/app/bdftopcf"
-    url      = "https://www.x.org/archive/individual/app/bdftopcf-1.0.5.tar.gz"
+    homepage = "http://cmpg.unibe.ch/software/arlequin35/"
+    url      = "http://cmpg.unibe.ch/software/arlequin35/linux/arlecore_linux.zip"
 
-    version('1.0.5', '456416d33e0d41a96b5a3725d99e1be3')
+    version('3.5.2.2', '347a589fc609f359eb61557a2e8ceb2f')
 
-    depends_on('libxfont')
+    depends_on('r', type=('build', 'run'))
 
-    depends_on('pkg-config@0.9.0:', type='build')
-    depends_on('xproto', type='build')
-    depends_on('fontsproto', type='build')
-    depends_on('util-macros', type='build')
+    def install(self, spec, prefix):
+        distutils.dir_util.copy_tree(".", prefix)
