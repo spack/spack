@@ -97,7 +97,10 @@ class Gcc(Compiler):
         if spack.compilers.clang.Clang.default_version(cc) != 'unknown':
             return 'unknown'
 
-        return super(Gcc, cls).default_version(cc)
+        version = super(Gcc, cls).default_version(cc)
+        if version in ['7']:
+            version = get_compiler_version(cc, '-dumpfullversion')
+        return version
 
     @classmethod
     def fc_version(cls, fc):
