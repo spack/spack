@@ -411,6 +411,27 @@ class TestStage(object):
             assert 'foobar' not in os.listdir(stage.source_path)
         check_destroy(stage, self.stage_name)
 
+    @pytest.mark.disable_clean_stage_check
+    @pytest.mark.usefixtures('tmpdir_for_stage')
+    def test_restage_with_resource(
+            self, mock_archive, mock_expand_resource,
+            composite_stage_with_expanding_resource):
+
+        composite_stage, root_stage, resource_stage = (
+            composite_stage_with_expanding_resource)
+
+        composite_stage.create()
+        composite_stage.fetch()
+        composite_stage.setup_source()
+
+        resource_file = join_path(
+            root_stage.source_path, 'resource-dir', 'resource-file.txt')
+        assert os.path.exists(resource_file)
+
+        composite_stage.restage()
+
+        assert os.path.exists(resource_file)
+
     def test_no_keep_without_exceptions(self, mock_archive):
         stage = Stage(mock_archive.url, name=self.stage_name, keep=False)
         with stage:
