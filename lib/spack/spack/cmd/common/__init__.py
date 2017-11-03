@@ -37,4 +37,10 @@ def print_module_placeholder_help():
             "", "For bash and zsh:",
             "    . %s/setup-env.sh" % spack.share_path, "",
             "For csh and tcsh:", "    setenv SPACK_ROOT %s" % spack.prefix,
-            "    source %s/setup-env.csh" % spack.share_path, "")
+            "    source %s/setup-env.csh" % spack.share_path, "",
+            "This exposes a 'spack' shell function, which you can use like",
+            "    $ spack load package-foo", "",
+            "Running the Spack executable directly (for example, invoking",
+            "./bin/spack) will bypass the shell function and print this",
+            "placeholder message, even if you have sourced one of the above",
+            "shell integration scripts.")
