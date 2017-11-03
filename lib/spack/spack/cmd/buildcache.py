@@ -210,8 +210,7 @@ def createtarball(args):
             specs.add(match)
             tty.msg('recursing dependencies')
             for d, node in match.traverse(order='post',
-                                          depth=True,
-                                          deptype=('link', 'run')):
+                                          depth=True):
                 if node.external or node.virtual:
                     tty.msg('skipping external or virtual dependency %s' %
                             node.format())
