@@ -30,7 +30,7 @@ class RPfamDb(RPackage):
     public repositories."""
 
     homepage = "https://www.bioconductor.org/packages/PFAM.db/"
-    url      = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/PFAM.db_3.4.1.tar.gz"
+    url      = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/PFAM.db_3.4.1.tar.gz"
 
     version('3.4.1', '65ed35887ecc44f5ac9f9c8563e03f44')
 

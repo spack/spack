@@ -41,4 +41,6 @@ class Bdftopcf(AutotoolsPackage):
     depends_on('libxfont')
 
     depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('xproto', type='build')
+    depends_on('fontsproto', type='build')
     depends_on('util-macros', type='build')

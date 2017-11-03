@@ -554,6 +554,19 @@ class ResourceStage(Stage):
 
     def setup_source(self):
         super(ResourceStage, self).setup_source()
+
+    def restage(self):
+        super(ResourceStage, self).restage()
+        self._add_to_root_stage()
+
+    def setup_source(self):
+        super(ResourceStage, self).setup_source()
+        self._add_to_root_stage()
+
+    def _add_to_root_stage(self):
+        """
+        Move the extracted resource to the root stage (according to placement).
+        """
         root_stage = self.root_stage
         resource = self.resource
         if resource.placement is None:
@@ -586,7 +599,6 @@ class ResourceStage(Stage):
                     raise
 
             if not os.path.exists(destination_path):
-                # Create a symlink
                 tty.info('Moving resource stage\n\tsource : '
                          '{stage}\n\tdestination : {destination}'.format(
                              stage=source_path, destination=destination_path

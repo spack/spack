@@ -1374,7 +1374,12 @@ class Spec(object):
 
     @property
     def prefix(self):
+        if hasattr(self, 'test_prefix'):
+            return Prefix(self.test_prefix)
         return Prefix(spack.store.layout.path_for_spec(self))
+
+    def _set_test_prefix(self, val):
+        self.test_prefix = val
 
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
@@ -2225,7 +2230,10 @@ class Spec(object):
             if not spec.virtual:
                 pkg_cls = spec.package_class
                 pkg_variants = pkg_cls.variants
-                not_existing = set(spec.variants) - set(pkg_variants)
+                # reserved names are variants that may be set on any package
+                # but are not necessarily recorded by the package's class
+                not_existing = set(spec.variants) - (
+                    set(pkg_variants) | set(spack.directives.reserved_names))
                 if not_existing:
                     raise UnknownVariantError(spec.name, not_existing)
 
