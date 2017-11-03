@@ -463,6 +463,8 @@ def mock_git_repository(tmpdir_factory):
     # Initialize the repository
     with repodir.as_cwd():
         git('init')
+        git('config', 'user.name', 'Spack')
+        git('config', 'user.email', 'spack@spack.io')
         url = 'file://' + str(repodir)
 
         # r0 is just the first commit
