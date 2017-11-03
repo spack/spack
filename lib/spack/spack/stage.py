@@ -552,9 +552,6 @@ class ResourceStage(Stage):
         if len(non_archives) == 1:
             return next(iter(non_archives))
 
-    def setup_source(self):
-        super(ResourceStage, self).setup_source()
-
     def restage(self):
         super(ResourceStage, self).restage()
         self._add_to_root_stage()
