@@ -303,20 +303,44 @@ def test_relocate_macho(tmpdir):
         get_patchelf()
         assert (needs_binary_relocation('Mach-O') is True)
 
-        macho_get_paths('/bin/bash')
+        rpaths, deps, idpath = macho_get_paths('/bin/bash')
+        nrpaths, ndeps, nid = macho_make_paths_relative('/bin/bash', '/usr',
+                                                   rpaths, deps, idpath)
         shutil.copyfile('/bin/bash', 'bash')
+        modify_macho_object('bash',
+            rpaths, deps, idpath,
+            nrpaths, ndeps, nid)
 
-        modify_macho_object('bash', '/bin/bash', '/usr', '/opt', False)
-        modify_macho_object('bash', '/bin/bash', '/usr', '/opt', True)
+        rpaths, deps, idpath = macho_get_paths('/bin/bash')
+        nrpaths, ndeps, nid = macho_replace_paths('/usr', '/opt',
+                                                   rpaths, deps, idpath)
+        shutil.copyfile('/bin/bash', 'bash')
+        modify_macho_object('bash',
+            rpaths, deps, idpath,
+            nrpaths, ndeps, nid)
 
+        path = '/usr/lib/libncurses.5.4.dylib'
+        rpaths, deps, idpath = macho_get_paths(path)
+        nrpaths, ndeps, nid = macho_make_paths_relative(path,
+                                                       '/usr',
+                                                       rpaths, deps, idpath)
         shutil.copyfile(
             '/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
         modify_macho_object(
             'libncurses.5.4.dylib',
-            '/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', False)
+            rpaths, deps, idpath,
+            nrpaths, ndeps, nid)
+
+        rpaths, deps, idpath = macho_get_paths(path)
+        nrpaths, ndeps, nid = macho_replace_paths(
+                                                 '/usr', '/opt',
+                                                 rpaths, deps, idpath)
+        shutil.copyfile(
+            '/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
         modify_macho_object(
             'libncurses.5.4.dylib',
-            '/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', True)
+            rpaths, deps, idpath,
+            nrpaths, ndeps, nid)
 
 
 @pytest.mark.skipif(sys.platform != 'linux2',

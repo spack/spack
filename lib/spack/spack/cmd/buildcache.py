@@ -226,14 +226,14 @@ def createtarball(args):
         except NoOverwriteException as e:
             tty.warn("%s exists, use -f to force overwrite." % e)
         except NoGpgException:
-            tty.warn("gpg2 is not available,"
+            tty.die("gpg2 is not available,"
                      " use -y to create unsigned build caches")
         except NoKeyException:
-            tty.warn("no default key available for signing,"
+            tty.die("no default key available for signing,"
                      " use -y to create unsigned build caches"
                      " or spack gpg init to create a default key")
         except PickKeyException:
-            tty.warn("multi keys available for signing,"
+            tty.die("multi keys available for signing,"
                      " use -y to create unsigned build caches"
                      " or -k <key hash> to pick a key")
 

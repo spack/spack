@@ -91,7 +91,7 @@ def macho_get_paths(path_name):
     otool = Executable('otool')
     output = otool("-l", path_name, output=str, err=str)
     last_cmd = None
-    idpath = ''
+    idpath = None
     rpaths = []
     deps = []
     for line in output.split('\n'):
@@ -119,11 +119,11 @@ def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
     in rpaths and deps; idpaths are replaced with @rpath/basebane(path_name);
     replacement are returned.
     """
-    id = None
+    nid = None
     nrpaths = []
     ndeps = []
     if idpath:
-        id = '@rpath/%s' % os.path.basename(idpath)
+        nid = '@rpath/%s' % os.path.basename(idpath)
     for rpath in rpaths:
         if re.match(old_dir, rpath):
             rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
@@ -136,7 +136,7 @@ def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
             ndeps.append('@loader_path/%s' % rel)
         else:
             ndeps.append(dep)
-    return nrpaths, ndeps, id
+    return nrpaths, ndeps, nid
 
 
 def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
@@ -144,22 +144,21 @@ def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
     Replace old_dir with new_dir in rpaths, deps and idpath
     and return replacements
     """
-    id = None
+    nid = None
     nrpaths = []
     ndeps = []
     if idpath:
-        id = idpath.replace(old_dir, new_dir)
+        nid = idpath.replace(old_dir, new_dir)
     for rpath in rpaths:
         nrpath = rpath.replace(old_dir, new_dir)
         nrpaths.append(nrpath)
     for dep in deps:
         ndep = dep.replace(old_dir, new_dir)
         ndeps.append(ndep)
-    return nrpaths, ndeps, id
+    return nrpaths, ndeps, nid
 
 
-def modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir,
-                        relative):
+def modify_macho_object(cur_path_name, rpaths, deps, idpath, nrpaths, ndeps, nid):
     """
     Modify MachO binary path_name by replacing old_dir with new_dir
     or the relative path to spack install root.
@@ -173,26 +172,15 @@ def modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir,
     # avoid error message for libgcc_s
     if 'libgcc_' in cur_path_name:
         return
-    rpaths, deps, idpath = macho_get_paths(cur_path_name)
-    id = None
-    nrpaths = []
-    ndeps = []
-    if relative:
-        nrpaths, ndeps, id = macho_make_paths_relative(orig_path_name,
-                                                       old_dir, rpaths,
-                                                       deps, idpath)
-    else:
-        nrpaths, ndeps, id = macho_replace_paths(old_dir, new_dir, rpaths,
-                                                 deps, idpath)
     install_name_tool = Executable('install_name_tool')
-    if id:
-        install_name_tool('-id', id, cur_path_name, output=str, err=str)
+    if nid:
+        install_name_tool('-id', nid, str(cur_path_name), output=str, err=str)
 
     for orig, new in zip(deps, ndeps):
-        install_name_tool('-change', orig, new, cur_path_name)
+        install_name_tool('-change', orig, new, str(cur_path_name))
 
     for orig, new in zip(rpaths, nrpaths):
-        install_name_tool('-rpath', orig, new, cur_path_name)
+        install_name_tool('-rpath', orig, new, str(cur_path_name))
     return
 
 
@@ -248,7 +236,15 @@ def relocate_binary(path_name, old_dir, new_dir):
     Change old_dir to new_dir in RPATHs of elf or mach-o file path_name
     """
     if platform.system() == 'Darwin':
-        modify_macho_object(path_name, old_dir, new_dir, relative=False)
+        rpaths, deps, idpath = macho_get_paths(path_name)
+        nid = None
+        nrpaths = []
+        ndeps = []
+        nrpaths, ndeps, nid = macho_replace_paths(old_dir, new_dir,
+                                                  rpaths, deps, idpath)
+        modify_macho_object(path_name,
+                            rpaths, deps, idpath,
+                            nrpaths, ndeps, nid)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(path_name)
         new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
@@ -262,9 +258,16 @@ def make_binary_relative(cur_path_name, orig_path_name, old_dir):
     Make RPATHs relative to old_dir in given elf or mach-o file path_name
     """
     if platform.system() == 'Darwin':
-        new_dir = ''
-        modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir,
-                            relative=True)
+        rpaths, deps, idpath = macho_get_paths(cur_path_name)
+        nid = None
+        nrpaths = []
+        ndeps = []
+        nrpaths, ndeps, nid = macho_make_paths_relative(orig_path_name,
+                                                       old_dir, rpaths,
+                                                       deps, idpath)
+        modify_macho_object(cur_path_name,
+                            rpaths, deps, idpath,
+                            nrpaths, ndeps, nid)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(cur_path_name)
         new_rpaths = get_relative_rpaths(orig_path_name, old_dir, orig_rpaths)
