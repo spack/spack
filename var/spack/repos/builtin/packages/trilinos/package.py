@@ -154,6 +154,8 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
     variant('openmp',       default=False,
             description='Enable OpenMP')
+    variant('rol',          default=False,
+            description='Enable ROL')
     variant('nox',          default=False,
             description='Enable NOX')
     variant('shards',       default=False,
@@ -309,6 +311,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+teuchos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
                 'ON' if '+anasazi' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_ROL:BOOL=%s' % (
+                'ON' if '+rol' in spec else 'OFF'),
             '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
                 'ON' if '+nox' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Shards=%s' % (
