@@ -229,59 +229,67 @@ def needs_text_relocation(filetype):
     """
     Check whether the given filetype is text that may need relocation.
     """
-    return ("text" in filetype)
+    return ("ASCII text" in filetype)
 
 
-def relocate_binary(path_name, old_dir, new_dir):
+def relocate_binary(path_names, old_dir, new_dir):
     """
     Change old_dir to new_dir in RPATHs of elf or mach-o file path_name
     """
     if platform.system() == 'Darwin':
-        rpaths, deps, idpath = macho_get_paths(path_name)
-        nid = None
-        nrpaths = []
-        ndeps = []
-        nrpaths, ndeps, nid = macho_replace_paths(old_dir, new_dir,
-                                                  rpaths, deps, idpath)
-        modify_macho_object(path_name,
-                            rpaths, deps, idpath,
-                            nrpaths, ndeps, nid)
+        for path_name in path_names:
+            rpaths, deps, idpath = macho_get_paths(path_name)
+            nid = None
+            nrpaths = []
+            ndeps = []
+            nrpaths, ndeps, nid = macho_replace_paths(old_dir, new_dir,
+                                                      rpaths, deps, idpath)
+            modify_macho_object(path_name,
+                                rpaths, deps, idpath,
+                                nrpaths, ndeps, nid)
     elif platform.system() == 'Linux':
-        orig_rpaths = get_existing_elf_rpaths(path_name)
-        new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
-        modify_elf_object(path_name, orig_rpaths, new_rpaths)
+        for path_name in path_names:
+            orig_rpaths = get_existing_elf_rpaths(path_name)
+            new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
+            modify_elf_object(path_name, orig_rpaths, new_rpaths)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
 
-def make_binary_relative(cur_path_name, orig_path_name, old_dir):
+def make_binary_relative(cur_path_names, orig_path_names, old_dir):
     """
     Make RPATHs relative to old_dir in given elf or mach-o file path_name
     """
     if platform.system() == 'Darwin':
-        rpaths, deps, idpath = macho_get_paths(cur_path_name)
-        nid = None
-        nrpaths = []
-        ndeps = []
-        nrpaths, ndeps, nid = macho_make_paths_relative(orig_path_name,
-                                                        old_dir, rpaths,
-                                                        deps, idpath)
-        modify_macho_object(cur_path_name,
-                            rpaths, deps, idpath,
-                            nrpaths, ndeps, nid)
+        for cur_path_name, orig_path_name in zip(cur_path_names,
+                                                 orig_path_names):
+            rpaths, deps, idpath = macho_get_paths(cur_path_name)
+            nid = None
+            nrpaths = []
+            ndeps = []
+            nrpaths, ndeps, nid = macho_make_paths_relative(orig_path_name,
+                                                            old_dir, rpaths,
+                                                            deps, idpath)
+            modify_macho_object(cur_path_name,
+                                rpaths, deps, idpath,
+                                nrpaths, ndeps, nid)
     elif platform.system() == 'Linux':
-        orig_rpaths = get_existing_elf_rpaths(cur_path_name)
-        new_rpaths = get_relative_rpaths(orig_path_name, old_dir, orig_rpaths)
-        modify_elf_object(cur_path_name, orig_rpaths, new_rpaths)
+        for cur_path_name, orig_path_name in zip(cur_path_names,
+                                                 orig_path_names):
+            orig_rpaths = get_existing_elf_rpaths(cur_path_name)
+            new_rpaths = get_relative_rpaths(orig_path_name, old_dir,
+                                             orig_rpaths)
+            modify_elf_object(cur_path_name, orig_rpaths, new_rpaths)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
 
-def relocate_text(path_name, old_dir, new_dir):
+def relocate_text(path_names, old_dir, new_dir):
     """
     Replace old path with new path in text file path_name
     """
-    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir, path_name)
+    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir,
+                path_names, backup=False)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):

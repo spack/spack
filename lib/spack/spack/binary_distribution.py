@@ -334,10 +334,13 @@ def make_package_relative(workdir, prefix):
     """
     buildinfo = read_buildinfo_file(workdir)
     old_path = buildinfo['buildpath']
+    orig_path_names = list()
+    cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
-        orig_path_name = os.path.join(prefix, filename)
-        cur_path_name = os.path.join(workdir, filename)
-        relocate.make_binary_relative(cur_path_name, orig_path_name, old_path)
+        orig_path_names.append(os.path.join(prefix, filename))
+        cur_path_names.append(os.path.join(workdir, filename))
+        relocate.make_binary_relative(cur_path_names, orig_path_names,
+                                      old_path)
 
 
 def relocate_package(prefix):
@@ -353,14 +356,18 @@ def relocate_package(prefix):
 
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
+    path_names = set()
     for filename in buildinfo['relocate_textfiles']:
         path_name = os.path.join(prefix, filename)
-        relocate.relocate_text(path_name, old_path, new_path)
+        path_names.add(path_name)
+    relocate.relocate_text(path_names, old_path, new_path)
     # only need to change the rpaths if they were not made relative
     if not rel:
+        path_names = set()
         for filename in buildinfo['relocate_binaries']:
             path_name = os.path.join(prefix, filename)
-            relocate.relocate_binary(path_name, old_path, new_path)
+            path_names.add(path_name)
+        relocate.relocate_binary(path_names, old_path, new_path)
 
 
 def extract_tarball(spec, filename, yes_to_all=False, force=False):
