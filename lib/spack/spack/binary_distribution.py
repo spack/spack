@@ -362,6 +362,7 @@ def relocate_package(prefix):
             path_name = os.path.join(prefix, filename)
             relocate.relocate_binary(path_name, old_path, new_path)
 
+
 def extract_tarball(spec, filename, yes_to_all=False, force=False):
     """
     extract binary tarball for given package into install area

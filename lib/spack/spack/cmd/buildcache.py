@@ -227,15 +227,15 @@ def createtarball(args):
             tty.warn("%s exists, use -f to force overwrite." % e)
         except NoGpgException:
             tty.die("gpg2 is not available,"
-                     " use -y to create unsigned build caches")
+                    " use -y to create unsigned build caches")
         except NoKeyException:
             tty.die("no default key available for signing,"
-                     " use -y to create unsigned build caches"
-                     " or spack gpg init to create a default key")
+                    " use -y to create unsigned build caches"
+                    " or spack gpg init to create a default key")
         except PickKeyException:
             tty.die("multi keys available for signing,"
-                     " use -y to create unsigned build caches"
-                     " or -k <key hash> to pick a key")
+                    " use -y to create unsigned build caches"
+                    " or -k <key hash> to pick a key")
 
 
 def installtarball(args):
