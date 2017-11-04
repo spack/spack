@@ -122,8 +122,8 @@ We will start by opening the compilers configuration file
       modules: []
       operating_system: rhel6
       paths:
-        cc: !!python/unicode '/path/to/clang'
-        cxx: !!python/unicode '/path/to/clang++'
+        cc: !!python/unicode '/usr/bin/clang'
+        cxx: !!python/unicode '/usr/bin/clang++'
         f77: null
         fc: null
       spec: clang@3.8.0-2ubuntu4
@@ -135,10 +135,10 @@ We will start by opening the compilers configuration file
       modules: []
       operating_system: rhel6
       paths:
-        cc: !!python/unicode '/path/to/gcc'
-        cxx: !!python/unicode '/path/to/g++'
-        f77: !!python/unicode '/path/to/gfortran'
-        fc: !!python/unicode '/path/to/gfortran'
+        cc: !!python/unicode '/usr/bin/gcc'
+        cxx: !!python/unicode '/usr/bin/g++'
+        f77: !!python/unicode '/usr/bin/gfortran'
+        fc: !!python/unicode '/usr/bin/gfortran'
       spec: gcc@5.4.0
       target: x86_64
 
@@ -157,10 +157,10 @@ to the compilers.yaml file.
       modules: []
       operating_system: rhel6
       paths:
-        cc: !!python/unicode '/path/to/clang'
-        cxx: !!python/unicode '/path/to/clang++'
-        f77: !!python/unicode '/path/to/gfortran'
-        fc: !!python/unicode '/path/to/gfortran'
+        cc: !!python/unicode '/usr/bin/clang'
+        cxx: !!python/unicode '/usr/bin/clang++'
+        f77: !!python/unicode '/usr/bin/gfortran'
+        fc: !!python/unicode '/usr/bin/gfortran'
       spec: clang@3.8.0-gfortran
       target: x86_64
 
@@ -218,11 +218,11 @@ Let's open our compilers configuration file again and add a compiler flag.
       modules: []
       operating_system: rhel6
       paths:
-        cc: !!python/unicode '/path/to/clang'
-        cxx: !!python/unicode '/path/to/clang++'
-        f77: !!python/unicode '/path/to/gfortran'
-        fc: !!python/unicode '/path/to/gfortran'
-      spec: clang@3.8.0-2ubuntu4+gfortran
+        cc: !!python/unicode '/usr/bin/clang'
+        cxx: !!python/unicode '/usr/bin/clang++'
+        f77: !!python/unicode '/usr/bin/gfortran'
+        fc: !!python/unicode '/usr/bin/gfortran'
+      spec: clang@3.8.0-gfortran
       target: x86_64
 
 We can test this out using the `spack spec` command to show how the
@@ -495,7 +495,7 @@ pre-installed zlib.
       variants: ~mpi
     zlib:
       paths:
-        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /
+        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /usr
 
 Okay what's going on here? We've told Spack that we know the path to an externally installed zlib. We've also told Spack how that zlib was built by writing it out in Spec format. And we've listed the prefix into which zlib was installed.
 
@@ -530,7 +530,7 @@ Note this did not use our external zlib. Why? Because Spack concretized zlib to 
       variants: ~mpi
     zlib:
       paths:
-        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /
+        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /usr
       buildable: False
 
 Now Spack will be forced to choose the external zlib.
@@ -591,11 +591,11 @@ of hdf5? Well, fortunately we have mpich installed on these systems.
       variants: ~mpi
     zlib:
       paths:
-        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /
+        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /usr
       buildable: False
     mpich:
       paths:
-        mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
+        mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64: /usr
       buildable: False
 
 If we concretize `hdf5+mpi` with this configuration file, we will just
@@ -650,11 +650,11 @@ again.
       variants: ~shared
     zlib:
       paths:
-        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /
+        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /usr
       buildable: False
     mpich:
       paths:
-        mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
+        mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64: /usr
       buildable: False
     openmpi:
       buildable: False
