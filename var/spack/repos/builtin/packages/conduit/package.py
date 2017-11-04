@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -146,7 +146,7 @@ class Conduit(Package):
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
-            # (see: https://github.com/LLNL/spack/issues/2658)
+            # (see: https://github.com/spack/spack/issues/2658)
             if "+shared" in spec:
                 cmake_args.extend(std_cmake_args)
             else:

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -131,7 +131,7 @@ class Graphviz(AutotoolsPackage):
                     "`tested_bindings` list.  Be prepared to add "
                     "required dependencies.  "
                     "Please then submit a pull request to "
-                    "http://github.com/llnl/spack".format(var))
+                    "http://github.com/spack/spack".format(var))
             options.append('--disable-%s' % var[1:])
 
         for var in self.tested_bindings:

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -108,7 +108,7 @@ class Adios(AutotoolsPackage):
     patch('python.patch', when='@1.10.0:')
     # Fix ADIOS <=1.10.0 compile error on HDF5 1.10+
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
-    #   https://github.com/LLNL/spack/issues/1683
+    #   https://github.com/spack/spack/issues/1683
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
 
     def validate(self, spec):
