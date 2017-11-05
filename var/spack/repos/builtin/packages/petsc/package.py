@@ -42,6 +42,7 @@ class Petsc(Package):
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.8.1', '3ed75c1147800fc156fe1f1e515a68a7')
     version('3.8.0', '02680f1f78a0d4c5a9de80a366793eb8')
     version('3.7.7', 'c2cfb76677d32839810c4cf51a2f9cf5')
     version('3.7.6', '977aa84b85aa3146c695592cd0a11057')
