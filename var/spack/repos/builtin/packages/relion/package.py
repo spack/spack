@@ -34,9 +34,7 @@ class Relion(CMakePackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     url      = "https://github.com/3dem/relion"
 
-    version('2.1', git='https://github.com/3dem/relion.git',
-    commit='e7607a869687b636d3c39e0d5b6a9cba930fc3b2')
-    version('2.0.3', 'c61be5ef00848806278b341f43893f5d')
+    version('develop', git='https://github.com/3dem/relion.git')
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=False, description="enable compute on gpu")
@@ -50,7 +48,7 @@ class Relion(CMakePackage):
     depends_on('mpi')
     depends_on('fftw+float+double')
     depends_on('fltk', when='+gui')
-    depends_on('cuda', when='+cuda')
+    depends_on('cuda@8.0:8.99', when='+cuda')
 
     def cmake_args(self):
         args = [
