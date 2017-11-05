@@ -52,10 +52,14 @@ class Nek5000(Package):
 
     version('17.0.0-beta2', git = 'https://github.com/Nek5000/Nek5000.git', \
                commit = 'b95f46c59f017fff2fc19b66aa65a881085a7572')
-    version('develop', git = 'https://github.com/Nek5000/Nek5000.git', \
+    version('develop'     , git = 'https://github.com/Nek5000/Nek5000.git', \
            branch='master')
 
-    variant('mpi', default=True, description='Build with MPI.')
+    variant('mpi'    , default=True, description='Build with MPI.'    )
+    variant('genbox' , default=True, description='Build genbox tool.' )
+    variant('genmap' , default=True, description='Build genmap tool.' )
+    variant('prenek' , default=True, description='Build prenek tool.' )
+    variant('postnek', default=True, description='Build psotnek tool.')
 
     depends_on('mpi', when="+mpi", type=('build'))
 
@@ -81,18 +85,39 @@ class Nek5000(Package):
             filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"',  'maketools')
             filter_file(r'^CC\s*=.*' , 'CC=\"'  + CC  + '\"',  'maketools')
             makeTools = Executable('./maketools')
-            makeTools('all')
+
+            if '+genbox' in spec:
+                makeTools('genbox' )
+            if '+genmap' in spec:
+                makeTools('genmap' )
+            if '+prenek' in spec:
+                makeTools('prenek' )
+            if '+postnek' in spec:
+                makeTools('postnek')
 
         with working_dir(binDir):
             if '+mpi' in spec:
                 F77 = spec['mpi'].mpif77
                 CC  = spec['mpi'].mpicc
 
+            # Update the makenek to use correct compilers and
+            # Nek5000 source. Nek5000 source is manually copied.
             filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"',  'makenek')
             filter_file(r'^CC\s*=.*' , 'CC=\"'  + CC  + '\"',  'makenek')
             filter_file(r'SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"'  + \
                                              prefix.bin.Nek5000 + '\"',  'makenek')
-
             install('makenek', installDir)
-            install('genbox' , installDir)
+
+            #FIXME "Not portable across platforms"
             call('cp -r ../../Nek5000 '  + installDir, shell=True)
+
+            if '+genbox' in spec:
+                install('genbox' , installDir)
+            if '+genmap' in spec:
+                install('genmap' , installDir)
+            if '+prenek' in spec:
+                install('prex'   , installDir)
+                install('pretex' , installDir)
+            if '+postnek' in spec:
+                install('postx'  , installDir)
+                install('postex' , installDir)
