@@ -26,7 +26,7 @@ Spack works out of the box. Simply clone spack and get going.
 
 .. code-block:: console
 
-  $ git clone https://github.com/LLNL/spack.git
+  $ git clone https://github.com/spack/spack.git
   Initialized empty Git repository in ~/spack/.git/
   remote: Counting objects: 47125, done.
   remote: Compressing objects: 100% (68/68), done.

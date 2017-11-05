@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -42,6 +42,7 @@ class Petsc(Package):
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.8.1', '3ed75c1147800fc156fe1f1e515a68a7')
     version('3.8.0', '02680f1f78a0d4c5a9de80a366793eb8')
     version('3.7.7', 'c2cfb76677d32839810c4cf51a2f9cf5')
     version('3.7.6', '977aa84b85aa3146c695592cd0a11057')
@@ -81,6 +82,9 @@ class Petsc(Package):
             description='Activates support for Trilinos (only parallel)')
     variant('int64', default=False,
             description='Compile with 64bit indices')
+
+    # 3.8.0 has a build issue with MKL - so list this conflict explicitly
+    conflicts('^intel-mkl', when='@3.8.0')
 
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc

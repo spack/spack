@@ -1,5 +1,5 @@
 -- -*- lua -*-
--- Module file created by spack (https://github.com/LLNL/spack) on {{ timestamp }}
+-- Module file created by spack (https://github.com/spack/spack) on {{ timestamp }}
 --
 -- {{ spec.short_spec }}
 --
