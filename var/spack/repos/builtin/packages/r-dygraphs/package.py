@@ -34,6 +34,7 @@ class RDygraphs(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/dygraphs/index.html"
     url      = "https://cran.r-project.org/src/contrib/dygraphs_0.9.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/dygraphs"
 
     version('0.9', '7f0ce4312bcd3f0a58b8c03b2772f833')
 

@@ -31,6 +31,7 @@ class RVegan(RPackage):
 
     homepage = "https://github.com/vegandevs/vegan"
     url      = "https://cran.r-project.org/src/contrib/vegan_2.4-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/vegan"
 
     version('2.4-3', 'db17d4c4b9a4d421246abd5b36b00fec')
 

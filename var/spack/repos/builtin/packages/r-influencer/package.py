@@ -37,6 +37,7 @@ class RInfluencer(RPackage):
 
     homepage = "https://github.com/rcc-uchicago/influenceR"
     url      = "https://cran.r-project.org/src/contrib/influenceR_0.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/influenceR"
 
     version('0.1.0', '6c8b6decd78c341364b5811fb3050ba5')
 

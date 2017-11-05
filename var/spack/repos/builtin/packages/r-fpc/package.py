@@ -30,6 +30,7 @@ class RFpc(RPackage):
 
     homepage = "http://www.homepages.ucl.ac.uk/~ucakche"
     url      = "https://cran.r-project.org/src/contrib/fpc_2.1-10.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/fpc"
 
     version('2.1-10', '75e5340e416cd13d7751e06f1c07866b')
 

@@ -38,6 +38,7 @@ class RRpostgresql(RPackage):
 
     homepage = "https://code.google.com/p/rpostgresql/"
     url      = "https://cran.r-project.org/src/contrib/RPostgreSQL_0.4-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RPostgreSQL"
 
     version('0.4-1', 'e7b22e212afbb2cbb88bab937f93e55a')
 

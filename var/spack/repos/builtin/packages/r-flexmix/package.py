@@ -30,6 +30,7 @@ class RFlexmix(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=flexmix"
     url      = "https://cran.r-project.org/src/contrib/flexmix_2.3-14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/flexmix"
 
     version('2.3-14', '5be4f7764e6a697f4586e60c2bf6e960')
 

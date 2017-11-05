@@ -34,6 +34,7 @@ class RMaptools(RPackage):
 
     homepage = "http://r-forge.r-project.org/projects/maptools/"
     url      = "https://cran.r-project.org/src/contrib/maptools_0.8-39.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/maptools"
 
     version('0.8-39', '3690d96afba8ef22c8e27ae540ffb836')
 

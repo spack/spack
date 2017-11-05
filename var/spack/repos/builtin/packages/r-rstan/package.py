@@ -38,6 +38,7 @@ class RRstan(RPackage):
 
     homepage = "http://mc-stan.org/"
     url      = "https://cran.r-project.org/src/contrib/rstan_2.10.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rstan"
 
     version('2.10.1', 'f5d212f6f8551bdb91fe713d05d4052a')
 

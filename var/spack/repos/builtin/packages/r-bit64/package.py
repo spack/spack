@@ -41,7 +41,7 @@ class RBit64(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/bit64/index.html"
     url      = "https://cran.rstudio.com/src/contrib/bit64_0.9-7.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/bit64"
     version('0.9-7', 'ac4bc39827338c552d329d3d4d2339c2')
 
     depends_on('r-bit', type=('build', 'run'))

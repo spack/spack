@@ -31,6 +31,7 @@ class RVisnetwork(RPackage):
 
     homepage = "https://github.com/datastorm-open/visNetwork"
     url      = "https://cran.r-project.org/src/contrib/visNetwork_1.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/visNetwork"
 
     version('1.0.1', 'dfc9664a5165134d8dbdcd949ad73cf7')
 

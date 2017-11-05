@@ -30,6 +30,7 @@ class RGgpubr(RPackage):
 
     homepage = "http://www.sthda.com/english/rpkgs/ggpubr"
     url      = "https://cran.r-project.org/src/contrib/ggpubr_0.1.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ggpubr"
 
     version('0.1.2', '42a5749ae44121597ef511a7424429d1')
 

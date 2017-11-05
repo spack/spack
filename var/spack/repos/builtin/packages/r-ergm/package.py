@@ -32,6 +32,7 @@ class RErgm(RPackage):
 
     homepage = "http://statnet.org"
     url      = "https://cran.r-project.org/src/contrib/ergm_3.7.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ergm"
 
     version('3.7.1', '431ae430c76b2408988f469831d80126')
 

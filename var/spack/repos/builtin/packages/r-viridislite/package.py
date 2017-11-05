@@ -30,6 +30,7 @@ class RViridislite(RPackage):
 
     homepage = "https://github.com/sjmgarnier/viridisLite"
     url      = "https://cran.r-project.org/src/contrib/viridisLite_0.2.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/viridisLite"
 
     version('0.2.0', '04a04415cf651a2b5f964b261896c0fb')
 

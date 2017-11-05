@@ -32,6 +32,7 @@ class RRbokeh(RPackage):
 
     homepage = "https://hafen.github.io/rbokeh"
     url      = "https://cran.r-project.org/src/contrib/rbokeh_0.5.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rbokeh"
 
     version('0.5.0', '4e14778c3fbd9286460ca28c68f57d10')
 

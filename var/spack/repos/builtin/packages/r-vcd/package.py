@@ -35,6 +35,7 @@ class RVcd(RPackage):
 
     homepage = "https://cran.r-project.org/package=vcd"
     url      = "https://cran.r-project.org/src/contrib/vcd_1.4-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/vcd"
 
     version('1.4-1', '7db150a77f173f85b69a1f86f73f8f02')
 

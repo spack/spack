@@ -32,5 +32,6 @@ class RDeoptimr(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/DEoptimR/index.html"
     url      = "https://cran.r-project.org/src/contrib/DEoptimR_1.0-8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/DEoptimR"
 
     version('1.0-8', 'c85836a504fbe4166e3c8eba0efe705d')

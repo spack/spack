@@ -30,6 +30,7 @@ class RAdabag(RPackage):
 
     homepage = "https://cran.r-project.org/package=adabag"
     url      = "https://cran.r-project.org/src/contrib/adabag_4.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/adabag"
 
     version('4.1', '2e019f053d49f62ebb3b1697bbb50afa')
 

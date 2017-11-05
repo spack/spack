@@ -31,6 +31,7 @@ class RRpartPlot(RPackage):
 
     homepage = "https://cran.r-project.org/package=rpart.plot"
     url      = "https://cran.r-project.org/src/contrib/rpart.plot_2.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart.plot"
 
     version('2.1.0', 'fb0f8edfe22c464683ee82aa429136f9')
 

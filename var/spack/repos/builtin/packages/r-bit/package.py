@@ -30,5 +30,5 @@ class RBit(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/bit/index.html"
     url      = "https://cran.rstudio.com/src/contrib/bit_1.1-12.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/bit"
     version('1.1-12', 'c4473017beb93f151a8e672e4d5747af')

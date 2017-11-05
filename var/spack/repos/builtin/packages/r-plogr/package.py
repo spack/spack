@@ -32,5 +32,5 @@ class RPlogr(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/plogr/index.html"
     url      = "https://cran.r-project.org/src/contrib/plogr_0.1-1.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/plogr"
     version('0.1-1', '5ee46ed21b5c571d02900219098517c0')

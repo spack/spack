@@ -31,6 +31,7 @@ class RTestthat(RPackage):
 
     homepage = "https://github.com/hadley/testthat"
     url      = "https://cran.r-project.org/src/contrib/testthat_1.0.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/testthat"
 
     version('1.0.2', '6c6a90c8db860292df5784a70e07b8dc')
 

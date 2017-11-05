@@ -31,7 +31,7 @@ class RReshape(RPackage):
 
     homepage = "https://cran.r-project.org/package=reshape"
     url      = "https://cran.r-project.org/src/contrib/reshape_0.8.7.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/reshape"
 
     version('0.8.7', '0b0eececc5eb74dea9d59a985bce6211')
 

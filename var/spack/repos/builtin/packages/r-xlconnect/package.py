@@ -31,6 +31,7 @@ class RXlconnect(RPackage):
 
     homepage = "http://miraisolutions.wordpress.com/"
     url      = "https://cran.r-project.org/src/contrib/XLConnect_0.2-11.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/XLConnect"
 
     version('0.2-12', '3340d05d259f0a41262eab4ed32617ad')
     version('0.2-11', '9d1769a103cda05665df399cc335017d')

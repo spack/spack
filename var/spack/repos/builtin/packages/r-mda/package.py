@@ -31,6 +31,7 @@ class RMda(RPackage):
 
     homepage = "https://cran.r-project.org/package=mda"
     url      = "https://cran.r-project.org/src/contrib/mda_0.4-9.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/mda"
 
     version('0.4-9', '2ce1446c4a013e0ebcc1099a00269ad9')
 

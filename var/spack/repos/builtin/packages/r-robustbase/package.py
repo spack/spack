@@ -34,6 +34,7 @@ class RRobustbase(RPackage):
 
     homepage = "https://robustbase.r-forge.r-project.org"
     url      = "https://cran.r-project.org/src/contrib/robustbase_0.92-7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/robustbase"
 
     version('0.92-7', 'db3c8d12f9729b35bad17abf09e80b72')
 

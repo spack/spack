@@ -32,6 +32,7 @@ class RTidyr(RPackage):
 
     homepage = "https://github.com/hadley/tidyr"
     url      = "https://cran.r-project.org/src/contrib/tidyr_0.5.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/tidyr"
 
     version('0.5.1', '3cadc869510c054ed93d374ab44120bd')
 

@@ -34,6 +34,7 @@ class RMunsell(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/munsell/index.html"
     url      = "https://cran.r-project.org/src/contrib/munsell_0.4.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/munsell"
 
     version('0.4.3', 'ebd205323dc37c948f499ee08be9c476')
 

@@ -37,6 +37,7 @@ class RPbdzmq(RPackage):
 
     homepage = "http://r-pbd.org/"
     url      = "https://cran.r-project.org/src/contrib/pbdZMQ_0.2-4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pbdZMQ"
 
     version('0.2-4', 'e5afb70199aa54d737ee7a0e26bde060')
 

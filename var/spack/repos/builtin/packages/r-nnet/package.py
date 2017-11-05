@@ -31,5 +31,6 @@ class RNnet(RPackage):
 
     homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
     url      = "https://cran.r-project.org/src/contrib/nnet_7.3-12.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/nnet"
 
     version('7.3-12', 'dc7c6f0d0de53d8fc72b44554400a74e')

@@ -35,7 +35,7 @@ class RGgally(RPackage):
 
     homepage = "https://cran.r-project.org/package=GGally"
     url      = "https://cran.r-project.org/src/contrib/GGally_1.3.2.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/GGally"
 
     version('1.3.2', 'efe58133ba8431198af7afb6bcb76264')
 
