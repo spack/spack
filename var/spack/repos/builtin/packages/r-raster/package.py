@@ -32,6 +32,7 @@ class RRaster(RPackage):
 
     homepage = "http://cran.r-project.org/package=raster"
     url      = "https://cran.r-project.org/src/contrib/raster_2.5-8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/raster"
 
     version('2.5-8', '2a7db931c74d50516e82d04687c0a577')
 

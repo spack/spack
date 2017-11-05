@@ -34,5 +34,6 @@ class RMagrittr(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/magrittr/index.html"
     url      = "https://cran.r-project.org/src/contrib/magrittr_1.5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/magrittr"
 
     version('1.5', 'e74ab7329f2b9833f0c3c1216f86d65a')

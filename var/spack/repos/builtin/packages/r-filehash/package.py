@@ -38,5 +38,6 @@ class RFilehash(RPackage):
 
     homepage = 'https://cran.r-project.org/'
     url      = "https://cran.r-project.org/src/contrib/filehash_2.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/filehash"
 
     version('2.3', '01fffafe09b148ccadc9814c103bdc2f')

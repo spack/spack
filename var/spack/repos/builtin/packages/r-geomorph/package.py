@@ -33,6 +33,7 @@ class RGeomorph(RPackage):
 
     homepage = "https://cran.r-project.org/package=geomorph"
     url      = "https://cran.r-project.org/src/contrib/geomorph_3.0.5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/geomorph"
 
     version('3.0.5', '240e69fe260ca3ef4d84b4281d61396c')
 

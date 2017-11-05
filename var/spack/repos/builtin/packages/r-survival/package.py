@@ -32,7 +32,7 @@ class RSurvival(RPackage):
 
     homepage = "https://cran.r-project.org/package=survival"
     url      = "https://cran.r-project.org/src/contrib/survival_2.41-3.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/survival"
 
     version('2.41-3', '6edb8093d1177775685dc26f3ce78d73')
     version('2.40-1', 'a2474b656cd723791268e3114481b8a7')

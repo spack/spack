@@ -34,7 +34,7 @@ class RStringr(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/stringr/index.html"
     url      = "https://cran.r-project.org/src/contrib/stringr_1.1.0.tar.gz"
-    list_url = "https://cran.r-project.org/web/packages/stringr/index.html"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/stringr"
 
     version('1.2.0', '9054b1de91c578cc5cf454d656e9c697')
     version('1.1.0', '47973a33944c6d5db9524b1e835b8a5d')

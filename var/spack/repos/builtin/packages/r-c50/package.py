@@ -31,6 +31,7 @@ class RC50(RPackage):
 
     homepage = "https://cran.r-project.org/package=C50"
     url      = "https://cran.r-project.org/src/contrib/C50_0.1.0-24.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/C50"
 
     version('0.1.0-24', '42631e65c5c579532cc6edf5ea175949')
 

@@ -31,6 +31,7 @@ class RNetworkd3(RPackage):
 
     homepage = "http://cran.r-project.org/package=networkD3"
     url      = "https://cran.r-project.org/src/contrib/networkD3_0.2.12.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/networkD3"
 
     version('0.2.12', '356fe4be59698e6fb052644bd9659d84')
 

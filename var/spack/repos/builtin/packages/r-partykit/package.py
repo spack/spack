@@ -38,6 +38,7 @@ class RPartykit(RPackage):
 
     homepage = "http://partykit.r-forge.r-project.org/partykit"
     url      = "https://cran.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/partykit"
 
     version('1.1-1', '8fcb31d73ec1b8cd3bcd9789639a9277')
 

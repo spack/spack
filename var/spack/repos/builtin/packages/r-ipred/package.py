@@ -32,6 +32,7 @@ class RIpred(RPackage):
 
     homepage = "https://cran.r-project.org/package=ipred"
     url      = "https://cran.r-project.org/src/contrib/ipred_0.9-5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ipred"
 
     version('0.9-5', 'ce8768547a7aa9554ad3650b18ea3cbd')
 

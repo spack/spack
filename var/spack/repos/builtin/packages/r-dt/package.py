@@ -33,6 +33,7 @@ class RDt(RPackage):
 
     homepage = "http://rstudio.github.io/DT"
     url      = "https://cran.r-project.org/src/contrib/DT_0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/DT"
 
     version('0.1', '5c8df984921fa484784ec4b8a4fb6f3c')
 
