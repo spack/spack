@@ -29,12 +29,12 @@ maintain a single file for many different builds of the same package.
 See the :doc:`features` for examples and highlights.
 
 Get spack from the `github repository
-<https://github.com/llnl/spack>`_ and install your first
+<https://github.com/spack/spack>`_ and install your first
 package:
 
 .. code-block:: console
 
-   $ git clone https://github.com/llnl/spack.git
+   $ git clone https://github.com/spack/spack.git
    $ cd spack/bin
    $ ./spack install libelf
 

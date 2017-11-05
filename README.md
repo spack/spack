@@ -24,7 +24,7 @@ for examples and highlights.
 To install spack and your first package, make sure you have Python.
 Then:
 
-    $ git clone https://github.com/llnl/spack.git
+    $ git clone https://github.com/spack/spack.git
     $ cd spack/bin
     $ ./spack install libelf
 
@@ -71,11 +71,11 @@ to you.
 Contributing to Spack is relatively easy.  Just send us a
 [pull request](https://help.github.com/articles/using-pull-requests/).
 When you send your request, make ``develop`` the destination branch on the
-[Spack repository](https://github.com/LLNL/spack).
+[Spack repository](https://github.com/spack/spack).
 
 Your PR must pass Spack's unit tests and documentation tests, and must be
 [PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant.  We enforce
-these guidelines with [Travis CI](https://travis-ci.org/LLNL/spack).  To
+these guidelines with [Travis CI](https://travis-ci.org/spack/spack).  To
 run these tests locally, and for helpful tips on git, see our
 [Contribution Guide](http://spack.readthedocs.io/en/latest/contribution_guide.html).
 
@@ -87,7 +87,7 @@ stable release.
 
 Authors
 ----------------
-Many thanks go to Spack's [contributors](https://github.com/llnl/spack/graphs/contributors).
+Many thanks go to Spack's [contributors](https://github.com/spack/spack/graphs/contributors).
 
 Spack was created by Todd Gamblin, tgamblin@llnl.gov.
 
