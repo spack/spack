@@ -35,7 +35,7 @@ class Motioncor2(Package):
     tomographic images. MotionCor2 is sufficiently fast
     to keep up with automated data collection."""
 
-    homepage = "http://www.example.com"
+    homepage = "http://msg.ucsf.edu/em/software"
     url      = "http://msg.ucsf.edu/MotionCor2/MotionCor2-1.0.2.tar.gz"
 
     version('1.0.2',        'f2f4c5b09170ab8480ca657f14cdba2b')
