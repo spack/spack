@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -120,8 +120,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                            self.prefix.lib.perl5 + '\\"')
 
         # Discussion of -fPIC for Intel at:
-        # https://github.com/LLNL/spack/pull/3081 and
-        # https://github.com/LLNL/spack/pull/4416
+        # https://github.com/spack/spack/pull/3081 and
+        # https://github.com/spack/spack/pull/4416
         if spec.satisfies('%intel'):
             config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
 
