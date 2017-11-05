@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 #
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ class Lammps(CMakePackage):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator. This package uses patch releases, not
     stable release.
-    See https://github.com/LLNL/spack/pull/5342 for a detailed
+    See https://github.com/spack/spack/pull/5342 for a detailed
     discussion.
     """
     homepage = "http://lammps.sandia.gov/"
