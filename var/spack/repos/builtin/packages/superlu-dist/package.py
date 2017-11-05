@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@ class SuperluDist(Package):
 
     version('develop', git='https://github.com/xiaoyeli/superlu_dist', tag='master')
     version('xsdk-0.2.0', git='https://github.com/xiaoyeli/superlu_dist', tag='xsdk-0.2.0')
+    version('5.2.2', 'a685ef7fb7859b24c8c9d5d5f121a8a5')
     version('5.2.1', 'af857778ffeb04aea02aa4843e6e8e1d')
     version('5.1.3', '3a9e88a8469aa7f319f0364364b8da35')
     version('5.1.1', '12638c631733a27dcbd87110e9f9cb1e')

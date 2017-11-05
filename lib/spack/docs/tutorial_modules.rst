@@ -661,7 +661,7 @@ Now the ``py-scipy`` module will be:
 .. code-block:: tcl
 
   #%Module1.0
-  ## Module file created by spack (https://github.com/LLNL/spack) on 2016-11-02 20:53:21.283547
+  ## Module file created by spack (https://github.com/spack/spack) on 2016-11-02 20:53:21.283547
   ##
   ## py-scipy@0.18.1%gcc@6.2.0 arch=linux-Ubuntu14-x86_64-e6uljfi
   ##

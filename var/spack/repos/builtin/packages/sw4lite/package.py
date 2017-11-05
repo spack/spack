@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -48,6 +48,8 @@ class Sw4lite(MakefilePackage):
     depends_on('lapack')
     depends_on('mpi')
 
+    parallel = False
+
     @property
     def build_targets(self):
         targets = []
@@ -81,7 +83,11 @@ class Sw4lite(MakefilePackage):
         targets.append('EXTRA_CXX_FLAGS=')
         targets.append('EXTRA_FORT_FLAGS=')
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
-        targets.append('EXTRA_LINK_FLAGS={0}'.format(lapack_blas.ld_flags))
+        if spec.satisfies('%gcc'):
+            targets.append('EXTRA_LINK_FLAGS={0} -lgfortran'
+                           .format(lapack_blas.ld_flags))
+        else:
+            targets.append('EXTRA_LINK_FLAGS={0}'.format(lapack_blas.ld_flags))
 
         return targets
 

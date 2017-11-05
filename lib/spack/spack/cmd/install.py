@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -73,6 +73,9 @@ the dependencies"""
     subparser.add_argument(
         '--restage', action='store_true',
         help="if a partial install is detected, delete prior state")
+    subparser.add_argument(
+        '--use-cache', action='store_true', dest='use_cache',
+        help="check for pre-built Spack packages in mirrors")
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")
@@ -395,7 +398,8 @@ def install(parser, args, **kwargs):
         'make_jobs': args.jobs,
         'verbose': args.verbose,
         'fake': args.fake,
-        'dirty': args.dirty
+        'dirty': args.dirty,
+        'use_cache': args.use_cache
     })
 
     if args.run_tests:

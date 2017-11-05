@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,21 +36,24 @@ class EcpProxyApps(Package):
     homepage = "https://exascaleproject.github.io/proxy-apps"
 
     # Dummy url
-    url = 'https://github.com/exascaleproject/proxy-apps/archive/v0.9.tar.gz'
+    url = 'https://github.com/exascaleproject/proxy-apps/archive/v1.0.tar.gz'
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('0.9', '395e9d79ae93e8ad71f1ec9773abdd43')
+    version('1.0', '5a26b184f506afeb7d221f15c0e8f153')
 
-    depends_on('amg@1.0', when='@0.9')
-    depends_on('laghos@1.0', when='@0.9')
-    depends_on('miniamr@1.4.0', when='@0.9')
-    depends_on('minife@2.1.0', when='@0.9')
-    depends_on('swfft@1.0', when='@0.9')
-    depends_on('comd@1.1', when='@0.9')
-    depends_on('minitri@1.0', when='@0.9')
-    depends_on('sw4lite@1.0', when='@0.9')
-    depends_on('xsbench@14', when='@0.9')
+    depends_on('amg@1.0', when='@1.0')
+    depends_on('candle-benchmarks@1.0', when='@1.0')
+    depends_on('comd@1.1', when='@1.0')
+    depends_on('laghos@1.0', when='@1.0')
+    depends_on('macsio@1.0', when='@1.0')
+    depends_on('miniamr@1.4.0', when='@1.0')
+    depends_on('minife@2.1.0', when='@1.0')
+    depends_on('minitri@1.0', when='@1.0')
+    depends_on('nekbone@17.0', when='@1.0')
+    depends_on('sw4lite@1.0', when='@1.0')
+    depends_on('swfft@1.0', when='@1.0')
+    depends_on('xsbench@14', when='@1.0')
 
     # Dummy install for now,  will be removed when metapackage is available
     def install(self, spec, prefix):

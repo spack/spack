@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -53,7 +53,7 @@ class Boost(Package):
     # NOTE: 1.64.0 seems fine for *most* applications, but if you need
     #       +python and +mpi, there seem to be errors with out-of-date
     #       API calls from mpi/python.
-    #       See: https://github.com/LLNL/spack/issues/3963
+    #       See: https://github.com/spack/spack/issues/3963
     version('1.64.0', '93eecce2abed9d2442c9676914709349')
     version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')

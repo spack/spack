@@ -7,7 +7,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -132,6 +132,9 @@ fetch_cache = spack.fetch_strategy.FsCache(cache_path)
 misc_cache_path = canonicalize_path(
     _config.get('misc_cache', join_path(user_config_path, 'cache')))
 misc_cache = FileCache(misc_cache_path)
+
+
+binary_cache_retrieved_specs = set()
 
 
 #: Directories where to search for templates
