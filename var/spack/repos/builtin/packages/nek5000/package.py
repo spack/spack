@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from subprocess import call
+
 
 class Nek5000(Package):
     """A fast and scalable high-order solver for computational fluid
@@ -33,25 +33,25 @@ class Nek5000(Package):
     url      = "https://github.com/Nek5000/Nek5000"
 
     tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
-                                         'spectral-elements', 'fluid']
+            'spectral-elements', 'fluid']
 
-    version('17.0.0-beta2', git = 'https://github.com/Nek5000/Nek5000.git',
-        commit = 'b95f46c59f017fff2fc19b66aa65a881085a7572')
-    version('develop'     , git = 'https://github.com/Nek5000/Nek5000.git',
+    version('17.0.0-beta2', git='https://github.com/Nek5000/Nek5000.git',
+        commit='b95f46c59f017fff2fc19b66aa65a881085a7572')
+    version('develop',      git='https://github.com/Nek5000/Nek5000.git',
         branch='master')
 
     # MPI
     variant('mpi', default=True, description='Build with MPI.')
 
     # Tools
-    variant('genbox',   default=True, description='Build genbox tool.'  )
-    variant('int_tp',   default=True, description='Build int_tp tool.'  )
-    variant('n2to3',    default=True, description='Build n2to3 tool.'   )
-    variant('postnek',  default=True, description='Build postnek tool.' )
+    variant('genbox',   default=True, description='Build genbox tool.')
+    variant('int_tp',   default=True, description='Build int_tp tool.')
+    variant('n2to3',    default=True, description='Build n2to3 tool.')
+    variant('postnek',  default=True, description='Build postnek tool.')
     variant('reatore2', default=True, description='Build reatore2 tool.')
-    variant('genmap',   default=True, description='Build genmap tool.'  )
+    variant('genmap',   default=True, description='Build genmap tool.')
     variant('nekmerge', default=True, description='Build nekmerge tool.')
-    variant('prenek',   default=True, description='Build prenek tool.'  )
+    variant('prenek',   default=True, description='Build prenek tool.')
 
     depends_on('mpi', when="+mpi")
 
@@ -94,7 +94,6 @@ class Nek5000(Package):
             if '+prenek' in spec:
                 makeTools('prenek')
 
-
         with working_dir(binDir):
             if '+mpi' in spec:
                 F77 = spec['mpi'].mpif77
@@ -104,8 +103,8 @@ class Nek5000(Package):
             # Nek5000 source.
             filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"', 'makenek')
             filter_file(r'^CC\s*=.*', 'CC=\"'  + CC  + '\"',  'makenek')
-            filter_file(r'SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"'  + \
-                prefix.bin.Nek5000 + '\"',  'makenek')
+            filter_file(r'SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
+                        prefix.bin.Nek5000 + '\"',  'makenek')
 
         # Install Nek5000/bin in prefix/bin
         install_tree(binDir, prefix.bin)
