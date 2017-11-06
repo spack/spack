@@ -27,7 +27,7 @@ import glob
 
 
 class Guidance(MakefilePackage):
-    """Guidance: Accurate detection of unreliable alignment regious accounting
+    """Guidance: Accurate detection of unreliable alignment regions accounting
        for the uncertainty of multiple parameters."""
 
     homepage = "http://guidance.tau.ac.il/ver2/"
