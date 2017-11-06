@@ -46,3 +46,4 @@ Full contents:
    tutorial_basics
    tutorial_packaging
    tutorial_modules
+   tutorial_buildsystems
