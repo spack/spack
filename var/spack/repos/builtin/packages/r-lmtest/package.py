@@ -32,6 +32,7 @@ class RLmtest(RPackage):
 
     homepage = "https://cran.r-project.org/package=lmtest"
     url      = "https://cran.r-project.org/src/contrib/lmtest_0.9-34.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/lmtest"
 
     version('0.9-34', 'fcdf7286bb5ccc2ca46be00bf25ac2fe')
 

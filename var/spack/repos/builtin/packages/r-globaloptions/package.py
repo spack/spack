@@ -31,7 +31,7 @@ class RGlobaloptions(RPackage):
 
     homepage = "https://cran.r-project.org/package=GlobalOptions"
     url      = "https://cran.rstudio.com/src/contrib/GlobalOptions_0.0.12.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/GlobalOptions"
 
     version('0.0.12', '6c268b3b27874918ba62eb0f6aa0a3e5')
 

@@ -32,5 +32,5 @@ class RSfsmisc(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/sfsmisc/index.html"
     url      = "https://cran.r-project.org/src/contrib/sfsmisc_1.1-1.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/sfsmisc"
     version('1.1-0', '1ba4303076e2bbf018f7eecc7d04e178')

@@ -32,10 +32,10 @@ class RSummarizedexperiment(RPackage):
        represent samples."""
 
     homepage = "https://bioconductor.org/packages/SummarizedExperiment/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/SummarizedExperiment_1.6.5.tar.gz"
+    url      = "https://git.bioconductor.org/packages/SummarizedExperiment"
     list_url = homepage
 
-    version('1.6.5', '8f7d534e37cfda1e3e145ec7609c61f5')
+    version('1.6.5', git='https://git.bioconductor.org/packages/SummarizedExperiment', commit='ec69cd5cfbccaef148a9f6abdfb3e22e888695d0')
 
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

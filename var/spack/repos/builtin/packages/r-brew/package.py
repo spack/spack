@@ -32,5 +32,6 @@ class RBrew(RPackage):
 
     homepage = "https://cran.r-project.org/package=brew"
     url      = "https://cran.r-project.org/src/contrib/brew_1.0-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/brew"
 
     version('1.0-6', '4aaca5e6ec145e0fc0fe6375ce1f3806')

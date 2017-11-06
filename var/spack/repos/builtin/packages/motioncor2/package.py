@@ -23,14 +23,28 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from glob import glob
 
 
-class RPlotrix(RPackage):
-    """Lots of plots, various labeling, axis and color scaling functions."""
+class Motioncor2(Package):
+    """MotionCor2 is a multi-GPU program that corrects beam-induced sample
+    motion recorded on dose fractionated movie stacks. It implements a robust
+    iterative alignment algorithm that delivers precise measurement and
+    correction of both global and non-uniform local motions at
+    single pixel level, suitable for both single-particle and
+    tomographic images. MotionCor2 is sufficiently fast
+    to keep up with automated data collection."""
 
-    homepage = "https://cran.r-project.org/package=plotrix"
-    url      = "https://cran.r-project.org/src/contrib/plotrix_3.6-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plotrix"
+    homepage = "http://msg.ucsf.edu/em/software"
+    url      = "http://msg.ucsf.edu/MotionCor2/MotionCor2-1.0.2.tar.gz"
 
-    version('3.6-4', 'efe9b9b093d8903228a9b56c46d943fa')
-    version('3.6-3', '23e3e022a13a596e9b77b40afcb4a2ef')
+    version('1.0.2',        'f2f4c5b09170ab8480ca657f14cdba2b')
+    version('1.0.1',        '73d94a80abdef9bf37bbc80fbbe76622')
+    version('1.0.0',        '490f4df8daa9f5ddb9eec3962ba3ddf5')
+
+    depends_on('cuda@8.0:8.99', type='run')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        for files in glob("MotionCor2_*"):
+            install(files, prefix.bin)

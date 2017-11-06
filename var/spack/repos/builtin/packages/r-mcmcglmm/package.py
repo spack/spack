@@ -30,6 +30,7 @@ class RMcmcglmm(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/MCMCglmm/index.html"
     url      = "https://cran.r-project.org/src/contrib/MCMCglmm_2.25.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/MCMCglmm"
 
     version('2.25', '260527ef6fecdd87f762fd07406d674a')
 

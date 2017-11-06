@@ -31,8 +31,9 @@ class RAffyio(RPackage):
        formats."""
 
     homepage = "https://bioconductor.org/packages/affyio/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/affyio_1.46.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/affyio"
+    list_url = homepage
 
-    version('1.46.0', 'e1f7a89ae16940aa29b998a4dbdc0ef9')
+    version('1.46.0', git='https://git.bioconductor.org/packages/affyio', commit='977597f2772e08273d86579486f452170566c880')
     depends_on('r-zlibbioc', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.46.0')

@@ -30,6 +30,7 @@ class RRmysql(RPackage):
 
     homepage = "https://github.com/rstats-db/rmysql"
     url      = "https://cran.r-project.org/src/contrib/RMySQL_0.10.9.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RMySQL"
 
     version('0.10.9', '3628200a1864ac3005cfd55cc7cde17a')
 

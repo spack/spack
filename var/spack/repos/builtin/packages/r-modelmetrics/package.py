@@ -31,6 +31,7 @@ class RModelmetrics(RPackage):
 
     homepage = "https://cran.r-project.org/package=ModelMetrics"
     url      = "https://cran.r-project.org/src/contrib/ModelMetrics_1.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ModelMetrics"
 
     version('1.1.0', 'd43175001f0531b8810d2802d76b7b44')
 

@@ -44,6 +44,7 @@ class RRinside(RPackage):
 
     homepage = "http://dirk.eddelbuettel.com/code/rinside.html"
     url      = "https://cran.r-project.org/src/contrib/RInside_0.2.13.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RInside"
 
     version('0.2.13', '2e3c35a7bd648e9bef98d0afcc02cf88')
 

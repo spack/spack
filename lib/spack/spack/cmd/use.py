@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
-import spack.modules
+from spack.cmd.common import print_module_placeholder_help
 
 description = "add package to environment using dotkit"
 section = "environment"
@@ -39,4 +39,4 @@ def setup_parser(subparser):
 
 
 def use(parser, args):
-    spack.modules.print_help()
+    print_module_placeholder_help()
