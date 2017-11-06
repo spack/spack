@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -53,12 +53,20 @@ class Netcdf(AutotoolsPackage):
     version('4.3.3.1', '5c9dad3705a3408d27f696e5b31fb88c')
     version('4.3.3',   '5fbd0e108a54bd82cb5702a73f56d2ae')
 
-    variant('mpi',     default=True,  description='Enables MPI parallelism')
-    variant('hdf4',    default=False, description='Enable HDF4 support')
-    variant('shared',  default=True,  description='Enable shared library')
-    variant('parallel-netcdf', default=False, description='Enable PnetCDF support')
-    variant('dap',     default=False, description='Enable DAP support')
-    variant('cdmremote', default=False, description='Enable CDM Remote support')
+    variant('mpi', default=True,
+            description='Enable parallel I/O for netcdf-4')
+    variant('parallel-netcdf', default=False,
+            description='Enable parallel I/O for classic files')
+    variant('hdf4', default=False, description='Enable HDF4 support')
+    variant('shared', default=True, description='Enable shared library')
+    variant('dap', default=False, description='Enable DAP support')
+
+    # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
+    # to the configure script. Since netcdf-4 support is mandatory we comment
+    # this variant out.
+    # variant('cdmremote', default=False,
+    #         description='Enable CDM Remote support')
+
     # These variants control the number of dimensions (i.e. coordinates and
     # attributes) and variables (e.g. time, entity ID, number of coordinates)
     # that can be used in any particular NetCDF file.
@@ -77,17 +85,57 @@ class Netcdf(AutotoolsPackage):
 
     depends_on("m4", type='build')
     depends_on("hdf", when='+hdf4')
-    depends_on("curl@7.18.0:", when='+dap')
-    depends_on("curl@7.18.0:", when='+cdmremote')
-    depends_on('parallel-netcdf', when='@4.2.1.1:+parallel-netcdf')
 
-    # Required for NetCDF-4 support
+    # curl 7.18.0 or later is required:
+    # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
+    depends_on("curl@7.18.0:", when='+dap')
+    # depends_on("curl@7.18.0:", when='+cdmremote')
+
+    depends_on('parallel-netcdf', when='+parallel-netcdf')
+
+    # We need to build with MPI wrappers if any of the two
+    # parallel I/O features is enabled:
+    # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html#build_parallel
+    depends_on('mpi', when='+mpi')
+    depends_on('mpi', when='+parallel-netcdf')
+
+    # zlib 1.2.5 or later is required for netCDF-4 compression:
+    # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
     depends_on("zlib@1.2.5:")
-    depends_on('hdf5')
+
+    # High-level API of HDF5 1.8.9 or later is required for netCDF-4 support:
+    # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
+    depends_on('hdf5@1.8.9:+hl')
+
+    # Starting version 4.4.0, it became possible to disable parallel I/O even
+    # if HDF5 supports it. For previous versions of the library we need
+    # HDF5 without mpi support to disable parallel I/O.
+    # The following doesn't work if hdf5+mpi by default and netcdf~mpi is
+    # specified in packages.yaml
+    # depends_on('hdf5~mpi', when='@:4.3~mpi')
+    # Thus, we have to introduce a conflict
+    conflicts('~mpi', when='@:4.3^hdf5+mpi',
+              msg='netcdf@:4.3~mpi requires hdf5~mpi')
+
+    # We need HDF5 with mpi support to enable parallel I/O.
+    # The following doesn't work if hdf5~mpi by default and netcdf+mpi is
+    # specified in packages.yaml
+    # depends_on('hdf5+mpi', when='+mpi')
+    # Thus, we have to introduce a conflict
+    conflicts('+mpi', when='^hdf5~mpi',
+              msg='netcdf+mpi requires hdf5+mpi')
 
     # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
     # https://github.com/Unidata/netcdf-c/issues/250
-    depends_on('hdf5@:1.8', when='@:4.4.0')
+    depends_on('hdf5@:1.8.999', when='@:4.4.0')
+
+    # The feature was introduced in version 4.1.2
+    # and was removed in version 4.4.0
+    # conflicts('+cdmremote', when='@:4.1.1,4.4:')
+
+    # The features were introduced in version 4.1.0
+    conflicts('+parallel-netcdf', when='@:4.0')
+    conflicts('+hdf4', when='@:4.0')
 
     def patch(self):
         try:
@@ -104,91 +152,96 @@ class Netcdf(AutotoolsPackage):
                   r'\1{0}\2'.format(max_vars))
 
     def configure_args(self):
-        spec = self.spec
-        # Workaround until variant forwarding works properly
-        if '+mpi' in spec and spec.satisfies('^hdf5~mpi'):
-            raise RuntimeError('Invalid spec. Package netcdf requires '
-                               'hdf5+mpi, but spec asked for hdf5~mpi.')
-
-        # Environment variables
-        CFLAGS   = []
+        CFLAGS = []
         CPPFLAGS = []
-        LDFLAGS  = []
-        LIBS     = []
+        LDFLAGS = []
+        LIBS = []
 
-        config_args = [
-            "--enable-fsync",
-            "--enable-v2",
-            "--enable-utilities",
-            "--enable-static",
-            "--enable-largefile",
-            # necessary for HDF5 support
-            "--enable-netcdf-4",
-            "--enable-dynamic-loading",
-        ]
+        config_args = ['--enable-v2',
+                       '--enable-utilities',
+                       '--enable-static',
+                       '--enable-largefile',
+                       '--enable-netcdf-4']
 
-        if '+shared' in spec:
-            config_args.append('--enable-shared')
-        else:
-            config_args.append('--disable-shared')
+        # The flag was introduced in version 4.1.0
+        if self.spec.satisfies('@4.1:'):
+            config_args.append('--enable-fsync')
+
+        # The flag was introduced in version 4.3.1
+        if self.spec.satisfies('@4.3.1:'):
+            config_args.append('--enable-dynamic-loading')
+
+        config_args += self.enable_or_disable('shared')
+
+        if '~shared' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
             CFLAGS.append(self.compiler.pic_flag)
 
-        if '+dap' in spec:
-            config_args.append('--enable-dap')
-        else:
-            config_args.append('--disable-dap')
+        config_args += self.enable_or_disable('dap')
+        # config_args += self.enable_or_disable('cdmremote')
 
-        if '+cdmremote' in spec:
-            config_args.append('--enable-cdmremote')
-        else:
-            config_args.append('--disable-cdmremote')
-
-        if '+dap' in spec or '+cdmremote' in spec:
+        # if '+dap' in self.spec or '+cdmremote' in self.spec:
+        if '+dap' in self.spec:
             # Make sure Netcdf links against Spack's curl, otherwise it may
             # pick up system's curl, which can give link errors, e.g.:
-            #   undefined reference to `SSL_CTX_use_certificate_chain_file`
-            LIBS.append("-lcurl")
-            CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
-            LDFLAGS.append("-L%s" % spec['curl'].prefix.lib)
+            # undefined reference to `SSL_CTX_use_certificate_chain_file
+            curl = self.spec['curl']
+            curl_libs = curl.libs
+            LIBS.append(curl_libs.link_flags)
+            LDFLAGS.append(curl_libs.search_flags)
+            # TODO: figure out how to get correct flags via headers.cpp_flags
+            CPPFLAGS.append('-I' + curl.prefix.include)
 
-        if '+mpi' in spec:
-            config_args.append('--enable-parallel4')
-            config_args.append('CC=%s' % spec['mpi'].mpicc)
+        if self.spec.satisfies('@4.4:'):
+            if '+mpi' in self.spec:
+                config_args.append('--enable-parallel4')
+            else:
+                config_args.append('--disable-parallel4')
 
-        CPPFLAGS.append("-I%s/include" % spec['hdf5'].prefix)
-        LDFLAGS.append("-L%s/lib"     % spec['hdf5'].prefix)
+        # Starting version 4.1.3, --with-hdf5= and other such configure options
+        # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
+        # used instead.
+        hdf5_hl = self.spec['hdf5:hl']
+        CPPFLAGS.append(hdf5_hl.headers.cpp_flags)
+        LDFLAGS.append(hdf5_hl.libs.search_flags)
 
-        # HDF4 support
-        # As of NetCDF 4.1.3, "--with-hdf4=..." is no longer a valid option
-        # You must use the environment variables CPPFLAGS and LDFLAGS
-        if '+hdf4' in spec:
-            config_args.append("--enable-hdf4")
-            CPPFLAGS.append("-I%s/include" % spec['hdf'].prefix)
-            LDFLAGS.append("-L%s/lib"     % spec['hdf'].prefix)
-            LIBS.append("-l%s"         % "jpeg")
-
-        if '+szip' in spec:
-            CPPFLAGS.append("-I%s/include" % spec['szip'].prefix)
-            LDFLAGS.append("-L%s/lib"     % spec['szip'].prefix)
-            LIBS.append("-l%s"         % "sz")
-
-        # PnetCDF support
-        if '+parallel-netcdf' in spec:
+        if '+parallel-netcdf' in self.spec:
             config_args.append('--enable-pnetcdf')
-            config_args.append('CC=%s' % spec['mpi'].mpicc)
-            CPPFLAGS.append("-I%s/include" % spec['parallel-netcdf'].prefix)
-            LDFLAGS.append("-L%s/lib"      % spec['parallel-netcdf'].prefix)
+            pnetcdf = self.spec['parallel-netcdf']
+            CPPFLAGS.append(pnetcdf.headers.cpp_flags)
+            # TODO: change to pnetcdf.libs.search_flags once 'parallel-netcdf'
+            # package gets custom implementation of 'libs'
+            LDFLAGS.append('-L' + pnetcdf.prefix.lib)
+        else:
+            config_args.append('--disable-pnetcdf')
+
+        if '+mpi' in self.spec or '+parallel-netcdf' in self.spec:
+            config_args.append('CC=%s' % self.spec['mpi'].mpicc)
+
+        config_args += self.enable_or_disable('hdf4')
+        if '+hdf4' in self.spec:
+            hdf4 = self.spec['hdf']
+            CPPFLAGS.append(hdf4.headers.cpp_flags)
+            # TODO: change to hdf4.libs.search_flags once 'hdf'
+            # package gets custom implementation of 'libs' property.
+            LDFLAGS.append('-L' + hdf4.prefix.lib)
+            # TODO: change to self.spec['jpeg'].libs.link_flags once the
+            # implementations of 'jpeg' virtual package get 'jpeg_libs'
+            # property.
+            LIBS.append('-ljpeg')
+            if '+szip' in hdf4:
+                # This should also come from hdf4.libs
+                LIBS.append('-lsz')
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
         # Use the netcdf-fortran package to install Fortran support.
 
-        config_args.append('CFLAGS=%s'   % ' '.join(CFLAGS))
-        config_args.append('CPPFLAGS=%s' % ' '.join(CPPFLAGS))
-        config_args.append('LDFLAGS=%s'  % ' '.join(LDFLAGS))
-        config_args.append('LIBS=%s'     % ' '.join(LIBS))
+        config_args.append('CFLAGS=' + ' '.join(CFLAGS))
+        config_args.append('CPPFLAGS=' + ' '.join(CPPFLAGS))
+        config_args.append('LDFLAGS=' + ' '.join(LDFLAGS))
+        config_args.append('LIBS=' + ' '.join(LIBS))
 
         return config_args
 

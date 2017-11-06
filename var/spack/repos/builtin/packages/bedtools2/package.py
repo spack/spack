@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,7 @@ class Bedtools2(Package):
 
     version('2.26.0', '52227e7efa6627f0f95d7d734973233d')
     version('2.25.0', '534fb4a7bf0d0c3f05be52a0160d8e3d')
+    version('2.23.0', '4fa3671b3a3891eefd969ad3509222e3')
 
     depends_on('zlib')
 

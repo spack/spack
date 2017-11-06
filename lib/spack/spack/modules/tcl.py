@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -86,7 +86,7 @@ class TclContext(BaseContext):
     @tengine.context_property
     def conflicts(self):
         """List of conflicts for the tcl module file."""
-        l = []
+        fmts = []
         naming_scheme = self.conf.naming_scheme
         f = string.Formatter()
         for item in self.conf.conflicts:
@@ -106,9 +106,9 @@ class TclContext(BaseContext):
                                                  cformat=item))
                         raise SystemExit('Module generation aborted.')
                 item = self.spec.format(item)
-            l.append(item)
+            fmts.append(item)
         # Substitute spec tokens if present
-        return [self.spec.format(x) for x in l]
+        return [self.spec.format(x) for x in fmts]
 
 
 class TclModulefileWriter(BaseModuleFileWriter):

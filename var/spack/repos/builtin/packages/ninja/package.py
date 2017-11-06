@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@ class Ninja(Package):
     homepage = "https://ninja-build.org/"
     url      = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
 
+    version('1.8.2', '5fdb04461cc7f5d02536b3bfc0300166')
     version('1.7.2', '7b482218757acbaeac4d4d54a3cd94e1')
     version('1.6.0', '254133059f2da79d8727f654d7198f43')
 

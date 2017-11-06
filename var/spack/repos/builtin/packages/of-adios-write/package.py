@@ -5,7 +5,7 @@
 # and is released as part of spack under the LGPL license.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for the LLNL notice and LGPL.
 #
 # License
@@ -35,12 +35,12 @@
 # OpenFOAM distribution.
 #
 ##############################################################################
-from spack import *
-from spack.environment import *
+import os
+
 import llnl.util.tty as tty
 
-import os
-from spack.pkg.builtin.openfoam_com import *
+from spack import *
+from spack.pkg.builtin.openfoam_com import add_extra_files
 
 
 class OfAdiosWrite(Package):

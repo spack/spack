@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,37 +34,61 @@ class Eccodes(CMakePackage):
     url      = "https://software.ecmwf.int/wiki/download/attachments/45757960/eccodes-2.2.0-Source.tar.gz?api=v2"
     list_url = "https://software.ecmwf.int/wiki/display/ECC/Releases"
 
+    version('2.5.0', '5a7e92c58418d855082fa573efd352aa')
     version('2.2.0', 'b27e6f0a3eea5b92dac37372e4c45a62')
 
-    variant('netcdf', default=True,
-            description="Support GRIB to NetCDF conversion")
-    variant('jpeg', default=True,
-            description="Support JPEG2000 encoding/decoding")
-    variant('png', default=True,
-            description="Support PNG encoding/decoding")
-    variant('python', default=False,
-            description="Build the eccodes Python interface")
+    variant('netcdf', default=False,
+            description='Enable GRIB to NetCDF conversion tool')
+    variant('jp2k', default='openjpeg', values=('openjpeg', 'jasper', 'none'),
+            description='Specify JPEG2000 decoding/encoding backend')
+    variant('png', default=False,
+            description='Enable PNG support for decoding/encoding')
+    variant('aec', default=False,
+            description='Enable Adaptive Entropy Coding for decoding/encoding')
     variant('pthreads', default=False,
-            description="Enable POSIX threads")
+            description='Enable POSIX threads')
     variant('openmp', default=False,
-            description="Enable OpenMP threads")
+            description='Enable OpenMP threads')
     variant('memfs', default=False,
-            description="Memory based access to definitions/samples")
+            description='Enable memory based access to definitions/samples')
+    variant('python', default=False,
+            description='Enable the Python interface')
+    variant('fortran', default=True, description='Enable the Fortran support')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'Production'))
 
     depends_on('netcdf', when='+netcdf')
-    depends_on('openjpeg', when='+jpeg')
+    depends_on('openjpeg', when='jp2k=openjpeg')
+    depends_on('jasper', when='jp2k=jasper')
     depends_on('libpng', when='+png')
-    depends_on('py-numpy', when='+python')
+    depends_on('libaec', when='+aec')
+    depends_on('python@:2', when='+python')
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
     extends('python', when='+python')
 
+    conflicts('+openmp', when='+pthreads',
+              msg='Cannot enable both POSIX threads and OMP')
+
+    # The following enforces linking against the specified JPEG2000 backend.
+    patch('enable_only_openjpeg.patch', when='jp2k=openjpeg')
+    patch('enable_only_jasper.patch', when='jp2k=jasper')
+
     def cmake_args(self):
-        variants = ['+netcdf', '+jpeg', '+png', '+python',
-                    '+pthreads', '+openmp', '+memfs']
-        options = ['NETCDF', 'JPG', 'PNG', 'PYTHON',
-                   'ECCODES_THREADS', 'ECCODES_OMP_THREADS', 'MEMFS']
-        return map(lambda variant, option: "-DENABLE_%s=%s" %
-                   (option, 'YES' if variant in self.spec else 'NO'),
-                   variants, options)
+        variants = ['+netcdf', '+png', '+aec', '+pthreads',
+                    '+openmp', '+memfs', '+python', '+fortran']
+        options = ['NETCDF', 'PNG', 'AEC', 'ECCODES_THREADS',
+                   'ECCODES_OMP_THREADS', 'MEMFS', 'PYTHON', 'FORTRAN']
+
+        args = map(lambda var, opt:
+                   "-DENABLE_%s=%s" %
+                   (opt, 'ON' if var in self.spec else 'OFF'),
+                   variants,
+                   options)
+
+        if self.spec.variants['jp2k'].value == 'none':
+            args.append('-DENABLE_JPG=OFF')
+        else:
+            args.append('-DENABLE_JPG=ON')
+
+        return args

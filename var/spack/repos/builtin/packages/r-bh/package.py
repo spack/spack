@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,6 @@ class RBh(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/BH/index.html"
     url      = "https://cran.r-project.org/src/contrib/BH_1.65.0-1.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/BH"
     version('1.65.0-1', '7d0402188e4af59f4103f36616d6ee55')
     version('1.60.0-2', 'b50fdc85285da05add4e9da664a2d551')

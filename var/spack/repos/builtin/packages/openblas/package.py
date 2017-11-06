@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
-from spack.package_test import *
-import spack.architecture
 import os
+
+from spack import *
+from spack.package_test import compare_output_file, compile_c_and_execute
+import spack.architecture
 
 
 class Openblas(MakefilePackage):
@@ -39,7 +40,6 @@ class Openblas(MakefilePackage):
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
-
     version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
 
     variant(

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -48,9 +48,10 @@ import spack.config
 from spack.util.path import canonicalize_path
 from spack.database import Database
 from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import YamlExtensionsLayout
 
 __author__ = "Benedikt Hegner (CERN)"
-__all__ = ['db', 'layout', 'root']
+__all__ = ['db', 'extensions', 'layout', 'root']
 
 #
 # Read in the config
@@ -75,3 +76,5 @@ db = Database(root)
 layout = YamlDirectoryLayout(root,
                              hash_len=config.get('install_hash_length'),
                              path_scheme=config.get('install_path_scheme'))
+
+extensions = YamlExtensionsLayout(root, layout)

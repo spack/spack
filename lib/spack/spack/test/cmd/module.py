@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,8 @@ def parser():
         ['rm', 'doesnotexist'],  # Try to remove a non existing module
         ['find', 'mpileaks'],  # Try to find a module with multiple matches
         ['find', 'doesnotexist'],  # Try to find a module with no matches
-        ['find', 'libelf'],  # Try to find a module wo specifying the type
+        # Try to find a module specifying more than one type
+        ['find', '-m', 'tcl', '-m', 'lmod', 'libelf'],
     ]
 )
 def failure_args(request):

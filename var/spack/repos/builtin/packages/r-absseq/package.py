@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,9 +32,10 @@ class RAbsseq(RPackage):
     of dispersion across expression level."""
 
     homepage = "https://www.bioconductor.org/packages/ABSSeq/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/ABSSeq_1.22.8.tar.gz"
+    url      = "https://git.bioconductor.org/packages/ABSSeq"
 
-    version('1.22.8', 'bfdb1800f2e7c60dfa7f6b43026ec8f9')
+    version('1.22.8', git='https://git.bioconductor.org/packages/ABSSeq', commit='a67ba49bc156a4522092519644f3ec83d58ebd6a')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.22.8')
     depends_on('r-locfit', type=('build', 'run'))
     depends_on('r-limma', type=('build', 'run'))

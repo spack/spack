@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,14 +35,14 @@ from six.moves.urllib.parse import urljoin
 
 import llnl.util.tty as tty
 import llnl.util.lock
-from llnl.util.filesystem import *
+from llnl.util.filesystem import mkdirp, join_path, can_access
+from llnl.util.filesystem import remove_if_dead_link, remove_linked_tree
 
 import spack
 import spack.config
 import spack.error
 import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
-from spack.version import *
 from spack.util.path import canonicalize_path
 from spack.util.crypto import prefix_bits, bit_length
 
@@ -366,18 +366,8 @@ class Stage(object):
                 return p
         return None
 
-    def chdir(self):
-        """Changes directory to the stage path. Or dies if it is not set
-        up."""
-        if os.path.isdir(self.path):
-            os.chdir(self.path)
-        else:
-            raise ChdirError("Setup failed: no such directory: " + self.path)
-
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
-        self.chdir()
-
         fetchers = []
         if not mirror_only:
             fetchers.append(self.default_fetcher)
@@ -478,18 +468,6 @@ class Stage(object):
         else:
             tty.msg("Already staged %s in %s" % (self.name, self.path))
 
-    def chdir_to_source(self):
-        """Changes directory to the expanded archive directory.
-           Dies with an error if there was no expanded archive.
-        """
-        path = self.source_path
-        if not path:
-            raise StageError("Attempt to chdir before expanding archive.")
-        else:
-            os.chdir(path)
-            if not os.listdir(path):
-                raise StageError("Archive was empty for %s" % self.name)
-
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
            the archive.
@@ -548,8 +526,18 @@ class ResourceStage(Stage):
         self.root_stage = root
         self.resource = resource
 
+    def restage(self):
+        super(ResourceStage, self).restage()
+        self._add_to_root_stage()
+
     def expand_archive(self):
         super(ResourceStage, self).expand_archive()
+        self._add_to_root_stage()
+
+    def _add_to_root_stage(self):
+        """
+        Move the extracted resource to the root stage (according to placement).
+        """
         root_stage = self.root_stage
         resource = self.resource
         placement = os.path.basename(self.source_path) \
@@ -557,23 +545,23 @@ class ResourceStage(Stage):
             else resource.placement
         if not isinstance(placement, dict):
             placement = {'': placement}
-        # Make the paths in the dictionary absolute and link
+
+        target_path = join_path(
+            root_stage.source_path, resource.destination)
+
+        try:
+            os.makedirs(target_path)
+        except OSError as err:
+            if err.errno == errno.EEXIST and os.path.isdir(target_path):
+                pass
+            else:
+                raise
+
         for key, value in iteritems(placement):
-            target_path = join_path(
-                root_stage.source_path, resource.destination)
             destination_path = join_path(target_path, value)
             source_path = join_path(self.source_path, key)
 
-            try:
-                os.makedirs(target_path)
-            except OSError as err:
-                if err.errno == errno.EEXIST and os.path.isdir(target_path):
-                    pass
-                else:
-                    raise
-
             if not os.path.exists(destination_path):
-                # Create a symlink
                 tty.info('Moving resource stage\n\tsource : '
                          '{stage}\n\tdestination : {destination}'.format(
                              stage=source_path, destination=destination_path
@@ -613,9 +601,6 @@ class StageComposite:
     def path(self):
         return self[0].path
 
-    def chdir_to_source(self):
-        return self[0].chdir_to_source()
-
     @property
     def archive_file(self):
         return self[0].archive_file
@@ -634,21 +619,12 @@ class DIYStage(object):
         self.source_path = path
         self.created = True
 
-    def chdir(self):
-        if os.path.isdir(self.path):
-            os.chdir(self.path)
-        else:
-            raise ChdirError("Setup failed: no such directory: " + self.path)
-
     # DIY stages do nothing as context managers.
     def __enter__(self):
         pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
-
-    def chdir_to_source(self):
-        self.chdir()
 
     def fetch(self, *args, **kwargs):
         tty.msg("No need to fetch for DIY.")
@@ -661,6 +637,9 @@ class DIYStage(object):
 
     def restage(self):
         tty.die("Cannot restage DIY stage.")
+
+    def create(self):
+        self.created = True
 
     def destroy(self):
         # No need to destroy DIY stage.
@@ -696,10 +675,6 @@ class StageError(spack.error.SpackError):
 
 class RestageError(StageError):
     """"Error encountered during restaging."""
-
-
-class ChdirError(StageError):
-    """Raised when Spack can't change directories."""
 
 
 # Keep this in namespace for convenience

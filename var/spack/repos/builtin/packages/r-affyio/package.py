@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,3 +35,4 @@ class RAffyio(RPackage):
 
     version('1.46.0', 'e1f7a89ae16940aa29b998a4dbdc0ef9')
     depends_on('r-zlibbioc', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.46.0')

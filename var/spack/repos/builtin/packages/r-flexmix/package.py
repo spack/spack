@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,7 @@ class RFlexmix(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=flexmix"
     url      = "https://cran.r-project.org/src/contrib/flexmix_2.3-14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/flexmix"
 
     version('2.3-14', '5be4f7764e6a697f4586e60c2bf6e960')
 

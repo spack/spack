@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,4 +36,4 @@ class RBiocinstaller(RPackage):
     version('1.26.1', 'ec0f8866639475bcd91179dcc840b5f4')
     version('1.25.3', '6214770455a5122dca5544861f52c91d')
 
-    depends_on('r@3.4.0:')
+    depends_on('r@3.4.0:3.4.9', when='@1.26.1')

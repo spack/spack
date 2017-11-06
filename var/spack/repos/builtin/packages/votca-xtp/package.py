@@ -5,7 +5,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,8 +34,7 @@ class VotcaXtp(CMakePackage):
        This package contains the VOTCA exciton transport engine.
     """
     homepage = "http://www.votca.org"
-    # No release yet
-    # url      = "https://github.com/votca/xtp/tarball/v1.4"
+    url      = "https://github.com/votca/xtp/tarball/v1.4"
 
     version('develop', git='https://github.com/votca/xtp', branch='master')
     version('1.4.1', '31a2dbd8bd48bf337bc88b20ab312050')

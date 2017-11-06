@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@ class RRngtools(RPackage):
 
     homepage = "https://renozao.github.io/rngtools"
     url      = "https://cran.r-project.org/src/contrib/rngtools_1.2.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rngtools"
 
     version('1.2.4', '715967f8b3af2848a76593a7c718c1cd')
 

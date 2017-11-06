@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,8 +31,8 @@ import spack
 import spack.cmd
 import spack.util.crypto
 import spack.util.web
-from spack.util.naming import *
-from spack.version import *
+from spack.util.naming import valid_fully_qualified_module_name
+from spack.version import ver, Version
 
 description = "checksum available versions of a package"
 section = "packaging"

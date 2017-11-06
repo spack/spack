@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@ import argparse
 import llnl.util.tty as tty
 import spack
 import spack.cmd
+from spack.directory_layout import YamlViewExtensionsLayout
 
 description = "activate a package extension"
 section = "extensions"
@@ -36,6 +37,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true',
         help="activate without first activating dependencies")
+    subparser.add_argument(
+        '-v', '--view', metavar='VIEW', type=str,
+        help="the view to operate on")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="spec of package extension to activate")
@@ -50,7 +54,11 @@ def activate(parser, args):
     if not spec.package.is_extension:
         tty.die("%s is not an extension." % spec.name)
 
-    if spec.package.activated:
+    layout = spack.store.extensions
+    if args.view is not None:
+        layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
+
+    if spec.package.is_activated(extensions_layout=layout):
         tty.die("Package %s is already activated." % specs[0].short_spec)
 
-    spec.package.do_activate()
+    spec.package.do_activate(extensions_layout=layout)

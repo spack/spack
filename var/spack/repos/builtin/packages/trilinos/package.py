@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
 import sys
-import platform
+from spack import *
+from spack.operating_systems.mac_os import macOS_version
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
@@ -154,6 +154,8 @@ class Trilinos(CMakePackage):
             description='Enable ForTrilinos')
     variant('openmp',       default=False,
             description='Enable OpenMP')
+    variant('rol',          default=False,
+            description='Enable ROL')
     variant('nox',          default=False,
             description='Enable NOX')
     variant('shards',       default=False,
@@ -202,8 +204,7 @@ class Trilinos(CMakePackage):
     # MPI related dependencies
     depends_on('mpi')
     depends_on('netcdf+mpi', when="~pnetcdf")
-    depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master")
-    depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@12.10.2:")
+    depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
@@ -310,6 +311,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+teuchos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Anasazi:BOOL=%s' % (
                 'ON' if '+anasazi' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_ROL:BOOL=%s' % (
+                'ON' if '+rol' in spec else 'OFF'),
             '-DTrilinos_ENABLE_NOX:BOOL=%s' % (
                 'ON' if '+nox' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Shards=%s' % (
@@ -586,7 +589,7 @@ class Trilinos(CMakePackage):
                 '-DTrilinos_ENABLE_FEI=OFF'
             ])
 
-        if '.'.join(platform.mac_ver()[0].split('.')[:2]) == '10.12':
+        if sys.platform == 'darwin' and macOS_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:

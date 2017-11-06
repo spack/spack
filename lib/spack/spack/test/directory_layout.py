@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,11 +26,13 @@
 This test verifies that the Spack directory layout works properly.
 """
 import os
-
 import pytest
+
+from llnl.util.filesystem import join_path
+
 import spack
-from spack.directory_layout import (YamlDirectoryLayout,
-                                    InvalidDirectoryLayoutParametersError)
+from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import InvalidDirectoryLayoutParametersError
 from spack.repository import RepoPath
 from spack.spec import Spec
 

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -57,7 +57,7 @@ class Libpng(AutotoolsPackage):
             # not honored, see
             #   https://sourceforge.net/p/libpng/bugs/210/#33f1
             # '--with-zlib=' + self.spec['zlib'].prefix,
-            'CFLAGS=-I{0}'.format(self.spec['zlib'].prefix.include),
-            'LDFLAGS=-L{0}'.format(self.spec['zlib'].prefix.lib)
+            'CFLAGS={0}'.format(self.spec['zlib'].headers.include_flags),
+            'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
         ]
         return args

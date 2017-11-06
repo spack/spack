@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,6 @@ class Raja(CMakePackage):
     """RAJA Parallel Framework."""
     homepage = "http://software.llnl.gov/RAJA/"
 
-    version('git', git='https://github.com/LLNL/RAJA.git', branch="master")
+    version('develop', git='https://github.com/LLNL/RAJA.git', branch="master", submodules="True")
 
     depends_on('cmake@3.3:', type='build')

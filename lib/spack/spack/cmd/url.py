@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,11 @@ from collections import defaultdict
 import spack
 
 from llnl.util import tty
-from spack.url import *
+from spack.url import parse_version_offset, parse_name_offset
+from spack.url import parse_name, parse_version, color_url
+from spack.url import substitute_version, substitution_offsets
+from spack.url import UndetectableNameError, UndetectableVersionError
+from spack.url import UrlParseError
 from spack.util.web import find_versions_of_archive
 from spack.util.naming import simplify_name
 

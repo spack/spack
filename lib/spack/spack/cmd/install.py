@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -62,6 +62,9 @@ the dependencies"""
         '-j', '--jobs', action='store', type=int,
         help="explicitly set number of make jobs. default is #cpus")
     subparser.add_argument(
+        '--overwrite', action='store_true',
+        help="reinstall an existing spec, even if it has dependents")
+    subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
     subparser.add_argument(
@@ -70,6 +73,9 @@ the dependencies"""
     subparser.add_argument(
         '--restage', action='store_true',
         help="if a partial install is detected, delete prior state")
+    subparser.add_argument(
+        '--use-cache', action='store_true', dest='use_cache',
+        help="check for pre-built Spack packages in mirrors")
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
         help="print full build log to stderr if build fails")
@@ -84,7 +90,7 @@ the dependencies"""
         help="display verbose build output while installing")
     subparser.add_argument(
         '--fake', action='store_true',
-        help="fake install. just remove prefix and create a fake file")
+        help="fake install for debug purposes.")
     subparser.add_argument(
         '-f', '--file', action='store_true',
         help="install from file. Read specs to install from .yaml files")
@@ -121,6 +127,7 @@ packages. If neither are chosen, don't run tests for any packages."""
         default=None,
         help="filename for the log file. if not passed a default will be used"
     )
+    arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 # Needed for test cases
@@ -286,7 +293,7 @@ def junit_output(spec, test_suite):
                     message='Unexpected exception thrown during install',
                     text=text
                 )
-            except:
+            except BaseException:
                 # Anything else is also an error
                 duration = time.time() - start_time
                 test_case.set_duration(duration)
@@ -314,6 +321,61 @@ def default_log_file(spec):
     return fs.join_path(dirname, basename)
 
 
+def install_spec(cli_args, kwargs, spec):
+
+    saved_do_install = PackageBase.do_install
+    decorator = lambda fn: fn
+
+    # Check if we were asked to produce some log for dashboards
+    if cli_args.log_format is not None:
+        # Compute the filename for logging
+        log_filename = cli_args.log_file
+        if not log_filename:
+            log_filename = default_log_file(spec)
+
+        # Create the test suite in which to log results
+        test_suite = TestSuite(spec)
+
+        # Temporarily decorate PackageBase.do_install to monitor
+        # recursive calls.
+        decorator = junit_output(spec, test_suite)
+
+    # Do the actual installation
+    try:
+        # decorate the install if necessary
+        PackageBase.do_install = decorator(PackageBase.do_install)
+
+        if cli_args.things_to_install == 'dependencies':
+            # Install dependencies as-if they were installed
+            # for root (explicit=False in the DB)
+            kwargs['explicit'] = False
+            for s in spec.dependencies():
+                p = spack.repo.get(s)
+                p.do_install(**kwargs)
+        else:
+            package = spack.repo.get(spec)
+            kwargs['explicit'] = True
+            package.do_install(**kwargs)
+
+    except InstallError as e:
+        if cli_args.show_log_on_error:
+            e.print_context()
+            if not os.path.exists(e.pkg.build_log_path):
+                tty.error("'spack install' created no log.")
+            else:
+                sys.stderr.write('Full build log:\n')
+                with open(e.pkg.build_log_path) as log:
+                    shutil.copyfileobj(log, sys.stderr)
+        raise
+
+    finally:
+        PackageBase.do_install = saved_do_install
+
+    # Dump test output if asked to
+    if cli_args.log_format is not None:
+        test_suite.dump(log_filename)
+
+
 def install(parser, args, **kwargs):
     if not args.package:
         tty.die("install requires at least one package argument")
@@ -336,7 +398,8 @@ def install(parser, args, **kwargs):
         'make_jobs': args.jobs,
         'verbose': args.verbose,
         'fake': args.fake,
-        'dirty': args.dirty
+        'dirty': args.dirty,
+        'use_cache': args.use_cache
     })
 
     if args.run_tests:
@@ -360,56 +423,39 @@ def install(parser, args, **kwargs):
     if len(specs) == 0:
         tty.error('The `spack install` command requires a spec to install.')
 
-    for spec in specs:
-        saved_do_install = PackageBase.do_install
-        decorator = lambda fn: fn
+    if args.overwrite:
+        # If we asked to overwrite an existing spec we must ensure that:
+        # 1. We have only one spec
+        # 2. The spec is already installed
+        assert len(specs) == 1, \
+            "only one spec is allowed when overwriting an installation"
 
-        # Check if we were asked to produce some log for dashboards
-        if args.log_format is not None:
-            # Compute the filename for logging
-            log_filename = args.log_file
-            if not log_filename:
-                log_filename = default_log_file(spec)
+        spec = specs[0]
+        t = spack.store.db.query(spec)
+        assert len(t) == 1, "to overwrite a spec you must install it first"
 
-            # Create the test suite in which to log results
-            test_suite = TestSuite(spec)
+        # Give the user a last chance to think about overwriting an already
+        # existing installation
+        if not args.yes_to_all:
+            tty.msg('The following package will be reinstalled:\n')
 
-            # Temporarily decorate PackageBase.do_install to monitor
-            # recursive calls.
-            decorator = junit_output(spec, test_suite)
+            display_args = {
+                'long': True,
+                'show_flags': True,
+                'variants': True
+            }
 
-        # Do the actual installation
-        try:
-            # decorate the install if necessary
-            PackageBase.do_install = decorator(PackageBase.do_install)
+            spack.cmd.display_specs(t, **display_args)
+            answer = tty.get_yes_or_no(
+                'Do you want to proceed?', default=False
+            )
+            if not answer:
+                tty.die('Reinstallation aborted.')
 
-            if args.things_to_install == 'dependencies':
-                # Install dependencies as-if they were installed
-                # for root (explicit=False in the DB)
-                kwargs['explicit'] = False
-                for s in spec.dependencies():
-                    p = spack.repo.get(s)
-                    p.do_install(**kwargs)
+        with fs.replace_directory_transaction(specs[0].prefix):
+            install_spec(args, kwargs, specs[0])
 
-            else:
-                package = spack.repo.get(spec)
-                kwargs['explicit'] = True
-                package.do_install(**kwargs)
+    else:
 
-        except InstallError as e:
-            if args.show_log_on_error:
-                e.print_context()
-                if not os.path.exists(e.pkg.build_log_path):
-                    tty.error("'spack install' created no log.")
-                else:
-                    sys.stderr.write('Full build log:\n')
-                    with open(e.pkg.build_log_path) as log:
-                        shutil.copyfileobj(log, sys.stderr)
-            raise
-
-        finally:
-            PackageBase.do_install = saved_do_install
-
-        # Dump test output if asked to
-        if args.log_format is not None:
-            test_suite.dump(log_filename)
+        for spec in specs:
+            install_spec(args, kwargs, spec)

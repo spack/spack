@@ -7,7 +7,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,6 +45,7 @@ parameters=(
     SPACK_PREFIX
     SPACK_ENV_PATH
     SPACK_DEBUG_LOG_DIR
+    SPACK_DEBUG_LOG_ID
     SPACK_COMPILER_SPEC
     SPACK_CC_RPATH_ARG
     SPACK_CXX_RPATH_ARG
@@ -110,13 +111,13 @@ case "$command" in
         comp="CXX"
         lang_flags=CXX
         ;;
-    ftn|f90|fc|f95|gfortran|ifort|pgfortran|xlf90|xlf90_r|nagfor)
+    ftn|f90|fc|f95|gfortran|flang|ifort|pgfortran|xlf90|xlf90_r|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
         ;;
-    f77|gfortran|ifort|pgfortran|xlf|xlf_r|nagfor|ftn)
+    f77|gfortran|flang|ifort|pgfortran|xlf|xlf_r|nagfor|ftn)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
@@ -355,8 +356,8 @@ fi
 # Write the input and output commands to debug logs if it's asked for.
 #
 if [[ $SPACK_DEBUG == TRUE ]]; then
-    input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.in.log"
-    output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.out.log"
+    input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.in.log"
+    output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_DEBUG_LOG_ID.out.log"
     echo "[$mode] $command $input_command" >> "$input_log"
     echo "[$mode] ${full_command[@]}" >> "$output_log"
 fi

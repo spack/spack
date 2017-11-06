@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,12 +37,16 @@ class Nalu(CMakePackage):
 
     maintainers = ['jrood-nrel']
 
+    variant('openfast', default=False,
+            description='Compile with OpenFAST support')
+
     version('master',
             git='https://github.com/NaluCFD/Nalu.git', branch='master')
 
     # Currently Nalu only builds static libraries; To be fixed soon
     depends_on('yaml-cpp+pic~shared@0.5.3:')
     depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards@master,12.12.1:')
+    depends_on('openfast+cxx', when='+openfast')
 
     def cmake_args(self):
         spec = self.spec
@@ -53,5 +57,10 @@ class Nalu(CMakePackage):
             '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
             '-DENABLE_INSTALL:BOOL=ON'
         ])
+
+        if '+openfast' in spec:
+            options.extend([
+                '-DOpenFAST_DIR:PATH=%s' % spec['openfast'].prefix
+            ])
 
         return options

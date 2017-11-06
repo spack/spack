@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,7 @@ import traceback
 from six import StringIO
 from six.moves import input
 
-from llnl.util.tty.color import *
+from llnl.util.tty.color import cprint, cwrite, cescape, clen
 
 _debug = False
 _verbose = False
@@ -250,7 +250,7 @@ def terminal_size():
         try:
             rc = struct.unpack('hh', fcntl.ioctl(
                 fd, termios.TIOCGWINSZ, '1234'))
-        except:
+        except BaseException:
             return
         return rc
     rc = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
@@ -259,7 +259,7 @@ def terminal_size():
             fd = os.open(os.ctermid(), os.O_RDONLY)
             rc = ioctl_GWINSZ(fd)
             os.close(fd)
-        except:
+        except BaseException:
             pass
     if not rc:
         rc = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -82,7 +82,7 @@ def setup_parser(subparser):
 
     list = subparsers.add_parser('list')
     list.add_argument('--trusted', action='store_true',
-                      help='list trusted keys')
+                      default=True, help='list trusted keys')
     list.add_argument('--signing', action='store_true',
                       help='list keys which may be used for signing')
     list.set_defaults(func=gpg_list)

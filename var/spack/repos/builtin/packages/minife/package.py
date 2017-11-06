@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,9 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-import tarfile
-
 from spack import *
 
 
@@ -34,11 +31,11 @@ class Minife(MakefilePackage):
     """
 
     homepage = "https://mantevo.org/"
-    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniFE/miniFE-2.0.1.tgz"
+    url      = "https://github.com/Mantevo/miniFE/archive/v2.1.0.tar.gz"
 
-    tags = ['proxy-app']
+    tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('2.0.1', '3113d7c8fc01495d08552672b0dbd015')
+    version('2.1.0', '930a6b99c09722428a6f4d795b506a62')
 
     variant('build', default='ref', description='Type of Parallelism',
             values=('ref', 'openmp_ref', 'qthreads', 'kokkos'))
@@ -47,14 +44,9 @@ class Minife(MakefilePackage):
     depends_on('qthreads', when='build=qthreads')
 
     @property
-    def build_version(self):
-        return self.version.up_to(2)
-
-    @property
     def build_targets(self):
         targets = [
-            '--directory=miniFE-{0}_{1}/src'.format(
-                self.build_version, self.spec.variants['build'].value),
+            '--directory={0}/src'.format(self.spec.variants['build'].value),
             'CXX={0}'.format(self.spec['mpi'].mpicxx),
             'CC={0}'.format(self.spec['mpi'].mpicc)
         ]
@@ -62,19 +54,12 @@ class Minife(MakefilePackage):
         return targets
 
     def edit(self, spec, prefix):
-        inner_tar = tarfile.open(name='miniFE-{0}_{1}.tgz'.format(
-                                 self.build_version,
-                                 self.spec.variants['build'].value))
-        inner_tar.extractall()
-
-        makefile = FileFilter('miniFE-{0}_{1}/src/Makefile'.format(
-                              self.build_version,
+        makefile = FileFilter('{0}/src/Makefile'.format(
                               self.spec.variants['build'].value))
 
         makefile.filter('-fopenmp', self.compiler.openmp_flag, string=True)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('miniFE-{0}_{1}/src/miniFE.x'.format(
-                self.build_version, self.spec.variants['build'].value),
+        install('{0}/src/miniFE.x'.format(self.spec.variants['build'].value),
                 prefix.bin)

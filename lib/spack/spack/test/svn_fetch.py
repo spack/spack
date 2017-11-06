@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@ import os
 
 import pytest
 import spack
-from llnl.util.filesystem import *
+from llnl.util.filesystem import join_path, touch, working_dir
 from spack.spec import Spec
 from spack.version import ver
 from spack.util.executable import which
@@ -72,22 +72,23 @@ def test_fetch(
         finally:
             spack.insecure = False
 
-        assert h() == t.revision
+        with working_dir(pkg.stage.source_path):
+            assert h() == t.revision
 
-        file_path = join_path(pkg.stage.source_path, t.file)
-        assert os.path.isdir(pkg.stage.source_path)
-        assert os.path.isfile(file_path)
+            file_path = join_path(pkg.stage.source_path, t.file)
+            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isfile(file_path)
 
-        os.unlink(file_path)
-        assert not os.path.isfile(file_path)
+            os.unlink(file_path)
+            assert not os.path.isfile(file_path)
 
-        untracked_file = 'foobarbaz'
-        touch(untracked_file)
-        assert os.path.isfile(untracked_file)
-        pkg.do_restage()
-        assert not os.path.isfile(untracked_file)
+            untracked_file = 'foobarbaz'
+            touch(untracked_file)
+            assert os.path.isfile(untracked_file)
+            pkg.do_restage()
+            assert not os.path.isfile(untracked_file)
 
-        assert os.path.isdir(pkg.stage.source_path)
-        assert os.path.isfile(file_path)
+            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isfile(file_path)
 
-        assert h() == t.revision
+            assert h() == t.revision

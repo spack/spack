@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -90,10 +90,10 @@ class Adios(AutotoolsPackage):
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
-    depends_on('sz', when='+sz')
+    depends_on('sz@:1.4.10', when='+sz')
     depends_on('zfp@:0.5.0', when='+zfp')
     # optional transports & file converters
-    depends_on('hdf5@1.8:+mpi', when='+hdf5')
+    depends_on('hdf5@1.8:+hl+mpi', when='+hdf5')
     depends_on('netcdf', when='+netcdf')
     depends_on('libevpath', when='staging=flexpath')
     depends_on('dataspaces+mpi', when='staging=dataspaces')
@@ -108,7 +108,7 @@ class Adios(AutotoolsPackage):
     patch('python.patch', when='@1.10.0:')
     # Fix ADIOS <=1.10.0 compile error on HDF5 1.10+
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
-    #   https://github.com/LLNL/spack/issues/1683
+    #   https://github.com/spack/spack/issues/1683
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
 
     def validate(self, spec):

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,36 +32,39 @@ from spack.util.executable import which
 def test_log_python_output_with_python_stream(capsys, tmpdir):
     # pytest's DontReadFromInput object does not like what we do here, so
     # disable capsys or things hang.
-    with capsys.disabled():
-        with log_output('foo.txt'):
-            print('logged')
+    with tmpdir.as_cwd():
+        with capsys.disabled():
+            with log_output('foo.txt'):
+                print('logged')
 
-    with open('foo.txt') as f:
-        assert f.read() == 'logged\n'
+        with open('foo.txt') as f:
+            assert f.read() == 'logged\n'
 
-    assert capsys.readouterr() == ('', '')
+        assert capsys.readouterr() == ('', '')
 
 
 def test_log_python_output_with_fd_stream(capfd, tmpdir):
-    with log_output('foo.txt'):
-        print('logged')
+    with tmpdir.as_cwd():
+        with log_output('foo.txt'):
+            print('logged')
 
-    with open('foo.txt') as f:
-        assert f.read() == 'logged\n'
+        with open('foo.txt') as f:
+            assert f.read() == 'logged\n'
 
-    assert capfd.readouterr() == ('', '')
+        assert capfd.readouterr() == ('', '')
 
 
 def test_log_python_output_and_echo_output(capfd, tmpdir):
-    with log_output('foo.txt') as logger:
-        with logger.force_echo():
-            print('echo')
-        print('logged')
+    with tmpdir.as_cwd():
+        with log_output('foo.txt') as logger:
+            with logger.force_echo():
+                print('echo')
+            print('logged')
 
-    assert capfd.readouterr() == ('echo\n', '')
+        assert capfd.readouterr() == ('echo\n', '')
 
-    with open('foo.txt') as f:
-        assert f.read() == 'echo\nlogged\n'
+        with open('foo.txt') as f:
+            assert f.read() == 'echo\nlogged\n'
 
 
 @pytest.mark.skipif(not which('echo'), reason="needs echo command")
@@ -72,24 +75,26 @@ def test_log_subproc_output(capsys, tmpdir):
     # TODO: figure out why this is and whether it means we're doing
     # sometihng wrong with OUR redirects.  Seems like it should work even
     # with capsys enabled.
-    with capsys.disabled():
-        with log_output('foo.txt'):
-            echo('logged')
+    with tmpdir.as_cwd():
+        with capsys.disabled():
+            with log_output('foo.txt'):
+                echo('logged')
 
-    with open('foo.txt') as f:
-        assert f.read() == 'logged\n'
+        with open('foo.txt') as f:
+            assert f.read() == 'logged\n'
 
 
 @pytest.mark.skipif(not which('echo'), reason="needs echo command")
 def test_log_subproc_and_echo_output(capfd, tmpdir):
     echo = which('echo')
 
-    with log_output('foo.txt') as logger:
-        with logger.force_echo():
-            echo('echo')
-        print('logged')
+    with tmpdir.as_cwd():
+        with log_output('foo.txt') as logger:
+            with logger.force_echo():
+                echo('echo')
+            print('logged')
 
-    assert capfd.readouterr() == ('echo\n', '')
+        assert capfd.readouterr() == ('echo\n', '')
 
-    with open('foo.txt') as f:
-        assert f.read() == 'logged\n'
+        with open('foo.txt') as f:
+            assert f.read() == 'logged\n'

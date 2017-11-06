@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,14 +27,15 @@ These tests check the database is functioning properly,
 both in memory and in its file
 """
 import multiprocessing
-import os.path
-
+import os
 import pytest
+
+from llnl.util.tty.colify import colify
+
 import spack
 import spack.store
 from spack.test.conftest import MockPackageMultiRepo
 from spack.util.executable import Executable
-from llnl.util.tty.colify import colify
 
 
 def _print_ref_counts():
@@ -102,6 +103,13 @@ def _check_db_sanity(install_db):
         assert e == a
 
     _check_merkleiness()
+
+
+def _mock_install(spec):
+    s = spack.spec.Spec(spec)
+    s.concretize()
+    pkg = spack.repo.get(s)
+    pkg.do_install(fake=True)
 
 
 def _mock_remove(spec):

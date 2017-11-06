@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,11 +32,11 @@ class Miniamr(MakefilePackage):
     """
 
     homepage = "https://mantevo.org"
-    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniAMR/miniAMR_1.0_all.tgz"
+    url      = "https://github.com/Mantevo/miniAMR/archive/v1.4.tar.gz"
 
-    tags = ['proxy-app']
+    tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('1.0', '812e5aaaab99689a4e9381a3bbd718a6')
+    version('1.4.0', '3aab0247047a94e343709cf2e51cc46e')
 
     variant('mpi', default=True, description='Build with MPI support')
 
@@ -47,12 +47,12 @@ class Miniamr(MakefilePackage):
         targets = []
         if '+mpi' in self.spec:
             targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+            targets.append('LD={0}'.format(self.spec['mpi'].mpicc))
             targets.append('LDLIBS=-lm')
-            targets.append('--file=Makefile.mpi')
-            targets.append('--directory=miniAMR_ref')
         else:
-            targets.append('--file=Makefile.serial')
-            targets.append('--directory=miniAMR_serial')
+            targets.append('CC={0}'.format(self.compiler.cc))
+            targets.append('LD={0}'.format(self.compiler.cc))
+        targets.append('--directory=ref')
 
         return targets
 
@@ -61,10 +61,6 @@ class Miniamr(MakefilePackage):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
 
-        if '+mpi' in spec:
-            install('miniAMR_ref/miniAMR.x', prefix.bin)
-        else:
-            install('miniAMR_serial/miniAMR.x', prefix.bin)
-
+        install('ref/ma.x', prefix.bin)
         # Install Support Documents
-        install('miniAMR_ref/README', prefix.doc)
+        install('ref/README', prefix.doc)
