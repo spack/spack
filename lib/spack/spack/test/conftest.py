@@ -48,6 +48,7 @@ import spack.util.pattern
 from spack.dependency import Dependency
 from spack.fetch_strategy import URLFetchStrategy
 from spack.fetch_strategy import FetchError
+from spack.package import PackageBase
 from spack.spec import Spec
 from spack.version import Version
 

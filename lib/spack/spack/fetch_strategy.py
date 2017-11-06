@@ -230,10 +230,6 @@ class URLFetchStrategy(FetchStrategy):
         self.extension = kwargs.get('extension', None)
 
     @property
-    def archive_basename(self):
-        return os.path.basename(self.url)
-
-    @property
     def expected_archive_files(self):
         if self._expected_archive_files is None:
             return [self.archive_basename]

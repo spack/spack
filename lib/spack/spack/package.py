@@ -1021,7 +1021,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         self.stage.create()
 
-        validate = spack.do_checksum and self.version in self.versions
+        validate = checksum and self.version in self.versions
         self.stage.fetch(mirror_only, validate=validate, expand=expand)
 
         if not os.listdir(self.stage.path):

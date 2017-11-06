@@ -524,16 +524,19 @@ class ResourceStage(Stage):
 
     def restage(self):
         super(ResourceStage, self).restage()
-        self._add_to_root_stage()def fetch(self, mirror_only=False, validate=True, expand=True):
+        self._add_to_root_stage()
+
+    def fetch(self, mirror_only=False, validate=True, expand=True):
         super(ResourceStage, self).fetch(mirror_only, validate, expand)
 
         if expand is True:
-        self._add_to_root_stage()
+            self._add_to_root_stage()
 
     def _add_to_root_stage(self):
+        """Move the extracted resource to the root stage
+        (according to placement).
         """
-        Move the extracted resource to the root stage (according to placement).
-        """root_stage = self.root_stage
+        root_stage = self.root_stage
         resource = self.resource
         placement = os.path.basename(self.source_path) \
             if resource.placement is None \
@@ -542,26 +545,27 @@ class ResourceStage(Stage):
             placement = {'': placement}
 
             target_path = os.path.join(
-                root_stage.source_path, resource.destination)
-
+                root_stage.source_path, resource.destination
+            )
 
             try:
                 os.makedirs(target_path)
             except OSError as err:
-                if err.errno == errno.EEXIST and os.path.isdir(target_path):# noqa: ignore=E501
+                if err.errno == errno.EEXIST and os.path.isdir(target_path):  # noqa: ignore=E501
                     pass
                 else:
                     raise
 
         for key, value in iteritems(placement):
             destination_path = os.path.join(target_path, value)
-            source_path = os.path.join(self.source_path, key)    if not os.path.exists(destination_path):
-
-                tty.info('Moving resource stage\n '
-                         '\tsource :{stage}\n'
-                        '\tdestination : {destination}'.format(
-                             stage=source_path, destination=destination_path)
-                         )
+            source_path = os.path.join(self.source_path, key)
+            if not os.path.exists(destination_path):
+                tty.info(
+                    'Moving resource stage\n '
+                    '\tsource :{stage}\n'
+                    '\tdestination : {destination}'.format(
+                        stage=source_path, destination=destination_path)
+                )
                 shutil.move(os.path.realpath(source_path), destination_path)
 
 
