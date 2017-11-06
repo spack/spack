@@ -4,15 +4,15 @@
 Advanced Topics in Packaging
 ============================
 
-While you can quickly accomplish most of the mundane tasks with what
+While you can quickly accomplish most common tasks with what
 was covered in :ref:`packaging-tutorial`, there are times when such
 knowledge won't suffice. Usually this happens for libraries that provide
-more than one API and need to let dependents decide which one to use,
+more than one API and need to let dependents decide which one to use
 or for packages that provide tools that are invoked at build-time,
 or in other similar situations.
 
-In the following we'll dig into some of the details of package's
-implementation that permit to deal with these rare, but important,
+In the following we'll dig into some of the details of package
+implementation that help us deal with these rare, but important,
 occurrences. You can rest assured that in every case Spack remains faithful to
 its philosophy: keep simple things simple, but be flexible enough when
 complex requests arise!
@@ -21,35 +21,26 @@ complex requests arise!
 Set up for the tutorial
 -----------------------
 
-The preferred way to follow this tutorial is to use a Docker image:
+The simplest way to follow along with this tutorial is to use our Docker image,
+which comes with Spack and various packages pre-installed:
 
 .. code-block:: console
 
- $ docker pull alalazo/spack:advanced_packaging_tutorial
- $ docker run --rm -h advanced-packaging-tutorial -it alalazo/spack:advanced_packaging_tutorial
- root@advanced-packaging-tutorial:/#
-
-The image comes with Spack and some of the software pre-installed:
-
-.. code-block:: console
-
+  $ docker pull alalazo/spack:advanced_packaging_tutorial
+  $ docker run --rm -h advanced-packaging-tutorial -it alalazo/spack:advanced_packaging_tutorial
+  root@advanced-packaging-tutorial:/#
   root@advanced-packaging-tutorial:/# spack find
   ==> 20 installed packages.
   -- linux-ubuntu16.04-x86_64 / gcc@5.4.0 -------------------------
   arpack-ng@3.5.0  hdf5@1.10.1   libpciaccess@0.13.5  libtool@2.4.6  m4@1.4.18  ncurses@6.0          openblas@0.2.20  openssl@1.0.2k     superlu@5.2.1       xz@5.2.3
   cmake@3.9.4      hwloc@1.11.8  libsigsegv@2.11      libxml2@2.9.4  mpich@3.2  netlib-lapack@3.6.1  openmpi@3.0.0    pkg-config@0.29.2  util-macros@1.19.1  zlib@1.2.11
 
-to help focusing on the topic at hand and not on configuration issues.
-If you already started the image, then you can set your preferred editor
-(possible choices are ``emacs``, ``vim``, ``nano``):
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# export EDITOR=emacs # or vim, or nano
-
+If you already started the image, you can set the ``EDITOR`` environment
+variable to your preferred editor (``vi``, ``emacs``, and ``nano`` are included in the image)
 and move directly to :ref:`specs_build_interface_tutorial`.
 
-If you need instead to work in a local folder, the steps to set it up are:
+If you choose not to use the Docker image, you can clone the Spack repository
+and build the necessary bits yourself:
 
 .. code-block:: console
 
@@ -91,13 +82,13 @@ the rest of the tutorial.
 Spec's build interface
 ----------------------
 
-Spack is designed with a particular care on assigning responsibilities
-to the right entities, as this results in a clearer and more intuitive interface
+Spack is designed with an emphasis on assigning responsibilities
+to the appropriate entities, as this results in a clearer and more intuitive interface
 for the users.
 When it comes to packaging, one of the most fundamental guideline that
 emerged from this tenet is that:
 
-  *It's a package responsibility to know
+  *It is a package's responsibility to know
   every software it directly depends on and to expose to others how to
   use the services it provides*.
 
@@ -109,9 +100,9 @@ and prescribes how they should expose their own build information.
 A motivating example
 ^^^^^^^^^^^^^^^^^^^^
 
-Suppose we need to package ``armadillo``. This library has a few dependencies,
-including LAPACK. Let's open an editor and complete the stub that
-has been prepared for the tutorial:
+We've started work on a package for ``armadillo``. You should open it,
+read through the comment that starts with ``# TUTORIAL:`` and complete
+the ``cmake_args`` section:
 
 .. code-block:: console
 
@@ -165,7 +156,7 @@ as a LAPACK provider:
     Fetch: 0.01s.  Build: 3.96s.  Total: 3.98s.
   [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/armadillo-8.100.1-n2eojtazxbku6g4l5izucwwgnpwz77r4
 
-The installation went fine and the code we added expanded to the right list
+Hopefully the installation went fine and the code we added expanded to the right list
 of semicolon separated libraries (you are encouraged to open ``armadillo``'s
 build logs to double check).
 
@@ -199,14 +190,15 @@ notice that this time the installation won't complete:
   See build log for details:
     /usr/local/var/spack/stage/arpack-ng-3.5.0-bloz7cqirpdxj33pg7uj32zs5likz2un/arpack-ng-3.5.0/spack-build.out
 
-This is because ``netlib-lapack`` requires extra work, if compared to ``openblas``,
+This is because ``netlib-lapack`` requires extra work, compared to ``openblas``,
 to expose its build information to other packages. Let's edit it:
 
 .. code-block:: console
 
   root@advanced-packaging-tutorial:/# spack edit netlib-lapack
 
-and follow the instructions as before. What we need to implement is:
+and follow the instructions in the ``# TUTORIAL:`` comment as before.
+What we need to implement is:
 
 .. code-block:: python
 
@@ -285,17 +277,17 @@ installation prefix).
 
   Types commonly returned by build-interface attributes
     Even though there's no enforcement on it, the type of the objects returned most often when
-    asking for the ``libs`` attributes is a :py:class:`llnl.util.filesystem.LibraryList`.
-    Similarly the usual type returned for ``headers`` is a :py:class:`llnl.util.filesystem.HeaderList`,
-    while for ``command`` is a :py:class:`spack.util.executable.Executable`. You can refer to
-    their API documentation to discover more about them.
+    asking for the ``libs`` attributes is :py:class:`LibraryList <llnl.util.filesystem.LibraryList>`.
+    Similarly the usual type returned for ``headers`` is :py:class:`HeaderList <llnl.util.filesystem.HeaderList>`,
+    while for ``command`` is :py:class:`Executable <spack.util.executable.Executable>`. You can refer to
+    these objects' API documentation to discover more about them.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Extra query parameters
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 An advanced feature of the Spec's build-interface protocol is the support
-for extra parameters after the subscript key. In fact, any of the key used in the query
+for extra parameters after the subscript key. In fact, any of the keys used in the query
 can be followed by a comma separated list of extra parameters which can be
 inspected by the package receiving the request to fine tune a response.
 
@@ -394,6 +386,7 @@ is retrieved by a dependent with:
 .. code-block:: python
 
   blas = self.spec['blas']
+  blas_libs = blas.libs
 
 Within the property we inspect various aspects of the current spec:
 
@@ -434,9 +427,8 @@ of a few real use cases.
 Set variables at build-time for yourself
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A few packages require their users to set some environment
-variables in order to be configured and built correctly. Spack
-permits you to accomplish this using the
+Spack provides a way to manipulate a package's build time and
+run time environments using the
 :py:func:`setup_environment <spack.package.PackageBase.setup_environment>` function.
 Let's try to see how it works by completing the ``elpa`` package:
 
@@ -462,7 +454,7 @@ In the end your method should look like:
 The two arguments, ``spack_env`` and ``run_env``, are both instances of
 :py:class:`EnvironmentModifications <spack.environment.EnvironmentModifications>` and
 permit you to register modifications to either the build-time or the run-time
-environment of the package.
+environment of the package, respectively.
 At this point it's possible to proceed with the installation of ``elpa``:
 
 .. code-block:: console
@@ -480,17 +472,17 @@ At this point it's possible to proceed with the installation of ``elpa``:
 If you had modifications to ``run_env``, those would have appeared e.g. in the module files
 generated for the package.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Inject variables at build-time to your dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Set variables in dependencies at build-time
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Another common occurrence for packages that support extensions, like ``r``
-or ``python``, or for packages that provide build tools is to
-require *their dependents* to have some environment variables set.
+Another common occurrence, particularly for packages like ``r`` and ``python``
+that support extensions and for packages that provide build tools,
+is to require *their dependents* to have some environment variables set.
 
-The situation, even in this case, is similar to the one encountered previously.
-The function to override is :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
-and takes one additional argument, i.e. the dependent spec that needs the modified
+The mechanism is similar to the what we just saw, except that we override the
+:py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
+function, which takes one additional argument, i.e. the dependent spec that needs the modified
 environment. Let's practice completing the ``mpich`` package:
 
 .. code-block:: console
