@@ -25,7 +25,6 @@
 from spack import *
 from subprocess import call
 
-
 class Nek5000(Package):
     """A fast and scalable high-order solver for computational fluid
        dynamics"""
@@ -41,11 +40,18 @@ class Nek5000(Package):
     version('develop'     , git = 'https://github.com/Nek5000/Nek5000.git',
         branch='master')
 
-    variant('mpi'    , default=True, description='Build with MPI.'    )
-    variant('genbox' , default=True, description='Build genbox tool.' )
-    variant('genmap' , default=True, description='Build genmap tool.' )
-    variant('prenek' , default=True, description='Build prenek tool.' )
-    variant('postnek', default=True, description='Build psotnek tool.')
+    # MPI
+    variant('mpi', default=True, description='Build with MPI.')
+
+    # Tools
+    variant('genbox',   default=True, description='Build genbox tool.'  )
+    variant('int_tp',   default=True, description='Build int_tp tool.'  )
+    variant('n2to3',    default=True, description='Build n2to3 tool.'   )
+    variant('postnek',  default=True, description='Build postnek tool.' )
+    variant('reatore2', default=True, description='Build reatore2 tool.')
+    variant('genmap',   default=True, description='Build genmap tool.'  )
+    variant('nekmerge', default=True, description='Build nekmerge tool.')
+    variant('prenek',   default=True, description='Build prenek tool.'  )
 
     depends_on('mpi', when="+mpi")
 
@@ -58,28 +64,36 @@ class Nek5000(Package):
     def install(self, spec, prefix):
         toolsDir   = 'tools'
         binDir     = 'bin'
-        installDir = prefix.bin
-
-        mkdirp(installDir)
 
         F77 = spack_f77
         CC  = spack_cc
 
-        # Build the tools, no need to install, maketools does this
-        # be default
+        # Build the tools, maketools copy them to Nek5000/bin by default.
+        # We will then install Nek5000/bin under prefix after that.
         with working_dir(toolsDir):
+            # Update the maketools script to use correct compilers
             filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"', 'maketools')
-            filter_file(r'^CC\s*=.*' , 'CC=\"'  + CC  + '\"', 'maketools')
+            filter_file(r'^CC\s*=.*', 'CC=\"' + CC  + '\"',   'maketools')
             makeTools = Executable('./maketools')
 
+            # Build the tools
             if '+genbox' in spec:
-                makeTools('genbox' )
-            if '+genmap' in spec:
-                makeTools('genmap' )
-            if '+prenek' in spec:
-                makeTools('prenek' )
+                makeTools('genbox')
+            if '+int_tp' in spec:
+                makeTools('int_tp')
+            if '+n2to3' in spec:
+                makeTools('n2to3')
             if '+postnek' in spec:
                 makeTools('postnek')
+            if '+reatore2' in spec:
+                makeTools('reatore2')
+            if '+genmap' in spec:
+                makeTools('genmap')
+            if '+nekmerge' in spec:
+                makeTools('nekmerge')
+            if '+prenek' in spec:
+                makeTools('prenek')
+
 
         with working_dir(binDir):
             if '+mpi' in spec:
@@ -87,23 +101,14 @@ class Nek5000(Package):
                 CC  = spec['mpi'].mpicc
 
             # Update the makenek to use correct compilers and
-            # Nek5000 source. Nek5000 source is manually copied.
-            filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"',  'makenek')
-            filter_file(r'^CC\s*=.*' , 'CC=\"'  + CC  + '\"',  'makenek')
+            # Nek5000 source.
+            filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"', 'makenek')
+            filter_file(r'^CC\s*=.*', 'CC=\"'  + CC  + '\"',  'makenek')
             filter_file(r'SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"'  + \
                 prefix.bin.Nek5000 + '\"',  'makenek')
-            install('makenek', installDir)
 
-            #FIXME "Not portable across platforms"
-            call('cp -r ../../Nek5000 '  + installDir, shell=True)
+        # Install Nek5000/bin in prefix/bin
+        install_tree(binDir, prefix.bin)
 
-            if '+genbox' in spec:
-                install('genbox' , installDir)
-            if '+genmap' in spec:
-                install('genmap' , installDir)
-            if '+prenek' in spec:
-                install('prex'   , installDir)
-                install('pretex' , installDir)
-            if '+postnek' in spec:
-                install('postx'  , installDir)
-                install('postex' , installDir)
+        # Copy Nek5000 source to prefix/bin
+        install_tree('../Nek5000', prefix.bin.Nek5000)
