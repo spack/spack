@@ -31,10 +31,10 @@ class RYaqcaffy(RPackage):
        reference datasets."""
 
     homepage = "http://bioconductor.org/packages/yaqcaffy/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/yaqcaffy_1.36.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/yaqcaffy"
     list_url = homepage
 
-    version('1.36.0', '73bea4305aa6b1fc9d49881b95bcda42')
+    version('1.36.0', git='https://git.bioconductor.org/packages/yaqcaffy', commit='4d46fe77b2c8de2230a77b0c07dd5dd726e3abd6')
 
     depends_on('r-simpleaffy', type=('build', 'run'))
     depends_on('r@3.4.0:3.4.9', when='@1.36.0')
