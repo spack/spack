@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.operating_systems.mac_os import macOS_version
 from llnl.util import tty
 
 import glob
@@ -96,7 +97,7 @@ class Gcc(AutotoolsPackage):
     # depends_on('cloog')
 
     # TODO: Add a 'test' deptype
-    # https://github.com/LLNL/spack/issues/1279
+    # https://github.com/spack/spack/issues/1279
     # depends_on('dejagnu@1.4.4', type='test')
     # depends_on('expect', type='test')
     # depends_on('tcl', type='test')
@@ -148,6 +149,10 @@ class Gcc(AutotoolsPackage):
     conflicts('languages=jit', when='@:4')
 
     if sys.platform == 'darwin':
+        # Fix parallel build on APFS filesystem
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
+        if macOS_version() >= Version('10.13'):
+            patch('darwin/apfs.patch', when='@7.2.0')
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,8 @@ class Amg2013(MakefilePackage):
             url='https://codesign.llnl.gov/amg2013/amg2013.tgz')
 
     variant('openmp', default=True, description='Build with OpenMP support')
-    variant('assumepartition', default=False, description='Assumed partition (for thousands of processors)')
+    variant('assumedpartition', default=False, description='Use assumed partition (for thousands of processors)')
+    variant('int64', default=False, description='Use 64-bit integers for global variables')
 
     depends_on('mpi')
 
@@ -48,16 +49,19 @@ class Amg2013(MakefilePackage):
     def build_targets(self):
         targets = []
 
-        include_cflags = ' -DTIMER_USE_MPI '
-        include_lflags = ' -lm '
-
-        if '+assumepartition' in self.spec:
-            include_cflags += ' -DHYPRE_NO_GLOBAL_PARTITION '
+        include_cflags = ['-DTIMER_USE_MPI']
+        include_lflags = ['-lm']
 
         if '+openmp' in self.spec:
-            include_cflags += ' -DHYPRE_USING_OPENMP '
-            include_cflags += self.compiler.openmp_flag
-            include_lflags += ' ' + self.compiler.openmp_flag
+            include_cflags.append('-DHYPRE_USING_OPENMP')
+            include_cflags.append(self.compiler.openmp_flag)
+            include_lflags.append(self.compiler.openmp_flag)
+
+        if '+assumedpartition' in self.spec:
+            include_cflags.append('-DHYPRE_NO_GLOBAL_PARTITION')
+
+        if '+int64' in self.spec:
+            include_cflags.append('-DHYPRE_LONG_LONG')
 
         targets.append('INCLUDE_CFLAGS={0}'.format(' '.join(include_cflags)))
         targets.append('INCLUDE_LFLAGS={0}'.format(' '.join(include_lflags)))
@@ -68,6 +72,6 @@ class Amg2013(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('test/amg2013', prefix.bin)
-        install_tree('docs', prefix.doc)
-        install('COPYRIGHT', prefix.doc)
-        install('COPYING.LESSER', prefix.doc)
+        install_tree('docs', prefix.docs)
+        install('COPYRIGHT', prefix.docs)
+        install('COPYING.LESSER', prefix.docs)

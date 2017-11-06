@@ -7,7 +7,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -90,7 +90,7 @@ from spack.abi import ABI
 from spack.concretize import DefaultConcretizer
 from spack.version import Version
 from spack.util.path import canonicalize_path
-
+from spack.package_prefs import PackageTesting
 
 #-----------------------------------------------------------------------------
 # Initialize various data structures & objects at the core of Spack.
@@ -134,6 +134,9 @@ misc_cache_path = canonicalize_path(
 misc_cache = FileCache(misc_cache_path)
 
 
+binary_cache_retrieved_specs = set()
+
+
 #: Directories where to search for templates
 template_dirs = spack.config.get_config('config')['template_dirs']
 template_dirs = [canonicalize_path(x) for x in template_dirs]
@@ -158,6 +161,10 @@ dirty = _config.get('dirty', False)
 build_jobs = _config.get('build_jobs', multiprocessing.cpu_count())
 
 
+# Needed for test dependencies
+package_testing = PackageTesting()
+
+
 #-----------------------------------------------------------------------------
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
@@ -174,6 +181,7 @@ __all__ = []
 
 from spack.package import Package, run_before, run_after, on_package_attributes
 from spack.build_systems.makefile import MakefilePackage
+from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.qmake import QMakePackage
@@ -190,6 +198,7 @@ __all__ += [
     'on_package_attributes',
     'Package',
     'MakefilePackage',
+    'AspellDictPackage',
     'AutotoolsPackage',
     'CMakePackage',
     'QMakePackage',
@@ -204,8 +213,11 @@ __all__ += [
 from spack.version import Version, ver
 __all__ += ['Version', 'ver']
 
-from spack.spec import Spec, alldeps
-__all__ += ['Spec', 'alldeps']
+from spack.spec import Spec
+__all__ += ['Spec']
+
+from spack.dependency import all_deptypes
+__all__ += ['all_deptypes']
 
 from spack.multimethod import when
 __all__ += ['when']

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -44,6 +44,9 @@ _flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
                         'extra_rpaths']
 _cache_config_file = []
+
+#: cache of compilers constructed from config data, keyed by config entry id.
+_compiler_cache = {}
 
 
 def _auto_compiler_spec(function):
@@ -251,35 +254,42 @@ def compilers_for_arch(arch_spec, scope=None):
 
 
 def compiler_from_config_entry(items):
-    cspec = spack.spec.CompilerSpec(items['spec'])
-    os = items.get('operating_system', None)
-    target = items.get('target', None)
+    config_id = id(items)
+    compiler = _compiler_cache.get(config_id, None)
 
-    if not ('paths' in items and
-            all(n in items['paths'] for n in _path_instance_vars)):
-        raise InvalidCompilerConfigurationError(cspec)
+    if compiler is None:
+        cspec = spack.spec.CompilerSpec(items['spec'])
+        os = items.get('operating_system', None)
+        target = items.get('target', None)
 
-    cls  = class_for_compiler_name(cspec.name)
+        if not ('paths' in items and
+                all(n in items['paths'] for n in _path_instance_vars)):
+            raise InvalidCompilerConfigurationError(cspec)
 
-    compiler_paths = []
-    for c in _path_instance_vars:
-        compiler_path = items['paths'][c]
-        if compiler_path != 'None':
-            compiler_paths.append(compiler_path)
-        else:
-            compiler_paths.append(None)
+        cls  = class_for_compiler_name(cspec.name)
 
-    mods = items.get('modules')
-    if mods == 'None':
-        mods = []
+        compiler_paths = []
+        for c in _path_instance_vars:
+            compiler_path = items['paths'][c]
+            if compiler_path != 'None':
+                compiler_paths.append(compiler_path)
+            else:
+                compiler_paths.append(None)
 
-    alias = items.get('alias', None)
-    compiler_flags = items.get('flags', {})
-    environment = items.get('environment', {})
-    extra_rpaths = items.get('extra_rpaths', [])
+        mods = items.get('modules')
+        if mods == 'None':
+            mods = []
 
-    return cls(cspec, os, target, compiler_paths, mods, alias,
-               environment, extra_rpaths, **compiler_flags)
+        alias = items.get('alias', None)
+        compiler_flags = items.get('flags', {})
+        environment = items.get('environment', {})
+        extra_rpaths = items.get('extra_rpaths', [])
+
+        compiler = cls(cspec, os, target, compiler_paths, mods, alias,
+                       environment, extra_rpaths, **compiler_flags)
+        _compiler_cache[id(items)] = compiler
+
+    return compiler
 
 
 def get_compilers(config, cspec=None, arch_spec=None):

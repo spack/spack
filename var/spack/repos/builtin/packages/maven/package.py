@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@ class Maven(Package):
     homepage = "https://maven.apache.org/index.html"
     url = "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.tar.gz"
 
+    version('3.5.0', '35c39251d2af99b6624d40d801f6ff02')
     version('3.3.9', '516923b3955b6035ba6b0a5b031fbd8b')
 
     depends_on('java')

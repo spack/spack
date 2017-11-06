@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,9 +29,11 @@ import os
 import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
+from llnl.util.filesystem import working_dir
 
 import spack
-from spack.util.executable import *
+from spack.util.executable import which
+from spack.cmd import spack_is_git_repo
 
 description = "query packages associated with particular git revisions"
 section = "developer"
@@ -75,26 +77,14 @@ def setup_parser(subparser):
         help="revision to compare to rev1 (default is HEAD)")
 
 
-def get_git(fatal=True):
-    # cd to spack prefix to do git operations
-    os.chdir(spack.prefix)
-
-    # If this is a non-git version of spack, give up.
-    if not os.path.isdir('.git'):
-        if fatal:
-            tty.die("No git repo in %s. Can't use 'spack pkg'" % spack.prefix)
-        else:
-            return None
-
-    return which("git", required=True)
-
-
 def list_packages(rev):
-    git = get_git()
     pkgpath = os.path.join(spack.packages_path, 'packages')
     relpath = pkgpath[len(spack.prefix + os.path.sep):] + os.path.sep
-    output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
-                 output=str)
+
+    git = which('git', required=True)
+    with working_dir(spack.prefix):
+        output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
+                     output=str)
     return sorted(line[len(relpath):] for line in output.split('\n') if line)
 
 
@@ -105,8 +95,9 @@ def pkg_add(args):
             tty.die("No such package: %s.  Path does not exist:" %
                     pkg_name, filename)
 
-        git = get_git()
-        git('-C', spack.packages_path, 'add', filename)
+        git = which('git', required=True)
+        with working_dir(spack.prefix):
+            git('-C', spack.packages_path, 'add', filename)
 
 
 def pkg_list(args):
@@ -150,6 +141,9 @@ def pkg_added(args):
 
 
 def pkg(parser, args):
+    if not spack_is_git_repo():
+        tty.die("This spack is not a git clone. Can't use 'spack pkg'")
+
     action = {'add': pkg_add,
               'diff': pkg_diff,
               'list': pkg_list,

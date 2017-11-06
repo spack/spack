@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,13 +25,16 @@
 import os
 import os.path
 import inspect
+import hashlib
 
 import spack
 import spack.error
 import spack.fetch_strategy as fs
 import spack.stage
-from llnl.util.filesystem import join_path
+from spack.util.crypto import checksum, Checker
+from llnl.util.filesystem import working_dir
 from spack.util.executable import which
+from spack.util.compression import allowed_archive
 
 
 def absolute_path_for_package(pkg):
@@ -39,8 +42,10 @@ def absolute_path_for_package(pkg):
     the recipe for the package passed as argument.
 
     Args:
-        pkg: a valid package object
+        pkg: a valid package object, or a Dependency object.
     """
+    if isinstance(pkg, spack.dependency.Dependency):
+        pkg = pkg.pkg
     m = inspect.getmodule(pkg)
     return os.path.abspath(m.__file__)
 
@@ -51,7 +56,7 @@ class Patch(object):
     """
 
     @staticmethod
-    def create(pkg, path_or_url, level, **kwargs):
+    def create(pkg, path_or_url, level=1, working_dir=".", **kwargs):
         """
         Factory method that creates an instance of some class derived from
         Patch
@@ -59,24 +64,26 @@ class Patch(object):
         Args:
             pkg: package that needs to be patched
             path_or_url: path or url where the patch is found
-            level: patch level
+            level: patch level (default 1)
+            working_dir (str): dir to change to before applying (default '.')
 
         Returns:
             instance of some Patch class
         """
         # Check if we are dealing with a URL
         if '://' in path_or_url:
-            return UrlPatch(pkg, path_or_url, level, **kwargs)
+            return UrlPatch(path_or_url, level, working_dir, **kwargs)
         # Assume patches are stored in the repository
-        return FilePatch(pkg, path_or_url, level)
+        return FilePatch(pkg, path_or_url, level, working_dir)
 
-    def __init__(self, pkg, path_or_url, level):
+    def __init__(self, path_or_url, level, working_dir):
         # Check on level (must be an integer > 0)
         if not isinstance(level, int) or not level >= 0:
             raise ValueError("Patch level needs to be a non-negative integer.")
         # Attributes shared by all patch subclasses
         self.path_or_url = path_or_url
         self.level = level
+        self.working_dir = working_dir
         # self.path needs to be computed by derived classes
         # before a call to apply
         self.path = None
@@ -91,29 +98,49 @@ class Patch(object):
         Args:
             stage: stage for the package that needs to be patched
         """
-        stage.chdir_to_source()
-        # Use -N to allow the same patches to be applied multiple times.
-        _patch = which("patch", required=True)
-        _patch('-s', '-p', str(self.level), '-i', self.path)
+        patch = which("patch", required=True)
+        with working_dir(stage.source_path):
+            # Use -N to allow the same patches to be applied multiple times.
+            patch('-s', '-p', str(self.level), '-i', self.path,
+                  "-d", self.working_dir)
 
 
 class FilePatch(Patch):
     """Describes a patch that is retrieved from a file in the repository"""
-    def __init__(self, pkg, path_or_url, level):
-        super(FilePatch, self).__init__(pkg, path_or_url, level)
+    def __init__(self, pkg, path_or_url, level, working_dir):
+        super(FilePatch, self).__init__(path_or_url, level, working_dir)
 
         pkg_dir = os.path.dirname(absolute_path_for_package(pkg))
-        self.path = join_path(pkg_dir, path_or_url)
+        self.path = os.path.join(pkg_dir, path_or_url)
         if not os.path.isfile(self.path):
-            raise NoSuchPatchFileError(pkg.name, self.path)
+            raise NoSuchPatchError(
+                "No such patch for package %s: %s" % (pkg.name, self.path))
+        self._sha256 = None
+
+    @property
+    def sha256(self):
+        if self._sha256 is None:
+            self._sha256 = checksum(hashlib.sha256, self.path)
+        return self._sha256
 
 
 class UrlPatch(Patch):
     """Describes a patch that is retrieved from a URL"""
-    def __init__(self, pkg, path_or_url, level, **kwargs):
-        super(UrlPatch, self).__init__(pkg, path_or_url, level)
+    def __init__(self, path_or_url, level, working_dir, **kwargs):
+        super(UrlPatch, self).__init__(path_or_url, level, working_dir)
         self.url = path_or_url
-        self.md5 = kwargs.get('md5')
+
+        self.archive_sha256 = None
+        if allowed_archive(self.url):
+            if 'archive_sha256' not in kwargs:
+                raise PatchDirectiveError(
+                    "Compressed patches require 'archive_sha256' "
+                    "and patch 'sha256' attributes: %s" % self.url)
+            self.archive_sha256 = kwargs.get('archive_sha256')
+
+        if 'sha256' not in kwargs:
+            raise PatchDirectiveError("URL patches require a sha256 checksum")
+        self.sha256 = kwargs.get('sha256')
 
     def apply(self, stage):
         """Retrieve the patch in a temporary stage, computes
@@ -122,30 +149,56 @@ class UrlPatch(Patch):
         Args:
             stage: stage for the package that needs to be patched
         """
-        fetcher = fs.URLFetchStrategy(self.url, digest=self.md5)
-        mirror = join_path(
+        # use archive digest for compressed archives
+        fetch_digest = self.sha256
+        if self.archive_sha256:
+            fetch_digest = self.archive_sha256
+
+        fetcher = fs.URLFetchStrategy(self.url, digest=fetch_digest)
+        mirror = os.path.join(
             os.path.dirname(stage.mirror_path),
-            os.path.basename(self.url)
-        )
+            os.path.basename(self.url))
+
         with spack.stage.Stage(fetcher, mirror_path=mirror) as patch_stage:
             patch_stage.fetch()
             patch_stage.check()
             patch_stage.cache_local()
 
-            if spack.util.compression.allowed_archive(self.url):
+            root = patch_stage.path
+            if self.archive_sha256:
                 patch_stage.expand_archive()
+                root = patch_stage.source_path
 
-            self.path = os.path.abspath(
-                os.listdir(patch_stage.path).pop()
-            )
+            files = os.listdir(root)
+            if not files:
+                if self.archive_sha256:
+                    raise NoSuchPatchError(
+                        "Archive was empty: %s" % self.url)
+                else:
+                    raise NoSuchPatchError(
+                        "Patch failed to download: %s" % self.url)
+
+            self.path = os.path.join(root, files.pop())
+
+            if not os.path.isfile(self.path):
+                raise NoSuchPatchError(
+                    "Archive %s contains no patch file!" % self.url)
+
+            # for a compressed archive, Need to check the patch sha256 again
+            # and the patch is in a directory, not in the same place
+            if self.archive_sha256:
+                checker = Checker(self.sha256)
+                if not checker.check(self.path):
+                    raise fs.ChecksumError(
+                        "sha256 checksum failed for %s" % self.path,
+                        "Expected %s but got %s" % (self.sha256, checker.sum))
+
             super(UrlPatch, self).apply(stage)
 
 
-class NoSuchPatchFileError(spack.error.SpackError):
-    """Raised when user specifies a patch file that doesn't exist."""
+class NoSuchPatchError(spack.error.SpackError):
+    """Raised when a patch file doesn't exist."""
 
-    def __init__(self, package, path):
-        super(NoSuchPatchFileError, self).__init__(
-            "No such patch file for package %s: %s" % (package, path))
-        self.package = package
-        self.path = path
+
+class PatchDirectiveError(spack.error.SpackError):
+    """Raised when the wrong arguments are suppled to the patch directive."""

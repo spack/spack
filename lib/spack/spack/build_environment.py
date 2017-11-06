@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -62,15 +62,15 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import *
+from llnl.util.filesystem import join_path, mkdirp, install, install_tree
 
 import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
-from spack.util.environment import *
+from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
-from spack.util.log_parse import *
+from spack.util.log_parse import parse_log_events, make_log_context
 
 
 #
@@ -91,6 +91,7 @@ SPACK_PREFIX = 'SPACK_PREFIX'
 SPACK_INSTALL = 'SPACK_INSTALL'
 SPACK_DEBUG = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC = 'SPACK_SHORT_SPEC'
+SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 
 
@@ -167,12 +168,6 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
-    for mod in compiler.modules:
-        # Fixes issue https://github.com/LLNL/spack/issues/3153
-        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-            load_module("cce")
-        load_module(mod)
-
     compiler.setup_custom_environment(pkg, env)
 
     return env
@@ -191,9 +186,9 @@ def set_build_environment_variables(pkg, env, dirty):
         dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
-    build_deps      = pkg.spec.dependencies(deptype='build')
-    link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
-    build_link_deps = pkg.spec.traverse(root=False, deptype=('build', 'link'))
+    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
 
     build_prefixes      = [dep.prefix for dep in build_deps]
@@ -303,6 +298,7 @@ def set_build_environment_variables(pkg, env, dirty):
     if spack.debug:
         env.set(SPACK_DEBUG, 'TRUE')
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
@@ -311,9 +307,6 @@ def set_build_environment_variables(pkg, env, dirty):
             pcdir = join_path(prefix, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
-
-    if pkg.architecture.target.module_name:
-        load_module(pkg.architecture.target.module_name)
 
     return env
 
@@ -484,7 +477,7 @@ def setup_package(pkg, dirty):
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
-    load_external_modules(pkg)
+
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
     for dspec in pkg.spec.traverse(order='post', root=False, deptype='build'):
@@ -511,8 +504,23 @@ def setup_package(pkg, dirty):
     validate(spack_env, tty.warn)
     spack_env.apply_modifications()
 
+    # All module loads that otherwise would belong in previous functions
+    # have to occur after the spack_env object has its modifications applied.
+    # Otherwise the environment modifications could undo module changes, such
+    # as unsetting LD_LIBRARY_PATH after a module changes it.
+    for mod in pkg.compiler.modules:
+        # Fixes issue https://github.com/spack/spack/issues/3153
+        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+            load_module("cce")
+        load_module(mod)
 
-def fork(pkg, function, dirty):
+    if pkg.architecture.target.module_name:
+        load_module(pkg.architecture.target.module_name)
+
+    load_external_modules(pkg)
+
+
+def fork(pkg, function, dirty, fake):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -523,6 +531,7 @@ def fork(pkg, function, dirty):
             process.
         dirty (bool): If True, do NOT clean the environment before
             building.
+        fake (bool): If True, skip package setup b/c it's not a real build
 
     Usage::
 
@@ -550,7 +559,8 @@ def fork(pkg, function, dirty):
             sys.stdin = input_stream
 
         try:
-            setup_package(pkg, dirty=dirty)
+            if not fake:
+                setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
         except StopIteration as e:
@@ -559,7 +569,7 @@ def fork(pkg, function, dirty):
             tty.msg(e.message)
             child_pipe.send(None)
 
-        except:
+        except BaseException:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
 
@@ -669,11 +679,11 @@ def get_package_context(traceback, context=3):
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
-    l = frame.f_lineno - start
-    start_ctx = max(0, l - context)
-    sourcelines = sourcelines[start_ctx:l + context + 1]
+    fl = frame.f_lineno - start
+    start_ctx = max(0, fl - context)
+    sourcelines = sourcelines[start_ctx:fl + context + 1]
     for i, line in enumerate(sourcelines):
-        is_error = start_ctx + i == l
+        is_error = start_ctx + i == fl
         mark = ">> " if is_error else "   "
         marked = "  %s%-6d%s" % (mark, start_ctx + i, line.rstrip())
         if is_error:
@@ -747,14 +757,14 @@ class ChildError(InstallError):
             # The error happened in some external executed process. Show
             # the build log with errors highlighted.
             if self.build_log:
-                events = parse_log_events(self.build_log)
-                nerr = len(events)
+                errors, warnings = parse_log_events(self.build_log)
+                nerr = len(errors)
                 if nerr > 0:
                     if nerr == 1:
                         out.write("\n1 error found in build log:\n")
                     else:
                         out.write("\n%d errors found in build log:\n" % nerr)
-                    out.write(make_log_context(events))
+                    out.write(make_log_context(errors))
 
         else:
             # The error happened in in the Python code, so try to show

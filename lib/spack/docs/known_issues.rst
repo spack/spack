@@ -34,7 +34,7 @@ A workaround is to explicitly activate the variant related to the dependency:
 
    $ spack install hdf5+mpi ^openmpi
 
-See https://github.com/LLNL/spack/issues/397 for further details.
+See https://github.com/spack/spack/issues/397 for further details.
 
 
 ---------------------------------------------------
@@ -73,8 +73,8 @@ A workaround is to explicitly activate the variants of dependencies as well:
 
    $ spack install r+X ^cairo+X ^pango+X
 
-See https://github.com/LLNL/spack/issues/267 and
-https://github.com/LLNL/spack/issues/2546 for further details.
+See https://github.com/spack/spack/issues/267 and
+https://github.com/spack/spack/issues/2546 for further details.
 
 
 ---------------------------------
@@ -94,7 +94,7 @@ Unfortunately, this command no longer works:
    ==> python@2.7.13%clang@8.0.0-apple~tk~ucs4 arch=darwin-sierra-x86_64 -ckrr4mg has no extensions.
 
 
-See https://github.com/LLNL/spack/issues/2895 for further details.
+See https://github.com/spack/spack/issues/2895 for further details.
 
 
 ----------------------------
@@ -105,6 +105,6 @@ See https://github.com/LLNL/spack/issues/2895 for further details.
 
 Spack provides a ``setup`` command that is useful for the development of
 software outside of Spack. Unfortunately, this command no longer works.
-See https://github.com/LLNL/spack/issues/2597 and
-https://github.com/LLNL/spack/issues/2662 for details. This is expected
-to be fixed by https://github.com/LLNL/spack/pull/2664.
+See https://github.com/spack/spack/issues/2597 and
+https://github.com/spack/spack/issues/2662 for details. This is expected
+to be fixed by https://github.com/spack/spack/pull/2664.

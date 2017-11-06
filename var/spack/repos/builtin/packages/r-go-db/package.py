@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,8 +30,7 @@ class RGoDb(RPackage):
     Ontology assembled using data from GO."""
 
     homepage = "https://www.bioconductor.org/packages/GO.db/"
-    url = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/GO.db_3.4.1.tar.gz"
-    list_url = homepage
+    url = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/GO.db_3.4.1.tar.gz"
 
     version('3.4.1', 'e16ee8921d8adc1ed3cbac2a3e35e386')
     depends_on('r-annotationdbi', type=('build', 'run'))

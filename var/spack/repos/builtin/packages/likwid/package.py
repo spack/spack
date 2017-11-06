@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,9 @@ class Likwid(Package):
 
     maintainers = ['davydden']
 
+    version('4.3.0', 'f6bdf12513af95bd6eefa9c68644e724')
+    version('4.2.1', 'c408ddcf0317cdd894af4c580cd74294')
+    version('4.2.0', 'e41ff334b8f032a323d941ce32907a75')
     version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,9 @@ class RDataTable(RPackage):
 
     homepage = "https://github.com/Rdatatable/data.table/wiki"
     url      = "https://cran.r-project.org/src/contrib/data.table_1.10.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/data.table"
 
+    version('1.10.4-2', '4a2d3541f241088d0979522b4083a765')
     version('1.10.0', 'f0e08dd5ba1b3f46c59dd1574fe497c1')
     version('1.9.6',  'b1c0c7cce490bdf42ab288541cc55372')
 

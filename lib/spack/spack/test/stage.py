@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,20 +26,13 @@
 import collections
 import os
 
+from llnl.util.filesystem import join_path, working_dir
+
 import pytest
 import spack
 import spack.stage
 import spack.util.executable
-from llnl.util.filesystem import join_path
 from spack.stage import Stage
-
-
-def check_chdir_to_source(stage, stage_name):
-    stage_path = get_stage_path(stage, stage_name)
-    archive_dir = 'test-files'
-    assert join_path(
-        os.path.realpath(stage_path), archive_dir
-    ) == os.getcwd()
 
 
 def check_expand_archive(stage, stage_name, mock_archive):
@@ -62,11 +55,6 @@ def check_fetch(stage, stage_name):
     stage_path = get_stage_path(stage, stage_name)
     assert archive_name in os.listdir(stage_path)
     assert join_path(stage_path, archive_name) == stage.fetcher.archive_file
-
-
-def check_chdir(stage, stage_name):
-    stage_path = get_stage_path(stage, stage_name)
-    assert os.path.realpath(stage_path) == os.getcwd()
 
 
 def check_destroy(stage, stage_name):
@@ -162,10 +150,9 @@ def mock_archive(tmpdir, monkeypatch):
     test_tmp_path.ensure(dir=True)
     test_readme.write('hello world!\n')
 
-    current = tmpdir.chdir()
-    tar = spack.util.executable.which('tar', required=True)
-    tar('czf', str(archive_name), 'test-files')
-    current.chdir()
+    with tmpdir.as_cwd():
+        tar = spack.util.executable.which('tar', required=True)
+        tar('czf', str(archive_name), 'test-files')
 
     # Make spack use the test environment for tmp stuff.
     monkeypatch.setattr(spack.stage, '_tmp_root', None)
@@ -180,9 +167,6 @@ def mock_archive(tmpdir, monkeypatch):
         test_tmp_dir=test_tmp_path,
         archive_dir=archive_dir
     )
-    # record this since this test changes to directories that will
-    # be removed.
-    current.chdir()
 
 
 @pytest.fixture()
@@ -245,40 +229,28 @@ class TestStage(object):
             check_setup(stage, None, mock_archive)
         check_destroy(stage, None)
 
-    def test_chdir(self, mock_archive):
-        with Stage(mock_archive.url, name=self.stage_name) as stage:
-            stage.chdir()
-            check_setup(stage, self.stage_name, mock_archive)
-            check_chdir(stage, self.stage_name)
-        check_destroy(stage, self.stage_name)
-
     def test_fetch(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
             stage.fetch()
             check_setup(stage, self.stage_name, mock_archive)
-            check_chdir(stage, self.stage_name)
             check_fetch(stage, self.stage_name)
         check_destroy(stage, self.stage_name)
 
     def test_no_search_if_default_succeeds(
-            self, mock_archive, failing_search_fn
-    ):
-        with Stage(
-                mock_archive.url,
-                name=self.stage_name,
-                search_fn=failing_search_fn
-        ) as stage:
+            self, mock_archive, failing_search_fn):
+        stage = Stage(mock_archive.url,
+                      name=self.stage_name,
+                      search_fn=failing_search_fn)
+        with stage:
             stage.fetch()
         check_destroy(stage, self.stage_name)
 
     def test_no_search_mirror_only(
-            self, failing_fetch_strategy, failing_search_fn
-    ):
-        with Stage(
-                failing_fetch_strategy,
-                name=self.stage_name,
-                search_fn=failing_search_fn
-        ) as stage:
+            self, failing_fetch_strategy, failing_search_fn):
+        stage = Stage(failing_fetch_strategy,
+                      name=self.stage_name,
+                      search_fn=failing_search_fn)
+        with stage:
             try:
                 stage.fetch(mirror_only=True)
             except spack.fetch_strategy.FetchError:
@@ -286,11 +258,10 @@ class TestStage(object):
         check_destroy(stage, self.stage_name)
 
     def test_search_if_default_fails(self, failing_fetch_strategy, search_fn):
-        with Stage(
-                failing_fetch_strategy,
-                name=self.stage_name,
-                search_fn=search_fn
-        ) as stage:
+        stage = Stage(failing_fetch_strategy,
+                      name=self.stage_name,
+                      search_fn=search_fn)
+        with stage:
             try:
                 stage.fetch(mirror_only=False)
             except spack.fetch_strategy.FetchError:
@@ -307,75 +278,64 @@ class TestStage(object):
             check_expand_archive(stage, self.stage_name, mock_archive)
         check_destroy(stage, self.stage_name)
 
-    def test_expand_archive_with_chdir(self, mock_archive):
-        with Stage(mock_archive.url, name=self.stage_name) as stage:
-            stage.fetch()
-            check_setup(stage, self.stage_name, mock_archive)
-            check_fetch(stage, self.stage_name)
-            stage.expand_archive()
-            stage.chdir_to_source()
-            check_expand_archive(stage, self.stage_name, mock_archive)
-            check_chdir_to_source(stage, self.stage_name)
-        check_destroy(stage, self.stage_name)
-
     def test_restage(self, mock_archive):
         with Stage(mock_archive.url, name=self.stage_name) as stage:
             stage.fetch()
             stage.expand_archive()
-            stage.chdir_to_source()
-            check_expand_archive(stage, self.stage_name, mock_archive)
-            check_chdir_to_source(stage, self.stage_name)
 
-            # Try to make a file in the old archive dir
-            with open('foobar', 'w') as file:
-                file.write("this file is to be destroyed.")
+            with working_dir(stage.source_path):
+                check_expand_archive(stage, self.stage_name, mock_archive)
+
+                # Try to make a file in the old archive dir
+                with open('foobar', 'w') as file:
+                    file.write("this file is to be destroyed.")
 
             assert 'foobar' in os.listdir(stage.source_path)
 
             # Make sure the file is not there after restage.
             stage.restage()
-            check_chdir(stage, self.stage_name)
             check_fetch(stage, self.stage_name)
-            stage.chdir_to_source()
-            check_chdir_to_source(stage, self.stage_name)
             assert 'foobar' not in os.listdir(stage.source_path)
         check_destroy(stage, self.stage_name)
 
     def test_no_keep_without_exceptions(self, mock_archive):
-        with Stage(
-                mock_archive.url, name=self.stage_name, keep=False
-        ) as stage:
+        stage = Stage(mock_archive.url, name=self.stage_name, keep=False)
+        with stage:
             pass
         check_destroy(stage, self.stage_name)
 
+    @pytest.mark.disable_clean_stage_check
     def test_keep_without_exceptions(self, mock_archive):
-        with Stage(
-                mock_archive.url, name=self.stage_name, keep=True
-        ) as stage:
+        stage = Stage(mock_archive.url, name=self.stage_name, keep=True)
+        with stage:
             pass
         path = get_stage_path(stage, self.stage_name)
         assert os.path.isdir(path)
 
+    @pytest.mark.disable_clean_stage_check
     def test_no_keep_with_exceptions(self, mock_archive):
         class ThisMustFailHere(Exception):
             pass
+
+        stage = Stage(mock_archive.url, name=self.stage_name, keep=False)
         try:
-            with Stage(
-                    mock_archive.url, name=self.stage_name, keep=False
-            ) as stage:
+            with stage:
                 raise ThisMustFailHere()
+
         except ThisMustFailHere:
             path = get_stage_path(stage, self.stage_name)
             assert os.path.isdir(path)
 
+    @pytest.mark.disable_clean_stage_check
     def test_keep_exceptions(self, mock_archive):
         class ThisMustFailHere(Exception):
             pass
+
+        stage = Stage(mock_archive.url, name=self.stage_name, keep=True)
         try:
-            with Stage(
-                    mock_archive.url, name=self.stage_name, keep=True
-            ) as stage:
+            with stage:
                 raise ThisMustFailHere()
+
         except ThisMustFailHere:
             path = get_stage_path(stage, self.stage_name)
             assert os.path.isdir(path)

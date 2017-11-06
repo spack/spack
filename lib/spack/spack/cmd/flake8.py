@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,10 +31,10 @@ import shutil
 import tempfile
 import argparse
 
-from llnl.util.filesystem import *
+from llnl.util.filesystem import working_dir, mkdirp
 
 import spack
-from spack.util.executable import *
+from spack.util.executable import which
 
 
 description = "runs source code style checks on Spack. requires flake8"
@@ -42,18 +42,34 @@ section = "developer"
 level = "long"
 
 
-"""List of directories to exclude from checks."""
+def is_package(f):
+    """Whether flake8 should consider a file as a core file or a package.
+
+    We run flake8 with different exceptions for the core and for
+    packages, since we allow `from spack import *` and poking globals
+    into packages.
+    """
+    return f.startswith('var/spack/repos/') or 'docs/tutorial/examples' in f
+
+
+#: List of directories to exclude from checks.
 exclude_directories = [spack.external_path]
 
-"""
-This is a dict that maps:
- filename pattern ->
-    a flake8 exemption code ->
-       list of patterns, for which matching lines should have codes applied.
-"""
-exemptions = {
+
+#: This is a dict that maps:
+#:  filename pattern ->
+#:     flake8 exemption code ->
+#:        list of patterns, for which matching lines should have codes applied.
+#:
+#: For each file, if the filename pattern matches, we'll add per-line
+#: exemptions if any patterns in the sub-dict match.
+pattern_exemptions = {
     # exemptions applied only to package.py files.
     r'package.py$': {
+        # Allow 'from spack import *' in packages, but no other wildcards
+        'F403': [
+            r'^from spack import \*$'
+        ],
         # Exempt lines with urls and descriptions from overlong line errors.
         'E501': [
             r'^\s*homepage\s*=',
@@ -79,18 +95,19 @@ exemptions = {
 
     # exemptions applied to all files.
     r'.py$': {
-        # Exempt lines with URLs from overlong line errors.
         'E501': [
-            r'(https?|ftp|file)\:',
+            r'(https?|ftp|file)\:',        # URLs
+            r'([\'"])[0-9a-fA-F]{32,}\1',  # long hex checksums
         ]
     },
 }
 
 # compile all regular expressions.
-exemptions = dict((re.compile(file_pattern),
-                   dict((code, [re.compile(p) for p in patterns])
-                        for code, patterns in error_dict.items()))
-                  for file_pattern, error_dict in exemptions.items())
+pattern_exemptions = dict(
+    (re.compile(file_pattern),
+     dict((code, [re.compile(p) for p in patterns])
+          for code, patterns in error_dict.items()))
+    for file_pattern, error_dict in pattern_exemptions.items())
 
 
 def changed_files(args):
@@ -98,9 +115,11 @@ def changed_files(args):
 
     git = which('git', required=True)
 
+    range = "{0}...".format(args.base)
+
     git_args = [
         # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', 'develop...'],
+        ['diff', '--name-only', '--diff-filter=ACMR', range],
         # Add changed files that have been staged but not yet committed
         ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
         # Add changed files that are unstaged
@@ -110,6 +129,10 @@ def changed_files(args):
     # Add new files that are untracked
     if args.untracked:
         git_args.append(['ls-files', '--exclude-standard', '--other'])
+
+    # add everything if the user asked for it
+    if args.all:
+        git_args.append(['ls-files', '--exclude-standard'])
 
     excludes = [os.path.realpath(f) for f in exclude_directories]
     changed = set()
@@ -131,45 +154,73 @@ def changed_files(args):
     return sorted(changed)
 
 
+def add_pattern_exemptions(line, codes):
+    """Add a flake8 exemption to a line."""
+    if line.startswith('#'):
+        return line
+
+    line = line.rstrip('\n')
+
+    # Line is already ignored
+    if line.endswith('# noqa'):
+        return line + '\n'
+
+    orig_len = len(line)
+    exemptions = ','.join(sorted(set(codes)))
+
+    # append exemption to line
+    if '# noqa: ' in line:
+        line += ',{0}'.format(exemptions)
+    elif line:  # ignore noqa on empty lines
+        line += '  # noqa: {0}'.format(exemptions)
+
+    # if THIS made the line too long, add an exemption for that
+    if len(line) > 79 and orig_len <= 79:
+        line += ',E501'
+
+    return line + '\n'
+
+
 def filter_file(source, dest, output=False):
-    """Filter a single file through all the patterns in exemptions."""
+    """Filter a single file through all the patterns in pattern_exemptions."""
     with open(source) as infile:
         parent = os.path.dirname(dest)
         mkdirp(parent)
 
         with open(dest, 'w') as outfile:
             for line in infile:
-                # Only strip newline characters
-                # We still want to catch trailing whitespace warnings
-                line = line.rstrip('\n')
+                line_errors = []
 
-                for file_pattern, errors in exemptions.items():
+                # pattern exemptions
+                for file_pattern, errors in pattern_exemptions.items():
                     if not file_pattern.search(source):
                         continue
 
                     for code, patterns in errors.items():
                         for pattern in patterns:
                             if pattern.search(line):
-                                if line.endswith('# noqa'):
-                                    # Line is already ignored
-                                    pass
-                                elif '# noqa: ' in line:
-                                    line += ',{0}'.format(code)
-                                else:
-                                    line += '  # noqa: {0}'.format(code)
+                                line_errors.append(code)
                                 break
 
-                oline = line + '\n'
-                outfile.write(oline)
+                if line_errors:
+                    line = add_pattern_exemptions(line, line_errors)
+
+                outfile.write(line)
                 if output:
-                    sys.stdout.write(oline)
+                    sys.stdout.write(line)
 
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-b', '--base', action='store', default='develop',
+        help="select base branch for collecting list of modified files")
+    subparser.add_argument(
         '-k', '--keep-temp', action='store_true',
         help="do not delete temporary directory where flake8 runs. "
              "use for debugging, to see filtered files")
+    subparser.add_argument(
+        '-a', '--all', action='store_true',
+        help="check all files, not just changed files")
     subparser.add_argument(
         '-o', '--output', action='store_true',
         help="send filtered files to stdout as well as temp files")
@@ -199,7 +250,6 @@ def flake8(parser, args):
         with working_dir(spack.prefix):
             if not file_list:
                 file_list = changed_files(args)
-            shutil.copy('.flake8', os.path.join(temp, '.flake8'))
 
         print('=======================================================')
         print('flake8: running flake8 code checks on spack.')
@@ -215,10 +265,26 @@ def flake8(parser, args):
             dest_path = os.path.join(temp, filename)
             filter_file(src_path, dest_path, args.output)
 
-        # run flake8 on the temporary tree.
+        # run flake8 on the temporary tree, once for core, once for pkgs
+        package_file_list = [f for f in file_list if is_package(f)]
+        file_list         = [f for f in file_list if not is_package(f)]
+
+        returncode = 0
         with working_dir(temp):
-            output = flake8('--format', 'pylint', *file_list,
-                            fail_on_error=False, output=str)
+            output = ''
+            if file_list:
+                output += flake8(
+                    '--format', 'pylint',
+                    '--config=%s' % os.path.join(spack.prefix, '.flake8'),
+                    *file_list, fail_on_error=False, output=str)
+                returncode |= flake8.returncode
+            if package_file_list:
+                output += flake8(
+                    '--format', 'pylint',
+                    '--config=%s' % os.path.join(spack.prefix,
+                                                 '.flake8_packages'),
+                    *package_file_list, fail_on_error=False, output=str)
+                returncode |= flake8.returncode
 
         if args.root_relative:
             # print results relative to repo root.
@@ -232,7 +298,7 @@ def flake8(parser, args):
             for line in output.split('\n'):
                 print(re.sub(r'^(.*): \[', cwd_relative, line))
 
-        if flake8.returncode != 0:
+        if returncode != 0:
             print('Flake8 found errors.')
             sys.exit(1)
         else:

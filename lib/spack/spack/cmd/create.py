@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,14 +30,15 @@ import re
 import llnl.util.tty as tty
 import spack
 import spack.cmd
-import spack.cmd.checksum
 import spack.util.web
 from llnl.util.filesystem import mkdirp
 from spack.repository import Repo
 from spack.spec import Spec
-from spack.util.executable import which
-from spack.util.naming import *
-from spack.url import *
+from spack.util.executable import which, ProcessError
+from spack.util.naming import mod_to_class
+from spack.util.naming import simplify_name, valid_fully_qualified_module_name
+from spack.url import UndetectableNameError, UndetectableVersionError
+from spack.url import parse_name, parse_version
 
 description = "create a new package file"
 section = "packaging"
@@ -53,7 +54,7 @@ package_template = '''\
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -470,14 +471,14 @@ class BuildSystemGuesser:
             try:
                 unzip  = which('unzip')
                 output = unzip('-lq', stage.archive_file, output=str)
-            except:
+            except ProcessError:
                 output = ''
         else:
             try:
                 tar    = which('tar')
                 output = tar('--exclude=*/*/*', '-tf',
                              stage.archive_file, output=str)
-            except:
+            except ProcessError:
                 output = ''
         lines = output.split('\n')
 
@@ -587,7 +588,7 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.cmd.checksum.get_checksums(
+        versions = spack.util.web.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
             keep_stage=args.keep_stage)
 

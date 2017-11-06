@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -48,9 +48,11 @@ class Lbann(CMakePackage):
     depends_on('elemental +openmp_blas +shared +int64 build_type=Debug', 
                when=('build_type=Debug'))
     depends_on('cuda', when='+gpu')
+    depends_on('cudnn', when='+gpu')
+    depends_on('cub', when='+gpu')
     depends_on('mpi')
     depends_on('hwloc')
-    depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib', when='+opencv')
+    depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib ~eigen', when='+opencv')
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
 
@@ -59,9 +61,6 @@ class Lbann(CMakePackage):
         # Environment variables
         CPPFLAGS = []
         CPPFLAGS.append('-DLBANN_SET_EL_RNG')
-
-        CPPFLAGS.append('-DLBANN_DATATYPE={0}'.format(
-            int(spec.variants['dtype'].value)))
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
@@ -77,6 +76,7 @@ class Lbann(CMakePackage):
             '-DELEMENTAL_MATH_LIBS={0}'.format(
                 spec['elemental'].libs),
             '-DSEQ_INIT:BOOL=%s' % ('+seq_init' in spec),
+            '-DDATATYPE={0}'.format(int(spec.variants['dtype'].value)),
             '-DVERBOSE=0',
             '-DLBANN_HOME=.',
             '-DLBANN_VER=spack']
@@ -84,5 +84,13 @@ class Lbann(CMakePackage):
         if '+opencv' in spec:
             args.extend(['-DOpenCV_DIR:STRING={0}'.format(
                 spec['opencv'].prefix)])
+
+        if '+cudnn' in spec:
+            args.extend(['-DcuDNN_DIR={0}'.format(
+                spec['cudnn'].prefix)])
+
+        if '+cudnn' in spec:
+            args.extend(['-DCUB_DIR={0}'.format(
+                spec['cub'].prefix)])
 
         return args

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.operating_systems.mac_os import macOS_version
+import sys
 
 
 class Bison(AutotoolsPackage):
@@ -39,5 +41,8 @@ class Bison(AutotoolsPackage):
     depends_on('m4', type=('build', 'run'))
 
     patch('pgi.patch', when='@3.0.4')
+
+    if sys.platform == 'darwin' and macOS_version() >= Version('10.13'):
+        patch('secure_snprintf.patch', level=0, when='@3.0.4')
 
     build_directory = 'spack-build'

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -161,8 +161,12 @@ class Git(AutotoolsPackage):
     depends_on('m4',       type='build')
 
     def setup_environment(self, spack_env, run_env):
-        spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
-            self.spec['gettext'].prefix.lib))
+        # This is done to avoid failures when git is an external package.
+        # In that case the node in the DAG gets truncated and git DOES NOT
+        # have a gettext dependency.
+        if 'gettext' in self.spec:
+            spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
+                self.spec['gettext'].prefix.lib))
 
     def configure_args(self):
         spec = self.spec

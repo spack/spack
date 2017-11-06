@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -121,6 +121,12 @@ class TestTcl(object):
                     if x.startswith('prepend-path CMAKE_PREFIX_PATH')
                     ]) == 0
         assert len([x for x in content if 'setenv FOO "foo"' in x]) == 1
+        assert len([
+            x for x in content if 'setenv OMPI_MCA_mpi_leave_pinned "1"' in x
+        ]) == 1
+        assert len([
+            x for x in content if 'setenv OMPI_MCA_MPI_LEAVE_PINNED "1"' in x
+        ]) == 0
         assert len([x for x in content if 'unsetenv BAR' in x]) == 1
         assert len([x for x in content if 'setenv MPILEAKS_ROOT' in x]) == 1
 
@@ -167,6 +173,26 @@ class TestTcl(object):
         expected = '${PACKAGE}/${VERSION}-${COMPILERNAME}'
 
         assert writer.conf.naming_scheme == expected
+
+    def test_invalid_naming_scheme(self, factory, patch_configuration):
+        """Tests the evaluation of an invalid naming scheme."""
+
+        patch_configuration('invalid_naming_scheme')
+
+        # Test that having invalid tokens in the naming scheme raises
+        # a RuntimeError
+        writer, _ = factory('mpileaks')
+        with pytest.raises(RuntimeError):
+            writer.layout.use_name
+
+    def test_invalid_token_in_env_name(self, factory, patch_configuration):
+        """Tests setting environment variables with an invalid name."""
+
+        patch_configuration('invalid_token_in_env_var_name')
+
+        writer, _ = factory('mpileaks')
+        with pytest.raises(RuntimeError):
+            writer.write()
 
     def test_conflicts(self, modulefile_content, patch_configuration):
         """Tests adding conflicts to the module."""

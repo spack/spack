@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -70,11 +70,7 @@ def check_mirror():
         # register mirror with spack config
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
         spack.config.update_config('mirrors', mirrors)
-
-        os.chdir(stage.path)
-        spack.mirror.create(
-            mirror_root, repos, no_checksum=True
-        )
+        spack.mirror.create(mirror_root, repos, no_checksum=True)
 
         # Stage directory exists
         assert os.path.isdir(mirror_root)

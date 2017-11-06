@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -255,10 +255,9 @@ class LmodFileLayout(BaseFileLayout):
         available = self.conf.available
         # List of services that are part of the hierarchy
         hierarchy = self.conf.hierarchy_tokens
-        # List of items that are both in the hierarchy and available
-        l = [x for x in hierarchy if x in available]
-        # Tokenize each part
-        parts = [self.token_to_path(x, available[x]) for x in l]
+        # Tokenize each part that is both in the hierarchy and available
+        parts = [self.token_to_path(x, available[x])
+                 for x in hierarchy if x in available]
         return parts
 
     @property
@@ -296,9 +295,9 @@ class LmodFileLayout(BaseFileLayout):
         for item in to_be_processed:
             hierarchy = self.conf.hierarchy_tokens
             available = self.conf.available
-            l = [x for x in hierarchy if x in item]
-            available_combination.append(tuple(l))
-            parts = [self.token_to_path(x, available[x]) for x in l]
+            ac = [x for x in hierarchy if x in item]
+            available_combination.append(tuple(ac))
+            parts = [self.token_to_path(x, available[x]) for x in ac]
             unlocked[None].append(tuple([self.arch_dirname] + parts))
 
         # Deduplicate the list
@@ -319,9 +318,10 @@ class LmodFileLayout(BaseFileLayout):
                 hierarchy = self.conf.hierarchy_tokens
                 available = self.conf.available
                 token2path = lambda x: self.token_to_path(x, available[x])
-                l = [x for x in hierarchy if x in item]
                 parts = []
-                for x in l:
+                for x in hierarchy:
+                    if x not in item:
+                        continue
                     value = token2path(x) if x in available else x
                     parts.append(value)
                 unlocked[m].append(tuple([self.arch_dirname] + parts))
@@ -374,17 +374,17 @@ class LmodContext(BaseContext):
     @tengine.context_property
     def unlocked_paths(self):
         """Returns the list of paths that are unlocked unconditionally."""
-        l = make_layout(self.spec)
-        return [os.path.join(*parts) for parts in l.unlocked_paths[None]]
+        layout = make_layout(self.spec)
+        return [os.path.join(*parts) for parts in layout.unlocked_paths[None]]
 
     @tengine.context_property
     def conditionally_unlocked_paths(self):
         """Returns the list of paths that are unlocked conditionally.
         Each item in the list is a tuple with the structure (condition, path).
         """
-        l = make_layout(self.spec)
+        layout = make_layout(self.spec)
         value = []
-        conditional_paths = l.unlocked_paths
+        conditional_paths = layout.unlocked_paths
         conditional_paths.pop(None)
         for services_needed, list_of_path_parts in conditional_paths.items():
             condition = ' and '.join([x + '_name' for x in services_needed])

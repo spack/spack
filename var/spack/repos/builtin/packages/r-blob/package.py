@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,7 @@ class RBlob(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/blob/index.html"
     url      = "https://cran.rstudio.com/src/contrib/blob_1.1.0.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/blob"
     version('1.1.0', '1c729aca36fd5193d81b1cd5ed9d8a00')
 
     depends_on('r-tibble', type=('build', 'run'))

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -309,8 +309,9 @@ def refresh(module_types, specs, args):
             try:
                 x.write(overwrite=True)
             except Exception as e:
-                msg = 'Could not write module file because of {0}: [{1}]'
-                tty.warn(msg.format(str(e), x.layout.filename))
+                msg = 'Could not write module file [{0}]'
+                tty.warn(msg.format(x.layout.filename))
+                tty.warn('\t--> {0} <--'.format(str(e)))
 
 
 def module(parser, args):
@@ -331,7 +332,9 @@ def module(parser, args):
     module_types = args.module_type
     if module_types is None:
         # If no selection has been made select all of them
-        module_types = list(spack.modules.module_types.keys())
+        module_types = ['tcl']
+
+    module_types = list(set(module_types))
 
     try:
 

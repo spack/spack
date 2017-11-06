@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,84 +24,43 @@
 ##############################################################################
 from __future__ import print_function
 
-import re
 from six import StringIO
 
+from ctest_log_parser import CTestLogParser
 from llnl.util.tty.color import colorize
 
 
-class LogEvent(object):
-    """Class representing interesting events (e.g., errors) in a build log."""
-    def __init__(self, text, line_no,
-                 pre_context='', post_context='', repeat_count=0):
-        self.text = text
-        self.line_no = line_no
-        self.pre_context = pre_context
-        self.post_context = post_context
-        self.repeat_count = repeat_count
-
-    @property
-    def start(self):
-        """First line in the log with text for the event or its context."""
-        return self.line_no - len(self.pre_context)
-
-    @property
-    def end(self):
-        """Last line in the log with text for event or its context."""
-        return self.line_no + len(self.post_context) + 1
-
-    def __getitem__(self, line_no):
-        """Index event text and context by actual line number in file."""
-        if line_no == self.line_no:
-            return self.text
-        elif line_no < self.line_no:
-            return self.pre_context[line_no - self.line_no]
-        elif line_no > self.line_no:
-            return self.post_context[line_no - self.line_no - 1]
-
-    def __str__(self):
-        """Returns event lines and context."""
-        out = StringIO()
-        for i in range(self.start, self.end):
-            if i == self.line_no:
-                out.write('  >> %-6d%s' % (i, self[i]))
-            else:
-                out.write('     %-6d%s' % (i, self[i]))
-        return out.getvalue()
-
-
-def parse_log_events(logfile, context=6):
+def parse_log_events(stream, context=6):
     """Extract interesting events from a log file as a list of LogEvent.
 
     Args:
-        logfile (str): name of the build log to parse
+        stream (str or fileobject): build log name or file object
         context (int): lines of context to extract around each log event
 
-    Currently looks for lines that contain the string 'error:', ignoring case.
+    Returns:
+        (tuple): two lists containig ``BuildError`` and
+            ``BuildWarning`` objects.
 
-    TODO: Extract warnings and other events from the build log.
+    This is a wrapper around ``ctest_log_parser.CTestLogParser`` that
+    lazily constructs a single ``CTestLogParser`` object.  This ensures
+    that all the regex compilation is only done once.
     """
-    with open(logfile, 'r') as f:
-        lines = [line for line in f]
+    if parse_log_events.ctest_parser is None:
+        parse_log_events.ctest_parser = CTestLogParser()
 
-    log_events = []
-    for i, line in enumerate(lines):
-        if re.search(r'\berror:', line, re.IGNORECASE):
-            event = LogEvent(
-                line.strip(),
-                i + 1,
-                [l.rstrip() for l in lines[i - context:i]],
-                [l.rstrip() for l in lines[i + 1:i + context + 1]])
-            log_events.append(event)
-    return log_events
+    return parse_log_events.ctest_parser.parse(stream, context)
+
+
+#: lazily constructed CTest log parser
+parse_log_events.ctest_parser = None
 
 
 def make_log_context(log_events):
     """Get error context from a log file.
 
     Args:
-        log_events (list of LogEvent): list of events created by, e.g.,
-            ``parse_log_events``
+        log_events (list of LogEvent): list of events created by
+            ``ctest_log_parser.parse()``
 
     Returns:
         str: context from the build log with errors highlighted

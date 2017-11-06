@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,5 +39,6 @@ class RTibble(RPackage):
     depends_on('r@3.1.2:')
 
     depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'))
+    depends_on('r-lazyeval@0.1.10:', type=('build', 'run'), when='@:1.3.0')
     depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rlang', type=('build', 'run'), when='@1.3.1:')

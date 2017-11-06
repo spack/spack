@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,12 @@ def _for_each_enabled(spec, method_name):
     """Calls a method for each enabled module"""
     for name in enabled:
         generator = spack.modules.module_types[name](spec)
-        getattr(generator, method_name)()
+        try:
+            getattr(generator, method_name)()
+        except RuntimeError as e:
+            msg = 'cannot perform the requested {0} operation on module files'
+            msg += ' [{1}]'
+            tty.warn(msg.format(method_name, str(e)))
 
 
 post_install = lambda spec: _for_each_enabled(spec, 'write')

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -460,7 +460,9 @@ def set_or_unset_not_first(variable, changes, errstream):
     modifications have already been requested.
     """
     indexes = [ii for ii, item in enumerate(changes)
-               if ii != 0 and type(item) in [SetEnv, UnsetEnv]]
+               if ii != 0 and
+               not item.args.get('force', False) and
+               type(item) in [SetEnv, UnsetEnv]]
     if indexes:
         good = '\t    \t{context} at {filename}:{lineno}'
         nogood = '\t--->\t{context} at {filename}:{lineno}'

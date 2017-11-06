@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,18 +34,17 @@ TODO: make this customizable and allow users to configure
       concretization  policies.
 """
 from __future__ import print_function
-from six import iteritems
-from spack.version import *
 from itertools import chain
-from ordereddict_backport import OrderedDict
 from functools_backport import reverse_order
+from six import iteritems
 
 import spack
 import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
-from spack.package_prefs import *
+from spack.version import ver, Version, VersionList, VersionRange
+from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
 
 class DefaultConcretizer(object):
@@ -66,7 +65,8 @@ class DefaultConcretizer(object):
         if spec.virtual:
             candidates = spack.repo.providers_for(spec)
             if not candidates:
-                raise UnsatisfiableProviderSpecError(candidates[0], spec)
+                raise spack.spec.UnsatisfiableProviderSpecError(
+                    candidates[0], spec)
 
             # Find nearest spec in the DAG (up then down) that has prefs.
             spec_w_prefs = find_spec(
@@ -80,17 +80,15 @@ class DefaultConcretizer(object):
         # For each candidate package, if it has externals, add those
         # to the usable list.  if it's not buildable, then *only* add
         # the externals.
-        #
-        # Use an OrderedDict to avoid duplicates (use it like a set)
-        usable = OrderedDict()
+        usable = []
         for cspec in candidates:
             if is_spec_buildable(cspec):
-                usable[cspec] = True
+                usable.append(cspec)
 
             externals = spec_externals(cspec)
             for ext in externals:
                 if ext.satisfies(spec):
-                    usable[ext] = True
+                    usable.append(ext)
 
         # If nothing is in the usable list now, it's because we aren't
         # allowed to build anything.
@@ -116,7 +114,9 @@ class DefaultConcretizer(object):
 
         # Find the nearest spec in the dag that has a compiler.  We'll
         # use that spec to calibrate compiler compatibility.
-        abi_exemplar = find_spec(spec, lambda x: x.compiler, spec.root)
+        abi_exemplar = find_spec(spec, lambda x: x.compiler)
+        if abi_exemplar is None:
+            abi_exemplar = spec.root
 
         # Sort candidates from most to least compatibility.
         #   We reverse because True > False.
@@ -146,8 +146,8 @@ class DefaultConcretizer(object):
             return False
 
         # List of versions we could consider, in sorted order
-        pkg = spec.package
-        usable = [v for v in pkg.versions
+        pkg_versions = spec.package_class.versions
+        usable = [v for v in pkg_versions
                   if any(v.satisfies(sv) for sv in spec.versions)]
 
         yaml_prefs = PackagePrefs(spec.name, 'version')
@@ -165,7 +165,7 @@ class DefaultConcretizer(object):
             -yaml_prefs(v),
 
             # The preferred=True flag (packages or packages.yaml or both?)
-            pkg.versions.get(Version(v)).get('preferred', False),
+            pkg_versions.get(Version(v)).get('preferred', False),
 
             # ------- Regular case: use latest non-develop version by default.
             # Avoid @develop version, which would otherwise be the "largest"
@@ -401,7 +401,7 @@ def find_spec(spec, condition, default=None):
         visited.add(id(relative))
 
     # Then search all other relatives in the DAG *except* spec
-    for relative in spec.root.traverse(deptypes=spack.alldeps):
+    for relative in spec.root.traverse(deptypes=all):
         if relative is spec:
             continue
         if id(relative) in visited:

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -119,7 +119,7 @@ def rst(pkgs):
 
     def github_url(pkg):
         """Link to a package file on github."""
-        url = 'https://github.com/LLNL/spack/blob/develop/var/spack/repos/builtin/packages/{0}/package.py'
+        url = 'https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/{0}/package.py'
         return url.format(pkg.name)
 
     def rst_table(elts):
@@ -170,7 +170,7 @@ def rst(pkgs):
                                    reversed(sorted(pkg.versions))))
             print()
 
-        for deptype in spack.alldeps:
+        for deptype in spack.all_deptypes:
             deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print('%s Dependencies' % deptype.capitalize())

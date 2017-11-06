@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,8 +39,7 @@ class Libpsl(AutotoolsPackage):
     depends_on('pkg-config@0.9.0:', type='build')
     depends_on('python@2.7:', type='build')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('valgrind', type='test')
+    depends_on('valgrind~mpi~boost', type='test')
 
     def configure_args(self):
         spec = self.spec

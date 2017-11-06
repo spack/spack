@@ -26,13 +26,13 @@ Spack uses a rough approximation of the `Git Flow <http://nvie.com/posts/a-succe
 branching model. The develop branch contains the latest contributions, and
 master is always tagged and points to the latest stable release. Therefore, when
 you send your request, make ``develop`` the destination branch on the
-`Spack repository <https://github.com/LLNL/spack>`_.
+`Spack repository <https://github.com/spack/spack>`_.
 
 ----------------------
 Continuous Integration
 ----------------------
 
-Spack uses `Travis CI <https://travis-ci.org/LLNL/spack>`_ for Continuous Integration
+Spack uses `Travis CI <https://travis-ci.org/spack/spack>`_ for Continuous Integration
 testing. This means that every time you submit a pull request, a series of tests will
 be run to make sure you didn't accidentally introduce any bugs into Spack. Your PR
 will not be accepted until it passes all of these tests. While you can certainly wait
@@ -124,7 +124,7 @@ command:
    "extends" in ``package.py`` files.
 
 More approved flake8 exemptions can be found
-`here <https://github.com/LLNL/spack/blob/develop/.flake8>`_.
+`here <https://github.com/spack/spack/blob/develop/.flake8>`_.
 
 If all is well, you'll see something like this:
 
@@ -197,7 +197,7 @@ installed with Spack:
 
 .. warning::
 
-   Sphinx has `several required dependencies <https://github.com/LLNL/spack/blob/develop/var/spack/repos/builtin/packages/py-sphinx/package.py>`_.
+   Sphinx has `several required dependencies <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-sphinx/package.py>`_.
    If you installed ``py-sphinx`` with Spack, make sure to add all of these
    dependencies to your ``PYTHONPATH``. The easiest way to do this is to run
    ``spack activate py-sphinx`` so that all of the dependencies are symlinked

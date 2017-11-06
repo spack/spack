@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 from spack import *
 from spack.spec import UnsupportedCompilerError
 
@@ -67,6 +68,9 @@ class Elemental(CMakePackage):
             values=('Debug', 'Release'))
     variant('blas', default='openblas', values=('openblas', 'mkl'),
             description='Enable the use of OpenBlas/MKL')
+    variant('mpfr', default=False,
+            description='Support GNU MPFR\'s'
+            'arbitrary-precision floating-point arithmetic')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('blas', when='~openmp_blas ~int64_blas')
@@ -87,9 +91,9 @@ class Elemental(CMakePackage):
     depends_on('scalapack', when='+scalapack ~int64_blas')
     extends('python', when='+python')
     depends_on('python@:2.8', when='+python')
-    depends_on('gmp')
-    depends_on('mpc')
-    depends_on('mpfr')
+    depends_on('gmp', when='+mpfr')
+    depends_on('mpc', when='+mpfr')
+    depends_on('mpfr', when='+mpfr')
 
     patch('elemental_cublas.patch', when='+cublas')
     patch('cmake_0.87.7.patch', when='@0.87.7')
@@ -123,14 +127,23 @@ class Elemental(CMakePackage):
             '-DEL_DISABLE_PARMETIS:BOOL=%s'    % ('~parmetis' in spec),
             '-DEL_DISABLE_QUAD:BOOL=%s'        % ('~quad' in spec),
             '-DEL_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
-            '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec)]
+            '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
+            '-DEL_DISABLE_MPFR:BOOL=%s'        % ('~mpfr' in spec)]
 
-        # see <stage_folder>/debian/rules as an example:
-        mpif77 = Executable(spec['mpi'].mpif77)
-        libgfortran = LibraryList(mpif77('--print-file-name',
-                                         'libgfortran.%s' % dso_suffix,
-                                         output=str))
-        args.append('-DGFORTRAN_LIB=%s' % libgfortran.libraries[0])
+        if self.spec.satisfies('%intel'):
+            ifort = env['SPACK_F77']
+            intel_bin = os.path.dirname(ifort)
+            intel_root = os.path.dirname(intel_bin)
+            libfortran = LibraryList('{0}/lib/intel64/libifcoremt.{1}'
+                                     .format(intel_root, dso_suffix))
+        elif self.spec.satisfies('%gcc'):
+            # see <stage_folder>/debian/rules as an example:
+            mpif77 = Executable(spec['mpi'].mpif77)
+            libfortran = LibraryList(mpif77('--print-file-name',
+                                            'libgfortran.%s' % dso_suffix,
+                                            output=str))
+        if libfortran:
+            args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
 
         # If using 64bit int BLAS libraries, elemental has to build
         # them internally

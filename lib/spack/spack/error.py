@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -111,16 +111,6 @@ class UnsupportedPlatformError(SpackError):
 
     def __init__(self, message):
         super(UnsupportedPlatformError, self).__init__(message)
-
-
-class NoNetworkConnectionError(SpackError):
-    """Raised when an operation needs an internet connection."""
-
-    def __init__(self, message, url):
-        super(NoNetworkConnectionError, self).__init__(
-            "No network connection: " + str(message),
-            "URL was: " + str(url))
-        self.url = url
 
 
 class SpecError(SpackError):

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,7 @@ class RRsqlite(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/RSQLite/index.html"
     url      = "https://cran.r-project.org/src/contrib/RSQLite_1.0.0.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RSQLite"
     version('2.0', '63842410e78ccdfc52d4ee97992521d5')
 
     depends_on('r-dbi', type=('build', 'run'))

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -82,13 +82,13 @@ def get_module_cmd_from_bash(bashopts=''):
     try:
         find_exec = re.search(r'.*`(.*(:? bash | sh ).*)`.*', module_func)
         exec_line = find_exec.group(1)
-    except:
+    except BaseException:
         try:
             # This will fail with nested parentheses. TODO: expand regex.
             find_exec = re.search(r'.*\(([^()]*(:? bash | sh )[^()]*)\).*',
                                   module_func)
             exec_line = find_exec.group(1)
-        except:
+        except BaseException:
             raise ModuleError('get_module_cmd cannot '
                               'determine the module command from bash')
 

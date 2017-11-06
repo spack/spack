@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,6 +45,8 @@ class Zlib(Package):
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True,
             description='Enables the build of shared libraries.')
+    variant('optimize', default=True,
+            description='Enable -O2 for a more optimized lib')
 
     patch('w_patch.patch', when="@1.2.11%cce")
 
@@ -58,6 +60,8 @@ class Zlib(Package):
     def setup_environment(self, spack_env, run_env):
         if '+pic' in self.spec:
             spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
+        if '+optimize' in self.spec:
+            spack_env.append_flags('CFLAGS', '-O2')
 
     def install(self, spec, prefix):
         config_args = []
