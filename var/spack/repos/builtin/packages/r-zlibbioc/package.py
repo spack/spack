@@ -33,7 +33,8 @@ class RZlibbioc(RPackage):
        on use."""
 
     homepage = "http://bioconductor.org/packages/release/bioc/html/Zlibbioc.html"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/zlibbioc_1.22.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/zlibbioc"
+    list_url = homepage
 
-    version('1.22.0', '2e9496b860270d2e73d1305b8c6c69a5')
+    version('1.22.0', git='https://git.bioconductor.org/packages/zlibbioc', commit='30377f830af2bc1ff17bbf3fdd2cb6442015fea5')
     depends_on('r@3.4.0:3.4.9', when='@1.22.0')
