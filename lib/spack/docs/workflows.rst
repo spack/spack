@@ -1088,7 +1088,7 @@ The main points that are implemented below:
    install:
      - if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
-         git clone --depth 50 https://github.com/llnl/spack.git $SPACK_ROOT &&
+         git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
          echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
        fi
      - travis_wait spack install cmake@3.7.2~openssl~ncurses
@@ -1181,7 +1181,7 @@ In order to build and run the image, execute:
    #COPY       packages.yaml modules.yaml $SPACK_ROOT/etc/spack/
 
    # install spack
-   RUN        curl -s -L https://api.github.com/repos/llnl/spack/tarball \
+   RUN        curl -s -L https://api.github.com/repos/spack/spack/tarball \
               | tar xzC $SPACK_ROOT --strip 1
    # note: at this point one could also run ``spack bootstrap`` to avoid
    #       parts of the long apt-get install list above
@@ -1265,7 +1265,7 @@ Buggy New Version
 
 Sometimes, the old version of a package works fine, but a new version
 is buggy.  For example, it was once found that `Adios did not build
-with hdf5@1.10 <https://github.com/LLNL/spack/issues/1683>`_.  If the
+with hdf5@1.10 <https://github.com/spack/spack/issues/1683>`_.  If the
 old version of ``hdf5`` will work with ``adios``, the suggested
 procedure is:
 
@@ -1275,7 +1275,7 @@ procedure is:
    .. code-block:: python
 
       # Adios does not build with HDF5 1.10
-      # See: https://github.com/LLNL/spack/issues/1683
+      # See: https://github.com/spack/spack/issues/1683
       depends_on('hdf5@:1.9')
 
 #. Determine whether the problem is with ``hdf5`` or ``adios``, and
@@ -1288,7 +1288,7 @@ procedure is:
    .. code-block:: python
 
       # Adios up to v1.10.0 does not build with HDF5 1.10
-      # See: https://github.com/LLNL/spack/issues/1683
+      # See: https://github.com/spack/spack/issues/1683
       depends_on('hdf5@:1.9', when='@:1.10.0')
       depends_on('hdf5', when='@1.10.1:')
 

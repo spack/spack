@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -64,7 +64,7 @@ class Xsdk(Package):
     depends_on('trilinos@develop+xsdkflags+hypre+superlu-dist+metis+hdf5~mumps+boost~suite-sparse~tpetra~ifpack2~zoltan2~amesos2~exodus',
                when='@develop')
 
-    depends_on('petsc@3.8.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
+    depends_on('petsc@3.8.1+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
                when='@0.3.0-rc1')
     depends_on('petsc@xsdk-0.2.0+trilinos+mpi+hypre+superlu-dist+metis+hdf5~mumps~boost+double~int64',
                when='@xsdk-0.2.0')

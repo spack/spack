@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ from llnl.util.filesystem import mkdirp, working_dir
 import spack
 from spack.util.executable import ProcessError, which
 
-_SPACK_UPSTREAM = 'https://github.com/llnl/spack'
+_SPACK_UPSTREAM = 'https://github.com/spack/spack'
 
 description = "create a new installation of spack in another prefix"
 section = "admin"
