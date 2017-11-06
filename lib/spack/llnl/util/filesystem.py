@@ -196,10 +196,11 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
 
 def set_install_permissions(path):
     """Set appropriate permissions on the installed file."""
-    if os.path.isdir(path):
-        os.chmod(path, 0o755)
-    else:
-        os.chmod(path, 0o644)
+    if not os.path.islink(path):
+        if os.path.isdir(path):
+            os.chmod(path, 0o755)
+        if os.path.isfile(path):
+            os.chmod(path, 0o644)
 
 
 def copy_mode(src, dest):
@@ -211,7 +212,8 @@ def copy_mode(src, dest):
         dest_mode |= stat.S_IXGRP
     if src_mode & stat.S_IXOTH:
         dest_mode |= stat.S_IXOTH
-    os.chmod(dest, dest_mode)
+    if not os.path.islink(dest):
+        os.chmod(dest, dest_mode)
 
 
 def unset_executable_mode(path):
