@@ -201,7 +201,7 @@ class Sundials(CMakePackage):
     # ==========================================================================
 
     # remove OpenMP header file and function from hypre vector test code
-    patch('test_nvector_parhyp.patch', when='@2.7.0:')
+    patch('test_nvector_parhyp.patch', when='@2.7.0:3.0.0')
 
     # ==========================================================================
     # SUNDIALS Settings
