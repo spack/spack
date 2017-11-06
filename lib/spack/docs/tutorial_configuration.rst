@@ -120,7 +120,7 @@ We will start by opening the compilers configuration file
       extra_rpaths: []
       flags: {}
       modules: []
-      operating_system: rhel6
+      operating_system: ubuntu16.04
       paths:
         cc: !!python/unicode '/usr/bin/clang'
         cxx: !!python/unicode '/usr/bin/clang++'
@@ -133,7 +133,7 @@ We will start by opening the compilers configuration file
       extra_rpaths: []
       flags: {}
       modules: []
-      operating_system: rhel6
+      operating_system: ubuntu16.04
       paths:
         cc: !!python/unicode '/usr/bin/gcc'
         cxx: !!python/unicode '/usr/bin/g++'
@@ -155,7 +155,7 @@ to the compilers.yaml file.
       extra_rpaths: []
       flags: {}
       modules: []
-      operating_system: rhel6
+      operating_system: ubuntu16.04
       paths:
         cc: !!python/unicode '/usr/bin/clang'
         cxx: !!python/unicode '/usr/bin/clang++'
@@ -216,7 +216,7 @@ Let's open our compilers configuration file again and add a compiler flag.
       flags:
         cppflags: -fPIC
       modules: []
-      operating_system: rhel6
+      operating_system: ubuntu16.04
       paths:
         cc: !!python/unicode '/usr/bin/clang'
         cxx: !!python/unicode '/usr/bin/clang++'
