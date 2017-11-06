@@ -37,3 +37,9 @@ class Bowtie(MakefilePackage):
     variant("tbb", default=False, description="Use Intel thread building block")
 
     depends_on("tbb", when="+tbb")
+
+    def edit(self, spec, prefix):
+        # FIXME: Edit the Makefile if necessary
+        # FIXME: If not needed delete this function
+        # makefile = FileFilter('Makefile')
+        # makefile.filter('CC = .*', 'CC = cc')

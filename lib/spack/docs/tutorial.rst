@@ -49,3 +49,4 @@ Full contents:
    tutorial_packaging
    tutorial_advanced_packaging
    tutorial_modules
+   tutorial_buildsystems
