@@ -42,6 +42,12 @@ class Gasnet(AutotoolsPackage):
 
     variant('ibv', default=False, description="Support InfiniBand")
     variant('mpi', default=True, description="Support MPI")
+    variant('aligned-segments', default=True,
+            description="Requirement to achieve aligned VM segments")
+    variant('pshm', default=True, 
+            description="Support inter-process shared memory support")
+    variant('segment-mmap-max', default='16GB',
+            description="Upper bound for mmap-based GASNet segments")
 
     depends_on('mpi', when='+mpi')
 
@@ -54,15 +60,19 @@ class Gasnet(AutotoolsPackage):
             "--enable-udp",
             "--enable-smp-safe",
             "--enable-segment-fast",
-            "--disable-aligned-segments",
-            # TODO: make option so Legion can request builds with/without this.
-            # See the Legion webpage for details on when to/not to use.
-            "--disable-pshm",
-            "--with-segment-mmap-max=64MB",
+            "--enable-pshm" if '+pshm' in self.spec else "--disable-pshm",
+            "--with-segment-mmap-max={0}".format(
+                self.spec.variants['segment-mmap-max'].value),
             # for consumers with shared libs
             "CC=%s %s" % (spack_cc, self.compiler.pic_flag),
             "CXX=%s %s" % (spack_cxx, self.compiler.pic_flag),
         ]
+
+        if '+aligned-segments' in self.spec:
+            args.append('--enable-aligned-segments')
+        else:
+            args.append('--disable-aligned-segments')
+
         if '+mpi' in self.spec:
             args.extend(['--enable-mpi', '--enable-mpi-compat', "MPI_CC=%s %s"
                         % (self.spec['mpi'].mpicc, self.compiler.pic_flag)])
