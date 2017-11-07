@@ -33,5 +33,6 @@ class RDesolve(RPackage):
 
     homepage = "https://cran.r-project.org/package=deSolve"
     url      = "https://cran.r-project.org/src/contrib/deSolve_1.20.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/deSolve"
 
     version('1.20', '85c6a2d8568944ae8eef27ac7c35fb25')

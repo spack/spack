@@ -38,6 +38,7 @@ class RAdegenet(RPackage):
 
     homepage = "https://github.com/thibautjombart/adegenet/wiki"
     url      = "https://cran.r-project.org/src/contrib/adegenet_2.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/adegenet"
 
     version('2.0.1', 'ecb1220ce7c9affaba2987bc7f38adda')
 

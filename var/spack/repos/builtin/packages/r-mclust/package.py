@@ -31,6 +31,7 @@ class RMclust(RPackage):
 
     homepage = "http://www.stat.washington.edu/mclust"
     url      = "https://cran.r-project.org/src/contrib/mclust_5.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/mclust"
 
     version('5.3', '74aac9fccdfc78373ce733c1a09176ef')
 

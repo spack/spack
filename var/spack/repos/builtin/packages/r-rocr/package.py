@@ -44,6 +44,7 @@ class RRocr(RPackage):
     parameters."""
     homepage = "https://cran.r-project.org/package=ROCR"
     url      = "https://cran.rstudio.com/src/contrib/ROCR_1.0-7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/ROCR"
 
     version('1.0-7', '46cbd43ae87fc4e1eff2109529a4820e')
     depends_on('r-gplots', type=('build', 'run'))

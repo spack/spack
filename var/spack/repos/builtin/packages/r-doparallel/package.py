@@ -31,7 +31,7 @@ class RDoparallel(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/doParallel/index.html"
     url      = "https://cran.r-project.org/src/contrib/doParallel_1.0.10.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/doParallel"
 
     version('1.0.11', 'd7822f0efd7bdf7582d8b43c986be86c')
     version('1.0.10', 'd9fbde8f315d98d055483ee3493c9b43')

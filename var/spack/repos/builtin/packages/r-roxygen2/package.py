@@ -31,6 +31,7 @@ class RRoxygen2(RPackage):
 
     homepage = "https://github.com/klutometis/roxygen"
     url      = "https://cran.r-project.org/src/contrib/roxygen2_5.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/roxygen2"
 
     version('5.0.1', 'df5bdbc12fda372e427710ef1cd92ed7')
 

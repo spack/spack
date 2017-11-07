@@ -58,11 +58,6 @@ class Lua(Package):
         destination="luarocks",
         placement='luarocks')
 
-    # Based on patches from Arch Linux and Homebrew:
-    # https://git.archlinux.org/svntogit/packages.git/tree/trunk/liblua.so.patch?h=packages/lua
-    # https://github.com/Homebrew/homebrew-core/blob/master/Formula/lua.rb
-    patch('liblua-shared.patch')
-
     def install(self, spec, prefix):
         if spec.satisfies("platform=darwin"):
             target = 'macosx'
@@ -76,8 +71,6 @@ class Lua(Package):
                  spec['ncurses'].prefix.lib),
              'MYLIBS=-lncursesw',
              'CC=%s -std=gnu99' % spack_cc,
-             'LUA_DSO=liblua.%s' % (
-                 dso_suffix),
              target)
         make('INSTALL_TOP=%s' % prefix,
              'MYCFLAGS=%s' % (
@@ -87,9 +80,11 @@ class Lua(Package):
                  spec['ncurses'].prefix.lib),
              'MYLIBS=-lncursesw',
              'CC=%s -std=gnu99' % spack_cc,
-             'LUA_DSO=liblua.%s' % (
-                 dso_suffix),
              'install')
+
+        static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
+                                 arguments=['-lm'], version=self.version,
+                                 compat_version=self.version.up_to(2))
 
         with working_dir(os.path.join('luarocks', 'luarocks')):
             configure('--prefix=' + prefix, '--with-lua=' + prefix)

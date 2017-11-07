@@ -33,6 +33,7 @@ class RCheckpoint(RPackage):
 
     homepage = "https://cran.r-project.org/package=checkpoint"
     url      = "https://cran.r-project.org/src/contrib/checkpoint_0.3.18.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/checkpoint"
 
     version('0.3.18', '021d7faeb72c36167951e103b2b065ea')
     version('0.3.15', 'a4aa8320338f1434a330d984e97981ea')

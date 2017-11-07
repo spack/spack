@@ -30,6 +30,7 @@ class RDiagrammer(RPackage):
 
     homepage = "https://github.com/rich-iannone/DiagrammeR"
     url      = "https://cran.r-project.org/src/contrib/DiagrammeR_0.8.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/DiagrammeR"
 
     version('0.8.4', '9ee295c744f5d4ba9a84289ca7bdaf1a')
 

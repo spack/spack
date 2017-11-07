@@ -31,5 +31,6 @@ class RBitops(RPackage):
 
     homepage = "https://cran.r-project.org/package=bitops"
     url      = "https://cran.r-project.org/src/contrib/bitops_1.0-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/bitops"
 
     version('1.0-6', 'fba16485a51b1ccd354abde5816b6bdd')

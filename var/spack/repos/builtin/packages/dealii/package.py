@@ -185,7 +185,8 @@ class Dealii(CMakePackage):
             '-DMUPARSER_DIR=%s' % spec['muparser'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
-            '-DZLIB_DIR=%s' % spec['zlib'].prefix
+            '-DZLIB_DIR=%s' % spec['zlib'].prefix,
+            '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
 
         if spec.satisfies('@:8.99'):

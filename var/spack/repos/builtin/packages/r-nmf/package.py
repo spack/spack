@@ -35,6 +35,7 @@ class RNmf(RPackage):
 
     homepage = "http://renozao.github.io/NMF"
     url      = "https://cran.r-project.org/src/contrib/NMF_0.20.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/NMF"
 
     version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
 

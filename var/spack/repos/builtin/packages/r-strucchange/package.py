@@ -31,6 +31,7 @@ class RStrucchange(RPackage):
 
     homepage = "https://cran.r-project.org/package=strucchange"
     url      = "https://cran.r-project.org/src/contrib/strucchange_1.5-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/strucchange"
 
     version('1.5-1', 'fc751fc011df9c8df82d577298cb8395')
 

@@ -35,6 +35,7 @@ class RLubridate(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/lubridate/index.html"
     url      = "https://cran.r-project.org/src/contrib/lubridate_1.5.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/lubridate"
 
     version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
 

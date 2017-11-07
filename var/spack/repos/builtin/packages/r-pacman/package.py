@@ -33,6 +33,7 @@ class RPacman(RPackage):
 
     homepage = "https://cran.r-project.org/package=pacman"
     url      = "https://cran.r-project.org/src/contrib/pacman_0.4.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pacman"
 
     version('0.4.1', 'bf18fe6d1407d31e00b337d9b07fb648')
 

@@ -33,6 +33,7 @@ class RXts(RPackage):
 
     homepage = "http://r-forge.r-project.org/projects/xts/"
     url      = "https://cran.r-project.org/src/contrib/xts_0.9-7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/xts"
 
     version('0.9-7', 'a232e94aebfa654653a7d88a0503537b')
 
