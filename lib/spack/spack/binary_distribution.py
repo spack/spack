@@ -361,7 +361,8 @@ def relocate_package(prefix):
         path_name = os.path.join(prefix, filename)
         path_names.add(path_name)
     relocate.relocate_text(path_names, old_path, new_path)
-    # only need to change the rpaths if they were not made relative
+    # If the binary files in the package were not edited to use
+    # relative RPATHs, then the RPATHs need to be relocated
     if not rel:
         path_names = set()
         for filename in buildinfo['relocate_binaries']:

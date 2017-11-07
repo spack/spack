@@ -287,7 +287,7 @@ def relocate_text(path_names, old_dir, new_dir):
     Replace old path with new path in text file path_name
     """
     filter_file("r'%s'" % old_dir, "r'%s'" % new_dir,
-                path_names, backup=False)
+                *path_names, backup=False)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
