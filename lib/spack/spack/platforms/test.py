@@ -30,7 +30,6 @@ class Test(Platform):
     priority    = 1000000
     front_end   = 'x86_32'
     back_end    = 'x86_64'
-    default     = 'x86_64'
 
     front_os = 'redhat6'
     back_os = 'debian6'
@@ -38,6 +37,7 @@ class Test(Platform):
 
     def __init__(self):
         super(Test, self).__init__('test')
+        self.default = 'x86_64'
         self.add_target(self.default, Target(self.default))
         self.add_target(self.front_end, Target(self.front_end))
 
