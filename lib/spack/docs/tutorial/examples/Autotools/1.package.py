@@ -40,5 +40,5 @@ class Mpileaks(AutoToolsPackage):
 
     def configure_args(self):
         args = ["--with-adept-utils=" + spec['adept-utils'].prefix,
-             "--with-callpath=" + spec['callpath'].prefix]
+                "--with-callpath=" + spec['callpath'].prefix]
         return args

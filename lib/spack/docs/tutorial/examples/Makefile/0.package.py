@@ -41,5 +41,5 @@ class Bowtie(MakefilePackage):
         # FIXME: Edit the Makefile if necessary
         # FIXME: If not needed delete this function
         # makefile = FileFilter('Makefile')
-        # makefile.filter('CC = .*', 'CC = cc')  
+        # makefile.filter('CC = .*', 'CC = cc') 
         return
