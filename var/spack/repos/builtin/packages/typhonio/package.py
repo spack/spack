@@ -26,7 +26,7 @@ from spack import *
 
 
 class Typhonio(CMakePackage):
-    """TyphonIO is a library of routines that perform input/output (I/O) 
+    """TyphonIO is a library of routines that perform input/output (I/O)
         of scientific data within application codes"""
 
     homepage = "http://uk-mac.github.io/typhonio/"
@@ -36,7 +36,7 @@ class Typhonio(CMakePackage):
     version('develop', git='https://github.com/UK-MAC/typhonio.git',
             branch='cmake_build')
 
-    variant('build_type', default='Release', description='The build type to build', 
+    variant('build_type', default='Release', description='The build type to build',
         values=('Debug', 'Release'))
     variant('fortran', default=False, description='Enable Fortran support')
     variant('shared', default=False, description='Build shared libraries')

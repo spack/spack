@@ -103,7 +103,7 @@ class Macsio(CMakePackage):
         if "+typhonio" in spec:
             cmake_args.append("-DENABLE_TYPHONIO_PLUGIN=ON")
             cmake_args.append("-DWITH_TYPHONIO_PREFIX={0}"
-                .format(spec['typhonio'].prefix))
+                              .format(spec['typhonio'].prefix))
 
         if "+exodus" in spec:
             cmake_args.append("-DENABLE_EXODUS_PLUGIN=ON")
