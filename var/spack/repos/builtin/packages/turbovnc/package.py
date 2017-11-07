@@ -69,21 +69,8 @@ class Turbovnc(CMakePackage):
     depends_on('xauth', when='+x11deps', type=('build', 'run'))
     # depends_on('xkbdata', when='+x11deps', type='build')
 
-    def validate(self):
-        """
-        Checks if incompatible versions of openssl were specified
-
-        :param spec: spec of the package
-        :raises RuntimeError: in case of inconsistencies
-        """
-        spec = self.spec
-        if spec.satisfies('@:2.1') and spec.satisfies('^openssl@1.1:'):
-            msg = 'turbovnc does not compile with openssl 1.1 '
-            raise RuntimeError(msg)
-
     def cmake_args(self):
 
-        self.validate()
         options = []
         if '+java' in self.spec:
             options.append('-DTVNC_BUILDJAVA:BOOL=ON')

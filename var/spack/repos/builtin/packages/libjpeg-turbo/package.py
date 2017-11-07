@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class LibjpegTurbo(Package):
@@ -82,13 +81,15 @@ class LibjpegTurbo(Package):
         if '+java' in self.spec:
             args.append('--with-java')
             # args.append('--with-java=' + self.spec['jdk'].prefix)
+        else:
+            args.append('--without-java')
         return args
 
     def setup_environment(self, spack_env, run_env):
         if '+java' in self.spec:
             spack_env.set(
                 'JNI_CFLAGS',
-                '-I' + os.path.join(self.spec['jdk'].prefix, 'include') +
+                '-I' + self.spec['jdk'].prefix.include +
                 ' ' + '-I' +
-                os.path.join(self.spec['jdk'].prefix, 'include', 'linux'),
+                self.spec['jdk'].prefix.include.linux,
                 separator=' ')

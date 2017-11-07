@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Xkbcomp(AutotoolsPackage):
@@ -30,6 +29,6 @@ class Xkbcomp(AutotoolsPackage):
     depends_on('xkeyboard-config', type=('build', 'run'))
 
     def configure_args(self):
-        datadir = os.path.join(self.spec['xkeyboard-config'].prefix, 'share')
+        datadir = self.spec['xkeyboard-config'].prefix.share
         return [
             '--datadir={0}'.format(datadir)]

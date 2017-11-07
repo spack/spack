@@ -5,7 +5,6 @@
 
 from spack import *
 import llnl.util.tty as tty
-import os
 
 
 class XkeyboardConfig(AutotoolsPackage):
@@ -33,9 +32,8 @@ class XkeyboardConfig(AutotoolsPackage):
     def symlink_xorg(self):
         if '+xorg' in self.spec:
             tty.warn('linking xorg->base in ' +
-                     os.path.join(self.prefix, 'share', 'X11', 'xkb', 'rules'))
-            with working_dir(os.path.join(
-                             self.prefix, 'share', 'X11', 'xkb', 'rules')):
+                     self.prefix.share.X11.xkb.rules)
+            with working_dir(self.prefix.share.X11.xkb.rules):
                 for suffix in ('', '.lst', '.xml'):
                     symlink('base{0}'.format(suffix), 'xorg{0}'.format(suffix))
 
