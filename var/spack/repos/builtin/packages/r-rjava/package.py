@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ class RRjava(RPackage):
 
     homepage = "http://www.rforge.net/rJava/"
     url      = "https://cran.r-project.org/src/contrib/rJava_0.9-8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rJava"
 
     version('0.9-8', '51ae0d690ceed056ebe7c4be71fc6c7a')
 

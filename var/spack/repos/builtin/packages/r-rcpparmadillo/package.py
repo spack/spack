@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@ class RRcpparmadillo(RPackage):
 
     homepage = "https://cran.r-project.org/package=RcppArmadillo"
     url      = "https://cran.r-project.org/src/contrib/RcppArmadillo_0.8.100.1.0.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RcppArmadillo"
 
     version('0.8.100.1.0', 'a79c0ee967f502702414bc3c80c88f56')
 

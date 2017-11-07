@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -117,9 +117,11 @@ def changed_files(args):
     current_branch = git("rev-parse", "--abbrev-ref", "HEAD",
                          output=str).strip("\n") + "..."
 
+    range = "{0}...".format(args.base)
+
     git_args = [
         # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', current_branch],
+        ['diff', '--name-only', '--diff-filter=ACMR', range],
         # Add changed files that have been staged but not yet committed
         ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
         # Add changed files that are unstaged
@@ -211,6 +213,9 @@ def filter_file(source, dest, output=False):
 
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-b', '--base', action='store', default='develop',
+        help="select base branch for collecting list of modified files")
     subparser.add_argument(
         '-k', '--keep-temp', action='store_true',
         help="do not delete temporary directory where flake8 runs. "

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,10 +29,10 @@ class RGcrma(RPackage):
     """Background adjustment using sequence information"""
 
     homepage = "https://bioconductor.org/packages/gcrma/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/gcrma_2.48.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/gcrma"
     list_url = homepage
 
-    version('2.48.0', 'c3a2f21c6f93458d1a123594e437a210')
+    version('2.48.0', git='https://git.bioconductor.org/packages/gcrma', commit='3ea0eb0b5c15ffb24df76620667ae7996ed715b4')
 
     depends_on('r-affy', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -59,6 +59,10 @@ class Oce(Package):
     # https://github.com/tpaviot/oce/issues/605
     # https://github.com/tpaviot/oce/commit/61cb965b9ffeca419005bc15e635e67589c421dd.patch
     patch('null.patch', when='@0.16:0.17.1')
+
+    # OCE depends on xlocale.h from glibc-headers but it was removed in 2.26,
+    # see https://github.com/tpaviot/oce/issues/675
+    patch('xlocale.patch', level=0, when='@0.18.1:')
 
     # fix build with Xcode 8 "previous definition of CLOCK_REALTIME"
     # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Paraview(CMakePackage):
@@ -88,6 +89,17 @@ class Paraview(CMakePackage):
             return self._urlfmt.format(version.up_to(2), version, '-source')
         else:
             return self._urlfmt.format(version.up_to(2), version, '')
+
+    def setup_environment(self, spack_env, run_env):
+        if os.path.isdir(self.prefix.lib64):
+            lib_dir = self.prefix.lib64
+        else:
+            lib_dir = self.prefix.lib
+        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
+        run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
+                             paraview_version))
+        run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
+                             paraview_version))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""

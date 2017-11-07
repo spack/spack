@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -289,7 +289,7 @@ class TestSpecSematics(object):
 
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
-        https://github.com/LLNL/spack/pull/2386#issuecomment-282147639
+        https://github.com/spack/spack/pull/2386#issuecomment-282147639
         is handled correctly.
         """
         a = Spec('a foobar=bar')

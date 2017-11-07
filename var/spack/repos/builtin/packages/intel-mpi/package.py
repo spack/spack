@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,8 @@ class IntelMpi(IntelPackage):
 
     version('2018.0.128', '15b46fc6a3014595de897aa48d3a658b',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12120/l_mpi_2018.0.128.tgz')
+    version('2017.4.239', '460a9ef1b3599d60b4d696e3f0f2a14d',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12209/l_mpi_2017.4.239.tgz')
     version('2017.3.196', '721ecd5f6afa385e038777e5b5361dfb',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11595/l_mpi_2017.3.196.tgz')
     version('2017.2.174', 'b6c2e62c3fb9b1558ede72ccf72cf1d6',
