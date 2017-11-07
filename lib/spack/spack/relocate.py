@@ -113,7 +113,7 @@ def macho_get_paths(path_name):
     return rpaths, deps, idpath
 
 
-def macho_make_paths_rel(path_name, old_dir, rpaths, deps, idpath):
+def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
     """
     Replace old_dir with relative path from dirname(path_name)
     in rpaths and deps; idpaths are replaced with @rpath/basebane(path_name);
@@ -136,7 +136,7 @@ def macho_make_paths_rel(path_name, old_dir, rpaths, deps, idpath):
             new_deps.append('@loader_path/%s' % rel)
         else:
             new_deps.append(dep)
-    return new_rpaths, new_deps, new_idpath
+    return (new_rpaths, new_deps, new_idpath)
 
 
 def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
@@ -262,22 +262,21 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
     Make RPATHs relative to old_dir in given elf or mach-o files
     """
     if platform.system() == 'Darwin':
-        for cur, orig in zip(cur_path_names, orig_path_names):
-            rpaths, deps, idpath = macho_get_paths(cur)
-            new_rpaths, new_deps, new_idpath = macho_make_paths_rel(orig,
-                                                                    old_dir,
-                                                                    rpaths,
-                                                                    deps,
-                                                                    idpath)
-            modify_macho_object(cur,
+        for cur_path, orig_path in zip(cur_path_names, orig_path_names):
+            rpaths, deps, idpath = macho_get_paths(cur_path)
+            (new_rpaths,
+             new_deps,
+             new_idpath) = macho_make_paths_relative(orig_path, old_dir,
+                                                     rpaths, deps, idpath)
+            modify_macho_object(cur_path,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
     elif platform.system() == 'Linux':
-        for cur, orig in zip(cur_path_names, orig_path_names):
-            orig_rpaths = get_existing_elf_rpaths(cur)
-            new_rpaths = get_relative_rpaths(orig, old_dir,
+        for cur_path, orig_path in zip(cur_path_names, orig_path_names):
+            orig_rpaths = get_existing_elf_rpaths(cur_path)
+            new_rpaths = get_relative_rpaths(orig_path, old_dir,
                                              orig_rpaths)
-            modify_elf_object(cur, orig_rpaths, new_rpaths)
+            modify_elf_object(cur_path, orig_rpaths, new_rpaths)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 

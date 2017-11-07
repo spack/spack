@@ -43,7 +43,7 @@ from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, get_patchelf
 from spack.relocate import substitute_rpath, get_relative_rpaths
-from spack.relocate import macho_replace_paths, macho_make_paths_rel
+from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
 
 
@@ -219,15 +219,15 @@ echo $PATH"""
 def test_relocate():
     assert (needs_binary_relocation('relocatable') is False)
 
-    out = macho_make_paths_rel('/Users/Shares/spack/pkgC/lib/libC.dylib',
-                               '/Users/Shared/spack',
-                               ('/Users/Shared/spack/pkgA/lib',
-                                '/Users/Shared/spack/pkgB/lib',
-                                '/usr/local/lib'),
-                               ('/Users/Shared/spack/pkgA/libA.dylib',
-                                   '/Users/Shared/spack/pkgB/libB.dylib',
-                                   '/usr/local/lib/libloco.dylib'),
-                               '/Users/Shared/spack/pkgC/lib/libC.dylib')
+    out = macho_make_paths_relative('/Users/Shares/spack/pkgC/lib/libC.dylib',
+                                    '/Users/Shared/spack',
+                                    ('/Users/Shared/spack/pkgA/lib',
+                                     '/Users/Shared/spack/pkgB/lib',
+                                     '/usr/local/lib'),
+                                    ('/Users/Shared/spack/pkgA/libA.dylib',
+                                     '/Users/Shared/spack/pkgB/libB.dylib',
+                                     '/usr/local/lib/libloco.dylib'),
+                                    '/Users/Shared/spack/pkgC/lib/libC.dylib')
     assert out == (['@loader_path/../../../../Shared/spack/pkgA/lib',
                     '@loader_path/../../../../Shared/spack/pkgB/lib',
                     '/usr/local/lib'],
@@ -236,14 +236,14 @@ def test_relocate():
                     '/usr/local/lib/libloco.dylib'],
                    '@rpath/libC.dylib')
 
-    out = macho_make_paths_rel('/Users/Shared/spack/pkgC/bin/exeC',
-                               '/Users/Shared/spack',
-                               ('/Users/Shared/spack/pkgA/lib',
-                                '/Users/Shared/spack/pkgB/lib',
-                                '/usr/local/lib'),
-                               ('/Users/Shared/spack/pkgA/libA.dylib',
-                                '/Users/Shared/spack/pkgB/libB.dylib',
-                                '/usr/local/lib/libloco.dylib'), None)
+    out = macho_make_paths_relative('/Users/Shared/spack/pkgC/bin/exeC',
+                                    '/Users/Shared/spack',
+                                    ('/Users/Shared/spack/pkgA/lib',
+                                     '/Users/Shared/spack/pkgB/lib',
+                                     '/usr/local/lib'),
+                                    ('/Users/Shared/spack/pkgA/libA.dylib',
+                                     '/Users/Shared/spack/pkgB/libB.dylib',
+                                     '/usr/local/lib/libloco.dylib'), None)
 
     assert out == (['@loader_path/../../pkgA/lib',
                     '@loader_path/../../pkgB/lib',
@@ -304,8 +304,8 @@ def test_relocate_macho(tmpdir):
         assert (needs_binary_relocation('Mach-O ') is True)
 
         rpaths, deps, idpath = macho_get_paths('/bin/bash')
-        nrpaths, ndeps, nid = macho_make_paths_rel('/bin/bash', '/usr',
-                                                   rpaths, deps, idpath)
+        nrpaths, ndeps, nid = macho_make_paths_relative('/bin/bash', '/usr',
+                                                        rpaths, deps, idpath)
         shutil.copyfile('/bin/bash', 'bash')
         modify_macho_object('bash',
                             rpaths, deps, idpath,
@@ -321,8 +321,8 @@ def test_relocate_macho(tmpdir):
 
         path = '/usr/lib/libncurses.5.4.dylib'
         rpaths, deps, idpath = macho_get_paths(path)
-        nrpaths, ndeps, nid = macho_make_paths_rel(path, '/usr',
-                                                   rpaths, deps, idpath)
+        nrpaths, ndeps, nid = macho_make_paths_relative(path, '/usr',
+                                                        rpaths, deps, idpath)
         shutil.copyfile(
             '/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
         modify_macho_object('libncurses.5.4.dylib',
