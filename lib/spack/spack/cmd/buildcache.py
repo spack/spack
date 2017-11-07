@@ -210,7 +210,8 @@ def createtarball(args):
             specs.add(match)
             tty.msg('recursing dependencies')
             for d, node in match.traverse(order='post',
-                                          depth=True):
+                                          depth=True,
+                                          deptype=('link', 'run')):
                 if node.external or node.virtual:
                     tty.msg('skipping external or virtual dependency %s' %
                             node.format())
@@ -266,7 +267,7 @@ def install_tarball(spec, args):
     force = False
     if args.force:
         force = True
-    for d in s.dependencies():
+    for d in s.dependencies(deptype=('link', 'run')):
         tty.msg("Installing buildcache for dependency spec %s" % d)
         install_tarball(d, args)
     package = spack.repo.get(spec)
