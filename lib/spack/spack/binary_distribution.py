@@ -133,7 +133,7 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>-<version>/
     """
-    return "%s/%s/%s-%s" % (spack.architecture.sys_type(),
+    return "%s/%s/%s-%s" % (spec.architecture,
                             str(spec.compiler).replace("@", "-"),
                             spec.name, spec.version)
 
@@ -143,7 +143,7 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    return "%s-%s-%s-%s-%s%s" % (spack.architecture.sys_type(),
+    return "%s-%s-%s-%s-%s%s" % (spec.architecture,
                                  str(spec.compiler).replace("@", "-"),
                                  spec.name,
                                  spec.version,
@@ -350,7 +350,9 @@ def relocate_package(prefix):
     buildinfo = read_buildinfo_file(prefix)
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
-    rel = buildinfo['relative_rpaths']
+    rel = False
+    if rel in buildinfo.keys():
+        rel = buildinfo['relative_rpaths']
     if new_path == old_path and not rel:
         return
 
