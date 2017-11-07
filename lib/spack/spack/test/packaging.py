@@ -301,7 +301,7 @@ def test_relocate():
 def test_relocate_macho(tmpdir):
     with tmpdir.as_cwd():
         get_patchelf()
-        assert (needs_binary_relocation('Mach-O') is True)
+        assert (needs_binary_relocation('Mach-O ') is True)
 
         rpaths, deps, idpath = macho_get_paths('/bin/bash')
         nrpaths, ndeps, nid = macho_make_paths_rel('/bin/bash', '/usr',
@@ -343,4 +343,4 @@ def test_relocate_macho(tmpdir):
 @pytest.mark.skipif(sys.platform != 'linux2',
                     reason="only works with Elf objects")
 def test_relocate_elf():
-    assert (needs_binary_relocation('ELF') is True)
+    assert (needs_binary_relocation('ELF ') is True)
