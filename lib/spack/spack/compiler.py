@@ -65,6 +65,22 @@ def dumpversion(compiler_path):
     return get_compiler_version(compiler_path, '-dumpversion')
 
 
+def tokenize_flags(flag_value):
+    tokens = flag_value.split()
+    if not tokens:
+        return []
+    flag = tokens[0]
+    flags = []
+    for token in tokens[1:]:
+        if not token.startswith('-'):
+            flag += ' ' + token
+        else:
+            flags.append(flag)
+            flag = token
+    flags.append(flag)
+    return flags
+
+
 class Compiler(object):
     """This class encapsulates a Spack "compiler", which includes C,
        C++, and Fortran compilers.  Subclasses should implement
@@ -147,7 +163,7 @@ class Compiler(object):
         for flag in spack.spec.FlagMap.valid_compiler_flags():
             value = kwargs.get(flag, None)
             if value is not None:
-                self.flags[flag] = value.split()
+                self.flags[flag] = tokenize_flags(value)
 
     @property
     def version(self):
