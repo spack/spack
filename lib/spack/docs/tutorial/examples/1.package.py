@@ -30,8 +30,7 @@ class Mpileaks(Package):
     MPI_Datatypes."""
 
     homepage = "https://github.com/hpc/mpileaks"
-    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
-
+    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"  # NOQA
     version('1.0', '8838c574b39202a57d7c2d68692718aa')
 
     # FIXME: Add dependencies if required.
