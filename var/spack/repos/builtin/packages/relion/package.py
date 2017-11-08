@@ -37,8 +37,8 @@ class Relion(CMakePackage):
     version('develop', git='https://github.com/3dem/relion.git')
 
     variant('gui', default=True, description="build the gui")
-    variant('cuda', default=False, description="enable compute on gpu")
-    variant('double', default=False, description="double precision (cpu) code")
+    variant('cuda', default=True, description="enable compute on gpu")
+    variant('double', default=True, description="double precision (cpu) code")
     variant('double-gpu', default=False, description="double precision (gpu) code")
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
