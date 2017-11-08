@@ -42,12 +42,14 @@ class Gasnet(AutotoolsPackage):
 
     variant('ibv', default=False, description="Support InfiniBand")
     variant('mpi', default=True, description="Support MPI")
-    variant('aligned-segments', default=True,
+    variant('aligned-segments', default=False,
             description="Requirement to achieve aligned VM segments")
     variant('pshm', default=True, 
             description="Support inter-process shared memory support")
     variant('segment-mmap-max', default='16GB',
             description="Upper bound for mmap-based GASNet segments")
+
+    conflicts('+aligned-segments', when='+pshm')
 
     depends_on('mpi', when='+mpi')
 
