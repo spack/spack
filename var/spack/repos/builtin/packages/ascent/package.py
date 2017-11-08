@@ -254,7 +254,7 @@ class Ascent(Package):
             # install module to standard style site packages dir
             # so we can support spack activate
             cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                                        self.site_packages_dir))
+                                        site_packages_dir))
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
