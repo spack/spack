@@ -32,12 +32,20 @@ class Cudnn(Package):
 
     homepage = "https://developer.nvidia.com/cudnn"
 
-    version('6.0', 'a08ca487f88774e39eb6b0ef6507451d',
+    version('7.0.cuda9', '6189e05077dbce0bd07059b20306a836',
+            url='http://developer.download.nvidia.com/compute/redist/cudnn/v7.0.3/cudnn-9.0-linux-x64-v7.tgz')
+    version('7.0.cuda8', '8548a35c8d51c3f8d44b46a79026d18b',
+            url='http://developer.download.nvidia.com/compute/redist/cudnn/v7.0.3/cudnn-8.0-linux-x64-v7.tgz')
+    version('6.0.cuda8', 'a08ca487f88774e39eb6b0ef6507451d',
             url='http://developer.download.nvidia.com/compute/redist/cudnn/v6.0/cudnn-8.0-linux-x64-v6.0.tgz')
-    version('5.1', '406f4ac7f7ee8aa9e41304c143461a69',
+    version('5.1.cuda8', '406f4ac7f7ee8aa9e41304c143461a69',
             url='http://developer.download.nvidia.com/compute/redist/cudnn/v5.1/cudnn-8.0-linux-x64-v5.1.tgz')
 
-    depends_on('cuda@8:')
+    depends_on('cuda@8', when="@5.1.cuda8", type='run')
+    depends_on('cuda@8', when="@6.0.cuda8", type='run')
+    depends_on('cuda@8', when="@6.0.cuda8", type='run')
+    depends_on('cuda@8', when="@7.0.cuda8", type='run')
+    depends_on('cuda@9', when="@7.0.cuda9", type='run')
 
     def install(self, spec, prefix):
         copy_tree('.', prefix)
