@@ -55,7 +55,7 @@ class IntelTbb(Package):
     provides('tbb')
 
     # include patch for gcc rtm options
-    patch("tbb_gcc_rtm_key.patch",level=0)
+    patch("tbb_gcc_rtm_key.patch", level=0)
 
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:
