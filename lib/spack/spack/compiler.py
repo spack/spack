@@ -65,8 +65,13 @@ def dumpversion(compiler_path):
     return get_compiler_version(compiler_path, '-dumpversion')
 
 
-def tokenize_flags(flag_value):
-    tokens = flag_value.split()
+def tokenize_flags(flags_str):
+    """Given a compiler flag specification as a string, this returns a list
+       where the entries are the flags. For compiler options which set values
+       using the syntax "-flag value", this function groups flags and their
+       values together. Any token not preceded by a "-" is considered the
+       value of a prior flag."""
+    tokens = flags_str.split()
     if not tokens:
         return []
     flag = tokens[0]

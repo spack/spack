@@ -114,3 +114,14 @@ compilers:
       cflags: -O3
       cxxflags: -O3
     modules: 'None'
+- compiler:
+    spec: intel@17.0.2
+    operating_system: debian6
+    paths:
+      cc: /path/to/gcc472
+      cxx: /path/to/g++472
+      f77: /path/to/gfortran472
+      fc: /path/to/gfortran472
+    flags:
+      cflags: -O0 -foo-flag foo-val
+    modules: 'None'
