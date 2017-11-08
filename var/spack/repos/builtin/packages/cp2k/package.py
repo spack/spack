@@ -36,7 +36,9 @@ class Cp2k(Package):
     """
     homepage = 'https://www.cp2k.org'
     url = 'https://sourceforge.net/projects/cp2k/files/cp2k-3.0.tar.bz2'
+    list_url = 'https://sourceforge.net/projects/cp2k/files/'
 
+    version('5.1', 'f25cf301aec471d7059179de4dac3ee7')
     version('4.1', 'b0534b530592de15ac89828b1541185e')
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
 
@@ -49,15 +51,16 @@ class Cp2k(Package):
 
     depends_on('lapack')
     depends_on('blas')
-    depends_on('fftw')
-    depends_on('libint@:1.2', when='@3.0,4.1')
+    depends_on('fftw@3:')
+    depends_on('libint@1.1.4:1.2', when='@3.0:5.999')
     depends_on('libxsmm', when='smm=libxsmm')
-    depends_on('libxc')
+    depends_on('libxc@2.2.2:')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
-    depends_on('elpa', when='+mpi')
-    depends_on('pexsi+fortran', when='+mpi')
+    depends_on('elpa@2011.12:2016.13', when='+mpi')
+    depends_on('pexsi+fortran@0.9.0:0.9.999', when='+mpi@:4.999')
+    depends_on('pexsi+fortran@0.10.0:', when='+mpi@5.0:')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
 
@@ -167,7 +170,7 @@ class Cp2k(Package):
                 mkf.write('CPP = # {0.compiler.cc} -P\n\n'.format(self))
                 mkf.write('AR = xiar -r\n\n')
             else:
-                mkf.write('CPP = {0.compiler.cc} -E\n\n'.format(self))
+                mkf.write('CPP = # {0.compiler.cc} -E\n\n'.format(self))
                 mkf.write('AR = ar -r\n\n')
             fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
             mkf.write('FC = {0}\n'.format(fc))
@@ -190,18 +193,34 @@ class Cp2k(Package):
                 cppflags.extend([
                     '-D__parallel',
                     '-D__LIBPEXSI',
-                    '-D__ELPA3',
                     '-D__SCALAPACK'
                 ])
+
+                elpa = spec['elpa']
+                if spec.satisfies('@:4.999'):
+                    if elpa.satisfies('@:2014.5.999'):
+                        cppflags.append('-D__ELPA')
+                    elif elpa.satisfies('@2014.6:2015.10.999'):
+                        cppflags.append('-D__ELPA2')
+                    else:
+                        cppflags.append('-D__ELPA3')
+                else:
+                    cppflags.append('-D__ELPA={0}{1:02d}'.format(
+                        elpa.version[0], int(elpa.version[1])))
+                    fcflags.append('-I' + join_path(
+                        elpa.prefix, 'include',
+                        'elpa-{0}'.format(str(elpa.version)), 'elpa'
+                    ))
+
                 if 'wannier90' in spec:
                     cppflags.append('-D__WANNIER90')
 
                 fcflags.extend([
                     # spec['elpa:fortran'].headers.cpp_flags
                     '-I' + join_path(
-                        spec['elpa'].prefix,
+                        elpa.prefix,
                         'include',
-                        'elpa-{0}'.format(str(spec['elpa'].version)),
+                        'elpa-{0}'.format(str(elpa.version)),
                         'modules'
                     ),
                     # spec[pexsi:fortran].headers.cpp_flags
@@ -210,7 +229,7 @@ class Cp2k(Package):
                 scalapack = spec['scalapack'].libs
                 ldflags.append(scalapack.search_flags)
                 libs.extend([
-                    join_path(spec['elpa'].prefix.lib,
+                    join_path(elpa.prefix.lib,
                               'libelpa.{0}'.format(dso_suffix)),
                     join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
                     join_path(spec['superlu-dist'].prefix.lib,
