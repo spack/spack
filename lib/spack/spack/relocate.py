@@ -192,7 +192,9 @@ def get_filetype(path_name):
     """
     file = Executable('file')
     file.add_default_env('LC_ALL', 'C')
-    output = file('-bh', '%s' % path_name,
+    file.add_default_arg('-b')
+    file.add_default_arg('-h')
+    output = file('%s' % path_name,
                   output=str, err=str)
     return output.strip()
 
@@ -218,9 +220,9 @@ def needs_binary_relocation(filetype):
     if "relocatable" in filetype:
         return False
     if platform.system() == 'Darwin':
-        return ('Mach-O ' in filetype)
+        return ('Mach-O' in filetype)
     elif platform.system() == 'Linux':
-        return ('ELF ' in filetype)
+        return ('ELF' in filetype)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
     return retval
@@ -230,7 +232,7 @@ def needs_text_relocation(filetype):
     """
     Check whether the given filetype is text that may need relocation.
     """
-    return (" text" in filetype)
+    return ("text" in filetype)
 
 
 def relocate_binary(path_names, old_dir, new_dir):

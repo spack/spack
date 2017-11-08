@@ -350,9 +350,7 @@ def relocate_package(prefix):
     buildinfo = read_buildinfo_file(prefix)
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
-    rel = False
-    if rel in buildinfo.keys():
-        rel = buildinfo['relative_rpaths']
+    rel = buildinfo.get('relative_rpaths', False)
     if new_path == old_path and not rel:
         return
 
