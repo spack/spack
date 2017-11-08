@@ -28,7 +28,6 @@ from spack import *
 
 import socket
 import os
-import platform
 
 import llnl.util.tty as tty
 from os import environ as env
@@ -40,7 +39,7 @@ def cmake_cache_entry(name, value):
     'host-config' files.
     """
     return 'set({0} "{1}" CACHE PATH "")\n\n'.format(name, value)
-        
+
 
 class Ascent(Package):
     """
@@ -62,7 +61,7 @@ class Ascent(Package):
     ###########################################################################
 
     variant("shared", default=True, description="Build Conduit as shared libs")
-        
+
     variant("cmake", default=True,
             description="Build CMake (if off, attempt to use cmake from PATH)")
 
@@ -78,8 +77,8 @@ class Ascent(Package):
 
     variant("tbb", default=True, description="Build tbb support")
     variant("cuda", default=False, description="Build cuda support")
-            
-    variant("adios",default=True,description="Build Adios filter support")
+
+    variant("adios", default=True, description="Build Adios filter support")
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
@@ -90,12 +89,12 @@ class Ascent(Package):
 
     depends_on("cmake", when="+cmake")
     depends_on("conduit")
-    
+
     #######################
     # Python
     #######################
     # we need a shared version of python b/c linking with static python lib
-    # causes duplicate state issues when running compiled python modules. 
+    # causes duplicate state issues when running compiled python modules.
     depends_on("python+shared")
     extends("python", when="+python")
     # TODO: blas and lapack are disabled due to build
@@ -111,17 +110,15 @@ class Ascent(Package):
     #############################
     # TPLs for Runtime Features
     #############################
-    
+
     depends_on("vtkh", when="+vtkh")
     depends_on("vtkh+cuda", when="+vtkh+cuda")
     depends_on("adios", when="+adios")
 
-    
     #######################
     # Documentation related
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
-
 
     def install(self, spec, prefix):
         """
@@ -143,7 +140,7 @@ class Ascent(Package):
             cmake(*cmake_args)
             make()
             make("install")
-            #TODO also copy host_cfg_fname into install
+            # TODO also copy host_cfg_fname into install
 
     def create_host_config(self, spec, prefix):
         """
@@ -222,9 +219,8 @@ class Ascent(Package):
             cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
-
         #######################################################################
-        # Core Dependencies 
+        # Core Dependencies
         #######################################################################
 
         #######################
@@ -234,9 +230,8 @@ class Ascent(Package):
         cfg.write("# conduit from spack \n")
         cfg.write(cmake_cache_entry("CONDUIT_DIR", spec['conduit'].prefix))
 
-
         #######################################################################
-        # Optional Dependencies 
+        # Optional Dependencies
         #######################################################################
 
         #######################
@@ -293,12 +288,11 @@ class Ascent(Package):
         #######################
 
         cfg.write("# CUDA Support\n")
-        
-        if "+cuda" in spec:
-            cfg.write(cmake_cache_entry("ENABLE_CUDA","ON"))
-        else:
-            cfg.write(cmake_cache_entry("ENABLE_CUDA","OFF"));
 
+        if "+cuda" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
 
         #######################
         # VTK-h
@@ -312,7 +306,7 @@ class Ascent(Package):
 
             cfg.write("# vtk-m from spack\n")
             cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
-            
+
             cfg.write("# vtk-h from spack\n")
             cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
         else:
@@ -329,7 +323,6 @@ class Ascent(Package):
         else:
             cfg.write("# adios not built by spack \n")
 
-
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")
         cfg.write("##################################\n")
@@ -338,4 +331,3 @@ class Ascent(Package):
         host_cfg_fname = os.path.abspath(host_cfg_fname)
         tty.info("spack generated conduit host-config file: " + host_cfg_fname)
         return host_cfg_fname
-

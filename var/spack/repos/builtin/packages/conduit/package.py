@@ -30,6 +30,7 @@ import os
 import llnl.util.tty as tty
 from os import environ as env
 
+
 def cmake_cache_entry(name, value):
     """
     Helper that creates CMake cache entry strings used in
@@ -91,7 +92,7 @@ class Conduit(Package):
     # Python
     #######################
     # we need a shared version of python b/c linking with static python lib
-    # causes duplicate state issues when running compiled python modules. 
+    # causes duplicate state issues when running compiled python modules.
     depends_on("python+shared")
     extends("python", when="+python")
     # TODO: blas and lapack are disabled due to build
