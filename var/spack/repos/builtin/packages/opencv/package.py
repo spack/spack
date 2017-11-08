@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -75,8 +75,9 @@ class Opencv(CMakePackage):
     variant('png', default=False, description='Include PNG support')
     variant('tiff', default=False, description='Include TIFF support')
     variant('zlib', default=False, description='Build zlib from source')
+    variant('dnn', default=False, description='Build DNN support')
 
-    depends_on('eigen', when='+eigen', type='build')
+    depends_on('eigen~mpfr', when='+eigen', type='build')
 
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
@@ -90,7 +91,7 @@ class Opencv(CMakePackage):
     depends_on('qt', when='+qt')
     depends_on('java', when='+java')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
-    depends_on('protobuf@3.1.0', when='@3.3.0:')
+    depends_on('protobuf@3.1.0', when='@3.3.0: +dnn')
 
     extends('python', when='+python')
 
@@ -127,6 +128,8 @@ class Opencv(CMakePackage):
                 'ON' if '+zlib' in spec else 'OFF')),
             '-DWITH_OPENMP:BOOL={0}'.format((
                 'ON' if '+openmp' in spec else 'OFF')),
+            '-DBUILD_opencv_dnn:BOOL={0}'.format((
+                'ON' if '+dnn' in spec else 'OFF')),
         ]
 
         # Media I/O

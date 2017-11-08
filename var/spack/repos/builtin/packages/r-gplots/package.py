@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,7 @@ class RGplots(RPackage):
 
     homepage = "https://cran.r-project.org/package=gplots"
     url      = "https://cran.rstudio.com/src/contrib/gplots_3.0.1.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/gplots"
     version('3.0.1', '6116822401d55add044beb120ca93d14')
     depends_on('r-gtools', type=('build', 'run'))
     depends_on('r-gdata', type=('build', 'run'))

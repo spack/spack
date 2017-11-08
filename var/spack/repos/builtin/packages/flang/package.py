@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@ class Flang(CMakePackage):
                       when='@4.0.1', level=1, working_dir='tools/clang'),
             patch('https://github.com/llvm-mirror/clang/pull/35.diff',
                       sha256='7f39555783993f78b75c380ca5ef167c1d8b88cc75c6542f6c94e0b6acfb7c5d',
-                      when='@5.0', level=1, working_dir='tools/clang')
+                      when='@5.0.0', level=1, working_dir='tools/clang')
         ]
     )
 

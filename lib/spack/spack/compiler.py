@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -125,7 +125,6 @@ class Compiler(object):
         def check(exe):
             if exe is None:
                 return None
-            exe = self._find_full_path(exe)
             _verify_executables(exe)
             return exe
 
@@ -285,17 +284,6 @@ class Compiler(object):
         # does not spoil the intented precedence.
         successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
-
-    def _find_full_path(self, path):
-        """Return the actual path for a tool.
-
-        Some toolchains use forwarding executables (particularly Xcode-based
-        toolchains) which can be manipulated by external environment variables.
-        This method should be used to extract the actual path used for a tool
-        by finding out the end executable the forwarding executables end up
-        running.
-        """
-        return path
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""

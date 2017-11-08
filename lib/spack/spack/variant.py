@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ import inspect
 import re
 
 import llnl.util.lang as lang
+import spack
 import spack.error as error
 from six import StringIO
 
@@ -592,6 +593,8 @@ def substitute_abstract_variants(spec):
         spec: spec on which to operate the substitution
     """
     for name, v in spec.variants.items():
+        if name in spack.directives.reserved_names:
+            continue
         pkg_variant = spec.package_class.variants[name]
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
