@@ -34,7 +34,7 @@ class Fasttree(Package):
     homepage = "http://www.microbesonline.org/fasttree"
     url      = "http://www.microbesonline.org/fasttree/FastTree-2.1.10.c"
 
-    version('2.1.10.c', '1c2c6425a638ec0c61ef064cda687987', expand=False)
+    version('2.1.10', '1c2c6425a638ec0c61ef064cda687987', expand=False, url='http://www.microbesonline.org/fasttree/FastTree-2.1.10.c')
 
     phases = ['build', 'install']
 
@@ -42,7 +42,7 @@ class Fasttree(Package):
         cc = Executable(spack_cc)
         cc('-O3', self.compiler.openmp_flag,
             '-DOPENMP', '-finline-functions', '-funroll-loops', '-Wall',
-            '-oFastTreeMP', 'FastTree-2.1.10.c', '-lm')
+            '-oFastTreeMP', 'FastTree-' + format(spec.version.dotted) + '.c', '-lm')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
