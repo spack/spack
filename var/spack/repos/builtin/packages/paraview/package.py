@@ -59,6 +59,7 @@ class Paraview(CMakePackage):
     depends_on('qt@:4', when='@:5.2.0+qt')
 
     depends_on('mesa+swrender', when='+osmesa')
+    depends_on('libxt', when='+qt')
     conflicts('+qt', when='+osmesa')
 
     depends_on('bzip2')
