@@ -41,6 +41,8 @@ class Cp2k(Package):
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
 
     variant('mpi', default=True, description='Enable MPI support')
+    variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'none'),
+            description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
 
     depends_on('python', type='build')
@@ -49,8 +51,7 @@ class Cp2k(Package):
     depends_on('blas')
     depends_on('fftw')
     depends_on('libint@:1.2', when='@3.0,4.1')
-    depends_on('libxsmm')
-    # TODO : add dependency on libsmm
+    depends_on('libxsmm', when='smm=libxsmm')
     depends_on('libxc')
 
     depends_on('mpi@2:', when='+mpi')
@@ -102,10 +103,8 @@ class Cp2k(Package):
                 '-D__LIBINT',
                 '-D__LIBINT_MAX_AM=6',
                 '-D__LIBDERIV_MAX_AM1=5',
-                '-D__LIBXSMM',
                 '-D__LIBXC',
                 spec['fftw'].headers.cpp_flags,
-                spec['libxsmm'].headers.cpp_flags,
                 libxc.headers.cpp_flags
             ]
 
@@ -240,13 +239,35 @@ class Cp2k(Package):
             blas = spec['blas'].libs
             ldflags.append((lapack + blas).search_flags)
 
-            libxsmm = spec['libxsmm'].libs
-            ldflags.append(libxsmm.search_flags)
-
             ldflags.append(libxc.libs.search_flags)
 
-            libs.extend([str(x) for x in (fftw, lapack, blas, libxsmm,
-                                          libxc.libs)])
+            libs.extend([str(x) for x in (fftw, lapack, blas, libxc.libs)])
+
+            if 'smm=libsmm' in spec:
+                lib_dir = join_path('lib', cp2k_architecture, cp2k_version)
+                mkdirp(lib_dir)
+                try:
+                    shutil.copy(env['LIBSMM_PATH'],
+                                join_path(lib_dir, 'libsmm.a'))
+                except KeyError:
+                    raise KeyError('Point environment variable LIBSMM_PATH to '
+                                   'the absolute path of the libsmm.a file')
+                except IOError:
+                    raise IOError('The file LIBSMM_PATH pointed to does not '
+                                  'exist. Note that it must be absolute path.')
+                cppflags.extend([
+                    '-D__HAS_smm_dnn',
+                    '-D__HAS_smm_vec',
+                ])
+                libs.append('-lsmm')
+            elif 'smm=libxsmm' in spec:
+                cppflags.extend([
+                    '-D__LIBXSMM',
+                    spec['libxsmm'].headers.cpp_flags,
+                ])
+                libxsmm = spec['libxsmm'].libs
+                ldflags.append(libxsmm.search_flags)
+                libs.append(str(libxsmm))
 
             dflags.extend(cppflags)
             cflags.extend(cppflags)
