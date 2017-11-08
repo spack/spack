@@ -51,6 +51,8 @@ class Ascent(Package):
     homepage = "https://github.com/Alpine-DAV/ascent"
     url      = "https://github.com/Alpine-DAV/ascent"
 
+    maintainers = ['cyrush']
+
     version('develop',
             git='https://github.com/Alpine-DAV/ascent.git',
             branch='develop',

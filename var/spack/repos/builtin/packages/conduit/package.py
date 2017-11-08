@@ -53,6 +53,8 @@ class Conduit(Package):
     version('0.2.1', 'ed7358af3463ba03f07eddd6a6e626ff')
     version('0.2.0', 'a7b398d493fd71b881a217993a9a29d4')
 
+    maintainers = ['cyrush']
+
     version('master',
             git='https://github.com/LLNL/conduit.git',
             branch="master",

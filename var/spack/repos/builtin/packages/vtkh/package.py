@@ -41,6 +41,8 @@ class Vtkh(Package):
             branch='master',
             submodules=True)
 
+    maintainers = ['cyrush']
+
     variant("mpi", default=True, description="build mpi support")
     variant("tbb", default=True, description="build tbb support")
     variant("cuda", default=False, description="build cuda support")
@@ -51,9 +53,9 @@ class Vtkh(Package):
     depends_on("tbb", when="+tbb")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtkm")
-    depends_on("vtkm+tbb", when="+tbb")
-    depends_on("vtkm+cuda", when="+cuda")
+    depends_on("vtkm@master")
+    depends_on("vtkm@master+tbb", when="+tbb")
+    depends_on("vtkm@master+cuda", when="+cuda")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
@@ -87,5 +89,11 @@ class Vtkh(Package):
                     cmake_args.extend(std_cmake_args)
             cmake_args.append("-DCMAKE_BUILD_TYPE=Release")
             cmake(*cmake_args)
-            make()
+            if "+cuda" in spec:
+                # avoid issues with make -j and FindCuda deps
+                # likely a ordering issue that needs to be resolved
+                # in vtk-h 
+                make(parallel=False)
+            else:
+                make()
             make("install")
