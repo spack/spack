@@ -51,6 +51,7 @@ class Cp2k(Package):
     depends_on('libint@:1.2', when='@3.0,4.1')
     depends_on('libxsmm')
     # TODO : add dependency on libsmm
+    depends_on('libxc')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
@@ -94,14 +95,18 @@ class Cp2k(Package):
 
             dflags = ['-DNDEBUG']
 
+            libxc = spec['libxc:fortran,static']
+
             cppflags = [
                 '-D__FFTW3',
                 '-D__LIBINT',
                 '-D__LIBINT_MAX_AM=6',
                 '-D__LIBDERIV_MAX_AM1=5',
                 '-D__LIBXSMM',
+                '-D__LIBXC',
                 spec['fftw'].headers.cpp_flags,
-                spec['libxsmm'].headers.cpp_flags
+                spec['libxsmm'].headers.cpp_flags,
+                libxc.headers.cpp_flags
             ]
 
             if '^mpi@3:' in spec:
@@ -115,10 +120,6 @@ class Cp2k(Package):
             cflags = copy.deepcopy(optflags[self.spec.compiler.name])
             cxxflags = copy.deepcopy(optflags[self.spec.compiler.name])
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
-            fcflags.extend([
-                spec['fftw'].headers.cpp_flags,
-                spec['libxsmm'].headers.cpp_flags
-            ])
 
             if '%intel' in spec:
                 cflags.append('-fp-model precise')
@@ -127,7 +128,7 @@ class Cp2k(Package):
             elif '%gcc' in spec:
                 fcflags.extend(['-ffree-form', '-ffree-line-length-none'])
 
-            fftw = find_libraries('libfftw3', root=spec['fftw'].prefix.lib)
+            fftw = spec['fftw'].libs
             ldflags = [fftw.search_flags]
 
             if 'superlu-dist@4.3' in spec:
@@ -242,7 +243,10 @@ class Cp2k(Package):
             libxsmm = spec['libxsmm'].libs
             ldflags.append(libxsmm.search_flags)
 
-            libs.extend([str(x) for x in (fftw, lapack, blas, libxsmm)])
+            ldflags.append(libxc.libs.search_flags)
+
+            libs.extend([str(x) for x in (fftw, lapack, blas, libxsmm,
+                                          libxc.libs)])
 
             dflags.extend(cppflags)
             cflags.extend(cppflags)
