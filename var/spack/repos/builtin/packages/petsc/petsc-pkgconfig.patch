@@ -1,0 +1,23 @@
+commit f5eb75d68c6efa16dcc4687305bbb6c2eafc4802
+Author: Satish Balay <balay@mcs.anl.gov>
+Date:   Tue Nov 7 22:26:10 2017 -0600
+
+    pkg-config: fix mismatch between Libs.private in PETSc.pc and PETSC_EXTERNAL_LIB_BASIC in petscvariables
+    for xsdk builds.
+    
+    ' -lfoobar' was processed incorrectly by toStringNoDupes() as the space at the begining
+    results in a failure for startswith('-l') check
+
+diff --git a/config/BuildSystem/config/libraries.py b/config/BuildSystem/config/libraries.py
+index 5f9ae8e5f5..0d86f31121 100644
+--- a/config/BuildSystem/config/libraries.py
++++ b/config/BuildSystem/config/libraries.py
+@@ -55,7 +55,7 @@ class Configure(config.base.Configure):
+             return [getattr(self.setCompilers, flagName)+dirname,'-L'+dirname,'-l'+name]
+           if flagSubst in self.argDB:
+             return [self.argDB[flagSubst]+dirname,'-L'+dirname,'-l'+name]
+-        return ['-L'+dirname,' -l'+name]
++        return ['-L'+dirname,'-l'+name]
+       else:
+         return ['-l'+name]
+     if os.path.splitext(library)[1] == '.so':
