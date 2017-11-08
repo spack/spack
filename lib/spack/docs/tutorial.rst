@@ -38,12 +38,13 @@ correspond to sections in the slides above.
 
   1. :ref:`basics-tutorial`
   2. :ref:`packaging-tutorial`
-  3. :ref:`modules-tutorial`
+  3. :ref: `build-systems-tutorial`
+  4. :ref:`modules-tutorial`
 
 Full contents:
 
 .. toctree::
    tutorial_basics
    tutorial_packaging
-   tutorial_modules
    tutorial_buildsystems
+   tutorial_modules

@@ -1,4 +1,4 @@
-.. _build-systems:
+.. _build-systems-tutorial:
 
 ==============================
 Spack Package Build Systems
@@ -108,7 +108,9 @@ Which is similiar to invoking make in our Package
 
 Another thing we have highlighted is in the :code:`configure()` method. 
 Here we see that the prefix option is already included which reduces 
-repeated code.
+repeated code. We can override `configure_args()` and the output of that
+function will be passed to `configure()` which means that we shouldn't have
+to override `configure` but rather simply construct arguments in `configure_args()`.
 
 Let's look at the mpileaks package.py file that we worked on earlier:
 
@@ -118,7 +120,7 @@ Let's look at the mpileaks package.py file that we worked on earlier:
     $ spack edit mpileaks
 
 Notice that mpileaks is a :code:`Package` class but uses the :code:`Autotools` 
-build system. Although this package is acceptable lets make this into an 
+build system. Although this package is acceptable let's make this into an 
 :code:`AutotoolsPackage` class and simplify it further.
 
 .. literalinclude:: tutorial/examples/Autotools/0.package.py
@@ -141,8 +143,8 @@ an argument to :code:`configure`. Our packages look simpler, and the packager
 does not need to worry about whether they have properly included :code:`configure`
 and :code:`make`.
 
-If we install this package we will see that no matter the class, the same
-behavior is shown.
+This version of the `mpileaks` package installs the same as the previous,
+but the `AutotoolsPackage` class lets us do it with a cleaner package file.
 
 -----------------
 Makefile
@@ -417,12 +419,11 @@ at the :code:`PythonPackage` class:
 As noted earlier, each of those methods have sensible defaults or they can
 be overridden.
 
-Using the :code:`Package` class is possible but it brings with it a lot of unnecessary
-methods that are useless for a Python package. Instead, Spack has a 
-:code: `PythonPackage` subclass that allows packagers of Python modules to 
-be able to invoke setup.py and use Distutils, which is much more familiar 
-to a typical python user. 
-
+We can write package files for Python packages using the `Package` class, but
+it brings with it a lot of methods that are useless for Python packages. 
+Instead, Spack has a  :code: `PythonPackage` subclass that allows packagers 
+of Python modules to be able to invoke setup.py and use Distutils, which is 
+much more familiar to a typical python user. 
 
 
 We will write a package file for Pandas_:
