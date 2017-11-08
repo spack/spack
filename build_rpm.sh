@@ -28,7 +28,7 @@ mpis=(
     'openmpi@2.1.1~cuda fabrics=pmi,verbs ~java schedulers=slurm'
     'openmpi@2.1.1+cuda fabrics=pmi,verbs ~java schedulers=slurm'
     'mvapich2@2.2+debug~cuda fabrics=mrail process_managers=slurm'
-    'mvapich2@2.2+debug+cuda fabrics=mrail process_managers=slurm'
+    # 'mvapich2@2.2+debug+cuda fabrics=mrail process_managers=slurm'
     'mpich@3.2+hydra+pmi+romio+verbs'
 )
 
@@ -43,7 +43,7 @@ nonmpipkgs=(
     python@3.6.1
     miniconda2@4.3.14
     miniconda3@4.3.14
-    openblas@0.2.19+openmp
+    openblas@0.2.20 threads=openmp
     perl@5.24.1
     sga@0.10.15
     boost@1.64.0
@@ -55,6 +55,7 @@ nonmpipkgs=(
     cudnn@5.1^cuda@9.0.176
     cudnn@6.0^cuda@8.0.61
     cudnn@6.0^cuda@9.0.176
+    samtools@1.6
 )
 
 otherpkgs=(
