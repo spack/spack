@@ -41,7 +41,8 @@ import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
-from spack.relocate import needs_binary_relocation, get_patchelf
+from spack.relocate import needs_binary_relocation, needs_text_relocation
+from spack.relocate import get_patchelf
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -218,6 +219,8 @@ echo $PATH"""
 
 def test_relocate():
     assert (needs_binary_relocation('relocatable') is False)
+    assert (needs_binary_relocation('link') is False)
+    assert (needs_text_relocation('link') is False)
 
     out = macho_make_paths_relative('/Users/Shares/spack/pkgC/lib/libC.dylib',
                                     '/Users/Shared/spack',

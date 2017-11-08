@@ -219,6 +219,8 @@ def needs_binary_relocation(filetype):
     retval = False
     if "relocatable" in filetype:
         return False
+    if "link" in filetype:
+        return False
     if platform.system() == 'Darwin':
         return ('Mach-O' in filetype)
     elif platform.system() == 'Linux':
@@ -232,6 +234,8 @@ def needs_text_relocation(filetype):
     """
     Check whether the given filetype is text that may need relocation.
     """
+    if "link" in filetype:
+        return False
     return ("text" in filetype)
 
 
