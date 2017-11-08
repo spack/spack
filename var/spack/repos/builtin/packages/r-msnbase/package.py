@@ -33,7 +33,7 @@ class RMsnbase(RPackage):
     url      = "https://git.bioconductor.org/packages/MSnbase"
 
     version('2.2.0', git='https://git.bioconductor.org/packages/MSnbase', commit='d6e8fb7f106d05096fa9074da0f829ac8f02c197')
- 
+
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-mzr', type=('build', 'run'))
