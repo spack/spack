@@ -51,10 +51,10 @@ nonmpipkgs=(
     cuda@8.0.61
     cuda@7.5.18
     cuda@6.5.14
-    cudnn@5.1^cuda@8.0.61
-    cudnn@5.1^cuda@9.0.176
-    cudnn@6.0^cuda@8.0.61
-    cudnn@6.0^cuda@9.0.176
+    cudnn@7.0.cuda9
+    cudnn@7.0.cuda8
+    cudnn@6.0.cuda8
+    cudnn@5.1.cuda8
     samtools@1.6
 )
 
@@ -89,7 +89,7 @@ do
         s $mpi %$compiler
         for pkg in "${mpipkgs[@]}"
         do
-            s $pkg ^$mpi %$compiler
+            s $pkg %$compiler ^$mpi
         done
     done
 done
