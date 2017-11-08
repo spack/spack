@@ -54,7 +54,6 @@ class Flecsi(CMakePackage):
         if '+mpi' in self.spec:
             options.extend([
                 '-DENABLE_MPI=ON',
-                '-DFLECSI_RUNTIME_MODEL=mpilegion'
             ])
 
         return options
