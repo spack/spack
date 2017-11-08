@@ -92,7 +92,7 @@ class Vtkh(Package):
             if "+cuda" in spec:
                 # avoid issues with make -j and FindCuda deps
                 # likely a ordering issue that needs to be resolved
-                # in vtk-h 
+                # in vtk-h
                 make(parallel=False)
             else:
                 make()
