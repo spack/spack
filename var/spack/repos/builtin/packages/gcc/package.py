@@ -47,6 +47,7 @@ class Gcc(AutotoolsPackage):
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
+    version('5.5.0', '0f70424213b4a1113c04ba66ddda0c1f')
     version('5.4.0', '4c626ac2a83ef30dfb9260e6f59c2b30')
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
@@ -169,6 +170,9 @@ class Gcc(AutotoolsPackage):
 
         if version < Version('6.4.0') or version == Version('7.1.0'):
             suffix = 'bz2'
+
+        if version == Version('5.5.0'):
+            suffix = 'xz'
 
         return url.format(version, suffix)
 
