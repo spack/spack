@@ -49,20 +49,21 @@ class Cp2k(Package):
     depends_on('blas')
     depends_on('fftw')
     depends_on('libint@:1.2', when='@3.0,4.1')
+    depends_on('libxsmm')
+    # TODO : add dependency on libsmm
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
+    depends_on('elpa', when='+mpi')
+    depends_on('pexsi+fortran', when='+mpi')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
-    depends_on('pexsi+fortran', when='+mpi')
 
     # Apparently cp2k@4.1 needs an "experimental" version of libwannier.a
     # which is only available contacting the developer directly. See INSTALL
     # in the stage of cp2k@4.1
     depends_on('wannier90', when='@3.0+mpi')
-    depends_on('elpa', when='+mpi')
 
-    # TODO : add dependency on libsmm, libxsmm
     # TODO : add dependency on CUDA
 
     parallel = False
@@ -78,14 +79,17 @@ class Cp2k(Package):
         with open(makefile, 'w') as mkf:
             # Optimization flags
             optflags = {
-                'gcc': ['-O2',
-                        '-ffast-math',
-                        '-ftree-vectorize',
-                        '-funroll-loops',
-                        '-mtune=native'],
-                'intel': ['-O2',
-                          '-pc64',
-                          '-unroll']
+                'gcc': [
+                    '-O2',
+                    '-mtune=native',
+                    '-funroll-loops',
+                    '-ffast-math',
+                    '-ftree-vectorize',
+                ], 'intel': [
+                    '-O2',
+                    '-pc64',
+                    '-unroll',
+                ]
             }
 
             dflags = ['-DNDEBUG']
@@ -95,7 +99,9 @@ class Cp2k(Package):
                 '-D__LIBINT',
                 '-D__LIBINT_MAX_AM=6',
                 '-D__LIBDERIV_MAX_AM1=5',
-                spec['fftw'].headers.cpp_flags
+                '-D__LIBXSMM',
+                spec['fftw'].headers.cpp_flags,
+                spec['libxsmm'].headers.cpp_flags
             ]
 
             if '^mpi@3:' in spec:
@@ -110,15 +116,16 @@ class Cp2k(Package):
             cxxflags = copy.deepcopy(optflags[self.spec.compiler.name])
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
             fcflags.extend([
-                '-ffree-form',
-                '-ffree-line-length-none',
-                spec['fftw'].headers.cpp_flags
+                spec['fftw'].headers.cpp_flags,
+                spec['libxsmm'].headers.cpp_flags
             ])
 
             if '%intel' in spec:
                 cflags.append('-fp-model precise')
                 cxxflags.append('-fp-model precise')
                 fcflags.extend(['-fp-model source', '-heap-arrays 64'])
+            elif '%gcc' in spec:
+                fcflags.extend(['-ffree-form', '-ffree-line-length-none'])
 
             fftw = find_libraries('libfftw3', root=spec['fftw'].prefix.lib)
             ldflags = [fftw.search_flags]
@@ -230,9 +237,12 @@ class Cp2k(Package):
             # LAPACK / BLAS
             lapack = spec['lapack'].libs
             blas = spec['blas'].libs
-
             ldflags.append((lapack + blas).search_flags)
-            libs.extend([str(x) for x in (fftw, lapack, blas)])
+
+            libxsmm = spec['libxsmm'].libs
+            ldflags.append(libxsmm.search_flags)
+
+            libs.extend([str(x) for x in (fftw, lapack, blas, libxsmm)])
 
             dflags.extend(cppflags)
             cflags.extend(cppflags)
