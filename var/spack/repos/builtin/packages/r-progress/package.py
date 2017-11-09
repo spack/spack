@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@ class RProgress(RPackage):
 
     homepage = "https://cran.r-project.org/package=progress"
     url      = "https://cran.r-project.org/src/contrib/progress_1.1.2.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/progress"
 
     version('1.1.2', 'b3698672896125137e0077bc97132428')
     depends_on('r-r6', type=('build', 'run'))

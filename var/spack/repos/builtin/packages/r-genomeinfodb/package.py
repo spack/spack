@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,15 +32,14 @@ class RGenomeinfodb(RPackage):
        names in their natural, rather than lexicographic, order."""
 
     homepage = "https://bioconductor.org/packages/GenomeInfoDb/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/GenomeInfoDb_1.12.2.tar.gz"
+    url      = "https://git.bioconductor.org/packages/GenomeInfoDb"
     list_url = homepage
 
-    version('1.12.3', '035e120026904df964a79617a8b3e6c6')
-    version('1.12.2', '55b5399d9c8c58b093dfa5f69f8ce2cc')
+    version('1.12.3', git='https://git.bioconductor.org/packages/GenomeInfoDb', commit='2deef3f0571b7f622483257bc22d2509ab5a0369')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))
     depends_on('r-genomeinfodbdata', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.12.2:1.12.3')
+    depends_on('r@3.4.0:3.4.9', when='@1.12.3')
