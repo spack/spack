@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@ class RGooglevis(RPackage):
 
     homepage = "https://github.com/mages/googleVis#googlevis"
     url      = "https://cran.r-project.org/src/contrib/googleVis_0.6.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/googleVis"
 
     version('0.6.0', 'ec36fd2a6884ddc7baa894007d0d0468')
 

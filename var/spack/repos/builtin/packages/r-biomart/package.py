@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,9 +40,9 @@ class RBiomart(RPackage):
        online queries from gene annotation to database mining."""
 
     homepage = "https://bioconductor.org/packages/biomaRt/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/biomaRt_2.32.1.tar.gz"
+    url      = "https://git.bioconductor.org/packages/biomaRt"
 
-    version('2.32.1', '9c7f4547dbf4582fc88ca0c65f789328')
+    version('2.32.1', git='https://git.bioconductor.org/packages/biomaRt', commit='f84d74424fa599f6d08f8db4612ca09914a9087f')
 
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))

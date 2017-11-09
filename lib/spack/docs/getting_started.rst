@@ -27,11 +27,11 @@ Installation
 ------------
 
 Getting Spack is easy.  You can clone it from the `github repository
-<https://github.com/llnl/spack>`_ using this command:
+<https://github.com/spack/spack>`_ using this command:
 
 .. code-block:: console
 
-   $ git clone https://github.com/llnl/spack.git
+   $ git clone https://github.com/spack/spack.git
 
 This will create a directory called ``spack``.
 
