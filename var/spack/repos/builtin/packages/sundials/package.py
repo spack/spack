@@ -39,6 +39,7 @@ class Sundials(CMakePackage):
     # Versions
     # ==========================================================================
 
+    version('3.1.0', '1a84ca41c7f71067e03d519ddbcd9dae')
     version('3.0.0', '5163a44cedd7398bddda442ba00313b8')
     version('2.7.0', 'c304631b9bc82877d7b0e9f4d4fd94d3')
     version('2.6.2', '3deeb0ede9f514184c6bd83ecab77d95')
@@ -355,12 +356,14 @@ class Sundials(CMakePackage):
     def post_install(self):
         """Run after install to fix install name of dynamic libraries
         on Darwin to have full path and install the LICENSE file."""
+        spec = self.spec
         prefix = self.spec.prefix
 
         if (sys.platform == 'darwin'):
             fix_darwin_install_name(prefix.lib)
 
-        install('LICENSE', prefix)
+        if spec.satisfies('@:3.0.0'):
+            install('LICENSE', prefix)
 
     @run_after('install')
     def filter_compilers(self):
