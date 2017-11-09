@@ -32,7 +32,7 @@ class Nekbone(Package):
        Nek5000 is a high order, incompressible Navier-Stokes solver based on
        the spectral element method."""
 
-    homepage = "hhttps://github.com/Nek5000/Nekbone"
+    homepage = "https://github.com/Nek5000/Nekbone"
     url = "https://github.com/Nek5000/Nekbone/tarball/v17.0"
 
     tags = ['proxy-app', 'ecp-proxy-app']
