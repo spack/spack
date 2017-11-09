@@ -34,4 +34,3 @@ class PyDlcpar(PythonPackage):
     version('1.0', '0bf684436df3554e46d5e992349eeaec')
 
     depends_on('py-numpy', type=('build', 'run'))
-
