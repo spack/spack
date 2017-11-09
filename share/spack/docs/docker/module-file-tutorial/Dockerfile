@@ -12,7 +12,7 @@ RUN apt-get update \
        build-essential \
        ca-certificates \
        coreutils \
-       curl \
+       curl man less \
        emacs-nox vim nano \
        git \
        openmpi-bin openmpi-common libopenmpi-dev \
@@ -24,7 +24,7 @@ RUN apt-get update \
 COPY spack.sh /etc/profile
 
 # Install spack
-RUN curl -s -L https://api.github.com/repos/llnl/spack/tarball/pull/5635/head \
+RUN curl -s -L https://api.github.com/repos/spack/spack/tarball/develop \
     | tar xzC $SPACK_ROOT --strip 1 
 
 # Copy configuration for external packages
