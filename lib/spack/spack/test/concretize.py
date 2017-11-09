@@ -203,25 +203,11 @@ class TestConcretize(object):
         assert set(client.compiler_flags['fflags']) == set(['-O0'])
         assert not set(cmake.compiler_flags['fflags'])
 
-    def test_compiler_flags_from_config_are_grouped(self):
-        spec = Spec('a%intel platform=test')
-        spec.concretize()
-        cflags = spec.compiler_flags['cflags']
-        assert any(x == '-foo-flag foo-val' for x in cflags)
-
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
         spec.concretize()
         cflags = spec.compiler_flags['cflags']
         assert any(x == '-foo-flag foo-val' for x in cflags)
-
-    def test_compiler_flags_from_user_and_config_are_grouped(self):
-        spec = Spec('a%intel cflags="-bar-flag bar-val -foo-flag foo-val"'
-                    ' platform=test')
-        spec.concretize()
-        cflags = spec.compiler_flags['cflags']
-        assert any(x == '-foo-flag foo-val' for x in cflags)
-        assert any(x == '-bar-flag bar-val' for x in cflags)
 
     def concretize_multi_provider(self):
         s = Spec('mpileaks ^multi-provider-mpi@3.0')
