@@ -192,9 +192,7 @@ def get_filetype(path_name):
     """
     file = Executable('file')
     file.add_default_env('LC_ALL', 'C')
-    file.add_default_arg('-b')
-    file.add_default_arg('-h')
-    output = file('%s' % path_name,
+    output = file('-b', '-h', '%s' % path_name,
                   output=str, err=str)
     return output.strip()
 
