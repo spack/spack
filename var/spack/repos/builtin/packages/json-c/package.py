@@ -33,4 +33,6 @@ class JsonC(AutotoolsPackage):
     version('0.12.1', '55f7853f7d8cf664554ce3fa71bf1c7d')
     version('0.11',   'aa02367d2f7a830bf1e3376f77881e98')
 
+    depends_on('autoconf', type='build')
+
     parallel = False
