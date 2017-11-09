@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,9 +31,10 @@ class RBiostrings(RPackage):
        or sets of sequences."""
 
     homepage = "https://bioconductor.org/packages/Biostrings/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/Biostrings_2.44.2.tar.gz"
+    url      = "https://git.bioconductor.org/packages/Biostrings"
+    list_url = homepage
 
-    version('2.44.2', 'b30d8c116493ea160a0ca0a662666436')
+    version('2.44.2', git='https://git.bioconductor.org/packages/Biostrings', commit='e4a2b320fb21c5cab3ece7b3c6fecaedfb1e5200')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))

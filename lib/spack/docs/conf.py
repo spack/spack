@@ -7,7 +7,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -249,7 +249,7 @@ html_theme_path = ["_themes"]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '../../../share/spack/logo/spack-logo-white-text-48.png'
+html_logo = '../../../share/spack/logo/spack-logo-white-text.svg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

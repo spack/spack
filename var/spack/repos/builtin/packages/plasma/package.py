@@ -4,7 +4,7 @@
 #
 # Created by Piotr Luszczek, luszczek@icl.utk.edu, All rights reserved.
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 #
 ##############################################################################
 #
@@ -103,7 +103,11 @@ class Plasma(MakefilePackage):
         if "^netlib-lapack" in self.spec:
             ld_flags = " -llapacke -lcblas"
 
-        system_libs = find_system_libraries(['libm'])
+        slibs = []
+        if self.spec.satisfies('%gcc') or self.spec.satisfies('%clang'):
+            slibs.append('libgfortran')
+        slibs.append('libm')
+        system_libs = find_system_libraries(slibs)
 
         # pass LAPACK, BLAS, and libm library flags
         targets.append("LIBS = {0} {1} {2} {3}".format(

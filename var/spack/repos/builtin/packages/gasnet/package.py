@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,12 +35,21 @@ class Gasnet(AutotoolsPackage):
     homepage = "http://gasnet.lbl.gov"
     url      = "http://gasnet.lbl.gov/GASNet-1.24.0.tar.gz"
 
+    version('1.30.0', '2ddb1d8397d62acfd389095ca8da72f6')
     version('1.28.2', '6ca0463dc2430570e40646c4d1e97b36')
     version('1.28.0', 'b44446d951d3d8954aa1570e3556ba61')
     version('1.24.0', 'c8afdf48381e8b5a7340bdb32ca0f41a')
 
     variant('ibv', default=False, description="Support InfiniBand")
     variant('mpi', default=True, description="Support MPI")
+    variant('aligned-segments', default=False,
+            description="Requirement to achieve aligned VM segments")
+    variant('pshm', default=True, 
+            description="Support inter-process shared memory support")
+    variant('segment-mmap-max', default='16GB',
+            description="Upper bound for mmap-based GASNet segments")
+
+    conflicts('+aligned-segments', when='+pshm')
 
     depends_on('mpi', when='+mpi')
 
@@ -53,15 +62,19 @@ class Gasnet(AutotoolsPackage):
             "--enable-udp",
             "--enable-smp-safe",
             "--enable-segment-fast",
-            "--disable-aligned-segments",
-            # TODO: make option so Legion can request builds with/without this.
-            # See the Legion webpage for details on when to/not to use.
-            "--disable-pshm",
-            "--with-segment-mmap-max=64MB",
+            "--enable-pshm" if '+pshm' in self.spec else "--disable-pshm",
+            "--with-segment-mmap-max={0}".format(
+                self.spec.variants['segment-mmap-max'].value),
             # for consumers with shared libs
             "CC=%s %s" % (spack_cc, self.compiler.pic_flag),
             "CXX=%s %s" % (spack_cxx, self.compiler.pic_flag),
         ]
+
+        if '+aligned-segments' in self.spec:
+            args.append('--enable-aligned-segments')
+        else:
+            args.append('--disable-aligned-segments')
+
         if '+mpi' in self.spec:
             args.extend(['--enable-mpi', '--enable-mpi-compat', "MPI_CC=%s %s"
                         % (self.spec['mpi'].mpicc, self.compiler.pic_flag)])

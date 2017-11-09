@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@ class RScales(RPackage):
 
     homepage = "https://github.com/hadley/scales"
     url      = "https://cran.r-project.org/src/contrib/scales_0.5.0.tar.gz"
-    list_url = "https://cran.r-project.org/package=scales"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/scales"
 
     version('0.5.0', '435f6bd826c5cf8df703ffb8a6750fd1')
     version('0.4.1', '3fb2218866a7fe4c1f6e66790876f85a')
