@@ -53,8 +53,8 @@ class Legion(CMakePackage):
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on("cmake@3.1:", type='build')
-    depends_on("gasnet", when='~mpi')
-    depends_on("gasnet+mpi", when='+mpi')
+    depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB'", when='~mpi')
+    depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +mpi", when='+mpi')
 
     def cmake_args(self):
         options = [
