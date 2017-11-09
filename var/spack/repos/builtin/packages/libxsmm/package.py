@@ -61,6 +61,15 @@ class Libxsmm(Package):
     variant('header-only', default=False,
             description='Produce header-only installation')
 
+    @property
+    def libs(self):
+        result = find_libraries(['libxsmm', 'libxsmmf'], root=self.prefix,
+                                recurse=True)
+        if len(result) == 0:
+            result = find_libraries(['libxsmm', 'libxsmmf'], root=self.prefix,
+                                    shared=False, recurse=True)
+        return result
+
     def patch(self):
         kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
         makefile = FileFilter('Makefile.inc')
