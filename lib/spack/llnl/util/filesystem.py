@@ -196,14 +196,22 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
 
 def set_install_permissions(path):
     """Set appropriate permissions on the installed file."""
-    if not os.path.islink(path):
-        if os.path.isdir(path):
-            os.chmod(path, 0o755)
-        if os.path.isfile(path):
-            os.chmod(path, 0o644)
+# If this points to a file maintained in a Spack prefix, it is assumed that
+# this function will be invoked on the target. If the file is outside a
+# Spack-maintained prefix, the permissions should not be modified.
+    if os.path.islink(path):
+        return
+    if os.path.isdir(path):
+        os.chmod(path, 0o755)
+    else:
+        os.chmod(path, 0o644)
 
 
 def copy_mode(src, dest):
+    """Set the mode of dest to that of src unless it is a link.
+    """
+    if os.path.islink(dest):
+        return
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
     if src_mode & stat.S_IXUSR:
@@ -212,8 +220,7 @@ def copy_mode(src, dest):
         dest_mode |= stat.S_IXGRP
     if src_mode & stat.S_IXOTH:
         dest_mode |= stat.S_IXOTH
-    if not os.path.islink(dest):
-        os.chmod(dest, dest_mode)
+    os.chmod(dest, dest_mode)
 
 
 def unset_executable_mode(path):
