@@ -158,6 +158,7 @@ class Mfem(Package):
 
         options = [
             'PREFIX=%s' % prefix,
+            'MFEM_CXX=%s' % env['CXX'],
             'MFEM_USE_MEMALLOC=YES',
             'MFEM_DEBUG=%s' % yes_no('+debug'),
             'MFEM_USE_LIBUNWIND=%s' % yes_no('+debug'),
