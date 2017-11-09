@@ -42,11 +42,9 @@ def cmake_cache_entry(name, value):
 
 
 class Ascent(Package):
-    """
-    Ascent is an open source many-core capable lightweight in situ
+    """Ascent is an open source many-core capable lightweight in situ
     visualization and analysis infrastructure for multi-physics HPC
-    simulations.
-    """
+    simulations."""
 
     homepage = "https://github.com/Alpine-DAV/ascent"
     url      = "https://github.com/Alpine-DAV/ascent"

@@ -28,14 +28,12 @@ import os
 
 
 class Vtkm(Package):
-    """
-    VTK-m is a toolkit of scientific visualization algorithms for emerging
+    """VTK-m is a toolkit of scientific visualization algorithms for emerging
     processor architectures. VTK-m supports the fine-grained concurrency for
     data analysis and visualization algorithms required to drive extreme scale
     computing by providing abstract models for data and execution that can be
     applied to a variety of algorithms across many different processor
-    architectures.
-    """
+    architectures."""
 
     homepage = "https://m.vtk.org/"
     url      = "https://gitlab.kitware.com/vtk/vtk-m/repository/v1.1.0/archive.tar.gz"
