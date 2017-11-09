@@ -50,6 +50,7 @@ class Paraview(CMakePackage):
     variant('qt', default=False, description='Enable Qt (gui) support')
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('examples', default=False, description="Build examples")
+    variant('hdf5', default=False, description="Use external HDF5")
 
     depends_on('python@2:2.8', when='+python')
     depends_on('py-numpy', when='+python', type='run')
@@ -66,6 +67,8 @@ class Paraview(CMakePackage):
     depends_on('freetype')
     # depends_on('hdf5+mpi', when='+mpi')
     # depends_on('hdf5~mpi', when='~mpi')
+    depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
+    depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
@@ -129,7 +132,7 @@ class Paraview(CMakePackage):
             '-DBUILD_TESTING:BOOL=OFF',
             '-DBUILD_EXAMPLES:BOOL=%s' % variant_bool('+examples'),
             '-DVTK_USE_SYSTEM_FREETYPE:BOOL=ON',
-            '-DVTK_USE_SYSTEM_HDF5:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'),
             '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
             '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
             '-DVTK_USE_SYSTEM_NETCDF:BOOL=OFF',
