@@ -59,3 +59,6 @@ class Nekbone(Package):
                 mkdir(path)
                 install('nekbone', path)
                 install('nekpmpi', path)
+                install('data.rea', path)
+                install('SIZE', path)
+                install('README', path)
