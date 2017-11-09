@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,32 +22,30 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Libffs(CMakePackage):
-    """FFS is a middleware library for data communication,
-    including representation, processing and marshaling
-    that preserves the performance of traditional approaches
-    while relaxing the requirement of a priori knowledge
-    and providing complex run-time flexibility.
-    """
+class Sosflow(CMakePackage):
+    """SOSflow provides a flexible, scalable, and programmable framework for
+    observation, introspection, feedback, and control of HPC applications."""
 
-    homepage = "http://www.cc.gatech.edu/systems/projects/FFS"
-    url = "https://github.com/GTkorvo/ffs/archive/v1.1.tar.gz"
+    homepage = "https://github.com/cdwdirect/sos_flow/wiki"
+    url      = "https://github.com/cdwdirect/sos_flow.git"
 
-    version('develop', git='https://github.com/GTkorvo/ffs.git',
-            branch='master')
-    version('1.1.1', 'aa1c8ad5cf35e8cf76735e3a60891509')
-    version('1.1', '561c6b3abc53e12b3c01192e8ef2ffbc')
+    version('spack', git='https://github.com/cdwdirect/sos_flow.git', tag='spack-build-v0.9901')
 
-    depends_on('flex')
-    depends_on('bison')
-    depends_on('gtkorvo-atl')
-    depends_on('gtkorvo-dill')
-    depends_on('gtkorvo-cercs-env')
+    depends_on('libevpath')
+    depends_on('sqlite@3:')
 
-    def cmake_args(self):
-        args = ["-DENABLE_TESTING=0", "-DTARGET_CNL=1",
-                "-DBUILD_SHARED_STATIC=STATIC"]
-        return args
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('SOS_HOST_KNOWN_AS', 'SPACK-SOS-BUILD')
+        spack_env.set('SOS_HOST_NODE_NAME', 'SPACK-SOS-NODE')
+        spack_env.set('SOS_HOST_DETAILED', 'SPACK-SOS-DETAILED')
+
+        run_env.set('SOS_ROOT', self.spec.prefix)
+        run_env.set('SOS_BUILD_DIR', self.spec.prefix)
+        run_env.set('SOS_CMD_PORT', '22500')
+        run_env.set('SOS_WORK', env['HOME'])
+        run_env.set('SOS_EVPATH_MEETUP', env['HOME'])
+        run_env.set('SOS_ENV_SET', 'true')
