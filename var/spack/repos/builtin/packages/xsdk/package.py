@@ -79,7 +79,7 @@ class Xsdk(Package):
     depends_on('alquimia@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('alquimia@develop', when='@develop')
 
-    depends_on('sundials@3.0.0~int64+hypre', when='@0.3.0-rc1')
+    depends_on('sundials@3.1.0~int64+hypre', when='@0.3.0-rc1')
     depends_on('plasma', when='@0.3.0-rc1 %gcc@4.9:')
     depends_on('magma', when='@0.3.0-rc1 +cuda')
 
