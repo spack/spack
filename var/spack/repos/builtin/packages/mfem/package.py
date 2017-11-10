@@ -51,8 +51,8 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('3.3.2-rc5', git='https://github.com/mfem/mfem',
-            tag='v3.3.2-rc5')
+    version('3.3.2', git='https://github.com/mfem/mfem',
+            branch='mfem-3.3.2-dev')
 
     version('laghos-v1.0', git='https://github.com/mfem/mfem',
             tag='laghos-v1.0')
@@ -158,9 +158,10 @@ class Mfem(Package):
 
         options = [
             'PREFIX=%s' % prefix,
-            'MFEM_CXX=%s' % env['CXX'],
             'MFEM_USE_MEMALLOC=YES',
             'MFEM_DEBUG=%s' % yes_no('+debug'),
+            'CXX=%s' % env['CXX'],
+            'MPICXX=%s' % spec['mpi'].mpicxx,
             'MFEM_USE_LIBUNWIND=%s' % yes_no('+debug'),
             'MFEM_USE_GZSTREAM=%s' % yes_no('+gzstream'),
             'MFEM_USE_METIS_5=%s' % metis5_str,
