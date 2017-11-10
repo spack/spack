@@ -63,14 +63,14 @@ class Openblas(MakefilePackage):
     )
 
     variant(
-        'virtualmachine',
+        'virtual_machine',
         default=False,
         description="Adding options to build openblas on Linux virtual machine"
     )
 
     variant(
         'num_threads',
-        default=0,
+        default='0',
         description="Limiting number of threads available for multihreading"
     )
 
@@ -133,7 +133,7 @@ class Openblas(MakefilePackage):
             'MAKE_NO_J=1'
         ]
 
-        if self.spec.variants['virtualmachine'].value:
+        if self.spec.variants['virtuali_machine'].value:
             make_defs += [
                 'DYNAMIC_ARCH=1',
                 'NO_AVX2=1'
