@@ -42,7 +42,7 @@ class Nek5000(Package):
 
     # MPI, Profiling and Visit variants
     variant('mpi',       default=True, description='Build with MPI.')
-    variant('profiling', default=True, description='Build with Profiling data.')
+    variant('profiling', default=True, description='Build with profiling data.')
     variant('visit',     default=False, description='Build with Visit.')
 
     # Tools
