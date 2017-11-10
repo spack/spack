@@ -51,6 +51,7 @@ class Elfutils(AutotoolsPackage):
 
     def configure_args(self):
         # configure doesn't use LIBS correctly
+        gettext_lib = self.spec['gettext'].prefix.lib,
         return [
-            'LDFLAGS=-L%s -lintl' % self.spec['gettext'].prefix.lib,
+            'LDFLAGS=-Wl,--no-as-needed -L%s -lintl' % gettext_lib,
             '--enable-maintainer-mode']
