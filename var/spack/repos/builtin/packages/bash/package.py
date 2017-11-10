@@ -37,6 +37,8 @@ class Bash(AutotoolsPackage):
     depends_on('ncurses')
     depends_on('readline@5.0:')
 
+    install_targets = ['install', 'install-headers']
+
     def configure_args(self):
         spec = self.spec
 
