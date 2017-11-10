@@ -45,7 +45,7 @@ class Flit(MakefilePackage):
     depends_on('python@3:', type='run')
     depends_on('py-numpy', type='run')
     depends_on('py-matplotlib tk=False', type='run')
-    # depends_on('py-toml', type='run') # TODO: add to spack
+    depends_on('py-toml', type='run')
 
     def build(self, spec, prefix):
         'Build instructions based on the version'
@@ -54,7 +54,7 @@ class Flit(MakefilePackage):
             make(*args)
         else:
             # FIXME: build the old FLiT
-            pass
+            raise NotImplementedError('Only can build version 2.0 and up')
 
     def install(self, spec, prefix):
         'Install instructions based on the version'
@@ -64,4 +64,4 @@ class Flit(MakefilePackage):
             make(*args, parallel=False)
         else:
             # FIXME: install the old FLiT
-            pass
+            raise NotImplementedError('Only can install version 2.0 and up')
