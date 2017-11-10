@@ -133,7 +133,7 @@ class Openblas(MakefilePackage):
             'MAKE_NO_J=1'
         ]
 
-        if self.spec.variants['virtuali_machine'].value:
+        if self.spec.variants['virtual_machine'].value:
             make_defs += [
                 'DYNAMIC_ARCH=1',
                 'NO_AVX2=1'
