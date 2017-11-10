@@ -27,6 +27,8 @@ class Plasma(MakefilePackage):
 
     version("develop", hg="https://luszczek@bitbucket.org/icl/plasma")
 
+    variant('shared', default=True, description="Build shared library (disables static library)")
+
     depends_on("blas")
     depends_on("lapack")
 
@@ -63,6 +65,10 @@ class Plasma(MakefilePackage):
 
         ld_flags = self.spec["lapack"].libs.ld_flags + " " + \
             self.spec["blas"].libs.ld_flags
+
+        if '~shared' in self.spec:
+           make_inc.filter("-fPIC", "")  # not using fPIC
+           ld_flags += " -lm"
 
         if "^mkl" not in spec:
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
@@ -115,3 +121,7 @@ class Plasma(MakefilePackage):
             self.spec["blas"].libs.ld_flags, ld_flags, system_libs.ld_flags))
 
         return targets
+
+    def build(self, spec, prefix):
+        if '~shared' in self.spec:
+            make('static=1', parallel=True)
