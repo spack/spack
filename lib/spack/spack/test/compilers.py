@@ -67,4 +67,3 @@ def test_compiler_flags_from_config_are_grouped():
 
     compiler = compilers.compiler_from_config_entry(compiler_entry)
     assert any(x == '-foo-flag foo-val' for x in compiler.flags['cflags'])
-
