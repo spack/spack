@@ -218,7 +218,7 @@ Let's open our compilers configuration file again and add a compiler flag.
       environment: {}
       extra_rpaths: []
       flags:
-        cppflags: -fPIC
+        cppflags: -g
       modules: []
       operating_system: ubuntu16.04
       paths:
@@ -234,26 +234,21 @@ spec is concretized.
 
 .. code-block:: console
 
-  $ spack spec zoltan %clang
+  $ spack spec cfitsio %clang@3.8.0-gfortran
   Input spec
   --------------------------------
-  zoltan
+  cfitsio%clang@3.8.0-gfortran
 
   Normalized
   --------------------------------
-  zoltan
+  cfitsio%clang@3.8.0-gfortran
 
   Concretized
   --------------------------------
-  zoltan@3.83%clang@3.8.0-gfortran cppflags="-fPIC" ~debug+fortran+mpi+shared arch=linux-ubuntu16.04-x86_64
-      ^openmpi@3.0.0%clang@3.8.0-gfortran cppflags="-fPIC" ~cuda fabrics= ~java schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64
-          ^hwloc@1.11.7%clang@3.8.0-gfortran cppflags="-fPIC" ~cuda+libxml2~pci arch=linux-ubuntu16.04-x86_64
-              ^libxml2@2.9.4%clang@3.8.0-gfortran cppflags="-fPIC" ~python arch=linux-ubuntu16.04-x86_64
-                  ^pkg-config@0.29.2%clang@3.8.0-gfortran cppflags="-fPIC" +internal_glib arch=linux-ubuntu16.04-x86_64
-                  ^xz@5.2.3%clang@3.8.0-gfortran cppflags="-fPIC"  arch=linux-ubuntu16.04-x86_64
-                  ^zlib@1.2.11%clang@3.8.0-gfortran cppflags="-fPIC" +pic+shared arch=linux-ubuntu16.04-x86_64
+  cfitsio@3.410%clang@3.8.0-gfortran cppflags="-g" +bzip2+shared arch=linux-ubuntu16.04-x86_64
+      ^bzip2@1.0.6%clang@3.8.0-gfortran cppflags="-g" +shared arch=linux-ubuntu16.04-x86_64
 
-We can see that "cppflags=-fPIC" has been added to every node in the DAG.
+We can see that "cppflags=-g" has been added to every node in the DAG.
 
 -------------------------------
 Advanced Compiler Configuration
