@@ -41,8 +41,9 @@ class Fasttree(Package):
     def build(self, spec, prefix):
         cc = Executable(spack_cc)
         cc('-O3', self.compiler.openmp_flag,
-            '-DOPENMP', '-finline-functions', '-funroll-loops', '-Wall',
-            '-oFastTreeMP', 'FastTree-' + format(spec.version.dotted) + '.c', '-lm')
+           '-DOPENMP', '-finline-functions', '-funroll-loops', '-Wall',
+           '-oFastTreeMP', 'FastTree-' + format(spec.version.dotted) + '.c',
+           '-lm')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
