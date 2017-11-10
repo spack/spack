@@ -61,12 +61,18 @@ class Nek5000(Package):
             msg = 'Cannot build Nek5000 without a Fortran compiler.'
             raise RuntimeError(msg)
 
+    @run_before('install')
+    def c_check(self):
+        if not self.compiler.cc:
+            msg = 'Cannot build Nek5000 without a C compiler.'
+            raise RuntimeError(msg)
+
     def install(self, spec, prefix):
         toolsDir   = 'tools'
         binDir     = 'bin'
 
-        F77 = spack_f77
-        CC  = spack_cc
+        F77 = self.compiler.fc
+        CC  = self.compiler.cc
 
         # Build the tools, maketools copy them to Nek5000/bin by default.
         # We will then install Nek5000/bin under prefix after that.
@@ -98,6 +104,8 @@ class Nek5000(Package):
             if '+mpi' in spec:
                 F77 = spec['mpi'].mpif77
                 CC  = spec['mpi'].mpicc
+            else:
+                filter_file(r'^#MPI=0', 'MPI=0', 'makenek')
 
             # Update the makenek to use correct compilers and
             # Nek5000 source.
