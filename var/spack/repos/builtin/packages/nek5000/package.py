@@ -56,7 +56,7 @@ class Nek5000(Package):
     variant('prenek',   default=True, description='Build prenek tool.')
 
     depends_on('mpi', when="+mpi")
-    depends_on('visit', when="+vist")
+    depends_on('visit', when="+visit")
 
     @run_before('install')
     def fortran_check(self):
