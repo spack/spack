@@ -40,7 +40,8 @@ class Openblas(MakefilePackage):
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
-    version('develop', git='https://github.com/xianyi/OpenBLAS.git', branch='develop')
+    version('develop', git='https://github.com/xianyi/OpenBLAS.git',
+            branch='develop')
 
     variant(
         'shared',
@@ -59,6 +60,18 @@ class Openblas(MakefilePackage):
         description='Multithreading support',
         values=('pthreads', 'openmp', 'none'),
         multi=False
+    )
+
+    variant(
+        'virtualmachine',
+        default=False,
+        description="Adding options to build openblas on Linux virtual machine"
+    )
+
+    variant(
+        'num_threads',
+        default=0,
+        description="Limiting number of threads available for multihreading"
     )
 
     # virtual dependency
@@ -119,6 +132,20 @@ class Openblas(MakefilePackage):
             'FC={0}'.format(spack_f77),
             'MAKE_NO_J=1'
         ]
+
+        if self.spec.variants['virtualmachine'].value:
+            make_defs += [
+                'DYNAMIC_ARCH=1',
+                'NO_AVX2=1'
+            ]
+
+        if self.spec.variants['num_threads'].value > 0:
+            make_defs += [
+                'NUM_THREADS=%s' % self.spec.variants['num_threads'].value
+            ]
+
+
+
         if self.spec.variants['cpu_target'].value:
             make_defs += [
                 'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
