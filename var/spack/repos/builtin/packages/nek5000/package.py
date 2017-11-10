@@ -40,8 +40,10 @@ class Nek5000(Package):
     version('develop',      git='https://github.com/Nek5000/Nek5000.git',
         branch='master')
 
-    # MPI
-    variant('mpi', default=True, description='Build with MPI.')
+    # MPI, Profiling and Visit variants
+    variant('mpi',       default=True, description='Build with MPI.')
+    variant('profiling', default=True, description='Build with Profiling data.')
+    variant('visit',     default=False, description='Build with Visit.')
 
     # Tools
     variant('genbox',   default=True, description='Build genbox tool.')
@@ -54,6 +56,7 @@ class Nek5000(Package):
     variant('prenek',   default=True, description='Build prenek tool.')
 
     depends_on('mpi', when="+mpi")
+    depends_on('visit', when="+vist")
 
     @run_before('install')
     def fortran_check(self):
@@ -106,6 +109,12 @@ class Nek5000(Package):
                 CC  = spec['mpi'].mpicc
             else:
                 filter_file(r'^#MPI=0', 'MPI=0', 'makenek')
+
+            if '+profiling' not in spec:
+                filter_file(r'^#PROFILING=0', 'PROFILING=0', 'makenek')
+
+            if '+visit' in spec:
+                filter_file(r'^#VISIT=1', 'VISIT=1', 'makenek')
 
             # Update the makenek to use correct compilers and
             # Nek5000 source.
