@@ -15,7 +15,7 @@ briefly cover the Spack config configuration file, which manages more
 high-level Spack configuration. For all of these features we will
 demonstrate how we build up a full configuration file. For some we
 will then demonstrate how the configuration affects the install
-command, and for others we will use the `spack spec` command to
+command, and for others we will use the ``spack spec`` command to
 demonstrate how the configuration changes have affected Spack's
 concretization algorithm. The provided output is all from a server
 running ubuntu version 16.04.
@@ -36,34 +36,38 @@ order of decreasing priority, are:
 - Default configurations
 
 Spack user configurations are stored in the user's home directory
-under the `.spack/` directory. Project configurations are stored
-within the Spack installation under `SPACK_ROOT/etc/`. System
-configurations are stored under `/etc/spack`. Default configurations
-are stored under `$SPACK_ROOT/etc/spack/defaults`. Spack contains
-sensible default configurations for several platforms in the relevant
-files under `$SPACK_ROOT/etc/spack/defaults/<platform>/`.
+under the ``.spack/`` directory. Project configurations are stored
+within the Spack installation under ``$SPACK_ROOT/etc/``. System
+configurations are stored under ``/etc/spack``. Default configurations
+are stored under ``$SPACK_ROOT/etc/spack/defaults``. At each of these
+scopes, there are two levels of configuration that can be used:
+platform-specific and platform-independent. Spack contains sensible
+default configurations for several platforms in the relevant files
+under ``$SPACK_ROOT/etc/spack/defaults/<platform>/``. Users should
+never need to change the default configurations, which are tracked by
+git.
 
-For example, compiler configuration files named `compilers.yaml` can
+For example, compiler configuration files named ``compilers.yaml`` can
 appear in 8 places and be used by Spack, in the following decreasing
 order of precedence.
 
-- `~/.spack/<platform>/compilers.yaml`
-- `~/.spack/compilers.yaml`
-- `$SPACK_ROOT/etc/<platform>/compilers.yaml`
-- `$SPACK_ROOT/etc/compilers.yaml`
-- `/etc/spack/<platform>/compilers.yaml`
-- `/etc/spack/compilers.yaml`
-- `$SPACK_ROOT/etc/defaults/<platform>/compilers.yaml`
-- `$SPACK_ROOT/etc/defaults/compilers.yaml`
+- ``~/.spack/<platform>/compilers.yaml``
+- ``~/.spack/compilers.yaml``
+- ``$SPACK_ROOT/etc/<platform>/compilers.yaml``
+- ``$SPACK_ROOT/etc/compilers.yaml``
+- ``/etc/spack/<platform>/compilers.yaml``
+- ``/etc/spack/compilers.yaml``
+- ``$SPACK_ROOT/etc/defaults/<platform>/compilers.yaml``
+- ``$SPACK_ROOT/etc/defaults/compilers.yaml``
 
 Spack configurations are YAML dictionaries. Every configuration file
 begins with a top-level dictionary that tells Spack which
 configuration set it modifies. When Spack checks it's configuration,
 the configuration scopes are updated as dictionaries in increasing
 order of precedence, allowing higher precedence files to override
-lower. YAML dictionaries use a colon ``:`` to specify key-value
+lower. YAML dictionaries use a colon ":" to specify key-value
 pairs. Spack extends YAML syntax slightly to allow a double-colon
-``::`` to specify a key-value pair. When a double-colon is used to
+"::" to specify a key-value pair. When a double-colon is used to
 specify a key-value pair, instead of adding that section Spack
 replaces what was in that section with the new value. For example, a
 user compilers configuration file as follows:
@@ -86,7 +90,7 @@ user compilers configuration file as follows:
       target: x86_64
 
 ensures that no other compilers are used, as the user configuration
-scope is the last scope searched and the `compilers::` line replaces
+scope is the last scope searched and the ``compilers::`` line replaces
 all previous configuration files information. If the same
 configuration file had a single colon instead of the double colon, it
 would add the clang version 6.0 compiler to whatever other compilers
@@ -101,7 +105,7 @@ Configuring New Spack compilers
 For most tasks, we can use Spack with the compilers autodetected the
 first time Spack runs on a system. As we discussed in the basic
 installation section, we can also tell Spack where compilers are
-located using the `spack compiler add` command. However, in some
+located using the ``spack compiler add`` command. However, in some
 circumstances we want even more fine-grained control over the
 compilers available. This section will teach you how to exercise that
 control using the compilers configuration file.
@@ -165,17 +169,17 @@ to the compilers.yaml file.
       target: x86_64
 
 Let's talk about the sections we've changed of this compiler
-entry. The biggest change we've made is to the `paths` section. This
+entry. The biggest change we've made is to the ``paths`` section. This
 lists the paths to the compilers to use for each
 language/specification. In this case, we point to the clang compiler
 for C/C++ and the gfortran compiler for both specifications of
-fortran. We've also changed the `spec` entry for this compiler. The
-`spec` entry is effectively the name of the compiler for Spack. It
-consists of a name and a version number, separated by the `@`
+fortran. We've also changed the ``spec`` entry for this compiler. The
+``spec`` entry is effectively the name of the compiler for Spack. It
+consists of a name and a version number, separated by the ``@``
 sign. The name must be one of the supported compiler names in Spack
 (gcc, intel, pgi, xl, xl_r, clang, nag, cce). The version number can
-be an arbitrary string of alphanumeric characters, as well as `-`,
-`.`, and `_`. The `target` and `operating_system` sections we leave
+be an arbitrary string of alphanumeric characters, as well as ``-``,
+``.``, and ``_``. The ``target`` and ``operating_system`` sections we leave
 unchanged. These sections specify when Spack can use different
 compilers, and are primarily useful for configuration files that will
 be used across multiple systems.
@@ -191,7 +195,7 @@ This new compiler also works on fortran codes
 
 .. code-block:: console
 
-  $ spack install zoltan %clang
+  $ spack install cfitsio %clang@3.8.0-gfortran
   ADD BINARY CACHING OUTPUT
 
 --------------------------
@@ -203,8 +207,8 @@ a particular computing environment. Spack provides configuration
 options for setting compiler flags every time a specific compiler is
 invoked. These flags become part of the package spec and therefore of
 the build provenance. As on the command line, the flags are set
-through the implicit build variables `cflags`, `cxxflags`, `cppflags`,
-`fflags`, `ldflags`, and `ldlibs`.
+through the implicit build variables ``cflags``, ``cxxflags``, ``cppflags``,
+``fflags``, ``ldflags``, and ``ldlibs``.
 
 Let's open our compilers configuration file again and add a compiler flag.
 
@@ -225,7 +229,7 @@ Let's open our compilers configuration file again and add a compiler flag.
       spec: clang@3.8.0-gfortran
       target: x86_64
 
-We can test this out using the `spack spec` command to show how the
+We can test this out using the ``spack spec`` command to show how the
 spec is concretized.
 
 .. code-block:: console
@@ -249,7 +253,7 @@ spec is concretized.
                   ^xz@5.2.3%clang@3.8.0-gfortran cppflags="-fPIC"  arch=linux-ubuntu16.04-x86_64
                   ^zlib@1.2.11%clang@3.8.0-gfortran cppflags="-fPIC" +pic+shared arch=linux-ubuntu16.04-x86_64
 
-We can see that ``cppflags=-fPIC`` has been added to every node in the DAG.
+We can see that "cppflags=-fPIC" has been added to every node in the DAG.
 
 -------------------------------
 Advanced Compiler Configuration
@@ -258,26 +262,26 @@ Advanced Compiler Configuration
 There are three fields of the compiler configuration entry that we
 have not talked about yet.
 
-The `modules` field of the compiler is used primarily on Cray systems,
+The ``modules`` field of the compiler is used primarily on Cray systems,
 but can be useful on any system that has compilers that are only
 useful when a particular module is loaded. Any modules in the
-`modules` field of the compiler configuration will be loaded as part
+``modules`` field of the compiler configuration will be loaded as part
 of the build environment for packages using that compiler.
 
-The `extra_rpaths` field of the compiler configuration is used for
+The ``extra_rpaths`` field of the compiler configuration is used for
 compilers that do not rpath all of their dependencies by
 default. Since compilers are generally installed externally to Spack,
 Spack is unable to manage compiler dependencies and enforce
 rpath-ing. This can lead to packages not finding link dependencies
 imposed by the compiler properly. For compilers that impose link
 dependencies on the resulting executables that are not rpath'd into
-the executable automatically, the `extra_rpath` field of the compiler
+the executable automatically, the ``extra_rpath`` field of the compiler
 configuration tells Spack which dependencies to rpath into every
 executable created by that compiler. The executables will then be able
 to find the link dependencies imposed by the compiler.
 
-The `environment` field of the compiler configuration is used for
-generally ``badly behaved`` compiler installations that require some
+The ``environment`` field of the compiler configuration is used for
+generally "badly behaved" compiler installations that require some
 sort of environment variable to be set to work properly. The contents
 of this field is a dictionary of environemnt variable names and values
 to set before the compiler is invoked. We generally recommend avoiding
@@ -288,51 +292,16 @@ pathological cases.
 Configuring Package Preferences in Spack
 ----------------------------------------
 
-Package preferences in Spack are managed through the `packages.yaml` configuration file. First, we will look at the default `packages.yaml` file.
+Package preferences in Spack are managed through the ``packages.yaml``
+configuration file. First, we will look at the default
+``packages.yaml`` file.
 
 .. code-block:: console
 
   $ emacs -nw $SPACK_ROOT/etc/spack/defaults/packages.yaml
 
-.. code-block:: yaml
-
-  # -------------------------------------------------------------------------
-  # This file controls default concretization preferences for Spack.
-  #
-  # Settings here are versioned with Spack and are intended to provide
-  # sensible defaults out of the box. Spack maintainers should edit this
-  # file to keep it current.
-  #
-  # Users can override these settings by editing the following files.
-  #
-  # Per-spack-instance settings (overrides defaults):
-  #   $SPACK_ROOT/etc/spack/packages.yaml
-  #
-  # Per-user settings (overrides default and site settings):
-  #   ~/.spack/packages.yaml
-  # -------------------------------------------------------------------------
-  packages:
-    all:
-      compiler: [gcc, intel, pgi, clang, xl, nag]
-      providers:
-        awk: [gawk]
-        blas: [openblas]
-        daal: [intel-daal]
-        elf: [elfutils]
-        golang: [gcc]
-        ipp: [intel-ipp]
-        java: [jdk]
-        lapack: [openblas]
-        mkl: [intel-mkl]
-        mpe: [mpe2]
-        mpi: [openmpi, mpich]
-        opencl: [pocl]
-        openfoam: [openfoam-com, openfoam-org, foam-extend]
-        pil: [py-pillow]
-        scalapack: [netlib-scalapack]
-        szip: [libszip, libaec]
-        tbb: [intel-tbb]
-        jpeg: [libjpeg-turbo, libjpeg]
+.. literalinclude:: ../../../etc/spack/defaults/packages.yaml
+   :language: yaml
 
 This sets the default preferences for compilers and for providers for
 virtual packages. To illustrate how this works, suppose we want to
@@ -404,7 +373,7 @@ Variant Preference Configuration
 The packages configuration file can also set variant preferences for
 packages. For example, let's change our preferences to build all
 packages without static libraries. We will accomplish this by turning
-off the `shared` variant on all packages that have one.
+off the ``shared`` variant on all packages that have one.
 
 .. code-block:: yaml
 
@@ -415,7 +384,7 @@ off the `shared` variant on all packages that have one.
         mpi: [mpich, openmpi]
       variants: ~shared
 
-We can check the effect of this command with `spack spec hdf5` again.
+We can check the effect of this command with ``spack spec hdf5`` again.
 
 .. code-block:: console
 
@@ -439,7 +408,7 @@ So far we have only made global changes to the package preferences. As
 we've seen throughout this tutorial, hdf5 builds with MPI enabled by
 default in Spack. If we were working on a project that would routinely
 need serial hdf5, that might get annoying quickly, having to type
-`hdf5~mpi` all the time. Instead, we'll update our preferences for
+``hdf5~mpi`` all the time. Instead, we'll update our preferences for
 hdf5.
 
 .. code-block:: yaml
@@ -598,7 +567,7 @@ of hdf5? Well, fortunately we have mpich installed on these systems.
         mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64: /usr
       buildable: False
 
-If we concretize `hdf5+mpi` with this configuration file, we will just
+If we concretize ``hdf5+mpi`` with this configuration file, we will just
 build with an alternate MPI implementation.
 
 .. code-block:: console
@@ -632,10 +601,10 @@ build with an alternate MPI implementation.
 We have only expressed a preference for mpich over other MPI
 implementations, and Spack will happily build with one we haven't
 forbid it from using. We could resolve this by requesting
-`hdf5%clang+mpi^mpich` explicitly, or we can configure Spack not to
+``hdf5%clang+mpi^mpich`` explicitly, or we can configure Spack not to
 use any other MPI implementation. Since we're focused on
 configurations here and the former can get tedious, we'll need to
-modify our `packages.yaml` file again.
+modify our ``packages.yaml`` file again.
 
 While we're at it, we can configure hdf5 to build with MPI by default
 again.
