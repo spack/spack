@@ -105,6 +105,13 @@ class Paraview(CMakePackage):
                              paraview_version))
         run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
                              paraview_version))
+        if '+python' in self.spec:
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 paraview_version))
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 paraview_version, 'site-packages'))
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 paraview_version, 'site-packages', 'vtk'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
