@@ -110,7 +110,8 @@ class Plasma(MakefilePackage):
             ld_flags = " -llapacke -lcblas"
 
         slibs = []
-        if self.spec.satisfies('%gcc') or self.spec.satisfies('%clang'):
+        if (self.spec.satisfies('%gcc') or self.spec.satisfies('%clang')) \
+           and not'platform=cray' in self.spec:
             slibs.append('libgfortran')
         slibs.append('libm')
         system_libs = find_system_libraries(slibs)
