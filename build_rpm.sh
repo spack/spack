@@ -34,8 +34,8 @@ mpis=(
 
 declare -A nonmpipkgs
 nonmpipkgs=(
-    ["python@2.7.13"]=""
-    ["python@3.6.1"]=""
+    ["python@2.7.14"]=""
+    ["python@3.6.2"]=""
     ["miniconda2@4.3.30"]=""
     ["miniconda3@4.3.30"]=""
     ["openblas@0.2.20 threads=openmp"]=""
@@ -51,16 +51,16 @@ nonmpipkgs=(
     ["cudnn@6.0.cuda8"]="^cuda@8.0.61"
     ["cudnn@5.1.cuda8"]="^cuda@8.0.61"
     ["samtools@1.6"]=""
-    ["r@3.4.1+external-lapack"]="^openblas+openmp"
+    ["r@3.4.1+external-lapack"]="^openblas threads=openmp"
     ["r@3.4.1+external-lapack"]="^intel-parallel-studio+mkl"
     ["fftw@3.3.6-pl2~mpi+openmp"]=""
 )
 
 declare -A mpipkgs
 mpipkgs=(
-    ["fftw@3.3.6-pl2+mpi+openmp"]=""
-    ["gromacs+mpi@5.1.4"]="^fftw+mpi+openmp@3.3.6-pl2"
-    ["gromacs+mpi+cuda@5.1.4"]="^fftw+mpi+openmp@3.3.6-pl2"
+    # ["fftw@3.3.6-pl2+mpi+openmp"]=""
+    # ["gromacs+mpi~cuda@5.1.4"]="^fftw+mpi+openmp@3.3.6-pl2"
+    # ["gromacs+mpi+cuda@5.1.4"]="^fftw+mpi+openmp@3.3.6-pl2"
 )
 
 declare -A otherpkgs
@@ -102,7 +102,23 @@ do
         s $mpi %$compiler
         for pkg in "${!mpipkgs[@]}"
         do
-            s $pkg %$compiler ${mpipkgs[$pkg]}^$mpi
+            pkgname=$pkg
+            pkgspec=${mpipkgs[$pkg]}
+            # Rule checking
+            if [[ "$mpi" != *"cuda"* ]] && [[ "$pkgname" != *"cuda"* ]]; then
+                echo "Build $pkgname^$pkgspec^$mpi against $compiler since CUDA is not involved."
+           			s $pkgname %$compiler $pkgspec^$mpi
+            elif [[ "$mpi" == "*openmpi*" ]] && [[ "$mpi" == "*+cuda*" ]] && [[ "$pkgname" == "*~cuda*" ]]; then
+                continue
+            elif [[ "$mpi" == "*openmpi*" ]] && [[ "$mpi" == "*~cuda*" ]] && [[ "$pkgname" == "*+cuda*" ]]; then
+                continue
+            elif [[ "$mpi" == "*mvapich*" ]] && [[ "$mpi" == "*+cuda*" ]] && [[ "$pkgname" == "*~cuda*" ]]; then
+                continue
+            elif [[ "$mpi" == "*mvapich*" ]] && [[ "$mpi" == "*~cuda*" ]] && [[ "$pkgname" == "*+cuda*" ]]; then
+                continue
+            else
+                s $pkgname %$compiler $pkgspec^$mpi
+            fi
         done
     done
 done
