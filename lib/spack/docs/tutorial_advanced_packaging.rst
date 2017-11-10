@@ -17,9 +17,9 @@ occurrences. You can rest assured that in every case Spack remains faithful to
 its philosophy: keep simple things simple, but be flexible enough when
 complex requests arise!
 
------------------------
-Set up for the tutorial
------------------------
+----------------------
+Setup for the tutorial
+----------------------
 
 The simplest way to follow along with this tutorial is to use our Docker image,
 which comes with Spack and various packages pre-installed:
@@ -259,7 +259,7 @@ key is used to compute the result according to the following algorithm:
   Given any pair of <query-key> and <build-attribute>:
 
     1. If <query-key> is the name of a virtual spec and the package
-       providing it has a an attribute named '<query-key>_<build-attribute>'
+       providing it has an attribute named '<query-key>_<build-attribute>'
        return it
 
     2. Otherwise if the package has an attribute named '<build-attribute>'
@@ -289,7 +289,7 @@ Extra query parameters
 An advanced feature of the Spec's build-interface protocol is the support
 for extra parameters after the subscript key. In fact, any of the keys used in the query
 can be followed by a comma separated list of extra parameters which can be
-inspected by the package receiving the request to fine tune a response.
+inspected by the package receiving the request to fine-tune a response.
 
 Let's look at an example and try to install ``netcdf``:
 
@@ -408,11 +408,18 @@ and construct the list of library we need to return accordingly.
 
 What we achieved is that the complexity of dealing with ``intel-parallel-studio``
 is now gathered in the package itself, instead of being spread
-all over its possible dependents. A package using MPI, or LAPACK, thus don't care
-anymore what is the actual implementation that is going to be used, and has
+all over its possible dependents.
+Thus, a package that uses MPI or LAPACK doesn't care which implementation it uses,
+as each virtual dependency has
 *a uniform interface* to ask for libraries or headers and manipulate them.
 The packages that provide this virtual spec, on the other hand, have a clear
-way to differentiate their answer to the query.
+way to differentiate their answer to the query [#uniforminterface]_.
+
+.. [#uniforminterface] Before this interface was added, each package that
+   depended on MPI or LAPACK had dozens of lines of code copied from other
+   packages telling it where to find the libraries and what they are called.
+   With the addition of this interface, the virtual dependency itself tells
+   other packages that depend on it where it can find its libraries.
 
 ---------------------------
 Package's build environment
@@ -480,7 +487,7 @@ Another common occurrence, particularly for packages like ``r`` and ``python``
 that support extensions and for packages that provide build tools,
 is to require *their dependents* to have some environment variables set.
 
-The mechanism is similar to the what we just saw, except that we override the
+The mechanism is similar to what we just saw, except that we override the
 :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
 function, which takes one additional argument, i.e. the dependent spec that needs the modified
 environment. Let's practice completing the ``mpich`` package:
@@ -524,16 +531,16 @@ At this point we can, for instance, install ``netlib-scalapack``:
 
 and double check the environment logs to verify that every variable was
 set to the correct value. More complicated examples of the use of this function
-may be found in the ``r`` and in the ``python`` package.
+may be found in the ``r`` and ``python`` package.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Attach attributes to other packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Build tools usually provide also a set of executables that can be used
+Build tools usually also provide a set of executables that can be used
 when another package is being installed. Spack gives the opportunity
 to monkey-patch dependent modules and attach attributes to them. This
-helps making the packager experience as similar as possible to what would
+helps make the packager experience as similar as possible to what would
 have been the manual installation of the same package.
 
 An example here is the ``automake`` package, which overrides
@@ -549,4 +556,8 @@ An example here is the ``automake`` package, which overrides
           setattr(module, name, self._make_executable(name))
 
 so that every other package that depends on it can use directly ``aclocal``
-and ``automake``, if need be.
+and ``automake`` with the usual function call syntax of :py:class:`Executable <spack.util.executable.Executable>`:
+
+.. code-block:: python
+
+  aclocal('--force')
