@@ -30,9 +30,9 @@ packages:
 
     intel-parallel-studio:
         paths:
-            intel-parallel-studio@cluster.2015.6%intel+all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-15.0.6/intel-parallel-studio-cluster.2015.6-v4m6xngrq67y7hopcnxg6qb6onvruevy
-            intel-parallel-studio@cluster.2016.4%intel+all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-kd3ufpcli3tp4x4nbrduqzm5vvlfnrur
-            intel-parallel-studio@cluster.2017.4%intel+all+daal~ilp64+ipp+mkl+mpi~newdtags+openmp+rpath+shared+tools: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.4/intel-parallel-studio-cluster.2017.4-bwdcdc6362g5qrytkjbec3iiskhqmgpw
+            intel-parallel-studio@cluster.2015.6%intel+daal~ilp64+ipp+mkl+mpi~newdtags+rpath+shared: /lustre/spack/tools/linux-centos7-x86_64/intel-15.0.6/intel-parallel-studio-cluster.2015.6-v4m6xngrq67y7hopcnxg6qb6onvruevy
+            intel-parallel-studio@cluster.2016.4%intel+daal~ilp64+ipp+mkl+mpi~newdtags+rpath+shared: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-kd3ufpcli3tp4x4nbrduqzm5vvlfnrur
+            intel-parallel-studio@cluster.2017.4%intel+daal~ilp64+ipp+mkl+mpi~newdtags+rpath+shared: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.4/intel-parallel-studio-cluster.2017.4-bwdcdc6362g5qrytkjbec3iiskhqmgpw
         buildable: False
 
     jdk:
