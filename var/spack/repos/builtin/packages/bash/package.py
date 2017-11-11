@@ -37,8 +37,6 @@ class Bash(AutotoolsPackage):
     depends_on('ncurses')
     depends_on('readline@5.0:')
 
-    install_targets = ['install', 'install-headers']
-
     def configure_args(self):
         spec = self.spec
 
@@ -51,3 +49,12 @@ class Bash(AutotoolsPackage):
 
     def check(self):
         make('tests')
+
+    @property
+    def install_targets(self):
+        args = ['install']
+
+        if self.spec.satisfies('@4.4:'):
+            args.append('install-headers')
+
+        return args
