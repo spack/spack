@@ -68,12 +68,6 @@ class Openblas(MakefilePackage):
         description="Adding options to build openblas on Linux virtual machine"
     )
 
-    variant(
-        'num_threads',
-        default='0',
-        description="Limiting number of threads available for multihreading"
-    )
-
     # virtual dependency
     provides('blas')
     provides('lapack')
@@ -138,13 +132,6 @@ class Openblas(MakefilePackage):
                 'DYNAMIC_ARCH=1',
                 'NO_AVX2=1'
             ]
-
-        if self.spec.variants['num_threads'].value > 0:
-            make_defs += [
-                'NUM_THREADS=%s' % self.spec.variants['num_threads'].value
-            ]
-
-
 
         if self.spec.variants['cpu_target'].value:
             make_defs += [
