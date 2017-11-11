@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,8 @@ import spack.cmd.buildcache as buildcache
 from spack.spec import Spec
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
-from spack.relocate import needs_binary_relocation, get_patchelf
+from spack.relocate import needs_binary_relocation, needs_text_relocation
+from spack.relocate import get_patchelf
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -94,6 +95,7 @@ echo $PATH"""
     pkg = spack.repo.get(spec)
     fake_fetchify(mock_archive.url, pkg)
     pkg.do_install()
+    pkghash = '/' + spec.dag_hash(7)
 
     # Put some non-relocatable file in there
     filename = os.path.join(spec.prefix, "dummy.txt")
@@ -133,7 +135,7 @@ echo $PATH"""
         pkg.do_uninstall(force=True)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', str(spec)])
+        args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # create build cache with relative path and signing
@@ -149,7 +151,7 @@ echo $PATH"""
         buildcache.install_tarball(spec, args)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', str(spec)])
+        args = parser.parse_args(['install', '-f', str(pkghash)])
         buildcache.buildcache(parser, args)
 
     else:
@@ -166,12 +168,12 @@ echo $PATH"""
         buildcache.install_tarball(spec, args)
 
         # test overwrite install without verification
-        args = parser.parse_args(['install', '-f', '-y', str(spec)])
+        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # create build cache with relative path
         args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', '-y', str(spec)])
+            ['create', '-d', mirror_path, '-f', '-r', '-y', str(pkghash)])
         buildcache.buildcache(parser, args)
 
         # Uninstall the package
@@ -182,7 +184,7 @@ echo $PATH"""
         buildcache.install_tarball(spec, args)
 
         # test overwrite install
-        args = parser.parse_args(['install', '-f', '-y', str(spec)])
+        args = parser.parse_args(['install', '-f', '-y', str(pkghash)])
         buildcache.buildcache(parser, args)
 
     # Validate the relocation information
@@ -217,6 +219,8 @@ echo $PATH"""
 
 def test_relocate():
     assert (needs_binary_relocation('relocatable') is False)
+    assert (needs_binary_relocation('link') is False)
+    assert (needs_text_relocation('link') is False)
 
     out = macho_make_paths_relative('/Users/Shares/spack/pkgC/lib/libC.dylib',
                                     '/Users/Shared/spack',
@@ -224,8 +228,8 @@ def test_relocate():
                                      '/Users/Shared/spack/pkgB/lib',
                                      '/usr/local/lib'),
                                     ('/Users/Shared/spack/pkgA/libA.dylib',
-                                        '/Users/Shared/spack/pkgB/libB.dylib',
-                                        '/usr/local/lib/libloco.dylib'),
+                                     '/Users/Shared/spack/pkgB/libB.dylib',
+                                     '/usr/local/lib/libloco.dylib'),
                                     '/Users/Shared/spack/pkgC/lib/libC.dylib')
     assert out == (['@loader_path/../../../../Shared/spack/pkgA/lib',
                     '@loader_path/../../../../Shared/spack/pkgB/lib',
@@ -241,8 +245,8 @@ def test_relocate():
                                      '/Users/Shared/spack/pkgB/lib',
                                      '/usr/local/lib'),
                                     ('/Users/Shared/spack/pkgA/libA.dylib',
-                                        '/Users/Shared/spack/pkgB/libB.dylib',
-                                        '/usr/local/lib/libloco.dylib'), None)
+                                     '/Users/Shared/spack/pkgB/libB.dylib',
+                                     '/usr/local/lib/libloco.dylib'), None)
 
     assert out == (['@loader_path/../../pkgA/lib',
                     '@loader_path/../../pkgB/lib',
@@ -257,8 +261,8 @@ def test_relocate():
                                '/Users/Shared/spack/pkgB/lib',
                                '/usr/local/lib'),
                               ('/Users/Shared/spack/pkgA/libA.dylib',
-                                  '/Users/Shared/spack/pkgB/libB.dylib',
-                                  '/usr/local/lib/libloco.dylib'),
+                               '/Users/Shared/spack/pkgB/libB.dylib',
+                               '/usr/local/lib/libloco.dylib'),
                               '/Users/Shared/spack/pkgC/lib/libC.dylib')
     assert out == (['/Applications/spack/pkgA/lib',
                     '/Applications/spack/pkgB/lib',
@@ -274,8 +278,8 @@ def test_relocate():
                                '/Users/Shared/spack/pkgB/lib',
                                '/usr/local/lib'),
                               ('/Users/Shared/spack/pkgA/libA.dylib',
-                                  '/Users/Shared/spack/pkgB/libB.dylib',
-                                  '/usr/local/lib/libloco.dylib'),
+                               '/Users/Shared/spack/pkgB/libB.dylib',
+                               '/usr/local/lib/libloco.dylib'),
                               None)
     assert out == (['/Applications/spack/pkgA/lib',
                     '/Applications/spack/pkgB/lib',
@@ -300,25 +304,46 @@ def test_relocate():
 def test_relocate_macho(tmpdir):
     with tmpdir.as_cwd():
         get_patchelf()
-        assert (needs_binary_relocation('Mach-O') is True)
+        assert (needs_binary_relocation('Mach-O'))
 
-        macho_get_paths('/bin/bash')
+        rpaths, deps, idpath = macho_get_paths('/bin/bash')
+        nrpaths, ndeps, nid = macho_make_paths_relative('/bin/bash', '/usr',
+                                                        rpaths, deps, idpath)
         shutil.copyfile('/bin/bash', 'bash')
+        modify_macho_object('bash',
+                            rpaths, deps, idpath,
+                            nrpaths, ndeps, nid)
 
-        modify_macho_object('bash', '/bin/bash', '/usr', '/opt', False)
-        modify_macho_object('bash', '/bin/bash', '/usr', '/opt', True)
+        rpaths, deps, idpath = macho_get_paths('/bin/bash')
+        nrpaths, ndeps, nid = macho_replace_paths('/usr', '/opt',
+                                                  rpaths, deps, idpath)
+        shutil.copyfile('/bin/bash', 'bash')
+        modify_macho_object('bash',
+                            rpaths, deps, idpath,
+                            nrpaths, ndeps, nid)
 
+        path = '/usr/lib/libncurses.5.4.dylib'
+        rpaths, deps, idpath = macho_get_paths(path)
+        nrpaths, ndeps, nid = macho_make_paths_relative(path, '/usr',
+                                                        rpaths, deps, idpath)
+        shutil.copyfile(
+            '/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
+        modify_macho_object('libncurses.5.4.dylib',
+                            rpaths, deps, idpath,
+                            nrpaths, ndeps, nid)
+
+        rpaths, deps, idpath = macho_get_paths(path)
+        nrpaths, ndeps, nid = macho_replace_paths('/usr', '/opt',
+                                                  rpaths, deps, idpath)
         shutil.copyfile(
             '/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
         modify_macho_object(
             'libncurses.5.4.dylib',
-            '/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', False)
-        modify_macho_object(
-            'libncurses.5.4.dylib',
-            '/usr/lib/libncurses.5.4.dylib', '/usr', '/opt', True)
+            rpaths, deps, idpath,
+            nrpaths, ndeps, nid)
 
 
 @pytest.mark.skipif(sys.platform != 'linux2',
                     reason="only works with Elf objects")
 def test_relocate_elf():
-    assert (needs_binary_relocation('ELF') is True)
+    assert (needs_binary_relocation('ELF'))

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -91,6 +91,7 @@ SPACK_PREFIX = 'SPACK_PREFIX'
 SPACK_INSTALL = 'SPACK_INSTALL'
 SPACK_DEBUG = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC = 'SPACK_SHORT_SPEC'
+SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 
 
@@ -297,6 +298,7 @@ def set_build_environment_variables(pkg, env, dirty):
     if spack.debug:
         env.set(SPACK_DEBUG, 'TRUE')
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
@@ -370,6 +372,104 @@ def set_module_variables_for_package(pkg, module):
 
     # Platform-specific library suffix.
     m.dso_suffix = dso_suffix
+
+    def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
+        compiler_path = kwargs.get('compiler', m.spack_cc)
+        compiler = Executable(compiler_path)
+
+        return _static_to_shared_library(pkg.spec.architecture, compiler,
+                                         static_lib, shared_lib, **kwargs)
+
+    m.static_to_shared_library = static_to_shared_library
+
+
+def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
+                              **kwargs):
+    """
+    Converts a static library to a shared library. The static library has to
+    be built with PIC for the conversion to work.
+
+    Parameters:
+        static_lib (str): Path to the static library.
+        shared_lib (str): Path to the shared library. Default is to derive
+                          from the static library's path.
+
+    Keyword arguments:
+        compiler (str): Path to the compiler. Default is spack_cc.
+        compiler_output: Where to print compiler output to.
+        arguments (str list): Additional arguments for the compiler.
+        version (str): Library version. Default is unspecified.
+        compat_version (str): Library compatibility version. Default is
+                              version.
+    """
+    compiler_output = kwargs.get('compiler_output', None)
+    arguments = kwargs.get('arguments', [])
+    version = kwargs.get('version', None)
+    compat_version = kwargs.get('compat_version', version)
+
+    if not shared_lib:
+        shared_lib = '{0}.{1}'.format(os.path.splitext(static_lib)[0],
+                                      dso_suffix)
+
+    compiler_args = []
+
+    # TODO: Compiler arguments should not be hardcoded but provided by
+    #       the different compiler classes.
+    if 'linux' in arch:
+        soname = os.path.basename(shared_lib)
+
+        if compat_version:
+            soname += '.{0}'.format(compat_version)
+
+        compiler_args = [
+            '-shared',
+            '-Wl,-soname,{0}'.format(soname),
+            '-Wl,--whole-archive',
+            static_lib,
+            '-Wl,--no-whole-archive'
+        ]
+    elif 'darwin' in arch:
+        install_name = shared_lib
+
+        if compat_version:
+            install_name += '.{0}'.format(compat_version)
+
+        compiler_args = [
+            '-dynamiclib',
+            '-install_name {0}'.format(install_name),
+            '-Wl,-force_load,{0}'.format(static_lib)
+        ]
+
+        if compat_version:
+            compiler_args.append('-compatibility_version {0}'.format(
+                compat_version))
+
+        if version:
+            compiler_args.append('-current_version {0}'.format(version))
+
+    if len(arguments) > 0:
+        compiler_args.extend(arguments)
+
+    shared_lib_base = shared_lib
+
+    if version:
+        shared_lib += '.{0}'.format(version)
+    elif compat_version:
+        shared_lib += '.{0}'.format(compat_version)
+
+    compiler_args.extend(['-o', shared_lib])
+
+    # Create symlinks for version and compat_version
+    shared_lib_link = os.path.basename(shared_lib)
+
+    if version or compat_version:
+        os.symlink(shared_lib_link, shared_lib_base)
+
+    if compat_version and compat_version != version:
+        os.symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
+                                                     compat_version))
+
+    return compiler(*compiler_args, output=compiler_output)
 
 
 def get_rpath_deps(pkg):
@@ -507,7 +607,7 @@ def setup_package(pkg, dirty):
     # Otherwise the environment modifications could undo module changes, such
     # as unsetting LD_LIBRARY_PATH after a module changes it.
     for mod in pkg.compiler.modules:
-        # Fixes issue https://github.com/LLNL/spack/issues/3153
+        # Fixes issue https://github.com/spack/spack/issues/3153
         if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
             load_module("cce")
         load_module(mod)
