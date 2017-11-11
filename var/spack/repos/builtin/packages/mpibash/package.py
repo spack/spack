@@ -42,8 +42,6 @@ class Mpibash(AutotoolsPackage):
     def configure_args(self):
         args = [
             "--with-bashdir={0}".format(self.spec['bash'].prefix.include.bash),
-            'PKG_CONFIG_PATH={0}'.format(
-                self.spec['libcircle'].prefix.lib.pkgconfig),
             "CC={0}".format(self.spec['mpi'].mpicc)
         ]
         return args
