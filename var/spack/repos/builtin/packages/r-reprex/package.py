@@ -25,33 +25,23 @@
 from spack import *
 
 
-class Elfutils(AutotoolsPackage):
-    """elfutils is a collection of various binary tools such as
-    eu-objdump, eu-readelf, and other utilities that allow you to
-    inspect and manipulate ELF files. Refer to Table 5.Tools Included
-    in elfutils for Red Hat Developer for a complete list of binary
-    tools that are distributed with the Red Hat Developer Toolset
-    version of elfutils."""
+class RReprex(RPackage):
+    """Convenience wrapper that uses the 'rmarkdown' package to render small
+       snippets of code to target formats that include both code and output.
+       The goal is to encourage the sharing of small, reproducible, and
+       runnable examples on code-oriented websites, such as
+       <http://stackoverflow.com> and <https://github.com>, or in email.
+       'reprex' also extracts clean, runnable R code from various common
+       formats, such as copy/paste from an R session."""
 
-    homepage = "https://fedorahosted.org/elfutils/"
+    homepage = "https://github.com/jennybc/reprex"
+    url      = "https://cran.r-project.org/src/contrib/reprex_0.1.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/reprex"
 
-    url = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
-    list_url = "https://sourceware.org/elfutils/ftp"
-    list_depth = 1
+    version('0.1.1', 'fcd89995d7b35a2ddd4269973937bde3')
 
-    version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
-    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
-
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('gettext')
-
-    provides('elf@1')
-
-    def configure_args(self):
-        # configure doesn't use LIBS correctly
-        gettext_lib = self.spec['gettext'].prefix.lib,
-        return [
-            'LDFLAGS=-Wl,--no-as-needed -L%s -lintl' % gettext_lib,
-            '--enable-maintainer-mode']
+    depends_on('r-callr', type=('build', 'run'))
+    depends_on('r-clipr', type=('build', 'run'))
+    depends_on('r-knitr', type=('build', 'run'))
+    depends_on('r-rmarkdown', type=('build', 'run'))
+    depends_on('r-whisker', type=('build', 'run'))

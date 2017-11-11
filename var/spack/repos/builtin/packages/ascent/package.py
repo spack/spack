@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+
 from spack import *
 
 import socket
@@ -39,25 +41,19 @@ def cmake_cache_entry(name, value):
     return 'set({0} "{1}" CACHE PATH "")\n\n'.format(name, value)
 
 
-class Conduit(Package):
-    """Conduit is an open source project from Lawrence Livermore National
-    Laboratory that provides an intuitive model for describing hierarchical
-    scientific data in C++, C, Fortran, and Python. It is used for data
-    coupling between packages in-core, serialization, and I/O tasks."""
+class Ascent(Package):
+    """Ascent is an open source many-core capable lightweight in situ
+    visualization and analysis infrastructure for multi-physics HPC
+    simulations."""
 
-    homepage = "http://software.llnl.gov/conduit"
-    url = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
-
-    version('0.3.0', '6396f1d1ca16594d7c66d4535d4f898e')
-    # note: checksums on github automatic release source tars changed ~9/17
-    version('0.2.1', 'ed7358af3463ba03f07eddd6a6e626ff')
-    version('0.2.0', 'a7b398d493fd71b881a217993a9a29d4')
+    homepage = "https://github.com/Alpine-DAV/ascent"
+    url      = "https://github.com/Alpine-DAV/ascent"
 
     maintainers = ['cyrush']
 
-    version('master',
-            git='https://github.com/LLNL/conduit.git',
-            branch="master",
+    version('develop',
+            git='https://github.com/Alpine-DAV/ascent.git',
+            branch='develop',
             submodules=True)
 
     ###########################################################################
@@ -69,13 +65,20 @@ class Conduit(Package):
     variant("cmake", default=True,
             description="Build CMake (if off, attempt to use cmake from PATH)")
 
+    variant("mpi", default=True, description="Build Ascent MPI Support")
+
     # variants for python support
     variant("python", default=True, description="Build Conduit Python support")
 
-    # variants for comm and i/o
-    variant("mpi", default=True, description="Build Conduit MPI Support")
-    variant("hdf5", default=True, description="Build Conduit HDF5 support")
-    variant("silo", default=False, description="Build Conduit Silo support")
+    # variants for runtime features
+
+    variant("vtkh", default=True,
+            description="Build VTK-h filter and rendering support")
+
+    variant("tbb", default=True, description="Build tbb support")
+    variant("cuda", default=False, description="Build cuda support")
+
+    variant("adios", default=True, description="Build Adios filter support")
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
@@ -84,11 +87,8 @@ class Conduit(Package):
     # package dependencies
     ###########################################################################
 
-    #######################
-    # CMake
-    #######################
-    # cmake 3.8.2 or newer
-    depends_on("cmake@3.8.2:", when="+cmake")
+    depends_on("cmake", when="+cmake")
+    depends_on("conduit")
 
     #######################
     # Python
@@ -102,46 +102,23 @@ class Conduit(Package):
     depends_on("py-numpy~blas~lapack", when="+python", type=('build', 'run'))
 
     #######################
-    # I/O Packages
-    #######################
-    # TODO: cxx variant is disabled due to build issue Cyrus
-    # experienced on BGQ. When on, the static build tries
-    # to link against shared libs.
-    #
-    # we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5~cxx~mpi~fortran", when="+hdf5+shared")
-    depends_on("hdf5~shared~cxx~mpi~fortran", when="+hdf5~shared")
-
-    # we are not using silo's fortran features
-    depends_on("silo~fortran", when="+silo+shared")
-    depends_on("silo~shared~fortran", when="+silo~shared")
-
-    #######################
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
+    depends_on("py-mpi4py", when="+python+mpi")
+
+    #############################
+    # TPLs for Runtime Features
+    #############################
+
+    depends_on("vtkh", when="+vtkh")
+    depends_on("vtkh+cuda", when="+vtkh+cuda")
+    depends_on("adios", when="+adios")
 
     #######################
     # Documentation related
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
-    depends_on("doxygen", when="+doc")
-
-    def url_for_version(self, version):
-        """
-        Provide proper url
-        """
-        v = str(version)
-        if v == "0.2.0":
-            return "https://github.com/LLNL/conduit/archive/v0.2.0.tar.gz"
-        elif v == "0.2.1":
-            return "https://github.com/LLNL/conduit/archive/v0.2.1.tar.gz"
-        elif v == "0.3.0":
-            # conduit uses BLT (https://github.com/llnl/blt) as a submodule,
-            # since github does not automatically package source from
-            # submodules, conduit provides a custom src tarball
-            return "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
-        return url
 
     def install(self, spec, prefix):
         """
@@ -152,7 +129,7 @@ class Conduit(Package):
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
-            # (see: https://github.com/spack/spack/issues/2658)
+            # (see: https://github.com/LLNL/spack/issues/2658)
             if "+shared" in spec:
                 cmake_args.extend(std_cmake_args)
             else:
@@ -163,14 +140,12 @@ class Conduit(Package):
             cmake(*cmake_args)
             make()
             make("install")
+            # TODO also copy host_cfg_fname into install
 
     def create_host_config(self, spec, prefix):
         """
         This method creates a 'host-config' file that specifies
-        all of the options used to configure and build conduit.
-
-        For more details see about 'host-config' files see:
-            http://software.llnl.gov/conduit/building.html
+        all of the options used to configure and build ascent.
         """
 
         #######################
@@ -244,6 +219,21 @@ class Conduit(Package):
             cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
 
+        #######################################################################
+        # Core Dependencies
+        #######################################################################
+
+        #######################
+        # Conduit
+        #######################
+
+        cfg.write("# conduit from spack \n")
+        cfg.write(cmake_cache_entry("CONDUIT_DIR", spec['conduit'].prefix))
+
+        #######################################################################
+        # Optional Dependencies
+        #######################################################################
+
         #######################
         # Python
         #######################
@@ -293,33 +283,45 @@ class Conduit(Package):
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 
-        #######################################################################
-        # I/O Packages
-        #######################################################################
-
-        cfg.write("# I/O Packages\n\n")
-
         #######################
-        # HDF5
+        # CUDA
         #######################
 
-        cfg.write("# hdf5 from spack \n")
+        cfg.write("# CUDA Support\n")
 
-        if "+hdf5" in spec:
-            cfg.write(cmake_cache_entry("HDF5_DIR", spec['hdf5'].prefix))
+        if "+cuda" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_CUDA", "ON"))
         else:
-            cfg.write("# hdf5 not built by spack \n")
+            cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
 
         #######################
-        # Silo
+        # VTK-h
         #######################
 
-        cfg.write("# silo from spack \n")
+        cfg.write("# vtk-h support \n")
 
-        if "+silo" in spec:
-            cfg.write(cmake_cache_entry("SILO_DIR", spec['silo'].prefix))
+        if "+vtkh" in spec:
+            cfg.write("# tbb from spack\n")
+            cfg.write(cmake_cache_entry("TBB_DIR", spec['tbb'].prefix))
+
+            cfg.write("# vtk-m from spack\n")
+            cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
+
+            cfg.write("# vtk-h from spack\n")
+            cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
         else:
-            cfg.write("# silo not built by spack \n")
+            cfg.write("# vtk-h not built by spack \n")
+
+        #######################
+        # Adios
+        #######################
+
+        cfg.write("# adios support\n")
+
+        if "+adios" in spec:
+            cfg.write(cmake_cache_entry("ADIOS_DIR", spec['adios'].prefix))
+        else:
+            cfg.write("# adios not built by spack \n")
 
         cfg.write("##################################\n")
         cfg.write("# end spack generated host-config\n")

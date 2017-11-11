@@ -25,33 +25,18 @@
 from spack import *
 
 
-class Elfutils(AutotoolsPackage):
-    """elfutils is a collection of various binary tools such as
-    eu-objdump, eu-readelf, and other utilities that allow you to
-    inspect and manipulate ELF files. Refer to Table 5.Tools Included
-    in elfutils for Red Hat Developer for a complete list of binary
-    tools that are distributed with the Red Hat Developer Toolset
-    version of elfutils."""
+class RReadxl(RPackage):
+    """Import excel files into R. Supports '.xls' via the embedded
+    'libxls' C library <https://sourceforge.net/projects/libxls/> and
+    '.xlsx' via the embedded 'RapidXML' C++ library
+    <https://rapidxml.sourceforge.net>. Works on Windows, Mac and Linux
+    without external dependencies."""
 
-    homepage = "https://fedorahosted.org/elfutils/"
+    homepage = "http://readxl.tidyverse.org/"
+    url      = "https://cran.r-project.org/src/contrib/readxl_1.0.0.tar.gz"
 
-    url = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
-    list_url = "https://sourceware.org/elfutils/ftp"
-    list_depth = 1
+    version('1.0.0', '030c47ae1af5dd4168087160c29131e4')
 
-    version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
-    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
-
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('gettext')
-
-    provides('elf@1')
-
-    def configure_args(self):
-        # configure doesn't use LIBS correctly
-        gettext_lib = self.spec['gettext'].prefix.lib,
-        return [
-            'LDFLAGS=-Wl,--no-as-needed -L%s -lintl' % gettext_lib,
-            '--enable-maintainer-mode']
+    depends_on('r-tibble', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-cellranger', type=('build', 'run'))

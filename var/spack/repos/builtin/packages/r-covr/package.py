@@ -25,33 +25,24 @@
 from spack import *
 
 
-class Elfutils(AutotoolsPackage):
-    """elfutils is a collection of various binary tools such as
-    eu-objdump, eu-readelf, and other utilities that allow you to
-    inspect and manipulate ELF files. Refer to Table 5.Tools Included
-    in elfutils for Red Hat Developer for a complete list of binary
-    tools that are distributed with the Red Hat Developer Toolset
-    version of elfutils."""
+class RCovr(RPackage):
+    """Track and report code coverage for your package and (optionally)
+    upload the results to a coverage service like 'Codecov'
+    <http://codecov.io> or 'Coveralls' <http://coveralls.io>. Code
+    coverage is a measure of the amount of code being exercised by a
+    set of tests. It is an indirect measure of test quality and
+    completeness. This package is compatible with any testing methodology
+    or framework and tracks coverage of both R code and compiled
+    C/C++/FORTRAN code."""
 
-    homepage = "https://fedorahosted.org/elfutils/"
+    homepage = "https://cran.r-project.org/package=covr"
+    url      = "https://cran.r-project.org/src/contrib/covr_3.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/covr"
 
-    url = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
-    list_url = "https://sourceware.org/elfutils/ftp"
-    list_depth = 1
+    version('3.0.1', 'f88383f751fe5aa830a2b2e5c14aa66a')
 
-    version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
-    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
-
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('gettext')
-
-    provides('elf@1')
-
-    def configure_args(self):
-        # configure doesn't use LIBS correctly
-        gettext_lib = self.spec['gettext'].prefix.lib,
-        return [
-            'LDFLAGS=-Wl,--no-as-needed -L%s -lintl' % gettext_lib,
-            '--enable-maintainer-mode']
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-rex', type=('build', 'run'))
+    depends_on('r-httr', type=('build', 'run'))
+    depends_on('r-crayon', type=('build', 'run'))
+    depends_on('r-withr', type=('build', 'run'))
