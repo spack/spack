@@ -422,7 +422,7 @@ build in Spack.
 To do this, we'll add a variant to our package, as per the following (see
 ``$SPACK_ROOT/lib/spack/docs/tutorial/examples/5.package.py``):
 
-.. literalinclude:: tutorial/examples/4.package.py
+.. literalinclude:: tutorial/examples/5.package.py
    :lines: 25-
    :language: python
 
