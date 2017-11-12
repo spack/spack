@@ -221,9 +221,9 @@ This new compiler also works on Fortran codes:
    ...
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-Configuring Compiler Flags
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
+Compiler Flags
+^^^^^^^^^^^^^^
 
 Some compilers may require specific compiler flags to work properly in
 a particular computing environment. Spack provides configuration
@@ -258,19 +258,20 @@ spec is concretized.
 
 .. code-block:: console
 
-  $ spack spec cfitsio %clang@3.8.0-gfortran
-  Input spec
-  --------------------------------
-  cfitsio%clang@3.8.0-gfortran
+   $ spack spec cfitsio %clang@3.8.0-gfortran
+   Input spec
+   --------------------------------
+   cfitsio%clang@3.8.0-gfortran
 
-  Normalized
-  --------------------------------
-  cfitsio%clang@3.8.0-gfortran
+   Normalized
+   --------------------------------
+   cfitsio%clang@3.8.0-gfortran
 
-  Concretized
-  --------------------------------
-  cfitsio@3.410%clang@3.8.0-gfortran cppflags="-g" +bzip2+shared arch=linux-ubuntu16.04-x86_64
-      ^bzip2@1.0.6%clang@3.8.0-gfortran cppflags="-g" +shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   cfitsio@3.410%clang@3.8.0-gfortran cppflags="-g" +bzip2+shared arch=linux-ubuntu16.04-x86_64
+       ^bzip2@1.0.6%clang@3.8.0-gfortran cppflags="-g" +shared arch=linux-ubuntu16.04-x86_64
+
 
 We can see that "cppflags=-g" has been added to every node in the DAG.
 
@@ -315,111 +316,119 @@ configuration file. First, we will look at the default
 
 .. code-block:: console
 
-  $ spack config --scope defaults edit packages
+   $ spack config --scope defaults edit packages
+
 
 .. literalinclude:: ../../../etc/spack/defaults/packages.yaml
    :language: yaml
 
-This sets the default preferences for compilers and for providers for
+
+This sets the default preferences for compilers and for providers of
 virtual packages. To illustrate how this works, suppose we want to
 change the preferences to prefer the clang compiler and to prefer
 mpich over openmpi. Currently, we prefer gcc and openmpi
 
 .. code-block:: console
 
-  $ spack spec hdf5
-  Input spec
-  --------------------------------
-  hdf5
+   $ spack spec hdf5
+   Input spec
+   --------------------------------
+   hdf5
 
-  Normalized
-  --------------------------------
-  hdf5
-      ^zlib@1.1.2:
+   Normalized
+   --------------------------------
+   hdf5
+       ^zlib@1.1.2:
 
-  Concretized
-  --------------------------------
-  hdf5@1.10.1%gcc@5.4.0+cxx~debug+fortran+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-      ^openmpi@3.0.0%gcc@5.4.0~cuda fabrics= ~java schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64
-          ^hwloc@1.11.7%gcc@5.4.0~cuda+libxml2~pci arch=linux-ubuntu16.04-x86_64
-              ^libxml2@2.9.4%gcc@5.4.0~python arch=linux-ubuntu16.04-x86_64
-                  ^pkg-config@0.29.2%gcc@5.4.0+internal_glib arch=linux-ubuntu16.04-x86_64
-                  ^xz@5.2.3%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
-                  ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%gcc@5.4.0+cxx~debug+fortran+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^openmpi@3.0.0%gcc@5.4.0~cuda fabrics= ~java schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64
+           ^hwloc@1.11.7%gcc@5.4.0~cuda+libxml2~pci arch=linux-ubuntu16.04-x86_64
+               ^libxml2@2.9.4%gcc@5.4.0~python arch=linux-ubuntu16.04-x86_64
+                   ^pkg-config@0.29.2%gcc@5.4.0+internal_glib arch=linux-ubuntu16.04-x86_64
+                   ^xz@5.2.3%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64
+                   ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
+
 
 Now we will open the packages configuration file and update our
 preferences.
 
 .. code-block:: console
 
-  $ emacs -nw ~/.spack/packages.yaml
+  $ spack config edit packages
+
 
 .. code-block:: yaml
 
-  packages:
-    all:
-      compiler: [clang, gcc, intel, pgi, xl, nag]
-      providers:
-        mpi: [mpich, openmpi]
+   packages:
+     all:
+       compiler: [clang, gcc, intel, pgi, xl, nag]
+       providers:
+         mpi: [mpich, openmpi]
+
 
 Because of the configuration scoping we discussed earlier, this
 overrides the default settings just for these two items.
 
 .. code-block:: console
 
-  $ spack spec hdf5
-  Input spec
-  --------------------------------
-  hdf5
+   $ spack spec hdf5
+   Input spec
+   --------------------------------
+   hdf5
 
-  Normalized
-  --------------------------------
-  hdf5
-      ^zlib@1.1.2:
+   Normalized
+   --------------------------------
+   hdf5
+       ^zlib@1.1.2:
 
-  Concretized
-  --------------------------------
-  hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-      ^mpich@3.2%clang@3.8.0-2ubuntu4 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
-      ^zlib@1.2.11%clang@3.8.0-2ubuntu4+pic+shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^mpich@3.2%clang@3.8.0-2ubuntu4 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.11%clang@3.8.0-2ubuntu4+pic+shared arch=linux-ubuntu16.04-x86_64
+
 
 ^^^^^^^^^^^^^^^^^^^
 Variant Preferences
 ^^^^^^^^^^^^^^^^^^^
 
 The packages configuration file can also set variant preferences for
-packages. For example, let's change our preferences to build all
-packages without static libraries. We will accomplish this by turning
+package variants. For example, let's change our preferences to build all
+packages without shared libraries. We will accomplish this by turning
 off the ``shared`` variant on all packages that have one.
 
 .. code-block:: yaml
 
-  packages:
-    all:
-      compiler: [clang, gcc, intel, pgi, xl, nag]
-      providers:
-        mpi: [mpich, openmpi]
-      variants: ~shared
+   packages:
+     all:
+       compiler: [clang, gcc, intel, pgi, xl, nag]
+       providers:
+         mpi: [mpich, openmpi]
+       variants: ~shared
+
 
 We can check the effect of this command with ``spack spec hdf5`` again.
 
 .. code-block:: console
 
-  $ spack spec hdf5
-  Input spec
-  --------------------------------
-  hdf5
+   $ spack spec hdf5
+   Input spec
+   --------------------------------
+   hdf5
 
-  Normalized
-  --------------------------------
-  hdf5
-      ^zlib@1.1.2:
+   Normalized
+   --------------------------------
+   hdf5
+       ^zlib@1.1.2:
 
-  Concretized
-  --------------------------------
-  hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-      ^mpich@3.2%clang@3.8.0-2ubuntu4 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
-      ^zlib@1.2.11%clang@3.8.0-2ubuntu4+pic~shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^mpich@3.2%clang@3.8.0-2ubuntu4 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.11%clang@3.8.0-2ubuntu4+pic~shared arch=linux-ubuntu16.04-x86_64
+
 
 So far we have only made global changes to the package preferences. As
 we've seen throughout this tutorial, hdf5 builds with MPI enabled by
@@ -430,33 +439,35 @@ hdf5.
 
 .. code-block:: yaml
 
-  packages:
-    all:
-      compiler: [clang, gcc, intel, pgi, xl, nag]
-      providers:
-        mpi: [mpich, openmpi]
-      variants: ~shared
-    hdf5:
-      variants: ~mpi
+   packages:
+     all:
+       compiler: [clang, gcc, intel, pgi, xl, nag]
+       providers:
+         mpi: [mpich, openmpi]
+       variants: ~shared
+     hdf5:
+       variants: ~mpi
+
 
 Now hdf5 will concretize without an MPI dependency by default.
 
 .. code-block:: console
 
-  $ spack spec hdf5
-  Input spec
-  --------------------------------
-  hdf5
+   $ spack spec hdf5
+   Input spec
+   --------------------------------
+   hdf5
 
-  Normalized
-  --------------------------------
-  hdf5
-      ^zlib@1.1.2:
+   Normalized
+   --------------------------------
+   hdf5
+       ^zlib@1.1.2:
 
-  Concretized
-  --------------------------------
-  hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-      ^zlib@1.2.11%clang@3.8.0-2ubuntu4+pic~shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.11%clang@3.8.0-2ubuntu4+pic~shared arch=linux-ubuntu16.04-x86_64
+
 
 In general, every attribute that we can set for all packages we can
 set separately for an individual package.
@@ -471,72 +482,84 @@ pre-installed zlib.
 
 .. code-block:: yaml
 
-  packages:
-    all:
-      compiler: [clang, gcc, intel, pgi, xl, nag]
-      providers:
-        mpi: [mpich, openmpi]
-      variants: ~shared
-    hdf5:
-      variants: ~mpi
-    zlib:
-      paths:
-        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /usr
+   packages:
+     all:
+       compiler: [clang, gcc, intel, pgi, xl, nag]
+       providers:
+         mpi: [mpich, openmpi]
+       variants: ~shared
+     hdf5:
+       variants: ~mpi
+     zlib:
+       paths:
+         zlib@1.2.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
 
-Okay what's going on here? We've told Spack that we know the path to an externally installed zlib. We've also told Spack how that zlib was built by writing it out in Spec format. And we've listed the prefix into which zlib was installed.
+
+Here, we've told Spack that zlib 1.2.8 is installed on our system.
+We've also told it the installation prefix where zlib can be found.
+We don't know exactly which variants it was built with, but that's
+okay.
 
 .. code-block:: console
 
-  $ spack spec hdf5
-  Input spec
-  --------------------------------
-  hdf5
+   $ spack spec hdf5
+   Input spec
+   --------------------------------
+   hdf5
 
-  Normalized
-  --------------------------------
-  hdf5
-      ^zlib@1.1.2:
+   Normalized
+   --------------------------------
+   hdf5
+       ^zlib@1.1.2:
 
-  Concretized
-  --------------------------------
-  hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-      ^zlib@1.2.11%clang@3.8.0-2ubuntu4+pic~shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.11%clang@3.8.0-2ubuntu4+pic~shared arch=linux-ubuntu16.04-x86_64
 
-Note this did not use our external zlib. Why? Because Spack concretized zlib to a different Spec than the one we provided. There are two ways we could get Spack to build with our external zlib. One would be to explicitly ask for that spec. The other is to tell Spack it's not allowed to build its own zlib. We'll go with the latter.
+
+You'll notice that this did not use our external zlib. Why?
+Because Spack concretized zlib to a different Spec than the
+one we provided. There are two ways we could get Spack to
+build with our external zlib. One would be to explicitly ask
+for that spec on the command line. The other is to tell Spack
+it's not allowed to build its own zlib. We'll go with the latter.
 
 .. code-block:: yaml
 
-  packages:
-    all:
-      compiler: [clang, gcc, intel, pgi, xl, nag]
-      providers:
-        mpi: [mpich, openmpi]
-      variants: ~shared
-    hdf5:
-      variants: ~mpi
-    zlib:
-      paths:
-        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /usr
-      buildable: False
+   packages:
+     all:
+       compiler: [clang, gcc, intel, pgi, xl, nag]
+       providers:
+         mpi: [mpich, openmpi]
+       variants: ~shared
+     hdf5:
+       variants: ~mpi
+     zlib:
+       paths:
+         zlib@1.2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
+       buildable: False
+
 
 Now Spack will be forced to choose the external zlib.
 
 .. code-block:: console
 
-  $ spack spec hdf5
-  Input spec
-  --------------------------------
-  hdf5
+   $ spack spec hdf5
+   Input spec
+   --------------------------------
+   hdf5
 
-  Normalized
-  --------------------------------
-  hdf5
-      ^zlib@1.1.2:
+   Normalized
+   --------------------------------
+   hdf5
+       ^zlib@1.1.2:
 
-  Concretized
-  --------------------------------
-  hdf5@1.10.1%gcc@5.4.0+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-      ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%gcc@5.4.0+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
+
 
 Note that Spack now concretizes the entire DAG to use the gcc
 compiler. Because we did not specify a build using the clang compiler
@@ -546,20 +569,21 @@ have to specify it.
 
 .. code-block:: console
 
-  $ spack spec hdf5 %clang
-  Input spec
-  --------------------------------
-  hdf5%clang
+   $ spack spec hdf5 %clang
+   Input spec
+   --------------------------------
+   hdf5%clang
 
-  Normalized
-  --------------------------------
-  hdf5%clang
-      ^zlib@1.1.2:
+   Normalized
+   --------------------------------
+   hdf5%clang
+       ^zlib@1.1.2:
 
-  Concretized
-  --------------------------------
-  hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-      ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
+
 
 This gets slightly more complicated with virtual dependencies. Suppose
 we don't want to build our own MPI, but we now want a parallel version
@@ -567,53 +591,55 @@ of hdf5? Well, fortunately we have mpich installed on these systems.
 
 .. code-block:: yaml
 
-  packages:
-    all:
-      compiler: [clang, gcc, intel, pgi, xl, nag]
-      providers:
-        mpi: [mpich, openmpi]
-      variants: ~shared
-    hdf5:
-      variants: ~mpi
-    zlib:
-      paths:
-        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /usr
-      buildable: False
-    mpich:
-      paths:
-        mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64: /usr
-      buildable: False
+   packages:
+     all:
+       compiler: [clang, gcc, intel, pgi, xl, nag]
+       providers:
+         mpi: [mpich, openmpi]
+       variants: ~shared
+     hdf5:
+       variants: ~mpi
+     zlib:
+       paths:
+         zlib@1.2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
+       buildable: False
+     mpich:
+       paths:
+         mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64: /usr
+       buildable: False
+
 
 If we concretize ``hdf5+mpi`` with this configuration file, we will just
 build with an alternate MPI implementation.
 
 .. code-block:: console
 
-  $ spack spec hdf5 %clang +mpi
-  Input spec
-  --------------------------------
-  hdf5%clang+mpi
+   $ spack spec hdf5 %clang +mpi
+   Input spec
+   --------------------------------
+   hdf5%clang+mpi
 
-  Normalized
-  --------------------------------
-  hdf5%clang+mpi
-      ^mpi
-      ^zlib@1.1.2:
+   Normalized
+   --------------------------------
+   hdf5%clang+mpi
+       ^mpi
+       ^zlib@1.1.2:
 
-  Concretized
-  --------------------------------
-  hdf5@1.10.1%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-      ^openmpi@3.0.0%clang@3.8.0-2ubuntu4~cuda fabrics=verbs ~java schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64
-          ^hwloc@1.11.8%clang@3.8.0-2ubuntu4~cuda+libxml2+pci arch=linux-ubuntu16.04-x86_64
-              ^libpciaccess@0.13.5%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
-                  ^libtool@2.4.6%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
-                      ^m4@1.4.18%clang@3.8.0-2ubuntu4 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00 +sigsegv arch=linux-ubuntu16.04-x86_64
-                          ^libsigsegv@2.11%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
-                  ^pkg-config@0.29.2%clang@3.8.0-2ubuntu4+internal_glib arch=linux-ubuntu16.04-x86_64
-                  ^util-macros@1.19.1%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
-              ^libxml2@2.9.4%clang@3.8.0-2ubuntu4~python arch=linux-ubuntu16.04-x86_64
-                  ^xz@5.2.3%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
-                  ^zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^openmpi@3.0.0%clang@3.8.0-2ubuntu4~cuda fabrics=verbs ~java schedulers= ~sqlite3~thread_multiple+vt arch=linux-ubuntu16.04-x86_64
+           ^hwloc@1.11.8%clang@3.8.0-2ubuntu4~cuda+libxml2+pci arch=linux-ubuntu16.04-x86_64
+               ^libpciaccess@0.13.5%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
+                   ^libtool@2.4.6%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
+                       ^m4@1.4.18%clang@3.8.0-2ubuntu4 patches=3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00 +sigsegv arch=linux-ubuntu16.04-x86_64
+                           ^libsigsegv@2.11%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
+                   ^pkg-config@0.29.2%clang@3.8.0-2ubuntu4+internal_glib arch=linux-ubuntu16.04-x86_64
+                   ^util-macros@1.19.1%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
+               ^libxml2@2.9.4%clang@3.8.0-2ubuntu4~python arch=linux-ubuntu16.04-x86_64
+                   ^xz@5.2.3%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
+                   ^zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64
+
 
 We have only expressed a preference for mpich over other MPI
 implementations, and Spack will happily build with one we haven't
@@ -628,52 +654,52 @@ again.
 
 .. code-block:: yaml
 
-  packages:
-    all:
-      compiler: [clang, gcc, intel, pgi, xl, nag]
-      providers:
-        mpi: [mpich, openmpi]
-      variants: ~shared
-    zlib:
-      paths:
-        zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64: /usr
-      buildable: False
-    mpich:
-      paths:
-        mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64: /usr
-      buildable: False
-    openmpi:
-      buildable: False
-    mvapich2:
-      buildable: False
-    intel-mpi:
-      buildable: False
-    spectrum-mpi:
-      buildable: False
-    intel-parallel-studio:
-      buildable: False
+   packages:
+     all:
+       compiler: [clang, gcc, intel, pgi, xl, nag]
+       providers:
+         mpi: [mpich, openmpi]
+       variants: ~shared
+     zlib:
+       paths:
+         zlib@1.2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
+       buildable: False
+     mpich:
+       paths:
+         mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64: /usr
+       buildable: False
+     openmpi:
+       buildable: False
+     mvapich2:
+       buildable: False
+     intel-mpi:
+       buildable: False
+     spectrum-mpi:
+       buildable: False
+     intel-parallel-studio:
+       buildable: False
 
 Now that we have configured Spack not to build any of the possible
 providers for MPI we can try again.
 
 .. code-block:: console
 
-  $ spack spec hdf5 %clang
-  Input spec
-  --------------------------------
-  hdf5%clang
+   $ spack spec hdf5 %clang
+   Input spec
+   --------------------------------
+   hdf5%clang
 
-  Normalized
-  --------------------------------
-  hdf5%clang
-      ^mpi
-      ^zlib@1.1.2:
+   Normalized
+   --------------------------------
+   hdf5%clang
+       ^mpi
+       ^zlib@1.1.2:
 
-  Concretized
-  --------------------------------
-  hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-      ^mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
-      ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
 
 Now that we have hdf5 configured to install exactly as we want it, we
 can install it. We've now minimized the command line effort necessary
@@ -682,5 +708,5 @@ hdf5 against our external installations of zlib and mpich.
 
 .. code-block:: console
 
-  $ spack install hdf5 %clang
-  ADD BINARY CACHING OUTPUT
+   $ spack install hdf5 %clang
+   ...
