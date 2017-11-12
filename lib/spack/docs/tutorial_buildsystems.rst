@@ -573,7 +573,7 @@ different location is found in :code:`spades`.
 
 .. code-block:: console
 
-    $ spack edit spade.
+    $ spack edit spade
 
 .. code-block:: python
 
