@@ -16,7 +16,7 @@ In this section, we will describe each build system and give examples on
 how these can be manipulated to install a package.
 
 -----------------------
-Package class Hierarchy
+Package Class Hierarchy
 -----------------------
 
 .. graphviz::
