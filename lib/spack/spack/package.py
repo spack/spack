@@ -1272,12 +1272,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     def try_install_from_binary_cache(self, explicit):
         tty.msg('Searching for binary cache of %s' % self.name)
         specs = binary_distribution.get_specs()
-        if self.spec not in specs:
+        binary_spec = spack.spec.Spec.from_dict(self.spec.to_dict())
+        binary_spec._mark_concrete()
+        if binary_spec not in specs:
             return False
         tty.msg('Installing %s from binary cache' % self.name)
-        tarball = binary_distribution.download_tarball(self.spec)
+        tarball = binary_distribution.download_tarball(binary_spec)
         binary_distribution.extract_tarball(
-            self.spec, tarball, yes_to_all=False, force=False)
+            binary_spec, tarball, yes_to_all=False, force=False)
         spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
         return True
 
