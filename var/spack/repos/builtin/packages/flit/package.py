@@ -60,7 +60,7 @@ class Flit(MakefilePackage):
         'Install instructions based on the version'
         if self.version >= Version('2.0'):
             args = self.install_targets[:]
-            args.append('PREFIX={}'.format(prefix))
+            args.append('PREFIX=%s' % prefix)
             make(*args, parallel=False)
         else:
             # FIXME: install the old FLiT
