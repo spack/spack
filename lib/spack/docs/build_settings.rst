@@ -89,6 +89,7 @@ be:
 
    packages:
      openmpi:
+       version: [1.4.3, 1.6.5]
        paths:
          openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
          openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
