@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -185,7 +185,8 @@ class Dealii(CMakePackage):
             '-DMUPARSER_DIR=%s' % spec['muparser'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
-            '-DZLIB_DIR=%s' % spec['zlib'].prefix
+            '-DZLIB_DIR=%s' % spec['zlib'].prefix,
+            '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
 
         if spec.satisfies('@:8.99'):

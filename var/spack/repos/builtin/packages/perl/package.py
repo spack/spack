@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -120,8 +120,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                            self.prefix.lib.perl5 + '\\"')
 
         # Discussion of -fPIC for Intel at:
-        # https://github.com/LLNL/spack/pull/3081 and
-        # https://github.com/LLNL/spack/pull/4416
+        # https://github.com/spack/spack/pull/3081 and
+        # https://github.com/spack/spack/pull/4416
         if spec.satisfies('%intel'):
             config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
 
@@ -167,12 +167,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             if d.package.extends(self.spec):
                 perl_lib_dirs.append(d.prefix.lib.perl5)
                 perl_bin_dirs.append(d.prefix.bin)
-        perl_bin_path = ':'.join(perl_bin_dirs)
-        perl_lib_path = ':'.join(perl_lib_dirs)
-        spack_env.prepend_path('PATH', perl_bin_path)
-        spack_env.prepend_path('PERL5LIB', perl_lib_path)
-        run_env.prepend_path('PATH', perl_bin_path)
-        run_env.prepend_path('PERL5LIB', perl_lib_path)
+        if perl_bin_dirs:
+            perl_bin_path = ':'.join(perl_bin_dirs)
+            spack_env.prepend_path('PATH', perl_bin_path)
+            run_env.prepend_path('PATH', perl_bin_path)
+        if perl_lib_dirs:
+            perl_lib_path = ':'.join(perl_lib_dirs)
+            spack_env.prepend_path('PERL5LIB', perl_lib_path)
+            run_env.prepend_path('PERL5LIB', perl_lib_path)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
@@ -256,7 +258,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         super(Perl, self).activate(ext_pkg, **args)
 
-        exts = spack.store.layout.extension_map(self.spec)
+        extensions_layout = args.get("extensions_layout",
+                                     spack.store.extensions)
+
+        exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
     def deactivate(self, ext_pkg, **args):
@@ -265,7 +270,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         super(Perl, self).deactivate(ext_pkg, **args)
 
-        exts = spack.store.layout.extension_map(self.spec)
+        extensions_layout = args.get("extensions_layout",
+                                     spack.store.extensions)
+
+        exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]

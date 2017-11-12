@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ class RPfamDb(RPackage):
     public repositories."""
 
     homepage = "https://www.bioconductor.org/packages/PFAM.db/"
-    url      = "https://www.bioconductor.org/packages/release/data/annotation/src/contrib/PFAM.db_3.4.1.tar.gz"
+    url      = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/PFAM.db_3.4.1.tar.gz"
 
     version('3.4.1', '65ed35887ecc44f5ac9f9c8563e03f44')
 

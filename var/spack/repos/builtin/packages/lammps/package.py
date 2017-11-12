@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 #
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ class Lammps(CMakePackage):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator. This package uses patch releases, not
     stable release.
-    See https://github.com/LLNL/spack/pull/5342 for a detailed
+    See https://github.com/spack/spack/pull/5342 for a detailed
     discussion.
     """
     homepage = "http://lammps.sandia.gov/"
@@ -45,8 +45,13 @@ class Lammps(CMakePackage):
         return "https://github.com/lammps/lammps/archive/patch_{0}.tar.gz".format(
             vdate.strftime("%d%b%Y").lstrip('0'))
 
-    supported_packages = ['voronoi', 'rigid', 'user-netcdf', 'kspace',
-                          'latte', 'user-atc', 'user-omp', 'meam', 'manybody']
+    supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
+                          'coreshell', 'dipole', 'granular', 'kspace', 'latte',
+                          'manybody', 'mc', 'meam', 'misc', 'molecule',
+                          'mpiio', 'peri', 'poems', 'python', 'qeq', 'reax',
+                          'replica', 'rigid', 'shock', 'snap', 'srd',
+                          'user-atc', 'user-h5md', 'user-lb', 'user-misc',
+                          'user-netcdf', 'user-omp', 'voronoi']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -57,6 +62,7 @@ class Lammps(CMakePackage):
             description='Build with mpi')
 
     depends_on('mpi', when='+mpi')
+    depends_on('mpi', when='+mpiio')
     depends_on('fftw', when='+kspace')
     depends_on('voropp', when='+voronoi')
     depends_on('netcdf+mpi', when='+user-netcdf')
@@ -65,8 +71,19 @@ class Lammps(CMakePackage):
     depends_on('latte', when='+latte')
     depends_on('blas', when='+latte')
     depends_on('lapack', when='+latte')
+    depends_on('python', when='+python')
+    depends_on('mpi', when='+user-lb')
+    depends_on('mpi', when='+user-h5md')
+    depends_on('hdf5', when='+user-h5md')
 
+    conflicts('+body', when='+poems')
     conflicts('+latte', when='@:20170921')
+    conflicts('+python', when='~lib')
+    conflicts('+qeq', when='~manybody')
+    conflicts('+user-atc', when='~manybody')
+    conflicts('+user-misc', when='~manybody')
+    conflicts('+user-phonon', when='~kspace')
+    conflicts('+user-misc', when='~manybody')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")

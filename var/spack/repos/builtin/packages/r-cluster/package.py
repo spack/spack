@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,7 @@ class RCluster(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/cluster/index.html"
     url      = "https://cran.rstudio.com/src/contrib/cluster_2.0.6.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
 
     version('2.0.6', 'e7d0660b05c65f4d886ebf7f046939ab')
     version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')

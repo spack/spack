@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,8 +45,7 @@ class Likwid(Package):
     # The reason is that the internal hwloc is patched to contain extra
     # functionality and functions are prefixed with "likwid_".
 
-    # TODO: how to specify those?
-    # depends_on('lua')
+    depends_on('lua', when='@4.2.0:')
 
     # TODO: check
     # depends_on('gnuplot', type='run')
@@ -87,6 +86,23 @@ class Likwid(Package):
         filter_file('^INSTALL_CHOWN.*',
                     'INSTALL_CHOWN = -o $(USER)',
                     'config.mk')
+
+        if spec.satisfies('^lua'):
+            filter_file('^#LUA_INCLUDE_DIR.*',
+                        'LUA_INCLUDE_DIR = {0}'.format(
+                            spec['lua'].prefix.include),
+                        'config.mk')
+            filter_file('^#LUA_LIB_DIR.*',
+                        'LUA_LIB_DIR = {0}'.format(
+                            spec['lua'].prefix.lib),
+                        'config.mk')
+            filter_file('^#LUA_LIB_NAME.*',
+                        'LUA_LIB_NAME = lua',
+                        'config.mk')
+            filter_file('^#LUA_BIN.*',
+                        'LUA_BIN = {0}'.format(
+                            spec['lua'].prefix.bin),
+                        'config.mk')
 
         make()
         make('install')

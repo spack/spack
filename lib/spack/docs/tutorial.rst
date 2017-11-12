@@ -45,4 +45,5 @@ Full contents:
 .. toctree::
    tutorial_basics
    tutorial_packaging
+   tutorial_advanced_packaging
    tutorial_modules

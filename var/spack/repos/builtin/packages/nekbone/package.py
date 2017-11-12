@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,7 +32,7 @@ class Nekbone(Package):
        Nek5000 is a high order, incompressible Navier-Stokes solver based on
        the spectral element method."""
 
-    homepage = "hhttps://github.com/Nek5000/Nekbone"
+    homepage = "https://github.com/Nek5000/Nekbone"
     url = "https://github.com/Nek5000/Nekbone/tarball/v17.0"
 
     tags = ['proxy-app', 'ecp-proxy-app']
@@ -59,3 +59,6 @@ class Nekbone(Package):
                 mkdir(path)
                 install('nekbone', path)
                 install('nekpmpi', path)
+                install('data.rea', path)
+                install('SIZE', path)
+                install('README', path)

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -91,7 +91,7 @@ def macho_get_paths(path_name):
     otool = Executable('otool')
     output = otool("-l", path_name, output=str, err=str)
     last_cmd = None
-    idpath = ''
+    idpath = None
     rpaths = []
     deps = []
     for line in output.split('\n'):
@@ -119,24 +119,24 @@ def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
     in rpaths and deps; idpaths are replaced with @rpath/basebane(path_name);
     replacement are returned.
     """
-    id = None
-    nrpaths = []
-    ndeps = []
+    new_idpath = None
     if idpath:
-        id = '@rpath/%s' % os.path.basename(idpath)
+        new_idpath = '@rpath/%s' % os.path.basename(idpath)
+    new_rpaths = list()
+    new_deps = list()
     for rpath in rpaths:
         if re.match(old_dir, rpath):
             rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
-            nrpaths.append('@loader_path/%s' % rel)
+            new_rpaths.append('@loader_path/%s' % rel)
         else:
-            nrpaths.append(rpath)
+            new_rpaths.append(rpath)
     for dep in deps:
         if re.match(old_dir, dep):
             rel = os.path.relpath(dep, start=os.path.dirname(path_name))
-            ndeps.append('@loader_path/%s' % rel)
+            new_deps.append('@loader_path/%s' % rel)
         else:
-            ndeps.append(dep)
-    return nrpaths, ndeps, id
+            new_deps.append(dep)
+    return (new_rpaths, new_deps, new_idpath)
 
 
 def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
@@ -144,22 +144,22 @@ def macho_replace_paths(old_dir, new_dir, rpaths, deps, idpath):
     Replace old_dir with new_dir in rpaths, deps and idpath
     and return replacements
     """
-    id = None
-    nrpaths = []
-    ndeps = []
+    new_idpath = None
     if idpath:
-        id = idpath.replace(old_dir, new_dir)
+        new_idpath = idpath.replace(old_dir, new_dir)
+    new_rpaths = list()
+    new_deps = list()
     for rpath in rpaths:
-        nrpath = rpath.replace(old_dir, new_dir)
-        nrpaths.append(nrpath)
+        new_rpath = rpath.replace(old_dir, new_dir)
+        new_rpaths.append(new_rpath)
     for dep in deps:
-        ndep = dep.replace(old_dir, new_dir)
-        ndeps.append(ndep)
-    return nrpaths, ndeps, id
+        new_dep = dep.replace(old_dir, new_dir)
+        new_deps.append(new_dep)
+    return new_rpaths, new_deps, new_idpath
 
 
-def modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir,
-                        relative):
+def modify_macho_object(cur_path, rpaths, deps, idpath,
+                        new_rpaths, new_deps, new_idpath):
     """
     Modify MachO binary path_name by replacing old_dir with new_dir
     or the relative path to spack install root.
@@ -171,28 +171,18 @@ def modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir,
     install_name_tool  -rpath old new binary
     """
     # avoid error message for libgcc_s
-    if 'libgcc_' in cur_path_name:
+    if 'libgcc_' in cur_path:
         return
-    rpaths, deps, idpath = macho_get_paths(cur_path_name)
-    id = None
-    nrpaths = []
-    ndeps = []
-    if relative:
-        nrpaths, ndeps, id = macho_make_paths_relative(orig_path_name,
-                                                       old_dir, rpaths,
-                                                       deps, idpath)
-    else:
-        nrpaths, ndeps, id = macho_replace_paths(old_dir, new_dir, rpaths,
-                                                 deps, idpath)
     install_name_tool = Executable('install_name_tool')
-    if id:
-        install_name_tool('-id', id, cur_path_name, output=str, err=str)
+    if new_idpath:
+        install_name_tool('-id', new_idpath, str(cur_path),
+                          output=str, err=str)
 
-    for orig, new in zip(deps, ndeps):
-        install_name_tool('-change', orig, new, cur_path_name)
+    for orig, new in zip(deps, new_deps):
+        install_name_tool('-change', orig, new, str(cur_path))
 
-    for orig, new in zip(rpaths, nrpaths):
-        install_name_tool('-rpath', orig, new, cur_path_name)
+    for orig, new in zip(rpaths, new_rpaths):
+        install_name_tool('-rpath', orig, new, str(cur_path))
     return
 
 
@@ -227,6 +217,8 @@ def needs_binary_relocation(filetype):
     retval = False
     if "relocatable" in filetype:
         return False
+    if "link" in filetype:
+        return False
     if platform.system() == 'Darwin':
         return ('Mach-O' in filetype)
     elif platform.system() == 'Linux':
@@ -240,44 +232,65 @@ def needs_text_relocation(filetype):
     """
     Check whether the given filetype is text that may need relocation.
     """
+    if "link" in filetype:
+        return False
     return ("text" in filetype)
 
 
-def relocate_binary(path_name, old_dir, new_dir):
+def relocate_binary(path_names, old_dir, new_dir):
     """
-    Change old_dir to new_dir in RPATHs of elf or mach-o file path_name
+    Change old_dir to new_dir in RPATHs of elf or mach-o files
     """
     if platform.system() == 'Darwin':
-        modify_macho_object(path_name, old_dir, new_dir, relative=False)
+        for path_name in path_names:
+            rpaths, deps, idpath = macho_get_paths(path_name)
+            new_rpaths, new_deps, new_idpath = macho_replace_paths(old_dir,
+                                                                   new_dir,
+                                                                   rpaths,
+                                                                   deps,
+                                                                   idpath)
+            modify_macho_object(path_name,
+                                rpaths, deps, idpath,
+                                new_rpaths, new_deps, new_idpath)
     elif platform.system() == 'Linux':
-        orig_rpaths = get_existing_elf_rpaths(path_name)
-        new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
-        modify_elf_object(path_name, orig_rpaths, new_rpaths)
+        for path_name in path_names:
+            orig_rpaths = get_existing_elf_rpaths(path_name)
+            new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
+            modify_elf_object(path_name, orig_rpaths, new_rpaths)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
 
-def make_binary_relative(cur_path_name, orig_path_name, old_dir):
+def make_binary_relative(cur_path_names, orig_path_names, old_dir):
     """
-    Make RPATHs relative to old_dir in given elf or mach-o file path_name
+    Make RPATHs relative to old_dir in given elf or mach-o files
     """
     if platform.system() == 'Darwin':
-        new_dir = ''
-        modify_macho_object(cur_path_name, orig_path_name, old_dir, new_dir,
-                            relative=True)
+        for cur_path, orig_path in zip(cur_path_names, orig_path_names):
+            rpaths, deps, idpath = macho_get_paths(cur_path)
+            (new_rpaths,
+             new_deps,
+             new_idpath) = macho_make_paths_relative(orig_path, old_dir,
+                                                     rpaths, deps, idpath)
+            modify_macho_object(cur_path,
+                                rpaths, deps, idpath,
+                                new_rpaths, new_deps, new_idpath)
     elif platform.system() == 'Linux':
-        orig_rpaths = get_existing_elf_rpaths(cur_path_name)
-        new_rpaths = get_relative_rpaths(orig_path_name, old_dir, orig_rpaths)
-        modify_elf_object(cur_path_name, orig_rpaths, new_rpaths)
+        for cur_path, orig_path in zip(cur_path_names, orig_path_names):
+            orig_rpaths = get_existing_elf_rpaths(cur_path)
+            new_rpaths = get_relative_rpaths(orig_path, old_dir,
+                                             orig_rpaths)
+            modify_elf_object(cur_path, orig_rpaths, new_rpaths)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
 
-def relocate_text(path_name, old_dir, new_dir):
+def relocate_text(path_names, old_dir, new_dir):
     """
     Replace old path with new path in text file path_name
     """
-    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir, path_name)
+    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir,
+                *path_names, backup=False)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
