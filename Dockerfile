@@ -1,8 +1,8 @@
 FROM ubuntu:16.04
 
 RUN apt-get update \
- && apt-get install -y curl gcc python make automake
+ && apt-get install -y automake curl gcc gfortran lbzip2 make patch python 
 COPY . /usr/local/src/spack/
 COPY docker/entrypoint.sh /usr/local/bin/
-VOLUME ["/usr/local/src/spack/opt/spack/"]
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
