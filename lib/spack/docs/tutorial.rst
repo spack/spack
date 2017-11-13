@@ -37,13 +37,15 @@ These scripts will take you step-by-step through basic Spack tasks.  They
 correspond to sections in the slides above.
 
   1. :ref:`basics-tutorial`
-  2. :ref:`packaging-tutorial`
-  3. :ref:`modules-tutorial`
+  2. :ref:`configs-tutorial`
+  3. :ref:`packaging-tutorial`
+  4. :ref:`modules-tutorial`
 
 Full contents:
 
 .. toctree::
    tutorial_basics
+   tutorial_configuration
    tutorial_packaging
    tutorial_advanced_packaging
    tutorial_modules
