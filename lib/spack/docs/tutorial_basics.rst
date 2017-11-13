@@ -1557,7 +1557,7 @@ added to the configuration.
 
 .. code-block:: console
 
-  $ spack install --fake gcc@6.1.0
+  $ spack install --use-cache gcc
   ==> libsigsegv is already installed in /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/libsigsegv-2.11-fypapcprssrj3nstp6njprskeyynsgaz
   ==> m4 is already installed in /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/m4-1.4.18-r5envx3kqctwwflhd4qax4ahqtt6x43a
   ==> pkg-config is already installed in /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/pkg-config-0.29.2-ae2hwm7q57byfbxtymts55xppqwk7ecj
@@ -1733,7 +1733,7 @@ gcc@7.2.0.
 
 .. code-block:: console
 
-  $ spack compiler add ~/spack/opt/spack/linux-redhat6-x86_64/gcc-4.4.7/gcc-6.1.0-j5576zbsot2ydljlthjzhsirsesnogvh/bin
+  $ spack compiler add /home/ubuntu/becker/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/gcc-7.2.0-k3vy57euyeuyvpotwf4wezfmpo3mrtrj
   ==> Added 1 new compiler to /home/ubuntu/.spack/linux/compilers.yaml
       gcc@7.2.0
   ==> Compilers are defined in the following files:
