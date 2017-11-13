@@ -135,6 +135,10 @@ override :code:`configure_args()`, which will then return it's output to
 to :code:`configure()`. Then, :code:`configure()` will append the common
 arguments
 
+Packagers also have the option to run :code:`autoreconf` in case a package
+needs to update the build system and generate a new :code:`configure`. Though,
+for the most part this will be unnecessary.
+
 Let's look at the :code:`mpileaks` package.py file that we worked on earlier:
 
 .. code-block:: console
@@ -175,7 +179,7 @@ package file.
 Makefile
 -----------------
 
-Packages that utilize :code:`GNU Make` or a :code:`Makefile` usually require you
+Packages that utilize :code:`Make` or a :code:`Makefile` usually require you
 to edit a :code:`Makefile` to set up platform and compiler specific variables.
 These packages are handled by the :code:`Makefile` subclass which provides
 convenience methods to help write these types of packages.
@@ -238,7 +242,7 @@ usual fashion and create a template of a :code:`MakefilePackage` package.py.
    :language: python
    :linenos:
 
-Spack was successfully able to detect that :code:`Bowtie` uses :code:`GNU Make`.
+Spack was successfully able to detect that :code:`Bowtie` uses :code:`Make`.
 Let's add in the rest of our details for our package:
 
 .. literalinclude:: tutorial/examples/Makefile/1.package.py
