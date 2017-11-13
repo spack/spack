@@ -589,28 +589,28 @@ support.
 
 .. code-block:: console
 
-  $ spack install --use-cache hdf5~mpi
-  ==> zlib is already installed in /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/zlib-1.2.11-5nus6knzumx4ik2yl44jxtgtsl7d54xb
-  ==> Installing hdf5
-  ==> Searching for binary cache of hdf5
-  ==> Finding buildcaches in /home/ubuntu/becker/buildcache/build_cache
-  ==> Fetching file:///home/ubuntu/becker/buildcache/build_cache/linux-ubuntu16.04-x86_64-gcc-5.4.0-openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f.spec.yaml
-######################################################################## 100.0%
-  ...
-  ==> Fetching file:///home/ubuntu/becker/buildcache/build_cache/linux-ubuntu16.04-x86_64-gcc-5.4.0-util-macros-1.19.1-milz7fmttmptcic2qdk5cnel7ll5sybr.spec.yaml
-  ######################################################################## 100.0%
-  ==> Installing hdf5 from binary cache
-  ==> Fetching file:///home/ubuntu/becker/buildcache/build_cache/linux-ubuntu16.04-x86_64/gcc-5.4.0/hdf5-1.10.1/linux-ubuntu16.04-x86_64-gcc-5.4.0-hdf5-1.10.1-pa6oqzfeqzkqkzqr2375fqyt3qggx3tr.spack
-  ######################################################################## 100.0%
-  gpg: Signature made Sat 11 Nov 2017 12:53:40 AM UTC using RSA key ID 3B7C69B2
-  gpg: Good signature from "sc-tutorial (GPG created for Spack) <becker33@llnl.gov>" [unknown]
-  gpg: WARNING: This key is not certified with a trusted signature!
-  gpg:          There is no indication that the signature belongs to the owner.
-  Primary key fingerprint: 95C7 1787 7AC0 0FFD AA8F  D6E9 9CFA 4A45 3B7C 69B2
-  ==> Relocating package from
-    /home/ubuntu/becker/spack/opt/spack to /home/ubuntu/test/spack/opt/spack.
-  ==> Successfully installed hdf5 from binary cache
-  [+] /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/hdf5-1.10.1-pa6oqzfeqzkqkzqr2375fqyt3qggx3tr
+   $ spack install --use-cache hdf5~mpi
+   ==> zlib is already installed in /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/zlib-1.2.11-5nus6knzumx4ik2yl44jxtgtsl7d54xb
+   ==> Installing hdf5
+   ==> Searching for binary cache of hdf5
+   ==> Finding buildcaches in /home/ubuntu/becker/buildcache/build_cache
+   ==> Fetching file:///home/ubuntu/becker/buildcache/build_cache/linux-ubuntu16.04-x86_64-gcc-5.4.0-openmpi-3.0.0-yo5qkfvumpmgmvlbalqcadu46j5bd52f.spec.yaml
+   ######################################################################## 100.0%
+   ...
+   ==> Fetching file:///home/ubuntu/becker/buildcache/build_cache/linux-ubuntu16.04-x86_64-gcc-5.4.0-util-macros-1.19.1-milz7fmttmptcic2qdk5cnel7ll5sybr.spec.yaml
+   ######################################################################## 100.0%
+   ==> Installing hdf5 from binary cache
+   ==> Fetching file:///home/ubuntu/becker/buildcache/build_cache/linux-ubuntu16.04-x86_64/gcc-5.4.0/hdf5-1.10.1/linux-ubuntu16.04-x86_64-gcc-5.4.0-hdf5-1.10.1-pa6oqzfeqzkqkzqr2375fqyt3qggx3tr.spack
+   ######################################################################## 100.0%
+   gpg: Signature made Sat 11 Nov 2017 12:53:40 AM UTC using RSA key ID 3B7C69B2
+   gpg: Good signature from "sc-tutorial (GPG created for Spack) <becker33@llnl.gov>" [unknown]
+   gpg: WARNING: This key is not certified with a trusted signature!
+   gpg:          There is no indication that the signature belongs to the owner.
+   Primary key fingerprint: 95C7 1787 7AC0 0FFD AA8F  D6E9 9CFA 4A45 3B7C 69B2
+   ==> Relocating package from
+     /home/ubuntu/becker/spack/opt/spack to /home/ubuntu/test/spack/opt/spack.
+   ==> Successfully installed hdf5 from binary cache
+   [+] /home/ubuntu/test/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/hdf5-1.10.1-pa6oqzfeqzkqkzqr2375fqyt3qggx3tr
 
 We might also want to install HDF5 with a different MPI
 implementation. While MPI is not a package itself, packages can depend on
