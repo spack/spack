@@ -133,7 +133,7 @@ We will start by opening the compilers configuration file
 
 .. code-block:: console
 
-   spack config edit compilers
+   $ spack config edit compilers
 
 
 .. code-block:: yaml
@@ -514,58 +514,13 @@ okay.
 
    Concretized
    --------------------------------
-   hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-       ^zlib@1.2.11%clang@3.8.0-2ubuntu4+pic~shared arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.1%gcc@5.4.0~cxx~debug~fortran~hl~mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.8%gcc@5.4.0+optimize+pic~shared arch=linux-ubuntu16.04-x86_64
 
 
-You'll notice that this did not use our external zlib. Why?
-Because Spack concretized zlib to a different Spec than the
-one we provided. There are two ways we could get Spack to
-build with our external zlib. One would be to explicitly ask
-for that spec on the command line. The other is to tell Spack
-it's not allowed to build its own zlib. We'll go with the latter.
-
-.. code-block:: yaml
-
-   packages:
-     all:
-       compiler: [clang, gcc, intel, pgi, xl, nag]
-       providers:
-         mpi: [mpich, openmpi]
-       variants: ~shared
-     hdf5:
-       variants: ~mpi
-     zlib:
-       paths:
-         zlib@1.2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
-       buildable: False
-
-
-Now Spack will be forced to choose the external zlib.
-
-.. code-block:: console
-
-   $ spack spec hdf5
-   Input spec
-   --------------------------------
-   hdf5
-
-   Normalized
-   --------------------------------
-   hdf5
-       ^zlib@1.1.2:
-
-   Concretized
-   --------------------------------
-   hdf5@1.10.1%gcc@5.4.0+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-       ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
-
-
-Note that Spack now concretizes the entire DAG to use the gcc
-compiler. Because we did not specify a build using the clang compiler
-(only expressed a preference) Spack used the gcc compiler specified by
-the zlib spec. If we want to use clang for the rest of the build, we
-have to specify it.
+You'll notice that Spack is now using the external zlib installation,
+but the compiler used to build zlib is now overriding our compiler
+preference of clang. If we explicitly specify clang:
 
 .. code-block:: console
 
@@ -581,8 +536,50 @@ have to specify it.
 
    Concretized
    --------------------------------
-   hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
-       ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
+   hdf5@1.10.1%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl~mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.11%clang@3.8.0-2ubuntu4+optimize+pic~shared arch=linux-ubuntu16.04-x86_64
+
+
+Spack concretizes to both hdf5 and zlib being built with clang.
+This has a side-effect of rebuilding zlib. If we want to force
+Spack to use the system zlib, we have two choices. We can either
+specify it on the command line, or we can tell Spack that it's
+not allowed to build its own zlib. We'll go with the latter.
+
+.. code-block:: yaml
+
+   packages:
+     all:
+       compiler: [clang, gcc, intel, pgi, xl, nag]
+       providers:
+         mpi: [mpich, openmpi]
+       variants: ~shared
+     hdf5:
+       variants: ~mpi
+     zlib:
+       paths:
+         zlib@1.2.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
+       buildable: False
+
+
+Now Spack will be forced to choose the external zlib.
+
+.. code-block:: console
+
+   $ spack spec hdf5 %clang
+   Input spec
+   --------------------------------
+   hdf5%clang
+
+   Normalized
+   --------------------------------
+   hdf5%clang
+       ^zlib@1.1.2:
+
+   Concretized
+   --------------------------------
+   hdf5@1.10.1%clang@3.8.0-2ubuntu4~cxx~debug~fortran~hl~mpi+pic+shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.8%gcc@5.4.0+optimize+pic~shared arch=linux-ubuntu16.04-x86_64
 
 
 This gets slightly more complicated with virtual dependencies. Suppose
@@ -601,7 +598,7 @@ of hdf5? Well, fortunately we have mpich installed on these systems.
        variants: ~mpi
      zlib:
        paths:
-         zlib@1.2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
+         zlib@1.2.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
        buildable: False
      mpich:
        paths:
@@ -638,7 +635,7 @@ build with an alternate MPI implementation.
                    ^util-macros@1.19.1%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
                ^libxml2@2.9.4%clang@3.8.0-2ubuntu4~python arch=linux-ubuntu16.04-x86_64
                    ^xz@5.2.3%clang@3.8.0-2ubuntu4 arch=linux-ubuntu16.04-x86_64
-                   ^zlib@1.2.11%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64
+                   ^zlib@1.2.8%gcc@5.4.0+optimize+pic+shared arch=linux-ubuntu16.04-x86_64
 
 
 We have only expressed a preference for mpich over other MPI
@@ -662,7 +659,7 @@ again.
        variants: ~shared
      zlib:
        paths:
-         zlib@1.2.11%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
+         zlib@1.2.8%gcc@5.4.0 arch=linux-ubuntu16.04-x86_64: /usr
        buildable: False
      mpich:
        paths:
@@ -699,17 +696,22 @@ providers for MPI we can try again.
    --------------------------------
    hdf5@1.10.1%clang@3.8.0-2ubuntu4+cxx~debug~fortran~hl+mpi+pic~shared~szip~threadsafe arch=linux-ubuntu16.04-x86_64
        ^mpich@3.2%gcc@5.4.0 device=ch3 +hydra netmod=tcp +pmi+romio~verbs arch=linux-ubuntu16.04-x86_64
-       ^zlib@1.2.11%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
+       ^zlib@1.2.8%gcc@5.4.0+pic+shared arch=linux-ubuntu16.04-x86_64
 
-Now that we have hdf5 configured to install exactly as we want it, we
-can install it. We've now minimized the command line effort necessary
-to get exactly the hdf5 installation we want, and we can now build
-hdf5 against our external installations of zlib and mpich.
 
-.. code-block:: console
+By configuring most of our package preferences in ``packages.yaml``,
+we can cut down on the amount of work we need to do when specifying
+a spec on the command line. In addition to compiler and variant
+preferences, we can specify version preferences as well. Anything
+that you can specify on the command line can be specified in
+``packages.yaml`` with the exact same spec syntax.
 
-   $ spack install hdf5 %clang
-   ...
+.. warning::
+
+   Make sure to delete or move the ``packages.yaml`` you have been
+   editing up to this point. Otherwise, it will change the hashes
+   of your packages, leading to differences in the output of later
+   tutorial sections.
 
 
 -----------------
@@ -757,11 +759,11 @@ the build environment with the ``dirty`` setting:
 However, this is strongly discouraged, as it can pull unwanted libraries
 into the build.
 
-One last setting that may be of interest to users building on a shared
-login node is the ability to customize the parallelism of Spack builds.
-By default, Spack installs all packages in parallel with the number of
-jobs equal to the number of cores on the node. For example, on a node
-with 36 cores, this will look like:
+One last setting that may be of interest to many users is the ability
+to customize the parallelism of Spack builds. By default, Spack
+installs all packages in parallel with the number of jobs equal to the
+number of cores on the node. For example, on a node with 36 cores,
+this will look like:
 
 .. code-block:: console
 
@@ -838,11 +840,4 @@ If we uninstall and reinstall zlib, we see that it now uses only 4 cores:
 
 Obviously, if you want to build everything in serial for whatever reason,
 you would set ``build_jobs`` to 1.
-
-.. warning::
-
-   At this point, make sure you delete or move the ``packages.yaml`` and
-   ``config.yaml`` you have been editing up to this point. Otherwise, they
-   will change the hashes of your packages, leading to differences in the
-   output of later tutorial sections.
 
