@@ -710,3 +710,139 @@ hdf5 against our external installations of zlib and mpich.
 
    $ spack install hdf5 %clang
    ...
+
+
+-----------------
+High-level Config
+-----------------
+
+In addition to compiler and package settings, Spack allows customization
+of several high-level settings. These settings are stored in the generic
+``config.yaml`` configuration file. You can see the default settings by
+running:
+
+.. code-block:: console
+
+   $ spack config --scope defaults edit config
+
+
+.. literalinclude:: ../../../etc/spack/defaults/config.yaml
+   :language: yaml
+
+
+As you can see, many of the directories Spack uses can be customized.
+For example, you can tell Spack to install packages to a prefix
+outside of the ``$SPACK_ROOT`` hierarchy. Module files can be
+written to a central location if you are using multiple Spack
+instances. If you have a fast scratch filesystem, you can run builds
+from this filesystem with the following ``config.yaml``:
+
+.. code-block:: yaml
+
+   config:
+     build_stage:
+       - /scratch/$user
+
+
+On systems with compilers that absolutely *require* environment variables
+like ``LD_LIBRARY_PATH``, it is possible to prevent Spack from cleaning
+the build environment with the ``dirty`` setting:
+
+.. code-block:: yaml
+
+   config:
+     dirty: true
+
+
+However, this is strongly discouraged, as it can pull unwanted libraries
+into the build.
+
+One last setting that may be of interest to users building on a shared
+login node is the ability to customize the parallelism of Spack builds.
+By default, Spack installs all packages in parallel with the number of
+jobs equal to the number of cores on the node. For example, on a node
+with 36 cores, this will look like:
+
+.. code-block:: console
+
+   $ spack install --verbose zlib
+   ==> Installing zlib
+   ==> Using cached archive: ~/spack/var/spack/cache/zlib/zlib-1.2.11.tar.gz
+   ==> Staging archive: ~/spack/var/spack/stage/zlib-1.2.11-5nus6knzumx4ik2yl44jxtgtsl7d54xb/zlib-1.2.11.tar.gz
+   ==> Created stage in ~/spack/var/spack/stage/zlib-1.2.11-5nus6knzumx4ik2yl44jxtgtsl7d54xb
+   ==> No patches needed for zlib
+   ==> Building zlib [Package]
+   ==> Executing phase: 'install'
+   ==> './configure' '--prefix=~/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/zlib-1.2.11-5nus6knzumx4ik2yl44jxtgtsl7d54xb'
+   Checking for shared library support...
+   Building shared library libz.so.1.2.11 with ~/spack/lib/spack/env/gcc/gcc.
+   Checking for size_t... Yes.
+   Checking for off64_t... Yes.
+   Checking for fseeko... Yes.
+   Checking for strerror... Yes.
+   Checking for unistd.h... Yes.
+   Checking for stdarg.h... Yes.
+   Checking whether to use vs[n]printf() or s[n]printf()... using vs[n]printf().
+   Checking for vsnprintf() in stdio.h... Yes.
+   Checking for return value of vsnprintf()... Yes.
+   Checking for attribute(visibility) support... Yes.
+   ==> 'make' '-j36'
+   ...
+   ==> 'make' '-j36' 'install'
+   ...
+
+
+As you can see, we are building with all 36 cores on the node. If you are
+on a shared login node, this can slow down the system for other users. If
+you have a strict ulimit or restriction on the number of available licenses,
+you may not be able to build at all with this many cores. On nodes with 64+
+cores, you may not see a significant speedup of the build anyway. To limit
+the number of cores our build uses, set ``build_jobs`` like so:
+
+.. code-block:: yaml
+
+   config:
+     build_jobs: 4
+
+
+If we uninstall and reinstall zlib, we see that it now uses only 4 cores:
+
+.. code-block:: console
+
+   $ spack install -v zlib
+   ==> Installing zlib
+   ==> Using cached archive: ~/spack/var/spack/cache/zlib/zlib-1.2.11.tar.gz
+   ==> Staging archive: ~/spack/var/spack/stage/zlib-1.2.11-ezuwp4pa52e75v6iweawzwymmf4ahxxn/zlib-1.2.11.tar.gz
+   ==> Created stage in ~/spack/var/spack/stage/zlib-1.2.11-ezuwp4pa52e75v6iweawzwymmf4ahxxn
+   ==> No patches needed for zlib
+   ==> Building zlib [Package]
+   ==> Executing phase: 'install'
+   ==> './configure' '--prefix=~/spack/opt/spack/linux-ubuntu16.04-x86_64/gcc-7.2.0/zlib-1.2.11-ezuwp4pa52e75v6iweawzwymmf4ahxxn'
+   Checking for shared library support...
+   Building shared library libz.so.1.2.11 with ~/spack/lib/spack/env/gcc/gcc.
+   Checking for size_t... Yes.
+   Checking for off64_t... Yes.
+   Checking for fseeko... Yes.
+   Checking for strerror... Yes.
+   Checking for unistd.h... Yes.
+   Checking for stdarg.h... Yes.
+   Checking whether to use vs[n]printf() or s[n]printf()... using vs[n]printf().
+   Checking for vsnprintf() in stdio.h... Yes.
+   Checking for return value of vsnprintf()... Yes.
+   Checking for attribute(visibility) support... Yes.
+   ==> 'make' '-j4'
+   ...
+   ==> 'make' '-j4' 'install'
+   ...
+
+
+Obviously, if you want to build everything in serial for whatever reason,
+you would set ``build_jobs`` to 1.
+
+.. warning::
+
+   At this point, make sure you delete or move the ``packages.yaml`` and
+   ``config.yaml`` you have been editing up to this point. Otherwise, they
+   will change the hashes of your packages, leading to differences in the
+   output of later tutorial sections.
+
