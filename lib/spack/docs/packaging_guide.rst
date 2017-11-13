@@ -1085,10 +1085,27 @@ can do
   destination=x/y/
   placement="z-renamed"
 
-Or
+or
 
 ``placement="x/y/z-renamed"``
 
+The concatenation of ``destination`` and ``placement`` will be referred to
+here as the target. The following specifies the behavior of ``placement``
+depending on whether the resource is a file or directory and whether the
+target already exists as a directory:
+
+* If ``placement`` ends with a ``/`` and the resource is a single file
+  (or if it expands to one file) then ``placement`` is assumed to specify a
+  directory and the resource file is placed in that directory
+* If ``placement`` does not end with a ``/`` and the resource is a single
+  file, then it is assumed that the resource file should be renamed. One
+  exception is if the target is a directory which already exists; in that
+  case the resource is in the target directory with its original name. 
+* If the resource is a directory and the target exists as a directory, the
+  files in the resource directory are moved to the target directory.
+* If the resource is a directory or an exploding tarball and the target path
+  does not exist, it is assumed that all files in the resource directory
+  should be placed in a directory specified by the target path.
 
 .. _license:
 
