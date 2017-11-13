@@ -67,8 +67,8 @@ class Plasma(MakefilePackage):
             self.spec["blas"].libs.ld_flags
 
         if '~shared' in self.spec:
-           make_inc.filter("-fPIC", "")  # not using fPIC
-           ld_flags += " -lm"
+            make_inc.filter("-fPIC", "")  # not using fPIC
+            ld_flags += " -lm"
 
         if "^mkl" not in spec:
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
@@ -81,7 +81,7 @@ class Plasma(MakefilePackage):
         for dep in ("blas", "lapack"):
             try:  # in case the dependency does not provide header flags
                 header_flags += " " + spec[dep].headers.cpp_flags
-            except:
+            except Exception:
                 pass
 
         make_inc.filter("CFLAGS +[+]=", "CFLAGS += " + header_flags + " ")
