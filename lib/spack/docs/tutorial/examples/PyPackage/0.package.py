@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,11 +27,11 @@
 # next to all the things you'll want to change. Once you've handled
 # them, you can save this file and test your package like this:
 #
-#     spack install mpileaks
+#     spack install py-pandas
 #
 # You can edit this file again by typing:
 #
-#     spack edit mpileaks
+#     spack edit py-pandas
 #
 # See the Spack documentation for more information on packaging.
 # If you submit this package back to Spack as a pull request,
@@ -40,19 +40,21 @@
 from spack import *
 
 
-class Mpileaks(Package):
+class PyPandas(PythonPackage):
     """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
-    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pandas/pandas-0.19.0.tar.gz"
 
-    version('1.0', '8838c574b39202a57d7c2d68692718aa')
+    version('0.19.0', 'bc9bb7188e510b5d44fbdd249698a2c3')
 
     # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    # depends_on('py-setuptools', type='build')
+    # depends_on('py-foo',        type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+    def build_args(self, spec, prefix):
+        # FIXME: Add arguments other than --prefix
+        # FIXME: If not needed delete this function
+        args = []
+        return args
