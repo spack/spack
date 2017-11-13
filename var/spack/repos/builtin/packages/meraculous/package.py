@@ -39,6 +39,8 @@ class Meraculous(CMakePackage):
     depends_on('gnuplot@3.7:')
     depends_on('perl-log-log4perl', type=('build', 'run'))
 
+    conflicts('%gcc@6.0.0:', when='@2.2.4')
+
     def patch(self):
         edit = FileFilter('CMakeLists.txt')
         edit.filter("-static-libstdc\+\+", "")
