@@ -39,7 +39,10 @@ correspond to sections in the slides above.
   1. :ref:`basics-tutorial`
   2. :ref:`configs-tutorial`
   3. :ref:`packaging-tutorial`
-  4. :ref:`modules-tutorial`
+  4. :ref:`build-systems-tutorial`
+  5. :ref:`advanced-packaging-tutorial`
+  6. :ref:`modules-tutorial`
+  7. :ref:`modules-tutorial`
 
 Full contents:
 
@@ -47,5 +50,6 @@ Full contents:
    tutorial_basics
    tutorial_configuration
    tutorial_packaging
+   tutorial_buildsystems
    tutorial_advanced_packaging
    tutorial_modules

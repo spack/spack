@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,18 +25,20 @@
 from spack import *
 
 
-class Mpileaks(Package):
-    """Tool to detect and report MPI objects like MPI_Requests and
-    MPI_Datatypes."""
+class Mpileaks(AutoToolsPackage):
+    """Tool to detect and report leaked MPI objects like MPI_Requests and
+       MPI_Datatypes."""
 
     homepage = "https://github.com/hpc/mpileaks"
-    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"  # NOQA
+    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
+
     version('1.0', '8838c574b39202a57d7c2d68692718aa')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    depends_on("mpi")
+    depends_on("adept-utils")
+    depends_on("callpath")
 
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+    def configure_args(self):
+        args = ["--with-adept-utils=" + spec['adept-utils'].prefix,
+                "--with-callpath=" + spec['callpath'].prefix]
+        return args

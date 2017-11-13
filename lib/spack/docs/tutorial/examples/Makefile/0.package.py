@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,18 +25,21 @@
 from spack import *
 
 
-class Mpileaks(Package):
-    """Tool to detect and report MPI objects like MPI_Requests and
-    MPI_Datatypes."""
+class Bowtie(MakefilePackage):
+    """FIXME: Put a proper description of your package here."""
 
-    homepage = "https://github.com/hpc/mpileaks"
-    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"  # NOQA
-    version('1.0', '8838c574b39202a57d7c2d68692718aa')
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "http://www.example.com"
+    url      = "https://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.2.1.1/bowtie-1.2.1.1-src.zip"
+
+    version('1.2.1.1', 'ec06265730c5f587cd58bcfef6697ddf')
 
     # FIXME: Add dependencies if required.
     # depends_on('foo')
 
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+    def edit(self, spec, prefix):
+        # FIXME: Edit the Makefile if necessary
+        # FIXME: If not needed delete this function
+        # makefile = FileFilter('Makefile')
+        # makefile.filter('CC = .*', 'CC = cc')
+        return
