@@ -8,20 +8,33 @@ You may begin to notice after writing a couple of package template files a
 pattern emerge for some packages. For example, you may find yourself writing
 an :code:`install()` method that invokes: :code:`configure`, :code:`cmake`,
 :code:`make`, :code:`make install`. You may also find yourself writing
-:code:`"prefix=" + prefix` as an argument to configure or cmake. Rather than
-having you repeat these lines for all packages, Spack has classes that can
-take care of these patterns. In addition, these package files allow for finer
-grained control of these build systems. In this section, we will describe
-each build system and give examples on how these can be manipulated to
-install a package.
+:code:`"prefix=" + prefix` as an argument to :code:`configure` or :code:`cmake`.
+Rather than having you repeat these lines for all packages, Spack has
+classes that can take care of these patterns. In addition,
+these package files allow for finer grained control of these build systems.
+In this section, we will describe each build system and give examples on
+how these can be manipulated to install a package.
 
 -----------------------
-Package class Hierarchy
+Package Class Hierarchy
 -----------------------
+
 .. graphviz::
 
-    digraph {
-        {Package, MakefilePackage, AutotoolsPackage, CMakePackage, PythonPackage, RPackage} -> PackageBaseClass
+    digraph G {
+
+        node [
+            shape = "record"
+        ]
+        edge [
+            arrowhead = "empty"
+        ]
+
+        PackageBase -> Package [dir=back]
+        PackageBase -> MakefilePackage [dir=back]
+        PackageBase -> AutotoolsPackage [dir=back]
+        PackageBase -> CMakePackage [dir=back]
+        PackageBase -> PythonPackage [dir=back]
     }
 
 The above diagram gives a high level view of the class hierarchy and how each
@@ -122,6 +135,10 @@ override :code:`configure_args()`, which will then return it's output to
 to :code:`configure()`. Then, :code:`configure()` will append the common
 arguments
 
+Packagers also have the option to run :code:`autoreconf` in case a package
+needs to update the build system and generate a new :code:`configure`. Though,
+for the most part this will be unnecessary.
+
 Let's look at the :code:`mpileaks` package.py file that we worked on earlier:
 
 .. code-block:: console
@@ -162,7 +179,7 @@ package file.
 Makefile
 -----------------
 
-Packages that utilize :code:`GNU Make` or a :code:`Makefile` usually require you
+Packages that utilize :code:`Make` or a :code:`Makefile` usually require you
 to edit a :code:`Makefile` to set up platform and compiler specific variables.
 These packages are handled by the :code:`Makefile` subclass which provides
 convenience methods to help write these types of packages.
@@ -225,7 +242,7 @@ usual fashion and create a template of a :code:`MakefilePackage` package.py.
    :language: python
    :linenos:
 
-Spack was successfully able to detect that :code:`Bowtie` uses :code:`GNU Make`.
+Spack was successfully able to detect that :code:`Bowtie` uses :code:`Make`.
 Let's add in the rest of our details for our package:
 
 .. literalinclude:: tutorial/examples/Makefile/1.package.py
@@ -573,7 +590,7 @@ different location is found in :code:`spades`.
 
 .. code-block:: console
 
-    $ spack edit spade.
+    $ spack edit spade
 
 .. code-block:: python
 

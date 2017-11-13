@@ -34,11 +34,18 @@ class Mpileaks(AutoToolsPackage):
 
     version('1.0', '8838c574b39202a57d7c2d68692718aa')
 
+    variant("stackstart", values=int, default=0,
+            description="Specify the number of stack frames to truncate")
+
     depends_on("mpi")
     depends_on("adept-utils")
     depends_on("callpath")
 
     def configure_args(self):
+        stackstart = int(self.spec.variants['stackstart'].value)
         args = ["--with-adept-utils=" + spec['adept-utils'].prefix,
                 "--with-callpath=" + spec['callpath'].prefix]
+        if stackstart:
+            args.extend(['--with-stack-start-c=%s' % stackstart,
+                         '--with-stack-start-fortran=%s' % stackstart])
         return args
