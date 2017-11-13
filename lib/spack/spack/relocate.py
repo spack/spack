@@ -217,7 +217,7 @@ def needs_binary_relocation(filetype):
     retval = False
     if "relocatable" in filetype:
         return False
-    if "link" in filetype:
+    if "symbolic link" in filetype:
         return False
     if platform.system() == 'Darwin':
         return ('Mach-O' in filetype)
