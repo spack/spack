@@ -1,4 +1,4 @@
-FROM pritunl/archlinux
+FROM base/archlinux
 MAINTAINER Omar Padron <omar.padron@kitware.com>
 
 ENV SPACK_ROOT=/spack        \
