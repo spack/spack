@@ -195,6 +195,7 @@ class Openmpi(AutotoolsPackage):
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('ucx', default=False, description='Enable UCX support')
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
@@ -205,6 +206,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
+    depends_on('ucx', when='+ucx')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -363,6 +365,12 @@ class Openmpi(AutotoolsPackage):
                         config_args.append('CFLAGS=-D__LP64__')
             else:
                 config_args.append('--without-cuda')
+
+        # UCX support
+        if '+ucx' in spec:
+            config_args.append('--with-ucx={0}'.format(spec['ucx'].prefix))
+        else:
+            config_args.append('--without-ucx')
 
         return config_args
 
