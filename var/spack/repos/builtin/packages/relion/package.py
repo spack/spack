@@ -34,6 +34,10 @@ class Relion(CMakePackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     url      = "https://github.com/3dem/relion"
 
+    version('2.0.3', git='https://github.com/3dem/relion.git',
+                commit='50505945ec46c25ddebf7292492df7de331a2696')
+    version('v.2.1-beta-1', git='https://github.com/3dem/relion.git',
+                commit='e7607a869687b636d3c39e0d5b6a9cba930fc3b2')
     version('develop', git='https://github.com/3dem/relion.git')
 
     variant('gui', default=True, description="build the gui")
@@ -49,6 +53,11 @@ class Relion(CMakePackage):
     depends_on('fftw+float+double')
     depends_on('fltk', when='+gui')
     depends_on('cuda@8.0:8.99', when='+cuda')
+    # compiles with gcc > 5
+    conflicts('%gcc@5:9')
+    # cuda 9 not yet supported 
+    #  https://github.com/3dem/relion/issues/296
+    conflicts('cuda@9')
 
     def cmake_args(self):
         args = [
@@ -58,9 +67,11 @@ class Relion(CMakePackage):
             '-DDoublePrec_CPU=%s' % ('+double' in self.spec),
             '-DDoublePrec_GPU=%s' % ('+double-gpu' in self.spec),
         ]
+        # added cuda arch for p100s
         if '+cuda' in self.spec:
             args += [
                 '-DCUDA=on',
+                '-DCUDA_ARCH=60'
                 '-DCUFFT=on',
             ]
         return args
