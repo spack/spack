@@ -69,7 +69,7 @@ from six import iteritems
 from llnl.util.tty.color import ColorStream
 
 from spack.spec import Spec
-from spack.dependency import all_deptypes, canonical_deptype
+from spack.dependency import canonical_deptype
 
 
 __all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
