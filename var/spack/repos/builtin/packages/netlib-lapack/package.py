@@ -75,7 +75,7 @@ class NetlibLapack(Package):
         shared = True if '+shared' in self.spec else False
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
-            tuple(): ['blas'],
+            tuple(): ['libblas'],
             ('c',): [
                 'libcblas',
                 'libblas',
@@ -95,7 +95,7 @@ class NetlibLapack(Package):
         shared = True if '+shared' in self.spec else False
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
-            tuple(): ['lapack'],
+            tuple(): ['liblapack'],
             ('c',): [
                 'liblapacke',
                 'liblapack',
