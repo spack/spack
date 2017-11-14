@@ -31,6 +31,7 @@ class Libmongoc(AutotoolsPackage):
     homepage = "https://github.com/mongodb/mongo-c-driver"
     url      = "https://github.com/mongodb/mongo-c-driver/releases/download/1.7.0/mongo-c-driver-1.7.0.tar.gz"
 
+    version('1.8.1', '52d54a4107a2da20c1a1b28bc1ff9d44')
     version('1.8.0', '8c271a16ff30f6d4f5e134f699f7360f')
     version('1.7.0', '21acf3584e92631422bc91e9e3cf4f76')
     version('1.6.3', '0193610cf1d98aae7008f272a1000972')
@@ -61,12 +62,15 @@ class Libmongoc(AutotoolsPackage):
             args.append('--enable-ssl=no')
 
         if spec.satisfies('@1.7.0:'):
-            # --with-{snappy,zlib}=system are currently broken and cause
-            # configure to not find the dependencies. We still want to
-            # explicitly disable them when appropriate.
+            # --with-{snappy,zlib}=system are broken for versions < 1.8.1
             if '+snappy' not in spec:
                 args.append('--with-snappy=no')
+            elif spec.satisfies('@1.8.1:'):
+                args.append('--with-snappy=system')
+
             if '+zlib' not in spec:
                 args.append('--with-zlib=no')
+            elif spec.satisfies('@1.8.1:'):
+                args.append('--with-zlib=system')
 
         return args

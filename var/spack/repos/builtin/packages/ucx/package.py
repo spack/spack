@@ -1,6 +1,6 @@
 ##############################################################################
 # Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -22,37 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install mpileaks
-#
-# You can edit this file again by typing:
-#
-#     spack edit mpileaks
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
-class Mpileaks(Package):
-    """FIXME: Put a proper description of your package here."""
+class Ucx(AutotoolsPackage):
+    """a communication library implementing high-performance messaging for
+    MPI/PGAS frameworks"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
+    homepage = "http://www.openucx.org"
+    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
 
-    version('1.0', '8838c574b39202a57d7c2d68692718aa')
-
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')

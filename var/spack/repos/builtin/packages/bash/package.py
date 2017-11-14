@@ -49,3 +49,12 @@ class Bash(AutotoolsPackage):
 
     def check(self):
         make('tests')
+
+    @property
+    def install_targets(self):
+        args = ['install']
+
+        if self.spec.satisfies('@4.4:'):
+            args.append('install-headers')
+
+        return args

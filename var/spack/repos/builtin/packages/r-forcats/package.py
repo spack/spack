@@ -22,37 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install mpileaks
-#
-# You can edit this file again by typing:
-#
-#     spack edit mpileaks
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
-class Mpileaks(Package):
-    """FIXME: Put a proper description of your package here."""
+class RForcats(RPackage):
+    """Helpers for reordering factor levels (including moving specified levels
+       to front, ordering by first appearance, reversing, and randomly
+       shuffling), and tools for modifying factor levels (including collapsing
+       rare levels into other, 'anonymising', and manually 'recoding')."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
-    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
+    homepage = "http://forcats.tidyverse.org/"
+    url      = "https://cran.r-project.org/src/contrib/forcats_0.2.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/forcats"
 
-    version('1.0', '8838c574b39202a57d7c2d68692718aa')
+    version('0.2.0', 'e4ba2c0a59dcdfcc02274c519bf3dbfc')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
-    def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+    depends_on('r-tibble', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
