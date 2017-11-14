@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,16 @@ class CandleBenchmarks(Package):
     tags = ['proxy-app', 'ecp-proxy-app']
 
     version('1.0', '6eced30dc15374bc9f90a86d0396e470')
+
+    depends_on('python@2.7:')
+    depends_on('py-theano +gpu', type=('build', 'run'))
+    depends_on('py-keras', type=('build', 'run'))
+    depends_on('py-matplotlib +image', type=('build', 'run'))
+    depends_on('py-tqdm', type=('build', 'run'))
+    depends_on('py-scikit-learn', type=('build', 'run'))
+    depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib +python -dnn')
+    depends_on('py-mdanalysis', type=('build', 'run'))
+    depends_on('py-mpi4py', type=('build', 'run'))
 
     # see #3244, but use external for now
     # depends_on('tensorflow')

@@ -5,7 +5,7 @@
 # This file is released as part of spack under the LGPL license.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,10 +30,14 @@ class Mesa(AutotoolsPackage):
      - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
-    url      = "https://mesa.freedesktop.org/archive/13.0.6/mesa-13.0.6.tar.xz"
+    url      = "https://mesa.freedesktop.org/archive/mesa-17.1.5.tar.xz"
     list_url = "https://mesa.freedesktop.org/archive"
+    _urlfmt = "https://mesa.freedesktop.org/archive/mesa-{0}.tar.xz"
+    _oldurlfmt = "https://mesa.freedesktop.org/archive/older-versions/{0}.x/{1}/mesa-{1}.tar.xz"
     list_depth = 2
 
+    version('17.2.3', 'a7dca71afbc7294cb7d505067fd44ef6')
+    version('17.2.2', '1a157b5baefb5adf9f4fbb8a6632d74c')
     version('17.1.5', '6cf936fbcaadd98924298a7009e8265d')
     version('17.1.4', 'be2ef7c9edec23b07f74f6512a6a6fa5')
     version('17.1.3', '1946a93d543bc219427e2bebe2ac4752')
@@ -83,6 +87,13 @@ class Mesa(AutotoolsPackage):
     depends_on('llvm+link_dylib', when='+llvm')
     depends_on('libelf', when='+llvm')
 
+    def url_for_version(self, version):
+        """Handle Mesa version-based custom URLs."""
+        if version < Version('17.0.0'):
+            return self._oldurlfmt.format(version.up_to(1), version)
+        else:
+            return self._urlfmt.format(version)
+
     def configure_args(self):
         """Build drivers for platforms supported by spack;
         exclude drivers for embedded systems.
@@ -101,7 +112,8 @@ class Mesa(AutotoolsPackage):
             if '+llvm' in spec:
                 # For @17.1.1:17.1.2 the swr driver requires C++14 support
                 # Should be fixed in 17.1.3, but can still encounter problems
-                if spec.version >= Version('17'):
+                if spec.version >= Version('17') and \
+                   spec.version < Version('17.2'):
                     if spec.satisfies('%gcc@4.9:'):
                         drivers.append('swr')
                 else:

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -51,16 +51,17 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('3.3.2-rc2', git='https://github.com/mfem/mfem',
-            tag='v3.3.2-rc2')
+    version('3.3.2', 
+            '01a762a5d0a2bc59ce4e2f59009045a4',
+            url='https://goo.gl/Kd7Jk8', extension='.tar.gz',
+            preferred=True)
 
     version('laghos-v1.0', git='https://github.com/mfem/mfem',
             tag='laghos-v1.0')
 
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
-            url='http://goo.gl/Vrpsns', extension='.tar.gz',
-            preferred=True)
+            url='http://goo.gl/Vrpsns', extension='.tar.gz')
 
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
@@ -126,7 +127,6 @@ class Mfem(Package):
     depends_on('petsc@3.8:', when='+petsc')
 
     depends_on('mpfr', when='+mpfr')
-    depends_on('cmake', when='^metis@5:', type='build')
     depends_on('netcdf', when='@3.2: +netcdf')
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
@@ -134,14 +134,6 @@ class Mfem(Package):
     depends_on('zlib', when='+gzstream')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
-
-    def check_variants(self, spec):
-        if 'metis@5:' in spec and '%clang' in spec and (
-                '^cmake %gcc' not in spec):
-            raise InstallError('To work around CMake bug with clang, must ' +
-                               'build mfem with mfem[+variants] %clang ' +
-                               '^cmake %gcc to force CMake to build with gcc')
-        return
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
@@ -151,7 +143,6 @@ class Mfem(Package):
     # configuration options. So, don't use CMake
     #
     def install(self, spec, prefix):
-        self.check_variants(spec)
 
         def yes_no(varstr):
             return 'YES' if varstr in self.spec else 'NO'
@@ -170,6 +161,7 @@ class Mfem(Package):
             'PREFIX=%s' % prefix,
             'MFEM_USE_MEMALLOC=YES',
             'MFEM_DEBUG=%s' % yes_no('+debug'),
+            'CXX=%s' % env['CXX'],
             'MFEM_USE_LIBUNWIND=%s' % yes_no('+debug'),
             'MFEM_USE_GZSTREAM=%s' % yes_no('+gzstream'),
             'MFEM_USE_METIS_5=%s' % metis5_str,
@@ -183,6 +175,9 @@ class Mfem(Package):
             'MFEM_USE_NETCDF=%s' % yes_no('+netcdf'),
             'MFEM_USE_MPFR=%s' % yes_no('+mpfr'),
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp')]
+
+        if '+mpi' in spec:
+            options += ['MPICXX=%s' % spec['mpi'].mpicxx]
 
         if '+hypre' in spec:
             options += [

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,10 +31,10 @@ class RAffy(RPackage):
        functions. 'affy' is fully functional without it."""
 
     homepage = "https://bioconductor.org/packages/affy/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/affy_1.54.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/affy"
     list_url = homepage
 
-    version('1.54.0', '84270de80ca61bb14b6127a6f5390100')
+    version('1.54.0', git='https://git.bioconductor.org/packages/affy', commit='a815f02906fcf491b28ed0a356d6fce95a6bd20e')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

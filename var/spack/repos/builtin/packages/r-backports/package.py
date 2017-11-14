@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,7 +36,7 @@ class RBackports(RPackage):
 
     homepage = "https://cran.r-project.org/package=backports"
     url      = "https://cran.r-project.org/src/contrib/backports_1.1.1.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/backports"
 
     version('1.1.1', '969543a0af32dc23bba9bb37ec82008c')
     version('1.1.0', 'b97a71b026fd7ede0e449be93d160c17')

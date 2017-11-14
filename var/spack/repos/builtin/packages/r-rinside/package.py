@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -44,6 +44,7 @@ class RRinside(RPackage):
 
     homepage = "http://dirk.eddelbuettel.com/code/rinside.html"
     url      = "https://cran.r-project.org/src/contrib/RInside_0.2.13.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RInside"
 
     version('0.2.13', '2e3c35a7bd648e9bef98d0afcc02cf88')
 

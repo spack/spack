@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@ class RIgraph(RPackage):
 
     homepage = "http://igraph.org/"
     url      = "https://cran.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/igraph"
 
     version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')
 

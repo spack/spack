@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@ class Sundials(CMakePackage):
     # Versions
     # ==========================================================================
 
+    version('3.1.0', '1a84ca41c7f71067e03d519ddbcd9dae')
     version('3.0.0', '5163a44cedd7398bddda442ba00313b8')
     version('2.7.0', 'c304631b9bc82877d7b0e9f4d4fd94d3')
     version('2.6.2', '3deeb0ede9f514184c6bd83ecab77d95')
@@ -183,8 +184,10 @@ class Sundials(CMakePackage):
     depends_on('petsc+double~complex', when='+petsc precision=double')
 
     # Require that external libraries built with the same index type
+    depends_on('hypre', when='+hypre')
     depends_on('hypre~int64', when='+hypre ~int64')
     depends_on('hypre+int64', when='+hypre +int64')
+    depends_on('petsc', when='+petsc')
     depends_on('petsc~int64', when='+petsc ~int64')
     depends_on('petsc+int64', when='+petsc +int64')
 
@@ -193,6 +196,13 @@ class Sundials(CMakePackage):
 
     # Require that SuperLU_MT built with external blas
     depends_on('superlu-mt+blas', when='+superlu-mt')
+
+    # ==========================================================================
+    # Patches
+    # ==========================================================================
+
+    # remove OpenMP header file and function from hypre vector test code
+    patch('test_nvector_parhyp.patch', when='@2.7.0:3.0.0')
 
     # ==========================================================================
     # SUNDIALS Settings
@@ -346,12 +356,14 @@ class Sundials(CMakePackage):
     def post_install(self):
         """Run after install to fix install name of dynamic libraries
         on Darwin to have full path and install the LICENSE file."""
+        spec = self.spec
         prefix = self.spec.prefix
 
         if (sys.platform == 'darwin'):
             fix_darwin_install_name(prefix.lib)
 
-        install('LICENSE', prefix)
+        if spec.satisfies('@:3.0.0'):
+            install('LICENSE', prefix)
 
     @run_after('install')
     def filter_compilers(self):

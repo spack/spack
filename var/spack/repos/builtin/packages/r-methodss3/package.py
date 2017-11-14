@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -38,6 +38,6 @@ class RMethodss3(RPackage):
 
     homepage = "https://cran.r-project.org/package=R.methodsS3"
     url      = "https://cran.r-project.org/src/contrib/R.methodsS3_1.7.1.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/R.methodsS3"
 
     version('1.7.1', 'c88e815837f268affd4f2a39c737d969')

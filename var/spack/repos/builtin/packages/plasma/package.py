@@ -4,7 +4,7 @@
 #
 # Created by Piotr Luszczek, luszczek@icl.utk.edu, All rights reserved.
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 #
 ##############################################################################
 #

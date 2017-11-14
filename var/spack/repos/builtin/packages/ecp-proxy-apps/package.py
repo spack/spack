@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,7 @@ class EcpProxyApps(Package):
     depends_on('candle-benchmarks@1.0', when='@1.0')
     depends_on('comd@1.1', when='@1.0')
     depends_on('laghos@1.0', when='@1.0')
+    depends_on('macsio@1.0', when='@1.0')
     depends_on('miniamr@1.4.0', when='@1.0')
     depends_on('minife@2.1.0', when='@1.0')
     depends_on('minitri@1.0', when='@1.0')
