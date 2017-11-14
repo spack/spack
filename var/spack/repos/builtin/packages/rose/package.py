@@ -27,7 +27,7 @@
 # -----------------------------------------------------------------------------
 
 from spack import *
-
+import spack.build_environment
 
 class Rose(AutotoolsPackage):
     """A compiler infrastructure to build source-to-source program
@@ -35,10 +35,14 @@ class Rose(AutotoolsPackage):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url = "https://github.com/rose-compiler/rose/archive/v0.9.7.0.tar.gz"
+    #url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.7.0.tar.gz"
+    url = "https://github.com/justintoo/rose-develop/archive/v0.9.9.104.zip"
 
+    version('0.9.9.104', 'b01cf9d2fd440fc0fe77a713c5f7831e')
     version('0.9.9.0', '8f47fb8aa803d019657bd42c8b892cce')
     version('0.9.7.0', 'be0d0941ba4c0349a20d6394c20d16d7')
+    version('0.9.9.52', commit='bd4fc0cc332ce62d9fa54db19879507d9e4f239b',
+            git='https://github.com/rose-compiler/rose-develop.git')
     version('develop', branch='master',
             git='https://github.com/rose-compiler/rose-develop.git')
 
@@ -75,6 +79,15 @@ class Rose(AutotoolsPackage):
     variant('z3', default=False, description='Enable z3 theorem prover')
     depends_on('z3', when='+z3')
 
+    variant('edg_source', default=False, description='Use the EDG C/C++ frontend source code')
+    depends_on('git', when='+edg_source')
+
+    #------------------------------------------------------------------------
+    # ROSE-based Projects
+    #------------------------------------------------------------------------
+    variant('codethorn', default=False, description='Enable the CodeThorn project')
+    variant('polyopt', default=False, description='Enable the PolyOpt project')
+
     build_directory = 'rose-build'
 
     def patch(self):
@@ -83,18 +96,34 @@ class Rose(AutotoolsPackage):
         # ROSE needs its <VERSION> <TIMESTAMP> to compute its EDG
         # binary compatibility signature for C/C++ and for its
         # --version information.
+        #
+        # <VERSION>      git rev-parse HEAD
+        # <TIMESTAMP>    git log -1 --format="%at"
+        #
         with open('VERSION', 'w') as f:
-            if '@0.9.9.0:' in spec:
+            if '@0.9.9.104:' in spec:
+                # EDG: 27acd506c6b0e4b1c5f7573c642e3e407237eddd
+                f.write('66c87e9395126a7ab8663d81f0e0b99d6e09131e 1504924600')
+            elif '@0.9.9.0:' in spec:
                 # EDG: 46306e9f73d3ccd690be300aefdaf766a9ba3f70
                 f.write('14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff 1492716108')
             elif '@0.9.7.0:' in spec:
                 # EDG: 8e63f421f9107ef6c7882b57f9c83e3878623ffa
                 f.write('992c21ad06893bc1e9e7688afe0562eee0fda021 1460595442')
+            else:
+                raise InstallError('Unknown ROSE version!')
 
     def autoreconf(self, spec, prefix):
-        if not spec.satisfies('@develop'):
+#        if not spec.satisfies('@develop'):
+        with working_dir(self.stage.source_path):
             bash = which('bash')
             bash('build')
+
+        if '+edg_source' in spec:
+            git = which('git')
+            git('clone',
+                'rose-dev@rosecompiler1.llnl.gov:rose/edg4x/edg.git',
+                'src/frontend/CxxFrontend/EDG')
 
     @property
     def languages(self):
@@ -166,26 +195,58 @@ class Rose(AutotoolsPackage):
 
         return args
 
+    def setup_environment(self, spack_env, run_env):
+        if '+codethorn' in self.spec:
+            spack_env.set('CXXFLAGS', '-std=c++11')
+
     def build(self, spec, prefix):
         # Spack will automatically pass ncpus as the number of make jobs.
         #
         # If you really want to srun this on a separate node, you can do this:
         #
-        #   $ srun -n1 spack install -j16 rose
+        #   $ srun -n1 spack install rose
         #
         with working_dir(self.build_directory):
             # ROSE needs the EDG version for C/C++
             with open('src/frontend/CxxFrontend/EDG-submodule-sha1', 'w') as f:
-                if '@0.9.9.0' in spec:
+                if '@0.9.9.104' in spec:
+                    f.write('27acd506c6b0e4b1c5f7573c642e3e407237eddd')
+                elif '@0.9.9.52' in spec:
+                    f.write('56a826126289414db5436e6c49879b99d046d26d')
+                elif '@0.9.9.0' in spec:
                     f.write('46306e9f73d3ccd690be300aefdaf766a9ba3f70')
                 elif '@0.9.7.0' in spec:
                     f.write('8e63f421f9107ef6c7882b57f9c83e3878623ffa')
                 else:
                     raise InstallError('Unknown ROSE version for EDG!')
 
-            # Install librose and identityTranslator
-            make('install-core')
+            # Compile librose
+            with working_dir('src'):
+                make()
+
+            # Install librose
+            with working_dir('src'):
+                make('install')
 
             # Install "official" ROSE-based tools
+            make('install-core')
+
             with working_dir('tools'):
                 make('install')
+
+            #-----------------------------------------------------------------
+            # ROSE-based Projects
+            #-----------------------------------------------------------------
+            if '+codethorn' in spec:
+                with working_dir('projects/CodeThorn'):
+                    make('install')
+
+            if '+polyopt' in spec:
+                mkdir = which('mkdir')
+                mkdir('-p', 'projects/PolyOpt2')
+                with working_dir('projects/PolyOpt2'):
+                    env['ROSE_SRC'] = self.stage.source_path
+                    env['ROSE_ROOT'] = self.prefix
+
+                    bash = which('bash')
+                    bash(join_path(self.stage.source_path, 'projects/PolyOpt2/install.sh'))
