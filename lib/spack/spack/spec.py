@@ -3013,7 +3013,7 @@ class Spec(object):
                 if named_str.upper().startswith('DEP:'):
                     _, pkgName, attribute = named_str.split(':', 2)
                     implementingSpecs = list(
-                        x for x in spec.traverse() if
+                        x for x in self.traverse() if
                         (x.name == pkgName or x.package.provides(pkgName)))
                     if not implementingSpecs:
                         raise ValueError(

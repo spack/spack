@@ -1,7 +1,8 @@
 import unittest
 import itertools
 
-from spack.cmd.rpm import *
+from spack.cmd.rpm import (Rpm, RpmInfo, RpmSpec, RpmSpecParser,
+                           resolve_autoname, fill_spec_template, default_spec)
 
 
 class MockSpec(object):
