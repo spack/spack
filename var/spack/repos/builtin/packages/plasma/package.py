@@ -57,24 +57,26 @@ class Plasma(MakefilePackage):
     patch("remove_absolute_mkl_include.patch", when="@17.1")
     patch("add_netlib_lapacke_detection.patch", when="@17.1")
 
+    def getblaslapacklibs(self):
+        if '^netlib-lapack' in self.spec:
+            bl_attr = ':c'
+        else:
+            bl_attr = ''
+        return self.spec['lapack' + bl_attr].libs + \
+            self.spec['blas' + bl_attr].libs + \
+            find_system_libraries(['libm'])
+
     def edit(self, spec, prefix):
         # copy "make.inc.mkl-gcc" provided by default into "make.inc"
         open("make.inc", "w").write(open("make.inc.mkl-gcc").read())
 
         make_inc = FileFilter("make.inc")
 
-        ld_flags = self.spec["lapack"].libs.ld_flags + " " + \
-            self.spec["blas"].libs.ld_flags
-
         if '~shared' in self.spec:
             make_inc.filter("-fPIC", "")  # not using fPIC
-            ld_flags += " -lm"
 
         if "^mkl" not in spec:
             make_inc.filter("-DPLASMA_WITH_MKL", "")  # not using MKL
-
-        if "^netlib-lapack" in spec:
-            ld_flags += " -llapacke -lcblas"
 
         header_flags = ""
         # accumulate CPP flags for headers: <cblas.h> and <lapacke.h>
@@ -92,7 +94,8 @@ class Plasma(MakefilePackage):
         # make sure CC variable comes from build environment
         make_inc.filter("CC *[?]*= * .*cc", "")
 
-        make_inc.filter("LIBS *[?]*= * .*", "LIBS = " + ld_flags)
+        make_inc.filter("LIBS *[?]*= * .*", "LIBS = " +
+                        self.getblaslapacklibs().ld_flags)
 
     @property
     def build_targets(self):
@@ -101,28 +104,10 @@ class Plasma(MakefilePackage):
         # use $CC set by Spack
         targets.append("CC = {0}".format(self.compiler.cc))
 
-        ld_flags = ""
-
         if "^mkl" in self.spec:
             targets.append("MKLROOT = {0}".format(env["MKLROOT"]))
 
-        if "^netlib-lapack" in self.spec:
-            ld_flags = " -llapacke -lcblas"
-
-        slibs = []
-        if (self.spec.satisfies('%gcc') or self.spec.satisfies('%clang')) \
-           and not'platform=cray' in self.spec:
-            slibs.append('libgfortran')
-        slibs.append('libm')
-        system_libs = find_system_libraries(slibs)
-
-        # pass LAPACK, BLAS, and libm library flags
-        targets.append("LIBS = {0} {1} {2} {3}".format(
-            self.spec["lapack"].libs.ld_flags,
-            self.spec["blas"].libs.ld_flags, ld_flags, system_libs.ld_flags))
+        targets.append("LIBS = {0}".format(
+            self.getblaslapacklibs().ld_flags))
 
         return targets
-
-    def build(self, spec, prefix):
-        if '~shared' in self.spec:
-            make('static=1', parallel=True)
