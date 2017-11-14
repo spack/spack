@@ -236,9 +236,17 @@ fi;
 #
 # Set up modules and dotkit search paths in the user environment
 #
-_sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
-_sp_dotkit_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('dotkit')))")
-_sp_tcl_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")
+
+read -r -d 'EOCs' _python_command << EOCs
+print(\'_sp_sys_type={0}\'.format(spack.architecture.sys_type()))\n
+print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'dotkit\'))))\n
+print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'tcl\'))))
+EOCs
+_python_command=$(echo ${_python_command} | tr -d ' ')
+
+_assignment_command=$(spack-python -c "exec('${_python_command}')")
+eval ${_assignment_command}
+
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
 
