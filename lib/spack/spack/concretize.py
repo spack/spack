@@ -366,6 +366,9 @@ class DefaultConcretizer(object):
                 nearest_flags = set(nearest.compiler_flags.get(flag, []))
                 flags = set(spec.compiler_flags.get(flag, []))
                 if (nearest_flags - flags):
+                    # TODO: these set operations may reorder the flags, which
+                    # for some orders of flags can be invalid. See:
+                    # https://github.com/spack/spack/issues/6154#issuecomment-342365573
                     spec.compiler_flags[flag] = list(nearest_flags | flags)
                     ret = True
             except StopIteration:

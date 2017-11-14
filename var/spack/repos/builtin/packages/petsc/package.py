@@ -42,6 +42,7 @@ class Petsc(Package):
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.8.2', '00666e1c4cbfa8dd6eebf91ff8180f79')
     version('3.8.1', '3ed75c1147800fc156fe1f1e515a68a7')
     version('3.8.0', '02680f1f78a0d4c5a9de80a366793eb8')
     version('3.7.7', 'c2cfb76677d32839810c4cf51a2f9cf5')
@@ -113,7 +114,8 @@ class Petsc(Package):
     depends_on('metis@5:~int64+real64', when='+metis~int64+double')
     depends_on('metis@5:+int64', when='+metis+int64~double')
 
-    depends_on('hdf5+mpi', when='+hdf5+mpi')
+    depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
+    depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
@@ -211,7 +213,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'trilinos'):
+                        'mumps', 'trilinos', 'zlib'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))

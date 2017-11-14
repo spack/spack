@@ -1122,7 +1122,7 @@ class Spec(object):
             self._set_architecture(target=value)
         elif name in valid_flags:
             assert(self.compiler_flags is not None)
-            self.compiler_flags[name] = value.split()
+            self.compiler_flags[name] = spack.compiler.tokenize_flags(value)
         else:
             # FIXME:
             # All other flags represent variants. 'foo=true' and 'foo=false'
