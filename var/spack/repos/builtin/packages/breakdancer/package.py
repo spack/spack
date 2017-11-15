@@ -36,7 +36,7 @@ class Breakdancer(CMakePackage):
     BreakDancerMini focuses on detecting small indels (usually between 10bp and
     100bp) using normally mapped read pairs.."""
 
-    homepage = "http://www.example.com"
+    homepage = "http://gmt.genome.wustl.edu/packages/breakdancer"
     url      = "https://github.com/genome/breakdancer.git"
 
     version('master', git='https://github.com/genome/breakdancer.git',
