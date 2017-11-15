@@ -237,11 +237,12 @@ fi;
 # Set up modules and dotkit search paths in the user environment
 #
 
-read -r -d 'EOCs' _python_command << EOCs
+_python_command=$(cat << EOCs
 print(\'_sp_sys_type={0}\'.format(spack.architecture.sys_type()))\n
 print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'dotkit\'))))\n
 print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'tcl\'))))
 EOCs
+)
 _python_command=$(echo ${_python_command} | tr -d ' ')
 
 _assignment_command=$(spack-python -c "exec('${_python_command}')")
