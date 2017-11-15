@@ -522,8 +522,8 @@ def resource(**kwargs):
 
         # Check if the path is relative
         if os.path.isabs(destination):
-            message = 'The destination keyword of a resource directive '
-            'can\'t be an absolute path.\n'
+            message = ('The destination keyword of a resource directive '
+                       'can\'t be an absolute path.\n')
             message += "\tdestination : '{dest}\n'".format(dest=destination)
             raise RuntimeError(message)
 
@@ -534,8 +534,8 @@ def resource(**kwargs):
         )  # Normalized absolute path
 
         if test_path not in normalized_destination:
-            message = "The destination folder of a resource must fall "
-            "within the main package stage directory.\n"
+            message = ("The destination folder of a resource must fall "
+                       "within the main package stage directory.\n")
             message += "\tdestination : '{dest}'\n".format(dest=destination)
             raise RuntimeError(message)
 
