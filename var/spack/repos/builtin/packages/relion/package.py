@@ -59,12 +59,10 @@ class Relion(CMakePackage):
     depends_on('fltk', when='+gui')
     depends_on('cuda@8.0:8.99', when='+cuda')
     # compiles with gcc > 5 under cuda8
-    conflicts('%gcc@5:9', when='+cuda')
+    conflicts('%gcc@5.0.0:9.0.0', when='+cuda')
     # cuda 9 not yet supported
     #  https://github.com/3dem/relion/issues/296
     conflicts('cuda@9')
-
-    carch = spec.variants['cuda_arch'].value
 
     def cmake_args(self):
         args = [
@@ -74,14 +72,15 @@ class Relion(CMakePackage):
             '-DDoublePrec_CPU=%s' % ('+double' in self.spec),
             '-DDoublePrec_GPU=%s' % ('+double-gpu' in self.spec),
         ]
-        # added cuda arch for p100s
         if '+cuda' in self.spec:
             args += [
                 '-DCUDA=on',
-                '-DCUFFT=on',
             ]
-        if 'cuda_arch' is not None:
+
+        carch = spec.variants['cuda_arch'].value
+
+        if carch is not None:
             args += [
-                '-DCUDA_ARCH=carch',
+                '-DCUDA_ARCH=%s' % (carch),
             ]
         return args
