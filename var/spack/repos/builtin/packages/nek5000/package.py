@@ -64,12 +64,6 @@ class Nek5000(Package):
             msg = 'Cannot build Nek5000 without a Fortran compiler.'
             raise RuntimeError(msg)
 
-    @run_before('install')
-    def c_check(self):
-        if not self.compiler.cc:
-            msg = 'Cannot build Nek5000 without a C compiler.'
-            raise RuntimeError(msg)
-
     def install(self, spec, prefix):
         toolsDir   = 'tools'
         binDir     = 'bin'
