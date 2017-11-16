@@ -22,13 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 from spack import *
 from spack.spec import UnsupportedCompilerError
 
 
 class Hydrogen(CMakePackage):
-    """Elemental-Hydrogen: Lite-version of Elemental distributed-memory 
+    """Elemental-Hydrogen: Lite-version of Elemental distributed-memory
        dense linear algebra library.  Optimized for Deep Learning."""
 
     homepage = "http://libelemental.org"

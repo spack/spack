@@ -74,6 +74,8 @@ class Lbann(CMakePackage):
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(spec['elemental'].prefix),
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
+            '-DcuDNN_DIR={0}'.format(spec['cudnn'].prefix),
+            '-DCUB_DIR={0}'.format(spec['cub'].prefix),
             '-DELEMENTAL_MATH_LIBS={0}'.format(
                 spec['elemental'].libs),
             '-DSEQ_INIT:BOOL=%s' % ('+seq_init' in spec),
