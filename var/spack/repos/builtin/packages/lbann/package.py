@@ -51,10 +51,11 @@ class Lbann(CMakePackage):
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
     depends_on('mpi')
-    depends_on('hwloc')
+    depends_on('hwloc ~pci')
     depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib ~eigen', when='+opencv')
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
+    depends_on('cmake -openssl -ncurses')
 
     def cmake_args(self):
         spec = self.spec
