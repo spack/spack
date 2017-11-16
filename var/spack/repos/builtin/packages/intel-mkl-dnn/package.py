@@ -26,7 +26,7 @@ from spack import *
 
 
 class IntelMklDnn(CMakePackage):
-    """Intel(R) Math Kernel Library for Deep Neural Networks 
+    """Intel(R) Math Kernel Library for Deep Neural Networks
     (Intel(R) MKL-DNN)."""
 
     homepage = "https://01.org/mkl-dnn"
