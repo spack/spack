@@ -25,28 +25,26 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class Xtensor(CMakePackage):
+    """Multi-dimensional arrays with broadcasting and lazy computing"""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "http://quantstack.net/xtensor"
+    url      = "https://github.com/QuantStack/xtensor/archive/0.13.1.tar.gz"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('develop', branch='master',
+            git='https://github.com/QuantStack/xtensor.git')
+    version('0.13.1', '80e7e33f05066d17552bf0f8b582dcc5')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
+    variant('xsimd', default=True,
+            description='Enable SIMD intrinsics')
 
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
+    depends_on('xtl')
+    depends_on('xtl@0.3.4:', when='@develop')
+    depends_on('xtl@0.3.3:', when='@0.13.1')
+    depends_on('xsimd@3.1.0', when='+xsimd')
 
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    # C++14 support
+    conflicts('%gcc@:4.8')
+    conflicts('%clang@:3.5')
+    # untested: conflicts('%intel@:15')
+    # untested: conflicts('%pgi@:14')

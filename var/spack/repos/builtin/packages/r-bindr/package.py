@@ -25,28 +25,12 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class RBindr(RPackage):
+    """Provides a simple interface for creating active bindings where the
+       bound function accepts additional arguments."""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "https://github.com/krlmlr/bindr"
+    url      = "https://cran.r-project.org/src/contrib/bindr_0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/bindr"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
-
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    version('0.1', 'f3897a70cbad2d2981272772fa30bb59')

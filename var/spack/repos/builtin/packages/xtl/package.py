@@ -25,28 +25,19 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class Xtl(CMakePackage):
+    """QuantStack tools library"""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "https://github.com/QuantStack/xtl"
+    url      = "https://github.com/QuantStack/xtl/archive/0.3.4.tar.gz"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('develop', branch='master',
+            git='https://github.com/QuantStack/xtl.git')
+    version('0.3.4', 'b76548a55f1e171a9c849e5ed543e8b3')
+    version('0.3.3', '09b6d9611e460d9280bf1156bcca20f5')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    # C++14 support
+    conflicts('%gcc@:4.8')
+    conflicts('%clang@:3.6')
+    # untested: conflicts('%intel@:15')
+    # untested: conflicts('%pgi@:14')

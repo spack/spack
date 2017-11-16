@@ -106,6 +106,8 @@ class Ncl(Package):
         placement='triangle_src',
         when='+triangle')
 
+    sanity_check_is_file = ['bin/ncl']
+
     def patch(self):
         # Make configure scripts use Spack's tcsh
         files = ['Configure'] + glob.glob('config/*')

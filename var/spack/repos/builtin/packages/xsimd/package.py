@@ -25,28 +25,20 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class Xsimd(CMakePackage):
+    """C++ wrappers for SIMD intrinsics"""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "http://quantstack.net/xsimd"
+    url      = "https://github.com/QuantStack/xsimd/archive/3.1.0.tar.gz"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('develop', branch='master',
+            git='https://github.com/QuantStack/xsimd.git')
+    version('3.1.0', '29c1c525116cbda28f610e2bf24a827e')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
+    depends_on('googletest')
 
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    # C++14 support
+    conflicts('%gcc@:4.8')
+    conflicts('%clang@:3.6')
+    # untested: conflicts('%intel@:15')
+    # untested: conflicts('%pgi@:14')

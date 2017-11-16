@@ -25,28 +25,16 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class RMnormt(RPackage):
+    """Functions are provided for computing the density and the distribution
+       function of multivariate normal and "t" random variables, and for
+       generating random vectors sampled from these distributions.
+       Probabilities are computed via non-Monte Carlo methods; different
+       routines are used in the case d=1, d=2, d>2, if d denotes the number
+       of dimensions."""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "http://azzalini.stat.unipd.it/SW/Pkg-mnormt"
+    url      = "https://cran.r-project.org/src/contrib/mnormt_1.5-5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/mnormt"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
-
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    version('1.5-5', '19b5be2e9ed33b92d7a716bfcca6b2c7')
