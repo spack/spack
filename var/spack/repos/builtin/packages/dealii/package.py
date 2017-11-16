@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,8 @@ class Dealii(CMakePackage):
     homepage = "https://www.dealii.org"
     url = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
 
+    maintainers = ['davydden', 'jppelteret']
+
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
     transitive_rpaths = False
@@ -47,6 +49,8 @@ class Dealii(CMakePackage):
     version('develop', git='https://github.com/dealii/dealii.git', branch='master')
 
     variant('mpi',      default=True,  description='Compile with MPI')
+    variant('assimp',   default=False,
+            description='Compile with Assimp')
     variant('arpack',   default=True,
             description='Compile with Arpack and PArpack (only with MPI)')
     variant('adol-c',   default=False,
@@ -80,6 +84,8 @@ class Dealii(CMakePackage):
     variant('build_type', default='DebugRelease',
             description='The build type to build',
             values=('Debug', 'Release', 'DebugRelease'))
+    variant('cuda', default=False,
+            description='Build with CUDA')
 
     # required dependencies, light version
     depends_on("blas")
@@ -92,21 +98,21 @@ class Dealii(CMakePackage):
     # depends_on("boost@1.59.0+thread+system+serialization+iostreams")
     # depends_on("boost+mpi", when='+mpi')
     # depends_on("boost+python", when='+python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
                when='@:8.4.2~mpi')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
                when='@:8.4.2+mpi')
     # since @8.5.0: (and @develop) python bindings are introduced:
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams",
                when='@8.5.0:~mpi~python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi",
                when='@8.5.0:+mpi~python')
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+python",
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+python",
                when='@8.5.0:~mpi+python')
-    depends_on(
-        "boost@1.59.0:+thread+system+serialization+iostreams+mpi+python",
-        when='@8.5.0:+mpi+python')
-    depends_on("bzip2")
+    depends_on("boost@1.59.0:1.63,1.66:+thread+system+serialization+iostreams+mpi+python",
+               when='@8.5.0:+mpi+python')
+    # bzip2 is not needed since 9.0
+    depends_on("bzip2", when='@:8.99')
     depends_on("lapack")
     depends_on("muparser")
     depends_on("suite-sparse")
@@ -117,10 +123,13 @@ class Dealii(CMakePackage):
     depends_on("mpi",              when="+mpi")
     depends_on("adol-c@2.6.4:",    when='@9.0:+adol-c')
     depends_on("arpack-ng+mpi",    when='+arpack+mpi')
+    depends_on("assimp",           when='@9.0:+assimp')
     depends_on("doxygen+graphviz", when='+doc')
     depends_on("graphviz",         when='+doc')
     depends_on("gsl",              when='@8.5.0:+gsl')
     depends_on("hdf5+mpi",         when='+hdf5+mpi')
+    depends_on("cuda@8:",          when='+cuda')
+    depends_on("cmake@3.9:",       when='+cuda')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on("metis@5:+int64+real64",   when='+metis+int64')
@@ -137,16 +146,18 @@ class Dealii(CMakePackage):
     depends_on("slepc",            when='+slepc+petsc+mpi')
     depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("slepc~arpack",     when='+slepc+petsc+mpi+int64')
-    depends_on("sundials",         when='@9.0:+sundials')
+    depends_on("sundials~pthread", when='@9.0:+sundials')
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos",       when='+trilinos+mpi~int64')
     depends_on("trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre", when="+trilinos+mpi+int64")
 
     # check that the combination of variants makes sense
+    conflicts('+assimp', when='@:8.5.1')
     conflicts('+nanoflann', when='@:8.5.1')
     conflicts('+sundials', when='@:8.5.1')
     conflicts('+adol-c', when='@:8.5.1')
     conflicts('+gsl',    when='@:8.4.2')
     conflicts('+python', when='@:8.4.2')
+    conflicts('+cuda', when='%gcc@6:')
     for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
               '+slepc', '+trilinos']:
         conflicts(p, when='~mpi')
@@ -164,7 +175,6 @@ class Dealii(CMakePackage):
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
-            '-DBZIP2_DIR=%s' % spec['bzip2'].prefix,
             # CMake's FindBlas/Lapack may pickup system's blas/lapack instead
             # of Spack's. Be more specific to avoid this.
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
@@ -175,8 +185,17 @@ class Dealii(CMakePackage):
             '-DMUPARSER_DIR=%s' % spec['muparser'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
-            '-DZLIB_DIR=%s' % spec['zlib'].prefix
+            '-DZLIB_DIR=%s' % spec['zlib'].prefix,
+            '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
+
+        if spec.satisfies('@:8.99'):
+            options.extend([
+                # Cmake may still pick up system's bzip2, fix this:
+                '-DBZIP2_FOUND=true',
+                '-DBZIP2_INCLUDE_DIRS=%s' % spec['bzip2'].prefix.include,
+                '-DBZIP2_LIBRARIES=%s' % spec['bzip2'].libs.joined(';')
+            ])
 
         # Set recommended flags for maximum (matrix-free) performance, see
         # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
@@ -205,6 +224,18 @@ class Dealii(CMakePackage):
                 '-DDEAL_II_EXAMPLES_RELDIR=share/deal.II/examples',
                 '-DDEAL_II_DOCREADME_RELDIR=share/deal.II/',
                 '-DDEAL_II_DOCHTML_RELDIR=share/deal.II/doc'
+            ])
+
+        # CUDA
+        # FIXME  -DDEAL_II_CUDA_FLAGS="-arch=sm_60"
+        if '+cuda' in spec:
+            options.extend([
+                '-DDEAL_II_WITH_CUDA=ON',
+                '-DDEAL_II_WITH_CXX14=OFF'
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_CUDA=OFF',
             ])
 
         # MPI
@@ -262,6 +293,17 @@ class Dealii(CMakePackage):
         else:
             options.extend([
                 '-DDEAL_II_WITH_ARPACK=OFF'
+            ])
+
+        # Assimp
+        if '+assimp' in spec:
+            options.extend([
+                '-DDEAL_II_WITH_ASSIMP=ON',
+                '-DASSIMP_DIR=%s' % spec['assimp'].prefix
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_ASSIMP=OFF'
             ])
 
         # since Netcdf is spread among two, need to do it by hand:

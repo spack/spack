@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -89,6 +89,7 @@ class CbtfKrell(CMakePackage):
     depends_on("libmonitor+krellpatch")
     depends_on("libunwind")
     depends_on("papi")
+    depends_on("llvm-openmp-ompt@towards_tr4+standalone")
 
     # MPI Installations
     # These have not worked either for build or execution, commenting out for
@@ -149,6 +150,7 @@ class CbtfKrell(CMakePackage):
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
             '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
             '-DDYNINST_DIR=%s' % spec['dyninst'].prefix,
+            '-DLIBIOMP_DIR=%s' % spec['llvm-openmp-ompt'].prefix,
             '-DXERCESC_DIR=%s' % spec['xerces-c'].prefix]
 
         # Add any MPI implementations coming from variant settings

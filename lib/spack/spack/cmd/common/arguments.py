@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,15 +26,23 @@
 import argparse
 
 import spack.cmd
-import spack.store
 import spack.modules
+import spack.spec
+import spack.store
 from spack.util.pattern import Args
+
 __all__ = ['add_common_arguments']
 
 _arguments = {}
 
 
 def add_common_arguments(parser, list_of_arguments):
+    """Extend a parser with extra arguments
+
+    Args:
+        parser: parser to be extended
+        list_of_arguments: arguments to be added to the parser
+    """
     for argument in list_of_arguments:
         if argument not in _arguments:
             message = 'Trying to add non existing argument "{0}" to a command'
@@ -98,8 +106,8 @@ _arguments['constraint'] = Args(
 _arguments['module_type'] = Args(
     '-m', '--module-type',
     choices=spack.modules.module_types.keys(),
-    default=list(spack.modules.module_types.keys())[0],
-    help='type of module files [default: %(default)s]')
+    action='append',
+    help='type of module file. More than one choice is allowed [default: tcl]')  # NOQA: ignore=E501
 
 _arguments['yes_to_all'] = Args(
     '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
@@ -113,7 +121,8 @@ _arguments['clean'] = Args(
     '--clean',
     action=CleanOrDirtyAction,
     dest='dirty',
-    help='clean environment before installing package',
+    help='sanitize the environment from variables that can affect how ' +
+         ' packages find libraries or headers',
     nargs=0
 )
 
@@ -121,7 +130,7 @@ _arguments['dirty'] = Args(
     '--dirty',
     action=CleanOrDirtyAction,
     dest='dirty',
-    help='do NOT clean environment before installing',
+    help='maintain the current environment without trying to sanitize it',
     nargs=0
 )
 
@@ -132,3 +141,7 @@ _arguments['long'] = Args(
 _arguments['very_long'] = Args(
     '-L', '--very-long', action='store_true',
     help='show full dependency hashes as well as versions')
+
+_arguments['tags'] = Args(
+    '-t', '--tags', action='append',
+    help='filter a package query by tags')

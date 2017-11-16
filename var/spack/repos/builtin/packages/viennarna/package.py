@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,8 +27,9 @@ from spack import *
 
 class Viennarna(AutotoolsPackage):
     """The ViennaRNA Package consists of a C code library and several
-       stand-alone programs for the prediction and comparison of RNA secondary
-       structures."""
+    stand-alone programs for the prediction and comparison of RNA secondary
+    structures.
+    """
 
     homepage = "https://www.tbi.univie.ac.at/RNA/"
     url      = "https://www.tbi.univie.ac.at/RNA/download/sourcecode/2_3_x/ViennaRNA-2.3.5.tar.gz"
@@ -49,19 +50,12 @@ class Viennarna(AutotoolsPackage):
         return url.format(version.up_to(2).underscored, version)
 
     def configure_args(self):
-        args = []
-        if '+sse' in self.spec:
-            args.append('--enable-sse')
-        else:
-            args.append('--disable-sse')
-        if '~python' in self.spec:
-            args.append('--without-python')
-        else:
-            args.append('--with-python')
-        if '~perl' in self.spec:
-            args.append('--without-perl')
-        else:
-            args.append('--with-perl')
+
+        args = self.enable_or_disable('sse')
+        args += self.with_or_without('python')
+        args += self.with_or_without('perl')
+
         if 'python@3:' in self.spec:
             args.append('--with-python3')
+
         return args

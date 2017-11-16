@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.operating_systems.mac_os import macOS_version
 from llnl.util import tty
 
 import glob
@@ -46,6 +47,7 @@ class Gcc(AutotoolsPackage):
     version('6.3.0', '677a7623c7ef6ab99881bc4e048debb6')
     version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
+    version('5.5.0', '0f70424213b4a1113c04ba66ddda0c1f')
     version('5.4.0', '4c626ac2a83ef30dfb9260e6f59c2b30')
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
@@ -96,7 +98,7 @@ class Gcc(AutotoolsPackage):
     # depends_on('cloog')
 
     # TODO: Add a 'test' deptype
-    # https://github.com/LLNL/spack/issues/1279
+    # https://github.com/spack/spack/issues/1279
     # depends_on('dejagnu@1.4.4', type='test')
     # depends_on('expect', type='test')
     # depends_on('tcl', type='test')
@@ -148,6 +150,10 @@ class Gcc(AutotoolsPackage):
     conflicts('languages=jit', when='@:4')
 
     if sys.platform == 'darwin':
+        # Fix parallel build on APFS filesystem
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81797
+        if macOS_version() >= Version('10.13'):
+            patch('darwin/apfs.patch', when='@7.2.0')
         patch('darwin/gcc-7.1.0-headerpad.patch', when='@5:')
         patch('darwin/gcc-6.1.0-jit.patch', when='@5:')
         patch('darwin/gcc-4.9.patch1', when='@4.9.0:4.9.3')
@@ -164,6 +170,9 @@ class Gcc(AutotoolsPackage):
 
         if version < Version('6.4.0') or version == Version('7.1.0'):
             suffix = 'bz2'
+
+        if version == Version('5.5.0'):
+            suffix = 'xz'
 
         return url.format(version, suffix)
 
