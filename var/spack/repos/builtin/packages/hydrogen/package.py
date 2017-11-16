@@ -27,16 +27,14 @@ from spack import *
 from spack.spec import UnsupportedCompilerError
 
 
-class Elemental(CMakePackage):
-    """Elemental: Distributed-memory dense and sparse-direct linear algebra
-       and optimization library."""
+class Hydrogen(CMakePackage):
+    """Elemental-Hydrogen: Lite-version of Elemental distributed-memory 
+       dense linear algebra library.  Optimized for Deep Learning."""
 
     homepage = "http://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.6.tar.gz"
 
-    version('develop', git='https://github.com/elemental/Elemental.git', branch='master')
-    version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
-    version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
+    version('develop', git='https://github.com/benson31/Elemental.git', branch='hydrogen')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -48,8 +46,6 @@ class Elemental(CMakePackage):
             description='Build C interface')
     variant('python', default=False,
             description='Install Python interface')
-    variant('parmetis', default=False,
-            description='Enable ParMETIS')
     variant('quad', default=False,
             description='Enable quad precision')
     variant('int64', default=False,
@@ -101,9 +97,6 @@ class Elemental(CMakePackage):
     depends_on('mpfr', when='+mpfr')
     depends_on('cmake -openssl -ncurses')
 
-    patch('elemental_cublas.patch', when='+cublas')
-    patch('cmake_0.87.7.patch', when='@0.87.7')
-
     @property
     def libs(self):
         shared = True if '+shared' in self.spec else False
@@ -130,33 +123,10 @@ class Elemental(CMakePackage):
             '-DEL_HYBRID:BOOL=%s'              % ('+hybrid' in spec),
             '-DEL_C_INTERFACE:BOOL=%s'         % ('+c' in spec),
             '-DINSTALL_PYTHON_PACKAGE:BOOL=%s' % ('+python' in spec),
-            '-DEL_DISABLE_PARMETIS:BOOL=%s'    % ('~parmetis' in spec),
             '-DEL_DISABLE_QUAD:BOOL=%s'        % ('~quad' in spec),
             '-DEL_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
             '-DEL_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
             '-DEL_DISABLE_MPFR:BOOL=%s'        % ('~mpfr' in spec)]
-
-        if self.spec.satisfies('%intel'):
-            ifort = env['SPACK_F77']
-            intel_bin = os.path.dirname(ifort)
-            intel_root = os.path.dirname(intel_bin)
-            libfortran = LibraryList('{0}/lib/intel64/libifcoremt.{1}'
-                                     .format(intel_root, dso_suffix))
-        elif self.spec.satisfies('%gcc'):
-            # see <stage_folder>/debian/rules as an example:
-            mpif77 = Executable(spec['mpi'].mpif77)
-            libfortran = LibraryList(mpif77('--print-file-name',
-                                            'libgfortran.%s' % dso_suffix,
-                                            output=str))
-        elif self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
-            xl_fort = env['SPACK_F77']
-            xl_bin = os.path.dirname(xl_fort)
-            xl_root = os.path.dirname(xl_bin)
-            libfortran = LibraryList('{0}/lib/libxlf90_r.{1}.1'
-                                     .format(xl_root, dso_suffix))
-
-        if 'libfortran' in locals():
-            args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
 
         # If using 64bit int BLAS libraries, elemental has to build
         # them internally
