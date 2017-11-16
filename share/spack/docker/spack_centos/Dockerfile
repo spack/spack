@@ -25,7 +25,7 @@ RUN yum update -y               && \
         openssh-server        \
         python                \
         tcl                && \
-    git clone --depth 1 git://github.com/llnl/spack.git /spack && \
+    git clone --depth 1 git://github.com/spack/spack.git /spack && \
     rm -rf /spack/.git /var/cache/yum && yum clean all
 
 RUN echo "source /usr/share/lmod/lmod/init/bash" \

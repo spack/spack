@@ -19,7 +19,7 @@ RUN pacman -Sy --noconfirm  \
         python              \
         sudo                \
         tcl              && \
-    git clone --depth 1 git://github.com/llnl/spack.git /spack              && \
+    git clone --depth 1 git://github.com/spack/spack.git /spack             && \
     echo 'nobody ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/nobody-sudo      && \
     sudo -u nobody git clone --depth 1                                         \
         https://aur.archlinux.org/lua-posix.git /tmp/lua-posix              && \

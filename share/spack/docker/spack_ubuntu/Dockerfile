@@ -20,7 +20,7 @@ RUN apt-get -yqq update && apt-get -yqq install \
         openssh-server      \
         python              \
         tcl              && \
-    git clone --depth 1 git://github.com/llnl/spack.git /spack && \
+    git clone --depth 1 git://github.com/spack/spack.git /spack && \
     rm -rf /spack/.git && rm -rf /var/lib/apt/lists/*
 
 RUN echo "source /usr/share/lmod/lmod/init/bash" \
