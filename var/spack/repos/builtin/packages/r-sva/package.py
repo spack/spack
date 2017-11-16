@@ -25,28 +25,17 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class RSva(RPackage):
+    """Surrogate Variable Analysis."""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/sva/"
+    url      = "https://git.bioconductor.org/packages/sva"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('3.24.4', git='https://git.bioconductor.org/packages/sva', commit='ed2ebb6e33374dc9ec50e6ea97cc1d9aef836c73')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    depends_on('r@3.4.0:3.4.9', when='@3.24.4')
+    depends_on('r-mgcv', type=('build', 'run'))
+    depends_on('r-genefilter', type=('build', 'run'))
+    depends_on('r-biocparallel', type=('build', 'run'))
+    depends_on('r-matrixstats', type=('build', 'run'))
+    depends_on('r-limma', type=('build', 'run'))

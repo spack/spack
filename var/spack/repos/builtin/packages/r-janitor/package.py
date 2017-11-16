@@ -25,28 +25,25 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class RJanitor(RPackage):
+    """The main janitor functions can: perfectly format data.frame column
+       names; provide quick one- and two-variable tabulations (i.e., frequency
+       tables and crosstabs); and isolate duplicate records. Other janitor
+       functions nicely format the tabulation results. These
+       tabulate-and-report functions approximate popular features of SPSS and
+       Microsoft Excel. This package follows the principles of the "tidyverse"
+       and works well with the pipe function %>%. janitor was built with
+       beginning-to-intermediate R users in mind and is optimized for
+       user-friendliness. Advanced R users can already do everything covered
+       here, but with janitor they can do it faster and save their thinking
+       for the fun stuff."""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "https://github.com/sfirke/janitor"
+    url      = "https://cran.r-project.org/src/contrib/janitor_0.3.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/janitor"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('0.3.0', '76036c54693b91aef19d468107ae066a')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-tidyr', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))

@@ -25,28 +25,24 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class RDbplyr(RPackage):
+    """A 'dplyr' back end for databases that allows you to work with remote
+       database tables as if they are in-memory data frames. Basic features
+       works with any database that has a 'DBI' back end; more advanced
+       features require 'SQL' translation to be provided by the package
+       author."""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "https://github.com/tidyverse/dbplyr"
+    url      = "https://cran.r-project.org/src/contrib/dbplyr_1.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/dbplyr"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('1.1.0', 'a66a08d1046e3e44bfe17e65ce72a1d0')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    depends_on('r-assertthat', type=('build', 'run'))
+    depends_on('r-dbi', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-glue', type=('build', 'run'))
+    depends_on('r-purrr', type=('build', 'run'))
+    depends_on('r-rlang', type=('build', 'run'))
+    depends_on('r-tibble', type=('build', 'run'))
+    depends_on('r-r6', type=('build', 'run'))

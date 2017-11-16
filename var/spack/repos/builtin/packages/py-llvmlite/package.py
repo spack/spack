@@ -25,28 +25,15 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class PyLlvmlite(PythonPackage):
+    """A lightweight LLVM python binding for writing JIT compilers"""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "http://llvmlite.readthedocs.io/en/latest/index.html"
+    url      = "https://pypi.io/packages/source/l/llvmlite/llvmlite-0.20.0.tar.gz"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('0.20.0', 'f2aa60d0981842b7930ba001b03679ab')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    depends_on('py-setuptools', type='build')
+    depends_on('py-enum34',     type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('llvm@4.0:4.99', when='@0.17.0:0.20.99')
+    depends_on('binutils', type='build')

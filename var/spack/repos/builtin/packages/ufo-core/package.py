@@ -25,28 +25,16 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class UfoCore(CMakePackage):
+    """The UFO data processing framework is a C library suited to build general
+    purpose streams data processing on heterogeneous architectures such as
+    CPUs, GPUs or clusters. This package contains the run-time system and
+    development files."""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "https://ufo.kit.edu"
+    url      = "https://github.com/ufo-kit/ufo-core/archive/v0.14.0.tar.gz"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('0.14.0', '3bd94d10d0f589953aba11821a8295f3')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    depends_on('glib')
+    depends_on('json-glib')

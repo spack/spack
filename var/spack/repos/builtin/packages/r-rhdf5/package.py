@@ -25,28 +25,19 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class RRhdf5(RPackage):
+    """This R/Bioconductor package provides an interface between HDF5
+    and R. HDF5's main features are the ability to store and access very
+    large and/or complex datasets and a wide variety of metadata on mass
+    storage (disk) through a completely portable file format. The rhdf5
+    package is thus suited for the exchange of large and/or complex
+    datasets between R and other software package, and for letting R
+    applications work on datasets that are larger than the available RAM."""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/rhdf5/"
+    url      = "https://git.bioconductor.org/packages/rhdf5"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('2.20.0', git='https://git.bioconductor.org/packages/rhdf5', commit='37b5165325062728bbec9167f89f5f4b794f30bc')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    depends_on('r@3.4.0:3.4.9', when='@2.20.0')
+    depends_on('r-zlibbioc', type=('build', 'run'))

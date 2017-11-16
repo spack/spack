@@ -25,28 +25,16 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class PyNumba(PythonPackage):
+    """NumPy aware dynamic Python compiler using LLVM"""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "https://numba.pydata.org/"
+    url      = "https://pypi.io/packages/source/n/numba/numba-0.35.0.tar.gz"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('0.35.0', '4f447383406f54aaf18ffaba3a0e79e8')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
-
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
-
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
-
-        return args
+    depends_on('py-numpy@1.10:',    type=('build', 'run'))
+    depends_on('py-llvmlite@0.20:', type=('build', 'run'))
+    depends_on('py-argparse',       type=('build', 'run'))
+    depends_on('py-funcsigs',       type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('py-singledispatch', type=('build', 'run'), when='^python@:3.3.99')

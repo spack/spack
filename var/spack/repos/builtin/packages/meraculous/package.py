@@ -25,28 +25,26 @@
 from spack import *
 
 
-class Callpath(CMakePackage):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class Meraculous(CMakePackage):
+    """Meraculous is a while genome assembler for Next Generation Sequencing
+       data geared for large genomes."""
 
-    homepage = "https://github.com/llnl/callpath"
-    url      = "https://github.com/llnl/callpath/archive/v1.0.3.tar.gz"
+    homepage = "http://jgi.doe.gov/data-and-tools/meraculous/"
+    url      = "https://downloads.sourceforge.net/project/meraculous20/Meraculous-v2.2.4.tar.gz"
 
-    version('1.0.3', 'c89089b3f1c1ba47b09b8508a574294a')
+    version('2.2.4', '349feb6cb178643a46e4b092c87bad3a')
 
-    depends_on("elf", type="link")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
+    depends_on('perl', type=('build', 'run'))
+    depends_on('boost@1.5.0:')
+    depends_on('gnuplot@3.7:')
+    depends_on('perl-log-log4perl', type=('build', 'run'))
 
-    def cmake_args(self):
-        args = ["-DCALLPATH_WALKER=dyninst"]
+    conflicts('%gcc@6.0.0:', when='@2.2.4')
 
-        if self.spec.satisfies("^dyninst@9.3.0:"):
-            std.flag = self.compiler.cxx_flag
-            args.append("-DCMAKE_CXX_FLAGS='{0}' -fpermissive'".format(
-                std_flag))
+    def patch(self):
+        edit = FileFilter('CMakeLists.txt')
+        edit.filter("-static-libstdc\+\+", "")
 
-        return args
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('MERACULOUS_ROOT', self.prefix)
+        run_env.prepend_path('PERL5LIB', self.prefix.lib)
