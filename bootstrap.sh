@@ -86,6 +86,7 @@ git co -- config.yaml.template
 # Installing packages
 if [[ $2 == "--install" ]]; then
     echo "Installing packages..."
+    spack clean
     ./build_${1}.sh
 fi
 
