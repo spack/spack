@@ -30,9 +30,6 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.binary_distribution as bindist
-from spack.binary_distribution import NoOverwriteException, NoGpgException
-from spack.binary_distribution import NoKeyException, PickKeyException
-from spack.binary_distribution import NoVerifyException, NoChecksumException
 
 description = "Create, download and install build cache files."
 section = "caching"

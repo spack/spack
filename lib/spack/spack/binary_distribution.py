@@ -49,11 +49,13 @@ class NoOverwriteException(spack.error.SpackError):
         super(NoOverwriteException, self).__init__(
             "%s exists, use -f to force overwrite." % filepath)
 
+
 class NoGpgException(spack.error.SpackError):
     def __init__(self):
         super(NoGpgException, self).__init__(
             "gpg2 is not available,"
             " use -y to create unsigned build caches")
+
 
 class PickKeyException(spack.error.SpackError):
     def __init__(self):
@@ -62,6 +64,7 @@ class PickKeyException(spack.error.SpackError):
             " use -y to create unsigned build caches"
             " or spack gpg init to create a default key")
 
+
 class NoKeyException(spack.error.SpackError):
     def __init__(self):
         super(NoKeyException, self).__init__(
@@ -69,17 +72,20 @@ class NoKeyException(spack.error.SpackError):
             " use -y to create unsigned build caches"
             " or -k <key hash> to pick a key")
 
+
 class NoVerifyException(spack.error.SpackError):
     def __init__(self):
         super(NoVerifyException, self).__init__(
             "Package spec file failed signature verification,"
             " use -y flag to install build cache")
 
+
 class NoChecksumException(spack.error.SpackError):
     def __init__(self):
         super(NoChecksumException, self).__init__(
             "Package tarball failed checksum verification,"
             " use -y flag to install build cache")
+
 
 def has_gnupg2():
     try:
