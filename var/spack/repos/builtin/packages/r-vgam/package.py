@@ -54,5 +54,6 @@ class RVgam(RPackage):
     version('1.0-1', '778182585c774036ac3d10240cf63b40')
     version('1.0-0', '81da7b3a797b5e26b9e859dc2f373b7b')
 
+    depends_on('r@3.4.0:3.4.9')
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-mgcv', type=('build', 'run'))
