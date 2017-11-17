@@ -46,7 +46,7 @@ class RSom(RPackage):
     homepage = "https://cran.r-project.org/web/packages/som/index.html"
     url      = "https://cran.r-project.org/src/contrib/som_0.3-5.1.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/som"
-    
+ 
     version('0.3-5.1', '802a5a80902579354ce3420faeeeb756')
     version('0.3-5', '72717499794c7aa945a768b742af8895')
     version('0.3-4', '1e25572e446409f5e32c5da5f1af98e6')
