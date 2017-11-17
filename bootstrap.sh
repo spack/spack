@@ -93,5 +93,5 @@ fi
 # Sync cached source packages to the HTTP servers
 if [[ $2 == "--sync" ]]; then
     echo "Sync cached packages to mirror site..."
-    rsync -ar --progress ${SPACKSOURCECACHE}/ root@lb://var/lib/www/spack.pi.sjtu.edu.cn/mirror/
+    rsync -ar --progress ${SPACK_ROOT}/var/spack/cache/ root@lb://var/lib/www/spack.pi.sjtu.edu.cn/mirror/
 fi
