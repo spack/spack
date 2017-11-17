@@ -15,7 +15,7 @@
 # -------------------------------------------------------------------------
 packages:
     all:
-        compiler: [gcc@5, intel@17, pgi@16]
+        compiler: [gcc@5, intel@17, pgi@17]
         providers:
             mpi: [openmpi, mvapich2, mpich, intel-parallel-studio+mpi]
             blas: [openblas, intel-parallel-studio+mkl]
@@ -30,7 +30,6 @@ packages:
 
     intel-parallel-studio:
         paths:
-            intel-parallel-studio@cluster.2015.6%intel+daal~ilp64+ipp+mkl+mpi~newdtags+rpath+shared: /lustre/spack/tools/linux-centos7-x86_64/intel-15.0.6/intel-parallel-studio-cluster.2015.6-v4m6xngrq67y7hopcnxg6qb6onvruevy
             intel-parallel-studio@cluster.2016.4%intel+daal~ilp64+ipp+mkl+mpi~newdtags+rpath+shared: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-kd3ufpcli3tp4x4nbrduqzm5vvlfnrur
             intel-parallel-studio@cluster.2017.4%intel+daal~ilp64+ipp+mkl+mpi~newdtags+rpath+shared: /lustre/spack/tools/linux-centos7-x86_64/intel-17.0.4/intel-parallel-studio-cluster.2017.4-bwdcdc6362g5qrytkjbec3iiskhqmgpw
         buildable: False
@@ -67,14 +66,14 @@ packages:
 
     pgi:
         paths:
-            pgi@16.10%gcc@4.8.5~amd~java~mpi+network+nvidia~single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-16.10-5rylcqgqakod7b4c7leqnbtrl43pp7tf
-        version: [16.10]
+            pgi@17.10%gcc@4.8.5~amd~java~mpi~network+nvidia+single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-17.10-j6cy7vqs3gtogsdgbywzi5qefttqxgwq
+        version: [17.10]
         buildable: False
 
     cmake:
         paths:
-            cmake@3.8.1%gcc@4.8.5~doc+ncurses+openssl+ownlibs~qt arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cmake-3.8.1-gxy3e7idb3na7wynpn55u3esttis67xw
-        version: [3.8.1]
+            cmake@3.8.1%gcc@4.8.5~doc+ncurses+openssl+ownlibs~qt arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/cmake-3.9.4-xljvvsd5lgjwt6xarxv2r3idnp6tsfai
+        version: [3.9.4]
         buildable: False
 
     bazel:
@@ -85,6 +84,6 @@ packages:
 
     environment-modules:
         paths:
-            environment-modules@3.2.10%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/environment-modules-3.2.10-ee3xcafcyoyfewc4gt5ozcmjctnb4uzw
+            environment-modules@3.2.10%gcc@4.8.5 arch=linux-centos7-x86_64: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/environment-modules-3.2.10-n3gn6zmyoqplsuxc56lrrzst5axfhdpg
         version: [3.2.10]
         buildable: False
