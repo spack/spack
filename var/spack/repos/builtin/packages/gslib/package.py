@@ -50,15 +50,15 @@ class Gslib(Package):
         if '+mpi' in spec:
             CC  = spec['mpi'].mpicc
 
-        if self.version == ver('v1.0.1'):
+        if self.version == Version('v1.0.1'):
             make('CC=' + CC)
             make('install')
             install_tree(libDir, prefix.lib)
-        elif self.version == ver('v1.0.0'):
+        elif self.version == Version('v1.0.0'):
             with working_dir(srcDir):
                 make('CC=' + CC)
                 mkdir(prefix.lib)
                 install(libname, prefix.lib)
 
         # TODO: Should only install the headers
-        install_tree(srcDir, prefix.inc)
+        install_tree(srcDir, prefix.include)
