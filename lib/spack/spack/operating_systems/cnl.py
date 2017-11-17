@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,10 +24,12 @@
 ##############################################################################
 import re
 
-from spack.architecture import OperatingSystem
+import llnl.util.tty as tty
+
 import spack.spec
-from spack.util.multiproc import parmap
 import spack.compilers
+from spack.architecture import OperatingSystem
+from spack.util.multiproc import parmap
 from spack.util.module_cmd import get_module_cmd
 
 

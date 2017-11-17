@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,9 +31,9 @@ import unittest
 import tempfile
 import shutil
 
-from llnl.util.filesystem import *
 import spack
-from spack.util.executable import *
+from llnl.util.filesystem import mkdirp, join_path
+from spack.util.executable import Executable
 
 # Complicated compiler test command
 test_command = [
@@ -70,8 +70,10 @@ class CompilerWrapperTest(unittest.TestCase):
         os.environ['SPACK_PREFIX'] = self.prefix
         os.environ['SPACK_ENV_PATH'] = "test"
         os.environ['SPACK_DEBUG_LOG_DIR'] = "."
+        os.environ['SPACK_DEBUG_LOG_ID'] = "foo-hashabc"
         os.environ['SPACK_COMPILER_SPEC'] = "gcc@4.4.7"
-        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2"
+        os.environ['SPACK_SHORT_SPEC'] = (
+            "foo@1.2 arch=linux-rhel6-x86_64 /hashabc")
 
         os.environ['SPACK_CC_RPATH_ARG']  = "-Wl,-rpath,"
         os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"

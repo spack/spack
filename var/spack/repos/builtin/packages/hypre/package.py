@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -51,19 +51,16 @@ class Hypre(Package):
             description="Use internal Superlu routines")
     variant('int64', default=False,
             description="Use 64bit integers")
+    variant('mpi', default=True, description='Enable MPI support')
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
 
-    depends_on("mpi")
+    depends_on("mpi", when='+mpi')
     depends_on("blas")
     depends_on("lapack")
 
     def install(self, spec, prefix):
-        os.environ['CC'] = spec['mpi'].mpicc
-        os.environ['CXX'] = spec['mpi'].mpicxx
-        os.environ['F77'] = spec['mpi'].mpif77
-
         # Note: --with-(lapack|blas)_libs= needs space separated list of names
         lapack = spec['lapack'].libs
         blas = spec['blas'].libs
@@ -75,6 +72,14 @@ class Hypre(Package):
             '--with-blas-libs=%s' % ' '.join(blas.names),
             '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
         ]
+
+        if '+mpi' in self.spec:
+            os.environ['CC'] = spec['mpi'].mpicc
+            os.environ['CXX'] = spec['mpi'].mpicxx
+            os.environ['F77'] = spec['mpi'].mpif77
+            configure_args.append('--with-MPI')
+        else:
+            configure_args.append('--without-MPI')
 
         if '+int64' in self.spec:
             configure_args.append('--enable-bigint')

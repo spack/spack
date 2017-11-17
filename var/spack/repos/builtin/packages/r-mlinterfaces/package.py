@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,10 +30,11 @@ class RMlinterfaces(RPackage):
     code for data in R and Bioconductor containers."""
 
     homepage = "https://www.bioconductor.org/packages/MLInterfaces/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/MLInterfaces_1.56.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/MLInterfaces"
 
-    version('1.56.0', '14245ac510304af211734079a81e3b4a')
+    version('1.56.0', git='https://git.bioconductor.org/packages/MLInterfaces', commit='31fe6fb20d859fcb01d5552f42bca6bab16cc67f')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.56.0')
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-gdata', type=('build', 'run'))

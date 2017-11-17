@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -60,7 +60,7 @@ import spack
 import spack.error
 import spack.spec
 import spack.url
-from spack.dependency import *
+from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.patch import Patch
 from spack.resource import Resource
@@ -522,8 +522,8 @@ def resource(**kwargs):
 
         # Check if the path is relative
         if os.path.isabs(destination):
-            message = 'The destination keyword of a resource directive '
-            'can\'t be an absolute path.\n'
+            message = ('The destination keyword of a resource directive '
+                       'can\'t be an absolute path.\n')
             message += "\tdestination : '{dest}\n'".format(dest=destination)
             raise RuntimeError(message)
 
@@ -534,8 +534,8 @@ def resource(**kwargs):
         )  # Normalized absolute path
 
         if test_path not in normalized_destination:
-            message = "The destination folder of a resource must fall "
-            "within the main package stage directory.\n"
+            message = ("The destination folder of a resource must fall "
+                       "within the main package stage directory.\n")
             message += "\tdestination : '{dest}'\n".format(dest=destination)
             raise RuntimeError(message)
 

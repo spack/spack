@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,9 +29,9 @@ import re
 import sys
 
 import llnl.util.tty as tty
-from llnl.util.lang import *
-from llnl.util.tty.colify import *
-from llnl.util.tty.color import *
+from llnl.util.lang import attr_setdefault, index_by
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
 import spack

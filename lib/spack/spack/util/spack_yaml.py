@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,7 @@
 """
 import yaml
 from yaml import Loader, Dumper
-from yaml.nodes import *
+from yaml.nodes import MappingNode, SequenceNode, ScalarNode
 from yaml.constructor import ConstructorError
 from ordereddict_backport import OrderedDict
 

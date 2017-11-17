@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,10 +32,11 @@ class RAnnotationdbi(RPackage):
     annotation data packages using SQLite data storage."""
 
     homepage = "https://www.bioconductor.org/packages/AnnotationDbi/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/AnnotationDbi_1.38.2.tar.gz"
+    url      = "https://git.bioconductor.org/packages/AnnotationDbi"
     list_url = homepage
-    version('1.38.2', 'aea4a5cd1f752b59cb9f4a8dcca05734')
+    version('1.38.2', git='https://git.bioconductor.org/packages/AnnotationDbi', commit='67d46facba8c15fa5f0eb47c4e39b53dbdc67c36')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.38.2')
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))

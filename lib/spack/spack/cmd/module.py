@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -332,7 +332,9 @@ def module(parser, args):
     module_types = args.module_type
     if module_types is None:
         # If no selection has been made select all of them
-        module_types = list(spack.modules.module_types.keys())
+        module_types = ['tcl']
+
+    module_types = list(set(module_types))
 
     try:
 

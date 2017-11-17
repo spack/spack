@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,14 +33,14 @@ to download packages directly from a mirror (e.g., on an intranet).
 import sys
 import os
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
+from llnl.util.filesystem import mkdirp, join_path
 
 import spack
 import spack.error
 import spack.url as url
 import spack.fetch_strategy as fs
 from spack.spec import Spec
-from spack.version import *
+from spack.version import VersionList
 from spack.util.compression import allowed_archive
 
 

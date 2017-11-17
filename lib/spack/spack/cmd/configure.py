@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,12 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.install as inst
 
-from spack import *
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.qmake import QMakePackage
+from spack.build_systems.waf import WafPackage
+from spack.build_systems.perl import PerlPackage
+from spack.build_systems.intel import IntelPackage
 
 description = 'stage and configure a package but do not install'
 section = "build"

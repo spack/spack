@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,5 +31,6 @@ class RWhisker(RPackage):
 
     homepage = "http://github.com/edwindj/whisker"
     url      = "https://cran.r-project.org/src/contrib/whisker_0.3-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/whisker"
 
     version('0.3-2', 'c4b9bf9a22e69ce003fe68663ab5e8e6')

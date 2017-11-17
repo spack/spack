@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,13 @@
 ##############################################################################
 import spack.cmd.configure as cfg
 
-from spack import *
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.qmake import QMakePackage
+from spack.build_systems.scons import SConsPackage
+from spack.build_systems.waf import WafPackage
+from spack.build_systems.python import PythonPackage
+from spack.build_systems.perl import PerlPackage
 
 description = 'stops at build stage when installing a package, if possible'
 section = "build"

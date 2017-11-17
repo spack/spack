@@ -44,3 +44,4 @@ class PyMpi4py(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('mpi')
     depends_on('py-cython', when='@3.0.0:', type='build')
+    

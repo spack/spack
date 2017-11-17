@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,9 +37,10 @@ class RAcme(RPackage):
     experiments quite easily with enough memory."""
 
     homepage = "https://www.bioconductor.org/packages/ACME/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/ACME_2.32.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/ACME"
 
-    version('2.32.0', 'f99ea6b94399fd7a10f55ac7e7ec04fa')
+    version('2.32.0', git='https://git.bioconductor.org/packages/ACME', commit='76372255d7714a0c8128a11c028bf70214dac407')
 
+    depends_on('r@3.4.0:3.4.9', when='@2.32.0')
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))

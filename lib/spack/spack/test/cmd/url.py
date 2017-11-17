@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,8 @@ import re
 import pytest
 from spack.url import UndetectableVersionError
 from spack.main import SpackCommand
-from spack.cmd.url import *
+from spack.cmd.url import name_parsed_correctly, version_parsed_correctly
+from spack.cmd.url import url_summary
 
 url = SpackCommand('url')
 

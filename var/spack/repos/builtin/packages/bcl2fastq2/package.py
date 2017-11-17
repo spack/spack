@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -85,16 +85,20 @@ class Bcl2fastq2(Package):
     def unpack_it(self, f):
         def wrap():
             f()                 # call the original expand_archive()
-            if os.path.isdir('bcl2fastq'):
-                tty.msg("The tarball has already been unpacked")
-            else:
-                tty.msg("Unpacking bcl2fastq2 tarball")
-                tarball = 'bcl2fastq2-v{0}.tar.gz'.format(self.version.dotted)
-                shutil.move(join_path('spack-expanded-archive', tarball), '.')
-                os.rmdir('spack-expanded-archive')
-                tar = which('tar')
-                tar('-xf', tarball)
-                tty.msg("Finished unpacking bcl2fastq2 tarball")
+            with working_dir(self.stage.path):
+                if os.path.isdir('bcl2fastq'):
+                    tty.msg("The tarball has already been unpacked")
+                else:
+                    tty.msg("Unpacking bcl2fastq2 tarball")
+                    tty.msg("cwd sez: {0}".format(os.getcwd()))
+                    tarball = 'bcl2fastq2-v{0}.tar.gz'.format(
+                        self.version.dotted)
+                    shutil.move(join_path('spack-expanded-archive', tarball),
+                                '.')
+                    os.rmdir('spack-expanded-archive')
+                    tar = which('tar')
+                    tar('-xf', tarball)
+                    tty.msg("Finished unpacking bcl2fastq2 tarball")
         return wrap
 
     def install(self, spec, prefix):
