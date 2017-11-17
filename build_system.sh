@@ -1,72 +1,34 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
-function s {
-    spack find $@ | grep 'No package'
-    if [ $? -eq 0 ]
-    then
-        spack install $@
-    else
-        echo "$@ has been installed."
-    fi
+from spack_install import install
+import os
+
+CC  = "gcc@4.8.5"
+JDK = "jdk@8u141-b15"
+
+# Install intel Compile
+for pkg in ["intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC),
+            "intel-parallel-studio@cluster.2017.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC),
+            "intel-parallel-studio@cluster.2018.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC)]:
+    os.system("rm -f $HOME/spack/etc/spack/licenses/intel/license.lic")
+    install(pkg)
+
+# Install JDK
+install("{} %{}".format(JDK, CC))
+
+# Install Java packages
+for pgk in ["mavene@3.3.9", "gradle@3.4", "ant@1.9.9", "bazel@0.4.5"]:
+    install("{} %{} ^{}".format(pgk, CC, JDK))
+
+# Install non-Java packages
+packages = {"gcc~binutils@4.9.4": [""],
+            "gcc~binutils@5.4.0": [""],
+            "gcc~binutils@6.4.0": [""],
+            "pgi+nvidia+single@17.10": [""],
+            "cmake@3.9.4": [""],
+            "environment-modules@3.2.10": [""],
 }
-
-cc=%gcc@4.8.5
-
-intelsuites=(
-    intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune threads=openmp
-    intel-parallel-studio@cluster.2017.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune threads=openmp
-    intel-parallel-studio@cluster.2018.0+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune threads=openmp
-)
-
-intelcompilers=(
-    %intel@16.0.4
-    %intel@17.0.4
-    %intel@18.0.0
-)
-
-buiddeps=(
-    autoconf
-    binutils
-    flex
-    gettext
-    help2man
-    m4
-    sigsegv
-    libxml2
-    ncurses
-    pkg-config
-    tar
-    xz
-    zlib
-)
-
-
-jdk='jdk@8u141-b15'
-
-# Compilers and environment-modules
-s gcc@4.9.4~binutils    $cc
-s gcc@5.4.0~binutils    $cc
-s gcc@6.4.0~binutils    $cc
-s cmake         $cc
-s pgi@17.10      $cc
-s $jdk $cc
-s maven@3.3.9   ^$jdk $cc
-s gradle@3.4    ^$jdk $cc
-s ant@1.9.9     ^$jdk $cc
-s bazel@0.4.5   ^$jdk $cc
-s sbt@0.13.12   ^$jdk $cc
-s environment-modules $cc
-
-for ((i=0; i<${#intelsuites[@]}; ++i))
-do
-    rm -f $HOME/spack/etc/spack/licenses/intel/license.lic
-    s ${intelsuites[i]} $cc
-    rm -f $HOME/spack/etc/spack/licenses/intel/license.lic
-    s ${intelsuites[i]} ${intelcompilers[i]}
-done
-
-# Uninstall build-time dependency packages
-for pkg in "${builddeps[@]}"
-do
-    spack uninstall -y --all $pkg
-done
+for pkg,specs in packages.items():
+    for spec in specs:
+        for cc in [CC]:
+            install("{} %{} {}".format(pkg, cc, spec))
