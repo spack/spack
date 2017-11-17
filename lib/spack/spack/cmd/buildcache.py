@@ -80,6 +80,24 @@ def setup_parser(subparser):
     listcache.add_argument(
         'packages', nargs=argparse.REMAINDER,
         help="specs of packages to search for")
+
+    listcache.add_argument('--show-flags',
+                           action='store_true',
+                           default=False,
+                           dest='show_flags',
+                           help='show spec compiler flags')
+    listcache.add_argument('--show-full-compiler',
+                           action='store_true',
+                           default=False,
+                           dest='show_full_compiler',
+                           help='show full compiler specs')
+    listcache.add_argument(
+        '-v', '--variants',
+        action='store_true',
+        default=False,
+        dest='variants',
+        help='show variants in output (can be long)')
+
     listcache.set_defaults(func=listspecs)
 
     dlkeys = subparsers.add_parser('keys')
@@ -297,24 +315,24 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     specs = bindist.get_specs(args.force)
+
+    display_args = {
+        'show_flags': args.show_flags,
+        'variants': args.variants,
+        'show_full_compiler': args.show_full_compiler,
+        'long': True
+    }
+
+    # The user may give one or more specs
     if args.packages:
         pkgs = set(args.packages)
-        for pkg in pkgs:
-            tty.msg("buildcache spec(s) matching " +
-                    "%s and commands to install them" % pkgs)
-            for spec in sorted(specs):
-                if spec.satisfies(pkg):
-                    tty.msg('Enter\nspack buildcache install /%s\n' %
-                            spec.dag_hash(7) +
-                            ' to install "%s"' %
-                            spec.format())
+        tty.msg("buildcache spec(s) matching '%s'" % "', '".join(pkgs))
+        filtered_specs = set([s for pkg in pkgs
+                             for s in specs if s.satisfies(pkg)])
+        spack.cmd.display_specs(filtered_specs, **display_args)
     else:
-        tty.msg("buildcache specs and commands to install them")
-        for spec in sorted(specs):
-            tty.msg('Enter\nspack buildcache install /%s\n' %
-                    spec.dag_hash(7) +
-                    ' to install "%s"' %
-                    spec.format())
+        tty.msg("buildcache specs")
+        spack.cmd.display_specs(specs, **display_args)
 
 
 def getkeys(args):
