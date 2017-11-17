@@ -17,7 +17,7 @@ for pkg in ["intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ip
 install("{} %{}".format(JDK, CC))
 
 # Install Java packages
-for pgk in ["maven@3.3.9", "gradle@3.4", "ant@1.9.9", "bazel@0.4.5"]:
+for pgk in ["maven@3.3.9", "gradle@3.4", "ant@1.9.9", "sbt@0.13.12", "bazel@0.4.5"]:
     install("{} %{} ^{}".format(pgk, CC, JDK))
 
 # Install non-Java packages
