@@ -51,3 +51,16 @@ compilers:
       fc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/gcc-6.4.0-z3457r46gt7ctihyd6ejkz4asud4i47r/bin/gfortran
     spec: gcc@6.4.0
     target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: centos7
+    paths:
+      cc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-17.10-j6cy7vqs3gtogsdgbywzi5qefttqxgwq/linux86-64/17.10/bin/pgcc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-17.10-j6cy7vqs3gtogsdgbywzi5qefttqxgwq/linux86-64/17.10/bin/pgc++
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-17.10-j6cy7vqs3gtogsdgbywzi5qefttqxgwq/linux86-64/17.10/bin/pgfortran
+      fc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-17.10-j6cy7vqs3gtogsdgbywzi5qefttqxgwq/linux86-64/17.10/bin/pgf95
+    spec: pgi@17.10
+    target: x86_64
