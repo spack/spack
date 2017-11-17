@@ -42,7 +42,7 @@ class IntelParallelStudio(IntelPackage):
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12058/parallel_studio_xe_2018_cluster_edition.tgz')
     version('composer.2018.0',     '31ba768fba6e7322957b03feaa3add28',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12067/parallel_studio_xe_2018_composer_edition.tgz')
-    version('cluster.2017.5',      '1baeb8e584317fcdf1f60b8208bd4eab5',
+    version('cluster.2017.5',      'baeb8e584317fcdf1f60b8208bd4eab5',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12138/parallel_studio_xe_2017_update5.tgz')
     version('professional.2017.4', '27398416078e1e4005afced3e9a6df7e',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
