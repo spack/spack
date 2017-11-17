@@ -22,34 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Neovim(CMakePackage):
-    """NeoVim: the future of vim"""
+class RSva(RPackage):
+    """Surrogate Variable Analysis."""
 
-    homepage = "http://neovim.io"
-    url      = "https://github.com/neovim/neovim/archive/v0.2.0.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/sva/"
+    url      = "https://git.bioconductor.org/packages/sva"
 
-    version('0.2.1', 'f4271f22d2a46fa18dace42849c56a98')
-    version('0.2.0', '9af7f61f9f0b1a2891147a479d185aa2')
+    version('3.24.4', git='https://git.bioconductor.org/packages/sva', commit='ed2ebb6e33374dc9ec50e6ea97cc1d9aef836c73')
 
-    depends_on('lua@5.1:5.2')
-    depends_on('lua-lpeg')
-    depends_on('lua-mpack')
-    depends_on('lua-bitlib')
-    depends_on('libuv')
-    depends_on('jemalloc')
-    depends_on('libtermkey')
-    depends_on('libvterm')
-    depends_on('unibilium')
-    depends_on('msgpack-c')
-    depends_on('gperf')
-
-    def cmake_args(self):
-        args = []
-        if version >= Version('0.2.1'):
-            args = ['-DPREFER_LUA=ON']
-
-        return args
+    depends_on('r@3.4.0:3.4.9', when='@3.24.4')
+    depends_on('r-mgcv', type=('build', 'run'))
+    depends_on('r-genefilter', type=('build', 'run'))
+    depends_on('r-biocparallel', type=('build', 'run'))
+    depends_on('r-matrixstats', type=('build', 'run'))
+    depends_on('r-limma', type=('build', 'run'))

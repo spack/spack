@@ -22,34 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Neovim(CMakePackage):
-    """NeoVim: the future of vim"""
+class RRhdf5(RPackage):
+    """This R/Bioconductor package provides an interface between HDF5
+    and R. HDF5's main features are the ability to store and access very
+    large and/or complex datasets and a wide variety of metadata on mass
+    storage (disk) through a completely portable file format. The rhdf5
+    package is thus suited for the exchange of large and/or complex
+    datasets between R and other software package, and for letting R
+    applications work on datasets that are larger than the available RAM."""
 
-    homepage = "http://neovim.io"
-    url      = "https://github.com/neovim/neovim/archive/v0.2.0.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/rhdf5/"
+    url      = "https://git.bioconductor.org/packages/rhdf5"
 
-    version('0.2.1', 'f4271f22d2a46fa18dace42849c56a98')
-    version('0.2.0', '9af7f61f9f0b1a2891147a479d185aa2')
+    version('2.20.0', git='https://git.bioconductor.org/packages/rhdf5', commit='37b5165325062728bbec9167f89f5f4b794f30bc')
 
-    depends_on('lua@5.1:5.2')
-    depends_on('lua-lpeg')
-    depends_on('lua-mpack')
-    depends_on('lua-bitlib')
-    depends_on('libuv')
-    depends_on('jemalloc')
-    depends_on('libtermkey')
-    depends_on('libvterm')
-    depends_on('unibilium')
-    depends_on('msgpack-c')
-    depends_on('gperf')
-
-    def cmake_args(self):
-        args = []
-        if version >= Version('0.2.1'):
-            args = ['-DPREFER_LUA=ON']
-
-        return args
+    depends_on('r@3.4.0:3.4.9', when='@2.20.0')
+    depends_on('r-zlibbioc', type=('build', 'run'))

@@ -22,34 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Neovim(CMakePackage):
-    """NeoVim: the future of vim"""
+class PyNumba(PythonPackage):
+    """NumPy aware dynamic Python compiler using LLVM"""
 
-    homepage = "http://neovim.io"
-    url      = "https://github.com/neovim/neovim/archive/v0.2.0.tar.gz"
+    homepage = "https://numba.pydata.org/"
+    url      = "https://pypi.io/packages/source/n/numba/numba-0.35.0.tar.gz"
 
-    version('0.2.1', 'f4271f22d2a46fa18dace42849c56a98')
-    version('0.2.0', '9af7f61f9f0b1a2891147a479d185aa2')
+    version('0.35.0', '4f447383406f54aaf18ffaba3a0e79e8')
 
-    depends_on('lua@5.1:5.2')
-    depends_on('lua-lpeg')
-    depends_on('lua-mpack')
-    depends_on('lua-bitlib')
-    depends_on('libuv')
-    depends_on('jemalloc')
-    depends_on('libtermkey')
-    depends_on('libvterm')
-    depends_on('unibilium')
-    depends_on('msgpack-c')
-    depends_on('gperf')
-
-    def cmake_args(self):
-        args = []
-        if version >= Version('0.2.1'):
-            args = ['-DPREFER_LUA=ON']
-
-        return args
+    depends_on('py-numpy@1.10:',    type=('build', 'run'))
+    depends_on('py-llvmlite@0.20:', type=('build', 'run'))
+    depends_on('py-argparse',       type=('build', 'run'))
+    depends_on('py-funcsigs',       type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('py-singledispatch', type=('build', 'run'), when='^python@:3.3.99')

@@ -22,34 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Neovim(CMakePackage):
-    """NeoVim: the future of vim"""
+class PyLlvmlite(PythonPackage):
+    """A lightweight LLVM python binding for writing JIT compilers"""
 
-    homepage = "http://neovim.io"
-    url      = "https://github.com/neovim/neovim/archive/v0.2.0.tar.gz"
+    homepage = "http://llvmlite.readthedocs.io/en/latest/index.html"
+    url      = "https://pypi.io/packages/source/l/llvmlite/llvmlite-0.20.0.tar.gz"
 
-    version('0.2.1', 'f4271f22d2a46fa18dace42849c56a98')
-    version('0.2.0', '9af7f61f9f0b1a2891147a479d185aa2')
+    version('0.20.0', 'f2aa60d0981842b7930ba001b03679ab')
 
-    depends_on('lua@5.1:5.2')
-    depends_on('lua-lpeg')
-    depends_on('lua-mpack')
-    depends_on('lua-bitlib')
-    depends_on('libuv')
-    depends_on('jemalloc')
-    depends_on('libtermkey')
-    depends_on('libvterm')
-    depends_on('unibilium')
-    depends_on('msgpack-c')
-    depends_on('gperf')
-
-    def cmake_args(self):
-        args = []
-        if version >= Version('0.2.1'):
-            args = ['-DPREFER_LUA=ON']
-
-        return args
+    depends_on('py-setuptools', type='build')
+    depends_on('py-enum34',     type=('build', 'run'), when='^python@:3.3.99')
+    depends_on('llvm@4.0:4.99', when='@0.17.0:0.20.99')
+    depends_on('binutils', type='build')

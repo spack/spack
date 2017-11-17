@@ -22,34 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Neovim(CMakePackage):
-    """NeoVim: the future of vim"""
+class PerlLogLog4perl(PerlPackage):
+    """Log4j implementation for Perl"""
 
-    homepage = "http://neovim.io"
-    url      = "https://github.com/neovim/neovim/archive/v0.2.0.tar.gz"
+    homepage = "http://search.cpan.org/~mschilli/Log-Log4perl-1.44/lib/Log/Log4perl.pm"
+    url      = "https://github.com/mschilli/log4perl/archive/rel_146.tar.gz"
 
-    version('0.2.1', 'f4271f22d2a46fa18dace42849c56a98')
-    version('0.2.0', '9af7f61f9f0b1a2891147a479d185aa2')
-
-    depends_on('lua@5.1:5.2')
-    depends_on('lua-lpeg')
-    depends_on('lua-mpack')
-    depends_on('lua-bitlib')
-    depends_on('libuv')
-    depends_on('jemalloc')
-    depends_on('libtermkey')
-    depends_on('libvterm')
-    depends_on('unibilium')
-    depends_on('msgpack-c')
-    depends_on('gperf')
-
-    def cmake_args(self):
-        args = []
-        if version >= Version('0.2.1'):
-            args = ['-DPREFER_LUA=ON']
-
-        return args
+    version('146', '500abbd978ed326cfe5367dc4f9f3be2')
