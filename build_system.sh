@@ -13,15 +13,15 @@ function s {
 cc=%gcc@4.8.5
 
 intelsuites=(
-    intel-parallel-studio@cluster.2015.6+all
-    intel-parallel-studio@cluster.2016.4+all
-    intel-parallel-studio@cluster.2017.4+all
+    intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune threads=openmp
+    intel-parallel-studio@cluster.2017.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune threads=openmp
+    intel-parallel-studio@cluster.2018.0+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune threads=openmp
 )
 
 intelcompilers=(
-    %intel@15.0.6
     %intel@16.0.4
     %intel@17.0.4
+    %intel@18.0.0
 )
 
 buiddeps=(
@@ -48,8 +48,7 @@ s gcc@4.9.4~binutils    $cc
 s gcc@5.4.0~binutils    $cc
 s gcc@6.4.0~binutils    $cc
 s cmake         $cc
-s pgi@16.10     $cc
-s pgi@17.4      $cc
+s pgi@17.10      $cc
 s $jdk $cc
 s maven@3.3.9   ^$jdk $cc
 s gradle@3.4    ^$jdk $cc
