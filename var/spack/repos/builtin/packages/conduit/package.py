@@ -173,8 +173,17 @@ class Conduit(Package):
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build conduit.
 
-        For more details see about 'host-config' files see:
+        For more details about 'host-config' files see:
             http://software.llnl.gov/conduit/building.html
+
+        Note:
+          The `py_site_pkgs_dir` arg exists to allow a package that
+          subclasses this package provide a specific site packages
+          dir when calling this function.
+
+          This is necessary because the spack `site_packages_dir`
+          var will not exist in the base class. For more details
+          on this issue see: https://github.com/spack/spack/issues/6261
         """
 
         #######################
@@ -261,7 +270,7 @@ class Conduit(Package):
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
                       spec['python'].command.path))
             # only set dest python site packages dir if passed
-            if py_site_pkgs_dir is not None:
+            if py_site_pkgs_dir:
                 cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
                                             py_site_pkgs_dir))
         else:
