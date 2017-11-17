@@ -11,7 +11,7 @@ if [ -z $1 ]; then
 	exit 1
 fi
 
-# PLATFORM, SPACK_ROOT, SPACKPREFIX, SPACKSTAGE, SPACKCACHE, SPACKSOURCECACHE
+# PLATFORM, SPACK_ROOT, SPACKPREFIX
 echo "Determine ${HOSTNAME} PLATFORM within sandybridge, haswell, knightlanding, minsky."
 if [[ $HOSTNAME == *"knl"* ]]; then
 	PLATFORM="knightlanding"
@@ -29,26 +29,22 @@ SPACK_ROOT=`pwd`
 
 if [ $1 = "system" ]; then
 	SPACKPREFIX=/lustre/spack/tools
-elif [ $1 = "rpm" ]; then 
+elif [ $1 = "rpm" ]; then
 	SPACKPREFIX=/lustre/spack/$PLATFORM
 else
 	SPACKPREFIX=$SPACK_ROOT/opt
 fi
 
-export SPACKSTAGE="/tmp/`whoami`/spack_stage"
-export SPACKCACHE="/tmp/`whoami`/spack_cache"
-export SPACKSOURCECACHE="$SPACK_ROOT/var/spack/cache"
-
 #Summarizing
 echo ">>>"
-for var in PLATFORM SPACK_ROOT SPACKPREFIX SPACKSTAGE SPACKCACHE SPACKSOURCECACHE
+for var in PLATFORM SPACK_ROOT SPACKPREFIX
 do
 	echo "$var => ${!var}"
 done
 echo ">>>"
 
 # Rendering CONFIG_YAML 
-for var in SPACKSTAGE SPACKPREFIX SPACKCACHE SPACKSOURCECACHE
+for var in SPACKPREFIX
 do
 	sed -i s=$var=${!var}=g config.yaml.template
 done

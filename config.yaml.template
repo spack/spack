@@ -1,33 +1,11 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 config:
-  build_stage:
-  - SPACKSTAGE
   checksum: true
   dirty: false
   install_tree: SPACKPREFIX
-  misc_cache: SPACKCACHE
   module_roots:
     dotkit: $spack/share/spack/dotkit
     lmod: $spack/share/spack/lmod
     tcl: $spack/share/spack/modules
-  source_cache: SPACKSOURCECACHE
   verify_ssl: true
 
 
