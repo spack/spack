@@ -221,22 +221,8 @@ def createtarball(args):
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        try:
-            bindist.build_tarball(spec, outdir, force,
-                                  relative, yes_to_all, signkey)
-        except NoOverwriteException as e:
-            tty.warn("%s exists, use -f to force overwrite." % e)
-        except NoGpgException:
-            tty.die("gpg2 is not available,"
-                    " use -y to create unsigned build caches")
-        except NoKeyException:
-            tty.die("no default key available for signing,"
-                    " use -y to create unsigned build caches"
-                    " or spack gpg init to create a default key")
-        except PickKeyException:
-            tty.die("multi keys available for signing,"
-                    " use -y to create unsigned build caches"
-                    " or -k <key hash> to pick a key")
+        bindist.build_tarball(spec, outdir, force,
+                              relative, yes_to_all, signkey)
 
 
 def installtarball(args):
@@ -278,18 +264,8 @@ def install_tarball(spec, args):
         tarball = bindist.download_tarball(spec)
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
-            try:
-                bindist.extract_tarball(spec, tarball, yes_to_all, force)
-            except NoOverwriteException as e:
-                tty.warn("%s exists. use -f to force overwrite." % e.args)
-            except NoVerifyException:
-                tty.die("Package spec file failed signature verification,"
-                        " use -y flag to install build cache")
-            except NoChecksumException:
-                tty.die("Package tarball failed checksum verification,"
-                        " use -y flag to install build cache")
-            finally:
-                spack.store.db.reindex(spack.store.layout)
+            bindist.extract_tarball(spec, tarball, yes_to_all, force)
+            spack.store.db.reindex(spack.store.layout)
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
                     spec.format())
