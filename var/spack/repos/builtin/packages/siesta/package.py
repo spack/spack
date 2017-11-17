@@ -45,13 +45,13 @@ class Siesta(Package):
     def configure(self, spec, prefix):
         sh = which('sh')
         configure_args = ['--enable-mpi',
-                          '--with-blas=%s' % spec['blas'].libs.ld_flags,
-                          '--with-lapack=%s' % spec['lapack'].libs.ld_flags,
+                          '--with-blas=%s' % spec['blas'].libs,
+                          '--with-lapack=%s' % spec['lapack'].libs,
                           # need to include BLAS below because Intel MKL's
                           # BLACS depends on BLAS, otherwise the compiler
                           # test fails
-                          '--with-blacs=%s %s' % (spec['scalapack'].libs,
-                                                  spec['blas'].libs.ld_flags),
+                          '--with-blacs=%s' % (spec['scalapack'].libs +
+                                               spec['blas'].libs),
                           '--with-scalapack=%s' % spec['scalapack'].libs,
                           # need to specify MPIFC explicitly below, otherwise
                           # Intel's mpiifort is not found
