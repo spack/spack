@@ -125,7 +125,9 @@ class Ascent(Package):
         Build and install Conduit.
         """
         with working_dir('spack-build', create=True):
-            host_cfg_fname = self.create_host_config(spec, prefix)
+            host_cfg_fname = self.create_host_config(spec,
+                                                     prefix,
+                                                     site_packages_dir)
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
@@ -140,9 +142,10 @@ class Ascent(Package):
             cmake(*cmake_args)
             make()
             make("install")
-            # TODO also copy host_cfg_fname into install
+            # install copy of host config for provenance
+            install(host_cfg_fname, prefix)
 
-    def create_host_config(self, spec, prefix):
+    def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build ascent.
@@ -184,9 +187,9 @@ class Ascent(Package):
                 raise RuntimeError(msg)
             cmake_exe = cmake_exe.path
 
-        host_cfg_fname = "%s-%s-%s.cmake" % (socket.gethostname(),
-                                             sys_type,
-                                             spec.compiler)
+        host_cfg_fname = "%s-%s-%s-ascent.cmake" % (socket.gethostname(),
+                                                    sys_type,
+                                                    spec.compiler)
 
         cfg = open(host_cfg_fname, "w")
         cfg.write("##################################\n")
@@ -246,10 +249,10 @@ class Ascent(Package):
             cfg.write("# python from spack \n")
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
                       spec['python'].command.path))
-            # install module to standard style site packages dir
-            # so we can support spack activate
-            cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                                        site_packages_dir))
+            # only set dest python site packages dir if passed
+            if py_site_pkgs_dir is not None:
+                cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
+                                            py_site_pkgs_dir))
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
