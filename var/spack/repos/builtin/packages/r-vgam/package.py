@@ -41,7 +41,7 @@ from spack import *
 
 
 class RVgam(RPackage):
-    """An implementation of about 6 major classes of statistical regression 
+    """An implementation of about 6 major classes of statistical regression
     models."""
 
     homepage = "https://cran.r-project.org/web/packages/VGAM/index.html"
