@@ -71,8 +71,11 @@ def test_install_package_and_dependency(
     assert 'failures="0"' in content
     assert 'errors="0"' in content
 
-    s = Spec('libdwarf').concretized()
-    assert not spack.repo.get(s).stage.created
+    # TODO: note that this test doesn't make sense if each new spec is stored
+    # separately in a repo (in which case Spec.package.stage will always be
+    # initialized and created)
+    # s = Spec('libdwarf').concretized()
+    # assert not spack.repo.get(s).stage.created
 
 
 @pytest.mark.usefixtures('noop_install', 'builtin_mock', 'config')
