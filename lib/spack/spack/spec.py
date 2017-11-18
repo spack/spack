@@ -925,6 +925,8 @@ class DependencyConstraints(object):
 @key_ordering
 class Spec(object):
 
+    ID_COUNTER = 0
+
     @staticmethod
     def from_literal(spec_dict, normal=True):
         """Builds a Spec from a dictionary containing the spec literal.
@@ -1078,6 +1080,9 @@ class Spec(object):
         return spec_builder(spec_dict)
 
     def __init__(self, spec_like, **kwargs):
+        self.unique_id = Spec.ID_COUNTER
+        Spec.ID_COUNTER += 1
+
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
             self._dup(spec_like)
@@ -2759,6 +2764,8 @@ class Spec(object):
 
         """
         clone = Spec.__new__(Spec)
+        clone.unique_id = Spec.ID_COUNTER
+        Spec.ID_COUNTER += 1
         clone._dup(self, deps=deps, **kwargs)
         return clone
 
@@ -3458,6 +3465,8 @@ class SpecParser(spack.parse.Parser):
             spec = self._initial
             self._initial = None
 
+        spec.unique_id = Spec.ID_COUNTER
+        Spec.ID_COUNTER += 1
         spec.name = spec_name
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
