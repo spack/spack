@@ -22,23 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install r-som
-#
-# You can edit this file again by typing:
-#
-#     spack edit r-som
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
-
 
 class RSom(RPackage):
     """Self-Organizing Map (with application in gene clustering)."""
@@ -46,7 +30,7 @@ class RSom(RPackage):
     homepage = "https://cran.r-project.org/web/packages/som/index.html"
     url      = "https://cran.r-project.org/src/contrib/som_0.3-5.1.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/som"
- 
+
     version('0.3-5.1', '802a5a80902579354ce3420faeeeb756')
     version('0.3-5', '72717499794c7aa945a768b742af8895')
     version('0.3-4', '1e25572e446409f5e32c5da5f1af98e6')
