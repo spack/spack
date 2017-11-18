@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class RSom(RPackage):
     """Self-Organizing Map (with application in gene clustering)."""
 
