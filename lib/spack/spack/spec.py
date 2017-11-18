@@ -1194,7 +1194,9 @@ class Spec(object):
 
     @property
     def package(self):
-        return spack.repo.get(self)
+        if not self._package:
+            self._package = spack.repo.get(self)
+        return self._package
 
     @property
     def package_class(self):
@@ -2604,6 +2606,8 @@ class Spec(object):
                        self.external_module != other.external_module and
                        self.compiler_flags != other.compiler_flags)
 
+        self._package = None
+
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
@@ -3368,6 +3372,7 @@ class SpecParser(spack.parse.Parser):
         spec._hash = None
         spec._cmp_key_cache = None
 
+        spec._package = None
         spec._normal = False
         spec._concrete = False
 

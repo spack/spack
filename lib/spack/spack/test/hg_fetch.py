@@ -61,7 +61,7 @@ def test_fetch(
     # Construct the package under test
     spec = Spec('hg-test')
     spec.concretize()
-    pkg = spack.repo.get(spec, new=True)
+    pkg = spack.repo.get(spec)
     pkg.versions[ver('hg')] = t.args
 
     # Enter the stage directory and check some properties
