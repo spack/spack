@@ -1964,8 +1964,7 @@ class Spec(object):
         If no conditions are True (and we don't depend on it), return
         ``(None, None)``.
         """
-        pkg = spack.repo.get(self.fullname)
-        conditions = pkg.dependencies[name]
+        conditions = self.package_class.dependencies[name]
 
         substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
@@ -2132,10 +2131,9 @@ class Spec(object):
         any_change = False
         changed = True
 
-        pkg = spack.repo.get(self.fullname)
         while changed:
             changed = False
-            for dep_name in pkg.dependencies:
+            for dep_name in self.package_class.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 dep = self._evaluate_dependency_conditions(dep_name)
                 # If dep is a needed dependency, merge it.
