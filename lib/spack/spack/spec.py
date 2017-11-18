@@ -1868,7 +1868,7 @@ class Spec(object):
         # there are declared conflicts
         matches = []
         for x in self.traverse():
-            for conflict_spec, when_list in x.package.conflicts.items():
+            for conflict_spec, when_list in x.package_class.conflicts.items():
                 if x.satisfies(conflict_spec):
                     for when_spec, msg in when_list:
                         if x.satisfies(when_spec):
@@ -2552,7 +2552,7 @@ class Spec(object):
         # FIXME: concretization to store the order of patches somewhere.
         # FIXME: Needs to be refactored in a cleaner way.
         for sha256 in self.variants['patches']._patches_in_order_of_appearance:
-            patch = self.package.lookup_patch(sha256)
+            patch = self.package_class.lookup_patch(sha256)
             if patch:
                 patches.append(patch)
                 continue
@@ -2560,7 +2560,7 @@ class Spec(object):
             # if not found in this package, check immediate dependents
             # for dependency patches
             for dep_spec in self._dependents.values():
-                patch = dep_spec.parent.package.lookup_patch(sha256)
+                patch = dep_spec.parent.package_class.lookup_patch(sha256)
 
                 if patch:
                     patches.append(patch)
