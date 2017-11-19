@@ -34,7 +34,7 @@ class Elpa(AutotoolsPackage):
     version('2017.05.003', '7c8e5e58cafab212badaf4216695700f')
     version('2017.05.002', 'd0abc1ac1f493f93bf5e30ec8ab155dc')
     version('2016.11.001.pre', '5656fd066cf0dcd071dbcaf20a639b37')
-    version('2016.05.004', 'c0dd3a53055536fc3a2a221e78d8b376')
+    version('2016.05.004', 'c0dd3a53055536fc3a2a221e78d8b376', preferred=True)
     version('2016.05.003', '88a9f3f3bfb63e16509dd1be089dcf2c')
     version('2015.11.001', 'de0f35b7ee7c971fd0dca35c900b87e6')
 
@@ -80,6 +80,9 @@ class Elpa(AutotoolsPackage):
         # https://src.fedoraproject.org/cgit/rpms/elpa.git/
         # https://packages.qa.debian.org/e/elpa.html
         options = []
+        # without -march=native there is configure error for 2017.05.02
+        # Could not compile test program, try with --disable-sse, or
+        # adjust the C compiler or CFLAGS
         if '+optflags' in self.spec:
             options.extend([
                 'FCFLAGS=-O3 -march=native -ffree-line-length-none',
