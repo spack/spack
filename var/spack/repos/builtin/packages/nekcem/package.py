@@ -56,6 +56,7 @@ class Nekcem(Package):
         binDir = 'bin'
         nek = 'nek'
         cNek = 'configurenek'
+        mNek = 'makenek'
 
         FC = self.compiler.fc
         CC = self.compiler.cc
@@ -77,7 +78,9 @@ class Nekcem(Package):
 
         # Install NekCEM in prefix/bin
         install_tree('../NekCEM', prefix.bin.NekCEM)
-        # Create symlinks to the nek and configurenek scripts
+        # Create symlinks to makenek, nek and configurenek scripts
+        os.symlink(os.path.join(prefix.bin.NekCEM, binDir, mNek),
+                   os.path.join(prefix.bin, mNek))
         os.symlink(os.path.join(prefix.bin.NekCEM, binDir, cNek),
                    os.path.join(prefix.bin, cNek))
         os.symlink(os.path.join(prefix.bin.NekCEM, binDir, nek),
