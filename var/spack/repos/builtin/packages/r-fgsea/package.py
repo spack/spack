@@ -25,17 +25,21 @@
 from spack import *
 
 
-class Libhio(AutotoolsPackage):
-    """
-    A library for writing to hierarchical data store systems.
-    """
+class RFgsea(RPackage):
+    """The package implements an algorithm for fast gene set enrichment
+    analysis. Using the fast algorithm allows to make more permutations
+    and get more fine grained p-values, which allows to use accurate
+    stantard approaches to multiple hypothesis correction."""
 
-    homepage = "https://github.com/hpc/libhio/"
-    url      = "https://github.com/hpc/libhio/releases/download/hio.1.3.0.1/libhio-1.3.0.1.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/fgsea/"
+    url      = "https://git.bioconductor.org/packages/fgsea"
 
-    version('1.4.0.0', 'a223effbfd50efd452053e6954e3ccf5')
-    version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
+    version('1.2.1', git='https://git.bioconductor.org/packages/fgsea', commit='99b04eef664204d0dca4b9f8027cd7eefb006b72')
 
-    depends_on("json-c")
-    depends_on("bzip2")
-    depends_on("pkg-config", type="build")
+    depends_on('r@3.4.0:3.4.9', when='@1.2.1')
+    depends_on('r-fastmatch', type=('build', 'run'))
+    depends_on('r-gridextra', type=('build', 'run'))
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-biocparallel', type=('build', 'run'))
+    depends_on('r-data-table', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

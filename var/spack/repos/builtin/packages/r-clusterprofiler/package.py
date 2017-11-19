@@ -25,17 +25,23 @@
 from spack import *
 
 
-class Libhio(AutotoolsPackage):
-    """
-    A library for writing to hierarchical data store systems.
-    """
+class RClusterprofiler(RPackage):
+    """This package implements methods to analyze and visualize functional
+    profiles (GO and KEGG) of gene and gene clusters."""
 
-    homepage = "https://github.com/hpc/libhio/"
-    url      = "https://github.com/hpc/libhio/releases/download/hio.1.3.0.1/libhio-1.3.0.1.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/clusterProfiler/"
+    url      = "https://git.bioconductor.org/packages/clusterProfiler"
 
-    version('1.4.0.0', 'a223effbfd50efd452053e6954e3ccf5')
-    version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
+    version('3.4.4', git='https://git.bioconductor.org/packages/clusterProfiler', commit='b86b00e8405fe130e439362651a5567736e2d9d7')
 
-    depends_on("json-c")
-    depends_on("bzip2")
-    depends_on("pkg-config", type="build")
+    depends_on('r@3.4.0:3.4.9', when='@3.4.4')
+    depends_on('r-tidyr', type=('build', 'run'))
+    depends_on('r-rvcheck', type=('build', 'run'))
+    depends_on('r-qvalue', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-gosemsim', type=('build', 'run'))
+    depends_on('r-go-db', type=('build', 'run'))
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on('r-dose', type=('build', 'run'))

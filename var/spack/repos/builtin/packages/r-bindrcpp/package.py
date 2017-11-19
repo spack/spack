@@ -25,17 +25,17 @@
 from spack import *
 
 
-class Libhio(AutotoolsPackage):
-    """
-    A library for writing to hierarchical data store systems.
-    """
+class RBindrcpp(RPackage):
+    """Provides an easy way to fill an environment with active bindings that
+       call a C++ function."""
 
-    homepage = "https://github.com/hpc/libhio/"
-    url      = "https://github.com/hpc/libhio/releases/download/hio.1.3.0.1/libhio-1.3.0.1.tar.gz"
+    homepage = "https://github.com/krlmlr/bindrcpp"
+    url      = "https://cran.r-project.org/src/contrib/bindrcpp_0.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/bindrcpp"
 
-    version('1.4.0.0', 'a223effbfd50efd452053e6954e3ccf5')
-    version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
+    version('0.2', '2ed7f19fd9a12587f882d90060e7a343')
 
-    depends_on("json-c")
-    depends_on("bzip2")
-    depends_on("pkg-config", type="build")
+    depends_on('r@3.4.0:3.4.9')
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-bindr', type=('build', 'run'))
+    depends_on('r-plogr', type=('build', 'run'))

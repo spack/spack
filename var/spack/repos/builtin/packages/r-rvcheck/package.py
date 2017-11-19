@@ -25,17 +25,12 @@
 from spack import *
 
 
-class Libhio(AutotoolsPackage):
-    """
-    A library for writing to hierarchical data store systems.
-    """
+class RRvcheck(RPackage):
+    """Check latest release version of R and R package (both in 'CRAN',
+    'Bioconductor' or 'Github')."""
 
-    homepage = "https://github.com/hpc/libhio/"
-    url      = "https://github.com/hpc/libhio/releases/download/hio.1.3.0.1/libhio-1.3.0.1.tar.gz"
+    homepage = "https://cran.r-project.org/package=rvcheck"
+    url      = "https://cran.rstudio.com/src/contrib/rvcheck_0.0.9.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/rvcheck"
 
-    version('1.4.0.0', 'a223effbfd50efd452053e6954e3ccf5')
-    version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
-
-    depends_on("json-c")
-    depends_on("bzip2")
-    depends_on("pkg-config", type="build")
+    version('0.0.9', '7e9821de754577f94fdcbf7b02a20edc')

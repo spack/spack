@@ -25,17 +25,17 @@
 from spack import *
 
 
-class Libhio(AutotoolsPackage):
-    """
-    A library for writing to hierarchical data store systems.
-    """
+class RSom(RPackage):
+    """Self-Organizing Map (with application in gene clustering)."""
 
-    homepage = "https://github.com/hpc/libhio/"
-    url      = "https://github.com/hpc/libhio/releases/download/hio.1.3.0.1/libhio-1.3.0.1.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/som/index.html"
+    url      = "https://cran.r-project.org/src/contrib/som_0.3-5.1.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/som"
 
-    version('1.4.0.0', 'a223effbfd50efd452053e6954e3ccf5')
-    version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
+    version('0.3-5.1', '802a5a80902579354ce3420faeeeb756')
+    version('0.3-5', '72717499794c7aa945a768b742af8895')
+    version('0.3-4', '1e25572e446409f5e32c5da5f1af98e6')
+    version('0.3-3', 'd4ac444be24f71d08b99974c2f4b96e5')
+    version('0.3-2', '4ce28f46df68fbb73905711ba2416fac')
 
-    depends_on("json-c")
-    depends_on("bzip2")
-    depends_on("pkg-config", type="build")
+    depends_on('r@3.4.0:3.4.9')
