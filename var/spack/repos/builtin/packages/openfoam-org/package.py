@@ -109,7 +109,6 @@ class OpenfoamOrg(Package):
     assets = ['bin/foamEtcFile']
 
     # Version-specific patches
-    patch('50-site.patch', when='@5.0')
     patch('41-etc.patch', when='@4.1')
     patch('41-site.patch', when='@4.1')
 
