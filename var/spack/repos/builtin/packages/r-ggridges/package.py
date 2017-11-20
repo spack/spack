@@ -22,26 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install r-ggridges
-#
-# You can edit this file again by typing:
-#
-#     spack edit r-ggridges
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
 class RGgridges(RPackage):
-    """Ridgeline plots provide a convenient way of visualizing changes in 
+    """Ridgeline plots provide a convenient way of visualizing changes in
     distributions over time or space."""
 
     homepage = "https://cran.r-project.org/web/packages/ggridges/index.html"
@@ -51,4 +36,5 @@ class RGgridges(RPackage):
     version('0.4.1', '21d53b3f7263beb17f629f0ebfb7b67a')
     version('0.4.0', 'da94ed1ee856a7fa5fb87712c84ec4c9')
 
+    depends_on('r@3.4.0:3.4.9')
     depends_on('r-ggplot2', type=('build', 'run'))
