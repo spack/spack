@@ -148,9 +148,13 @@ class Conduit(Package):
         Build and install Conduit.
         """
         with working_dir('spack-build', create=True):
+            py_site_pkgs_dir = None
+            if "+python" in spec:
+                py_site_pkgs_dir = site_packages_dir
+
             host_cfg_fname = self.create_host_config(spec,
                                                      prefix,
-                                                     site_packages_dir)
+                                                     py_site_pkgs_dir)
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
@@ -179,7 +183,8 @@ class Conduit(Package):
         Note:
           The `py_site_pkgs_dir` arg exists to allow a package that
           subclasses this package provide a specific site packages
-          dir when calling this function.
+          dir when calling this function. `py_site_pkgs_dir` should
+          be an absolute path or `None`.
 
           This is necessary because the spack `site_packages_dir`
           var will not exist in the base class. For more details
