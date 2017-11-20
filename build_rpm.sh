@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from spack_install import install
+from spack_install import check_pass
 import os
 
 COMPILERS = ["gcc@5.4.0", "intel@17.0.5"]
@@ -33,41 +34,47 @@ nonmpipkgs = {"python@2.7.14": [""],
               "cudnn@6.0": ["^cuda@8.0.61"],
               "cudnn@5.1": ["^cuda@8.0.61"],
               "samtools@1.6": [""],
+              "bwa@0.7.17": [""],
               "r@3.4.1+external-lapack": ["^openblas threads=openmp", "^intel-parallel-studio+mkl"],
-              "fftw@3.3.6-pl2~mpi+openmp": [""]
+              "octave+qt@4.2.1": ["^openblas threads=openmp"],
+              "fftw@3.3.6-pl2~mpi+openmp": [""],
+              "eigen~fftw~metis~scotch~suitesparse@3.3.3": [""],
+              "opencv+core+eigen+imgproc+openmp+jpeg+png+tiff@3.3.0": ["^eigen~fftw~metis~scotch~suitesparse@3.3.3"]
 }
-for pkg,specs in nonmpipkgs:
+for pkg,specs in nonmpipkgs.items():
     for spec in specs:
         for compiler in COMPILERS:
-            install("{} %{} {}".format(pgk, compiler, spec))
+            install("{} %{} {}".format(pkg, compiler, spec))
 
 
 # Build MPI libraries
-MPIS = ["openmpi@2.1.2~cuda fabrics=verbs ~java schedulers=slurm",
-       "openmpi@2.1.2+cuda fabrics=verbs ~java schedulers=slurm",
-       "mvapich2@2.2~cuda fabrics=mrail process_managers=slurm",
-       "mvapich2@2.2+cuda fabrics=mrail process_managers=slurm",
-       "mpich@3.2+hydra+pmi+romio+verbs"
-]
-for pkg in MPIS:
+MPIS = {"openmpi@2.1.2~cuda fabrics=verbs ~java schedulers=slurm": "",
+       "openmpi@2.1.2+cuda fabrics=verbs ~java schedulers=slurm": "^cuda@8.0.61",
+       "mvapich2@2.2~cuda fabrics=mrail process_managers=slurm": "",
+       "mvapich2@2.2+cuda fabrics=mrail process_managers=slurm": "^cuda@8.0.61",
+       "mpich@3.2+hydra+pmi+romio+verbs": ""
+}
+for pkg,spec in MPIS.items():
     for compiler in COMPILERS:
-        install("{} %{}".format(pkg, compiler))
+        install("{} %{} {}".format(pkg, compiler, spec))
 
 # Build MPI packages
-mpipkgs = {["fftw@3.3.6-pl2+mpi+openmp"]: [""],
-    ["gromacs+mpi~cuda@5.1.4"]: ["^fftw+mpi+openmp@3.3.6-pl2"],
-    ["gromacs+mpi+cuda@5.1.4"]: ["^fftw+mpi+openmp@3.3.6-pl2"]
+mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
+    "gromacs+mpi~cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
+    "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
+    "scotch+mpi@6.0.4": [""]
 }
 for pkg,specs in mpipkgs.items():
     for spec in specs:
         for compiler in COMPILERS:
-            for mpi in MPIS:
+            for mpi in MPIS.keys():
                 if spec == "":
                    concrete_spec = "{} %{} ^{}".format(pkg, compiler, mpi)
                 else:
                    concrete_spec = "{} %{} ^{} {}".format(pkg, compiler, mpi, spec)
-                install(concrete_spec) if pass_check(concrete_spec)
+                if check_pass(pkg, compiler, mpi, spec):
+                    install(concrete_spec) 
 
 # Remove intermediate dependency
-for pkg in ["automake", "autoconf", "bison", "m4", "gperf", "flex", "inputproto", "help2man", "pkg-conf", "gdbm", "readline"]:
+for pkg in ["automake", "autoconf", "bison", "m4", "gperf", "flex", "inputproto", "help2man", "pkg-conf", "gdbm", "nasm"]:
     os.system("spack uninstall -y --all {}".format(pkg))

@@ -7,3 +7,8 @@ def install(spec):
         print("{} not found. Build it.".format(spec))
         os.system("spack install --restage {}".format(spec))
 
+def check_pass(pkg, compiler, mpi, spec):
+    if ('cuda' not in pkg) and ('+cuda' not in mpi): return True
+    if ('+cuda' in pkg) and ('~cuda' in mpi): return False
+    if ('~cuda' in pkg) and ('+cuda' in mpi): return False
+    return True
