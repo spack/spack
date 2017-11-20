@@ -1106,6 +1106,8 @@ The main points that are implemented below:
      - make -j 2
      - make test
 
+.. _workflow_create_docker_image:
+
 -----------------------------------
 Using Spack to Create Docker Images
 -----------------------------------
