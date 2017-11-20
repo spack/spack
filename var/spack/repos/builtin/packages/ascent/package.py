@@ -280,10 +280,6 @@ class Ascent(Package):
             sphinx_build_exe = join_path(spec['py-sphinx'].prefix.bin,
                                          "sphinx-build")
             cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
-
-            cfg.write("# doxygen from uberenv\n")
-            doxygen_exe = spec['doxygen'].command.path
-            cfg.write(cmake_cache_entry("DOXYGEN_EXECUTABLE", doxygen_exe))
         else:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))
 
