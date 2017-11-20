@@ -23,10 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.build_systems.cuda import CudaPackage
 import os
 
 
-class Dealii(CMakePackage):
+class Dealii(CMakePackage, CudaPackage):
     """C++ software library providing well-documented tools to build finite
     element codes for a broad variety of PDEs."""
     homepage = "https://www.dealii.org"
@@ -84,8 +85,6 @@ class Dealii(CMakePackage):
     variant('build_type', default='DebugRelease',
             description='The build type to build',
             values=('Debug', 'Release', 'DebugRelease'))
-    variant('cuda', default=False,
-            description='Build with CUDA')
 
     # required dependencies, light version
     depends_on("blas")
@@ -157,7 +156,6 @@ class Dealii(CMakePackage):
     conflicts('+adol-c', when='@:8.5.1')
     conflicts('+gsl',    when='@:8.4.2')
     conflicts('+python', when='@:8.4.2')
-    conflicts('+cuda', when='%gcc@6:')
     for p in ['+arpack', '+hdf5', '+netcdf', '+p4est', '+petsc',
               '+slepc', '+trilinos']:
         conflicts(p, when='~mpi')
@@ -227,12 +225,25 @@ class Dealii(CMakePackage):
             ])
 
         # CUDA
-        # FIXME  -DDEAL_II_CUDA_FLAGS="-arch=sm_60"
         if '+cuda' in spec:
-            options.extend([
-                '-DDEAL_II_WITH_CUDA=ON',
-                '-DDEAL_II_WITH_CXX14=OFF'
-            ])
+            options.append(
+                '-DDEAL_II_WITH_CUDA=ON'
+            )
+            if not spec.satisfies('^cuda@9:'):
+                options.append('-DDEAL_II_WITH_CXX14=OFF')
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch is not None:
+                if len(cuda_arch) > 1:
+                    raise InstallError(
+                        'deal.II only supports compilation for a single GPU!'
+                    )
+                flags = '-arch=sm_{0}'.format(cuda_arch[0])
+                # FIXME: there are some compiler errors in dealii
+                # with flags below. Stick with -arch=sm_xy for now.
+                # flags = ' '.join(self.cuda_flags(cuda_arch))
+                options.append(
+                    '-DDEAL_II_CUDA_FLAGS={0}'.format(flags)
+                )
         else:
             options.extend([
                 '-DDEAL_II_WITH_CUDA=OFF',

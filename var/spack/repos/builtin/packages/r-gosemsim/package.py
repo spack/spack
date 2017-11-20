@@ -25,17 +25,21 @@
 from spack import *
 
 
-class Libhio(AutotoolsPackage):
-    """
-    A library for writing to hierarchical data store systems.
-    """
+class RGosemsim(RPackage):
+    """The semantic comparisons of Gene Ontology (GO) annotations provide
+    quantitative ways to compute similarities between genes and gene
+    groups, and have became important basis for many bioinformatics
+    analysis approaches. GOSemSim is an R package for semantic similarity
+    computation among GO terms, sets of GO terms, gene products and gene
+    clusters. GOSemSim implemented five methods proposed by Resnik,
+    Schlicker, Jiang, Lin and Wang respectively."""
 
-    homepage = "https://github.com/hpc/libhio/"
-    url      = "https://github.com/hpc/libhio/releases/download/hio.1.3.0.1/libhio-1.3.0.1.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/GOSemSim/"
+    url      = "https://git.bioconductor.org/packages/GOSemSim"
 
-    version('1.4.0.0', 'a223effbfd50efd452053e6954e3ccf5')
-    version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
+    version('2.2.0', git='https://git.bioconductor.org/packages/GOSemSim', commit='247434790e6c8cf99e5643f569390362b8c87c52')
 
-    depends_on("json-c")
-    depends_on("bzip2")
-    depends_on("pkg-config", type="build")
+    depends_on('r@3.4.0:3.4.9', when='@2.2.0')
+    depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on('r-go-db', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

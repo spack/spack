@@ -25,17 +25,13 @@
 from spack import *
 
 
-class Libhio(AutotoolsPackage):
-    """
-    A library for writing to hierarchical data store systems.
-    """
+class RDoDb(RPackage):
+    """A set of annotation maps describing the entire Disease
+    Ontology assembled using data from DO."""
 
-    homepage = "https://github.com/hpc/libhio/"
-    url      = "https://github.com/hpc/libhio/releases/download/hio.1.3.0.1/libhio-1.3.0.1.tar.gz"
+    homepage = "https://bioconductor.org/packages/DO.db/"
+    url      = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/DO.db_2.9.tar.gz"
 
-    version('1.4.0.0', 'a223effbfd50efd452053e6954e3ccf5')
-    version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
+    version('2.9', '63dda6d46d2fe40c52a2e79260a7fb9d')
 
-    depends_on("json-c")
-    depends_on("bzip2")
-    depends_on("pkg-config", type="build")
+    depends_on('r-annotationdbi', type=('build', 'run'))
