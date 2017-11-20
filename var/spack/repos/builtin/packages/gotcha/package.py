@@ -26,16 +26,18 @@ from spack import *
 
 
 class Gotcha(CMakePackage):
-    """C software library for shared library function wrapping, 
+    """C software library for shared library function wrapping,
     enables tools to intercept calls into shared libraries"""
 
     homepage = "http://github.com/LLNL/gotcha"
-    url      = "http://github.com/LLNL/gotcha"
+    url = "http://github.com/LLNL/gotcha"
 
     variant('test', default=False, description='Build tests for Gotcha')
 
-    version('develop', git='https://github.com/LLNL/gotcha.git', branch="develop")
-    version('master', git='https://github.com/LLNL/gotcha.git', branch="master")
+    version('develop', git='https://github.com/LLNL/gotcha.git',
+            branch="develop")
+    version('master', git='https://github.com/LLNL/gotcha.git',
+            branch="master")
     version('0.0.2', git='https://github.com/LLNL/gotcha.git', tag="0.0.2")
 
     def configure_args(self):
