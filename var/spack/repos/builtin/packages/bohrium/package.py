@@ -23,9 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.build_systems.cuda import CudaPackage
 
 
-class Bohrium(CMakePackage):
+class Bohrium(CMakePackage, CudaPackage):
     """Library for automatic acceleration of array operations"""
 
     homepage    = "http://bh107.org"
@@ -43,42 +44,46 @@ class Bohrium(CMakePackage):
     #
     variant("cuda", default=True,
             description="Build with CUDA code generator")
-    variant("opencl", default=True,
+    variant('opencl', default=True,
             description="Build with OpenCL code generator")
-    variant("openmp", default=True,
+    variant('openmp', default=True,
             description="Build with OpenMP code generator")
 
-    variant("node", default=True,
+    variant('node', default=True,
             description="Build the node vector engine manager")
-    variant("proxy", default=True,
+    variant('proxy', default=True,
             description="Build the proxy vector engine manager")
-    variant("python", default=True,
+    variant('python', default=True,
             description="Build the numpy-like bridge "
             "to enable use from python")
-    variant("cbridge", default=True,
+    variant('cbridge', default=True,
             description="Build the bridge interface towards plain C")
 
-    variant("blas", default=True,
+    variant('blas', default=True,
             description="Build with BLAS extension methods")
-    variant("lapack", default=True,
+    variant('lapack', default=True,
             description="Build with LAPACK extension methods")
 
     #
     # Conflicts and extensions
     #
-    conflicts("%intel")
-    conflicts("%clang@:3.5")
-    extends("python", when="+python")
+    conflicts('%intel')
+    conflicts('%clang@:3.5')
+    extends('python', when="+python")
+
+    # Bohrium needs at least one vector engine and
+    # at least one vector engine manager
+    conflicts('~node~proxy')
+    conflicts('~openmp~opencl~cuda')
 
     #
     # Dependencies
     #
-    depends_on("cmake@2.8:", type="build")
+    depends_on('cmake@2.8:', type="build")
+    depends_on('boost+system+serialization+filesystem+regex')
 
-    depends_on("boost+system+serialization+filesystem+regex")
-
-    depends_on("cuda", when="+cuda")
-    depends_on("opencl", when="+opencl")
+    # cuda dependencies managed by CudaPackage class
+    depends_on('opencl', when="+opencl")
 
     # NOTE The lapacke interface and hence netlib-lapack
     #      is the strictly required lapack provider
@@ -86,13 +91,13 @@ class Bohrium(CMakePackage):
     depends_on("netlib-lapack+lapacke", when="+lapack")
     depends_on("blas", when="+blas")
 
-    depends_on("python", type="build", when="~python")
-    depends_on("python", when="+python")
-    depends_on("py-numpy", when="+python")
-    depends_on("swig", type="build", when="+python")
-    depends_on("py-cython", type="build", when="+python")
+    depends_on('python', type="build", when="~python")
+    depends_on('python', when="+python")
+    depends_on('py-numpy', when="+python")
+    depends_on('swig', type="build", when="+python")
+    depends_on('py-cython', type="build", when="+python")
 
-    depends_on("zlib", when="+proxy")
+    depends_on('zlib', when="+proxy")
 
     #
     # Settings and cmake cache
@@ -100,14 +105,13 @@ class Bohrium(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        # Checks for consistency:
-        if "+node" not in spec and "+proxy" not in spec:
+        cuda_arch = spec.variants['cuda_arch'].value
+        if cuda_arch:
+            # TODO Add cuda arch support to Bohrium once the basic setup
+            #      via Spack works.
             raise InstallError(
-                "Bohrium requires either +node or +proxy to be set")
-        if "+openmp" not in spec and "+opencl" not in spec \
-           and "+cuda" not in spec:
-            raise InstallError(
-                "Bohrium requires at least one of +openmp, +opencl or +cuda")
+                "Bohrium does not support setting the CUDA architecture yet."
+            )
 
         args = [
             "-DPYTHON_EXECUTABLE:FILEPATH=" + spec['python'].command.path,
