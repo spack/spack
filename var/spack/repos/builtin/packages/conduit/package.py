@@ -28,6 +28,7 @@ import socket
 import os
 
 import llnl.util.tty as tty
+from os import environ as env
 
 
 def cmake_cache_entry(name, value):
@@ -51,6 +52,8 @@ class Conduit(Package):
     # note: checksums on github automatic release source tars changed ~9/17
     version('0.2.1', 'ed7358af3463ba03f07eddd6a6e626ff')
     version('0.2.0', 'a7b398d493fd71b881a217993a9a29d4')
+
+    maintainers = ['cyrush']
 
     version('master',
             git='https://github.com/LLNL/conduit.git',
@@ -84,12 +87,15 @@ class Conduit(Package):
     #######################
     # CMake
     #######################
-    # cmake 3.8.2 is the version we recommend
-    depends_on("cmake@3.8.2", when="+cmake")
+    # cmake 3.8.2 or newer
+    depends_on("cmake@3.8.2:", when="+cmake")
 
     #######################
     # Python
     #######################
+    # we need a shared version of python b/c linking with static python lib
+    # causes duplicate state issues when running compiled python modules.
+    depends_on("python+shared")
     extends("python", when="+python")
     # TODO: blas and lapack are disabled due to build
     # issues Cyrus experienced on OSX 10.11.6
@@ -103,12 +109,12 @@ class Conduit(Package):
     # to link against shared libs.
     #
     # we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5~cxx~mpi~fortran", when="+shared")
-    depends_on("hdf5~shared~cxx~mpi~fortran", when="~shared")
+    depends_on("hdf5~cxx~mpi~fortran", when="+hdf5+shared")
+    depends_on("hdf5~shared~cxx~mpi~fortran", when="+hdf5~shared")
 
     # we are not using silo's fortran features
-    depends_on("silo~fortran", when="+shared")
-    depends_on("silo~shared~fortran", when="~shared")
+    depends_on("silo~fortran", when="+silo+shared")
+    depends_on("silo~shared~fortran", when="+silo~shared")
 
     #######################
     # MPI

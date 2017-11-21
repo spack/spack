@@ -47,3 +47,23 @@ class TestCompilers(object):
         filtered = [x for x in all_compilers if str(x.spec) == 'clang@3.3']
         filtered = [x for x in filtered if x.operating_system == 'SuSE11']
         assert len(filtered) == 1
+
+
+def test_compiler_flags_from_config_are_grouped():
+    compiler_entry = {
+        'spec': 'intel@17.0.2',
+        'operating_system': 'foo-os',
+        'paths': {
+            'cc': 'cc-path',
+            'cxx': 'cxx-path',
+            'fc': None,
+            'f77': None
+        },
+        'flags': {
+            'cflags': '-O0 -foo-flag foo-val'
+        },
+        'modules': None
+    }
+
+    compiler = compilers.compiler_from_config_entry(compiler_entry)
+    assert any(x == '-foo-flag foo-val' for x in compiler.flags['cflags'])

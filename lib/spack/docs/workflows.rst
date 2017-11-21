@@ -1106,6 +1106,8 @@ The main points that are implemented below:
      - make -j 2
      - make test
 
+.. _workflow_create_docker_image:
+
 -----------------------------------
 Using Spack to Create Docker Images
 -----------------------------------
@@ -1207,6 +1209,9 @@ MPI
 """
 Due to the dependency on Fortran for OpenMPI, which is the spack default
 implementation, consider adding ``gfortran`` to the ``apt-get install`` list.
+
+Recent versions of OpenMPI will require you to pass ``--allow-run-as-root``
+to your ``mpirun`` calls if started as root user inside Docker.
 
 For execution on HPC clusters, it can be helpful to import the docker
 image into Singularity in order to start a program with an *external*

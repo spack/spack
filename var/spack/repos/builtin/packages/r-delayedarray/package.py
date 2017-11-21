@@ -43,9 +43,10 @@ class RDelayedarray(RPackage):
        frames."""
 
     homepage = "https://bioconductor.org/packages/DelayedArray/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/DelayedArray_0.2.7.tar.gz"
+    url      = "https://git.bioconductor.org/packages/DelayedArray"
+    list_url = homepage
 
-    version('0.2.7', 'a03b9a92745b7bcac4c0ed44ed6b2272')
+    version('0.2.7', git='https://git.bioconductor.org/packages/DelayedArray', commit='909c2ce1665ebae2543172ead50abbe10bd42bc4')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
