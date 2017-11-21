@@ -25,16 +25,16 @@
 from spack import *
 
 
-class PyPysam(PythonPackage):
-    """A python module for reading, manipulating and writing genomic data
-       sets."""
+class RGgridges(RPackage):
+    """Ridgeline plots provide a convenient way of visualizing changes in
+    distributions over time or space."""
 
-    homepage = "https://pypi.python.org/pypi/pysam"
-    url      = "https://pypi.io/packages/source/p/pysam/pysam-0.11.2.2.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/ggridges/index.html"
+    url      = "https://cran.r-project.org/src/contrib/ggridges_0.4.1.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/ggridges"
 
-    version('0.13', 'a9b502dd1a7e6403e35e6972211688a2')
-    version('0.11.2.2', '56230cd5f55b503845915b76c22d620a')
+    version('0.4.1', '21d53b3f7263beb17f629f0ebfb7b67a')
+    version('0.4.0', 'da94ed1ee856a7fa5fb87712c84ec4c9')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython@0.21:', type='build')
-    depends_on('bcftools')
+    depends_on('r@3.4.0:3.4.9')
+    depends_on('r-ggplot2', type=('build', 'run'))

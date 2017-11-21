@@ -25,16 +25,26 @@
 from spack import *
 
 
-class PyPysam(PythonPackage):
-    """A python module for reading, manipulating and writing genomic data
-       sets."""
+class RChemometrics(RPackage):
+    """R companion to the book "Introduction to Multivariate Statistical Analysis
+    in Chemometrics" written by K. Varmuza and P. Filzmoser (2009)."""
 
-    homepage = "https://pypi.python.org/pypi/pysam"
-    url      = "https://pypi.io/packages/source/p/pysam/pysam-0.11.2.2.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/chemometrics/index.html"
+    url      = "https://cran.r-project.org/src/contrib/chemometrics_1.4.2.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/chemometrics"
 
-    version('0.13', 'a9b502dd1a7e6403e35e6972211688a2')
-    version('0.11.2.2', '56230cd5f55b503845915b76c22d620a')
+    version('1.4.2', '8137b0ca4004add9cc2ea81d2c54427f')
+    version('1.4.1', '1e5a89442bb4a61db0da884eedd74fc2')
+    version('1.3.9', '2b619791896db1513ca3d714acb68af3')
+    version('1.3.8', '7fad828bd094b5485fbf20bdf7d3d0d1')
+    version('1.3.7', 'a9e2f32efb1545421dd96185fd849184')
 
-    depends_on('py-setuptools', type='build')
-    depends_on('py-cython@0.21:', type='build')
-    depends_on('bcftools')
+    depends_on('r@3.4.0:3.4.9')
+    depends_on('r-rpart', type=('build', 'run'))
+    depends_on('r-mclust', type=('build', 'run'))
+    depends_on('r-lars', type=('build', 'run'))
+    depends_on('r-robustbase', type=('build', 'run'))
+    depends_on('r-e1071', type=('build', 'run'))
+    depends_on('r-pls', type=('build', 'run'))
+    depends_on('r-som', type=('build', 'run'))
+    depends_on('r-pcapp', type=('build', 'run'))

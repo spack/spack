@@ -126,7 +126,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("doxygen+graphviz", when='+doc')
     depends_on("graphviz",         when='+doc')
     depends_on("gsl",              when='@8.5.0:+gsl')
-    depends_on("hdf5+mpi",         when='+hdf5+mpi')
+    depends_on("hdf5+mpi+hl",      when='+hdf5+mpi')
     depends_on("cuda@8:",          when='+cuda')
     depends_on("cmake@3.9:",       when='+cuda')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
