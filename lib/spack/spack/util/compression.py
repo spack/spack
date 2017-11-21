@@ -66,7 +66,8 @@ class Gunzip(object):
 
     def __call__(self, archive_path):
         args = ['-c', archive_path]
-        target_path = strip_extension(archive_path)
+        target_name = os.path.basename(strip_extension(archive_path))
+        target_path = os.path.join(os.getcwd(), target_name)
         self.gunzip_exe(*args, output=target_path)
 
 

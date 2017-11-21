@@ -367,11 +367,6 @@ class Stage(object):
             if os.path.isdir(p):
                 return p
 
-        # The archive may expand to a single file rather than a directory
-        non_archives = set(paths) - set([self.archive_file])
-        if len(non_archives) == 1:
-            return self.path
-
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
         fetchers = []
@@ -532,26 +527,6 @@ class ResourceStage(Stage):
         self.root_stage = root
         self.resource = resource
 
-    @property
-    def source_base_file(self):
-        # If the retrieved resource expands to a single file or is not
-        # expanded, this will return the path to the file itself (rather than
-        # the directory which contains the file)
-        if isinstance(self.fetcher, fs.URLFetchStrategy):
-            if not self.fetcher.expand_archive:
-                return self.archive_file
-
-        paths = list(os.path.join(self.path, f) for f in os.listdir(self.path))
-
-        for p in paths:
-            if os.path.isdir(p):
-                return p
-
-        # The archive may expand to a single file rather than a directory
-        non_archives = set(paths) - set([self.archive_file])
-        if len(non_archives) == 1:
-            return next(iter(non_archives))
-
     def restage(self):
         super(ResourceStage, self).restage()
         self._add_to_root_stage()
@@ -566,25 +541,38 @@ class ResourceStage(Stage):
         """
         root_stage = self.root_stage
         resource = self.resource
+
+        target_root = root_stage.source_path
+
+        if not resource.fetcher.expand_archive:
+            if resource.placement:
+                placement = resource.placement
+            else:
+                placement = os.path.basename(self.archive_file)
+            path_elements = [target_root, resource.destination, placement]
+            path_elements = [x for x in path_elements if x]
+            target_path = os.path.join(*path_elements)
+            shutil.move(self.archive_file, target_path)
+            return
+
         if resource.placement is None:
-            placement = os.path.basename(self.source_base_file)
+            if os.path.basename(self.source_path) == 'spack-expanded-archive':
+                placement = dict((f, f) for f in os.listdir(self.source_path))
+            else:
+                placement = os.path.basename(self.source_path)
         else:
             placement = resource.placement
 
         if not isinstance(placement, dict):
             placement = {'': placement}
 
-        target_root = root_stage.source_path
         if resource.destination:
             target_root = join_path(target_root, resource.destination)
 
         # Make the paths in the dictionary absolute and link
         for key, value in iteritems(placement):
             destination_path = join_path(target_root, value)
-            if os.path.isfile(self.source_base_file):
-                source_path = self.source_base_file
-            else:
-                source_path = join_path(self.source_base_file, key)
+            source_path = join_path(self.source_path, key)
 
             dst_dir = os.path.dirname(destination_path)
             try:
