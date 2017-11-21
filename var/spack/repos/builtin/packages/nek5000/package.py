@@ -75,7 +75,10 @@ class Nek5000(Package):
         # We will then install Nek5000/bin under prefix after that.
         with working_dir(toolsDir):
             # Update the maketools script to use correct compilers
-            filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"', 'maketools')
+            if self.version == Version('17.0.0-beta2'):  # Old release
+                filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"', 'maketools')
+            else:
+                filter_file(r'^FC\s*=.*', 'FC=\"' + F77 + '\"', 'maketools')
             filter_file(r'^CC\s*=.*', 'CC=\"' + CC  + '\"',   'maketools')
             makeTools = Executable('./maketools')
 
@@ -109,6 +112,8 @@ class Nek5000(Package):
 
             if '+visit' in spec:
                 filter_file(r'^#VISIT=1', 'VISIT=1', 'makenek')
+                filter_file(r'^#VISIT_INSTALL=.*', 'VISIT_INSTALL=\"' +
+                            spec['visit'].prefix.bin + '\"', 'makenek')
 
             # Update the makenek to use correct compilers and
             # Nek5000 source.
