@@ -25,31 +25,21 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RFnn(RPackage):
+    """Cover-tree and kd-tree fast k-nearest neighbor search algorithms and
+    related applications including KNN classification, regression and
+    information measures are implemented."""
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/FNN/index.html"
+    url      = "https://cran.r-project.org/src/contrib/FNN_1.1.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/FNN"
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
+    version('1.1',   '8ba8f5b8be271785593e13eae7b8c393')
+    version('1.0',   'e9a47dc69d1ba55165be0877b8443fe0')
+    version('0.6-4', '1c105df9763ceb7b13989cdbcb542fcc')
+    version('0.6-3', 'f0f0184e50f9f30a36ed5cff24d6cff2')
+    version('0.6-2', '20648ba934ea32b1b00dafb75e1a830c')
 
-    variant('mpi', default=True, description='Enable MPI support')
-
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
-
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    depends_on('r@3.4.0:3.4.9')
+    depends_on('r-mvtnorm', type=('build', 'run'))
+    depends_on('r-chemometrics', type=('build', 'run'))

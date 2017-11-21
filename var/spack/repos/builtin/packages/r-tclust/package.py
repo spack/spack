@@ -25,31 +25,21 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RTclust(RPackage):
+    """Provides functions for robust trimmed clustering."""
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/tclust/index.html"
+    url      = "https://cran.r-project.org/src/contrib/tclust_1.3-1.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/tclust"
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
+    version('1.3-1',  '5415d74682588d4a6fb8ce166fc75661')
+    version('1.2-7',  'e32cd02819682cc944c7baaac3b6f2b7')
+    version('1.2-3',  '922abc1abd8da4c6ac9830e1f2f71e84')
+    version('1.1-03', 'f1cc9278bdb068acce4623a9d98b7b62')
+    version('1.1-02', '6f206501b0341fb5623208d145984f5a')
 
-    variant('mpi', default=True, description='Enable MPI support')
-
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
-
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    depends_on('r@3.4.0:3.4.9')
+    depends_on('r-cluster', type=('build', 'run'))
+    depends_on('r-mclust', type=('build', 'run'))
+    depends_on('r-mvtnorm', type=('build', 'run'))
+    depends_on('r-sn', type=('build', 'run'))

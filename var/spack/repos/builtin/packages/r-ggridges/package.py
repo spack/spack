@@ -25,31 +25,16 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RGgridges(RPackage):
+    """Ridgeline plots provide a convenient way of visualizing changes in
+    distributions over time or space."""
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/ggridges/index.html"
+    url      = "https://cran.r-project.org/src/contrib/ggridges_0.4.1.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/ggridges"
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
+    version('0.4.1', '21d53b3f7263beb17f629f0ebfb7b67a')
+    version('0.4.0', 'da94ed1ee856a7fa5fb87712c84ec4c9')
 
-    variant('mpi', default=True, description='Enable MPI support')
-
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
-
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    depends_on('r@3.4.0:3.4.9')
+    depends_on('r-ggplot2', type=('build', 'run'))
