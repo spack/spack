@@ -48,8 +48,8 @@ for pkg,specs in nonmpipkgs.items():
 
 
 # Build MPI libraries
-MPIS = {"openmpi@2.1.2~cuda fabrics=verbs ~java schedulers=slurm": "",
-       "openmpi@2.1.2+cuda fabrics=verbs ~java schedulers=slurm": "^cuda@8.0.61",
+MPIS = {"openmpi@2.1.2~vt~cuda fabrics=verbs,pmi ~java schedulers=slurm": "",
+        "openmpi@2.1.2~vt+cuda fabrics=verbs,pmi ~java schedulers=slurm": "^cuda@8.0.61",
        "mvapich2@2.2~cuda fabrics=mrail process_managers=slurm": "",
        "mvapich2@2.2+cuda fabrics=mrail process_managers=slurm": "^cuda@8.0.61",
        "mpich@3.2+hydra+pmi+romio+verbs": ""
@@ -61,7 +61,7 @@ for pkg,spec in MPIS.items():
 # Build MPI packages
 mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
     "gromacs+mpi~cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
-    "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
+    "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@8.0.61"],
     "scotch+mpi@6.0.4": [""]
 }
 for pkg,specs in mpipkgs.items():
@@ -76,5 +76,5 @@ for pkg,specs in mpipkgs.items():
                     install(concrete_spec) 
 
 # Remove intermediate dependency
-for pkg in ["automake", "autoconf", "bison", "m4", "gperf", "flex", "inputproto", "help2man", "pkg-conf", "gdbm", "nasm"]:
+for pkg in ["automake", "autoconf", "bison", "m4", "gperf", "flex", "inputproto", "help2man", "pkg-config", "nasm"]:
     os.system("spack uninstall -y --all {}".format(pkg))
