@@ -25,14 +25,16 @@
 from spack import *
 
 
-class Libmesh(Package):
+class Libmesh(AutotoolsPackage):
     """The libMesh library provides a framework for the numerical simulation of
        partial differential equations using arbitrary unstructured
        discretizations on serial and parallel platforms."""
 
     homepage = "http://libmesh.github.io/"
     url      = "https://github.com/libMesh/libmesh/releases/download/v1.0.0/libmesh-1.0.0.tar.bz2"
+    list_url = "https://github.com/libMesh/libmesh/releases"
 
+    version('1.1.0', '92e636163d64cc23762df1cdeec257fe')
     version('1.0.0', 'cb464fc63ea0b71b1e69fa3f5d4f93a4')
 
     variant('mpi', default=True, description='Enables MPI parallelism')
@@ -42,15 +44,12 @@ class Libmesh(Package):
     # Parallel version of libmesh needs parallel solvers
     depends_on('petsc+mpi', when='+mpi')
 
-    def install(self, spec, prefix):
-        config_args = ["--prefix=%s" % prefix]
+    def configure_args(self):
+        spec = self.spec
+        config_args = []
 
         if '+mpi' in spec:
-            config_args.append('CC=%s' % spec['mpi'].mpicc)
-            config_args.append('CXX=%s' % spec['mpi'].mpicxx)
-            config_args.append('PETSC_DIR=%s' % spec['petsc'].prefix)
+            config_args.append('CC={0}'.format(spec['mpi'].mpicc))
+            config_args.append('CXX={0}'.format(spec['mpi'].mpicxx))
 
-        configure(*config_args)
-
-        make()
-        make('install')
+        return config_args
