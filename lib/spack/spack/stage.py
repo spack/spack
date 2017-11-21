@@ -545,17 +545,10 @@ class ResourceStage(Stage):
         target_root = root_stage.source_path
 
         if not resource.fetcher.expand_archive:
-            if resource.placement:
-                placement = resource.placement
-            else:
-                placement = os.path.basename(self.archive_file)
-            path_elements = [target_root, resource.destination, placement]
-            path_elements = [x for x in path_elements if x]
-            target_path = os.path.join(*path_elements)
-            shutil.move(self.archive_file, target_path)
-            return
-
-        if resource.placement is None:
+            src_file_name = os.path.basename(self.archive_file)
+            dst_file_name = resource.placement or src_file_name
+            placement = {src_file_name: dst_file_name}
+        elif resource.placement is None:
             if os.path.basename(self.source_path) == 'spack-expanded-archive':
                 placement = dict((f, f) for f in os.listdir(self.source_path))
             else:

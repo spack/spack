@@ -1094,18 +1094,19 @@ here as the target. The following specifies the behavior of ``placement``
 depending on whether the resource is a file or directory and whether the
 target already exists as a directory:
 
-* If ``placement`` ends with a ``/`` and the resource is a single file
-  (or if it expands to one file) then ``placement`` is assumed to specify a
-  directory and the resource file is placed in that directory
-* If ``placement`` does not end with a ``/`` and the resource is a single
-  file, then it is assumed that the resource file should be renamed. One
-  exception is if the target is a directory which already exists; in that
-  case the resource is in the target directory with its original name. 
-* If the resource is a directory and the target exists as a directory, the
-  files in the resource directory are moved to the target directory.
-* If the resource is a directory or an exploding tarball and the target path
-  does not exist, it is assumed that all files in the resource directory
-  should be placed in a directory specified by the target path.
+* If placement ends with a ``/`` it is assumed that the resource should keep
+  its name and be placed in the target directory. 
+* If placement does not end with a ``/``, it is assumed that the resource
+  should be renamed. One exception is if the target already exists as an
+  empty directory. In this case if the resource is a single file, it is placed
+  in the directory; if the resource is a directory (or an exploding tarball)
+  then all files in the resource are placed in the target directory.
+
+If the resource is a directory (or an exploding tarball) and you want to
+relocate different files in the resource to different locations, you can
+specify ``placement`` as a dictionary. The keys of the dictionary refer to
+files inside the expanded resource directory. The above rules apply for
+each key/target pair.
 
 .. _license:
 
