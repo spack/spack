@@ -106,8 +106,8 @@ class Bohrium(CMakePackage, CudaPackage):
         spec = self.spec
 
         cuda_arch = spec.variants['cuda_arch'].value
-        if cuda_arch:
-            # TODO Add cuda arch support to Bohrium once the basic setup
+        if "+cuda" in spec and len(cuda_arch) >= 1 and cuda_arch[0]:
+            # TODO Add cuda_arch support to Bohrium once the basic setup
             #      via Spack works.
             raise InstallError(
                 "Bohrium does not support setting the CUDA architecture yet."
