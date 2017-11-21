@@ -27,7 +27,7 @@ from spack import *
 
 class RPbapply(RPackage):
     """A lightweight package that adds progress bar to vectorized R
-    functions ('*apply')."""
+    apply functions."""
 
     homepage = "https://cran.r-project.org/web/packages/pbapply/index.html"
     url      = "https://cran.r-project.org/src/contrib/pbapply_1.3-3.tar.gz"
