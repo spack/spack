@@ -37,18 +37,31 @@ class Gslib(Package):
         commit='9533e652320a3b26a72c36487ae265b02072cd48')
 
     variant('mpi', default=True, description='Build with MPI')
+    variant('mpiio', default=True, description='Build with MPI I/O')
 
     depends_on('mpi', when="+mpi")
+    depends_on('mpi', when="+mpiio")
 
     def install(self, spec, prefix):
         srcDir = 'src'
         libDir = 'lib'
         libname = 'libgs.a'
 
+        if self.version == Version('v1.0.1'):
+            makeFile = 'Makefile'
+        else:
+            makeFile = 'src/Makefile'
+
         CC  = self.compiler.cc
+
+        if '+mpiio' not in spec:
+            filter_file(r'MPIIO.*?=.*1', 'MPIIO = 0', makeFile)
 
         if '+mpi' in spec:
             CC  = spec['mpi'].mpicc
+        else:
+            filter_file(r'MPI.*?=.*1', 'MPI = 0', makeFile)
+            filter_file(r'MPIIO.*?=.*1', 'MPIIO = 0', makeFile)
 
         if self.version == Version('v1.0.1'):
             make('CC=' + CC)
@@ -60,5 +73,6 @@ class Gslib(Package):
                 mkdir(prefix.lib)
                 install(libname, prefix.lib)
 
-        # TODO: Should only install the headers
+        # TODO: Should only install the headers (this will
+        # be fixed in gslib on future releases.
         install_tree(srcDir, prefix.include)
