@@ -25,31 +25,22 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RSdmtools(RPackage):
+    """Species Distribution Modelling Tools: Tools for processing data
+    associated with species distribution modelling exercises
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    This packages provides a set of tools for post processing the outcomes of
+    species distribution modeling exercises."""
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
+    homepage = "https://cran.r-project.org/web/packages/SDMTools/index.html"
+    url      = "https://cran.r-project.org/src/contrib/SDMTools_1.1-221.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/SDMTools"
 
-    variant('mpi', default=True, description='Enable MPI support')
+    version('1.1-221', '3604da1783d0c6081b62b29d35a32c3c')
+    version('1.1-20', '27cc8de63cfdd86d4ba9983012121c58')
+    version('1.1-13', '0d6a14d985988a81b9ff06c635675143')
+    version('1.1-12', 'a13d75e4024d908a57ea462112d8a437')
+    version('1.1-11', 'cb890ee06eb862f97141b73c7390a0a9')
 
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
-
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    depends_on('r@3.4.0:3.4.9')
+    depends_on('r-utils', type=('build', 'run'))

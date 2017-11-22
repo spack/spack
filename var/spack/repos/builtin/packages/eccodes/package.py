@@ -80,11 +80,8 @@ class Eccodes(CMakePackage):
         options = ['NETCDF', 'PNG', 'AEC', 'ECCODES_THREADS',
                    'ECCODES_OMP_THREADS', 'MEMFS', 'PYTHON', 'FORTRAN']
 
-        args = map(lambda var, opt:
-                   "-DENABLE_%s=%s" %
-                   (opt, 'ON' if var in self.spec else 'OFF'),
-                   variants,
-                   options)
+        args = ["-DENABLE_%s=%s" % (opt, 'ON' if var in self.spec else 'OFF')
+                for var, opt in zip(variants, options)]
 
         if self.spec.variants['jp2k'].value == 'none':
             args.append('-DENABLE_JPG=OFF')

@@ -25,36 +25,23 @@
 from spack import *
 
 
-class Typhonio(CMakePackage):
-    """TyphonIO is a library of routines that perform input/output (I/O)
-        of scientific data within application codes"""
+class Gotcha(CMakePackage):
+    """C software library for shared library function wrapping,
+    enables tools to intercept calls into shared libraries"""
 
-    homepage = "http://uk-mac.github.io/typhonio/"
-    url      = "https://github.com/UK-MAC/typhonio/archive/v1.6_CMake.tar.gz"
+    homepage = "http://github.com/LLNL/gotcha"
+    url = "http://github.com/LLNL/gotcha"
 
-    version('1.6_CMake', '8e8b2940a57874205e6d451856db5c2755884bf9')
-    version('develop', git='https://github.com/UK-MAC/typhonio.git',
-            branch='cmake_build')
+    variant('test', default=False, description='Build tests for Gotcha')
 
-    variant('build_type', default='Release', description='The build type to build',
-        values=('Debug', 'Release'))
-    variant('fortran', default=False, description='Enable Fortran support')
-    variant('shared', default=False, description='Build shared libraries')
-    variant('doc', default=False, description='Build user guide and doxygen documentation')
+    version('develop', git='https://github.com/LLNL/gotcha.git',
+            branch="develop")
+    version('master', git='https://github.com/LLNL/gotcha.git',
+            branch="master")
+    version('0.0.2', git='https://github.com/LLNL/gotcha.git', tag="0.0.2")
 
-    depends_on('mpi')
-    depends_on('hdf5')
-
-    def cmake_args(self):
+    def configure_args(self):
         spec = self.spec
-        cmake_args = []
-
-        if "+fortran" in spec:
-            cmake_args.append("-DBUILD_FORTRAN_LIBRARY=ON")
-        if "+shared" in spec:
-            cmake_args.append("-DBUILD_TIO_SHARED=ON")
-        if "+docs" in spec:
-            cmake_args.append("-DBUILD_DOXYGEN_DOCS=ON")
-            cmake_args.append("-DBUILD_USER_GUIDE=ON")
-
-        return cmake_args
+        return [
+            '-DGOTCHA_ENABLE_TESTS=%s' % ('ON' if '+test' in spec else 'OFF')
+        ]

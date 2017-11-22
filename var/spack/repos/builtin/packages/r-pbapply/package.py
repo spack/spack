@@ -25,31 +25,18 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RPbapply(RPackage):
+    """A lightweight package that adds progress bar to vectorized R
+    apply functions."""
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/pbapply/index.html"
+    url      = "https://cran.r-project.org/src/contrib/pbapply_1.3-3.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/pbapply"
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
+    version('1.3-3', '570db6795179a1439c174be881c77d18')
+    version('1.3-2', 'd72a777bfe4a28ba4e1585e31680f82e')
+    version('1.3-1', '13d64dead441426aa96a3bf3fde29daf')
+    version('1.3-0', 'a3f93cd05054657a01893a3817fa1f08')
+    version('1.2-2', '23e2bfe531c704b79308b0b5fbe1ace8')
 
-    variant('mpi', default=True, description='Enable MPI support')
-
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
-
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    depends_on('r@3.4.0:3.4.9')

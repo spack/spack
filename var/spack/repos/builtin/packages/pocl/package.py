@@ -91,8 +91,7 @@ class Pocl(CMakePackage):
 
     @run_after('install')
     def symlink_opencl(self):
-        with working_dir(self.build_directory):
-            os.symlink("OpenCL", join_path(self.prefix.include, "CL"))
+        os.symlink("CL", self.prefix.include.OpenCL)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

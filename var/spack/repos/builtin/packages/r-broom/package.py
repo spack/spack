@@ -25,31 +25,25 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RBroom(RPackage):
+    """Convert statistical analysis objects from R into tidy data frames, so
+       that they can more easily be combined, reshaped and otherwise processed
+       with tools like 'dplyr', 'tidyr' and 'ggplot2'. The package provides
+       three S3 generics: tidy, which summarizes a model's statistical
+       findings such as coefficients of a regression; augment, which adds
+       columns to the original data such as predictions, residuals and cluster
+       assignments; and glance, which provides a one-row summary of
+       model-level statistics."""
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    homepage = "http://github.com/tidyverse/broom"
+    url      = "https://cran.r-project.org/src/contrib/broom_0.4.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/broom"
+    version('0.4.2', '6eabab1f2eaec10f93cf9aa56d6a61de')
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
-
-    variant('mpi', default=True, description='Enable MPI support')
-
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
-
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-tidyr', type=('build', 'run'))
+    depends_on('r-psych', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-nlme', type=('build', 'run'))

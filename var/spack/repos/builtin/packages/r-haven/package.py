@@ -25,31 +25,18 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RHaven(RPackage):
+    """Import foreign statistical formats into R via the embedded 'ReadStat' C
+       library, <https://github.com/WizardMac/ReadStat>."""
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    homepage = "http://haven.tidyverse.org/"
+    url      = "https://cran.r-project.org/src/contrib/haven_1.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/haven"
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
+    version('1.1.0', '8edd4b7683f8c36b5bb68582ac1b8733')
 
-    variant('mpi', default=True, description='Enable MPI support')
-
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
-
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-readr', type=('build', 'run'))
+    depends_on('r-hms', type=('build', 'run'))
+    depends_on('r-tibble', type=('build', 'run'))
+    depends_on('r-forcats', type=('build', 'run'))

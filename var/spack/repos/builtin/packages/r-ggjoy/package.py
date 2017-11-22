@@ -25,31 +25,18 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RGgjoy(RPackage):
+    """Joyplots provide a convenient way of visualizing changes in distributions
+    over time or space."""
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/ggjoy/index.html"
+    url      = "https://cran.r-project.org/src/contrib/ggjoy_0.4.0.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/ggjoy"
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
+    version('0.4.0', 'c63782e2395a9cfc435d08e078e6596b')
+    version('0.3.0', '59bd34a846270d43f2eeb1e90b03a127')
+    version('0.2.0', '8584cd154e228f8505b324e91d2e50d7')
 
-    variant('mpi', default=True, description='Enable MPI support')
-
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
-
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    depends_on('r@3.4.0:3.4.9')
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-ggridges', type=('build', 'run'))

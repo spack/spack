@@ -25,31 +25,25 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RPhantompeakqualtools(RPackage):
+    """Computes informative enrichment and quality measures for
+       ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data. This is a modified version
+       of r-spp to be used in conjunction with the phantompeakqualtools
+       package."""
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    homepage = "https://github.com/kundajelab/phantompeakqualtools"
+    url      = "https://github.com/kundajelab/phantompeakqualtools/raw/master/spp_1.14.tar.gz"
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
+    version('1.14', '4de207d570999170c1bf45bcba8c6d2d')
 
-    variant('mpi', default=True, description='Enable MPI support')
+    depends_on('boost@1.41.0:')
+    depends_on('r-catools', type=('build', 'run'))
+    depends_on('r-snow', type=('build', 'run'))
+    depends_on('r-snowfall', type=('build', 'run'))
+    depends_on('r-bitops', type=('build', 'run'))
+    depends_on('r-rsamtools', type=('build', 'run'))
 
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
+    conflicts('%gcc@6:')
 
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)

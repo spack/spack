@@ -25,31 +25,15 @@
 from spack import *
 
 
-class Meme(AutotoolsPackage):
-    """The MEME Suite allows the biologist to discover novel motifs in
-    collections of unaligned nucleotide or protein sequences, and to perform a
-    wide variety of other motif-based analyses."""
+class RIca(RPackage):
+    """Independent Component Analysis (ICA) using various algorithms: FastICA,
+    Information-Maximization (Infomax), and Joint Approximate Diagonalization
+    of Eigenmatrices (JADE)."""
 
-    homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/ica/index.html"
+    url      = "https://cran.r-project.org/src/contrib/ica_1.0-1.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/ica"
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
-
-    variant('mpi', default=True, description='Enable MPI support')
-
-    depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
-    depends_on('libgcrypt', type=('link'))
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('mpi', when='+mpi')
-
-    # disable mpi support
-    def configure_args(self):
-        spec = self.spec
-        args = []
-        if '~mpi' in spec:
-            args += ['--enable-serial']
-        return args
+    depends_on('r@3.4.0:3.4.9')
+    version('1.0-1', '15c8d5afeec2804beec55dd14abc585d')
+    version('1.0-0', '3ade2b3b00eb39c348d802f24d2afd1d')
