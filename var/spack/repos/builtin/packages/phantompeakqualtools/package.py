@@ -25,26 +25,20 @@
 from spack import *
 
 
-class RDplyr(RPackage):
-    """A fast, consistent tool for working with data frame like objects, both
-    in memory and out of memory."""
+class Phantompeakqualtools(RPackage):
+    """This package computes informative enrichment and quality measures for
+       ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data."""
 
-    homepage = "https://github.com/hadley/dplyr"
-    url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
+    homepage = "https://github.com/kundajelab/phantompeakqualtools"
+    url      = "https://github.com/kundajelab/phantompeakqualtools/archive/1.2.tar.gz"
 
-    version('0.7.3', 'f9760b796917747e9dcd927ebb531c7d')
-    version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
+    version('1.2', 'e94943a42132b9ff2886f006ab34c121')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-lazyeval', type=('build', 'run'))
-    depends_on('r-dbi', type=('build', 'run'))
-    depends_on('r-bindrcpp', type=('build', 'run'))
-    depends_on('r-glue', type=('build', 'run'))
-    depends_on('r-pkgconfig', type=('build', 'run'))
-    depends_on('r-plogr', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
+    depends_on('awk')
+    depends_on('samtools')
+    depends_on('r', type=('build', 'run'))
+    depends_on('r-phantompeakqualtools', type=('build', 'run'))
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('run_spp.R', prefix.bin)

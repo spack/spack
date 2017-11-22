@@ -25,26 +25,28 @@
 from spack import *
 
 
-class RDplyr(RPackage):
-    """A fast, consistent tool for working with data frame like objects, both
-    in memory and out of memory."""
+class Mira(AutotoolsPackage):
+    """MIRA is a multi-pass DNA sequence data assembler/mapper for whole genome
+       and EST/RNASeq projects."""
 
-    homepage = "https://github.com/hadley/dplyr"
-    url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
+    homepage = "http://sourceforge.net/projects/mira-assembler/"
+    url      = "https://downloads.sourceforge.net/project/mira-assembler/MIRA/stable/mira-4.0.2.tar.bz2"
 
-    version('0.7.3', 'f9760b796917747e9dcd927ebb531c7d')
-    version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
+    version('4.0.2', '1921b426910653a34a6dbb37346f28ea')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-lazyeval', type=('build', 'run'))
-    depends_on('r-dbi', type=('build', 'run'))
-    depends_on('r-bindrcpp', type=('build', 'run'))
-    depends_on('r-glue', type=('build', 'run'))
-    depends_on('r-pkgconfig', type=('build', 'run'))
-    depends_on('r-plogr', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
+    depends_on('boost@1.46:')
+    depends_on('expat@2.0.1:')
+    depends_on('gperftools')
+
+    conflicts('%gcc@6:', when='@:4.0.2')
+
+    def patch(self):
+        with working_dir(join_path('src', 'progs')):
+            edit = FileFilter('quirks.C')
+            edit.filter('#include <boost/filesystem.hpp>',
+                        '#include <boost/filesystem.hpp>\n#include <iostream>')
+
+    def configure_args(self):
+        args = ['--with-boost=%s' % self.spec['boost'].prefix,
+                '--with-expat=%s' % self.spec['expat'].prefix]
+        return args

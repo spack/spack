@@ -25,26 +25,23 @@
 from spack import *
 
 
-class RDplyr(RPackage):
-    """A fast, consistent tool for working with data frame like objects, both
-    in memory and out of memory."""
+class Gotcha(CMakePackage):
+    """C software library for shared library function wrapping,
+    enables tools to intercept calls into shared libraries"""
 
-    homepage = "https://github.com/hadley/dplyr"
-    url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
+    homepage = "http://github.com/LLNL/gotcha"
+    url = "http://github.com/LLNL/gotcha"
 
-    version('0.7.3', 'f9760b796917747e9dcd927ebb531c7d')
-    version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
+    variant('test', default=False, description='Build tests for Gotcha')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-lazyeval', type=('build', 'run'))
-    depends_on('r-dbi', type=('build', 'run'))
-    depends_on('r-bindrcpp', type=('build', 'run'))
-    depends_on('r-glue', type=('build', 'run'))
-    depends_on('r-pkgconfig', type=('build', 'run'))
-    depends_on('r-plogr', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
+    version('develop', git='https://github.com/LLNL/gotcha.git',
+            branch="develop")
+    version('master', git='https://github.com/LLNL/gotcha.git',
+            branch="master")
+    version('0.0.2', git='https://github.com/LLNL/gotcha.git', tag="0.0.2")
+
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '-DGOTCHA_ENABLE_TESTS=%s' % ('ON' if '+test' in spec else 'OFF')
+        ]

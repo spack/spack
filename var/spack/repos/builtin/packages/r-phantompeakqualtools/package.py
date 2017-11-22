@@ -25,26 +25,25 @@
 from spack import *
 
 
-class RDplyr(RPackage):
-    """A fast, consistent tool for working with data frame like objects, both
-    in memory and out of memory."""
+class RPhantompeakqualtools(RPackage):
+    """Computes informative enrichment and quality measures for
+       ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data. This is a modified version
+       of r-spp to be used in conjunction with the phantompeakqualtools
+       package."""
 
-    homepage = "https://github.com/hadley/dplyr"
-    url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
+    homepage = "https://github.com/kundajelab/phantompeakqualtools"
+    url      = "https://github.com/kundajelab/phantompeakqualtools/raw/master/spp_1.14.tar.gz"
 
-    version('0.7.3', 'f9760b796917747e9dcd927ebb531c7d')
-    version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
+    version('1.14', '4de207d570999170c1bf45bcba8c6d2d')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-lazyeval', type=('build', 'run'))
-    depends_on('r-dbi', type=('build', 'run'))
-    depends_on('r-bindrcpp', type=('build', 'run'))
-    depends_on('r-glue', type=('build', 'run'))
-    depends_on('r-pkgconfig', type=('build', 'run'))
-    depends_on('r-plogr', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
+    depends_on('boost@1.41.0:')
+    depends_on('r-catools', type=('build', 'run'))
+    depends_on('r-snow', type=('build', 'run'))
+    depends_on('r-snowfall', type=('build', 'run'))
+    depends_on('r-bitops', type=('build', 'run'))
+    depends_on('r-rsamtools', type=('build', 'run'))
+
+    conflicts('%gcc@6:')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)

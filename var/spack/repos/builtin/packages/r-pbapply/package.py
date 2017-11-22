@@ -25,26 +25,18 @@
 from spack import *
 
 
-class RDplyr(RPackage):
-    """A fast, consistent tool for working with data frame like objects, both
-    in memory and out of memory."""
+class RPbapply(RPackage):
+    """A lightweight package that adds progress bar to vectorized R
+    apply functions."""
 
-    homepage = "https://github.com/hadley/dplyr"
-    url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
+    homepage = "https://cran.r-project.org/web/packages/pbapply/index.html"
+    url      = "https://cran.r-project.org/src/contrib/pbapply_1.3-3.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/pbapply"
 
-    version('0.7.3', 'f9760b796917747e9dcd927ebb531c7d')
-    version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
+    version('1.3-3', '570db6795179a1439c174be881c77d18')
+    version('1.3-2', 'd72a777bfe4a28ba4e1585e31680f82e')
+    version('1.3-1', '13d64dead441426aa96a3bf3fde29daf')
+    version('1.3-0', 'a3f93cd05054657a01893a3817fa1f08')
+    version('1.2-2', '23e2bfe531c704b79308b0b5fbe1ace8')
 
-    depends_on('r-assertthat', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-lazyeval', type=('build', 'run'))
-    depends_on('r-dbi', type=('build', 'run'))
-    depends_on('r-bindrcpp', type=('build', 'run'))
-    depends_on('r-glue', type=('build', 'run'))
-    depends_on('r-pkgconfig', type=('build', 'run'))
-    depends_on('r-plogr', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9')
