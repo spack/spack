@@ -2536,98 +2536,86 @@ build system.
 Compiler flags
 ^^^^^^^^^^^^^^
 
-Compiler flags set by the user through the Spec object can be passed to
-the build in one of two ways. For packages inheriting from the
-``CmakePackage`` or ``AutotoolsPackage`` classes, the build environment
-passes those flags to the relevant environment variables (``CFLAGS``,
-``CXXFLAGS``, etc) that are respected by the build system. For all other
-packages, the default behavior is to inject the flags directly into the
-compiler commands using Spack's compiler wrappers.
+Compiler flags set by the user through the Spec object can be passed
+to the build in one of three ways. By default, the build environment
+injects these flags directly into the compiler commands using Spack's
+compiler wrappers. The flag_handler method can be used to change this
+behavior.
 
-.. warning::
+Packages can override the flag_handler method with one of three
+builtin flag_handlers. The builtin flag_handlers are named
+``inject_flags``, ``env_flags``, and ``command_line_flags``. The
+``inject_flags`` method is the default. The ``env_flags`` method puts
+all of the flags into the environment variables that ``make`` uses as
+implicit variables ('CFLAGS', 'CXXFLAGS', etc.). The
+``command_line_flags`` method is only available for
+``AutotoolsPackage`` and ``CMakePackage``. It adds the flags to the
+command line invocation of ``configure`` or ``cmake``, respectively.
 
-   The flag handling methods described in this section are in beta.
-   The exact semantics are liable to change to improve usability.
+Individual packages may also define their own ``flag_handler``
+methods. The ``flag_handler`` method takes the package instance
+(``self``), the name of the flag, and a list of the values of the
+flag. It will be called on each of the six compiler flags supported in
+Spack. It should return a triple of ``(injf, envf, clf)`` where
+``injf`` is a list of flags to inject via the Spack compiler wrappers,
+``envf`` is a list of flags to pass to the build system through the
+environment using implicit variables, and ``clf`` is a list of flags
+to pass to the build system on the command line. If ``clf`` is
+non-empty in a package that does not support ``command_line_flags``,
+the build environment will raise a ``NotImplementedError`` .
 
-Individual packages can override the default behavior for the flag
-handling.  Packages can define a ``default_flag_handler`` method that
-applies to all sets of flags handled by Spack, or may define
-individual methods ``cflags_handler``, ``cxxflags_handler``,
-etc. Spack will apply the individual method for a flag set if it
-exists, otherwise the ``default_flag_handler`` method if it exists,
-and fall back on the default for that package class if neither exists.
-
-These methods are defined on the package class, and take two
-parameters in addition to the packages itself. The ``env`` parameter
-is an ``EnvironmentModifications`` object that can be used to change
-the build environment. The ``flag_val`` parameter is a tuple. Its
-first entry is the name of the flag (``cflags``, ``cxxflags``, etc.)
-and its second entry is a list of the values for that flag.
-
-There are three primary idioms that can be combined to create whatever
-behavior the package requires.
-
-1. The default behavior for packages inheriting from
-``AutotoolsPackage`` or ``CmakePackage``.
+Here are the definitions of the three builtin flag handlers:
 
 .. code-block:: python
 
-    def default_flag_handler(self, env, flag_val):
-        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
-        return []
+   def inject_flags(self, name, flags):
+       return (flags, None, None)
 
-2. The default behavior for other packages
+   def env_flags(self, name, flags):
+       return (None, flags, None)
 
-.. code-block:: python
+   def command_line_flags(self, name, flags):
+       return (None, None, flags)
 
-    def default_flag_handler(self, env, flag_val):
-        return flag_val[1]
+Note that it would be equivalent to return ``[]`` instead of ``None``.
 
-
-3. Packages may have additional flags to add to the build. These flags
-can be added to either idiom above. For example:
-
-.. code-block:: python
-
-    def default_flag_handler(self, env, flag_val):
-        flags = flag_val[1]
-        flags.append('-flag')
-        return flags
-
-or
+Packages can override the default behavior either by specifying one of
+the builtin flag handlers
 
 .. code-block:: python
 
-    def default_flag_handler(self, env, flag_val):
-        env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1]))
-        env.append_flags(flag_val[0].upper(), '-flag')
-        return []
+   flag_handler = <PackageClass>.env_flags
 
-Packages may also opt for methods that include aspects of any of the
-idioms above. E.g.
+where ``<PackageClass>`` can be any of the subclasses of PackageBase
+discussed in :ref:`installation_procedure`.
+
+or by implementing the flag_handler method. Suppose for a package
+``Foo`` we need to pass ``cflags``, ``cxxflags``, and ``cppflags``
+through the environment, the rest of the flags through compiler
+wrapper injection, and we need to add ``-lbar`` to ``ldlibs``. The
+following flag handler method accomplishes that.
 
 .. code-block:: python
 
-    def default_flag_handler(self, env, flag_val):
-        flags = []
-        if len(flag_val[1]) > 3:
-            env.append_flags(flag_val[0].upper(), ' '.join(flag_val[1][3:]))
-            flags = flag_val[1][:3]
-        else:
-            flags = flag_val[1]
-        flags.append('-flag')
-        return flags
+   def flag_handler(self, name, flags):
+       if name in ['cflags', 'cxxflags', 'cppflags']:
+           return (None, flags, None)
+       elif name == 'ldlibs':
+           flags.append('-lbar')
+       return (flags, None, None)
 
 Because these methods can pass values through environment variables,
 it is important not to override these variables unnecessarily in other
 package methods. In the ``setup_environment`` and
 ``setup_dependent_environment`` methods, use the ``append_flags``
 method of the ``EnvironmentModifications`` class to append values to a
-list of flags whenever there is no good reason to override the
-existing value. In the ``install`` method and other methods that can
-operate on the build environment directly through the ``env``
-variable, test for environment variable existance before overriding
-values to add compiler flags.
+list of flags whenever the flag handler is ``env_flags``. If the
+package passes flags through the environment or the command line
+manually (in the install method, for example), we recommend using the
+default flag handler or rewriting the package to pass its flags
+through the flag handler rather than manually. Manual flag passing is
+likely to interfere with the ``env_flags`` and ``command_line_flags``
+methods.
 
 In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
