@@ -51,7 +51,7 @@ class Lbann(CMakePackage):
     depends_on('cudnn', when='+gpu')
     depends_on('cub', when='+gpu')
     depends_on('mpi')
-    depends_on('hwloc ~pci')
+    depends_on('hwloc ~pci ~libxml2')
     depends_on('opencv@3.2.0: +openmp +core +highgui +imgproc +jpeg +png +tiff +zlib ~eigen', when='+opencv')
     depends_on('protobuf@3.0.2:')
     depends_on('cnpy')
@@ -73,8 +73,6 @@ class Lbann(CMakePackage):
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(spec['elemental'].prefix),
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
-            '-DcuDNN_DIR={0}'.format(spec['cudnn'].prefix),
-            '-DCUB_DIR={0}'.format(spec['cub'].prefix),
             '-DELEMENTAL_MATH_LIBS={0}'.format(
                 spec['elemental'].libs),
             '-DSEQ_INIT:BOOL=%s' % ('+seq_init' in spec),
@@ -91,7 +89,7 @@ class Lbann(CMakePackage):
             args.extend(['-DcuDNN_DIR={0}'.format(
                 spec['cudnn'].prefix)])
 
-        if '+cudnn' in spec:
+        if '+cub' in spec:
             args.extend(['-DCUB_DIR={0}'.format(
                 spec['cub'].prefix)])
 
