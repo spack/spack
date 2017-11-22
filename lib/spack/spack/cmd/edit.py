@@ -127,7 +127,7 @@ def edit(parser, args):
             else:
                 # Find all possible files with that name
                 files = glob.glob(join_path(path, name + '.*'))
-                blacklist = ['.pyc', '~'] # blacklist binaries and backups
+                blacklist = ['.pyc', '~']  # blacklist binaries and backups
                 files = filter(lambda x: all(s not in x for s in blacklist),
                                files)
                 if len(files) > 1:
@@ -139,7 +139,7 @@ def edit(parser, args):
                 if not files:
                     tty.die("No file for '{0}' was found in {1}".format(name,
                                                                         path))
-                path = files[0] # the only one
+                path = files[0]  # already confirmed only one entry in files
 
         spack.editor(path)
     elif name:
