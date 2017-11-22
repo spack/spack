@@ -163,7 +163,7 @@ class CMakePackage(PackageBase):
         setattr(self, 'cmake_flag_args', [])
 
         flag_string = '-DCMAKE_{0}_FLAGS={1}'
-        langs = {'C':'c', 'CXX':'cxx', 'Fortran':'f'}
+        langs = {'C': 'c', 'CXX': 'cxx', 'Fortran': 'f'}
 
         # Handle language compiler flags
         for lang, pre in langs.items():

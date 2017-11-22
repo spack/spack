@@ -28,17 +28,20 @@ import os
 import spack.spec
 import spack.build_environment
 
+
 @pytest.fixture()
 def temp_env():
     old_env = os.environ.copy()
     yield
     os.environ = old_env
 
+
 def add_O3_to_cl_cflags(name, flags):
     cl_flags = []
     if name == 'cflags':
         cl_flags.append('-O3')
     return (flags, None, cl_flags)
+
 
 @pytest.mark.usefixtures('config')
 class TestFlagHandlers(object):

@@ -254,8 +254,8 @@ class AutotoolsPackage(PackageBase):
         setattr(self, 'configure_flag_args', [])
         for flag, values in flags.items():
             if values:
-                self.configure_flag_args.append('{0}={1}'.format(flag.upper(),
-                                                       ' '.join(values)))
+                values_str = '{0}={1}'.format(flag.upper(), ' '.join(values))
+                self.configure_flag_args.append(values_str)
 
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
