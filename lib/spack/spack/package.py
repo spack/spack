@@ -1707,6 +1707,36 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         pass
 
+    def inject_flags(self, name, flags):
+        return (flags, None, None)
+
+    def env_flags(self, name, flags):
+        return (None, flags, None)
+
+    def command_line_flags(self, name, flags):
+        return (None, None, flags)
+
+    flag_handler = inject_flags
+    # The flag handler method is called for each of the allowed compiler flags.
+    # It returns a triple of inject_flags, env_flags, command_line_flags.
+    # The flags returned as inject_flags are injected through the spack
+    #  compiler wrappers.
+    # The flags returned as env_flags are passed to the build system through
+    #  the environment variables of the same name.
+    # The flags returned as command_line_flags are passed to the build system
+    #  package subclass to be turned into the appropriate part of the standard
+    #  arguments. This is implemented for build system classes where
+    #  appropriate and will otherwise raise a NotImplementedError.
+    # inject_flags, env_flags, and command_line_flags methods are provided in
+    #  module scope as easy default options for users.
+
+    def flags_to_cl_args(self, flags):
+        # Takes flags as a dict name: list of values
+        if any(v for v in flags.values()):
+            msg = 'The {0} build system'.format(self.__class__.__name__)
+            msg += ' cannot take command line arguments for compiler flags'
+            raise NotImplementedError(msg)
+
     @staticmethod
     def uninstall_by_spec(spec, force=False):
         if not os.path.isdir(spec.prefix):

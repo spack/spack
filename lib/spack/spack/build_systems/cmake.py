@@ -109,7 +109,9 @@ class CMakePackage(PackageBase):
         :return: standard cmake arguments
         """
         # standard CMake arguments
-        return CMakePackage._std_args(self)
+        std_cmake_args = CMakePackage._std_args(self)
+        std_cmake_args += getattr(self, 'cmake_flag_args', [])
+        return std_cmake_args
 
     @staticmethod
     def _std_args(pkg):
@@ -153,6 +155,42 @@ class CMakePackage(PackageBase):
         deps = filter_system_paths(deps)
         args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
         return args
+
+    def flags_to_cl_args(self, flags):
+        """Produces a list of all command line arguments to pass the specified
+        compiler flags to cmake. Note CMAKE does not have a cppflags option."""
+        # Has to be dynamic attribute due to caching
+        setattr(self, 'cmake_flag_args', [])
+
+        flag_string = '-DCMAKE_{0}_FLAGS={1}'
+        langs = {'C':'c', 'CXX':'cxx', 'Fortran':'f'}
+
+        # Handle language compiler flags
+        for lang, pre in langs.items():
+            flag = pre + 'flags'
+            # cmake has no explicit cppflags support -> add it to all langs
+            lang_flags = ' '.join(flags.get(flag, []) + flags.get('cppflags',
+                                                                  []))
+            if lang_flags:
+                self.cmake_flag_args.append(flag_string.format(lang,
+                                                               lang_flags))
+
+        # Cmake has different linker arguments for different build types.
+        # We specify for each of them.
+        if flags['ldflags']:
+            ldflags = ' '.join(flags['ldflags'])
+            ld_string = '-DCMAKE_{0}_LINKER_FLAGS={1}'
+            # cmake has separate linker arguments for types of builds.
+            for type in ['EXE', 'MODULE', 'SHARED', 'STATIC']:
+                self.cmake_flag_args.append(ld_string.format(type, ldflags))
+
+        # CMake has libs options separated by language. Apply ours to each.
+        if flags['ldlibs']:
+            libs_flags = ' '.join(flags['ldlibs'])
+            libs_string = '-DCMAKE_{0}_STANDARD_LIBRARIES={1}'
+            for lang in langs:
+                self.cmake_flag_args.append(libs_string.format(lang,
+                                                               libs_flags))
 
     @property
     def build_directory(self):

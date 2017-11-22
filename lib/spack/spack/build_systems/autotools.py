@@ -256,12 +256,24 @@ class AutotoolsPackage(PackageBase):
         """
         return []
 
+    def flags_to_cl_args(self, flags):
+        """Produces a list of all command line arguments to pass specified
+        compiler flags to configure."""
+        # Has to be dynamic attribute due to caching.
+        setattr(self, 'configure_flag_args', [])
+        for flag, values in flags.items():
+            if values:
+                self.configure_flag_args.append('{0}={1}'.format(flag.upper(),
+                                                       ' '.join(values)))
+
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
         :py:meth:`~.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
-        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+        options = getattr(self, 'configure_flag_args', [])
+        options += ['--prefix={0}'.format(prefix)]
+        options += self.configure_args()
 
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
