@@ -386,11 +386,6 @@ def set_module_variables_for_package(pkg, module):
     # a Prefix object.
     m.prefix = pkg.prefix
 
-    # Options for builtin flag handling methods
-    m.inject_flags = pkg.inject_flags
-    m.env_flags = pkg.env_flags
-    m.command_line_flags = pkg.command_line_flags
-
     # Platform-specific library suffix.
     m.dso_suffix = dso_suffix
 
