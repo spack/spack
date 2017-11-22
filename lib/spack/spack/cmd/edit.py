@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import glob
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
@@ -81,6 +82,10 @@ def setup_parser(subparser):
         const=spack.cmd.command_path,
         help="edit the command with the supplied name")
     excl_args.add_argument(
+        '-d', '--docs', dest='path', action='store_const',
+        const=join_path(spack.lib_path, 'docs'),
+        help="edit the docs with the supplied name")
+    excl_args.add_argument(
         '-t', '--test', dest='path', action='store_const',
         const=spack.test_path,
         help="edit the test with the supplied name")
@@ -112,9 +117,30 @@ def edit(parser, args):
     if args.path:
         path = args.path
         if name:
-            path = join_path(path, name + ".py")
-            if not os.path.exists(path):
-                tty.die("No command for '{0}' was found.".format(name))
+            if '.' in name:
+                # User provided suffix. Just use join it to the path
+                path = join_path(path, name)
+                if not os.path.exists(path):
+                    dir, name = os.path.split(path)
+                    tty.die("No file '{0}' was found in {1}".format(name,
+                                                                    dir))
+            else:
+                # Find all possible files with that name
+                files = glob.glob(join_path(path, name + '.*'))
+                blacklist = ['.pyc', '~'] # blacklist binaries and backups
+                files = filter(lambda x: all(s not in x for s in blacklist),
+                               files)
+                if len(files) > 1:
+                    m = 'Multiple files exist with the name {0}.'.format(name)
+                    m += ' Please specify a suffix. Files are:'
+                    for f in files:
+                        m += ' ' + os.path.basename(f)
+                    tty.die(m)
+                if not files:
+                    tty.die("No file for '{0}' was found in {1}".format(name,
+                                                                        path))
+                path = files[0] # the only one
+
         spack.editor(path)
     elif name:
         edit_package(name, args.repo, args.namespace)
