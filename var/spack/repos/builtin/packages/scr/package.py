@@ -89,6 +89,8 @@ class Scr(CMakePackage):
     variant('cntl_base', default='/tmp',
             description='Compile time default location for control directory.')
 
+    conflicts('platform=bgq')
+
     def get_abs_path_rel_prefix(self, path):
         # Return path if absolute, otherwise prepend prefix
         if os.path.isabs(path):
@@ -99,6 +101,9 @@ class Scr(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
+
+        if 'platform=cray' in spec:
+            args.append('-DSCR_LINK_STATIC=ON')
 
         args.append('-DENABLE_FORTRAN={0}'.format('+fortran' in spec))
 
