@@ -1,0 +1,200 @@
+--- a/src/data_output.hpp	2017-11-11 12:33:06.000000000 +1100
++++ b/src/data_output.hpp	2017-11-18 10:11:46.000000000 +1100
+@@ -58,7 +58,7 @@
+             virtual void writeGridCompressed_(CGrid* grid)   = 0;
+             virtual void writeTimeDimension_(void)           = 0;
+             virtual void writeTimeAxis_ (CField*     field,
+-                                         const shared_ptr<CCalendar> cal) = 0;
++                                         const boost::shared_ptr<CCalendar> cal) = 0;
+ 
+             /// Propriétés protégées ///
+             EDataOutputType type;
+--- a/src/group_factory_decl.cpp	2017-11-11 12:33:00.000000000 +1100
++++ b/src/group_factory_decl.cpp	2017-11-18 10:11:46.000000000 +1100
+@@ -4,18 +4,18 @@
+ namespace xios
+ {
+ # define  macro(U) \
+-  template void CGroupFactory::AddGroup<U>(shared_ptr<U> pgroup,shared_ptr<U> cgroup); \
+-  template void CGroupFactory::AddChild<U>(shared_ptr<U> group, shared_ptr<U::RelChild> child); \
+-  template shared_ptr<U>  CGroupFactory::GetGroup<U>(shared_ptr<U> group, const StdString & id); \
+-  template shared_ptr<U::RelChild> CGroupFactory::GetChild<U>(shared_ptr<U> group, const StdString & id); \
+-  template int CGroupFactory::GetGroupNum<U>(shared_ptr<U> group); \
+-  template int CGroupFactory::GetGroupIdNum<U>(shared_ptr<U> group); \
+-  template int CGroupFactory::GetChildNum<U>(shared_ptr<U> group); \
++  template void CGroupFactory::AddGroup<U>(boost::shared_ptr<U> pgroup,boost::shared_ptr<U> cgroup); \
++  template void CGroupFactory::AddChild<U>(boost::shared_ptr<U> group, boost::shared_ptr<U::RelChild> child); \
++  template boost::shared_ptr<U>  CGroupFactory::GetGroup<U>(boost::shared_ptr<U> group, const StdString & id); \
++  template boost::shared_ptr<U::RelChild> CGroupFactory::GetChild<U>(boost::shared_ptr<U> group, const StdString & id); \
++  template int CGroupFactory::GetGroupNum<U>(boost::shared_ptr<U> group); \
++  template int CGroupFactory::GetGroupIdNum<U>(boost::shared_ptr<U> group); \
++  template int CGroupFactory::GetChildNum<U>(boost::shared_ptr<U> group); \
+   template int CGroupFactory::GetChildIdNum<U>(boost::shared_ptr<U> group); \
+-  template bool CGroupFactory::HasGroup<U>(shared_ptr<U> group, const StdString & id); \
++  template bool CGroupFactory::HasGroup<U>(boost::shared_ptr<U> group, const StdString & id); \
+   template bool CGroupFactory::HasChild<U>(boost::shared_ptr<U> group, const StdString & id); \
+-  template shared_ptr<U> CGroupFactory::CreateGroup<U>(shared_ptr<U> group, const StdString & id ); \
+-  template shared_ptr<U::RelChild>  CGroupFactory::CreateChild<U>(shared_ptr<U> group, const StdString & id);
++  template boost::shared_ptr<U> CGroupFactory::CreateGroup<U>(boost::shared_ptr<U> group, const StdString & id ); \
++  template boost::shared_ptr<U::RelChild>  CGroupFactory::CreateChild<U>(boost::shared_ptr<U> group, const StdString & id);
+ 
+   macro(CFieldGroup)
+   macro(CFileGroup)
+--- a/src/node/context.cpp	2017-11-11 12:33:00.000000000 +1100
++++ b/src/node/context.cpp	2017-11-18 10:11:47.000000000 +1100
+@@ -19,7 +19,7 @@
+ 
+ namespace xios {
+ 
+-  shared_ptr<CContextGroup> CContext::root;
++  boost::shared_ptr<CContextGroup> CContext::root;
+ 
+    /// ////////////////////// Définitions ////////////////////// ///
+ 
+@@ -55,7 +55,7 @@
+    */
+    CContextGroup* CContext::getRoot(void)
+    {
+-      if (root.get()==NULL) root=shared_ptr<CContextGroup>(new CContextGroup(xml::CXMLNode::GetRootName()));
++      if (root.get()==NULL) root=boost::shared_ptr<CContextGroup>(new CContextGroup(xml::CXMLNode::GetRootName()));
+       return root.get();
+    }
+ 
+--- a/src/node/context.hpp	2017-11-11 12:33:00.000000000 +1100
++++ b/src/node/context.hpp	2017-11-18 10:11:47.000000000 +1100
+@@ -205,7 +205,7 @@
+          std::vector<CField*> fieldsWithReadAccess;
+ 
+          // Context root
+-         static shared_ptr<CContextGroup> root;
++         static boost::shared_ptr<CContextGroup> root;
+ 
+          // Determine context on client or not
+          bool hasClient;
+--- a/src/node/file.cpp	2017-11-11 12:32:57.000000000 +1100
++++ b/src/node/file.cpp	2017-11-18 10:11:47.000000000 +1100
+@@ -163,7 +163,7 @@
+          }
+ 
+ //         CField* field_tmp=(*it).get();
+-//         shared_ptr<CField> sptfield=*it;
++//         boost::shared_ptr<CField> sptfield=*it;
+ //         field_tmp->refObject.push_back(sptfield);
+          newEnabledFields.push_back(*it);
+          // Le champ est finalement actif, on y ajoute sa propre reference.
+@@ -481,7 +481,7 @@
+ 
+          if (isOpen) data_out->closeFile();
+ 
+-        data_out = shared_ptr<CDataOutput>(new CNc4DataOutput(this, oss.str(), append, useClassicFormat, useCFConvention,
++        data_out = boost::shared_ptr<CDataOutput>(new CNc4DataOutput(this, oss.str(), append, useClassicFormat, useCFConvention,
+                                                               fileComm, multifile, isCollective, time_counter_name));
+         isOpen = true;
+ 
+@@ -596,8 +596,8 @@
+       bool isCollective = par_access.isEmpty() || par_access == par_access_attr::collective;
+ 
+       if (isOpen) data_out->closeFile();
+-      if (time_counter_name.isEmpty()) data_in = shared_ptr<CDataInput>(new CNc4DataInput(oss.str(), fileComm, multifile, isCollective));
+-      else data_in = shared_ptr<CDataInput>(new CNc4DataInput(oss.str(), fileComm, multifile, isCollective, time_counter_name));
++      if (time_counter_name.isEmpty()) data_in = boost::shared_ptr<CDataInput>(new CNc4DataInput(oss.str(), fileComm, multifile, isCollective));
++      else data_in = boost::shared_ptr<CDataInput>(new CNc4DataInput(oss.str(), fileComm, multifile, isCollective, time_counter_name));
+       isOpen = true;
+     }
+   }
+--- a/src/object_factory_decl.cpp	2017-11-11 12:33:39.000000000 +1100
++++ b/src/object_factory_decl.cpp	2017-11-18 10:11:47.000000000 +1100
+@@ -4,12 +4,12 @@
+ namespace xios
+ {
+ #define macro(U) \
+-  template shared_ptr<U> CObjectFactory::GetObject<U>(const StdString& id);  \
+-  template shared_ptr<U> CObjectFactory::GetObject<U>(const StdString& context,const StdString& id); \
+-  template shared_ptr<U> CObjectFactory::GetObject<U>(const U* const object); \
++  template boost::shared_ptr<U> CObjectFactory::GetObject<U>(const StdString& id);  \
++  template boost::shared_ptr<U> CObjectFactory::GetObject<U>(const StdString& context,const StdString& id); \
++  template boost::shared_ptr<U> CObjectFactory::GetObject<U>(const U* const object); \
+   template int CObjectFactory::GetObjectNum<U>(void); \
+   template int CObjectFactory::GetObjectIdNum<U>(void); \
+-  template const std::vector<shared_ptr<U> >& CObjectFactory::GetObjectVector<U>(const StdString& context ); \
++  template const std::vector<boost::shared_ptr<U> >& CObjectFactory::GetObjectVector<U>(const StdString& context ); \
+   template bool CObjectFactory::HasObject<U>(const StdString& id); \
+   template bool CObjectFactory::HasObject<U>(const StdString& context,const StdString& id); \
+   template boost::shared_ptr<U> CObjectFactory::CreateObject<U>(const StdString& id ); \
+--- a/src/object_template.hpp	2017-11-11 12:33:13.000000000 +1100
++++ b/src/object_template.hpp	2017-11-18 10:11:47.000000000 +1100
+@@ -76,8 +76,8 @@
+          static T* get(const T* ptr) ;
+          static T* get(const string& contextId, const string& id) ;
+          T* get(void) ;
+-         shared_ptr<T> getShared(void) ;
+-         static shared_ptr<T> getShared(const T* ptr) ;
++         boost::shared_ptr<T> getShared(void) ;
++         static boost::shared_ptr<T> getShared(const T* ptr) ;
+ 
+          static T* create(const string& id=string("")) ;
+          static const vector<T*> getAll() ;
+--- a/src/object_template_impl.hpp	2017-11-11 12:33:32.000000000 +1100
++++ b/src/object_template_impl.hpp	2017-11-18 10:11:47.000000000 +1100
+@@ -320,13 +320,13 @@
+    }
+ 
+    template <typename T>
+-   shared_ptr<T> CObjectTemplate<T>::getShared(const T* ptr)
++   boost::shared_ptr<T> CObjectTemplate<T>::getShared(const T* ptr)
+    {
+      return CObjectFactory::GetObject<T>(ptr);
+    }
+ 
+    template <typename T>
+-   shared_ptr<T> CObjectTemplate<T>::getShared(void)
++   boost::shared_ptr<T> CObjectTemplate<T>::getShared(void)
+    {
+      return CObjectFactory::GetObject<T>((T*)this);
+    }
+@@ -334,10 +334,10 @@
+    template <typename T>
+    const vector<T*> CObjectTemplate<T>::getAll()
+    {
+-     const vector< shared_ptr<T> >& shared_vect= CObjectFactory::GetObjectVector<T>();
++     const vector< boost::shared_ptr<T> >& shared_vect= CObjectFactory::GetObjectVector<T>();
+      vector<T*> vect;
+ 
+-     typename vector<shared_ptr<T> >::const_iterator it;
++     typename vector<boost::shared_ptr<T> >::const_iterator it;
+      for(it=shared_vect.begin();it!=shared_vect.end();++it) vect.push_back(it->get());
+      return vect;
+    }
+@@ -345,10 +345,10 @@
+    template <typename T>
+    const vector<T*> CObjectTemplate<T>::getAll(const string & id)
+    {
+-     const vector< shared_ptr<T> >& shared_vect= CObjectFactory::GetObjectVector<T>(id);
++     const vector< boost::shared_ptr<T> >& shared_vect= CObjectFactory::GetObjectVector<T>(id);
+      vector<T*> vect;
+ 
+-     typename vector<shared_ptr<T> >::const_iterator it;
++     typename vector<boost::shared_ptr<T> >::const_iterator it;
+      for(it=shared_vect.begin();it!=shared_vect.end();++it) vect.push_back(it->get());
+      return vect;
+    }
+--- a/src/type/type_specialisation.hpp	2017-11-11 12:33:32.000000000 +1100
++++ b/src/type/type_specialisation.hpp	2017-11-18 10:11:47.000000000 +1100
+@@ -438,7 +438,7 @@
+   template <>                                                          \
+   void CType<ARRAY(ValueType,NumsDims)>::allocate(void)  \
+   {                                                                    \
+-    if (empty) ptrValue=new shared_ptr<CArray<ValueType, NumsDims> >(new  CArray<ValueType, NumsDims>()) ;\
++    if (empty) ptrValue=new boost::shared_ptr<CArray<ValueType, NumsDims> >(new  CArray<ValueType, NumsDims>()) ;\
+     empty=false ;                                                      \
+   }                                                                    \
+                                                                         \   
+@@ -483,7 +483,7 @@
+  template <>                                                          \
+   bool CType_ref<ARRAY(ValueType,NumsDims)>::_fromBuffer(CBufferIn& buffer)   \
+   {                                                                    \
+-    shared_ptr<CArray<ValueType, NumsDims> > tmp(new CArray<ValueType, NumsDims>() ) ; \
++    boost::shared_ptr<CArray<ValueType, NumsDims> > tmp(new CArray<ValueType, NumsDims>() ) ; \
+     *(this->ptrValue)=tmp ;\
+     return (*(this->ptrValue))->fromBuffer(buffer) ;                   \
+   }                                                                    \

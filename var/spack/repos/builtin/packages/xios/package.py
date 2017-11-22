@@ -43,14 +43,19 @@ class Xios(Package):
             description='Build for debugging, development or production')
     # NOTE: oasis coupler could be supported with a variant
 
-    patch('bld_limit_extern.patch', when='%gcc@7:')
+    # Use spack versions of boost and blitz,
+    # to ensure compatibility with recent compilers:
+    patch('bld_limit_extern.patch')
+
+    patch('clang_fpos_long_ambiguity.patch', when='%clang')
+    patch('clang_boost_shared_ptr.patch', when='%clang')
 
     depends_on('netcdf+mpi')
     depends_on('netcdf-fortran^netcdf+mpi')
     depends_on('hdf5+mpi')
     depends_on('mpi')
-    depends_on('boost', when='%gcc@7:')
-    depends_on('blitz', when='%gcc@7:')
+    depends_on('boost')
+    depends_on('blitz')
     depends_on('perl', type='build')
     depends_on('perl-uri-escape', type='build')
     depends_on('gmake', type='build')
@@ -91,16 +96,26 @@ OASIS_LIB=""
         spec = self.spec
         mode = spec.variants['mode'].value
         param = dict()
-        param['CC'] = spec['mpi'].mpicc
-        param['FC'] = spec['mpi'].mpifc
+        param['MPICXX'] = spec['mpi'].mpicxx
+        param['MPIFC'] = spec['mpi'].mpifc
+        param['CC'] = self.compiler.cc
+        param['FC'] = self.compiler.fc
+        param['BOOST_INC_DIR'] = spec['boost'].prefix.include
+        param['BOOST_LIB_DIR'] = spec['boost'].prefix.lib
+        param['BLITZ_INC_DIR'] = spec['blitz'].prefix.include
+        param['BLITZ_LIB_DIR'] = spec['blitz'].prefix.lib
+        if spec.satisfies('%clang platform=darwin'):
+          param['LIBCXX'] = '-lc++'
+        else:
+          param['LIBCXX'] = '-lstdc++'
 
-        if spec.satisfies('%gcc') or spec.satisfies('%intel'):
+        if any(map(spec.satisfies, ('%gcc', '%intel', '%clang'))):
             text = r"""
-%CCOMPILER      {CC}
-%FCOMPILER      {FC}
-%LINKER         {FC}
+%CCOMPILER      {MPICXX}
+%FCOMPILER      {MPIFC}
+%LINKER         {MPIFC}
 
-%BASE_CFLAGS    -ansi -w -D_GLIBCXX_USE_CXX11_ABI=0
+%BASE_CFLAGS    -ansi -w -D_GLIBCXX_USE_CXX11_ABI=0 -I{BOOST_INC_DIR} -I{BLITZ_INC_DIR}
 %PROD_CFLAGS    -O3 -DBOOST_DISABLE_ASSERTS
 %DEV_CFLAGS     -g -O2 
 %DEBUG_CFLAGS   -g 
@@ -111,10 +126,10 @@ OASIS_LIB=""
 %DEBUG_FFLAGS   -g 
 
 %BASE_INC       -D__NONE__
-%BASE_LD        -lstdc++
+%BASE_LD        -L{BOOST_LIB_DIR} -L{BLITZ_LIB_DIR} {LIBCXX}
 
-%CPP            cpp
-%FPP            cpp -P
+%CPP            {CC} -E
+%FPP            {CC} -E -P -x c
 %MAKE           gmake
 """.format(**param)
         elif spec.satisfies('%cce'):
@@ -127,11 +142,11 @@ OASIS_LIB=""
                 param.update({'CC_OPT_DEV': '-O1', 'CC_OPT_PROD': '-O1'})
 
             text = r"""
-%CCOMPILER      {CC}
-%FCOMPILER      {FC}
-%LINKER         {FC}
+%CCOMPILER      {MPICXX}
+%FCOMPILER      {MPIFC}
+%LINKER         {MPIFC}
 
-%BASE_CFLAGS    -DMPICH_SKIP_MPICXX -h msglevel_4 -h zero -h gnu
+%BASE_CFLAGS    -DMPICH_SKIP_MPICXX -h msglevel_4 -h zero -h gnu -I{BOOST_INC_DIR} -I{BLITZ_INC_DIR}
 %PROD_CFLAGS    {CC_OPT_PROD} -DBOOST_DISABLE_ASSERTS
 %DEV_CFLAGS     {CC_OPT_DEV}
 %DEBUG_CFLAGS   -g
@@ -142,7 +157,7 @@ OASIS_LIB=""
 %DEBUG_FFLAGS   -g 
 
 %BASE_INC       -D__NONE__
-%BASE_LD        -D__NONE__
+%BASE_LD        -D__NONE__ -L{BOOST_LIB_DIR} -L{BLITZ_LIB_DIR}
 
 %CPP            cpp
 %FPP            cpp -P -CC

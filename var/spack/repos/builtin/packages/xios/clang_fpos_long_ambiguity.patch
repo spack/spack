@@ -1,0 +1,137 @@
+--- a/src/attribute_map.cpp	2017-11-15 19:30:13.000000000 +1100
++++ b/src/attribute_map.cpp	2017-11-15 19:33:10.000000000 +1100
+@@ -325,7 +325,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName() << "_";
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -375,7 +375,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName() << "_";
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -425,7 +425,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName() << "_";
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -475,7 +475,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -510,7 +510,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -537,7 +537,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -572,7 +572,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -599,7 +599,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -634,7 +634,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -661,7 +661,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -699,7 +699,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -726,7 +726,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -764,7 +764,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -791,7 +791,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
+@@ -829,7 +829,7 @@
+            if (it->second->isPublic())
+            {
+              oss << ", " << it->second->getName();
+-             if (oss.tellp() - startPos > 90)
++             if ((long)oss.tellp() - startPos > 90)
+              {
+                oss << "  &" << iendl;
+                startPos = oss.tellp();
