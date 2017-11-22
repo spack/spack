@@ -96,14 +96,11 @@ class TestFlagHandlers(object):
         assert set(pkg.cmake_flag_args) == expected
 
     def test_command_line_flags_autotools(self, temp_env):
-        print os.environ
         s = spack.spec.Spec('libelf cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
         pkg.flag_handler = pkg.command_line_flags
         spack.build_environment.setup_package(pkg, False)
-
-        print os.environ
 
         assert 'SPACK_CPPFLAGS' not in os.environ
         assert 'CPPFLAGS' not in os.environ
