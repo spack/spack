@@ -99,7 +99,6 @@ class Elemental(CMakePackage):
     depends_on('gmp', when='+mpfr')
     depends_on('mpc', when='+mpfr')
     depends_on('mpfr', when='+mpfr')
-    depends_on('cmake -openssl -ncurses')
 
     patch('elemental_cublas.patch', when='+cublas')
     patch('cmake_0.87.7.patch', when='@0.87.7')
