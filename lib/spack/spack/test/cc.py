@@ -211,8 +211,14 @@ class CompilerWrapperTest(unittest.TestCase):
                       ' '.join(test_command) + ' ' +
                       '-lfoo')
 
-        os.environ['SPACK_LDFLAGS'] = ''
-        os.environ['SPACK_LDLIBS'] = ''
+        del os.environ['SPACK_CFLAGS']
+        del os.environ['SPACK_CXXFLAGS']
+        del os.environ['SPACK_FFLAGS']
+        del os.environ['SPACK_CPPFLAGS']
+        del os.environ['SPACK_LDFLAGS']
+        del os.environ['SPACK_LDLIBS']
+#        os.environ['SPACK_LDFLAGS'] = ''
+#        os.environ['SPACK_LDLIBS'] = ''
 
     def test_dep_rpath(self):
         """Ensure RPATHs for root package are added."""
