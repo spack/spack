@@ -927,13 +927,18 @@ Environment Modules
 """""""""""""""""""
 
 In order to use Spack's generated module files, you must have
-installed one of *Environment Modules* or *Lmod*. The preferred method
+installed ``environment-modules`` or ``lmod``. The simplest way
 to get the latest version of either of these tools is installing
-it with Spack, for instance:
+it as part of Spack's bootstrap procedure:
 
 .. code-block:: console
 
-   $ spack install lmod
+   $ spack bootstrap
+
+.. warning::
+   At the moment ``spack bootstrap`` is only able to install ``environment-modules``.
+   Extending its capabilities to prefer ``lmod`` where possible is in the roadmap,
+   and likely to happen before the next release.
 
 Alternatively, on many Linux distributions, you can install a pre-built binary
 from the vendor's repository. On Fedora/RHEL/CentOS, for example, this can be
