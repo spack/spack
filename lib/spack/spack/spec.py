@@ -1771,17 +1771,8 @@ class Spec(object):
 
         Some rigorous validation and checks are also performed on the spec.
         Concretizing ensures that it is self-consistent and that it's
-        consistent with requirements of its pacakges. See flatten() and
+        consistent with requirements of its packages. See flatten() and
         normalize() for more details on this.
-
-        It also ensures that:
-
-        .. code-block:: python
-
-            for x in self.traverse():
-                assert x.package.spec == x
-
-        which may not be true *during* the concretization step.
         """
         if not self.name:
             raise SpecError("Attempting to concretize anonymous spec")
@@ -1877,11 +1868,6 @@ class Spec(object):
                             matches.append((x, conflict_spec, when_spec, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
-
-        # At this point the spec-package mutual references should
-        # be self-consistent
-        for x in self.traverse():
-            x.package.spec = x
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
