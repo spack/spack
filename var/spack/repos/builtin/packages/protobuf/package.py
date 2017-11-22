@@ -63,8 +63,7 @@ class Protobuf(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format((
-                'ON' if '+shared' in self.spec else 'OFF')),
+            '-DBUILD_SHARED_LIBS=%s' % int('+shared' in spec),
             '-Dprotobuf_BUILD_TESTS:BOOL=OFF',
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON'
         ]
