@@ -22,29 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install r-sn
-#
-# You can edit this file again by typing:
-#
-#     spack edit r-sn
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
 class RSn(RPackage):
-    """Build and manipulate probability distributions of the skew-normal family 
-    and some related ones, notably the skew-t family, and provide related 
-    statistical methods for data fitting and diagnostics, in the univariate and 
-    the multivariate case."""
+    """Build and manipulate probability distributions of the skew-normal
+    family and some related ones, notably the skew-t family, and provide
+    related statistical methods for data fitting and diagnostics, in the
+    univariate and the multivariate case."""
 
     homepage = "https://cran.r-project.org/web/packages/sn/index.html"
     url      = "https://cran.r-project.org/src/contrib/sn_1.5-0.tar.gz"
@@ -56,5 +41,6 @@ class RSn(RPackage):
     version('1.2-4', 'bf3a47b05016326e910fdb4cc4967e4d')
     version('1.2-3', '290ae511d974a6beb4c3c79c0106858f')
 
+    depends_on('r@3.4.0:3.4.9')
     depends_on('r-mnormt', type=('build', 'run'))
     depends_on('r-numderiv', type=('build', 'run'))
