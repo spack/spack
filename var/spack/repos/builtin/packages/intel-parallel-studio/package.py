@@ -161,7 +161,12 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+clck',      when='@composer.0:composer.9999')
     conflicts('+inspector', when='@composer.0:composer.9999')
     conflicts('+itac',      when='@composer.0:composer.9999')
+    conflicts('+mpi',       when='@composer.0:composer.9999')
     conflicts('+vtune',     when='@composer.0:composer.9999')
+    # The following components are not available before 2016
+    conflicts('+daal',      when='@professional.0:professional.2015.7')
+    conflicts('+daal',      when='@cluster.0:cluster.2015.7')
+    conflicts('+daal',      when='@composer.0:composer.2015.7')
 
     @property
     def blas_libs(self):
