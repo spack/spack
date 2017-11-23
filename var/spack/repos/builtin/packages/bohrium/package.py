@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 from spack.build_systems.cuda import CudaPackage
+from spack import *
+import os
 
 
 class Bohrium(CMakePackage, CudaPackage):
@@ -108,6 +109,11 @@ class Bohrium(CMakePackage, CudaPackage):
 
     depends_on('zlib', when="+proxy")
 
+    @property
+    def config_file(self):
+        """Return the path of the Bohrium system-wide configuration file"""
+        return join_path(self.prefix.etc.bohrium, "config.ini")
+
     #
     # Settings and cmake cache
     #
@@ -132,6 +138,9 @@ class Bohrium(CMakePackage, CudaPackage):
             # the configuration stage.
             "-DJUPYTER_FOUND=FALSE",
             "-DJUPYTER_EXECUTABLE=FALSE",
+            #
+            # Force the configuration file to appear at a sensible place
+            "-DFORCE_CONFIG_PATH=" + os.path.dirname(self.config_file),
             #
             # Vector engine managers
             "-DVEM_NODE=" + str("+node" in spec),
@@ -210,3 +219,4 @@ class Bohrium(CMakePackage, CudaPackage):
         # Bohrium needs an extra include dir apart from
         # the self.prefix.include dir
         run_env.prepend_path("CPATH", self.prefix.include.bohrium)
+        run_env.set("BH_CONFIG", self.config_file)
