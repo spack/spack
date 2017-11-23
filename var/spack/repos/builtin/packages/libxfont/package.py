@@ -44,5 +44,5 @@ class Libxfont(AutotoolsPackage):
     depends_on('xtrans', type='build')
     depends_on('xproto', type='build')
     depends_on('fontsproto@2.1.3:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

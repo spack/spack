@@ -42,7 +42,7 @@ class Glib(AutotoolsPackage):
 
     variant('libmount', default=False, description='Build with libmount support')
 
-    depends_on('pkg-config@0.16:+internal_glib', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libffi')
     depends_on('zlib')
     depends_on('gettext')
