@@ -91,8 +91,14 @@ class Bohrium(CMakePackage, CudaPackage):
     # NOTE The lapacke interface and hence netlib-lapack
     #      is the strictly required lapack provider
     #      for bohrium right now.
-    depends_on("netlib-lapack+lapacke", when="+lapack")
-    depends_on("blas", when="+blas")
+    depends_on('netlib-lapack+lapacke', when="+lapack")
+    depends_on('blas', when="+blas")
+
+    # Make sure an appropriate opencv is used
+    depends_on('opencv', when="+opencv")
+    depends_on('opencv+cuda', when="+opencv+cuda")
+    depends_on('opencv+openmp', when="+opencv+openmp")
+    depends_on('opencv+openmp+cuda', when="+opencv+openmp+cuda")
 
     depends_on('python', type="build", when="~python")
     depends_on('python', when="+python")
@@ -108,6 +114,7 @@ class Bohrium(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
 
+        # Sanity check
         cuda_arch = spec.variants['cuda_arch'].value
         if "+cuda" in spec and len(cuda_arch) >= 1 and cuda_arch[0]:
             # TODO Add cuda_arch support to Bohrium once the basic setup
@@ -117,7 +124,9 @@ class Bohrium(CMakePackage, CudaPackage):
             )
 
         args = [
+            # Choose a particular python version
             "-DPYTHON_EXECUTABLE:FILEPATH=" + spec['python'].command.path,
+            #
             # Hard-disable Jupyter, since this would override a config
             # file in the user's home directory in some cases during
             # the configuration stage.
@@ -128,17 +137,29 @@ class Bohrium(CMakePackage, CudaPackage):
             "-DVEM_NODE=" + str("+node" in spec),
             "-DVEM_PROXY=" + str("+proxy" in spec),
             #
-            # Vector engines
-            "-DVE_OPENMP=" + str("+openmp" in spec),
-            "-DVE_OPENCL=" + str("+opencl" in spec),
-            "-DVE_CUDA=" + str("+cuda" in spec),
-            #
             # Bridges and interfaces
             "-DBRIDGE_BHXX=ON",
             "-DBRIDGE_C=" + str("+cbridge" in spec or "+python" in spec),
             "-DBRIDGE_NPBACKEND=" + str("+python" in spec),
             "-DNO_PYTHON3=ON",  # Only build python version we provide
         ]
+
+        #
+        # Vector engines
+        #
+        args += [
+            "-DVE_OPENCL=" + str("+opencl" in spec),
+            "-DVE_CUDA=" + str("+cuda" in spec),
+        ]
+
+        if "+openmp" in spec:
+            args += [
+                "-DVE_OPENMP=ON",
+                "-DOPENMP_FOUND=True",
+                "-DVE_OPENMP_COMPILER_CMD=" + self.compiler.cc,
+            ]
+        else:
+            args += ["-DVE_OPENMP=OFF", "-DOPENMP_FOUND=False"]
 
         #
         # Extension methods
@@ -163,17 +184,23 @@ class Bohrium(CMakePackage, CudaPackage):
         else:
             args += ["-DEXT_LAPACK=OFF", "-DLAPACKE_FOUND=False"]
 
-        # TODO Other extension methods are not ready yet, because of missing
-        #      packages or because they are untested, so disable in order
-        #      to prevent their setup:
-        args += [
-            "-DEXT_LAPACK=" + str("+lapack" in spec),
-            "-DEXT_CLBLAS=OFF",      # clBLAS not in Spack yet
-            "-DEXT_TDMA=OFF",        # untested
-            "-DEXT_VISUALIZER=OFF",  # untested
-            "-DEXT_OPENCV=OFF",      # untested
-        ]
+        if "+opencv" in spec:
+            args += [
+                "-DEXT_OPENCV=ON",
+                "-DOpenCV_FOUND=True",
+                "-DOpenCV_INCLUDE_DIRS=" + spec["opencv"].prefix.include,
+                "-DOpenCV_LIBS=" + ";".join(spec["opencv"].prefix.libs),
+            ]
+        else:
+            args += ["-DEXT_OPENCV=OFF", "-DOpenCV_FOUND=False"]
 
+        # TODO Other extension methods are not ready yet,
+        #      because of missing packages in Spack
+        args += [
+            "-DEXT_CLBLAS=OFF",      # clBLAS missing
+            # Bohrium visualizer extension method
+            "-DEXT_VISUALIZER=OFF",  # freeglut missing
+        ]
         return args
 
     #
