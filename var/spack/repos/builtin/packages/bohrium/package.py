@@ -63,12 +63,15 @@ class Bohrium(CMakePackage, CudaPackage):
             description="Build with BLAS extension methods")
     variant('lapack', default=True,
             description="Build with LAPACK extension methods")
+    variant('opencv', default=True,
+            description="Build with OpenCV extension methods")
 
     #
     # Conflicts and extensions
     #
     conflicts('%intel')
     conflicts('%clang@:3.5')
+    conflicts('%gcc@:4.7')
     extends('python', when="+python")
 
     # Bohrium needs at least one vector engine and
