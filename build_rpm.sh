@@ -14,7 +14,8 @@ for pkg in ["jdk@8u141-b15%gcc@4.8.5",
             "ant@1.9.9%gcc@4.8.5",
             "sbt@0.13.12%gcc@4.8.5",
             "cmake@3.9.4%gcc@4.8.5",
-            "environment-modules@3.2.10"]:
+            "environment-modules@3.2.10",
+            "intel-parallel-studio@cluster.2017.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune  %intel@17.0.5 threads=openmp"]:
           os.system("spack install {}".format(pkg))
 
 # Build non-MPI packages
@@ -52,11 +53,13 @@ MPIS = {"openmpi@2.1.2~vt~cuda fabrics=verbs,pmi ~java schedulers=slurm": "",
         "openmpi@2.1.2~vt+cuda fabrics=verbs,pmi ~java schedulers=slurm": "^cuda@8.0.61",
        "mvapich2@2.2~cuda fabrics=mrail process_managers=slurm": "",
        "mvapich2@2.2+cuda fabrics=mrail process_managers=slurm": "^cuda@8.0.61",
-       "mpich@3.2+hydra+pmi+romio+verbs": ""
+        "mpich@3.2~hydra+pmi+romio+verbs netmod=ofi": "",
+       "intel-parallel-studio@cluster.2017.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune": ""
 }
 for pkg,spec in MPIS.items():
     for compiler in COMPILERS:
-        install("{} %{} {}".format(pkg, compiler, spec))
+        if 'intel-parallel' not in pkg:
+            install("{} %{} {}".format(pkg, compiler, spec))
 
 # Build MPI packages
 mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
@@ -71,9 +74,9 @@ for pkg,specs in mpipkgs.items():
                 if spec == "":
                    concrete_spec = "{} %{} ^{}".format(pkg, compiler, mpi)
                 else:
-                   concrete_spec = "{} %{} ^{} {}".format(pkg, compiler, mpi, spec)
+                   concrete_spec = "{} %{} {} ^{}".format(pkg, compiler, spec, mpi)
                 if check_pass(pkg, compiler, mpi, spec):
-                    install(concrete_spec) 
+                    install(concrete_spec)
 
 # Remove intermediate dependency
 for pkg in ["automake", "autoconf", "bison", "m4", "gperf", "flex", "inputproto", "help2man", "pkg-config", "nasm"]:

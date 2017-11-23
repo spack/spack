@@ -9,6 +9,8 @@ def install(spec):
 
 def check_pass(pkg, compiler, mpi, spec):
     if ('cuda' not in pkg) and ('+cuda' not in mpi): return True
+    if ('+cuda' not in pkg) and ('+cuda' in mpi): return False
     if ('+cuda' in pkg) and ('~cuda' in mpi): return False
     if ('~cuda' in pkg) and ('+cuda' in mpi): return False
+    if ('intel-parallel' in mpi) and ('gcc' in compiler): return False
     return True
