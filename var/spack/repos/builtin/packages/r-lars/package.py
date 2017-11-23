@@ -22,32 +22,18 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install r-lars
-#
-# You can edit this file again by typing:
-#
-#     spack edit r-lars
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
 class RLars(RPackage):
-    """Efficient procedures for fitting an entire lasso sequence with the cost 
+    """Efficient procedures for fitting an entire lasso sequence with the cost
     of a single least squares fit."""
 
     homepage = "https://cran.r-project.org/web/packages/lars/index.html"
     url      = "https://cran.r-project.org/src/contrib/lars_1.2.tar.gz"
     list_url = "https://cran.rstudio.com/src/contrib/Archive/lars"
 
+    depends_on('r@3.4.0:3.4.9')
     version('1.2',   '2571bae325f6cba1ad0202ea61695b8c')
     version('1.1',   'e94f6902aade09b13ec25ba2381384e5')
     version('0.9-8', 'e6f9fffab2d83898f6d3d811f04d177f')
