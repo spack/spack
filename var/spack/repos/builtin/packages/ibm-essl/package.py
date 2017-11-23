@@ -31,6 +31,8 @@ class IbmEssl(Package):
     homepage = "https://www.ibm.com/systems/power/software/essl/"
     url      = "ibm-essl"
 
+    version('5.5')
+
     variant('ilp64', default=False, description='64 bit integers')
     variant(
         'threads', default='openmp',
@@ -43,43 +45,34 @@ class IbmEssl(Package):
     provides('blas')
     provides('essl')
 
+    conflicts('+cuda', when='+ilp64',
+              msg='ESSL+cuda+ilp64 cannot combine CUDA acceleration'
+              ' 64 bit integers')
+
+    conflicts('+cuda', when='threads=none',
+              msg='ESSL+cuda threads=none cannot combine CUDA acceleration'
+              ' without multithreading support')
+
     @property
     def blas_libs(self):
         spec = self.spec
         prefix = self.prefix
 
-        if spec.satisfies('threads=openmp'):
-            # ESSL SMP support requires XL OpenMP library
-            if '%xl' in spec or '%clang' in spec:
-                if '+ilp64' in spec:
-                    if '+cuda' in spec:
-                        raise InstallError(
-                            "IBM's ESSL does not support 64bit Integers with "
-                            "CUDA acceleration")
-                    else:
-                        essl_lib = ['libesslsmp6464']
-                else:
-                    essl_lib = ['libesslsmp']
-            else:
-                if '+ilp64' in spec:
-                    if '+cuda' in spec:
-                        raise InstallError(
-                            "IBM's ESSL does not support 64bit Integers with "
-                            "CUDA acceleration")
-                    else:
-                        essl_lib = ['libessl6464']
-                else:
-                    essl_lib = ['libessl']
+        if '+ilp64' in spec:
+            essl_lib = ['libessl6464']
         else:
-            if '+ilp64' in spec:
-                if '+cuda' in spec:
-                    raise InstallError(
-                        "IBM's ESSL does not support 64bit Integers with "
-                        "CUDA acceleration")
+            essl_lib = ['libesslasdfasd']
+
+        if spec.satisfies('threads=openmp'):
+            # ESSL SMP support requires XL or Clang OpenMP library
+            if '%xl' in spec or '%xl_r' in spec or '%clang' in spec:
+                if '+ilp64' in spec:
+                    essl_lib = ['libesslsmp6464']
                 else:
-                    essl_lib = ['libessl6464']
-            else:
-                essl_lib = ['libessl']
+                    if '+cuda' in spec:
+                        essl_lib = ['libesslsmpcuda']
+                    else:
+                        essl_lib = ['libesslsmp']
 
         essl_root = prefix.lib64
 
@@ -90,3 +83,6 @@ class IbmEssl(Package):
         )
 
         return essl_libs
+
+    def install(self, spec, prefix):
+        raise InstallError('IBM ESSL is not installable; it is vendor supplied')
