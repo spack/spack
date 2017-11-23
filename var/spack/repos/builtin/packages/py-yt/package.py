@@ -53,7 +53,7 @@ class PyYt(PythonPackage):
             tag="yt-3.0.2", commit="511887af4c995a78fe606e58ce8162c88380ecdc")
     version("2.6.3", hg="https://bitbucket.org/yt_analysis/yt",
             tag="yt-2.6.3", commit="816186f16396a16853810ac9ebcde5057d8d5b1a")
-    version("development", git="https://github.com/yt-project/yt.git",
+    version("develop", git="https://github.com/yt-project/yt.git",
             branch="master")
 
     variant("astropy", default=True, description="enable astropy support")
