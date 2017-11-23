@@ -217,8 +217,6 @@ class CompilerWrapperTest(unittest.TestCase):
         del os.environ['SPACK_CPPFLAGS']
         del os.environ['SPACK_LDFLAGS']
         del os.environ['SPACK_LDLIBS']
-#        os.environ['SPACK_LDFLAGS'] = ''
-#        os.environ['SPACK_LDLIBS'] = ''
 
     def test_dep_rpath(self):
         """Ensure RPATHs for root package are added."""
