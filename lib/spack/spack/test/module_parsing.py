@@ -185,6 +185,26 @@ def test_get_module_cmd_from_bash_parens(backup_restore_env, tmpdir):
     assert module_cmd_list == 'fill python list\n'
 
 
+def test_get_module_cmd_from_bash_with_shell_var(backup_restore_env, tmpdir):
+    bash_function = 'eval `$ECHO bash $*`'
+    export_bash_function('module', bash_function)
+
+    create_bash_with_custom_init(tmpdir)
+
+    with pytest.raises(ModuleError) as e:
+        get_module_cmd_from_bash()
+    assert \
+        'Failed to create executable based on shell function \'module\'.' == \
+        e.value.message
+
+    create_bash_with_custom_init(tmpdir, 'ECHO=echo')
+
+    module_cmd = get_module_cmd_from_bash()
+    module_cmd_list = module_cmd('list', output=str, error=str)
+
+    assert module_cmd_list == 'python list\n'
+
+
 def test_get_module_cmd_fails(backup_restore_env, tmpdir):
     unset_bash_function('module')
 
