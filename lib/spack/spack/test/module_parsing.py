@@ -238,3 +238,39 @@ def test_get_module_cmd_from_which(backup_restore_env, tmpdir):
     module_cmd_list = module_cmd('list', output=str, error=str)
 
     assert module_cmd_list == 'python list\n'
+
+
+def test_old_tcl_module(backup_restore_env, tmpdir):
+    # Hide bash shell function.
+    unset_bash_function('module')
+    create_bash_with_custom_init(tmpdir)
+
+    os.environ['PATH'] = str(tmpdir) + ':' + os.environ['PATH']
+
+    def create_command(version):
+        f = tmpdir.join('modulecmd')
+        f.write('#!/bin/bash\n'
+            'if [ $# -eq 1 -a "$1" = \'python\' ]; then\n'
+            '  cat >&2 << \'EOF\'\n'
+            'Modules Release Tcl ' + version + ' '
+            '($RCSfile: modulecmd.tcl,v $ $Revision: 1.121 $)\n'
+            '        Copyright GNU GPL v2 1991\n'
+            'Usage: module [ command ]\n'
+            'EOF\n'
+            '  exit\n'
+            'elif [ $# -eq 3 -a "$1" = \'python\' ]; then\n'
+            '  echo -n "exec \'modulescript_12345_00\'"\n'
+            'fi')
+        f.chmod(0o770)
+
+    # The script must be modified.
+    create_command('3.3.0')
+    module_cmd = get_module_cmd()
+    script = module_cmd('load', 'mod', output=str)
+    assert script == 'exec(open(\'modulescript_12345_00\').read())'
+
+    # The script must not be modified.
+    create_command('4.0.0')
+    module_cmd = get_module_cmd()
+    script = module_cmd('load', 'mod', output=str)
+    assert script == 'exec \'modulescript_12345_00\''
