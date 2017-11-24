@@ -39,11 +39,16 @@ nonmpipkgs = {"python@2.7.14": [""],
               "r@3.4.1+external-lapack": ["^openblas threads=openmp", "^intel-parallel-studio+mkl"],
               "octave+qt@4.2.1": ["^openblas threads=openmp"],
               "fftw@3.3.6-pl2~mpi+openmp": [""],
+              # "fftw@2.1.5~mpi+openmp": [""],
               "eigen~fftw~metis~scotch~suitesparse@3.3.3": [""],
               "opencv+core+eigen+imgproc+openmp+jpeg+png+tiff@3.3.0": ["^eigen~fftw~metis~scotch~suitesparse@3.3.3"],
               "gsl@1.16": [""],
               "gsl@2.4": [""],
-              "glib@2.53.1": [""]
+              "glib@2.53.1": [""],
+              "gmp@6.1.2": [""],
+              "ffmpeg@3.2.4": [""],
+              "bamtools@2.4.1": [""],
+              "bcftools@1.6": [""],
 }
 for pkg,specs in nonmpipkgs.items():
     for spec in specs:
@@ -66,9 +71,10 @@ for pkg,spec in MPIS.items():
 
 # Build MPI packages
 mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
-    "gromacs+mpi~cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
-    "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@8.0.61"],
-    "scotch+mpi@6.0.4": [""]
+           # "fftw@2.1.5+mpi+openmp": [""],
+           "gromacs+mpi~cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
+           "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@8.0.61"]
+           # "scotch+mpi@6.0.4": [""]
 }
 for pkg,specs in mpipkgs.items():
     for spec in specs:
