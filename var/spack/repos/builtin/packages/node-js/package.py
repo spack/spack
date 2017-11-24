@@ -46,7 +46,7 @@ class NodeJs(Package):
     variant('zlib', default=True,  description='Build with Spacks zlib instead of the bundled version')
 
     depends_on('libtool', type='build', when=sys.platform != 'darwin')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('python@2.7:2.8', type='build')
     # depends_on('bash-completion', when="+bash-completion")
     depends_on('icu4c', when='+icu4c')

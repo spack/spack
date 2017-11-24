@@ -33,7 +33,7 @@ class PyQtconsole(PythonPackage):
 
     version('4.2.1', 'c08ebebc7a60629ebadf685361ca0798')
 
-    variant('docs', default=False, description='Build documentation')
+    variant('doc', default=False, description='Build documentation')
 
     depends_on('py-setuptools',          type='build')
     depends_on('py-ipykernel@4.1:',      type=('build', 'run'))

@@ -34,7 +34,7 @@ class PyElephant(PythonPackage):
 
     version('0.3.0', '84e69e6628fd617af469780c30d2da6c')
 
-    variant('docs', default=False, description='Build the documentation')
+    variant('doc', default=False, description='Build the documentation')
     variant('pandas', default=True, description='Build with pandas')
 
     depends_on('py-setuptools',         type='build')

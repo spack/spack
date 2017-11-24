@@ -49,7 +49,7 @@ class Libemos(CMakePackage):
     depends_on('grib-api', when='grib=grib-api')
     depends_on('fftw+float+double')
     depends_on('cmake@2.8.11:', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     conflicts('grib=eccodes', when='@:4.4.1',
               msg='Eccodes is supported starting version 4.4.2')
