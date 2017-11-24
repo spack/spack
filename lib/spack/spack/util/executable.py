@@ -42,6 +42,7 @@ class Executable(object):
         self.exe = name.split(' ')
         self.default_env = {}
         self.returncode = None
+        self.post_processor = None
 
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
@@ -183,11 +184,15 @@ class Executable(object):
                                    proc.returncode, cmd_line)
 
             if output is str or error is str:
+                out_str = to_str(out) if out else None
+                err_str = to_str(err) if err else None
+                if self.post_processor:
+                    out_str, err_str = self.post_processor(out_str, err_str)
                 result = ''
-                if output is str:
-                    result += to_str(out)
-                if error is str:
-                    result += to_str(err)
+                if out_str:
+                    result += out_str
+                if err_str:
+                    result += err_str
                 return result
 
         except OSError as e:
