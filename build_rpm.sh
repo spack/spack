@@ -40,7 +40,10 @@ nonmpipkgs = {"python@2.7.14": [""],
               "octave+qt@4.2.1": ["^openblas threads=openmp"],
               "fftw@3.3.6-pl2~mpi+openmp": [""],
               "eigen~fftw~metis~scotch~suitesparse@3.3.3": [""],
-              "opencv+core+eigen+imgproc+openmp+jpeg+png+tiff@3.3.0": ["^eigen~fftw~metis~scotch~suitesparse@3.3.3"]
+              "opencv+core+eigen+imgproc+openmp+jpeg+png+tiff@3.3.0": ["^eigen~fftw~metis~scotch~suitesparse@3.3.3"],
+              "gsl@1.16": [""],
+              "gsl@2.4": [""],
+              "glib@2.53.1": [""]
 }
 for pkg,specs in nonmpipkgs.items():
     for spec in specs:
