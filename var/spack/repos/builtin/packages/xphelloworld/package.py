@@ -44,5 +44,5 @@ class Xphelloworld(AutotoolsPackage):
     # It looks like xprint support was removed from libxaw at some point.
     # But even the oldest version of libxaw doesn't build libxaw8.
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

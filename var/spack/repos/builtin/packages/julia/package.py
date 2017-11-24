@@ -66,7 +66,7 @@ class Julia(Package):
     # Build-time dependencies:
     # depends_on("awk")
     depends_on("m4", type="build")
-    # depends_on("pkg-config")
+    # depends_on("pkgconfig")
 
     # Combined build-time and run-time dependencies:
     # (Yes, these are run-time dependencies used by Julia's package manager.)

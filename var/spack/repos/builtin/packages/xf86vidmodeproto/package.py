@@ -36,5 +36,5 @@ class Xf86vidmodeproto(AutotoolsPackage):
 
     version('2.3.1', '99016d0fe355bae0bb23ce00fb4d4a2c')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
