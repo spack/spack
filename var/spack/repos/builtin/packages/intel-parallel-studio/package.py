@@ -98,6 +98,10 @@ class IntelParallelStudio(IntelPackage):
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
     version('composer.2015.6',      'da9f8600c18d43d58fba0488844f79c9',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
+    version('professional.2015.1', '542b78c86beff9d7b01076a7be9c6ddc',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
+    version('cluster.2015.1',      '542b78c86beff9d7b01076a7be9c6ddc',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
     version('composer.2015.1',      '85beae681ae56411a8e791a7c44a5c0a',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4933/l_compxe_2015.1.133.tgz')
 
@@ -409,7 +413,9 @@ class IntelParallelStudio(IntelPackage):
     @property
     def arch_required(self):
         # Composer 2015 doesn't support specifying an architecture
-        if self.spec.satisfies('@composer.0:composer.2015.7'):
+        if self.spec.satisfies('@professional.0:professional.2015.7') or \
+            self.spec.satisfies('@cluster.0:cluster.2015.7') or \
+            self.spec.satisfies('@composer.0:composer.2015.7'):
             return False
         else:
             return True
@@ -451,7 +457,9 @@ class IntelParallelStudio(IntelPackage):
         """Newer versions of Intel Parallel Studio have a bug in the
         ``psxevars.sh`` script."""
 
-        if self.spec.satisfies('@composer.0:composer.2015.7'):
+        if self.spec.satisfies('@professional.0:professional.2015.7') or \
+            self.spec.satisfies('@cluster.0:cluster.2015.7') or \
+            self.spec.satisfies('@composer.0:composer.2015.7'):
             return
 
         bindir = glob.glob(join_path(
