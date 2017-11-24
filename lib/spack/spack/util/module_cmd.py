@@ -26,16 +26,17 @@
 This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
-import subprocess
 import re
 import os
+import shlex
+
 import llnl.util.tty as tty
 from spack.util.executable import which
 
 
-def get_module_cmd(bashopts=''):
+def get_module_cmd():
     try:
-        return get_module_cmd_from_bash(bashopts)
+        return get_module_cmd_from_bash()
     except ModuleError:
         # Don't catch the exception this time; we have no other way to do it.
         tty.warn("Could not detect module function from bash."
@@ -63,37 +64,76 @@ def get_module_cmd_from_which():
     return module_cmd
 
 
-def get_module_cmd_from_bash(bashopts=''):
-    # Find how the module function is defined in the environment
-    module_func = os.environ.get('BASH_FUNC_module()', None)
-    if module_func:
-        module_func = os.path.expandvars(module_func)
-    else:
-        module_func_proc = subprocess.Popen(['{0} typeset -f module | '
-                                             'envsubst'.format(bashopts)],
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.STDOUT,
-                                            executable='/bin/bash',
-                                            shell=True)
-        module_func_proc.wait()
-        module_func = module_func_proc.stdout.read()
+def get_module_cmd_from_bash():
+    # Take the first bash from the $PATH
+    bash = which('bash')
+    if bash is None:
+        raise ModuleError('Bash executable not found.')
+
+    # We assume that if the shell function 'module' is available at all, it
+    # should be available at least in the case of the interactive login shell.
+    bash.add_default_arg('-l')
+    bash.add_default_arg('-i')
+
+    # We will call bash to run the scripts from the command line.
+    bash.add_default_arg('-c')
+
+    # Depending on the version, Bash stores shell functions as environment
+    # variables under different names (e.g. BASH_FUNC_module(),
+    # BASH_FUNC_module%%). Thus, we don't check the variables but call
+    # 'typeset -f module' to get the definition of the function.
+    module_func_str = bash('typeset -f module',
+                           output=str,
+                           error=os.devnull,
+                           fail_on_error=False)
+
+    if bash.returncode != 0:
+        raise ModuleError('Bash function \'module\' is not defined.')
+
+    # Bash initialization scripts might define the function 'module' using
+    # shell variables that are not exported. Thus, we export everything.
+    bash_init_vars_str = bash('export $(compgen -v); env --null',
+                              output=str,
+                              error=os.devnull,
+                              fail_on_error=False)
+
+    bash_init_vars_dict = {}
+    if bash_init_vars_str:
+        for var_record in bash_init_vars_str.strip('\0').split('\0'):
+            name_value = var_record.split('=', 1)
+            if len(name_value) == 2:
+                bash_init_vars_dict[name_value[0]] = name_value[1]
+
+    # Expand variables in the function definition.
+    env_bu = os.environ.copy()
+    try:
+        os.environ.clear()
+        os.environ.update(bash_init_vars_dict)
+        module_func_str = os.path.expandvars(module_func_str)
+        module_func_str = os.path.expanduser(module_func_str)
+    except BaseException:
+        raise ModuleError('Failed to expand variables in the definition of '
+                          'bash function \'module\'.')
+    finally:
+        os.environ.clear()
+        os.environ.update(env_bu)
 
     # Find the portion of the module function that is evaluated
     try:
-        find_exec = re.search(r'.*`(.*(:? bash | sh ).*)`.*', module_func)
+        find_exec = re.search(r'.*`(.*(:? bash | sh ).*)`.*', module_func_str)
         exec_line = find_exec.group(1)
     except BaseException:
         try:
             # This will fail with nested parentheses. TODO: expand regex.
             find_exec = re.search(r'.*\(([^()]*(:? bash | sh )[^()]*)\).*',
-                                  module_func)
+                                  module_func_str)
             exec_line = find_exec.group(1)
         except BaseException:
-            raise ModuleError('get_module_cmd cannot '
-                              'determine the module command from bash')
+            raise ModuleError('Failed to determine the module command from '
+                              'bash.')
 
     # Create an executable
-    args = exec_line.split()
+    args = shlex.split(exec_line)
     module_cmd = which(args[0])
     if module_cmd:
         for arg in args[1:]:
@@ -103,14 +143,14 @@ def get_module_cmd_from_bash(bashopts=''):
             else:
                 module_cmd.add_default_arg(arg)
     else:
-        raise ModuleError('Could not create executable based on module'
-                          ' function.')
+        raise ModuleError('Failed to create executable based on shell '
+                          'function \'module\'.')
 
     # Check that the executable works
     module_cmd('list', output=str, error=str, fail_on_error=False)
     if module_cmd.returncode != 0:
-        raise ModuleError('get_module_cmd cannot determine the module command'
-                          'from bash.')
+        raise ModuleError('The module command that was determined from bash '
+                          'doesn\'t work as expected.')
 
     return module_cmd
 
