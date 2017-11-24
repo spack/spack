@@ -690,3 +690,20 @@ class MockPackageMultiRepo(object):
         import collections
         Repo = collections.namedtuple('Repo', ['namespace'])
         return Repo('mockrepo')
+
+##########
+# Specs of various kind
+##########
+
+
+@pytest.fixture(
+    params=[
+        'conflict%clang',
+        'conflict%clang+foo',
+        'conflict-parent%clang',
+        'conflict-parent@0.9^conflict~foo'
+    ]
+)
+def conflict_spec(request):
+    """Spec that will raise a conflict during concretization."""
+    return request.param
