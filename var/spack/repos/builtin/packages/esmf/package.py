@@ -69,6 +69,10 @@ class Esmf(MakefilePackage):
     # https://sourceforge.net/p/esmf/esmf/ci/34de0ccf556ba75d35c9687dae5d9f666a1b2a18/
     patch('mvapich2.patch', when='@:7.0.99')
 
+    # Allow different directories for creation and
+    # installation of dynamic libraries on OSX:
+    patch('darwin_dylib_install_name.patch', when='platform=darwin')
+
     # Make script from mvapich2.patch executable
     @run_before('build')
     @when('@:7.0.99')
