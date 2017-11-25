@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-'Spack package specification for the FLiT tool'
 
 from spack import *
 
@@ -49,20 +48,12 @@ class Flit(MakefilePackage):
     depends_on('py-toml', type='run')
 
     def build(self, spec, prefix):
-        'Build instructions based on the version'
-        if self.version >= Version('2.0'):
-            args = self.build_targets[:]
-            make(*args)
-        else:
-            # FIXME: build the old FLiT
-            raise NotImplementedError('Only can build version 2.0 and up')
+        """Build instructions based on the version"""
+        args = self.build_targets[:]
+        make(*args)
 
     def install(self, spec, prefix):
-        'Install instructions based on the version'
-        if self.version >= Version('2.0'):
-            args = self.install_targets[:]
-            args.append('PREFIX=%s' % prefix)
-            make(*args, parallel=False)
-        else:
-            # FIXME: install the old FLiT
-            raise NotImplementedError('Only can install version 2.0 and up')
+        """Install instructions based on the version"""
+        args = self.install_targets[:]
+        args.append('PREFIX=%s' % prefix)
+        make(*args, parallel=False)

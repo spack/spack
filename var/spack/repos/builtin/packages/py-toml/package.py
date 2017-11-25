@@ -22,34 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-toml
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-toml
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
 class PyToml(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """A Python library for parsing and creating TOML configuration files.
+    For more information on the TOML standard, see
+    https://github.com/toml-lang/toml.git"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://github.com/uiri/toml.git"
     url      = "https://github.com/uiri/toml/archive/0.9.3.tar.gz"
 
     version('0.9.3', '58e3023a17509dcf4f50581bfc70ff23')
 
-    # Add dependencies
     depends_on('py-setuptools', type='build')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
 
