@@ -99,7 +99,7 @@ class Octave(AutotoolsPackage):
     depends_on('qhull',        when='+qhull')
     depends_on('qrupdate',     when='+qrupdate')
     # depends_on('qscintilla',  when='+qscintilla) # TODO: add package
-    depends_on('qt',           when='+qt')
+    depends_on('qt+opengl',    when='+qt')
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('zlib',         when='+zlib')
 
