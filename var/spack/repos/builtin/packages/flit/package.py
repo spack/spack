@@ -51,4 +51,4 @@ class Flit(MakefilePackage):
         """Install instructions based on the version"""
         args = self.install_targets[:]
         args.append('PREFIX=%s' % prefix)
-        make(*args, parallel=False)
+        make(*args)
