@@ -57,7 +57,7 @@ class Pocl(CMakePackage):
 
     depends_on("cmake @2.8.12:", type="build")
     depends_on("hwloc")
-    depends_on("libtool", type=("build", "run"))
+    depends_on("libtool", type=("build", "link", "run"))
     # We don't request LLVM's shared libraries because these are not
     # enabled by default, and also because they fail to build for us
     # (see #1616)
