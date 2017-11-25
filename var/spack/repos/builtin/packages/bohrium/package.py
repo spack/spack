@@ -96,10 +96,10 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on('blas', when="+blas")
 
     # Make sure an appropriate opencv is used
-    depends_on('opencv', when="+opencv")
-    depends_on('opencv+cuda', when="+opencv+cuda")
-    depends_on('opencv+openmp', when="+opencv+openmp")
-    depends_on('opencv+openmp+cuda', when="+opencv+openmp+cuda")
+    depends_on('opencv+imgproc', when="+opencv")
+    depends_on('opencv+imgproc+cuda', when="+opencv+cuda")
+    depends_on('opencv+imgproc+openmp', when="+opencv+openmp")
+    depends_on('opencv+imgproc+openmp+cuda', when="+opencv+openmp+cuda")
 
     depends_on('python', type="build", when="~python")
     depends_on('python', when="+python")
@@ -177,7 +177,7 @@ class Bohrium(CMakePackage, CudaPackage):
             args += [
                 "-DEXT_BLAS=ON",
                 "-DCBLAS_FOUND=True",
-                "-DCBLAS_LIBRARIES=" + ";".join(spec["blas"].libs),
+                "-DCBLAS_LIBRARIES=" + spec["blas"].libs.joined(";"),
                 "-DCBLAS_INCLUDES=" + spec["blas"].prefix.include,
             ]
         else:
@@ -187,7 +187,7 @@ class Bohrium(CMakePackage, CudaPackage):
             args += [
                 "-DEXT_LAPACK=ON",
                 "-DLAPACKE_FOUND=True",
-                "-DLAPACKE_LIBRARIES=" + ";".join(spec["lapack"].libs),
+                "-DLAPACKE_LIBRARIES=" + spec["lapack"].libs.joined(";"),
                 "-DLAPACKE_INCLUDE_DIR=" + spec["lapack"].prefix.include,
             ]
         else:
@@ -198,7 +198,7 @@ class Bohrium(CMakePackage, CudaPackage):
                 "-DEXT_OPENCV=ON",
                 "-DOpenCV_FOUND=True",
                 "-DOpenCV_INCLUDE_DIRS=" + spec["opencv"].prefix.include,
-                "-DOpenCV_LIBS=" + ";".join(spec["opencv"].prefix.libs),
+                "-DOpenCV_LIBS=" + spec["opencv"].libs.joined(";"),
             ]
         else:
             args += ["-DEXT_OPENCV=OFF", "-DOpenCV_FOUND=False"]
