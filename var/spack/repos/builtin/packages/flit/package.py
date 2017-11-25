@@ -47,8 +47,6 @@ class Flit(MakefilePackage):
     depends_on('py-matplotlib tk=False', type='run')
     depends_on('py-toml', type='run')
 
-    def install(self, spec, prefix):
-        """Install instructions based on the version"""
-        args = self.install_targets[:]
-        args.append('PREFIX=%s' % prefix)
-        make(*args)
+    @property
+    def install_targets(self):
+        return ['install', 'PREFIX=%s' % self.prefix]
