@@ -1,4 +1,3 @@
-# flake8: noqa
 ##############################################################################
 # Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.

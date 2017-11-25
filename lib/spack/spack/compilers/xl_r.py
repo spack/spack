@@ -1,10 +1,9 @@
 ##############################################################################
-# Copyright (c) 2016, International Business Machines Corporation
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Created by Serban Maerean, serban@us.ibm.com based on a similar file,
-# spack/lib/spack/spack/compilers/xl.py, produced by Todd Gamblin,
-# tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/spack/spack
