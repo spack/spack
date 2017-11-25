@@ -39,7 +39,7 @@ class Flit(MakefilePackage):
     # FIXME: fix install and build to handle the old version, which is not
     #        installable
     # version('1.0.0',       '27763c89b044c5e3cfe62dd319a36a2b')
-    conflicts("@:2", msg="Only can build version 2.0 and up")
+    conflicts("@:1.999", msg="Only can build version 2.0 and up")
 
     # Add dependencies
     depends_on('python@3:', type='run')
