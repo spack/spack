@@ -33,7 +33,7 @@ class Harfbuzz(AutotoolsPackage):
     version('1.4.6', '21a78b81cd20cbffdb04b59ac7edfb410e42141869f637ae1d6778e74928d293')
     version('0.9.37', 'bfe733250e34629a188d82e3b971bc1e')
 
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("glib")
     depends_on("icu4c")
     depends_on("freetype")

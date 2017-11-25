@@ -47,7 +47,7 @@ class Ipopt(Package):
 
     depends_on("blas")
     depends_on("lapack")
-    depends_on("pkg-config", type='build')
+    depends_on("pkgconfig", type='build')
     depends_on("mumps+double~mpi")
     depends_on('coinhsl', when='+coinhsl')
     depends_on('metis@4.0:4.999', when='+metis')

@@ -64,7 +64,7 @@ class Slurm(AutotoolsPackage):
     depends_on('lz4')
     depends_on('munge')
     depends_on('openssl')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('readline')
     depends_on('zlib')
 

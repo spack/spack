@@ -45,7 +45,7 @@ class Cairo(AutotoolsPackage):
     depends_on("glib")
     depends_on("pixman")
     depends_on("freetype")
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("fontconfig@2.10.91:")  # Require newer version of fontconfig.
 
     def configure_args(self):
