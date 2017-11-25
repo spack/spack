@@ -1,10 +1,10 @@
 #include <bhxx/bhxx.hpp>
 
 int main() {
-    const size_t n = 3;
-    bhxx::BhArray<double> a({n});
-    bhxx::BhArray<double> b({n});
-    bhxx::BhArray<double> c({n});
+    const size_t dim = 3;
+    bhxx::BhArray<double> a({dim});
+    bhxx::BhArray<double> b({dim});
+    bhxx::BhArray<double> c({dim});
 
     bhxx::identity(a, 1);
     bhxx::identity(b, 2);
@@ -13,7 +13,7 @@ int main() {
     bhxx::Runtime::instance().sync(c.base);
     bhxx::Runtime::instance().flush();
 
-    for (auto it = c.data(); it < c.data() + n; ++it) {
+    for (auto it = c.data(); it < c.data() + dim; ++it) {
         if (*it != 3) {
             std::cout << "Failure, values not as expected." << std::endl;
             return 1;
