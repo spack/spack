@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 from spack.build_systems.cuda import CudaPackage
+from spack import *
+import os
 
 
 class Bohrium(CMakePackage, CudaPackage):
@@ -63,12 +64,15 @@ class Bohrium(CMakePackage, CudaPackage):
             description="Build with BLAS extension methods")
     variant('lapack', default=True,
             description="Build with LAPACK extension methods")
+    variant('opencv', default=True,
+            description="Build with OpenCV extension methods")
 
     #
     # Conflicts and extensions
     #
     conflicts('%intel')
     conflicts('%clang@:3.5')
+    conflicts('%gcc@:4.7')
     extends('python', when="+python")
 
     # Bohrium needs at least one vector engine and
@@ -88,8 +92,14 @@ class Bohrium(CMakePackage, CudaPackage):
     # NOTE The lapacke interface and hence netlib-lapack
     #      is the strictly required lapack provider
     #      for bohrium right now.
-    depends_on("netlib-lapack+lapacke", when="+lapack")
-    depends_on("blas", when="+blas")
+    depends_on('netlib-lapack+lapacke', when="+lapack")
+    depends_on('blas', when="+blas")
+
+    # Make sure an appropriate opencv is used
+    depends_on('opencv', when="+opencv")
+    depends_on('opencv+cuda', when="+opencv+cuda")
+    depends_on('opencv+openmp', when="+opencv+openmp")
+    depends_on('opencv+openmp+cuda', when="+opencv+openmp+cuda")
 
     depends_on('python', type="build", when="~python")
     depends_on('python', when="+python")
@@ -99,12 +109,18 @@ class Bohrium(CMakePackage, CudaPackage):
 
     depends_on('zlib', when="+proxy")
 
+    @property
+    def config_file(self):
+        """Return the path of the Bohrium system-wide configuration file"""
+        return join_path(self.prefix.etc.bohrium, "config.ini")
+
     #
     # Settings and cmake cache
     #
     def cmake_args(self):
         spec = self.spec
 
+        # Sanity check
         cuda_arch = spec.variants['cuda_arch'].value
         if "+cuda" in spec and len(cuda_arch) >= 1 and cuda_arch[0]:
             # TODO Add cuda_arch support to Bohrium once the basic setup
@@ -114,21 +130,21 @@ class Bohrium(CMakePackage, CudaPackage):
             )
 
         args = [
+            # Choose a particular python version
             "-DPYTHON_EXECUTABLE:FILEPATH=" + spec['python'].command.path,
+            #
             # Hard-disable Jupyter, since this would override a config
             # file in the user's home directory in some cases during
             # the configuration stage.
             "-DJUPYTER_FOUND=FALSE",
             "-DJUPYTER_EXECUTABLE=FALSE",
             #
+            # Force the configuration file to appear at a sensible place
+            "-DFORCE_CONFIG_PATH=" + os.path.dirname(self.config_file),
+            #
             # Vector engine managers
             "-DVEM_NODE=" + str("+node" in spec),
             "-DVEM_PROXY=" + str("+proxy" in spec),
-            #
-            # Vector engines
-            "-DVE_OPENMP=" + str("+openmp" in spec),
-            "-DVE_OPENCL=" + str("+opencl" in spec),
-            "-DVE_CUDA=" + str("+cuda" in spec),
             #
             # Bridges and interfaces
             "-DBRIDGE_BHXX=ON",
@@ -136,6 +152,23 @@ class Bohrium(CMakePackage, CudaPackage):
             "-DBRIDGE_NPBACKEND=" + str("+python" in spec),
             "-DNO_PYTHON3=ON",  # Only build python version we provide
         ]
+
+        #
+        # Vector engines
+        #
+        args += [
+            "-DVE_OPENCL=" + str("+opencl" in spec),
+            "-DVE_CUDA=" + str("+cuda" in spec),
+        ]
+
+        if "+openmp" in spec:
+            args += [
+                "-DVE_OPENMP=ON",
+                "-DOPENMP_FOUND=True",
+                "-DVE_OPENMP_COMPILER_CMD=" + self.compiler.cc,
+            ]
+        else:
+            args += ["-DVE_OPENMP=OFF", "-DOPENMP_FOUND=False"]
 
         #
         # Extension methods
@@ -160,17 +193,23 @@ class Bohrium(CMakePackage, CudaPackage):
         else:
             args += ["-DEXT_LAPACK=OFF", "-DLAPACKE_FOUND=False"]
 
-        # TODO Other extension methods are not ready yet, because of missing
-        #      packages or because they are untested, so disable in order
-        #      to prevent their setup:
-        args += [
-            "-DEXT_LAPACK=" + str("+lapack" in spec),
-            "-DEXT_CLBLAS=OFF",      # clBLAS not in Spack yet
-            "-DEXT_TDMA=OFF",        # untested
-            "-DEXT_VISUALIZER=OFF",  # untested
-            "-DEXT_OPENCV=OFF",      # untested
-        ]
+        if "+opencv" in spec:
+            args += [
+                "-DEXT_OPENCV=ON",
+                "-DOpenCV_FOUND=True",
+                "-DOpenCV_INCLUDE_DIRS=" + spec["opencv"].prefix.include,
+                "-DOpenCV_LIBS=" + ";".join(spec["opencv"].prefix.libs),
+            ]
+        else:
+            args += ["-DEXT_OPENCV=OFF", "-DOpenCV_FOUND=False"]
 
+        # TODO Other extension methods are not ready yet,
+        #      because of missing packages in Spack
+        args += [
+            "-DEXT_CLBLAS=OFF",      # clBLAS missing
+            # Bohrium visualizer extension method
+            "-DEXT_VISUALIZER=OFF",  # freeglut missing
+        ]
         return args
 
     #
@@ -180,3 +219,4 @@ class Bohrium(CMakePackage, CudaPackage):
         # Bohrium needs an extra include dir apart from
         # the self.prefix.include dir
         run_env.prepend_path("CPATH", self.prefix.include.bohrium)
+        run_env.set("BH_CONFIG", self.config_file)
