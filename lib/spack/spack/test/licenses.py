@@ -43,8 +43,8 @@ def check_license(filepath):
         return f.read().startswith(license)
 
 
-def test_check_licenses():
-    """Check the licenses in all packages"""
+def test_check_licenses_lib():
+    """Check the licenses in all spack files"""
     spack_lib_root = os.path.dirname(inspect.getfile(spack))
     failed_licenses = []
     for root, _, filenames in os.walk(spack_lib_root):
@@ -53,6 +53,18 @@ def test_check_licenses():
                 filepath = os.path.join(root, filename)
                 if not check_license(filepath):
                     failed_licenses.append(filepath)
+    for fl in failed_licenses:
+        tty.msg("{0:} has a changed license, compared to {1:}"
+                "".format(fl, thisfile))
+    assert failed_licenses == []
+
+
+def test_check_licenses_package():
+    """Check the licenses in all packages"""
+    failed_licenses = []
+    for name in spack.repo.all_package_names():
+        if not check_license(spack.repo.filename_for_package_name(name)):
+            failed_licenses.append(spack.repo.filename_for_package_name(name))
     for fl in failed_licenses:
         tty.msg("{0:} has a changed license, compared to {1:}"
                 "".format(fl, thisfile))
