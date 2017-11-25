@@ -51,11 +51,13 @@ class Libcint(CMakePackage):
     #
     # Dependencies and conflicts
     #
-    conflicts('+test~shared')
     depends_on('cmake@2.6:', type="build")
     depends_on('blas')
     depends_on('python', type=("build", "test"), when="+test")
     depends_on('py-numpy', type=("build", "test"), when="+test")
+
+    # Libcint tests only work with a shared libcint library
+    conflicts('+test~shared')
 
     #
     # Settings and cmake cache
