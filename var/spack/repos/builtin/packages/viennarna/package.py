@@ -55,7 +55,8 @@ class Viennarna(AutotoolsPackage):
         args = self.enable_or_disable('sse')
         args += self.with_or_without('python')
         args += self.with_or_without('perl')
-        args.append('--without-swig', when='@2.4.3')
+        if self.spec.satisfies('@2.4.3:'):
+            args.append('--without-swig')
 
         if 'python@3:' in self.spec:
             args.append('--with-python3')
