@@ -43,17 +43,13 @@ class Gapbs(MakefilePackage):
 
     variant('serial', default=False, description='Version with no parallelism')
 
-    def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter(r'-std=c\+\+11', self.compiler.cxx11_flag)
-
     def build(self, spec, prefix):
-        options = ['PAR_FLAG=' + self.compiler.openmp_flag]
+        cxx_flags = ['-O3', self.compiler.cxx11_flag]
 
-        if '+serial' in spec:
-            options.append("SERIAL=1")
+        if '-serial' in spec:
+            cxx_flags.append(self.compiler.openmp_flag)
 
-        make(*options)
+        make('CXX_FLAGS=' + ' '.join(cxx_flags))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
