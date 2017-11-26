@@ -75,6 +75,7 @@ mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
            # "fftw@2.1.5+mpi+openmp": [""],
            "gromacs+mpi~cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
            "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@8.0.61"]
+           "hpl@2.2": ["^openblas threads=openmp"]
            # "scotch+mpi@6.0.4": [""]
 }
 for pkg,specs in mpipkgs.items():
