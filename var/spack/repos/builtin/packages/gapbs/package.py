@@ -46,11 +46,9 @@ class Gapbs(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
         makefile.filter(r'-std=c\+\+11', self.compiler.cxx11_flag)
-        makefile.filter('PAR_FLAG =.*',
-                        'PAR_FLAG=' + self.compiler.openmp_flag)
 
     def build(self, spec, prefix):
-        options = []
+        options = ['PAR_FLAG=' + self.compiler.openmp_flag]
 
         if '+serial' in spec:
             options.append("SERIAL=1")
