@@ -40,5 +40,5 @@ class Libxrandr(AutotoolsPackage):
     depends_on('randrproto@1.5:', type='build')
     depends_on('xextproto', type='build')
     depends_on('renderproto', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

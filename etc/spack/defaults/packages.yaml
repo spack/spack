@@ -31,6 +31,7 @@ packages:
       opencl: [pocl]
       openfoam: [openfoam-com, openfoam-org, foam-extend]
       pil: [py-pillow]
+      pkgconfig: [pkgconf, pkg-config]
       scalapack: [netlib-scalapack]
       szip: [libszip, libaec]
       tbb: [intel-tbb]

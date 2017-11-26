@@ -40,7 +40,7 @@ class Mozjs(AutotoolsPackage):
             url="http://ftp.mozilla.org/pub/js/js185-1.0.0.tar.gz")
 
     depends_on('perl@5.6:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('python@2.7.3:2.8', type='build')
     depends_on('nspr', when='@:27')
     depends_on('libffi@3.0.9:')

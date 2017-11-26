@@ -44,7 +44,7 @@ class Emacs(AutotoolsPackage):
         description="Select an X toolkit (gtk, athena)"
     )
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on('ncurses')
     depends_on('zlib')

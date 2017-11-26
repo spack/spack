@@ -34,6 +34,7 @@ class NodeJs(Package):
     homepage = "https://nodejs.org/"
     url      = "https://nodejs.org/download/release/v6.3.0/node-v6.3.0.tar.gz"
 
+    version('8.9.1', '7482b2523f72000d1b6060c38945026b')
     version('7.1.0', '1db5df2cb025f9c70e83d9cf21c4266a')
     version('6.3.0', '8c14e5c89d66d4d060c91b3ba15dfd31')
     version('6.2.2', '1120e8bf191fdaee42206d031935210d')
@@ -46,7 +47,7 @@ class NodeJs(Package):
     variant('zlib', default=True,  description='Build with Spacks zlib instead of the bundled version')
 
     depends_on('libtool', type='build', when=sys.platform != 'darwin')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('python@2.7:2.8', type='build')
     # depends_on('bash-completion', when="+bash-completion")
     depends_on('icu4c', when='+icu4c')

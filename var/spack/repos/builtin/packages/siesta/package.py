@@ -35,10 +35,14 @@ class Siesta(Package):
 
     version('4.0.1', '5cb60ce068f2f6e84fa9184ffca94c08')
 
+    patch('configure.patch')
+
     depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
     depends_on('scalapack')
+    depends_on('netcdf')
+    depends_on('netcdf-fortran')
 
     phases = ['configure', 'build', 'install']
 
@@ -53,6 +57,8 @@ class Siesta(Package):
                           '--with-blacs=%s' % (spec['scalapack'].libs +
                                                spec['blas'].libs),
                           '--with-scalapack=%s' % spec['scalapack'].libs,
+                          '--with-netcdf=%s' % (spec['netcdf-fortran'].libs +
+                                                spec['netcdf'].libs),
                           # need to specify MPIFC explicitly below, otherwise
                           # Intel's mpiifort is not found
                           'MPIFC=%s' % spec['mpi'].mpifc

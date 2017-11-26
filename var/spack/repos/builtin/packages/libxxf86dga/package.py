@@ -39,5 +39,5 @@ class Libxxf86dga(AutotoolsPackage):
     depends_on('xproto', type='build')
     depends_on('xextproto', type='build')
     depends_on('xf86dgaproto@2.0.99.2:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
