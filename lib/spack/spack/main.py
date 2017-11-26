@@ -226,7 +226,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # epilog
         formatter.add_text("""\
 {help}:
-  spack help -a          list all available commands
+  spack help --all       list all available commands
   spack help <command>   help on a specific command
   spack help --spec      help on the spec syntax
   spack docs             open http://spack.rtfd.io/ in a browser"""
