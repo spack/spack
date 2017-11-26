@@ -25,22 +25,14 @@
 from spack import *
 
 
-class PyPylint(PythonPackage):
-    """array processing for numbers, strings, records, and objects."""
-    homepage = "https://pypi.python.org/pypi/pylint"
-    url      = "https://pypi.io/packages/source/p/pylint/pylint-1.7.2.tar.gz"
+class PyTraceback2(PythonPackage):
+    """Backports of the traceback module"""
 
-    version('1.7.2', '27ee752cdcfacb05bf4940947e6b35c6')
-    version('1.4.3', '5924c1c7ca5ca23647812f5971d0ea44')
-    version('1.4.1', 'df7c679bdcce5019389038847e4de622')
+    homepage = "https://github.com/testing-cabal/traceback2"
+    url      = "https://pypi.io/packages/source/t/traceback2/traceback2-1.4.0.tar.gz"
 
-    extends('python', ignore=r'bin/pytest')
-    depends_on('py-six', type=('build', 'run'))
-    depends_on('py-astroid', type=('build', 'run'))
-    depends_on('py-logilab-common', type=('build', 'run'))
-    depends_on('py-pytest-runner', type=('build', 'run'))
+    version('1.4.0', '9e9723f4d70bfc6308fa992dd193c400')
+
     depends_on('py-setuptools', type='build')
-    depends_on('py-setuptools-scm@1.15.0:', type='build')
-
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
+    depends_on('py-linecache2', type=('build', 'run'))
+    depends_on('py-pbr', type=('build', 'run'))
