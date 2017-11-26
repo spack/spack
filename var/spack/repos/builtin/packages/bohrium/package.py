@@ -259,18 +259,18 @@ class Bohrium(CMakePackage, CudaPackage):
             stacks.append("opencl")
 
         # C++ compiler and compiler flags
-        cpp = which("c++")
-        cpp_flags = ["-I", self.prefix.include,
+        cxx = Executable(self.compiler.cxx)
+        cxx_flags = ["-I", self.prefix.include,
                      "-I", self.prefix.include.bohrium,
                      "-L", self.prefix.lib, "-lbh", "-lbhxx"]
 
-        # Compile C++ check program
-        file_cppadd = join_path(os.path.dirname(self.module.__file__),
-                                "cppadd.cpp")
-        cpp("-o", "test_cppadd", file_cppadd, *cpp_flags)
-        test_cppadd = Executable("./test_cppadd")
+        # Compile C++ test program
+        file_cxxadd = join_path(os.path.dirname(self.module.__file__),
+                                "cxxadd.cpp")
+        cxx("-o", "test_cxxadd", file_cxxadd, *cxx_flags)
+        test_cxxadd = Executable("./test_cxxadd")
 
-        # Build python test executable
+        # Build python test commandline
         file_pyadd = join_path(os.path.dirname(self.module.__file__),
                                "pyadd.py")
         test_pyadd = Executable(spec['python'].command.path + " " + file_pyadd)
@@ -280,7 +280,7 @@ class Bohrium(CMakePackage, CudaPackage):
             tty.info("Testing with bohrium stack '" + bh_stack + "'")
             test_env["BH_STACK"] = bh_stack
 
-            cpp_output = test_cppadd(output=str, env=test_env)
+            cpp_output = test_cxxadd(output=str, env=test_env)
             compare_output(cpp_output, "Success!\n")
 
             # Python test (if +python)
