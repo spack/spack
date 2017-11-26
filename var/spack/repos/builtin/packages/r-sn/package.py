@@ -25,22 +25,22 @@
 from spack import *
 
 
-class PyPylint(PythonPackage):
-    """array processing for numbers, strings, records, and objects."""
-    homepage = "https://pypi.python.org/pypi/pylint"
-    url      = "https://pypi.io/packages/source/p/pylint/pylint-1.7.2.tar.gz"
+class RSn(RPackage):
+    """Build and manipulate probability distributions of the skew-normal
+    family and some related ones, notably the skew-t family, and provide
+    related statistical methods for data fitting and diagnostics, in the
+    univariate and the multivariate case."""
 
-    version('1.7.2', '27ee752cdcfacb05bf4940947e6b35c6')
-    version('1.4.3', '5924c1c7ca5ca23647812f5971d0ea44')
-    version('1.4.1', 'df7c679bdcce5019389038847e4de622')
+    homepage = "https://cran.r-project.org/web/packages/sn/index.html"
+    url      = "https://cran.r-project.org/src/contrib/sn_1.5-0.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/sn"
 
-    extends('python', ignore=r'bin/pytest')
-    depends_on('py-six', type=('build', 'run'))
-    depends_on('py-astroid', type=('build', 'run'))
-    depends_on('py-logilab-common', type=('build', 'run'))
-    depends_on('py-pytest-runner', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('py-setuptools-scm@1.15.0:', type='build')
+    version('1.5-0', 'a3349773be950199d7f4c17954be56d1')
+    version('1.4-0', 'cfa604317ea54224b06abd1cec179375')
+    version('1.3-0', '84d02ba2ab5ca6f3644626013e7ce36d')
+    version('1.2-4', 'bf3a47b05016326e910fdb4cc4967e4d')
+    version('1.2-3', '290ae511d974a6beb4c3c79c0106858f')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose', type='test')
+    depends_on('r@3.4.0:3.4.9')
+    depends_on('r-mnormt', type=('build', 'run'))
+    depends_on('r-numderiv', type=('build', 'run'))
