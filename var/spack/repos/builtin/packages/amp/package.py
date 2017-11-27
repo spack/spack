@@ -81,7 +81,6 @@ class Amp(CMakePackage):
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
         ])
-        #    -D CMAKE_BUILD_TYPE=Debug
 
         # #################### Compiler Settings #######################
 
@@ -101,16 +100,19 @@ class Amp(CMakePackage):
                 '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.fc,
                 '-DUSE_MPI=0',
             ])
-        # -D FFLAGS="-fPIC"                               \
-        # -D CFLAGS="-fPIC"                               \
-        # -D CXXFLAGS="-fPIC"                             \
-        # -D LDFLAGS=""
 
         # ################## Third Party Libraries #####################
 
         tpl_list = "LAPACK"
-        options.extend(['-DTPL_LAPACK_INSTALL_DIR=%s' %
-                        spec['lapack'].prefix, ])
+        blas = spec['blas'].libs
+        lapack = spec['lapack'].libs
+        options.extend([
+            '-DTPL_LAPACK_INSTALL_DIR=%s' % spec['lapack'].prefix,
+            '-DTPL_BLAS_LIBRARY_NAMES=%s' % ';'.join(blas.names),
+            '-DTPL_BLAS_LIBRARY_DIRS=%s' % ';'.join(blas.directories),
+            '-DTPL_LAPACK_LIBRARY_NAMES=%s' % ';'.join(lapack.names),
+            '-DTPL_LAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
+        ])
         if '+boost' in spec:
             tpl_list = tpl_list + ";BOOST"
             options.extend(['-DTPL_BOOST_INSTALL_DIR=%s' %
