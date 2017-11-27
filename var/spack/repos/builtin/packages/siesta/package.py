@@ -34,8 +34,9 @@ class Siesta(Package):
     url      = "https://launchpad.net/siesta/4.0/4.0.1/+download/siesta-4.0.1.tar.gz"
 
     version('4.0.1', '5cb60ce068f2f6e84fa9184ffca94c08')
+    version('3.2-pl-5', '27a300c65eb2a25d107d910d26aaf81a', url='http://departments.icmab.es/leem/siesta/CodeAccess/Code/siesta-3.2-pl-5.tgz')
 
-    patch('configure.patch')
+    patch('configure.patch', when='@:4.0.9')
 
     depends_on('mpi')
     depends_on('blas')
