@@ -78,7 +78,7 @@ class Vasp(MakefilePackage):
 
         makefile = FileFilter('makefile.include')
         makefile.filter('FC         = .*', 'FC         = %s' % spec['mpi'].mpifc)
-        makefile.filter('OFLAG      = .*', 'OFLAG      = -O2 -ip')
+        makefile.filter('OFLAG      = .*', 'OFLAG      = -g')
         makefile.filter('BLACS      = .*', 'BLACS      = -lmkl_blacs_openmpi_lp64')
         makefile.filter('LLIBS      = .*', 'LLIBS      = %s/lib/libwannier.a $(SCALAPACK) $(LAPACK) $(BLAS)' % self.spec['wannier90'].prefix)
         makefile.filter('CPP_LIB    = .*', 'CPP_LIB    = $(CPP) -DLONGCHAR')
