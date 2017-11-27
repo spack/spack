@@ -35,22 +35,37 @@ from spack.util.executable import which
 
 
 def get_module_cmd():
+    result = None
+
     try:
         result = get_module_cmd_from_bash()
     except ModuleError:
-        # Don't catch the exception this time; we have no other way to do it.
-        tty.warn("Could not detect module function from bash."
-                 " Trying to detect modulecmd from `which`")
+        tty.warn('Could not detect module function as a shell function in the '
+                 'current environment. Trying to detect in the interactive '
+                 'login environment.')
+
+    if result is None:
+        try:
+            # We assume that if the shell function 'module' is available at all,
+            # it should be available at least in the case of the interactive
+            # login shell.
+            result = get_module_cmd_from_bash(['-i', '-l'])
+        except ModuleError:
+            tty.warn('Could not detect module function in the interactive '
+                     'login environment. Trying to find \'modulecmd\' in the '
+                     '$PATH.')
+
+    if result is None:
         try:
             result = get_module_cmd_from_which()
         except ModuleError:
-            result = None
+            tty.warn('Failed to find \'modulecmd\' in the $PATH.')
 
     if result is None:
-        raise ModuleError('Spack requires modulecmd or a defined module '
-                          'function. Make sure modulecmd is in your path '
-                          'or the function "module" is defined in your '
-                          'bash environment.')
+        raise ModuleError('Spack requires \'modulecmd\' executable or a '
+                          'defined shell \'module\' function. Make sure '
+                          '\'modulecmd\' is in your $PATH or the function '
+                          '\'module\' is defined and exported.')
 
     if re.match(r'^Modules Release Tcl 3\.',
                 result(error=str)) is not None:
@@ -73,16 +88,15 @@ def get_module_cmd_from_which():
     return module_cmd
 
 
-def get_module_cmd_from_bash():
+def get_module_cmd_from_bash(bashopts=None):
     # Take the first bash from the $PATH
     bash = which('bash')
     if bash is None:
         raise ModuleError('Bash executable not found.')
 
-    # We assume that if the shell function 'module' is available at all, it
-    # should be available at least in the case of the interactive login shell.
-    bash.add_default_arg('-l')
-    bash.add_default_arg('-i')
+    if bashopts:
+        for opt in bashopts:
+            bash.add_default_arg(opt)
 
     # We will call bash to run the scripts from the command line.
     bash.add_default_arg('-c')
@@ -99,9 +113,10 @@ def get_module_cmd_from_bash():
     if bash.returncode != 0:
         raise ModuleError('Bash function \'module\' is not defined.')
 
-    # Bash initialization scripts might define the function 'module' using
-    # shell variables that are not exported. Thus, we export everything.
+    # Function definition might use shell variables that are not exported.
+    # We export them here.
     bash_init_vars_str = bash('for var in $(compgen -v);do'
+                              # `env --null` is not universal
                               ' printf "%s=%s\\0" "$var" "${!var}";'
                               'done',
                               output=str,
