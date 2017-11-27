@@ -25,30 +25,18 @@
 from spack import *
 
 
-class Glog(Package):
-    """C++ implementation of the Google logging module."""
+class RPcapp(RPackage):
+        """Provides functions for robust PCA by projection pursuit."""
 
-    homepage = "https://github.com/google/glog"
-    url      = "https://github.com/google/glog/archive/v0.3.5.tar.gz"
+        homepage = "https://cran.r-project.org/web/packages/pcaPP/index.html"
+        url      = "https://cran.r-project.org/src/contrib/pcaPP_1.9-72.tar.gz"
+        list_url = "https://cran.rstudio.com/src/contrib/Archive/pcaPP"
 
-    version('0.3.5', '5df6d78b81e51b90ac0ecd7ed932b0d4')
-    version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
-    version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
+        version('1.9-72', '87c08f8ecab69311bba395c026bbc91c')
+        version('1.9-70', '3fcc809ec1cdc910f10e9ebf372888e8')
+        version('1.9-61', '1bd5bc3aff968b168493e8c523d726ea')
+        version('1.9-60', '23dd468abb9fedc11e40166446df1017')
+        version('1.9-50', 'be44f173404fd6e86ba0a5515711bfa3')
 
-    depends_on('gflags')
-    depends_on('cmake', when="@0.3.5:")
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make
-        make('install')
-
-    @when('@0.3.5:')
-    def install(self, spec, prefix):
-        cmake_args = ['-DBUILD_SHARED_LIBS=TRUE']
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-            make
-            make('install')
+        depends_on('r@3.4.0:3.4.9')
+        depends_on('r-mvtnorm', type=('build', 'run'))

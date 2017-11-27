@@ -25,30 +25,33 @@
 from spack import *
 
 
-class Glog(Package):
-    """C++ implementation of the Google logging module."""
+class Gapbs(MakefilePackage):
+    """The GAP Benchmark Suite is intended to help graph processing research by
+    standardizing evaluations. Fewer differences between graph processing
+    evaluations will make it easier to compare different research efforts and
+    quantify improvements. The benchmark not only specifies graph kernels,
+    input graphs, and evaluation methodologies, but it also provides an
+    optimized baseline implementation (this repo). These baseline
+    implementations are representative of state-of-the-art performance, and
+    thus new contributions should outperform them to demonstrate an
+    improvement."""
 
-    homepage = "https://github.com/google/glog"
-    url      = "https://github.com/google/glog/archive/v0.3.5.tar.gz"
+    homepage = "http://gap.cs.berkeley.edu/benchmark.html"
+    url      = "https://github.com/sbeamer/gapbs/archive/v1.0.tar.gz"
 
-    version('0.3.5', '5df6d78b81e51b90ac0ecd7ed932b0d4')
-    version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
-    version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
+    version('1.0', 'ac2efa793f44e58553449f42b9779f3ff2d47634')
 
-    depends_on('gflags')
-    depends_on('cmake', when="@0.3.5:")
+    variant('serial', default=False, description='Version with no parallelism')
+
+    def build(self, spec, prefix):
+        cxx_flags = ['-O3', self.compiler.cxx11_flag]
+
+        if '-serial' in spec:
+            cxx_flags.append(self.compiler.openmp_flag)
+
+        make('CXX_FLAGS=' + ' '.join(cxx_flags))
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make
-        make('install')
-
-    @when('@0.3.5:')
-    def install(self, spec, prefix):
-        cmake_args = ['-DBUILD_SHARED_LIBS=TRUE']
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-            make
-            make('install')
+        mkdirp(prefix.bin)
+        for app in ["bc", "bfs", "cc", "converter", "pr", "sssp", "tc"]:
+            install(app, prefix.bin)

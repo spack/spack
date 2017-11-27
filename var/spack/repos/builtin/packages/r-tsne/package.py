@@ -25,30 +25,15 @@
 from spack import *
 
 
-class Glog(Package):
-    """C++ implementation of the Google logging module."""
+class RTsne(RPackage):
+    """A "pure R" implementation of the t-SNE algorithm."""
 
-    homepage = "https://github.com/google/glog"
-    url      = "https://github.com/google/glog/archive/v0.3.5.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/tsne/index.html"
+    url      = "https://cran.r-project.org/src/contrib/tsne_0.1-3.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/tnse"
 
-    version('0.3.5', '5df6d78b81e51b90ac0ecd7ed932b0d4')
-    version('0.3.4', 'df92e05c9d02504fb96674bc776a41cb')
-    version('0.3.3', 'c1f86af27bd9c73186730aa957607ed0')
+    version('0.1-3', '00974d4b3fd5f1100d0ebd24e03b0af9')
+    version('0.1-2', 'd96d8dce6ffeda68e2b25ec1ff52ea61')
+    version('0.1-1', '8197e5c61dec916b7a31b74e658b632d')
 
-    depends_on('gflags')
-    depends_on('cmake', when="@0.3.5:")
-
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make
-        make('install')
-
-    @when('@0.3.5:')
-    def install(self, spec, prefix):
-        cmake_args = ['-DBUILD_SHARED_LIBS=TRUE']
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-            make
-            make('install')
+    depends_on('r@3.4.0:3.4.9')
