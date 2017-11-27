@@ -37,5 +37,5 @@ class Libxext(AutotoolsPackage):
 
     depends_on('xproto@7.0.13:', type='build')
     depends_on('xextproto@7.1.99:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

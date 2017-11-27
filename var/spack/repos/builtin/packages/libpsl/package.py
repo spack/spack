@@ -36,7 +36,7 @@ class Libpsl(AutotoolsPackage):
     depends_on('icu4c')
 
     depends_on('gettext', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('python@2.7:', type='build')
 
     depends_on('valgrind~mpi~boost', type='test')

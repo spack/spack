@@ -38,5 +38,5 @@ class Libxshmfence(AutotoolsPackage):
     version('1.2', 'f0b30c0fc568b22ec524859ee28556f1')
 
     depends_on('xproto', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

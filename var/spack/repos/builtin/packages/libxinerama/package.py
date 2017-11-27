@@ -38,5 +38,5 @@ class Libxinerama(AutotoolsPackage):
 
     depends_on('xextproto', type='build')
     depends_on('xineramaproto@1.1.99.1:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
