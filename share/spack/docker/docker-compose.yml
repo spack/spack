@@ -18,6 +18,12 @@ services:
       - '../../..:/spack'
     environment:
       CUSTOM_PROMPT: "${CUSTOM_PROMPT:-0}"
+  opensuse:
+    build: ./spack_opensuse
+    volumes:
+      - '../../..:/spack'
+    environment:
+      CUSTOM_PROMPT: "${CUSTOM_PROMPT:-0}"
   ubuntu:
     build: ./spack_ubuntu
     volumes:
