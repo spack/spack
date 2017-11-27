@@ -58,6 +58,10 @@ def run_bash_command(*args):
         return out.decode('utf-8'), err.decode('utf-8')
 
 
+def bash_func_definition(name, body):
+    return '%s () { %s; }' % (name, body)
+
+
 def update_env_after_bash(out):
     if sys.version_info >= (3, 0, 0):
         if out.startswith('environ('):
@@ -70,8 +74,7 @@ def update_env_after_bash(out):
 
 def export_bash_function(name, body):
     out, _ = run_bash_command(
-        '-c',
-        ('%s () { %s; };export -f %s;' % (name, body, name)) +
+        '-c', bash_func_definition(name, body) + ';export -f ' + name + ';' +
         sys.executable + ' -c \'import os;print(repr(os.environ))\'')
 
     update_env_after_bash(out)
@@ -133,14 +136,16 @@ def test_get_path_from_module(backup_restore_env, tmpdir):
              'prepend-path PATH /path/to/bin']
 
     create_bash_with_custom_init(tmpdir)
+    export_bash_function('module', 'eval `/bin/bash modulecmd bash $*`')
+    modulecmd = tmpdir.join('modulecmd')
 
     for line in lines:
-        export_bash_function('module', 'eval `echo ' + line + ' bash filler`')
+        modulecmd.write('echo \'' + line + '\'')
         path = get_path_from_module('mod')
 
         assert path == '/path/to'
 
-    export_bash_function('module', 'eval $(echo fill bash $*)')
+    modulecmd.write('')
     path = get_path_from_module('mod')
 
     assert path is None
@@ -163,14 +168,14 @@ def test_get_argument_from_module_line():
 
 
 @pytest.mark.skipif(
-    run_bash_command('-i', '-l', '-c', 'module avail; echo $?')[0] != '0\n',
-    reason='Depends on defined module command')
+    run_bash_command('-c', 'module avail; echo $?')[0] != '0\n',
+    reason='Depends on defined (and exported) module command.')
 def test_get_module_cmd_from_bash_using_modules(tmpdir):
     with tmpdir.as_cwd():
         # Bash initialization scripts might report on errors but we want
         # only pure stderr of the command, which is why we redirect its output
         # to a file.
-        run_bash_command('-i', '-l', '-c', 'module list 2> module_list.txt')
+        run_bash_command('-c', 'module list 2> module_list.txt')
         with open('module_list.txt') as f:
             module_list = f.read()
 
@@ -183,9 +188,9 @@ def test_get_module_cmd_from_bash_using_modules(tmpdir):
 
 
 def test_get_module_cmd_from_bash_ticks(backup_restore_env, tmpdir):
-    export_bash_function('module', 'eval `echo bash $*`')
-
+    export_bash_function('module', 'eval `/bin/bash modulecmd bash $*`')
     create_bash_with_custom_init(tmpdir)
+    tmpdir.join('modulecmd').write('echo $*')
 
     module_cmd = get_module_cmd_from_bash()
     module_cmd_list = module_cmd('list', output=str, error=str)
@@ -194,21 +199,20 @@ def test_get_module_cmd_from_bash_ticks(backup_restore_env, tmpdir):
 
 
 def test_get_module_cmd_from_bash_parens(backup_restore_env, tmpdir):
-    export_bash_function('module', 'eval $(echo fill sh $*)')
-
+    export_bash_function('module', 'eval $(/bin/bash modulecmd bash $*)')
     create_bash_with_custom_init(tmpdir)
+    tmpdir.join('modulecmd').write('echo $*')
 
     module_cmd = get_module_cmd_from_bash()
     module_cmd_list = module_cmd('list', output=str, error=str)
 
-    assert module_cmd_list == 'fill python list\n'
+    assert module_cmd_list == 'python list\n'
 
 
 def test_get_module_cmd_from_bash_with_shell_var(backup_restore_env, tmpdir):
-    bash_function = 'eval `$ECHO bash $*`'
-    export_bash_function('module', bash_function)
-
+    export_bash_function('module', 'eval `$BASH_EXEC modulecmd bash $*`')
     create_bash_with_custom_init(tmpdir)
+    tmpdir.join('modulecmd').write('echo $*')
 
     with pytest.raises(ModuleError) as e:
         get_module_cmd_from_bash()
@@ -216,7 +220,7 @@ def test_get_module_cmd_from_bash_with_shell_var(backup_restore_env, tmpdir):
     assert str(e.value).startswith('Failed to create executable based on '
                                    'shell function \'module\'.')
 
-    create_bash_with_custom_init(tmpdir, 'ECHO=echo')
+    create_bash_with_custom_init(tmpdir, 'BASH_EXEC=/bin/bash')
 
     module_cmd = get_module_cmd_from_bash()
     module_cmd_list = module_cmd('list', output=str, error=str)
@@ -261,15 +265,12 @@ def test_get_module_cmd_from_which(backup_restore_env, tmpdir):
 
 
 def test_old_tcl_module(backup_restore_env, tmpdir):
-    # Hide bash shell function.
-    unset_bash_function('module')
+    export_bash_function('module', 'eval `/bin/bash modulecmd bash $*`')
     create_bash_with_custom_init(tmpdir)
+    modulecmd = tmpdir.join('modulecmd')
 
-    os.environ['PATH'] = str(tmpdir) + ':' + os.environ['PATH']
-
-    def create_command(version):
-        f = tmpdir.join('modulecmd')
-        f.write('#!/bin/bash\n'
+    def write_modulecmd(f, version):
+        f.write(
             'if [ $# -eq 1 -a "$1" = \'python\' ]; then\n'
             '  cat >&2 << \'EOF\'\n'
             'Modules Release Tcl ' + version + ' '
@@ -281,16 +282,15 @@ def test_old_tcl_module(backup_restore_env, tmpdir):
             'elif [ $# -eq 3 -a "$1" = \'python\' ]; then\n'
             '  echo -n "exec \'modulescript_12345_00\'"\n'
             'fi')
-        f.chmod(0o770)
 
     # The script must be modified.
-    create_command('3.3.0')
+    write_modulecmd(modulecmd, '3.3.0')
     module_cmd = get_module_cmd()
     script = module_cmd('load', 'mod', output=str)
     assert script == 'exec(open(\'modulescript_12345_00\').read())'
 
     # The script must not be modified.
-    create_command('4.0.0')
+    write_modulecmd(modulecmd, '4.0.0')
     module_cmd = get_module_cmd()
     script = module_cmd('load', 'mod', output=str)
     assert script == 'exec \'modulescript_12345_00\''
