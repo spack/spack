@@ -64,12 +64,15 @@ class Siesta(Package):
                           # Intel's mpiifort is not found
                           'MPIFC=%s' % spec['mpi'].mpifc
                           ]
-        with working_dir('Obj'):
-            sh('../Src/configure', *configure_args)
-            sh('../Src/obj_setup.sh')
-        with working_dir('Obj_trans', create=True):
-            sh('../Src/configure', *configure_args)
-            sh('../Src/obj_setup.sh')
+        for dir, create in [('Obj', False), ('Obj_trans', True)]:
+            with working_dir(dir, create=create):
+                sh('../Src/configure', *configure_args)
+                if spec.satisfies('@:4.0.9%intel'):
+                    with open('arch.make', 'a') as f:
+                        f.write('\natom.o: atom.F\n')
+                        f.write('\t$(FC) -c $(FFLAGS) -O1')
+                        f.write('$(INCFLAGS) $(FPPFLAGS) $<')
+                sh('../Src/obj_setup.sh')
 
     def build(self, spec, prefix):
         with working_dir('Obj'):
