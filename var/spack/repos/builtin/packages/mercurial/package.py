@@ -84,7 +84,11 @@ class Mercurial(PythonPackage):
         hgrc_filename = join_path(etc_dir, 'hgrc')
 
         # Use certifi to find the location of the CA certificate
-        certificate = python('-c', 'import certifi; print certifi.where()',
+        if '^python@3:' in self.spec:
+            certificate = python('-c', 'import certifi; print(certifi.where())',
+                             output=str)
+        else:
+            certificate = python('-c', 'import certifi; print certifi.where()',
                              output=str)
 
         if not certificate:
