@@ -168,9 +168,14 @@ def test_get_argument_from_module_line():
 
 
 @pytest.mark.skipif(
-    run_bash_command('-c', 'module avail; echo $?')[0] != '0\n',
+    # We expect that 'module load' produces output neither to stdout nor
+    # to stderr and exits with 0. Unfortunately, checking only the exit status
+    # is not enough because 'eval `exit 1`' exits with 0. So, we hope that
+    # even incorrectly defined 'module' command will report on some errors to
+    # the stderr.
+    run_bash_command('-c', 'module load; echo $?') != ('0\n', ''),
     reason='Depends on defined (and exported) module command.')
-def test_get_module_cmd_from_bash_using_modules(tmpdir):
+def test_get_module_cmd_returns_the_same(tmpdir):
     with tmpdir.as_cwd():
         # Bash initialization scripts might report on errors but we want
         # only pure stderr of the command, which is why we redirect its output
