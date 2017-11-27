@@ -412,10 +412,10 @@ class IntelParallelStudio(IntelPackage):
 
     @property
     def arch_required(self):
-        # Composer 2015 doesn't support specifying an architecture
+        # version 2015 doesn't support specifying an architecture
         if self.spec.satisfies('@professional.0:professional.2015.7') or \
-            self.spec.satisfies('@cluster.0:cluster.2015.7') or \
-            self.spec.satisfies('@composer.0:composer.2015.7'):
+           self.spec.satisfies('@cluster.0:cluster.2015.7') or \
+           self.spec.satisfies('@composer.0:composer.2015.7'):
             return False
         else:
             return True
@@ -458,8 +458,8 @@ class IntelParallelStudio(IntelPackage):
         ``psxevars.sh`` script."""
 
         if self.spec.satisfies('@professional.0:professional.2015.7') or \
-            self.spec.satisfies('@cluster.0:cluster.2015.7') or \
-            self.spec.satisfies('@composer.0:composer.2015.7'):
+           self.spec.satisfies('@cluster.0:cluster.2015.7') or \
+           self.spec.satisfies('@composer.0:composer.2015.7'):
             return
 
         bindir = glob.glob(join_path(
