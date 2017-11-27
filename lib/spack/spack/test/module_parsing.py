@@ -228,28 +228,6 @@ def test_get_module_cmd_from_bash_with_shell_var(backup_restore_env, tmpdir):
     assert module_cmd_list == 'python list\n'
 
 
-def test_get_module_cmd_fails(backup_restore_env, tmpdir):
-    unset_bash_function('module')
-
-    create_bash_with_custom_init(tmpdir)
-
-    with pytest.raises(ModuleError) as e:
-        get_module_cmd_from_bash()
-    assert str(e.value).startswith('Bash function \'module\' is not defined.')
-
-    # Only bash wrapper is in the PATH
-    os.environ['PATH'] = str(tmpdir)
-
-    with pytest.raises(ModuleError) as e:
-        get_module_cmd_from_which()
-    assert str(e.value).startswith('`which` did not find any modulecmd '
-                                   'executable')
-
-    with pytest.raises(ModuleError) as e:
-        get_module_cmd()
-    assert str(e.value).startswith('Spack requires modulecmd or a defined ')
-
-
 def test_get_module_cmd_from_which(backup_restore_env, tmpdir):
     f = tmpdir.join('modulecmd')
     f.write('#!/bin/bash\n'
@@ -262,6 +240,88 @@ def test_get_module_cmd_from_which(backup_restore_env, tmpdir):
     module_cmd_list = module_cmd('list', output=str, error=str)
 
     assert module_cmd_list == 'python list\n'
+
+
+def test_get_module_cmd_detect_order(backup_restore_env, tmpdir):
+    """Test that Spack respectes the following order when detecting modulecmd:
+        1. Currently exported shell function 'module'.
+        2. Shell function 'module' defined in the bash initialization scripts.
+        3. Executable 'modulecmd' in the $PATH.
+    """
+
+    # Bash wrapper that redefines 'module' function only in interactive or
+    # login modes.
+    create_bash_with_custom_init(
+        tmpdir,
+        'if [[ $- = *i* ]] || shopt -q login_shell;'
+        'then ' +
+        bash_func_definition('module',
+                             'eval \`/bin/bash shell_init bash \$*\`') +
+        ';fi')
+
+    shell_init = tmpdir.join('shell_init')
+    shell_init.write('echo $0 $*')
+
+    # If 'module' function is correctly defined and exported by a user,
+    # Spack should use that definition.
+    export_bash_function('module', 'eval `/bin/bash shell_user bash $*`')
+    shell_user = tmpdir.join('shell_user')
+    shell_user.write('echo $0 $*')
+
+    # create_bash_with_custom_init() has already added tmpdir to the $PATH.
+    which = tmpdir.join('modulecmd')
+    which.write('#!/bin/bash\n'
+                'echo $0 $*')
+    which.chmod(0o770)
+
+    module_cmd = get_module_cmd()
+    module_cmd_list = module_cmd('list', output=str)
+
+    assert module_cmd_list == 'shell_user python list\n'
+
+    # If 'module' function is defined incorrectly, Spack should use the
+    # definition from the bash initialization scripts.
+    shell_user.write('exit 1')
+
+    module_cmd = get_module_cmd()
+    module_cmd_list = module_cmd('list', output=str)
+
+    assert module_cmd_list == 'shell_init python list\n'
+
+    # If 'module' function in the bash initialization scripts is defined
+    # incorrectly, Spack should use the 'modulecmd' executable.
+    shell_init.write('exit 1')
+
+    module_cmd = get_module_cmd()
+    module_cmd_list = module_cmd('list', output=str)
+
+    assert module_cmd_list == str(tmpdir) + '/modulecmd python list\n'
+
+    # If 'modulecmd' is incorrect too, raise a ModuleError.
+    which.write('#!/bin/bash\n'
+                'exit 1')
+
+    with pytest.raises(ModuleError) as e:
+        get_module_cmd()
+    assert str(e.value).startswith('Spack requires \'modulecmd\' executable ')
+
+
+def test_get_module_cmd_fails(backup_restore_env, tmpdir):
+    unset_bash_function('module')
+
+    create_bash_with_custom_init(tmpdir)
+
+    with pytest.raises(ModuleError) as e:
+        get_module_cmd_from_bash()
+    assert str(e.value).startswith('Bash function \'module\' is not defined.')
+
+    if 'PATH' in os.environ:
+        os.environ.pop('PATH')
+
+    with pytest.raises(ModuleError) as e:
+        get_module_cmd_from_which()
+    assert str(e.value).startswith('`which` did not find any modulecmd '
+                                   'executable')
 
 
 def test_old_tcl_module(backup_restore_env, tmpdir):
