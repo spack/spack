@@ -33,7 +33,7 @@ class PerlInlineC(PerlPackage):
 
     version('0.78', '710a454b5337b1cbf3f2ae5c8c45b413')
 
-    depends_on('perl-yaml-xs', type=('build', 'run'))
+    depends_on('perl-yaml-libyaml', type=('build', 'run'))
     depends_on('perl-parse-recdescent', type=('build', 'run'))
     depends_on('perl-inline', type=('build', 'run'))
     depends_on('perl-pegex', type=('build', 'run'))

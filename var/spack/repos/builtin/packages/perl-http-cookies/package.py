@@ -34,4 +34,4 @@ class PerlHttpCookies(PerlPackage):
     version('6.04', '7bf1e277bd5c886bc18d21eb8423b65f')
 
     depends_on('perl-uri', type=('build', 'run'))
-    depends_on('perl-http-headers-util', type=('build', 'run'))
+    depends_on('perl-http-message', type=('build', 'run'))

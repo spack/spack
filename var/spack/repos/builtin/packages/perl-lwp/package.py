@@ -34,7 +34,7 @@ class PerlLwp(PerlPackage):
     version('6.29', 'efec8d563ffd3652333356aa722c2b56')
 
     depends_on('perl-test-requiresinternet', type=('build', 'run'))
-    depends_on('perl-http-status', type=('build', 'run'))
+    depends_on('perl-http-message', type=('build', 'run'))
     depends_on('perl-file-listing', type=('build', 'run'))
     depends_on('perl-http-daemon', type=('build', 'run'))
     depends_on('perl-html-parser', type=('build', 'run'))
