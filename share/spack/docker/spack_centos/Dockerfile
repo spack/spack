@@ -37,12 +37,12 @@ RUN echo "source /spack/share/spack/spack-completion.bash" \
 COPY handle-ssh.sh /etc/profile.d/handle-ssh.sh
 COPY handle-prompt.sh /etc/profile.d/handle-prompt.sh.source
 
-RUN (                                                                       \
-    echo "export DISTRO=$DISTRO"                                          ; \
-    echo "if [ x\$CUSTOM_PROMPT '!=' 'x' -a x\$CUSTOM_PROMPT '!=' 'x0' ]" ; \
-    echo "then"                                                           ; \
-    echo "source /etc/profile.d/handle-prompt.sh.source"                  ; \
-    echo "fi"                                                             ; \
+RUN (                                                         \
+    echo "export DISTRO=$DISTRO"                            ; \
+    echo "if [ x\$PROMPT '!=' 'x' -a x\$PROMPT '!=' 'x0' ]" ; \
+    echo "then"                                             ; \
+    echo "source /etc/profile.d/handle-prompt.sh.source"    ; \
+    echo "fi"                                               ; \
 ) > /etc/profile.d/handle-prompt.sh
 
 RUN mkdir -p /root/.spack
