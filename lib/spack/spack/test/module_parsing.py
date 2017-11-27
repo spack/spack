@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
+
 import pytest
 import subprocess
 import os
@@ -43,11 +45,16 @@ def backup_restore_env():
 
 
 def run_bash_command(*args):
-    return subprocess.Popen(
+    out, err = subprocess.Popen(
         ['/bin/bash'] + list(args),
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
     ).communicate()
+
+    if sys.version_info < (3, 0, 0):
+        return out, err
+    else:
+        return out.decode('utf-8'), err.decode('utf-8')
 
 
 def export_bash_function(name, body):
@@ -193,9 +200,9 @@ def test_get_module_cmd_from_bash_with_shell_var(backup_restore_env, tmpdir):
 
     with pytest.raises(ModuleError) as e:
         get_module_cmd_from_bash()
-    assert \
-        'Failed to create executable based on shell function \'module\'.' == \
-        e.value.message
+
+    assert str(e.value).startswith('Failed to create executable based on '
+                                   'shell function \'module\'.')
 
     create_bash_with_custom_init(tmpdir, 'ECHO=echo')
 
@@ -212,18 +219,19 @@ def test_get_module_cmd_fails(backup_restore_env, tmpdir):
 
     with pytest.raises(ModuleError) as e:
         get_module_cmd_from_bash()
-    assert 'Bash function \'module\' is not defined.' == e.value.message
+    assert str(e.value).startswith('Bash function \'module\' is not defined.')
 
     # Only bash wrapper is in the PATH
     os.environ['PATH'] = str(tmpdir)
 
     with pytest.raises(ModuleError) as e:
         get_module_cmd_from_which()
-    assert '`which` did not find any modulecmd executable' == e.value.message
+    assert str(e.value).startswith('`which` did not find any modulecmd '
+                                   'executable')
 
     with pytest.raises(ModuleError) as e:
         get_module_cmd()
-    assert e.value.message.startswith('Spack requires modulecmd or a defined ')
+    assert str(e.value).startswith('Spack requires modulecmd or a defined ')
 
 
 def test_get_module_cmd_from_which(backup_restore_env, tmpdir):
