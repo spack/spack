@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import ast
 import sys
 
 import pytest
@@ -57,21 +58,32 @@ def run_bash_command(*args):
         return out.decode('utf-8'), err.decode('utf-8')
 
 
-def export_bash_function(name, body):
-    out, _ = run_bash_command('-c', '%s () { %s; };export -f %s;env --null' %
-                              (name, body, name))
+def update_env_after_bash(out):
+    if sys.version_info >= (3, 0, 0):
+        if out.startswith('environ('):
+            out = out[8:]
+        if out.endswith(')\n'):
+            out = out[:-2]
 
-    for var in out.strip('\0').split('\0'):
-        var_name, var_value = var.split('=', 1)
-        os.environ[var_name] = var_value
+    os.environ.update(ast.literal_eval(out))
+
+
+def export_bash_function(name, body):
+    out, _ = run_bash_command(
+        '-c',
+        ('%s () { %s; };export -f %s;' % (name, body, name)) +
+        sys.executable + ' -c \'import os;print(repr(os.environ))\'')
+
+    update_env_after_bash(out)
 
 
 def unset_bash_function(name):
-    out, _ = run_bash_command('-c', 'unset -f %s;env --null' % name)
+    out, _ = run_bash_command(
+        '-c',
+        ('unset -f %s;' % name) +
+        sys.executable + ' -c \'import os;print(repr(os.environ))\'')
     os.environ.clear()
-    for var in out.strip('\0').split('\0'):
-        var_name, var_value = var.split('=', 1)
-        os.environ[var_name] = var_value
+    update_env_after_bash(out)
 
 
 def create_bash_with_custom_init(path_to_dir, init_script=None,

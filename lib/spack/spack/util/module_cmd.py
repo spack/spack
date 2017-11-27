@@ -101,7 +101,9 @@ def get_module_cmd_from_bash():
 
     # Bash initialization scripts might define the function 'module' using
     # shell variables that are not exported. Thus, we export everything.
-    bash_init_vars_str = bash('export $(compgen -v); env --null',
+    bash_init_vars_str = bash('for var in $(compgen -v);do'
+                              ' printf "%s=%s\\0" "$var" "${!var}";'
+                              'done',
                               output=str,
                               error=os.devnull,
                               fail_on_error=False)
