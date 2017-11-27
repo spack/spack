@@ -38,3 +38,4 @@ class RRtsne(RPackage):
     version('0.10', 'c587e1b76fdcea2629424f74c6e92340')
 
     depends_on('r@3.4.0:3.4.9')
+    depends_on('r-rcpp', type=('build', 'run'))
