@@ -46,9 +46,9 @@ def get_module_cmd():
 
     if result is None:
         try:
-            # We assume that if the shell function 'module' is available at all,
-            # it should be available at least in the case of the interactive
-            # login shell.
+            # We assume that if the shell function 'module' is available at
+            # all, it should be available at least in the case of the
+            # interactive login shell.
             result = get_module_cmd_from_bash(['-i', '-l'])
         except ModuleError:
             tty.warn('Could not detect module function in the interactive '
