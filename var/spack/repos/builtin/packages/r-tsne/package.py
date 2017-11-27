@@ -25,30 +25,15 @@
 from spack import *
 
 
-class DialignTx(MakefilePackage):
-    """DIALIGN-TX: greedy and progressive approaches for segment-based
-       multiple sequence alignment"""
+class RTsne(RPackage):
+    """A "pure R" implementation of the t-SNE algorithm."""
 
-    homepage = "http://dialign-tx.gobics.de/"
-    url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
+    homepage = "https://cran.r-project.org/web/packages/tsne/index.html"
+    url      = "https://cran.r-project.org/src/contrib/tsne_0.1-3.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/tnse"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('0.1-3', '00974d4b3fd5f1100d0ebd24e03b0af9')
+    version('0.1-2', 'd96d8dce6ffeda68e2b25ec1ff52ea61')
+    version('0.1-1', '8197e5c61dec916b7a31b74e658b632d')
 
-    build_directory = 'source'
-
-    conflicts('%gcc@6:')
-
-    def edit(self, spec, prefix):
-        with working_dir(self.build_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter(' -march=i686 ', ' ')
-            makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        with working_dir(self.build_directory):
-            install('dialign-tx', prefix.bin)
-            # t-coffee recognizes as dialign-t
-            install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
-
-    patch('dialign-1-0-2-gcc-5-4-0.patch', when='%gcc@5.4.0')
+    depends_on('r@3.4.0:3.4.9')
