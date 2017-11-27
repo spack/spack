@@ -59,7 +59,7 @@ class Plasma(MakefilePackage):
 
     def getblaslapacklibs(self):
         if '^netlib-lapack' in self.spec:
-            bl_attr = ':c'
+            bl_attr = ':c,fortran'
         else:
             bl_attr = ''
         return self.spec['lapack' + bl_attr].libs + \

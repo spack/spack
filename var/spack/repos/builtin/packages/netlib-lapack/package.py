@@ -76,9 +76,12 @@ class NetlibLapack(Package):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ['libblas'],
-            ('c',): [
+            ('c', 'fortran'): [
                 'libcblas',
                 'libblas',
+            ],
+            ('c',): [
+                'libcblas',
             ],
             ('fortran',): [
                 'libblas',
@@ -96,9 +99,12 @@ class NetlibLapack(Package):
         query_parameters = self.spec.last_query.extra_parameters
         query2libraries = {
             tuple(): ['liblapack'],
-            ('c',): [
+            ('c', 'fortran'): [
                 'liblapacke',
                 'liblapack',
+            ],
+            ('c',): [
+                'liblapacke',
             ],
             ('fortran',): [
                 'liblapack',
