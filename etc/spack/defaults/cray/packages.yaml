@@ -16,14 +16,14 @@ packages:
     intel-mkl:
         buildable: false
         paths:
-            intel-mkl@2017.2.174%gcc~ilp64~openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
-            intel-mkl@2017.2.174%gcc+ilp64~openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
-            intel-mkl@2017.2.174%gcc+ilp64+openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
-            intel-mkl@2017.2.174%gcc+ilp64+openmp+shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
-            intel-mkl@2017.2.174%intel~ilp64~openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
-            intel-mkl@2017.2.174%intel+ilp64~openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
-            intel-mkl@2017.2.174%intel+ilp64+openmp~shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
-            intel-mkl@2017.2.174%intel+ilp64+openmp+shared: /opt/intel/compilers_and_libraries_2017.2.174/linux/mkl
+            intel-mkl@2017.2.174%gcc~ilp64~shared: /opt/intel
+            intel-mkl@2017.2.174%gcc+ilp64~shared: /opt/intel
+            intel-mkl@2017.2.174%gcc+ilp64 threads=openmp ~shared: /opt/intel
+            intel-mkl@2017.2.174%gcc+ilp64 threads=openmp +shared: /opt/intel
+            intel-mkl@2017.2.174%intel~ilp64~shared: /opt/intel
+            intel-mkl@2017.2.174%intel+ilp64~shared: /opt/intel
+            intel-mkl@2017.2.174%intel+ilp64 threads=openmp ~shared: /opt/intel
+            intel-mkl@2017.2.174%intel+ilp64 threads=openmp +shared: /opt/intel
     fftw:
         buildable: false
         modules:

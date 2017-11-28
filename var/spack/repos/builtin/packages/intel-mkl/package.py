@@ -72,6 +72,23 @@ class IntelMkl(IntelPackage):
         conflicts('threads=openmp', when='%gcc')
 
     @property
+    def _path_to_mkl_lib(self):
+        # Property method to path to intel mkl. On some installs the
+        # compilers_and_libraries path is appended with the version.
+        return os.path.join(self._path_to_mkl,
+                            "lib",
+                            "intel64")
+
+    @property
+    def _path_to_mkl(self):
+        ver = self.spec.version
+        return os.path.join(self.prefix,
+                            "compilers_and_libraries_{0}".format(ver),
+                            "linux",
+                            "mkl")
+
+
+    @property
     def license_required(self):
         # The Intel libraries are provided without requiring a license as of
         # version 2017.2. Trying to specify the license will fail. See:
@@ -102,7 +119,7 @@ class IntelMkl(IntelPackage):
                 omp_threading = ['libiomp5']
 
                 if sys.platform != 'darwin':
-                    omp_root = prefix.compilers_and_libraries.linux.lib.intel64
+                    omp_root = self._path_to_mkl_lib
                 else:
                     omp_root = prefix.lib
                 omp_libs = find_libraries(
@@ -118,12 +135,12 @@ class IntelMkl(IntelPackage):
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
         if sys.platform != 'darwin':
-            mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
+            mkl_root = self._path_to_mkl_lib
         else:
             mkl_root = prefix.mkl.lib
 
         mkl_libs = find_libraries(
-            mkl_integer + ['libmkl_core'] + mkl_threading,
+            mkl_integer + mkl_threading + ['libmkl_core'],
             root=mkl_root,
             shared=shared
         )
@@ -170,7 +187,7 @@ class IntelMkl(IntelPackage):
 
         integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
         mkl_root = self.prefix.mkl.lib if sys.platform == 'darwin' else \
-            self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+            self._path_to_mkl_lib
 
         shared = True if '+shared' in self.spec else False
 
@@ -188,8 +205,8 @@ class IntelMkl(IntelPackage):
             mkl_lib = self.prefix.mkl.lib
             mkl_root = self.prefix.mkl
         else:
-            mkl_lib = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
-            mkl_root = self.prefix.compilers_and_libraries.linux.mkl
+            mkl_lib = self._path_to_mkl_lib
+            mkl_root = self._path_to_mkl
 
         spack_env.set('MKLROOT', mkl_root)
         spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_lib)
