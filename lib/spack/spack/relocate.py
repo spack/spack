@@ -28,7 +28,7 @@ import platform
 import re
 import spack
 import spack.cmd
-from spack.util.executable import Executable
+from spack.util.executable import Executable,which
 from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
 
@@ -289,8 +289,9 @@ def relocate_text(path_names, old_dir, new_dir):
     """
     Replace old path with new path in text file path_name
     """
-    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir,
-                *path_names, backup=False)
+    perl=which('perl')
+    for path in path_names:
+        perl('-p', '-i', '-e', 's|%s|%s|g' % (old_dir,new_dir), path)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
