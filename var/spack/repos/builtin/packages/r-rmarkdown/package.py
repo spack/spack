@@ -33,6 +33,7 @@ class RRmarkdown(RPackage):
     url      = "https://cran.r-project.org/src/contrib/rmarkdown_1.0.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/rmarkdown"
 
+    version('1.7', '477c50840581ba7947b3d905c67a511b')
     version('1.0', '264aa6a59e9680109e38df8270e14c58')
 
     depends_on('r-knitr', type=('build', 'run'))
@@ -42,3 +43,6 @@ class RRmarkdown(RPackage):
     depends_on('r-evaluate', type=('build', 'run'))
     depends_on('r-base64enc', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-rprojroot', type=('build', 'run'))
+    depends_on('r-mime', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
