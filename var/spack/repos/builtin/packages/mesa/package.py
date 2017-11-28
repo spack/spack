@@ -54,7 +54,7 @@ class Mesa(AutotoolsPackage):
             description="Use llvm for rendering pipes.")
 
     # General dependencies
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('flex@2.5.35:', type='build')
     depends_on('bison@2.4.1:', type='build')
     depends_on('binutils', type='build')

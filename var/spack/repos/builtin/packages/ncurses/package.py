@@ -47,7 +47,7 @@ class Ncurses(AutotoolsPackage):
     variant("shared", default=True,
             description="Enable shared libs")
 
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')

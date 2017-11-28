@@ -290,3 +290,10 @@ class Gcc(AutotoolsPackage):
                     out.write('-rpath {0}:{1} '.format(
                               self.prefix.lib, self.prefix.lib64))
         set_install_permissions(specs_file)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.set('CC', join_path(self.spec.prefix.bin, 'gcc'))
+        run_env.set('CXX', join_path(self.spec.prefix.bin, 'g++'))
+        run_env.set('FC', join_path(self.spec.prefix.bin, 'gfortran'))
+        run_env.set('F77', join_path(self.spec.prefix.bin, 'gfortran'))
+        run_env.set('F90', join_path(self.spec.prefix.bin, 'gfortran'))

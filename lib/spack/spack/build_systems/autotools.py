@@ -221,10 +221,10 @@ class AutotoolsPackage(PackageBase):
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']
-            if 'pkg-config' in spec:
+            if 'pkgconfig' in spec:
                 autoreconf_args += [
                     '-I',
-                    join_path(spec['pkg-config'].prefix, 'share', 'aclocal'),
+                    join_path(spec['pkgconfig'].prefix, 'share', 'aclocal'),
                 ]
             autoreconf_args += self.autoreconf_extra_args
             m.autoreconf(*autoreconf_args)

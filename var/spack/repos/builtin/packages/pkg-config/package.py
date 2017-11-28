@@ -36,6 +36,8 @@ class PkgConfig(AutotoolsPackage):
     version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
     version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
 
+    provides('pkgconfig')
+
     variant('internal_glib', default=True,
             description='Builds with internal glib')
 

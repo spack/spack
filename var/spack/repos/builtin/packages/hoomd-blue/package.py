@@ -71,7 +71,7 @@ class HoomdBlue(CMakePackage):
     depends_on('python@2.7:')
     depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('cmake@2.8.0:', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('cuda@7.0:', when='+cuda')
     depends_on('doxygen@1.8.5:', when='+doc', type='build')
