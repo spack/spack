@@ -38,7 +38,7 @@ class XorgGtest(AutotoolsPackage):
     depends_on('libxi')
     depends_on('xorg-server')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
     # TODO: may be missing evemu package?

@@ -35,8 +35,8 @@ class Gearshifft(CMakePackage):
 
     variant('cufft', default=True,
             description='Compile gearshifft_cufft')
-    # variant('clfft', default=True,
-    #         description='Compile gearshifft_clfft')
+    variant('clfft', default=True,
+            description='Compile gearshifft_clfft')
     variant('fftw', default=True,
             description='Compile gearshifft_fftw')
     variant('openmp', default=True,
@@ -48,8 +48,8 @@ class Gearshifft(CMakePackage):
     depends_on('cmake@2.8.0:', type='build')
     depends_on('boost@1.56.0:')
     depends_on('cuda@8.0:', when='+cufft')
-    # depends_on('opencl@1.2:', when='+clfft')
-    # depends_on('clfft@2.12.0:', when='+clfft')
+    depends_on('opencl@1.2:', when='+clfft')
+    depends_on('clfft@2.12.0:', when='+clfft')
     depends_on('fftw@3.3.4:~mpi~openmp', when='+fftw~openmp')
     depends_on('fftw@3.3.4:~mpi+openmp', when='+fftw+openmp')
 
@@ -67,8 +67,8 @@ class Gearshifft(CMakePackage):
             '-DGEARSHIFFT_FFTW_OPENMP:BOOL={0}'.format((
                 'ON' if '+openmp' in spec else 'OFF')),
             '-DGEARSHIFFT_CUFFT:BOOL={0}'.format((
-                'ON' if '+cufft' in spec else 'OFF'))
-            # '-DGEARSHIFFT_CLFFT:BOOL={0}'.format((
-            #     'ON' if '+clfft' in spec else 'OFF'))
+                'ON' if '+cufft' in spec else 'OFF')),
+            '-DGEARSHIFFT_CLFFT:BOOL={0}'.format((
+                'ON' if '+clfft' in spec else 'OFF'))
         ])
         return args
