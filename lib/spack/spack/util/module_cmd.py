@@ -37,12 +37,22 @@ from spack.util.executable import which
 def get_module_cmd():
     result = None
 
+    # Unset BASH_ENV to prevent possible redefinition of the function.
+    env_bu = None
     try:
+        if 'BASH_ENV' in os.environ:
+            env_bu = os.environ.copy()
+            os.environ.pop('BASH_ENV')
+
         result = get_module_cmd_from_bash()
     except ModuleError:
         tty.warn('Could not detect module function as a shell function in the '
                  'current environment. Trying to detect in the interactive '
                  'login environment.')
+    finally:
+        if env_bu:
+            os.environ.clear()
+            os.environ.update(env_bu)
 
     if result is None:
         try:
