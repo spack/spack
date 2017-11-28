@@ -256,7 +256,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
-                arcname='%s' % os.path.basename(workdir))
+                arcname='.')
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -416,7 +416,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     # delay creating installpath until verification is complete
     mkdirp(installpath)
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=join_path(installpath, '..'))
+        tar.extractall(path=join_path(installpath, '.'))
 
     os.remove(tarfile_path)
     os.remove(specfile_path)
