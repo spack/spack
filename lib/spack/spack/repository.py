@@ -987,7 +987,14 @@ class Repo(object):
             # e.g., spack.pkg.builtin.mpich
             fullname = "%s.%s" % (self.full_namespace, pkg_name)
 
-            module = imp.load_source(fullname, file_path)
+            try:
+                module = imp.load_source(fullname, file_path)
+            except SyntaxError as e:
+                # SyntaxError strips the path from the filename so we need to
+                # manually construct the error message in order to give the
+                # user the correct package.py where the syntax error is located
+                raise SyntaxError('invalid syntax in {0:}, line {1:}'
+                                  ''.format(file_path, e.lineno))
             module.__package__ = self.full_namespace
             module.__loader__ = self
             self._modules[pkg_name] = module
