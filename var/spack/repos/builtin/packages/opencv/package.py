@@ -56,9 +56,10 @@ class Opencv(CMakePackage):
     # Standard variants
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('lapack', default=True, description='Include Lapack library support') # 3.3.0
-    variant('powerpc', default=True, description='Enable PowerPC for GCC') # 2.4.13, 3.3.0
-    variant('fast-math', default=False, description='Enable -ffast-math (not recommended for GCC 4.6.x)') # 2.4.13, 3.3.0
+    variant('lapack', default=True, description='Include Lapack library support')
+    variant('powerpc', default=True, description='Enable PowerPC for GCC')
+    variant('fast-math', default=False, 
+            description='Enable -ffast-math (not recommended for GCC 4.6.x)')
 
     # OpenCV modules
     variant('calib3d', default=True, description='calib3d module')
@@ -87,12 +88,12 @@ class Opencv(CMakePackage):
     variant('ipp_iw', default=False, description='Build IPP IW from source')
     variant('jasper', default=True, description='Activates support for JasPer')
     variant('jpeg', default=False, description='Include JPEG support')
-    variant('opencl', default=True, description='Include OpenCL Runtime support') # when='@2.4.13:')
-    variant('opencl_svm', default=True, description='Include OpenCL Shared Virtual Memory support') #, when='@3.3.0:')
-    variant('openclamdfft', default=True, description='Include OpenCL AMD OpenCL FFT library support') #, when='@2.4.13:')
-    variant('openclamdblas', default=True, description='Include OpenCL AMD OpenCL BLAS library support') #, when='@2.4.13:')
+    variant('opencl', default=True, description='Include OpenCL Runtime support')
+    variant('opencl_svm', default=True, description='Include OpenCL Shared Virtual Memory support')
+    variant('openclamdfft', default=True, description='Include OpenCL AMD OpenCL FFT library support')
+    variant('openclamdblas', default=True, description='Include OpenCL AMD OpenCL BLAS library support')
     variant('openmp', default=False, description='Activates support for OpenMP threads')
-    variant('pthreads_pf', default=True, description='Use pthreads-based parallel_for') # when='@3.3.0:'
+    variant('pthreads_pf', default=True, description='Use pthreads-based parallel_for')
     variant('png', default=False, description='Include PNG support')
     variant('qt', default=False, description='Activates support for QT')
     variant('gtk', default=False, description='Activates support for GTK')
