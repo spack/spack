@@ -54,7 +54,7 @@ class RRcurl(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/RCurl/index.html"
     url      = "https://cran.rstudio.com/src/contrib/RCurl_1.95-4.8.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RCurl"
 
     version('1.95-4.8', '9c8aaff986eb2792c89dd3ae54d21580')
 
