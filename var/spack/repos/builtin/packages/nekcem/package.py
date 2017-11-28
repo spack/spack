@@ -73,8 +73,8 @@ class Nekcem(Package):
 
             blasLapack = spec['blas'].libs + spec['lapack'].libs
             ldFlags = blasLapack.ld_flags
-            filter_file(r'^LDFLAGS\s*=.*', 'LDFLAGS=\"' + ldFlags +
-                        '\"', 'makenek')
+#            filter_file(r'^LDFLAGS\s*=.*', 'LDFLAGS=\"' + str(ldFlags) +
+#                        '\"', 'makenek')
 
         # Install NekCEM in prefix/bin
         install_tree('../NekCEM', prefix.bin.NekCEM)
