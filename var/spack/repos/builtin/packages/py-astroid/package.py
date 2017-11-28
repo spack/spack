@@ -29,7 +29,7 @@ class PyAstroid(PythonPackage):
     homepage = "https://www.astroid.org/"
     url      = "https://github.com/PyCQA/astroid/archive/astroid-1.4.5.tar.gz"
 
- #   version('1.5.3', '6f65e4ea8290ec032320460905afb828') # has broken unit tests
+    # version('1.5.3', '6f65e4ea8290ec032320460905afb828') # has broken unit tests
     version('1.4.5', '7adfc55809908297ef430efe4ea20ac3')
     version('1.4.4', '8ae6f63f6a2b260bb7f647dafccbc796')
     version('1.4.3', '4647159de7d4d0c4b1de23ecbfb8e246')
