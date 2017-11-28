@@ -289,7 +289,7 @@ def relocate_text(path_names, old_dir, new_dir):
     """
     Replace old path with new path in text file path_name
     """
-    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir,
+    filter_file('%s' % old_dir, '%s' % new_dir,
                 *path_names, backup=False)
 
 
