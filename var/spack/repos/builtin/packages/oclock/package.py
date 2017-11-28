@@ -40,5 +40,5 @@ class Oclock(AutotoolsPackage):
     depends_on('libxt')
     depends_on('libxkbfile')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

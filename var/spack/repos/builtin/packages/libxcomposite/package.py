@@ -38,5 +38,5 @@ class Libxcomposite(AutotoolsPackage):
     depends_on('libxfixes')
 
     depends_on('compositeproto@0.4:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
