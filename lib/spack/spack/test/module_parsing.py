@@ -89,8 +89,7 @@ def unset_bash_function(name):
     update_env_after_bash(out)
 
 
-def create_bash_with_custom_init(path_to_dir, init_script=None,
-                                 prepend_to_path=True):
+def create_bash_with_custom_init(path_to_dir, init_script=None):
     """Creates a wrapper for bash that ensures that system bash initialization
     scripts are ignored (except for the case of --posix). It also allows for
     initialization with a custom script but the implementation assumes that
@@ -102,30 +101,27 @@ def create_bash_with_custom_init(path_to_dir, init_script=None,
             will be stored.
         init_script(str): script that will be prepended to the bash
             command_string.
-        prepend_to_path(bool): specifies whether or not the path to the script
-            must be added to the PATH.
-
     """
     init_script = (init_script + ';') if init_script else ''
     path_to_bash = path_to_dir.join('bash')
-    path_to_bash.write('#!/bin/bash\n'
-                       'args=("--norc" "--noprofile")\n'
-                       'for arg in "$@"; do\n'
-                       '  case "$arg" in\n'
-                       '    -*)\n'
-                       '      new_arg="$arg";;\n'
-                       '    *)\n'
-                       '      new_arg="' + init_script + '$arg";;\n'
-                       '  esac\n'
-                       '  args=("${args[@]}" "$new_arg")\n'
-                       'done\n'
-                       'BASH_ENV= exec /bin/bash "${args[@]}"')
+    path_to_bash.write('#!/usr/bin/env python\n'
+                       'import os\n'
+                       'import sys\n'
+                       'args = ["bash", "--norc", "--noprofile"]\n'
+                       'for arg in sys.argv[1:]:\n'
+                       '    if not arg.startswith("-"):\n'
+                       '        arg = r"' + init_script + '" + arg\n'
+                       '    args.append(arg)\n'
+                       'os.execv("/bin/bash", args)')
     path_to_bash.chmod(0o770)
-    if prepend_to_path:
-        if 'PATH' in os.environ:
-            os.environ['PATH'] = str(path_to_dir) + ':' + os.environ['PATH']
-        else:
-            os.environ['PATH'] = str(path_to_dir)
+
+    if 'PATH' in os.environ:
+        os.environ['PATH'] = str(path_to_dir) + ':' + os.environ['PATH']
+    else:
+        os.environ['PATH'] = str(path_to_dir)
+
+    if 'BASH_ENV' in os.environ:
+        os.environ.pop('BASH_ENV')
 
 
 def test_get_path_from_module(backup_restore_env, tmpdir):
@@ -256,55 +252,67 @@ def test_get_module_cmd_detect_order(backup_restore_env, tmpdir):
 
     # Bash wrapper that redefines 'module' function only in interactive or
     # login modes.
+    init_definition = tmpdir.join('init_definition')
+    init_definition.write('echo $0 $*')
     create_bash_with_custom_init(
         tmpdir,
         'if [[ $- = *i* ]] || shopt -q login_shell;'
         'then ' +
-        bash_func_definition('module',
-                             'eval \`/bin/bash shell_init bash \$*\`') +
+        bash_func_definition(
+            'module',
+            'eval `/bin/bash ' + str(init_definition) + ' bash $*`') +
         ';fi')
 
-    shell_init = tmpdir.join('shell_init')
-    shell_init.write('echo $0 $*')
+    # Set BASH_ENV to make sure that it will not redefine function that was
+    # set by a user.
+    env_definition = tmpdir.join('env_definition')
+    env_definition.write('echo $0 $*')
+    bash_env = tmpdir.join('bash_env')
+    bash_env.write(
+        bash_func_definition(
+            'module',
+            'eval `/bin/bash ' + str(env_definition) + ' bash $*`'))
+    os.environ['BASH_ENV'] = str(bash_env)
 
     # If 'module' function is correctly defined and exported by a user,
     # Spack should use that definition.
-    export_bash_function('module', 'eval `/bin/bash shell_user bash $*`')
-    shell_user = tmpdir.join('shell_user')
-    shell_user.write('echo $0 $*')
+    user_definition = tmpdir.join('user_definition')
+    user_definition.write('echo $0 $*')
+    export_bash_function(
+        'module', 'eval `/bin/bash ' + str(user_definition) + ' bash $*`')
 
     # create_bash_with_custom_init() has already added tmpdir to the $PATH.
-    which = tmpdir.join('modulecmd')
-    which.write('#!/bin/bash\n'
-                'echo $0 $*')
-    which.chmod(0o770)
+    which_executable = tmpdir.join('modulecmd')
+    which_executable.write('#!/bin/bash\n'
+                           'echo $0 $*')
+    which_executable.chmod(0o770)
 
     module_cmd = get_module_cmd()
     module_cmd_list = module_cmd('list', output=str)
 
-    assert module_cmd_list == 'shell_user python list\n'
+    assert module_cmd_list == (str(user_definition) + ' python list\n')
 
     # If 'module' function is defined incorrectly, Spack should use the
     # definition from the bash initialization scripts.
-    shell_user.write('exit 1')
+    user_definition.write('exit 1')
 
     module_cmd = get_module_cmd()
     module_cmd_list = module_cmd('list', output=str)
 
-    assert module_cmd_list == 'shell_init python list\n'
+    assert module_cmd_list == (str(init_definition) + ' python list\n')
 
     # If 'module' function in the bash initialization scripts is defined
     # incorrectly, Spack should use the 'modulecmd' executable.
-    shell_init.write('exit 1')
+    init_definition.write('exit 1')
 
     module_cmd = get_module_cmd()
     module_cmd_list = module_cmd('list', output=str)
 
-    assert module_cmd_list == str(tmpdir) + '/modulecmd python list\n'
+    assert module_cmd_list == (str(which_executable) + ' python list\n')
 
     # If 'modulecmd' is incorrect too, raise a ModuleError.
-    which.write('#!/bin/bash\n'
-                'exit 1')
+    which_executable.write('#!/bin/bash\n'
+                           'exit 1')
 
     with pytest.raises(ModuleError) as e:
         get_module_cmd()
