@@ -180,7 +180,7 @@ def test_get_module_cmd_returns_the_same(tmpdir):
         with open('module_list.txt') as f:
             module_list = f.read()
 
-    module_cmd = get_module_cmd()
+    module_cmd = get_module_cmd(True)
     module_cmd_list = module_cmd('list', output=str, error=str)
 
     # Lmod command reprints some env variables on every invocation.
@@ -287,7 +287,7 @@ def test_get_module_cmd_detect_order(backup_restore_env, tmpdir):
                            'echo $0 $*')
     which_executable.chmod(0o770)
 
-    module_cmd = get_module_cmd()
+    module_cmd = get_module_cmd(True)
     module_cmd_list = module_cmd('list', output=str)
 
     assert module_cmd_list == (str(user_definition) + ' python list\n')
@@ -296,7 +296,7 @@ def test_get_module_cmd_detect_order(backup_restore_env, tmpdir):
     # definition from the bash initialization scripts.
     user_definition.write('exit 1')
 
-    module_cmd = get_module_cmd()
+    module_cmd = get_module_cmd(True)
     module_cmd_list = module_cmd('list', output=str)
 
     assert module_cmd_list == (str(init_definition) + ' python list\n')
@@ -305,7 +305,7 @@ def test_get_module_cmd_detect_order(backup_restore_env, tmpdir):
     # incorrectly, Spack should use the 'modulecmd' executable.
     init_definition.write('exit 1')
 
-    module_cmd = get_module_cmd()
+    module_cmd = get_module_cmd(True)
     module_cmd_list = module_cmd('list', output=str)
 
     assert module_cmd_list == (str(which_executable) + ' python list\n')
@@ -315,7 +315,7 @@ def test_get_module_cmd_detect_order(backup_restore_env, tmpdir):
                            'exit 1')
 
     with pytest.raises(ModuleError) as e:
-        get_module_cmd()
+        get_module_cmd(True)
     assert str(e.value).startswith('Spack requires \'modulecmd\' executable ')
 
 
@@ -358,12 +358,12 @@ def test_old_tcl_module(backup_restore_env, tmpdir):
 
     # The script must be modified.
     write_modulecmd(modulecmd, '3.3.0')
-    module_cmd = get_module_cmd()
+    module_cmd = get_module_cmd(True)
     script = module_cmd('load', 'mod', output=str)
     assert script == 'exec(open(\'modulescript_12345_00\').read())'
 
     # The script must not be modified.
     write_modulecmd(modulecmd, '4.0.0')
-    module_cmd = get_module_cmd()
+    module_cmd = get_module_cmd(True)
     script = module_cmd('load', 'mod', output=str)
     assert script == 'exec \'modulescript_12345_00\''

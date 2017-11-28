@@ -33,8 +33,15 @@ import shlex
 import llnl.util.tty as tty
 from spack.util.executable import which
 
+_module_cmd_cache = None
 
-def get_module_cmd():
+
+def get_module_cmd(update_cache=False):
+    global _module_cmd_cache
+
+    if not update_cache and _module_cmd_cache:
+        return _module_cmd_cache
+
     result = None
 
     # Unset BASH_ENV to prevent possible redefinition of the function.
@@ -45,10 +52,10 @@ def get_module_cmd():
             os.environ.pop('BASH_ENV')
 
         result = get_module_cmd_from_bash()
-    except ModuleError:
-        tty.warn('Could not detect module function as a shell function in the '
-                 'current environment. Trying to detect in the interactive '
-                 'login environment.')
+    except ModuleError as e:
+        tty.warn('Failed to detect module function as a shell function in the '
+                 'current environment: ' + str(e) + ' Trying to detect in the '
+                 'interactive login shell.')
     finally:
         if env_bu:
             os.environ.clear()
@@ -60,10 +67,10 @@ def get_module_cmd():
             # all, it should be available at least in the case of the
             # interactive login shell.
             result = get_module_cmd_from_bash(['-i', '-l'])
-        except ModuleError:
-            tty.warn('Could not detect module function in the interactive '
-                     'login environment. Trying to find \'modulecmd\' in the '
-                     '$PATH.')
+        except ModuleError as e:
+            tty.warn('Failed to detect module function in the interactive '
+                     'login shell: ' + str(e) + ' Trying to find '
+                     '\'modulecmd\' in the $PATH.')
 
     if result is None:
         try:
@@ -80,6 +87,8 @@ def get_module_cmd():
     if re.match(r'^Modules Release Tcl 3\.',
                 result(error=str)) is not None:
         result.post_processor = old_tcl_postprocessor
+
+    _module_cmd_cache = result
 
     return result
 
