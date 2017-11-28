@@ -88,7 +88,7 @@ class Mercurial(PythonPackage):
 
         # Use certifi to find the location of the CA certificate
         print_str = self.spec['python'].package.print_string('certifi.where()')
-        certificate = python('-c', 'import certifi; ' + print_fct)
+        certificate = python('-c', 'import certifi; ' + print_str)
 
         if not certificate:
             tty.warn('CA certificate not found. You may not be able to '
