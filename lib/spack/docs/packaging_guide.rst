@@ -652,34 +652,6 @@ use:
 #. If all else fails and ``@develop`` is the only matching version, it
    will be used.
 
-^^^^^^^^^^^^^
-``spack md5``
-^^^^^^^^^^^^^
-
-If you have one or more files to checksum, you can use the ``spack md5``
-command to do it:
-
-.. code-block:: console
-
-   $ spack md5 foo-8.2.1.tar.gz foo-8.2.2.tar.gz
-   ==> 2 MD5 checksums:
-   4136d7b4c04df68b686570afa26988ac  foo-8.2.1.tar.gz
-   1586b70a49dfe05da5fcc29ef239dce0  foo-8.2.2.tar.gz
-
-``spack md5`` also accepts one or more URLs and automatically downloads
-the files for you:
-
-.. code-block:: console
-
-   $ spack md5 http://example.com/foo-8.2.1.tar.gz
-   ==> Trying to fetch from http://example.com/foo-8.2.1.tar.gz
-   ######################################################################## 100.0%
-   ==> 1 MD5 checksum:
-   4136d7b4c04df68b686570afa26988ac  foo-8.2.1.tar.gz
-
-Doing this for lots of files, or whenever a new package version is
-released, is tedious.  See ``spack checksum`` below for an automated
-version of this process.
 
 .. _cmd-spack-checksum:
 

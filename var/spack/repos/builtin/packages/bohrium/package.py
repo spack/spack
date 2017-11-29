@@ -24,6 +24,9 @@
 ##############################################################################
 from spack.build_systems.cuda import CudaPackage
 from spack import *
+from spack.package_test import compare_output
+from spack.util.executable import Executable
+import llnl.util.tty as tty
 import os
 
 
@@ -96,14 +99,14 @@ class Bohrium(CMakePackage, CudaPackage):
     depends_on('blas', when="+blas")
 
     # Make sure an appropriate opencv is used
-    depends_on('opencv', when="+opencv")
-    depends_on('opencv+cuda', when="+opencv+cuda")
-    depends_on('opencv+openmp', when="+opencv+openmp")
-    depends_on('opencv+openmp+cuda', when="+opencv+openmp+cuda")
+    depends_on('opencv+imgproc', when="+opencv")
+    depends_on('opencv+imgproc+cuda', when="+opencv+cuda")
+    depends_on('opencv+imgproc+openmp', when="+opencv+openmp")
+    depends_on('opencv+imgproc+openmp+cuda', when="+opencv+openmp+cuda")
 
     depends_on('python', type="build", when="~python")
-    depends_on('python', when="+python")
-    depends_on('py-numpy', when="+python")
+    depends_on('python', type=("build", "link", "test"), when="+python")
+    depends_on('py-numpy', type=("build", "test", "run"), when="+python")
     depends_on('swig', type="build", when="+python")
     depends_on('py-cython', type="build", when="+python")
 
@@ -177,7 +180,7 @@ class Bohrium(CMakePackage, CudaPackage):
             args += [
                 "-DEXT_BLAS=ON",
                 "-DCBLAS_FOUND=True",
-                "-DCBLAS_LIBRARIES=" + ";".join(spec["blas"].libs),
+                "-DCBLAS_LIBRARIES=" + spec["blas"].libs.joined(";"),
                 "-DCBLAS_INCLUDES=" + spec["blas"].prefix.include,
             ]
         else:
@@ -187,7 +190,7 @@ class Bohrium(CMakePackage, CudaPackage):
             args += [
                 "-DEXT_LAPACK=ON",
                 "-DLAPACKE_FOUND=True",
-                "-DLAPACKE_LIBRARIES=" + ";".join(spec["lapack"].libs),
+                "-DLAPACKE_LIBRARIES=" + spec["lapack"].libs.joined(";"),
                 "-DLAPACKE_INCLUDE_DIR=" + spec["lapack"].prefix.include,
             ]
         else:
@@ -198,7 +201,7 @@ class Bohrium(CMakePackage, CudaPackage):
                 "-DEXT_OPENCV=ON",
                 "-DOpenCV_FOUND=True",
                 "-DOpenCV_INCLUDE_DIRS=" + spec["opencv"].prefix.include,
-                "-DOpenCV_LIBS=" + ";".join(spec["opencv"].prefix.libs),
+                "-DOpenCV_LIBS=" + spec["opencv"].libs.joined(";"),
             ]
         else:
             args += ["-DEXT_OPENCV=OFF", "-DOpenCV_FOUND=False"]
@@ -220,3 +223,67 @@ class Bohrium(CMakePackage, CudaPackage):
         # the self.prefix.include dir
         run_env.prepend_path("CPATH", self.prefix.include.bohrium)
         run_env.set("BH_CONFIG", self.config_file)
+
+    #
+    # Quick tests
+    #
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        spec = self.spec
+        test_env = {}
+
+        # Make sure the correct config is found
+        test_env["BH_CONFIG"] = self.config_file
+
+        # Remove the lib/spackenv directory from the PATH variable when
+        # executing the tests, becauses it messes with the JIT compilation
+        # inside Bohrium
+        paths = os.environ['PATH'].split(':')
+        paths = [p for p in paths if "spack/env" not in p]
+        test_env["PATH"] = ":".join(paths)
+
+        # Add the PYTHONPATH to bohrium to the PYTHONPATH environment
+        pythonpaths = [p for p in os.environ["PYTHONPATH"].split(":")]
+        pythonpaths.append(join_path(self.prefix,
+                                     spec['python'].package.site_packages_dir))
+        test_env["PYTHONPATH"] = ":".join(pythonpaths)
+
+        # Collect the stacks which should be available:
+        stacks = ["default"]
+        if "+openmp" in spec:
+            stacks.append("openmp")
+        if "+cuda" in spec:
+            stacks.append("cuda")
+        if "+opencl" in spec:
+            stacks.append("opencl")
+
+        # C++ compiler and compiler flags
+        cxx = Executable(self.compiler.cxx)
+        cxx_flags = ["-I", self.prefix.include,
+                     "-I", self.prefix.include.bohrium,
+                     "-L", self.prefix.lib, "-lbh", "-lbhxx"]
+
+        # Compile C++ test program
+        file_cxxadd = join_path(os.path.dirname(self.module.__file__),
+                                "cxxadd.cpp")
+        cxx("-o", "test_cxxadd", file_cxxadd, *cxx_flags)
+        test_cxxadd = Executable("./test_cxxadd")
+
+        # Build python test commandline
+        file_pyadd = join_path(os.path.dirname(self.module.__file__),
+                               "pyadd.py")
+        test_pyadd = Executable(spec['python'].command.path + " " + file_pyadd)
+
+        # Run tests for each available stack
+        for bh_stack in stacks:
+            tty.info("Testing with bohrium stack '" + bh_stack + "'")
+            test_env["BH_STACK"] = bh_stack
+
+            cpp_output = test_cxxadd(output=str, env=test_env)
+            compare_output(cpp_output, "Success!\n")
+
+            # Python test (if +python)
+            if "+python" in spec:
+                py_output = test_pyadd(output=str, env=test_env)
+                compare_output(py_output, "Success!\n")
