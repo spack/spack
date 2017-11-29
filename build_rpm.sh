@@ -63,7 +63,7 @@ MPIS = {"openmpi@2.1.2~vt~cuda fabrics=verbs,pmi ~java schedulers=slurm": "",
        "mvapich2@2.2~cuda fabrics=mrail process_managers=slurm": "",
        "mvapich2@2.2+cuda fabrics=mrail process_managers=slurm": "^cuda@8.0.61",
         "mpich@3.2~hydra+pmi+romio+verbs netmod=ofi": "",
-       "intel-parallel-studio@cluster.2017.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune": ""
+       "intel-parallel-studio@cluster.2017.5+mpi": ""
 }
 for pkg,spec in MPIS.items():
     for compiler in COMPILERS:
@@ -74,8 +74,8 @@ for pkg,spec in MPIS.items():
 mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
            # "fftw@2.1.5+mpi+openmp": [""],
            "gromacs+mpi~cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
-           "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@8.0.61"]
-           "hpl@2.2": ["^openblas threads=openmp"]
+           "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@8.0.61"],
+           "hpl@2.2": ["^openblas threads=openmp", ""]
            # "scotch+mpi@6.0.4": [""]
 }
 for pkg,specs in mpipkgs.items():
