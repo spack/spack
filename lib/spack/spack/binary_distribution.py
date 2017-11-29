@@ -104,7 +104,7 @@ def write_buildinfo_file(prefix, rel=False):
     text_to_relocate = []
     binary_to_relocate = []
     blacklist = (".spack", "man")
-    os_id=platform.system()
+    os_id = platform.system()
     # Do this at during tarball creation to save time when tarball unpacked.
     # Used by make_package_relative to determine binaries to change.
     for root, dirs, files in os.walk(prefix, topdown=True):
