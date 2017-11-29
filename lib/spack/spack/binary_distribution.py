@@ -96,7 +96,7 @@ def read_buildinfo_file(prefix):
     return buildinfo
 
 
-def write_buildinfo_file(prefix, rel=False):
+def write_buildinfo_file(prefix, workdir, rel=False):
     """
     Create a cache file containing information
     required for the relocation
@@ -125,7 +125,7 @@ def write_buildinfo_file(prefix, rel=False):
     buildinfo['buildpath'] = prefix
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
-    filename = buildinfo_file_name(prefix)
+    filename = buildinfo_file_name(workdir)
     with open(filename, 'w') as outfile:
         outfile.write(yaml.dump(buildinfo, default_flow_style=True))
 
@@ -249,7 +249,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
-    write_buildinfo_file(workdir, rel=rel)
+    write_buildinfo_file(str(spec.prefix), workdir, rel=rel)
 
     # optinally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
