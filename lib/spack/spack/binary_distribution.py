@@ -28,6 +28,7 @@ import re
 import tarfile
 import yaml
 import shutil
+import platform
 
 import llnl.util.tty as tty
 from spack.util.gpg import Gpg
@@ -95,7 +96,7 @@ def read_buildinfo_file(prefix):
     return buildinfo
 
 
-def write_buildinfo_file(prefix, rel=False):
+def write_buildinfo_file(prefix, workdir, rel=False):
     """
     Create a cache file containing information
     required for the relocation
@@ -103,6 +104,7 @@ def write_buildinfo_file(prefix, rel=False):
     text_to_relocate = []
     binary_to_relocate = []
     blacklist = (".spack", "man")
+    os_id = platform.system()
     # Do this at during tarball creation to save time when tarball unpacked.
     # Used by make_package_relative to determine binaries to change.
     for root, dirs, files in os.walk(prefix, topdown=True):
@@ -110,7 +112,7 @@ def write_buildinfo_file(prefix, rel=False):
         for filename in files:
             path_name = os.path.join(root, filename)
             filetype = relocate.get_filetype(path_name)
-            if relocate.needs_binary_relocation(filetype):
+            if relocate.needs_binary_relocation(filetype, os_id):
                 rel_path_name = os.path.relpath(path_name, prefix)
                 binary_to_relocate.append(rel_path_name)
             elif relocate.needs_text_relocation(filetype):
@@ -123,7 +125,7 @@ def write_buildinfo_file(prefix, rel=False):
     buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
-    filename = buildinfo_file_name(prefix)
+    filename = buildinfo_file_name(workdir)
     with open(filename, 'w') as outfile:
         outfile.write(yaml.dump(buildinfo, default_flow_style=True))
 
@@ -241,13 +243,13 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    workdir = join_path(outdir, os.path.basename(spec.prefix))
+    workdir = join_path(outdir, spec.dag_hash())
     if os.path.exists(workdir):
         shutil.rmtree(workdir)
     install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
-    write_buildinfo_file(workdir, rel=rel)
+    write_buildinfo_file(spec.prefix, workdir, rel=rel)
 
     # optinally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
@@ -256,7 +258,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
-                arcname='%s' % os.path.basename(workdir))
+                arcname='.')
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -359,7 +361,8 @@ def relocate_package(prefix):
     path_names = set()
     for filename in buildinfo['relocate_textfiles']:
         path_name = os.path.join(prefix, filename)
-        path_names.add(path_name)
+        if '~' not in path_name:
+            path_names.add(path_name)
     relocate.relocate_text(path_names, old_path, new_path)
     # If the binary files in the package were not edited to use
     # relative RPATHs, then the RPATHs need to be relocated
@@ -416,7 +419,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     # delay creating installpath until verification is complete
     mkdirp(installpath)
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=join_path(installpath, '..'))
+        tar.extractall(path=join_path(installpath, '.'))
 
     os.remove(tarfile_path)
     os.remove(specfile_path)
