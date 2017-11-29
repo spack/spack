@@ -35,7 +35,7 @@ class Salmon(CMakePackage):
     version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
     version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
 
-    depends_on('intel-tbb')
+    depends_on('tbb')
     depends_on('boost')
 
     def cmake_args(self):
