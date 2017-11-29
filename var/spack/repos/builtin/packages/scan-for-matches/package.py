@@ -35,7 +35,7 @@ class ScanForMatches(Package):
     version('2010-7-16', 'f64c9cfb385984ded2a7ad9ad2253d83')
 
     def install(self, spec, prefix):
-        cc = which('cc')
+        cc = Executable(self.compiler.cc)
         cc('-O', '-o', 'scan_for_matches', 'ggpunit.c', 'scan_for_matches.c')
         mkdirp(prefix.bin)
         install('scan_for_matches', prefix.bin)
