@@ -32,7 +32,7 @@ import shutil
 import pytest
 import argparse
 
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, join_path
 
 import spack
 import spack.store
@@ -42,7 +42,7 @@ from spack.spec import Spec
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
-from spack.relocate import get_patchelf
+from spack.relocate import get_patchelf, relocate_text
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -191,6 +191,20 @@ echo $PATH"""
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
     assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
 
+    old_dir = '/home/spack/opt/spack'
+    filename = join_path(mirror_path, "dummy.txt")
+    with open(filename, "w") as script:
+        script.write(old_dir)
+        script.close()
+
+    filenames = [filename]
+    new_dir = '/opt/rh/devtoolset/'
+    relocate_text(filenames, old_dir, new_dir)
+
+    with open(filename, "r")as script:
+        for line in script:
+            assert(new_dir in line)
+
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
@@ -219,8 +233,8 @@ echo $PATH"""
 
 def test_relocate():
     assert (needs_binary_relocation('relocatable') is False)
-    assert (needs_binary_relocation('link') is False)
-    assert (needs_text_relocation('link') is False)
+    assert (needs_binary_relocation('link to') is False)
+    assert (needs_text_relocation('link to') is False)
 
     out = macho_make_paths_relative('/Users/Shares/spack/pkgC/lib/libC.dylib',
                                     '/Users/Shared/spack',

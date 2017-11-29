@@ -241,7 +241,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    workdir = join_path(outdir, os.path.basename(spec.prefix))
+    workdir = join_path(outdir, spec.dag_hash())
     if os.path.exists(workdir):
         shutil.rmtree(workdir)
     install_tree(spec.prefix, workdir, symlinks=True)
