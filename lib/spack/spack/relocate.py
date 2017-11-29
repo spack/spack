@@ -210,7 +210,7 @@ def modify_elf_object(path_name, orig_rpath, new_rpath):
         tty.die('relocation not supported for this platform')
 
 
-def needs_binary_relocation(filetype):
+def needs_binary_relocation(filetype, os_id=None):
     """
     Check whether the given filetype is a binary that may need relocation.
     """
@@ -219,12 +219,12 @@ def needs_binary_relocation(filetype):
         return False
     if "link to" in filetype:
         return False
-    if platform.system() == 'Darwin':
+    if os_id == 'Darwin':
         return ("Mach-O" in filetype)
-    elif platform.system() == 'Linux':
+    elif os_id == 'Linux':
         return ("ELF" in filetype)
     else:
-        tty.die("Relocation not implemented for %s" % platform.system())
+        tty.die("Relocation not implemented for %s" % os_id)
     return retval
 
 
