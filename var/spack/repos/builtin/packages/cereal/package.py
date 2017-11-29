@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -52,18 +52,11 @@ class Cereal(CMakePackage):
 
     depends_on('cmake@2.6.2:', type='build')
 
-    def patch(self):
-        # Don't use -Werror
-        filter_file(r'-Werror', '', 'CMakeLists.txt')
-
     def cmake_args(self):
         # Boost is only used for self-tests, which we are not running (yet?)
         return [
             '-DCMAKE_DISABLE_FIND_PACKAGE_Boost=TRUE',
             '-DSKIP_PORTABILITY_TEST=TRUE',
+            '-DJUST_INSTALL_CEREAL=On',
+            '-DWITH_WERROR=Off',
         ]
-
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            install_tree('doc', prefix.doc)
-            install_tree('include', prefix.include)

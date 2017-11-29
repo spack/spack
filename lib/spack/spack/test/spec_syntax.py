@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,9 +25,15 @@
 import pytest
 import shlex
 
+import spack
 import spack.spec as sp
 from spack.parse import Token
-from spack.spec import *
+from spack.spec import Spec, parse, parse_anonymous_spec
+from spack.spec import SpecParseError, RedundantSpecError
+from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
+from spack.spec import DuplicateArchitectureError, DuplicateVariantError
+from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
+
 
 # Sample output for a complex lexing.
 complex_lex = [Token(sp.ID, 'mvapich_foo'),
@@ -314,33 +320,20 @@ class TestSpecSyntax(object):
         assert len(specs) == 2
 
     def test_ambiguous_hash(self, database):
-        dbspecs = database.mock.db.query()
-
-        def find_ambiguous(specs, keyfun):
-            """Return the first set of specs that's ambiguous under a
-               particular key function."""
-            key_to_spec = {}
-            for spec in specs:
-                key = keyfun(spec)
-                speclist = key_to_spec.setdefault(key, [])
-                speclist.append(spec)
-                if len(speclist) > 1:
-                    return (key, speclist)
-
-            # If we fail here, we may need to guarantee that there are
-            # some ambiguos specs by adding more specs to the test DB
-            # until this succeeds.
-            raise RuntimeError("no ambiguous specs found for keyfun!")
+        x1 = Spec('a')
+        x1._hash = 'xy'
+        x1._concrete = True
+        x2 = Spec('a')
+        x2._hash = 'xx'
+        x2._concrete = True
+        database.mock.db.add(x1, spack.store.layout)
+        database.mock.db.add(x2, spack.store.layout)
 
         # ambiguity in first hash character
-        char, specs = find_ambiguous(dbspecs, lambda s: s.dag_hash()[0])
-        self._check_raises(AmbiguousHashError, ['/' + char])
+        self._check_raises(AmbiguousHashError, ['/x'])
 
         # ambiguity in first hash character AND spec name
-        t, specs = find_ambiguous(dbspecs,
-                                  lambda s: (s.name, s.dag_hash()[0]))
-        name, char = t
-        self._check_raises(AmbiguousHashError, [name + '/' + char])
+        self._check_raises(AmbiguousHashError, ['a/x'])
 
     def test_invalid_hash(self, database):
         mpileaks_zmpi = database.mock.db.query_one('mpileaks ^zmpi')

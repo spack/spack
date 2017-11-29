@@ -1,0 +1,6 @@
+enable:
+  - lmod
+lmod:
+  core_compilers: []
+  hierarchy:
+    - mpi

@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import re
+from spack import *
 
 
 class Mfem(Package):
@@ -50,6 +50,14 @@ class Mfem(Package):
     #
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
+
+    version('3.3.2', 
+            '01a762a5d0a2bc59ce4e2f59009045a4',
+            url='https://goo.gl/Kd7Jk8', extension='.tar.gz',
+            preferred=True)
+
+    version('laghos-v1.0', git='https://github.com/mfem/mfem',
+            tag='laghos-v1.0')
 
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
@@ -101,6 +109,7 @@ class Mfem(Package):
     conflicts('+superlu-dist', when='@:3.1')
     conflicts('+netcdf', when='@:3.1')
 
+    depends_on('hypre', when='+hypre')
     depends_on('blas', when='+lapack')
     depends_on('blas', when='+suite-sparse')
     depends_on('lapack', when='+lapack')
@@ -111,16 +120,13 @@ class Mfem(Package):
     depends_on('parmetis', when='+superlu-dist')
     depends_on('metis@5:', when='+superlu-dist')
     depends_on('metis@5:', when='+suite-sparse ^suite-sparse@4.5:')
-    depends_on('hypre~internal-superlu', when='+mpi')
-    depends_on('hypre@develop~internal-superlu', when='+petsc +hypre')
 
     depends_on('sundials@2.7:+hypre', when='+sundials')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='@3.2: +superlu-dist')
-    depends_on('petsc@develop', when='+petsc')
+    depends_on('petsc@3.8:', when='+petsc')
 
     depends_on('mpfr', when='+mpfr')
-    depends_on('cmake', when='^metis@5:', type='build')
     depends_on('netcdf', when='@3.2: +netcdf')
     depends_on('zlib', when='@3.2: +netcdf')
     depends_on('hdf5', when='@3.2: +netcdf')
@@ -128,14 +134,6 @@ class Mfem(Package):
     depends_on('zlib', when='+gzstream')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3 arch=ppc64le')
-
-    def check_variants(self, spec):
-        if 'metis@5:' in spec and '%clang' in spec and (
-                '^cmake %gcc' not in spec):
-            raise InstallError('To work around CMake bug with clang, must ' +
-                               'build mfem with mfem[+variants] %clang ' +
-                               '^cmake %gcc to force CMake to build with gcc')
-        return
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
@@ -145,7 +143,6 @@ class Mfem(Package):
     # configuration options. So, don't use CMake
     #
     def install(self, spec, prefix):
-        self.check_variants(spec)
 
         def yes_no(varstr):
             return 'YES' if varstr in self.spec else 'NO'
@@ -164,6 +161,7 @@ class Mfem(Package):
             'PREFIX=%s' % prefix,
             'MFEM_USE_MEMALLOC=YES',
             'MFEM_DEBUG=%s' % yes_no('+debug'),
+            'CXX=%s' % env['CXX'],
             'MFEM_USE_LIBUNWIND=%s' % yes_no('+debug'),
             'MFEM_USE_GZSTREAM=%s' % yes_no('+gzstream'),
             'MFEM_USE_METIS_5=%s' % metis5_str,
@@ -177,6 +175,9 @@ class Mfem(Package):
             'MFEM_USE_NETCDF=%s' % yes_no('+netcdf'),
             'MFEM_USE_MPFR=%s' % yes_no('+mpfr'),
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp')]
+
+        if '+mpi' in spec:
+            options += ['MPICXX=%s' % spec['mpi'].mpicxx]
 
         if '+hypre' in spec:
             options += [

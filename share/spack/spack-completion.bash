@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,7 @@ function _bash_completion_spack {
     # and `spack compiler add []` will call _spack_compiler_add
     local subfunction=$(IFS='_'; echo "_${COMP_WORDS_NO_FLAGS[*]}")
     # Translate dashes to underscores, as dashes are not permitted in
-    # compatibility mode. See https://github.com/LLNL/spack/pull/4079
+    # compatibility mode. See https://github.com/spack/spack/pull/4079
     subfunction=${subfunction//-/_}
 
     # However, the word containing the current cursor position needs to be
@@ -407,9 +407,9 @@ function _spack_find {
     if $list_options
     then
         compgen -W "-h --help -s --short -p --paths -d --deps -l --long
-                    -L --very-long -f --show-flags -e --explicit
-                    -E --implicit -u --unknown -m --missing -v --variants
-                    -M --only-missing -N --namespace" -- "$cur"
+                    -L --very-long -f --show-flags --show-full-compiler
+                    -e --explicit -E --implicit -u --unknown -m --missing
+                    -v --variants -M --only-missing -N --namespace" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
@@ -456,7 +456,7 @@ function _spack_install {
     then
         compgen -W "-h --help --only -j --jobs --keep-prefix --keep-stage
                     -n --no-checksum -v --verbose --fake --clean --dirty
-                    --run-tests --log-format --log-file" -- "$cur"
+                    --run-tests --log-format --log-file --source" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
