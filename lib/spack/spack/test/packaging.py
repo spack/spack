@@ -32,7 +32,7 @@ import shutil
 import pytest
 import argparse
 
-from llnl.util.filesystem import mkdirp, join_path
+from llnl.util.filesystem import mkdirp
 
 import spack
 import spack.store
@@ -191,7 +191,6 @@ echo $PATH"""
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
     assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
 
-
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
 
@@ -234,6 +233,7 @@ def test_relocate_text():
         for line in script:
             assert(new_dir in line)
 
+
 def test_needs_relocation():
     binary_type = (
         'ELF 64-bit LSB executable, x86-64, version 1 (SYSV),'
@@ -242,15 +242,16 @@ def test_needs_relocation():
 
     assert needs_binary_relocation(binary_type, os_id='Linux')
     assert not needs_binary_relocation('relocatable',
-                                        os_id='Linux')
+                                       os_id='Linux')
     assert not needs_binary_relocation('symbolic link to `foo\'',
-                                        os_id='Linux')
+                                       os_id='Linux')
 
     assert needs_text_relocation('ASCII text')
     assert not needs_text_relocation('symbolic link to `foo.text\'')
 
     macho_type = 'Mach-O 64-bit executable x86_64'
     assert needs_binary_relocation(macho_type, os_id='Darwin')
+
 
 def test_macho_paths():
 
@@ -321,6 +322,7 @@ def test_macho_paths():
                     '/usr/local/lib/libloco.dylib'],
                    None)
 
+
 def test_elf_paths():
     out = get_relative_rpaths(
         '/usr/bin/test', '/usr',
@@ -337,7 +339,7 @@ def test_elf_paths():
 def test_relocate_macho(tmpdir):
     with tmpdir.as_cwd():
 
-        get_patchelf() # this does nothing on Darwin
+        get_patchelf()  # this does nothing on Darwin
 
         rpaths, deps, idpath = macho_get_paths('/bin/bash')
         nrpaths, ndeps, nid = macho_make_paths_relative('/bin/bash', '/usr',
@@ -374,4 +376,3 @@ def test_relocate_macho(tmpdir):
             'libncurses.5.4.dylib',
             rpaths, deps, idpath,
             nrpaths, ndeps, nid)
-
