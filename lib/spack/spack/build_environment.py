@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -62,15 +62,15 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import *
+from llnl.util.filesystem import join_path, mkdirp, install, install_tree
 
 import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
-from spack.util.environment import *
+from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
-from spack.util.log_parse import *
+from spack.util.log_parse import parse_log_events, make_log_context
 
 
 #
@@ -91,6 +91,7 @@ SPACK_PREFIX = 'SPACK_PREFIX'
 SPACK_INSTALL = 'SPACK_INSTALL'
 SPACK_DEBUG = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC = 'SPACK_SHORT_SPEC'
+SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 
 
@@ -167,18 +168,12 @@ def set_compiler_environment_variables(pkg, env):
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
-    for mod in compiler.modules:
-        # Fixes issue https://github.com/LLNL/spack/issues/3153
-        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-            load_module("cce")
-        load_module(mod)
-
     compiler.setup_custom_environment(pkg, env)
 
     return env
 
 
-def set_build_environment_variables(pkg, env, dirty=False):
+def set_build_environment_variables(pkg, env, dirty):
     """Ensure a clean install environment when we build packages.
 
     This involves unsetting pesky environment variables that may
@@ -191,9 +186,9 @@ def set_build_environment_variables(pkg, env, dirty=False):
         dirty (bool): Skip unsetting the user's environment settings
     """
     # Gather information about various types of dependencies
-    build_deps      = pkg.spec.dependencies(deptype='build')
-    link_deps       = pkg.spec.traverse(root=False, deptype=('link'))
-    build_link_deps = pkg.spec.traverse(root=False, deptype=('build', 'link'))
+    build_deps      = set(pkg.spec.dependencies(deptype=('build', 'test')))
+    link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
+    build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
 
     build_prefixes      = [dep.prefix for dep in build_deps]
@@ -303,6 +298,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     if spack.debug:
         env.set(SPACK_DEBUG, 'TRUE')
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
@@ -311,9 +307,6 @@ def set_build_environment_variables(pkg, env, dirty=False):
             pcdir = join_path(prefix, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
-
-    if pkg.architecture.target.module_name:
-        load_module(pkg.architecture.target.module_name)
 
     return env
 
@@ -379,6 +372,104 @@ def set_module_variables_for_package(pkg, module):
 
     # Platform-specific library suffix.
     m.dso_suffix = dso_suffix
+
+    def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
+        compiler_path = kwargs.get('compiler', m.spack_cc)
+        compiler = Executable(compiler_path)
+
+        return _static_to_shared_library(pkg.spec.architecture, compiler,
+                                         static_lib, shared_lib, **kwargs)
+
+    m.static_to_shared_library = static_to_shared_library
+
+
+def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
+                              **kwargs):
+    """
+    Converts a static library to a shared library. The static library has to
+    be built with PIC for the conversion to work.
+
+    Parameters:
+        static_lib (str): Path to the static library.
+        shared_lib (str): Path to the shared library. Default is to derive
+                          from the static library's path.
+
+    Keyword arguments:
+        compiler (str): Path to the compiler. Default is spack_cc.
+        compiler_output: Where to print compiler output to.
+        arguments (str list): Additional arguments for the compiler.
+        version (str): Library version. Default is unspecified.
+        compat_version (str): Library compatibility version. Default is
+                              version.
+    """
+    compiler_output = kwargs.get('compiler_output', None)
+    arguments = kwargs.get('arguments', [])
+    version = kwargs.get('version', None)
+    compat_version = kwargs.get('compat_version', version)
+
+    if not shared_lib:
+        shared_lib = '{0}.{1}'.format(os.path.splitext(static_lib)[0],
+                                      dso_suffix)
+
+    compiler_args = []
+
+    # TODO: Compiler arguments should not be hardcoded but provided by
+    #       the different compiler classes.
+    if 'linux' in arch:
+        soname = os.path.basename(shared_lib)
+
+        if compat_version:
+            soname += '.{0}'.format(compat_version)
+
+        compiler_args = [
+            '-shared',
+            '-Wl,-soname,{0}'.format(soname),
+            '-Wl,--whole-archive',
+            static_lib,
+            '-Wl,--no-whole-archive'
+        ]
+    elif 'darwin' in arch:
+        install_name = shared_lib
+
+        if compat_version:
+            install_name += '.{0}'.format(compat_version)
+
+        compiler_args = [
+            '-dynamiclib',
+            '-install_name {0}'.format(install_name),
+            '-Wl,-force_load,{0}'.format(static_lib)
+        ]
+
+        if compat_version:
+            compiler_args.append('-compatibility_version {0}'.format(
+                compat_version))
+
+        if version:
+            compiler_args.append('-current_version {0}'.format(version))
+
+    if len(arguments) > 0:
+        compiler_args.extend(arguments)
+
+    shared_lib_base = shared_lib
+
+    if version:
+        shared_lib += '.{0}'.format(version)
+    elif compat_version:
+        shared_lib += '.{0}'.format(compat_version)
+
+    compiler_args.extend(['-o', shared_lib])
+
+    # Create symlinks for version and compat_version
+    shared_lib_link = os.path.basename(shared_lib)
+
+    if version or compat_version:
+        os.symlink(shared_lib_link, shared_lib_base)
+
+    if compat_version and compat_version != version:
+        os.symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
+                                                     compat_version))
+
+    return compiler(*compiler_args, output=compiler_output)
 
 
 def get_rpath_deps(pkg):
@@ -450,7 +541,7 @@ def load_external_modules(pkg):
             load_module(dep.external_module)
 
 
-def setup_package(pkg, dirty=False):
+def setup_package(pkg, dirty):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
@@ -465,12 +556,8 @@ def setup_package(pkg, dirty=False):
     # code ensures that all packages in the DAG have pieces of the
     # same spec object at build time.
     #
-    # This is safe for the build process, b/c the build process is a
-    # throwaway environment, but it is kind of dirty.
-    #
-    # TODO: Think about how to avoid this fix and do something cleaner.
     for s in pkg.spec.traverse():
-        s.package.spec = s
+        assert s.package.spec is s
 
     # Trap spack-tracked compiler flags as appropriate.
     # Must be before set_compiler_environment_variables
@@ -488,7 +575,7 @@ def setup_package(pkg, dirty=False):
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
-    load_external_modules(pkg)
+
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
     for dspec in pkg.spec.traverse(order='post', root=False, deptype='build'):
@@ -515,8 +602,23 @@ def setup_package(pkg, dirty=False):
     validate(spack_env, tty.warn)
     spack_env.apply_modifications()
 
+    # All module loads that otherwise would belong in previous functions
+    # have to occur after the spack_env object has its modifications applied.
+    # Otherwise the environment modifications could undo module changes, such
+    # as unsetting LD_LIBRARY_PATH after a module changes it.
+    for mod in pkg.compiler.modules:
+        # Fixes issue https://github.com/spack/spack/issues/3153
+        if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+            load_module("cce")
+        load_module(mod)
 
-def fork(pkg, function, dirty=False):
+    if pkg.architecture.target.module_name:
+        load_module(pkg.architecture.target.module_name)
+
+    load_external_modules(pkg)
+
+
+def fork(pkg, function, dirty, fake):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -527,6 +629,7 @@ def fork(pkg, function, dirty=False):
             process.
         dirty (bool): If True, do NOT clean the environment before
             building.
+        fake (bool): If True, skip package setup b/c it's not a real build
 
     Usage::
 
@@ -554,7 +657,8 @@ def fork(pkg, function, dirty=False):
             sys.stdin = input_stream
 
         try:
-            setup_package(pkg, dirty=dirty)
+            if not fake:
+                setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
         except StopIteration as e:
@@ -563,7 +667,7 @@ def fork(pkg, function, dirty=False):
             tty.msg(e.message)
             child_pipe.send(None)
 
-        except:
+        except BaseException:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
 
@@ -602,6 +706,10 @@ def fork(pkg, function, dirty=False):
             target=child_process, args=(child_pipe, input_stream))
         p.start()
 
+    except InstallError as e:
+        e.pkg = pkg
+        raise
+
     finally:
         # Close the input stream in the parent process
         if input_stream is not None:
@@ -609,6 +717,10 @@ def fork(pkg, function, dirty=False):
 
     child_result = parent_pipe.recv()
     p.join()
+
+    # let the caller know which package went wrong.
+    if isinstance(child_result, InstallError):
+        child_result.pkg = pkg
 
     # If the child process raised an error, print its output here rather
     # than waiting until the call to SpackError.die() in main(). This
@@ -665,11 +777,11 @@ def get_package_context(traceback, context=3):
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
-    l = frame.f_lineno - start
-    start_ctx = max(0, l - context)
-    sourcelines = sourcelines[start_ctx:l + context + 1]
+    fl = frame.f_lineno - start
+    start_ctx = max(0, fl - context)
+    sourcelines = sourcelines[start_ctx:fl + context + 1]
     for i, line in enumerate(sourcelines):
-        is_error = start_ctx + i == l
+        is_error = start_ctx + i == fl
         mark = ">> " if is_error else "   "
         marked = "  %s%-6d%s" % (mark, start_ctx + i, line.rstrip())
         if is_error:
@@ -680,10 +792,15 @@ def get_package_context(traceback, context=3):
 
 
 class InstallError(spack.error.SpackError):
-    """Raised by packages when a package fails to install"""
+    """Raised by packages when a package fails to install.
+
+    Any subclass of InstallError will be annotated by Spack wtih a
+    ``pkg`` attribute on failure, which the caller can use to get the
+    package for which the exception was raised.
+    """
 
 
-class ChildError(spack.error.SpackError):
+class ChildError(InstallError):
     """Special exception class for wrapping exceptions from child processes
        in Spack's build environment.
 
@@ -738,9 +855,14 @@ class ChildError(spack.error.SpackError):
             # The error happened in some external executed process. Show
             # the build log with errors highlighted.
             if self.build_log:
-                events = parse_log_events(self.build_log)
-                out.write("\n%d errors in build log:\n" % len(events))
-                out.write(make_log_context(events))
+                errors, warnings = parse_log_events(self.build_log)
+                nerr = len(errors)
+                if nerr > 0:
+                    if nerr == 1:
+                        out.write("\n1 error found in build log:\n")
+                    else:
+                        out.write("\n%d errors found in build log:\n" % nerr)
+                    out.write(make_log_context(errors))
 
         else:
             # The error happened in in the Python code, so try to show

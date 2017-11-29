@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,7 +35,8 @@ dependents = SpackCommand('dependents')
 def test_immediate_dependents(builtin_mock):
     out = dependents('libelf')
     actual = set(re.split(r'\s+', out.strip()))
-    assert actual == set(['dyninst', 'libdwarf'])
+    assert actual == set(['dyninst', 'libdwarf',
+                          'patch-a-dependency', 'patch-several-dependencies'])
 
 
 def test_transitive_dependents(builtin_mock):
@@ -43,7 +44,8 @@ def test_transitive_dependents(builtin_mock):
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set(
         ['callpath', 'dyninst', 'libdwarf', 'mpileaks', 'multivalue_variant',
-         'singlevalue-variant-dependent'])
+         'singlevalue-variant-dependent',
+         'patch-a-dependency', 'patch-several-dependencies'])
 
 
 def test_immediate_installed_dependents(builtin_mock, database):

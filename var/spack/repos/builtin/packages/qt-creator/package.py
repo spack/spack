@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,7 @@ class QtCreator(QMakePackage):
     list_url = 'http://download.qt.io/official_releases/qtcreator/'
     list_depth = 2
 
+    version('4.4.0', 'bae2e08bb5087aba65d41eb3f9328d9a')
     version('4.3.1', '6769ea47f287e2d9e30ff92acb899eef')
     version('4.1.0', '657727e4209befa4bf5889dff62d9e0a')
 

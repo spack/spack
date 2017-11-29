@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Paraview(CMakePackage):
@@ -33,6 +34,7 @@ class Paraview(CMakePackage):
     url      = "http://www.paraview.org/files/v5.3/ParaView-v5.3.0.tar.gz"
     _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.gz'
 
+    version('5.4.1', '4030c70477ec5a85aa72d6fc86a30753')
     version('5.4.0', 'b92847605bac9036414b644f33cb7163')
     version('5.3.0', '68fbbbe733aa607ec13d1db1ab5eba71')
     version('5.2.0', '4570d1a2a183026adb65b73c7125b8b0')
@@ -55,6 +57,9 @@ class Paraview(CMakePackage):
     depends_on('qt', when='@5.3.0:+qt')
     depends_on('qt@:4', when='@:5.2.0+qt')
 
+    depends_on('mesa+swrender', when='+osmesa')
+    conflicts('+qt', when='+osmesa')
+
     depends_on('bzip2')
     depends_on('freetype')
     # depends_on('hdf5+mpi', when='+mpi')
@@ -68,6 +73,7 @@ class Paraview(CMakePackage):
     # depends_on('protobuf') # version mismatches?
     # depends_on('sqlite') # external version not supported
     depends_on('zlib')
+    depends_on('cmake@3.3:', type='build')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
@@ -83,6 +89,17 @@ class Paraview(CMakePackage):
             return self._urlfmt.format(version.up_to(2), version, '-source')
         else:
             return self._urlfmt.format(version.up_to(2), version, '')
+
+    def setup_environment(self, spack_env, run_env):
+        if os.path.isdir(self.prefix.lib64):
+            lib_dir = self.prefix.lib64
+        else:
+            lib_dir = self.prefix.lib
+        paraview_version = 'paraview-%s' % self.spec.version.up_to(2)
+        run_env.prepend_path('LIBRARY_PATH', join_path(lib_dir,
+                             paraview_version))
+        run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
+                             paraview_version))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
@@ -136,10 +153,17 @@ class Paraview(CMakePackage):
                 '-DMPIEXEC:FILEPATH=%s/bin/mpiexec' % spec['mpi'].prefix
             ])
 
-        if 'darwin' in self.spec.architecture:
+        if 'darwin' in spec.architecture:
             cmake_args.extend([
                 '-DVTK_USE_X:BOOL=OFF',
                 '-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON',
+            ])
+
+        # Hide git from Paraview so it will not use `git describe`
+        # to find its own version number
+        if spec.satisfies('@5.4.0:5.4.1'):
+            cmake_args.extend([
+                '-DGIT_EXECUTABLE=FALSE'
             ])
 
         return cmake_args

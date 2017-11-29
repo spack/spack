@@ -170,7 +170,7 @@ of usage:
 
 .. code-block:: sh
 
-   #!/bin/sh
+   #!/bin/bash
 
    compilers=(
        %gcc
@@ -355,7 +355,7 @@ Transitive Dependencies
 
 In the script above, each ``spack module loads`` command generates a
 *single* ``module load`` line.  Transitive dependencies do not usually
-need to be loaded, only modules the user needs in in ``$PATH``.  This is
+need to be loaded, only modules the user needs in ``$PATH``.  This is
 because Spack builds binaries with RPATH.  Spack's RPATH policy has
 some nice features:
 
@@ -1088,7 +1088,7 @@ The main points that are implemented below:
    install:
      - if ! which spack >/dev/null; then
          mkdir -p $SPACK_ROOT &&
-         git clone --depth 50 https://github.com/llnl/spack.git $SPACK_ROOT &&
+         git clone --depth 50 https://github.com/spack/spack.git $SPACK_ROOT &&
          echo -e "config:""\n  build_jobs:"" 2" > $SPACK_ROOT/etc/spack/config.yaml;
        fi
      - travis_wait spack install cmake@3.7.2~openssl~ncurses
@@ -1106,6 +1106,154 @@ The main points that are implemented below:
      - make -j 2
      - make test
 
+.. _workflow_create_docker_image:
+
+-----------------------------------
+Using Spack to Create Docker Images
+-----------------------------------
+
+Spack can be the ideal tool to set up images for Docker (and Singularity).
+
+An example ``Dockerfile`` is given below, downloading the latest spack
+version.
+
+The following functionality is prepared:
+
+#. Base image: the example starts from a minimal ubuntu.
+
+#. Installing as root: docker images are usually set up as root.
+   Since some autotools scripts might complain about this being unsafe, we set
+   ``FORCE_UNSAFE_CONFIGURE=1`` to avoid configure errors.
+
+#. Pre-install the spack dependencies, including modules from the packages.
+   This avoids needing to build those from scratch via ``spack bootstrap``.
+   Package installs are followed by a clean-up of the system package index,
+   to avoid outdated information and it saves space.
+
+#. Install spack in ``/usr/local``.
+   Add ``setup-env.sh`` to profile scripts, so commands in *login* shells
+   can use the whole spack functionality, including modules.
+
+#. Install an example package (``tar``).
+   As with system package managers above, ``spack install`` commands should be
+   concatenated with a ``&& spack clean -a`` in order to keep image sizes small.
+
+#. Add a startup hook to an *interactive login shell* so spack modules will be
+   usable.
+
+In order to build and run the image, execute:
+
+.. code-block:: bash
+
+   docker build -t spack .
+   docker run -it spack
+
+.. code-block:: docker
+
+   FROM       ubuntu:16.04
+   MAINTAINER Your Name <someone@example.com>
+
+   # general environment for docker
+   ENV        DEBIAN_FRONTEND=noninteractive \
+              SPACK_ROOT=/usr/local \
+              FORCE_UNSAFE_CONFIGURE=1
+
+   # install minimal spack depedencies
+   RUN        apt-get update \
+              && apt-get install -y --no-install-recommends \
+                 autoconf \
+                 build-essential \
+                 ca-certificates \
+                 coreutils \
+                 curl \
+                 environment-modules \
+                 git \
+                 python \
+                 unzip \
+                 vim \
+              && rm -rf /var/lib/apt/lists/*
+
+   # load spack environment on login
+   RUN        echo "source $SPACK_ROOT/share/spack/setup-env.sh" \
+              > /etc/profile.d/spack.sh
+
+   # spack settings
+   # note: if you wish to change default settings, add files alongside
+   #       the Dockerfile with your desired settings. Then uncomment this line
+   #COPY       packages.yaml modules.yaml $SPACK_ROOT/etc/spack/
+
+   # install spack
+   RUN        curl -s -L https://api.github.com/repos/spack/spack/tarball \
+              | tar xzC $SPACK_ROOT --strip 1
+   # note: at this point one could also run ``spack bootstrap`` to avoid
+   #       parts of the long apt-get install list above
+
+   # install software
+   RUN        spack install tar \
+              && spack clean -a
+
+   # need the modules already during image build?
+   #RUN        /bin/bash -l -c ' \
+   #                spack load tar \
+   #                && which tar'
+
+   # image run hook: the -l will make sure /etc/profile environments are loaded
+   CMD        /bin/bash -l
+
+^^^^^^^^^^^^^^
+Best Practices
+^^^^^^^^^^^^^^
+
+"""
+MPI
+"""
+Due to the dependency on Fortran for OpenMPI, which is the spack default
+implementation, consider adding ``gfortran`` to the ``apt-get install`` list.
+
+Recent versions of OpenMPI will require you to pass ``--allow-run-as-root``
+to your ``mpirun`` calls if started as root user inside Docker.
+
+For execution on HPC clusters, it can be helpful to import the docker
+image into Singularity in order to start a program with an *external*
+MPI. Otherwise, also add ``openssh-server`` to the ``apt-get install`` list.
+
+""""
+CUDA
+""""
+Starting from CUDA 9.0, Nvidia provides minimal CUDA images based on
+Ubuntu.
+Please see `their instructions <https://hub.docker.com/r/nvidia/cuda/>`_.
+Avoid double-installing CUDA by adding, e.g.
+
+.. code-block:: yaml
+
+   packages:
+     cuda:
+       paths:
+         cuda@9.0.176%gcc@5.4.0 arch=linux-ubuntu16-x86_64: /usr/local/cuda
+       buildable: False
+
+to your ``packages.yaml``.
+Then ``COPY`` in that file into the image as in the example above.
+
+Users will either need ``nvidia-docker`` or e.g. Singularity to *execute*
+device kernels.
+
+"""""""""""
+Singularity
+"""""""""""
+Importing and running the image created above into
+`Singularity <http://singularity.lbl.gov/>`_ works like a charm.
+Just use the `docker bootstraping mechanism <http://singularity.lbl.gov/quickstart#bootstrap-recipes>`_:
+
+.. code-block:: none
+
+   Bootstrap: docker
+   From: registry/user/image:tag
+
+   %runscript
+   exec /bin/bash -l
+
 ------------------
 Upstream Bug Fixes
 ------------------
@@ -1122,7 +1270,7 @@ Buggy New Version
 
 Sometimes, the old version of a package works fine, but a new version
 is buggy.  For example, it was once found that `Adios did not build
-with hdf5@1.10 <https://github.com/LLNL/spack/issues/1683>`_.  If the
+with hdf5@1.10 <https://github.com/spack/spack/issues/1683>`_.  If the
 old version of ``hdf5`` will work with ``adios``, the suggested
 procedure is:
 
@@ -1132,7 +1280,7 @@ procedure is:
    .. code-block:: python
 
       # Adios does not build with HDF5 1.10
-      # See: https://github.com/LLNL/spack/issues/1683
+      # See: https://github.com/spack/spack/issues/1683
       depends_on('hdf5@:1.9')
 
 #. Determine whether the problem is with ``hdf5`` or ``adios``, and
@@ -1145,7 +1293,7 @@ procedure is:
    .. code-block:: python
 
       # Adios up to v1.10.0 does not build with HDF5 1.10
-      # See: https://github.com/LLNL/spack/issues/1683
+      # See: https://github.com/spack/spack/issues/1683
       depends_on('hdf5@:1.9', when='@:1.10.0')
       depends_on('hdf5', when='@1.10.1:')
 
