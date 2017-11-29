@@ -25,18 +25,14 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyBackportsFunctoolsLruCache(PythonPackage):
+    """Backport of functools.lru_cache from Python 3.3"""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
-    url      = "https://pypi.io/packages/source/e/enum34/enum34-1.1.6.tar.gz"
+    homepage = "https://bitbucket.org/jaraco/backports.functools_lru_cache"
+    url      = "https://pypi.io/packages/source/b/backports.functools_lru_cache/backports.functools_lru_cache-1.0.1.zip"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
+    version('1.0.1', 'c789ef439d189330b99872746a6d9e85')
 
-    depends_on('python')
-    conflicts('python@3.4:')
-
-    # This dependency breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm@1.15.0:', type='build')
+    depends_on('python@2.6.0:3.3.99',        type=('build', 'run'))

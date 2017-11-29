@@ -22,19 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-from spack.cmd.md5 import do_checksum
-
-description = "calculate sha256 checksums for files/urls"
-section = "packaging"
-level = "long"
+from spack import *
 
 
-def setup_parser(subparser):
-    setup_parser.parser = subparser
-    subparser.add_argument('files', nargs=argparse.REMAINDER,
-                           help="files/urls to checksum")
+class PyEditdistance(PythonPackage):
+    """Fast implementation of the edit distance (Levenshtein distance)."""
 
+    homepage = "http://www.example.com://github.com/aflc/editdistance"
+    url      = "https://pypi.io/packages/source/e/editdistance/editdistance-0.4.tar.gz"
 
-def sha256(parser, args):
-    do_checksum(parser, args, 'sha256')
+    version('0.4', '27434720ca0930a9b6974b182b6237bc')
+
+    depends_on('py-setuptools', type='build')
