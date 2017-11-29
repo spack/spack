@@ -26,7 +26,6 @@ import os
 import glob
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
 
 import spack
 import spack.cmd
@@ -83,7 +82,7 @@ def setup_parser(subparser):
         help="edit the command with the supplied name")
     excl_args.add_argument(
         '-d', '--docs', dest='path', action='store_const',
-        const=join_path(spack.lib_path, 'docs'),
+        const=os.path.join(spack.lib_path, 'docs'),
         help="edit the docs with the supplied name")
     excl_args.add_argument(
         '-t', '--test', dest='path', action='store_const',
@@ -117,24 +116,17 @@ def edit(parser, args):
     if args.path:
         path = args.path
         if name:
-            if '.' in name:
-                # User provided suffix. Just use join it to the path
-                path = join_path(path, name)
-                if not os.path.exists(path):
-                    dir, name = os.path.split(path)
-                    tty.die("No file '{0}' was found in {1}".format(name,
-                                                                    dir))
-            else:
-                # Find all possible files with that name
-                files = glob.glob(join_path(path, name + '.*'))
+            path = os.path.join(path, name)
+            if not os.path.exists(path):
+                files = glob.glob(path + '*')
                 blacklist = ['.pyc', '~']  # blacklist binaries and backups
                 files = filter(lambda x: all(s not in x for s in blacklist),
                                files)
                 if len(files) > 1:
                     m = 'Multiple files exist with the name {0}.'.format(name)
-                    m += ' Please specify a suffix. Files are:'
+                    m += ' Please specify a suffix. Files are:\n\n'
                     for f in files:
-                        m += ' ' + os.path.basename(f)
+                        m += '        ' + os.path.basename(f) + '\n'
                     tty.die(m)
                 if not files:
                     tty.die("No file for '{0}' was found in {1}".format(name,
