@@ -62,7 +62,6 @@ def spec(parser, args):
     name_fmt = '$.' if args.namespaces else '$_'
     kwargs = {'cover': args.cover,
               'format': name_fmt + '$@$%@+$+$=',
-              'hashes': args.long or args.very_long,
               'hashlen': None if args.very_long else 7,
               'show_types': args.types,
               'install_status': args.install_status}
@@ -75,16 +74,12 @@ def spec(parser, args):
             print(spec.to_yaml())
             continue
 
-        # Print some diagnostic info by default.
+        kwargs['hashes'] = False  # Always False for input spec
         print("Input spec")
         print("--------------------------------")
         print(spec.tree(**kwargs))
 
-        print("Normalized")
-        print("--------------------------------")
-        spec.normalize()
-        print(spec.tree(**kwargs))
-
+        kwargs['hashes'] = args.long or args.very_long
         print("Concretized")
         print("--------------------------------")
         spec.concretize()
