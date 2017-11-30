@@ -71,10 +71,10 @@ compilers:
     modules: []
     operating_system: centos7
     paths:
-      cc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.5-geurbg7kvebddctqiaqjqjoy2hzp45k5/bin/icc
+      cc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.5-geurbg7kvebddctqiaqjqjoy2hzp45k5/bin/icc
       cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.5-geurbg7kvebddctqiaqjqjoy2hzp45k5/bin/icpc
       f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.5-geurbg7kvebddctqiaqjqjoy2hzp45k5/bin/ifort
-      fc:  /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.5-geurbg7kvebddctqiaqjqjoy2hzp45k5/bin/ifort
+      fc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2017.5-geurbg7kvebddctqiaqjqjoy2hzp45k5/bin/ifort
     spec: intel@17.0.5
     target: x86_64
 - compiler:
@@ -89,4 +89,17 @@ compilers:
       f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.1-i3dng6yvf5oi7m2ccqockkaol23f72z7/bin/ifort
       fc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2018.1-i3dng6yvf5oi7m2ccqockkaol23f72z7/bin/ifort
     spec: intel@18.0.1
+    target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: centos7
+    paths:
+      cc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-jnqjhwujdkmsbkqwhnvo7urpcmyqbkgd/bin/icc
+      cxx: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-jnqjhwujdkmsbkqwhnvo7urpcmyqbkgd/bin/icpc
+      f77: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-jnqjhwujdkmsbkqwhnvo7urpcmyqbkgd/bin/ifort
+      fc: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/intel-parallel-studio-cluster.2016.4-jnqjhwujdkmsbkqwhnvo7urpcmyqbkgd/bin/ifort
+    spec: intel@16.0.4
     target: x86_64
