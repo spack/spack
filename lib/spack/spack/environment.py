@@ -26,6 +26,7 @@ import collections
 import inspect
 import json
 import os
+import re
 import sys
 import os.path
 import subprocess
@@ -289,6 +290,10 @@ class EnvironmentModifications(object):
                 (default: ``&> /dev/null``)
             concatenate_on_success (str): Operator used to execute a command
                 only when the previous command succeeds (default: ``&&``)
+            blacklist ([str or re]): Ignore any modifications of these
+                variables (default: [])
+            whitelist ([str or re]): Always respect modifications of these
+                variables (default: []). Has precedence over blacklist.
 
         Returns:
             EnvironmentModifications: an object that, if executed, has
@@ -305,6 +310,8 @@ class EnvironmentModifications(object):
         source_command         = kwargs.get('source_command', 'source')
         suppress_output        = kwargs.get('suppress_output', '&> /dev/null')
         concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
+        blacklist              = kwargs.get('blacklist', [])
+        whitelist              = kwargs.get('whitelist', [])
 
         source_file = [source_command, filename]
         source_file.extend(args)
@@ -346,11 +353,27 @@ class EnvironmentModifications(object):
             env_after = dict((k.encode('utf-8'), v.encode('utf-8'))
                              for k, v in env_after.items())
 
-        # Filter variables that are not related to sourcing a file
-        to_be_filtered = 'SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'
+        # Other variables unrelated to sourcing a file
+        blacklist.extend(['SHLVL', '_', 'PWD', 'OLDPWD', 'PS2'])
+
+        def set_intersection(fullset, *args):
+            # A set intersection using string literals and regexs
+            meta = '[' + re.escape('[$()*?[]^{|}') + ']'
+            subset = fullset & set(args)   # As literal
+            for name in args:
+                if re.search(meta, name):
+                    pattern = re.compile(name)
+                    for k in fullset:
+                        if re.match(pattern, k):
+                            subset.add(k)
+            return subset
+
         for d in env_after, env_before:
-            for name in to_be_filtered:
-                d.pop(name, None)
+            # Retain (whitelist) has priority over prune (blacklist)
+            prune = set_intersection(set(d), *blacklist)
+            prune -= set_intersection(prune, *whitelist)
+            for k in prune:
+                d.pop(k, None)
 
         # Fill the EnvironmentModifications instance
         env = EnvironmentModifications()
