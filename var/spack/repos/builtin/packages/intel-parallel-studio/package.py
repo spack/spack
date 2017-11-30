@@ -433,13 +433,11 @@ class IntelParallelStudio(IntelPackage):
     def fix_psxevars(self):
         """Newer versions (>2016) of Intel Parallel Studio have a bug in the
         ``psxevars.sh`` script."""
-        spec = self.spec
-        year = self.version[1]
 
         bindir = glob.glob(join_path(
             self.prefix, 'parallel_studio*', 'bin'))[0]
 
-        if year > 2016:
+        if self.version[1] > 2016:
             filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
                         os.path.join(bindir, 'psxevars.sh'),
                         os.path.join(bindir, 'psxevars.csh'))
