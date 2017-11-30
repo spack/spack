@@ -243,7 +243,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    workdir = join_path(outdir, spec.dag_hash())
+    workdir = join_path(outdir, os.path.basename(spec.prefix))
     if os.path.exists(workdir):
         shutil.rmtree(workdir)
     install_tree(spec.prefix, workdir, symlinks=True)
@@ -258,7 +258,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
-                arcname='.')
+                arcname='%s' % os.path.basename(workdir))
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -419,7 +419,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     # delay creating installpath until verification is complete
     mkdirp(installpath)
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=join_path(installpath, '.'))
+        tar.extractall(path=join_path(installpath, '..'))
 
     os.remove(tarfile_path)
     os.remove(specfile_path)
