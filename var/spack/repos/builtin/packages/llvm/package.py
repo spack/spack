@@ -427,7 +427,7 @@ class Llvm(CMakePackage):
             cmake_args.append('-DLLVM_LINK_LLVM_DYLIB:Bool=ON')
 
         if '+all_targets' not in spec:  # all is default on cmake
-            targets = ['CppBackend', 'NVPTX', 'AMDGPU']
+            targets = ['NVPTX', 'AMDGPU']
             if 'x86' in spec.architecture.target.lower():
                 targets.append('X86')
             elif 'arm' in spec.architecture.target.lower():
