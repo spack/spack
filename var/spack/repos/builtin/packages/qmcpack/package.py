@@ -116,22 +116,23 @@ class Qmcpack(CMakePackage):
                     'CMake/FindLibxml2QMC.cmake')
 
     def cmake_args(self):
+        spec = self.spec
         args = []
 
-        if '+mpi' in self.spec:
-            mpi = self.spec['mpi']
+        if '+mpi' in spec:
+            mpi = spec['mpi']
             args.append('-DCMAKE_C_COMPILER={0}'.format(mpi.mpicc))
             args.append('-DCMAKE_CXX_COMPILER={0}'.format(mpi.mpicxx))
             args.append('-DMPI_BASE_DIR:PATH={0}'.format(mpi.prefix))
 
         # Currently FFTW_HOME and LIBXML2_HOME are used by CMake.
         # Any CMake warnings about other variables are benign.
-        xml2_prefix = self.spec['libxml2'].prefix
+        xml2_prefix = spec['libxml2'].prefix
         args.append('-DLIBXML2_HOME={0}'.format(xml2_prefix))
         args.append('-DLibxml2_INCLUDE_DIRS={0}'.format(xml2_prefix.include))
         args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(xml2_prefix.lib))
 
-        fftw_prefix = self.spec['fftw'].prefix
+        fftw_prefix = spec['fftw'].prefix
         args.append('-DFFTW_HOME={0}'.format(fftw_prefix))
         args.append('-DFFTW_INCLUDE_DIRS={0}'.format(fftw_prefix.include))
         args.append('-DFFTW_LIBRARY_DIRS={0}'.format(fftw_prefix.lib))
@@ -140,15 +141,15 @@ class Qmcpack(CMakePackage):
         args.append('-DHDF5_ROOT={0}'.format(self.spec['hdf5'].prefix))
 
         # Default is MPI, serial version is convenient for cases, e.g. laptops
-        if '+mpi' in self.spec:
+        if '+mpi' in spec:
             args.append('-DQMC_MPI=1')
-        elif '~mpi' in self.spec:
+        elif '~mpi' in spec:
             args.append('-DQMC_MPI=0')
 
         # Default is real-valued single particle orbitals
-        if '+complex' in self.spec:
+        if '+complex' in spec:
             args.append('-DQMC_COMPLEX=1')
-        elif '~complex' in self.spec:
+        elif '~complex' in spec:
             args.append('-DQMC_COMPLEX=0')
 
         # When '-DQMC_CUDA=1', CMake automatically sets:
@@ -157,29 +158,29 @@ class Qmcpack(CMakePackage):
         # There is a double-precision CUDA path, but it is not as well
         # tested.
 
-        if '+cuda' in self.spec:
+        if '+cuda' in spec:
             args.append('-DQMC_CUDA=1')
-        elif '~cuda' in self.spec:
+        elif '~cuda' in spec:
             args.append('-DQMC_CUDA=0')
 
         # Mixed-precision versues double-precision CPU and GPU code
-        if '+mixed' in self.spec:
+        if '+mixed' in spec:
             args.append('-DQMC_MIXED_PRECISION=1')
-        elif '~mixed' in self.spec:
+        elif '~mixed' in spec:
             args.append('-DQMC_MIXED_PRECISION=0')
 
         # New Structure-of-Array (SOA) code, much faster than default
         # Array-of-Structure (AOS) code.
         # No support for local atomic orbital basis.
-        if '+soa' in self.spec:
+        if '+soa' in spec:
             args.append('-DENABLE_SOA=1')
-        elif '~soa' in self.spec:
+        elif '~soa' in spec:
             args.append('-DENABLE_SOA=0')
 
         # Manual Timers
-        if '+timers' in self.spec:
+        if '+timers' in spec:
             args.append('-DENABLE_TIMERS=1')
-        elif '~timers' in self.spec:
+        elif '~timers' in spec:
             args.append('-DENABLE_TIMERS=0')
 
     #     # Proper MKL detection not working.
