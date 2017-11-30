@@ -705,5 +705,7 @@ class MockPackageMultiRepo(object):
     ]
 )
 def conflict_spec(request):
-    """Spec that will raise a conflict during concretization."""
+    """Specs which violate constraints specified with the "conflicts"
+    directive in the "conflict" package.
+    """
     return request.param
