@@ -444,6 +444,7 @@ class EnvironmentModifications(object):
                 else:
                     try:
                         prepend_list = after_list[:start]
+                        prepend_list.reverse()  # Preserve order after prepend
                     except KeyError:
                         prepend_list = []
                     try:
