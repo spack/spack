@@ -690,3 +690,22 @@ class MockPackageMultiRepo(object):
         import collections
         Repo = collections.namedtuple('Repo', ['namespace'])
         return Repo('mockrepo')
+
+##########
+# Specs of various kind
+##########
+
+
+@pytest.fixture(
+    params=[
+        'conflict%clang',
+        'conflict%clang+foo',
+        'conflict-parent%clang',
+        'conflict-parent@0.9^conflict~foo'
+    ]
+)
+def conflict_spec(request):
+    """Specs which violate constraints specified with the "conflicts"
+    directive in the "conflict" package.
+    """
+    return request.param
