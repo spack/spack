@@ -127,7 +127,12 @@ def parse_specs(args, **kwargs):
         sys.exit(1)
 
     except spack.spec.SpecError as e:
-        tty.error(e.message)
+
+        msgs = [e.message]
+        if e.long_message:
+            msgs.append(e.long_message)
+
+        tty.error(*msgs)
         sys.exit(1)
 
 
