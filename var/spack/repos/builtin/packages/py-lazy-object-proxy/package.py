@@ -25,18 +25,14 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyLazyObjectProxy(PythonPackage):
+    """A fast and thorough lazy object proxy."""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
-    url      = "https://pypi.io/packages/source/e/enum34/enum34-1.1.6.tar.gz"
+    homepage = "https://github.com/ionelmc/python-lazy-object-proxy"
+    url      = "https://pypi.io/packages/source/l/lazy-object-proxy/lazy-object-proxy-1.3.1.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
+    version('1.3.1', 'e128152b76eb5b9ba759504936139fd0')
 
-    depends_on('python')
-    conflicts('python@3.4:')
+    conflicts('^python@3.0:3.2.99')
 
-    # This dependency breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

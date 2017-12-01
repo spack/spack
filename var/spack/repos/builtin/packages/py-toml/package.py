@@ -25,18 +25,17 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyToml(PythonPackage):
+    """A Python library for parsing and creating TOML configuration files.
+    For more information on the TOML standard, see
+    https://github.com/toml-lang/toml.git"""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
-    url      = "https://pypi.io/packages/source/e/enum34/enum34-1.1.6.tar.gz"
+    homepage = "https://github.com/uiri/toml.git"
+    url      = "https://github.com/uiri/toml/archive/0.9.3.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
+    version('0.9.3', '58e3023a17509dcf4f50581bfc70ff23')
 
-    depends_on('python')
-    conflicts('python@3.4:')
-
-    # This dependency breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
+
+    phases = ['build', 'check', 'install']

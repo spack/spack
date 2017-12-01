@@ -25,18 +25,24 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class RBiomformat(RPackage):
+    """This is an R package for interfacing with the BIOM format. This
+    package includes basic tools for reading biom-format files, accessing
+    and subsetting data tables from a biom object (which is more complex
+    than a single table), as well as limited support for writing a
+    biom-object back to a biom-format file. The design of this API is
+    intended to match the python API and other tools included with the
+    biom-format project, but with a decidedly "R flavor" that should be
+    familiar to R users. This includes S4 classes and methods, as well
+    as extensions of common core functions/methods."""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
-    url      = "https://pypi.io/packages/source/e/enum34/enum34-1.1.6.tar.gz"
+    homepage = "https://www.bioconductor.org/packages/biomformat/"
+    url      = "https://git.bioconductor.org/packages/biomformat"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
+    version('1.4.0', git='https://git.bioconductor.org/packages/biomformat', commit='83b4b1883bc56ea93a0a6ca90fc1b18712ef0f1a')
 
-    depends_on('python')
-    conflicts('python@3.4:')
-
-    # This dependency breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-rhdf5', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.4.0')

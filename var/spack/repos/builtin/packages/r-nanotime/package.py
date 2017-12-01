@@ -22,19 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-from spack.cmd.md5 import do_checksum
-
-description = "calculate sha256 checksums for files/urls"
-section = "packaging"
-level = "long"
+from spack import *
 
 
-def setup_parser(subparser):
-    setup_parser.parser = subparser
-    subparser.add_argument('files', nargs=argparse.REMAINDER,
-                           help="files/urls to checksum")
+class RNanotime(RPackage):
+    """Full 64-bit resolution date and time support with resolution up to
+       nanosecond granularity is provided, with easy transition to and from
+       the standard 'POSIXct' type."""
 
+    homepage = "https://cran.r-project.org/package=nanotime"
+    url      = "https://cran.r-project.org/src/contrib/nanotime_0.2.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/nanotime"
 
-def sha256(parser, args):
-    do_checksum(parser, args, 'sha256')
+    version('0.2.0', '796b1f7d0bb43e2f3d98e3cc6f4b0657')
+
+    depends_on('r-bit64', type=('build', 'run'))
+    depends_on('r-rcppcctz', type=('build', 'run'))
+    depends_on('r-zoo', type=('build', 'run'))

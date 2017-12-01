@@ -42,11 +42,23 @@ class Libmongoc(AutotoolsPackage):
     variant('snappy', default=True, description='Enable Snappy support.')
     variant('zlib', default=True, description='Enable zlib support.')
 
+    patch('https://github.com/mongodb/mongo-c-driver/pull/466.patch', sha256='713a872217d11aba04a774785a2824d26b566543c270a1fa386114f5200fda20', when='@1.8.1')
+
+    depends_on('autoconf', type='build', when='@1.8.1')
+    depends_on('automake', type='build', when='@1.8.1')
+    depends_on('libtool', type='build', when='@1.8.1')
+    depends_on('m4', type='build', when='@1.8.1')
+
     depends_on('libbson')
 
     depends_on('openssl', when='+ssl')
     depends_on('snappy', when='+snappy')
     depends_on('zlib', when='+zlib')
+
+    @property
+    def force_autoreconf(self):
+        # Run autoreconf due to build system patch
+        return self.spec.satisfies('@1.8.1')
 
     def configure_args(self):
         spec = self.spec

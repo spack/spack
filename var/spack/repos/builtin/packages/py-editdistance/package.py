@@ -25,18 +25,12 @@
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class PyEditdistance(PythonPackage):
+    """Fast implementation of the edit distance (Levenshtein distance)."""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
-    url      = "https://pypi.io/packages/source/e/enum34/enum34-1.1.6.tar.gz"
+    homepage = "http://www.example.com://github.com/aflc/editdistance"
+    url      = "https://pypi.io/packages/source/e/editdistance/editdistance-0.4.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
+    version('0.4', '27434720ca0930a9b6974b182b6237bc')
 
-    depends_on('python')
-    conflicts('python@3.4:')
-
-    # This dependency breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

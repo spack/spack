@@ -22,21 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class PyEnum34(PythonPackage):
-    """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
+class Flit(MakefilePackage):
+    """Floating-point Litmus Tests (FLiT) is a C++ test infrastructure for
+    detecting variability in floating-point code caused by variations in
+    compiler code generation, hardware and execution environments."""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
-    url      = "https://pypi.io/packages/source/e/enum34/enum34-1.1.6.tar.gz"
+    homepage = "https://pruners.github.io/flit"
+    url      = "https://github.com/PRUNERS/FLiT"
+    url      = "https://github.com/PRUNERS/FLiT/archive/v2.0-alpha.1.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
+    version('2.0-alpha.1', '62cf7784bcdc15b962c813b11e478159')
+    # FIXME: fix install and build to handle the old version, which is not
+    #        installable
+    # version('1.0.0',       '27763c89b044c5e3cfe62dd319a36a2b')
+    conflicts("@:1.999", msg="Only can build version 2.0 and up")
 
-    depends_on('python')
-    conflicts('python@3.4:')
+    # Add dependencies
+    depends_on('python@3:', type='run')
+    depends_on('py-numpy', type='run')
+    depends_on('py-matplotlib tk=False', type='run')
+    depends_on('py-toml', type='run')
 
-    # This dependency breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    @property
+    def install_targets(self):
+        return ['install', 'PREFIX=%s' % self.prefix]
