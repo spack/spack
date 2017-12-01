@@ -88,6 +88,14 @@ class NoChecksumException(spack.error.SpackError):
             " use -y flag to install build cache")
 
 
+
+class NewLayoutException(spack.error.SpackError):
+    def __init__self(self):
+        super(NewLayoutException, self).__init__(
+             "Package tarball created from an install prefix"
+             "with a different directory layout."
+             "Unable to install.") 
+
 def has_gnupg2():
     try:
         gpg_util.Gpg.gpg()('--version', output=os.devnull)
