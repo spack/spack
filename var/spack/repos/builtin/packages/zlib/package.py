@@ -73,3 +73,6 @@ class Zlib(Package):
         if self.run_tests:
             make('check')
         make('install')
+
+    def dependent_cmake_args(self):
+        return ['-DZLIB_ROOT=' + self.spec.prefix]

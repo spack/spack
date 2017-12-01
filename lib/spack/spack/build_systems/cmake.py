@@ -29,6 +29,7 @@ import platform
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir, join_path
+from six import string_types
 from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, InstallError, run_after
@@ -72,6 +73,11 @@ class CMakePackage(PackageBase):
     install_targets = ['install']
 
     build_time_test_callbacks = ['check']
+
+    #: List of names of packages which ``dependent_cmake_args()`` are ignored.
+    #: Everything is ignored if the value is ``all``. Nothing is ignored
+    #: if the value is ``None``.
+    ignore_cmake_args_from = None
 
     #: The build system generator to use.
     #:
@@ -184,11 +190,33 @@ class CMakePackage(PackageBase):
         """
         return []
 
+    def dep_cmake_args(self):
+        """Iterates over dependencies and appends their dependent_cmake_args()
+        to the result."""
+
+        if self.ignore_cmake_args_from in ('all', all):
+            return []
+
+        if self.ignore_cmake_args_from is None:
+            ignored_deps = set()
+        elif isinstance(self.ignore_cmake_args_from, string_types):
+            ignored_deps = {self.ignore_cmake_args_from}
+        else:
+            ignored_deps = set(self.ignore_cmake_args_from)
+
+        result = []
+        for dep_spec in self.spec.traverse(root=False, deptype='build'):
+            if dep_spec.name not in ignored_deps:
+                result.extend(dep_spec.package.dependent_cmake_args())
+
+        return result
+
     def cmake(self, spec, prefix):
         """Runs ``cmake`` in the build directory"""
         options = [os.path.abspath(self.root_cmakelists_dir)]
         options += self.std_cmake_args
         options += self.cmake_args()
+        options += self.dep_cmake_args()
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).cmake(*options)
 

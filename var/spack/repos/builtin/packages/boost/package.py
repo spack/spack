@@ -378,3 +378,7 @@ class Boost(Package):
         # on Darwin; correct this
         if (sys.platform == 'darwin') and ('+shared' in spec):
             fix_darwin_install_name(prefix.lib)
+
+    def dependent_cmake_args(self):
+        return ['-DBOOST_ROOT=' + self.spec.prefix,
+                '-DBoost_NO_SYSTEM_PATHS=ON']
