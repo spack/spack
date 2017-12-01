@@ -122,7 +122,8 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     # Create buildinfo data and write it to disk
     buildinfo = {}
     buildinfo['relative_rpaths'] = rel
-    buildinfo['buildpath'] = prefix
+    buildinfo['buildpath'] = spack.store.layout.root
+    buildinfo['relative_prefix'] = os.path.relpath(prefix, spack.store.layout.root)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
     filename = buildinfo_file_name(workdir)
@@ -249,7 +250,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
-    write_buildinfo_file(str(spec.prefix), workdir, rel=rel)
+    write_buildinfo_file(spec.prefix, workdir, rel=rel)
 
     # optinally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
@@ -258,7 +259,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
-                arcname='.')
+                arcname='%s' % os.path.basename(spec.prefix))
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -274,6 +275,11 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     bchecksum['hash_algorithm'] = 'sha256'
     bchecksum['hash'] = checksum
     spec_dict['binary_cache_checksum'] = bchecksum
+    # Add original install prefix relative to layout root to spec.yaml.
+    # This will be used to determine is the directory layout has changed.
+    buildinfo = {}
+    buildinfo['relative_prefix'] = os.path.relpath(spec.prefix, spack.store.layout.root)
+    spec_dict['buildinfo'] = buildinfo
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
     signed = False
@@ -350,7 +356,7 @@ def relocate_package(prefix):
     Relocate the given package
     """
     buildinfo = read_buildinfo_file(prefix)
-    new_path = prefix
+    new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
     rel = buildinfo.get('relative_rpaths', False)
     if new_path == old_path and not rel:
@@ -416,15 +422,24 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     if bchecksum['hash'] != checksum:
         raise NoChecksumException()
 
+    new_relative_prefix = str(os.path.relpath(spec.prefix, 
+                              spack.store.layout.root))
+    # if the original relative prefix is in the spec file use it
+    buildinfo = spec_dict.get('buildinfo', {}) 
+    old_relative_prefix = buildinfo.get('relative_prefix', new_relative_prefix)
+    if old_relative_prefix != new_relative_prefix:
+        raise NewLayoutException() 
+
     # delay creating installpath until verification is complete
-    mkdirp(installpath)
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=join_path(installpath, '.'))
+        tar.extractall()
+    workdir = os.path.basename(installpath)
 
     os.remove(tarfile_path)
     os.remove(specfile_path)
-    relocate_package(installpath)
-
+    relocate_package(workdir)
+    install_tree(workdir, installpath)
+    shutil.rmtree(workdir)
 
 def get_specs(force=False):
     """
