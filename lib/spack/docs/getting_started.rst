@@ -1096,6 +1096,22 @@ they may use packages you have signed using the ``--export <keyfile>`` flag.
 Secret keys may also be later exported using the
 ``spack gpg export <location> [<key>...]`` command.
 
+.. note::
+
+   Key creation speed
+      The creation of a new GPG key requires generating a lot of random numbers.
+      Depending on the entropy produced on your system, the entire process may
+      take a long time (even a few minutes). To speed it up you may install
+      tools like ``rngd``, which is usually available as a package in the host OS.
+      On e.g. an Ubuntu machine you need to give the following commands:
+
+      .. code-block:: console
+
+         $ sudo apt-get install rng-tools
+         $ sudo rngd -r /dev/urandom
+
+      before generating the keys.
+
 ^^^^^^^^^^^^
 Listing keys
 ^^^^^^^^^^^^
