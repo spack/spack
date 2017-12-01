@@ -1279,21 +1279,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             return False
         tty.msg('Installing %s from binary cache' % self.name)
         tarball = binary_distribution.download_tarball(binary_spec)
-        try:
-            binary_distribution.extract_tarball(
+        binary_distribution.extract_tarball(
                 binary_spec, tarball, yes_to_all=False, force=False)
-        except binary_distribution.NoOverwriteException as e:
-            tty.warn("Install prefix %s exists." % e.args)
-        except binary_distribution.NoVerifyException:
-            tty.die("Package spec file failed signature verification. "
-                    "Use 'spack buildcache keys' to download and use pgp keys.")
-        except binary_distribution.NoChecksumException:
-            tty.die("Package tarball failed checksum verification. "
-                    "It cannot be installed.")
-        except binary_distribution.NewLayoutException:
-            tty.die("Package tarball was created from an install "
-                    "prefix with a different directory layout."
-                    " It cannot be installed.")
 
         spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
         return True

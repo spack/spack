@@ -45,33 +45,54 @@ import hashlib
 from spack.util.executable import ProcessError
 import spack.relocate as relocate
 
-
-class NoOverwriteException(Exception):
-    pass
-
-
-class NoGpgException(Exception):
-    pass
+class NoOverwriteException(spack.error.SpackError):
+    def __init__(self, filepath):
+        super(NoOverwriteException, self).__init__(
+             "%s exists" % filepath)
 
 
-class PickKeyException(Exception):
-    pass
+class NoGpgException(spack.error.SpackError):
+    def __init__(self):
+        super(NoGpgException, self).__init__(
+             "No gpg2 is not available\n"
+             "Use spack install gpg2 and spack load gpg2.")
 
 
-class NoKeyException(Exception):
-    pass
+class NoKeyException(spack.error.SpackError):
+    def __init__(self):
+        super(NoKeyException, self).__init__(
+             "No default key available for signing.\n"
+             "Use spack gpg init to create a default key.")
 
 
-class NoVerifyException(Exception):
-    pass
+class PickKeyException(spack.error.SpackError):
+    def __init__(self):
+        super(PickKeyException, self).__init__(
+             "Multi keys available for signing\n"
+             "Use spack buildcache create -k <key hash> to pick a key")
 
 
-class NoChecksumException(Exception):
-    pass
+class NoVerifyException(spack.error.SpackError):
+    def __init__(self):
+        super(NoVerifyException, self).__init__(
+             "Package spec file failed signature verification.\n"
+             "Use spack buildcache keys to download "
+             "and install a key for verification from the mirror.")
 
 
-class NewLayoutException(Exception):
-    pass
+class NoChecksumException(spack.error.SpackError):
+    def __init__(self):
+        super(NoChecksumException, self).__init__(
+             "Package tarball failed checksum verification.\n"
+             "It cannot be installed.")
+
+
+class NewLayoutException(spack.error.SpackError):
+    def __init__(self):
+        super(NewLayoutException, self).__init__(
+             "Package tarball was created from an install "
+             "prefix with a different directory layout.\n"
+             "It cannot be relocated.")
 
 
 def has_gnupg2():

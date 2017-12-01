@@ -273,21 +273,7 @@ def install_tarball(spec, args):
         tarball = bindist.download_tarball(spec)
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
-            try:
-                bindist.extract_tarball(spec, tarball, yes_to_all, force)
-            except bindist.NoOverwriteException as e:
-                tty.warn("%s exists." % e.args)
-            except bindist.NoVerifyException:
-                tty.die("Package spec file failed signature verification."
-                        " Use spack buildcache keys to download a pgp key "
-                        " to verify the package with.")
-            except bindist.NoChecksumException:
-                tty.die("Package tarball failed checksum verification,"
-                        "It cannot be installed.")
-            except bindist.NewLayoutException:
-                tty.die("Package tarball was created from an install"
-                        "prefix with a different directory layout."
-                        "It cannot be installed.")
+            bindist.extract_tarball(spec, tarball, yes_to_all, force)
             spack.store.db.reindex(spack.store.layout)
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
