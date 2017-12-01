@@ -25,7 +25,7 @@
 import argparse
 
 import llnl.util.tty as tty
-import tempfile
+
 import spack
 import spack.cmd
 import spack.binary_distribution as bindist
@@ -180,7 +180,7 @@ def createtarball(args):
                 " installed package argument")
     pkgs = set(args.packages)
     specs = set()
-    outdir = tempfile.gettempdir()
+    outdir = '.'
     if args.directory:
         outdir = args.directory
     signkey = None

@@ -62,7 +62,6 @@ import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
 
-
 from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
 from llnl.util.filesystem import working_dir, install_tree, install
 from llnl.util.lang import memoized
@@ -1280,8 +1279,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         tty.msg('Installing %s from binary cache' % self.name)
         tarball = binary_distribution.download_tarball(binary_spec)
         binary_distribution.extract_tarball(
-                binary_spec, tarball, yes_to_all=False, force=False)
-
+            binary_spec, tarball, yes_to_all=False, force=False)
         spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
         return True
 
