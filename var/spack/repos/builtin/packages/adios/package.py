@@ -37,6 +37,7 @@ class Adios(AutotoolsPackage):
 
     version('develop', git='https://github.com/ornladios/ADIOS.git',
             branch='master')
+    version('1.13.0', '68af36b821debbdf4748b20320a990ce')
     version('1.12.0', '84a1c71b6698009224f6f748c5257fc9')
     version('1.11.1', '5639bfc235e50bf17ba9dafb14ea4185')
     version('1.11.0', '5eead5b2ccf962f5e6d5f254d29d5238')
