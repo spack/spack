@@ -26,13 +26,10 @@ import argparse
 
 import os
 import llnl.util.tty as tty
-
+import tempfile
 import spack
 import spack.cmd
 import spack.binary_distribution as bindist
-from spack.binary_distribution import NoOverwriteException, NoGpgException
-from spack.binary_distribution import NoKeyException, PickKeyException
-from spack.binary_distribution import NoVerifyException, NoChecksumException
 
 description = "Create, download and install build cache files."
 section = "caching"
@@ -184,7 +181,7 @@ def createtarball(args):
                 " installed package argument")
     pkgs = set(args.packages)
     specs = set()
-    outdir = os.getcwd()
+    outdir = tempfile.gettempdir()
     if args.directory:
         outdir = args.directory
     signkey = None
@@ -219,21 +216,23 @@ def createtarball(args):
                     tty.msg('adding dependency %s' % node.format())
                     specs.add(node)
 
+    tty.msg('writing tarball to %s/build_cache' % outdir,
+            'use -d dirname to write elsewhere')
+
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        try:
-            bindist.build_tarball(spec, outdir, force,
+        try: bindist.build_tarball(spec, outdir, force,
                                   relative, yes_to_all, signkey)
-        except NoOverwriteException as e:
+        except bindist.NoOverwriteException as e:
             tty.warn("%s exists, use -f to force overwrite." % e)
         except NoGpgException:
             tty.die("gpg2 is not available,"
                     " use -y to create unsigned build caches")
-        except NoKeyException:
+        except bindist.NoKeyException:
             tty.die("no default key available for signing,"
                     " use -y to create unsigned build caches"
                     " or spack gpg init to create a default key")
-        except PickKeyException:
+        except bindist.PickKeyException:
             tty.die("multi keys available for signing,"
                     " use -y to create unsigned build caches"
                     " or -k <key hash> to pick a key")
@@ -280,16 +279,19 @@ def install_tarball(spec, args):
             tty.msg('Installing buildcache for spec %s' % spec.format())
             try:
                 bindist.extract_tarball(spec, tarball, yes_to_all, force)
-            except NoOverwriteException as e:
+            except bindist.NoOverwriteException as e:
                 tty.warn("%s exists. use -f to force overwrite." % e.args)
-            except NoVerifyException:
+            except bindist.NoVerifyException:
                 tty.die("Package spec file failed signature verification,"
                         " use -y flag to install build cache")
-            except NoChecksumException:
+            except bindist.NoChecksumException:
                 tty.die("Package tarball failed checksum verification,"
                         " use -y flag to install build cache")
-            finally:
-                spack.store.db.reindex(spack.store.layout)
+            except bindist.NewLayoutException:
+                tty.die("Package tarball was created from an install"
+                        "prefix with a different directory layout."
+                        "It cannot be installed.") 
+            spack.store.db.reindex(spack.store.layout)
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
                     spec.format())

@@ -68,6 +68,9 @@ class NoVerifyException(Exception):
 class NoChecksumException(Exception):
     pass
 
+class NewLayoutException(Exception):
+    pass
+
 
 def has_gnupg2():
     try:
@@ -123,6 +126,7 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     buildinfo = {}
     buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
+    buildinfo['relative_prefix'] = os.path.relpath(prefix, spack.store.layout.root)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
     filename = buildinfo_file_name(workdir)
@@ -243,7 +247,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    workdir = join_path(outdir, os.path.basename(spec.prefix))
+    workdir = join_path(outdir, spec.dag_hash())
     if os.path.exists(workdir):
         shutil.rmtree(workdir)
     install_tree(spec.prefix, workdir, symlinks=True)
@@ -258,7 +262,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
-                arcname='%s' % os.path.basename(workdir))
+                arcname='%s' % os.path.basename(spec.prefix))
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -274,6 +278,11 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     bchecksum['hash_algorithm'] = 'sha256'
     bchecksum['hash'] = checksum
     spec_dict['binary_cache_checksum'] = bchecksum
+    # Add original install prefix relative to layout root to spec.yaml.
+    # This will be used to determine is the directory layout has changed.
+    buildinfo = {}
+    buildinfo['relative_prefix'] = os.path.relpath(spec.prefix, spack.store.layout.root)
+    spec_dict['buildinfo'] = buildinfo
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
     signed = False
@@ -417,15 +426,33 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     if bchecksum['hash'] != checksum:
         raise NoChecksumException()
 
-    # delay creating installpath until verification is complete
-    mkdirp(installpath)
-    with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=join_path(installpath, '..'))
+    new_relative_prefix = str(os.path.relpath(spec.prefix,
+                              spack.store.layout.root))
+    # if the original relative prefix is in the spec file use it
+    buildinfo = spec_dict.get('buildinfo', {})
+    old_relative_prefix = buildinfo.get('relative_prefix', new_relative_prefix)
+    # if the original relative prefix and new relative prefix differ the
+    # directory layout has changed and the  buildcache cannot be installed
+    if old_relative_prefix != new_relative_prefix:
+        raise NewLayoutException()
 
+    # extract the tarball in the curreny working dir
+    with closing(tarfile.open(tarfile_path, 'r')) as tar:
+        tar.extractall()
+    # the base of the install prefix is used when creating the tarball
+    # so the pathname should be the same now that the directory layout
+    # is confirmed
+    workdir = os.path.basename(installpath)
+
+    #cleanup
     os.remove(tarfile_path)
     os.remove(specfile_path)
-    relocate_package(installpath)
 
+    relocate_package(workdir)
+    # Delay creating installpath until verification is complete
+    # and any relocation has been done.
+    install_tree(workdir, installpath)
+    shutil.rmtree(workdir)
 
 def get_specs(force=False):
     """
