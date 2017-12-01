@@ -215,8 +215,7 @@ def createtarball(args):
                     tty.msg('adding dependency %s' % node.format())
                     specs.add(node)
 
-    tty.msg('writing tarball to %s/build_cache' % outdir,
-            'use -d dirname to write elsewhere')
+    tty.msg('writing tarballs to %s/build_cache' % outdir)
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
@@ -224,18 +223,16 @@ def createtarball(args):
             bindist.build_tarball(spec, outdir, force,
                                   relative, yes_to_all, signkey)
         except bindist.NoOverwriteException as e:
-            tty.warn("%s exists, use -f to force overwrite." % e)
+            tty.warn("%s exists" % e)
         except bindist.NoGpgException:
             tty.die("gpg2 is not available,"
                     " use -y to create unsigned build caches")
         except bindist.NoKeyException:
             tty.die("no default key available for signing,"
-                    " use -y to create unsigned build caches"
-                    " or spack gpg init to create a default key")
+                    " use 'spack gpg init' to create a default key")
         except bindist.PickKeyException:
             tty.die("multi keys available for signing,"
-                    " use -y to create unsigned build caches"
-                    " or -k <key hash> to pick a key")
+                    " use -k <key hash> to pick a key")
 
 
 def installtarball(args):
@@ -271,8 +268,7 @@ def install_tarball(spec, args):
         install_tarball(d, args)
     package = spack.repo.get(spec)
     if s.concrete and package.installed and not force:
-        tty.warn("Package for spec %s already installed." % spec.format(),
-                 " Use -f flag to overwrite.")
+        tty.warn("Package for spec %s already installed." % spec.format())
     else:
         tarball = bindist.download_tarball(spec)
         if tarball:
@@ -280,13 +276,14 @@ def install_tarball(spec, args):
             try:
                 bindist.extract_tarball(spec, tarball, yes_to_all, force)
             except bindist.NoOverwriteException as e:
-                tty.warn("%s exists. use -f to force overwrite." % e.args)
+                tty.warn("%s exists." % e.args)
             except bindist.NoVerifyException:
-                tty.die("Package spec file failed signature verification,"
-                        " use -y flag to install build cache")
+                tty.die("Package spec file failed signature verification."
+                        " Use spack buildcache keys to download a pgp key "
+                        " to verify the package with.")
             except bindist.NoChecksumException:
                 tty.die("Package tarball failed checksum verification,"
-                        " use -y flag to install build cache")
+                        "It cannot be installed.")
             except bindist.NewLayoutException:
                 tty.die("Package tarball was created from an install"
                         "prefix with a different directory layout."

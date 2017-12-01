@@ -29,6 +29,7 @@ import tarfile
 import yaml
 import shutil
 import platform
+import tempfile
 
 import llnl.util.tty as tty
 from spack.util.gpg import Gpg
@@ -249,9 +250,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    workdir = join_path(outdir, spec.dag_hash())
-    if os.path.exists(workdir):
-        shutil.rmtree(workdir)
+    workdir = join_path(tempfile.mkdtemp(),os.path.basename(spec.prefix))
     install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
@@ -391,12 +390,11 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     """
     extract binary tarball for given package into install area
     """
-    installpath = spec.prefix
-    if os.path.exists(installpath):
+    if os.path.exists(spec.prefix):
         if force:
-            shutil.rmtree(installpath)
+            shutil.rmtree(spec.prefix)
         else:
-            raise NoOverwriteException(str(installpath))
+            raise NoOverwriteException(str(spec.prefix))
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')
     spackfile_path = os.path.join(stagepath, spackfile_name)
@@ -439,23 +437,24 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     if old_relative_prefix != new_relative_prefix:
         raise NewLayoutException()
 
-    # extract the tarball in the curreny working dir
+    # extract the tarball in a temp directory
+    tmpdir = tempfile.mkdtemp()
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall()
+        tar.extractall(path=tmpdir)
     # the base of the install prefix is used when creating the tarball
     # so the pathname should be the same now that the directory layout
     # is confirmed
-    workdir = os.path.basename(installpath)
+    workdir = join_path(tmpdir,os.path.basename(spec.prefix))
 
     # cleanup
     os.remove(tarfile_path)
     os.remove(specfile_path)
 
     relocate_package(workdir)
-    # Delay creating installpath until verification is complete
+    # Delay creating spec.prefix until verification is complete
     # and any relocation has been done.
-    install_tree(workdir, installpath)
-    shutil.rmtree(workdir)
+    install_tree(workdir, spec.prefix, symlinks=True)
+    shutil.rmtree(tmpdir)
 
 
 def get_specs(force=False):
