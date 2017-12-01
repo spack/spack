@@ -219,20 +219,8 @@ def createtarball(args):
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        try:
-            bindist.build_tarball(spec, outdir, force,
-                                  relative, yes_to_all, signkey)
-        except bindist.NoOverwriteException as e:
-            tty.warn("%s exists" % e)
-        except bindist.NoGpgException:
-            tty.die("gpg2 is not available,"
-                    " use -y to create unsigned build caches")
-        except bindist.NoKeyException:
-            tty.die("no default key available for signing,"
-                    " use 'spack gpg init' to create a default key")
-        except bindist.PickKeyException:
-            tty.die("multi keys available for signing,"
-                    " use -k <key hash> to pick a key")
+        bindist.build_tarball(spec, outdir, force,
+                              relative, yes_to_all, signkey)
 
 
 def installtarball(args):
