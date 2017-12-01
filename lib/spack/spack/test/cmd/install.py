@@ -33,9 +33,6 @@ import llnl.util.filesystem as fs
 import spack
 import spack.cmd.install
 from spack.spec import Spec
-from spack.main import SpackCommand, SpackCommandError
-
-install = SpackCommand('install')
 
 
 @pytest.fixture(scope='module')
