@@ -45,28 +45,47 @@ from spack.util.executable import ProcessError
 import spack.relocate as relocate
 
 
-class NoOverwriteException(Exception):
-    pass
+class NoOverwriteException(spack.error.SpackError):
+    def __init__(self, filepath):
+        super(NoOverwriteException, self).__init__(
+            "%s exists, use -f to force overwrite." % filepath)
 
 
-class NoGpgException(Exception):
-    pass
+class NoGpgException(spack.error.SpackError):
+    def __init__(self):
+        super(NoGpgException, self).__init__(
+            "gpg2 is not available,"
+            " use -y to create unsigned build caches")
 
 
-class PickKeyException(Exception):
-    pass
+class PickKeyException(spack.error.SpackError):
+    def __init__(self):
+        super(PickKeyException, self).__init__(
+            "no default key available for signing,"
+            " use -y to create unsigned build caches"
+            " or spack gpg init to create a default key")
 
 
-class NoKeyException(Exception):
-    pass
+class NoKeyException(spack.error.SpackError):
+    def __init__(self):
+        super(NoKeyException, self).__init__(
+            "multi keys available for signing,"
+            " use -y to create unsigned build caches"
+            " or -k <key hash> to pick a key")
 
 
-class NoVerifyException(Exception):
-    pass
+class NoVerifyException(spack.error.SpackError):
+    def __init__(self):
+        super(NoVerifyException, self).__init__(
+            "Package spec file failed signature verification,"
+            " use -y flag to install build cache")
 
 
-class NoChecksumException(Exception):
-    pass
+class NoChecksumException(spack.error.SpackError):
+    def __init__(self):
+        super(NoChecksumException, self).__init__(
+            "Package tarball failed checksum verification,"
+            " use -y flag to install build cache")
 
 
 def has_gnupg2():
@@ -285,15 +304,9 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     signed = False
     if not yes_to_all:
         # sign the tarball and spec file with gpg
-        try:
-            sign_tarball(yes_to_all, key, force, specfile_path)
-            signed = True
-        except NoGpgException:
-            raise NoGpgException()
-        except PickKeyException:
-            raise PickKeyException()
-        except NoKeyException():
-            raise NoKeyException()
+        sign_tarball(yes_to_all, key, force, specfile_path)
+        signed = True
+
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
