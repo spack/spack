@@ -379,14 +379,19 @@ class EnvironmentModifications(object):
         env = EnvironmentModifications()
 
         # New variables
-        new_variables = set(env_after) - set(env_before)
+        new_variables = list(set(env_after) - set(env_before))
         # Variables that have been unset
-        unset_variables = set(env_before) - set(env_after)
+        unset_variables = list(set(env_before) - set(env_after))
         # Variables that have been modified
-        common_variables = set(
-            env_before).intersection(set(env_after))
+        common_variables = set(env_before).intersection(set(env_after))
+
         modified_variables = [x for x in common_variables
                               if env_before[x] != env_after[x]]
+
+        # Consistent output order - looks nicer, easier comparison...
+        new_variables.sort()
+        unset_variables.sort()
+        modified_variables.sort()
 
         def return_separator_if_any(*args):
             separators = ':', ';'
