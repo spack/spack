@@ -72,7 +72,9 @@ class Qmcpack(CMakePackage):
     conflicts('^openblas+ilp64')
     conflicts('^intel-mkl+ilp64')
 
-    # Dependencies match those in the QMCPACK manual
+    # Dependencies match those in the QMCPACK manual.
+    # FIXME: once concretizer can unite unconditional and conditional
+    # dependencies the some of the '~mpi' will not be necessary.
     depends_on('cmake@3.4.3:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('libxml2')
@@ -92,7 +94,7 @@ class Qmcpack(CMakePackage):
     # blas and lapack patching fails often and so are disabled at this time
     depends_on('py-numpy~blas~lapack', type='run', when='+da')
 
-    # GUI is optional fpr data anlysis
+    # GUI is optional for data anlysis
     # py-matplotlib leads to a long complex DAG for dependencies
     depends_on('py-matplotlib', type='run', when='+gui')
 
@@ -183,11 +185,20 @@ class Qmcpack(CMakePackage):
         elif '~timers' in spec:
             args.append('-DENABLE_TIMERS=0')
 
-    #     # Proper MKL detection not working.
-    #     # Include MKL flags
-    #     if 'intel-mkl' in self.spec:
-    #         args.append('-DBLA_VENDOR=Intel10_64lp_seq')
-    #         args.append('-DQMC_INCLUDE={0}'.format(join_path(env['MKLROOT'],'include')))
+        # Proper detection of optimized BLAS and LAPACK. 
+        # Based on the code from the deal II Spack package:
+        # https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/dealii/package.py
+        #
+        # Basically, we override CMake's auto-detection mechanism
+        # and use the Spack's interface instead
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        args.extend([
+            '-DLAPACK_FOUND=true',
+            '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
+                self.spec['lapack'].prefix.include, self.spec['blas'].prefix.include),
+            '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';')
+        ])
+        
         return args
 
     # def setup_environment(self, spack_env, run_env):
