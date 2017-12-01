@@ -464,6 +464,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     install_tree(workdir, installpath)
     shutil.rmtree(workdir)
 
+
 def get_specs(force=False):
     """
     Get spec.yaml's for build caches available on mirror
