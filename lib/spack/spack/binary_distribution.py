@@ -88,13 +88,13 @@ class NoChecksumException(spack.error.SpackError):
             " use -y flag to install build cache")
 
 
-
 class NewLayoutException(spack.error.SpackError):
     def __init__self(self):
         super(NewLayoutException, self).__init__(
-             "Package tarball created from an install prefix"
-             "with a different directory layout."
-             "Unable to install.") 
+            "Package tarball created from an install prefix"
+            "with a different directory layout."
+            "Unable to install.")
+
 
 def has_gnupg2():
     try:
@@ -150,7 +150,8 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     buildinfo = {}
     buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
-    buildinfo['relative_prefix'] = os.path.relpath(prefix, spack.store.layout.root)
+    buildinfo['relative_prefix'] = os.path.relpath(prefix,
+                                                   spack.store.layout.root)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
     filename = buildinfo_file_name(workdir)
@@ -305,7 +306,8 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # Add original install prefix relative to layout root to spec.yaml.
     # This will be used to determine is the directory layout has changed.
     buildinfo = {}
-    buildinfo['relative_prefix'] = os.path.relpath(spec.prefix, spack.store.layout.root)
+    buildinfo['relative_prefix'] = os.path.relpath(spec.prefix,
+                                                   spack.store.layout.root)
     spec_dict['buildinfo'] = buildinfo
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
@@ -443,13 +445,13 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     if bchecksum['hash'] != checksum:
         raise NoChecksumException()
 
-    new_relative_prefix = str(os.path.relpath(spec.prefix, 
+    new_relative_prefix = str(os.path.relpath(spec.prefix,
                               spack.store.layout.root))
     # if the original relative prefix is in the spec file use it
-    buildinfo = spec_dict.get('buildinfo', {}) 
+    buildinfo = spec_dict.get('buildinfo', {})
     old_relative_prefix = buildinfo.get('relative_prefix', new_relative_prefix)
     if old_relative_prefix != new_relative_prefix:
-        raise NewLayoutException() 
+        raise NewLayoutException()
 
     # delay creating installpath until verification is complete
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
