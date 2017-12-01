@@ -225,11 +225,9 @@ def test_relocate_text(tmpdir):
         with open(filename, "w") as script:
             script.write(old_dir)
             script.close()
-    
         filenames = [filename]
         new_dir = '/opt/rh/devtoolset/'
         relocate_text(filenames, old_dir, new_dir)
-    
         with open(filename, "r")as script:
             for line in script:
                 assert(new_dir in line)

@@ -68,6 +68,7 @@ class NoVerifyException(Exception):
 class NoChecksumException(Exception):
     pass
 
+
 class NewLayoutException(Exception):
     pass
 
@@ -126,7 +127,8 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     buildinfo = {}
     buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
-    buildinfo['relative_prefix'] = os.path.relpath(prefix, spack.store.layout.root)
+    buildinfo['relative_prefix'] = os.path.relpath(prefix,
+                                                   spack.store.layout.root)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
     filename = buildinfo_file_name(workdir)
@@ -281,7 +283,8 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # Add original install prefix relative to layout root to spec.yaml.
     # This will be used to determine is the directory layout has changed.
     buildinfo = {}
-    buildinfo['relative_prefix'] = os.path.relpath(spec.prefix, spack.store.layout.root)
+    buildinfo['relative_prefix'] = os.path.relpath(spec.prefix,
+                                                   spack.store.layout.root)
     spec_dict['buildinfo'] = buildinfo
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
@@ -444,7 +447,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     # is confirmed
     workdir = os.path.basename(installpath)
 
-    #cleanup
+    # cleanup
     os.remove(tarfile_path)
     os.remove(specfile_path)
 
@@ -453,6 +456,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     # and any relocation has been done.
     install_tree(workdir, installpath)
     shutil.rmtree(workdir)
+
 
 def get_specs(force=False):
     """

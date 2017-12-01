@@ -24,7 +24,6 @@
 ##############################################################################
 import argparse
 
-import os
 import llnl.util.tty as tty
 import tempfile
 import spack
@@ -221,11 +220,12 @@ def createtarball(args):
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        try: bindist.build_tarball(spec, outdir, force,
+        try:
+            bindist.build_tarball(spec, outdir, force,
                                   relative, yes_to_all, signkey)
         except bindist.NoOverwriteException as e:
             tty.warn("%s exists, use -f to force overwrite." % e)
-        except NoGpgException:
+        except bindist.NoGpgException:
             tty.die("gpg2 is not available,"
                     " use -y to create unsigned build caches")
         except bindist.NoKeyException:
@@ -290,7 +290,7 @@ def install_tarball(spec, args):
             except bindist.NewLayoutException:
                 tty.die("Package tarball was created from an install"
                         "prefix with a different directory layout."
-                        "It cannot be installed.") 
+                        "It cannot be installed.")
             spack.store.db.reindex(spack.store.layout)
         else:
             tty.die('Download of binary cache file for spec %s failed.' %

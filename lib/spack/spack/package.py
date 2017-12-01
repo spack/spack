@@ -1284,7 +1284,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 binary_spec, tarball, yes_to_all=False, force=False)
         except binary_distribution.NoOverwriteException as e:
             tty.warn("Install prefix %s exists." % e.args,
-                    "Use spack buildcache install for more options.")
+                     "Use spack buildcache install for more options.")
         except binary_distribution.NoVerifyException:
             tty.die("Package spec file failed signature verification."
                     "Use spack buildcache install for more options.")
