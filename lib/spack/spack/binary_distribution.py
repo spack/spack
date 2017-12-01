@@ -45,54 +45,62 @@ import hashlib
 from spack.util.executable import ProcessError
 import spack.relocate as relocate
 
+
 class NoOverwriteException(spack.error.SpackError):
+
     def __init__(self, filepath):
         super(NoOverwriteException, self).__init__(
-             "%s exists" % filepath)
+            "%s exists" % filepath)
 
 
 class NoGpgException(spack.error.SpackError):
+
     def __init__(self):
         super(NoGpgException, self).__init__(
-             "No gpg2 is not available\n"
-             "Use spack install gpg2 and spack load gpg2.")
+            "No gpg2 is not available\n"
+            "Use spack install gpg2 and spack load gpg2.")
 
 
 class NoKeyException(spack.error.SpackError):
+
     def __init__(self):
         super(NoKeyException, self).__init__(
-             "No default key available for signing.\n"
-             "Use spack gpg init to create a default key.")
+            "No default key available for signing.\n"
+            "Use spack gpg init to create a default key.")
 
 
 class PickKeyException(spack.error.SpackError):
+
     def __init__(self):
         super(PickKeyException, self).__init__(
-             "Multi keys available for signing\n"
-             "Use spack buildcache create -k <key hash> to pick a key")
+            "Multi keys available for signing\n"
+            "Use spack buildcache create -k <key hash> to pick a key")
 
 
 class NoVerifyException(spack.error.SpackError):
+
     def __init__(self):
         super(NoVerifyException, self).__init__(
-             "Package spec file failed signature verification.\n"
-             "Use spack buildcache keys to download "
-             "and install a key for verification from the mirror.")
+            "Package spec file failed signature verification.\n"
+            "Use spack buildcache keys to download "
+            "and install a key for verification from the mirror.")
 
 
 class NoChecksumException(spack.error.SpackError):
+
     def __init__(self):
         super(NoChecksumException, self).__init__(
-             "Package tarball failed checksum verification.\n"
-             "It cannot be installed.")
+            "Package tarball failed checksum verification.\n"
+            "It cannot be installed.")
 
 
 class NewLayoutException(spack.error.SpackError):
+
     def __init__(self):
         super(NewLayoutException, self).__init__(
-             "Package tarball was created from an install "
-             "prefix with a different directory layout.\n"
-             "It cannot be relocated.")
+            "Package tarball was created from an install "
+            "prefix with a different directory layout.\n"
+            "It cannot be relocated.")
 
 
 def has_gnupg2():
@@ -271,7 +279,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    workdir = join_path(tempfile.mkdtemp(),os.path.basename(spec.prefix))
+    workdir = join_path(tempfile.mkdtemp(), os.path.basename(spec.prefix))
     install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
@@ -449,7 +457,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
         raise NoChecksumException()
 
     new_relative_prefix = str(os.path.relpath(spec.prefix,
-                              spack.store.layout.root))
+                                              spack.store.layout.root))
     # if the original relative prefix is in the spec file use it
     buildinfo = spec_dict.get('buildinfo', {})
     old_relative_prefix = buildinfo.get('relative_prefix', new_relative_prefix)
@@ -465,7 +473,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     # the base of the install prefix is used when creating the tarball
     # so the pathname should be the same now that the directory layout
     # is confirmed
-    workdir = join_path(tmpdir,os.path.basename(spec.prefix))
+    workdir = join_path(tmpdir, os.path.basename(spec.prefix))
 
     # cleanup
     os.remove(tarfile_path)
