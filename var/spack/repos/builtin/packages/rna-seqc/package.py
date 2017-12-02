@@ -60,4 +60,4 @@ class RnaSeqc(Package):
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file('RNA-SeQC_v{}.jar', join_path(prefix.bin, jar_file),
-                script, **kwargs)
+                    script, **kwargs)
