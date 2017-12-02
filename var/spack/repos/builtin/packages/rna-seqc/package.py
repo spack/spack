@@ -44,7 +44,7 @@ class RnaSeqc(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        jar_file = 'RNA-SeQC_v{}.jar'.format(self.version.dotted)
+        jar_file = 'RNA-SeQC_v{0}.jar'.format(self.version.dotted)
         install(jar_file, prefix.bin)
 
         # Set up a helper script to call java on the jar file,
@@ -59,5 +59,5 @@ class RnaSeqc(Package):
         java = join_path(self.spec['jdk'].prefix, 'bin', 'java')
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
-        filter_file('RNA-SeQC_v{}.jar', join_path(prefix.bin, jar_file),
+        filter_file('RNA-SeQC_v{0}.jar', join_path(prefix.bin, jar_file),
                     script, **kwargs)
