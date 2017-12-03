@@ -98,7 +98,7 @@ class Mvapich2(AutotoolsPackage):
         description='The fabric enabled for this build',
         default='psm',
         values=(
-            'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
+            'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
             'nemesistcpib'
         )
     )
@@ -145,6 +145,8 @@ class Mvapich2(AutotoolsPackage):
         # From here on I can suppose that only one variant has been selected
         if 'fabrics=psm' in self.spec:
             opts = ["--with-device=ch3:psm"]
+        elif 'fabrics=psm2' in self.spec:
+            opts = ["--with-device=ch3:psm2"]
         elif 'fabrics=sock' in self.spec:
             opts = ["--with-device=ch3:sock"]
         elif 'fabrics=nemesistcpib' in self.spec:
