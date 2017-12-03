@@ -57,11 +57,21 @@ for pkg,specs in nonmpipkgs.items():
             install("{} %{} {}".format(pkg, compiler, spec))
 
 
+if os.system("lspci | grep Omni-Path"):
+    MVFAB = "psm2"
+    OMPIFAB = "psm2"
+elif os.system("lspci | grep Mellanox"):
+    MVFAB = "mrail"
+    OMPIFAB = "verbs"
+else:
+    MVFAB = ""
+    OMPIFAB = ""
+
 # Build MPI libraries
-MPIS = {"openmpi@2.1.2~vt~cuda fabrics=verbs,pmi ~java schedulers=slurm": "",
-        "openmpi@2.1.2~vt+cuda fabrics=verbs,pmi ~java schedulers=slurm": "^cuda@8.0.61",
-       "mvapich2@2.2~cuda fabrics=mrail process_managers=slurm": "",
-       "mvapich2@2.2+cuda fabrics=mrail process_managers=slurm": "^cuda@8.0.61",
+MPIS = {"openmpi@2.1.2~vt~cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "",
+        "openmpi@2.1.2~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@8.0.61",
+        "mvapich2@2.2~cuda fabrics={} process_managers=slurm".format(MVFAB): "",
+        "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@8.0.61",
         "mpich@3.2~hydra+pmi+romio+verbs netmod=ofi": "",
        "intel-parallel-studio@cluster.2017.5+mpi": ""
 }
