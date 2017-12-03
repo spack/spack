@@ -22,22 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 
 
-class Salmon(CMakePackage):
-    """Salmon is a tool for quantifying the expression of transcripts using
-       RNA-seq data."""
+class KvasirMpl(Package):
+    """Kvasir metaprogramming library"""
 
-    homepage = "http://combine-lab.github.io/salmon/"
-    url      = "https://github.com/COMBINE-lab/salmon/archive/v0.8.2.tar.gz"
+    homepage = "https://github.com/kvasir-io/mpl"
 
-    version('0.9.1', '1277b8ed65d2c6982ed176a496a2a1e3')
-    version('0.8.2', 'ee512697bc44b13661a16d4e14cf0a00')
+    version('develop', git='https://github.com/kvasir-io/mpl.git',
+            branch='development')
 
-    depends_on('tbb')
-    depends_on('boost')
-
-    def cmake_args(self):
-        args = ['-DBOOST_ROOT=%s' % self.spec['boost'].prefix]
-        return args
+    def install(self, spec, prefix):
+        install_tree('src', prefix.include)
