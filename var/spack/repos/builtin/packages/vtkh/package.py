@@ -26,6 +26,7 @@
 from spack import *
 import os
 
+
 class Vtkh(Package):
     """VTK-h is a toolkit of scientific visualization algorithms for emerging
     processor architectures. VTK-h brings together several projects like VTK-m
