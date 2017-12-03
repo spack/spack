@@ -70,6 +70,12 @@ packages:
         version: [0.13.12]
         buildable: False
 
+    bazel:
+        paths:
+            bazel@0.4.5%gcc@4.8.5: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/bazel-0.4.5-f3gth4g4lclx5t5tlteubwmqicyiraqi
+        version: [0.4.5]
+        buildable: False
+        
     pgi:
         paths:
             pgi@17.10%gcc@4.8.5~amd~java~mpi~network+nvidia+single: /lustre/spack/tools/linux-centos7-x86_64/gcc-4.8.5/pgi-17.10-j6cy7vqs3gtogsdgbywzi5qefttqxgwq
