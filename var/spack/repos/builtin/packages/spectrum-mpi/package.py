@@ -70,4 +70,3 @@ class SpectrumMpi(Package):
         spack_env.set('OMPI_F77', spack_f77)
 
         spack_env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
-
