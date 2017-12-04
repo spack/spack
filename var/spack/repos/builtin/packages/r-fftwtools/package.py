@@ -23,26 +23,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Bamtools(CMakePackage):
-    """C++ API & command-line toolkit for working with BAM data."""
+class RFftwtools(RPackage):
+    """Provides a wrapper for several 'FFTW' functions. This package provides
+       access to the two-dimensional 'FFT', the multivariate 'FFT', and the
+       one-dimensional real to complex 'FFT' using the 'FFTW3' library. The
+       package includes the functions fftw() and mvfftw() which are designed
+       to mimic the functionality of the R functions fft() and mvfft().
+       The 'FFT' functions have a parameter that allows them to not return
+       the redundant complex conjugate when the input is real data."""
 
-    homepage = "https://github.com/pezmaster31/bamtools"
-    url      = "https://github.com/pezmaster31/bamtools/archive/v2.4.0.tar.gz"
+    homepage = "https://github.com/krahim/fftwtools"
+    url      = "https://cran.r-project.org/src/contrib/fftwtools_0.9-8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/fftwtools"
 
-    version('2.5.0', 'dd4185bdba6e3adf2c24b7f93a57233d')
-    version('2.4.1', '41cadf513f2744256851accac2bc7baa')
-    version('2.4.0', '6139d00c1b1fe88fe15d094d8a74d8b9')
-    version('2.3.0', 'd327df4ba037d6eb8beef65d7da75ebc')
-    version('2.2.3', '6eccd3e45e4ba12a68daa3298998e76d')
+    version('0.9-8', '2d1258fbaf0940b57ed61c8d6cd6694d')
 
-    depends_on('zlib', type='link')
-
-    def cmake_args(self):
-        args = []
-        rpath = self.rpath
-        rpath.append(os.path.join(self.prefix.lib, "bamtools"))
-        args.append("-DCMAKE_INSTALL_RPATH=%s" % ':'.join(rpath))
-        return args
+    depends_on('fftw')
