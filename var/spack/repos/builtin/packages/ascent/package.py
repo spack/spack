@@ -78,7 +78,7 @@ class Ascent(Package):
     variant("tbb", default=True, description="Build tbb support")
     variant("cuda", default=False, description="Build cuda support")
 
-    variant("adios", default=True, description="Build Adios filter support")
+    variant("adios", default=False, description="Build Adios filter support")
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
