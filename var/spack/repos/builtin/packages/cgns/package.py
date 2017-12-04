@@ -55,10 +55,7 @@ class Cgns(CMakePackage):
             '-DCGNS_ENABLE_SCOPING:BOOL=%s' % (
                 'ON' if '+scoping' in spec else 'OFF'),
             '-DCGNS_ENABLE_PARALLEL:BOOL=%s' % (
-                'ON' if '+parallel' in spec else 'OFF')
-        ])
-
-        options.extend([
+                'ON' if '+parallel' in spec else 'OFF'),
             '-DCGNS_ENABLE_TESTS:BOOL=OFF',
             '-DCGNS_BUILD_CGNSTOOLS:BOOL=OFF'
         ])

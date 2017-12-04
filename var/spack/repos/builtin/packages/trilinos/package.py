@@ -547,8 +547,8 @@ class Trilinos(CMakePackage):
         if '+cgns' in spec:
             options.extend([
                 '-DTPL_ENABLE_CGNS:BOOL=ON',
-                '-DHYPRE_INCLUDE_DIRS:PATH=%s' % spec['cgns'].prefix.include,
-                '-DHYPRE_LIBRARY_DIRS:PATH=%s' % spec['cgns'].prefix.lib
+                '-DCGNS_INCLUDE_DIRS:PATH=%s' % spec['cgns'].prefix.include,
+                '-DCGNS_LIBRARY_DIRS:PATH=%s' % spec['cgns'].prefix.lib
             ])
         else:
             options.extend([
