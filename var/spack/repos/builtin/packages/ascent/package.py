@@ -88,7 +88,7 @@ class Ascent(Package):
     ###########################################################################
 
     depends_on("cmake", when="+cmake")
-    depends_on("conduit")
+    depends_on("conduit@master")
 
     #######################
     # Python
