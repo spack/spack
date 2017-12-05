@@ -61,7 +61,7 @@ class Vasp(MakefilePackage):
     parallel = False
 
     def url_for_version(self, version):
-        return 'file:///opt/sources/vasp/{0}/vasp.{0}.tar.gz'.format(version, version)
+        return 'file:///opt/sources/vasp/{0}/vasp.{0}.tar.gz'.format(version)
 
     def setup_environment(self, spack_env, run_env):
 
