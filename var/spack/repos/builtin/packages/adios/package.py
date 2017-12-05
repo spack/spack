@@ -91,7 +91,8 @@ class Adios(AutotoolsPackage):
     depends_on('zlib', when='+zlib')
     depends_on('bzip2', when='+bzip2')
     depends_on('szip', when='+szip')
-    depends_on('sz@:1.4.10', when='+sz')
+    depends_on('sz@:1.4.10', when='@:1.12.0 +sz')
+    depends_on('sz@1.4.11.0:', when='@1.13.0: +sz')
     depends_on('zfp@:0.5.0', when='+zfp')
     # optional transports & file converters
     depends_on('hdf5@1.8:+hl+mpi', when='+hdf5')
