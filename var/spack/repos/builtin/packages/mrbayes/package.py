@@ -32,9 +32,10 @@ class Mrbayes(AutotoolsPackage):
        of model parameters."""
 
     homepage = "http://mrbayes.sourceforge.net"
-    url      = "https://downloads.sourceforge.net/project/mrbayes/mrbayes/3.2.6/mrbayes-3.2.6.tar.gz"
+    url      = ""
 
-    version('3.2.6', '95f9822f24be47b976bf87540b55d1fe')
+    version('3.2.6', commit='8a9adb11bcc538cb95d91d57568dff383f924503',
+            git='https://github.com/NBISweden/MrBayes.git')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('beagle', default=True, description='Enable BEAGLE library for speed benefits')
@@ -47,8 +48,6 @@ class Mrbayes(AutotoolsPackage):
 
     depends_on('libbeagle', when='+beagle')
     depends_on('mpi', when='+mpi')
-
-    configure_directory = 'src'
 
     def configure_args(self):
         args = []
