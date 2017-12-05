@@ -66,6 +66,10 @@ class Adios(AutotoolsPackage):
             description='Enable ZFP transform support')
     variant('sz', default=True,
             description='Enable SZ transform support')
+    variant('lz4', default=True,
+            description='Enable LZ4 transform support')
+    variant('blosc', default=True,
+            description='Enable Blosc transform support')
     # transports and serial file converters
     variant('hdf5', default=False,
             description='Enable parallel HDF5 transport and serial bp2h5 ' +
@@ -94,6 +98,8 @@ class Adios(AutotoolsPackage):
     depends_on('sz@:1.4.10', when='@:1.12.0 +sz')
     depends_on('sz@1.4.11.0:', when='@1.13.0: +sz')
     depends_on('zfp@:0.5.0', when='+zfp')
+    depends_on('lz4', when='+lz4')
+    depends_on('c-blosc@1.12.0:', when='+blosc')
     # optional transports & file converters
     depends_on('hdf5@1.8:+hl+mpi', when='+hdf5')
     depends_on('netcdf', when='+netcdf')
@@ -155,7 +161,16 @@ class Adios(AutotoolsPackage):
         extra_args += self.with_or_without('infiniband')
 
         # Transforms
-        variants = ['zlib', 'bzip2', 'szip', 'zfp', 'sz']
+        variants = ['zlib', 'bzip2', 'szip']
+        if spec.satisfies('@1.11.0:'):
+            variants += ['zfp']
+        if spec.satisfies('@1.12.0:'):
+            variants += ['sz', 'lz4']
+        if spec.satisfies('@1.13.0:'):
+            extra_args += self.with_or_without(
+                'blosc',
+                activation_value=lambda x: spec['c-blosc'].prefix
+            )
 
         # External I/O libraries
         variants += ['hdf5', 'netcdf']
