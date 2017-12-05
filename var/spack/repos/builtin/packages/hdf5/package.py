@@ -74,6 +74,9 @@ class Hdf5(AutotoolsPackage):
     conflicts('+threadsafe', when='+cxx')
     conflicts('+threadsafe', when='+fortran')
 
+    patch('h5f90global-mult-obj-same-equivalence-same-common-block.patch',
+          when='@1.10.1%intel@18')
+
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
