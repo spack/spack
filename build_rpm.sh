@@ -57,10 +57,10 @@ for pkg,specs in nonmpipkgs.items():
             install("{} %{} {}".format(pkg, compiler, spec))
 
 
-if os.system("lspci | grep Omni-Path"):
-    MVFAB = "psm2"
+if os.system("lspci | grep Omni-Path") == 0:
+    MVFAB = "psm"
     OMPIFAB = "psm2"
-elif os.system("lspci | grep Mellanox"):
+elif os.system("lspci | grep Mellanox") == 0:
     MVFAB = "mrail"
     OMPIFAB = "verbs"
 else:
