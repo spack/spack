@@ -54,7 +54,8 @@ class Paraview(CMakePackage):
     depends_on('py-numpy', when='+python', type='run')
     depends_on('py-matplotlib', when='+python', type='run')
     depends_on('mpi', when='+mpi')
-    depends_on('qt', when='@5.3.0:+qt')
+    depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
+    depends_on('qt~opengl', when='@5.3.0:+qt~opengl2')
     depends_on('qt@:4', when='@:5.2.0+qt')
 
     depends_on('mesa+swrender', when='+osmesa')

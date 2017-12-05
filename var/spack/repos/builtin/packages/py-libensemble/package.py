@@ -22,27 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
-import os
 
 
-class Bamtools(CMakePackage):
-    """C++ API & command-line toolkit for working with BAM data."""
+class PyLibensemble(PythonPackage):
+    """Library for managing ensemble-like collections of computations."""
 
-    homepage = "https://github.com/pezmaster31/bamtools"
-    url      = "https://github.com/pezmaster31/bamtools/archive/v2.4.0.tar.gz"
+    homepage = "https://libensemble.readthedocs.io"
+    url      = "https://pypi.io/packages/source/l/libensemble/libensemble-0.1.0.tar.gz"
 
-    version('2.5.0', 'dd4185bdba6e3adf2c24b7f93a57233d')
-    version('2.4.1', '41cadf513f2744256851accac2bc7baa')
-    version('2.4.0', '6139d00c1b1fe88fe15d094d8a74d8b9')
-    version('2.3.0', 'd327df4ba037d6eb8beef65d7da75ebc')
-    version('2.2.3', '6eccd3e45e4ba12a68daa3298998e76d')
+    version('develop', git='https://github.com/Libensemble/libensemble.git', branch='master')
+    version('0.1.0', '0c3d45dd139429de1a5273e5bd8e46ec')
 
-    depends_on('zlib', type='link')
-
-    def cmake_args(self):
-        args = []
-        rpath = self.rpath
-        rpath.append(os.path.join(self.prefix.lib, "bamtools"))
-        args.append("-DCMAKE_INSTALL_RPATH=%s" % ':'.join(rpath))
-        return args
+    depends_on('python@2.7:2.8,3.3:')
+    depends_on('py-setuptools', type='build')
+    depends_on('mpi')
+    depends_on('py-mpi4py@2.0:', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-petsc4py@3.5:', type=('build', 'run'))
+    depends_on('nlopt', type=('build', 'run'))
