@@ -31,9 +31,10 @@ from spack import *
 
 class Occa(MakefilePackage):
     """
-    OCCA is an open-source library that facilitates programming in an environment
-    containing different types of devices. We abstract devices and let the user
-    pick at run-time, for example: CPUs, GPUs, Intel's Xeon Phi, FPGAs.
+    OCCA is an open-source library that facilitates programming
+    in an environment containing different types of devices.
+    We abstract devices and let the user pick at run-time.
+    For example: CPUs, GPUs, Intel's Xeon Phi, FPGAs.
     """
 
     homepage = "http://libocca.org"
