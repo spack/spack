@@ -30,6 +30,7 @@ class Xsimd(CMakePackage):
 
     homepage = "http://quantstack.net/xsimd"
     url      = "https://github.com/QuantStack/xsimd/archive/3.1.0.tar.gz"
+    maintainers = ['ax3l']
 
     version('develop', branch='master',
             git='https://github.com/QuantStack/xsimd.git')
