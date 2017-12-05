@@ -85,7 +85,7 @@ class Nek5000(Package):
             # Build the tools
             if '+genbox' in spec:
                 makeTools('genbox')
-            if '+int_tp' in spec:
+            if '+int_tp' in spec and self.version == Version('17.0.0-beta2'):
                 makeTools('int_tp')
             if '+n2to3' in spec:
                 makeTools('n2to3')
