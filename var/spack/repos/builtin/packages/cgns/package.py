@@ -39,11 +39,11 @@ class Cgns(CMakePackage):
     variant('hdf5', default=True, description='Enable HDF5 interface')
     variant('fortran', default=False, description='Enable Fortran interface')
     variant('scoping', default=True, description='Enable scoping')
-    variant('parallel', default=True, description='Enable parallel')
+    variant('mpi', default=True, description='Enable parallel cgns')
 
-    depends_on('hdf5', when='+hdf5~parallel')
-    depends_on('hdf5+mpi', when='+hdf5+parallel')
-    depends_on('mpi', when='+parallel')
+    depends_on('hdf5', when='+hdf5~mpi')
+    depends_on('hdf5+mpi', when='+hdf5+mpi')
+    depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
         spec = self.spec
@@ -55,12 +55,12 @@ class Cgns(CMakePackage):
             '-DCGNS_ENABLE_SCOPING:BOOL=%s' % (
                 'ON' if '+scoping' in spec else 'OFF'),
             '-DCGNS_ENABLE_PARALLEL:BOOL=%s' % (
-                'ON' if '+parallel' in spec else 'OFF'),
+                'ON' if '+mpi' in spec else 'OFF'),
             '-DCGNS_ENABLE_TESTS:BOOL=OFF',
             '-DCGNS_BUILD_CGNSTOOLS:BOOL=OFF'
         ])
 
-        if '+parallel' in spec:
+        if '+mpi' in spec:
             options.extend([
                 '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
                 '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
@@ -74,7 +74,7 @@ class Cgns(CMakePackage):
                 '-DHDF5_INCLUDE_DIR:PATH=%s' % spec['hdf5'].prefix.include,
                 '-DHDF5_LIBRARY_DIR:PATH=%s' % spec['hdf5'].prefix.lib
             ])
-            if '+parallel' in spec:
+            if '+mpi' in spec:
                 options.extend([
                     '-DHDF5_NEED_MPI:BOOL=ON',
                     '-DHDF5_ENABLE_PARALLEL:BOOL=ON'
