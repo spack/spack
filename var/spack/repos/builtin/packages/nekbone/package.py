@@ -51,9 +51,6 @@ class Nekbone(Package):
             raise RuntimeError(msg)
 
     def install(self, spec, prefix):
-
-        working_dirs = ['example1', 'example2', 'example3', 'nek_comm',
-                        'nek_delay', 'nek_mgrid']
         mkdir(prefix.bin)
 
         FC = self.compiler.fc
@@ -61,21 +58,6 @@ class Nekbone(Package):
         if '+mpi' in spec:
             FC = spec['mpi'].mpif77
             CC = spec['mpi'].mpicc
-
-        for wdir in working_dirs:
-            with working_dir('test/' + wdir):
-                makenek = FileFilter('makenek')
-                makenek.filter('CC.*', 'CC=' + CC)
-                makenek.filter('F77.*', 'F77=' + FC)
-                makenek = Executable('./makenek')
-                path = join_path(prefix.bin,  wdir)
-                makenek('ex1', '../../src')
-                mkdir(path)
-                install('nekbone', path)
-                install('nekpmpi', path)
-                install('data.rea', path)
-                install('SIZE', path)
-                install('README', path)
 
         # Install Nekbone in prefix.bin
         install_tree("../Nekbone", prefix.bin.Nekbone)
@@ -90,5 +72,8 @@ class Nekbone(Package):
         with working_dir(prefix.bin):
             filter_file(r'^SOURCE_ROOT\s*=.*', 'SOURCE_ROOT=\"' +
                         prefix.bin.Nekbone + '/src\"', 'makenek')
-            filter_file(r'^CC\s*=.*', 'CC=\"' + CC + '\"', 'makenek')
-            filter_file(r'^FC\s*=.*', 'FC=\"' + FC + '\"', 'makenek')
+            filter_file(r'^CC\s*=.*', 'CC=\"' + CC + '\"', 'makenek'  )
+            filter_file(r'^F77\s*=.*', 'F77=\"' + FC + '\"', 'makenek')
+
+            if '+mpi' not in spec:
+                filter_file(r'^#IFMPI=\"false\"', 'IFMPI=\"false\"', 'makenek')
