@@ -45,15 +45,11 @@ class Occa(MakefilePackage):
             description="Enable OpenMP backend")
     variant('opencl', default=False,
             description="Enable OpenCL backend")
+    variant('cuda'  , default=False,
+            description="Enable CUDA backend")
 
+    depends_on('cuda'  , when='+cuda')
     depends_on('opencl', when='+opencl')
-
-    # Installing CUDA on OSX has issues
-    # User must install it manually
-    if sys.platform != 'darwin':
-        variant('cuda', default=False,
-                description="Enable CUDA backend")
-        depends_on('cuda', when='+cuda')
 
     def install(self, spec, prefix):
         make()
