@@ -34,7 +34,7 @@ class Mrbayes(AutotoolsPackage):
     homepage = "http://mrbayes.sourceforge.net"
     url      = "https://github.com/NBISweden/MrBayes"
 
-    version('3.2.6', commit='8a9adb11bcc538cb95d91d57568dff383f924503',
+    version('2017-11-22', commit='8a9adb11bcc538cb95d91d57568dff383f924503',
             git='https://github.com/NBISweden/MrBayes.git')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
