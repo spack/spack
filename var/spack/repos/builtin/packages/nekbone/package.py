@@ -72,7 +72,7 @@ class Nekbone(Package):
         with working_dir(prefix.bin):
             filter_file(r'^SOURCE_ROOT\s*=.*', 'SOURCE_ROOT=\"' +
                         prefix.bin.Nekbone + '/src\"', 'makenek')
-            filter_file(r'^CC\s*=.*', 'CC=\"' + CC + '\"', 'makenek'  )
+            filter_file(r'^CC\s*=.*', 'CC=\"' + CC + '\"', 'makenek')
             filter_file(r'^F77\s*=.*', 'F77=\"' + FC + '\"', 'makenek')
 
             if '+mpi' not in spec:
