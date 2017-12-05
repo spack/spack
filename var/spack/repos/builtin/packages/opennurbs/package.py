@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import glob
-import os
 
 
 class Opennurbs(Package):
