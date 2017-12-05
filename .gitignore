@@ -25,9 +25,9 @@
 /bin/spackc
 /cache
 /linux
-compilers.yaml
-config.yaml
-mirrors.yaml
-modules.yaml
-packages.yaml
-repos.yaml
+/compilers.yaml
+/config.yaml
+/mirrors.yaml
+/modules.yaml
+/packages.yaml
+/repos.yaml
