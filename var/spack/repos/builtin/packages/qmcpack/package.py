@@ -110,6 +110,10 @@ class Qmcpack(CMakePackage):
                patches=patch(patch_url, sha256=patch_checksum),
                when='~mpi')
 
+    # This is Spack specific patch, we may need to enhance QMCPACK's CMake
+    # in the near future.
+    patch('cmake.diff')
+
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
         # for libxml2, so we fix that.
@@ -185,7 +189,7 @@ class Qmcpack(CMakePackage):
         elif '~timers' in spec:
             args.append('-DENABLE_TIMERS=0')
 
-        # Proper detection of optimized BLAS and LAPACK. 
+        # Proper detection of optimized BLAS and LAPACK.
         # Based on the code from the deal II Spack package:
         # https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/dealii/package.py
         #
@@ -194,19 +198,20 @@ class Qmcpack(CMakePackage):
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
         args.extend([
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
-                self.spec['lapack'].prefix.include, self.spec['blas'].prefix.include),
             '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';')
         ])
+
+        # Additionally, we need to pass the BLAS+LAPACK include directory for
+        # header files. Intel MKL requires special case due to differences in
+        # Darwin vs. Linux $MKLROOT naming schemes
+        if 'intel-mkl' in self.spec:
+            args.append('-DLAPACK_INCLUDE_DIRS=%s' %
+                format(join_path(env['MKLROOT'],'include')))
+        else:
+            args.append('-DLAPACK_INCLUDE_DIRS=%s;%s' % (
+                self.spec['lapack'].prefix.include, self.spec['blas'].prefix.include))
         
         return args
-
-    # def setup_environment(self, spack_env, run_env):
-    #     # Add MKLROOT/lib to the CMAKE_PREFIX_PATH to enable CMake to find
-    #     # MKL libraries. MKLROOT environment variable must be defined for
-    #     # this to work properly.
-    #     if 'intel-mkl' in self.spec:
-    #         spack_env.append_path('CMAKE_PREFIX_PATH',format(join_path(env['MKLROOT'],'lib')))
 
     def install(self, spec, prefix):
         """Make the install targets"""
