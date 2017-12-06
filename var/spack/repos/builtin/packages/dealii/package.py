@@ -89,30 +89,22 @@ class Dealii(CMakePackage, CudaPackage):
 
     # required dependencies, light version
     depends_on('blas')
-    # Boost 1.58 is blacklisted, see
+    # Boost 1.58 is blacklisted, require at least 1.59, see
     # https://github.com/dealii/dealii/issues/1591
-    # Require at least 1.59
-    # There are issues with 1.65.1 but not with 1.65.0:
+    # There are issues with 1.65.1 and 1.65.0:
     # https://github.com/dealii/dealii/issues/5262
-    # +python won't affect @:8.4.2
-    # FIXME: once concretizer can unite unconditional and
-    # conditional dependencies, simplify to:
-    # depends_on('boost@1.59.0+thread+system+serialization+iostreams')
-    # depends_on('boost+mpi', when='+mpi')
-    # depends_on('boost+python', when='+python')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams',
-               when='@:8.4.2~mpi')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams+mpi',
-               when='@:8.4.2+mpi')
-    # since @8.5.0: (and @develop) python bindings are introduced:
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams',
-               when='@8.5.0:~mpi~python')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams+mpi',
-               when='@8.5.0:+mpi~python')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams+python',
-               when='@8.5.0:~mpi+python')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams+mpi+python',
-               when='@8.5.0:+mpi+python')
+    # we take the patch from https://github.com/boostorg/serialization/pull/79
+    # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
+    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams',
+               patches=patch('boost_1.65.1_singleton.patch',
+                       level=1,
+                       when='@1.65.1'),
+               when='~python')
+    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams+python',
+               patches=patch('boost_1.65.1_singleton.patch',
+                       level=1,
+                       when='@1.65.1'),
+               when='+python')
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
