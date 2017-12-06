@@ -49,7 +49,7 @@ class Mercurial(PythonPackage):
     version('3.8.1', '172a8c588adca12308c2aca16608d7f4')
 
     depends_on('python@2.6:2.8', when='@:4.2.99')
-    depends_on('python@2.7:2.8,3.5:3.5.999,3.6.2:', when='@4.4:')
+    depends_on('python@2.7:2.8,3.5:3.5.999,3.6.2:', when='@4.3:')
     depends_on('py-docutils', type='build')
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-certifi',  type=('build', 'run'))
