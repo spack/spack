@@ -74,6 +74,9 @@ class Hdf5(AutotoolsPackage):
     conflicts('+threadsafe', when='+cxx')
     conflicts('+threadsafe', when='+fortran')
 
+    # There are known build failures with intel@18.0.1. This issue is
+    # discussed and patch is provided at
+    # https://software.intel.com/en-us/forums/intel-fortran-compiler-for-linux-and-mac-os-x/topic/747951.
     patch('h5f90global-mult-obj-same-equivalence-same-common-block.patch',
           when='@1.10.1%intel@18')
 
