@@ -31,9 +31,9 @@ class Gslib(Package):
     homepage = "https://github.com/gslib/gslib"
     url      = "https://github.com/gslib/gslib"
 
-    version('v1.0.1', git='https://github.com/gslib/gslib.git',
+    version('1.0.1', git='https://github.com/gslib/gslib.git',
         commit='d16685f24551b7efd69e58d96dc76aec75239ea3')
-    version('v1.0.0', git='https://github.com/gslib/gslib.git',
+    version('1.0.0', git='https://github.com/gslib/gslib.git',
         commit='9533e652320a3b26a72c36487ae265b02072cd48')
 
     variant('mpi', default=True, description='Build with MPI')
@@ -47,7 +47,7 @@ class Gslib(Package):
         libDir = 'lib'
         libname = 'libgs.a'
 
-        if self.version == Version('v1.0.1'):
+        if self.version == Version('1.0.1'):
             makeFile = 'Makefile'
         else:
             makeFile = 'src/Makefile'
@@ -63,16 +63,16 @@ class Gslib(Package):
             filter_file(r'MPI.*?=.*1', 'MPI = 0', makeFile)
             filter_file(r'MPIIO.*?=.*1', 'MPIIO = 0', makeFile)
 
-        if self.version == Version('v1.0.1'):
+        if self.version == Version('1.0.1'):
             make('CC=' + CC)
             make('install')
             install_tree(libDir, prefix.lib)
-        elif self.version == Version('v1.0.0'):
+        elif self.version == Version('1.0.0'):
             with working_dir(srcDir):
                 make('CC=' + CC)
                 mkdir(prefix.lib)
                 install(libname, prefix.lib)
 
-        # TODO: Should only install the headers (this will
+        # Should only install the headers (this will
         # be fixed in gslib on future releases.
         install_tree(srcDir, prefix.include)
