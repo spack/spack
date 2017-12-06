@@ -71,10 +71,13 @@ class Nekcem(Package):
             filter_file(r'^NEK\s*=.*', 'NEK=\"' + prefix.bin.NekCEM +
                         '\"', 'makenek')
 
-            blasLapack = spec['blas'].libs + spec['lapack'].libs
+            blasLapack = spec['lapack'].libs + spec['blas'].libs
             ldFlags = blasLapack.ld_flags
-#            filter_file(r'^LDFLAGS\s*=.*', 'LDFLAGS=\"' + str(ldFlags) +
-#                        '\"', 'makenek')
+            # Temporary workaround, we should use LDFLAGS when
+            # configurenek in Nekcem is fixed.
+            # See issue: https://github.com/NekCEM/NekCEM/issues/200
+            filter_file(r'^EXTRALDFLAGS\s*=.*', 'EXTRALDFLAGS=\"' + ldFlags +
+                        '\"', 'makenek')
 
         # Install NekCEM in prefix/bin
         install_tree('../NekCEM', prefix.bin.NekCEM)
