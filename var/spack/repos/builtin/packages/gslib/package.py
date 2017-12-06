@@ -38,9 +38,11 @@ class Gslib(Package):
 
     variant('mpi', default=True, description='Build with MPI')
     variant('mpiio', default=True, description='Build with MPI I/O')
+    variant('blas', default=False, description='Build with BLAS')
 
     depends_on('mpi', when="+mpi")
     depends_on('mpi', when="+mpiio")
+    depends_on('blas', when="+blas")
 
     def install(self, spec, prefix):
         srcDir = 'src'
@@ -63,13 +65,21 @@ class Gslib(Package):
             filter_file(r'MPI.*?=.*1', 'MPI = 0', makeFile)
             filter_file(r'MPIIO.*?=.*1', 'MPIIO = 0', makeFile)
 
+        makeCmd = "CC=" + CC
+
+        if '+blas' in spec:
+            filter_file(r'BLAS.*?=.*0', 'BLAS = 1', makeFile)
+            blas = spec['blas'].libs
+            ldFlags = blas.ld_flags
+            filter_file(r'\$\(LDFLAGS\)', ldFlags, makeFile)
+
         if self.version == Version('1.0.1'):
-            make('CC=' + CC)
+            make(makeCmd)
             make('install')
             install_tree(libDir, prefix.lib)
         elif self.version == Version('1.0.0'):
             with working_dir(srcDir):
-                make('CC=' + CC)
+                make(makeCmd)
                 mkdir(prefix.lib)
                 install(libname, prefix.lib)
 
