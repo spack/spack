@@ -26,9 +26,9 @@ from spack import *
 
 
 class PerlStatisticsDescriptive(PerlPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Module of basic descriptive statistical functions."""
 
-    homepage = "http://www.example.com"
+    homepage = "http://search.cpan.org/~shlomif/Statistics-Descriptive-3.0612/lib/Statistics/Descriptive.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/S/SH/SHLOMIF/Statistics-Descriptive-3.0612.tar.gz"
 
     version('3.0612', 'e38cfbc1e3962d099b62a14a57a175f1')
