@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import os
 
 
 class Siesta(Package):
@@ -78,6 +79,9 @@ class Siesta(Package):
             make(parallel=False)
         with working_dir('Obj_trans'):
             make('transiesta', parallel=False)
+        with working_dir('Util'):
+            sh = which('sh')
+            sh('build_all.sh')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
@@ -85,3 +89,8 @@ class Siesta(Package):
             install('siesta', prefix.bin)
         with working_dir('Obj_trans'):
             install('transiesta', prefix.bin)
+        for root, _, files in os.walk('Util'):
+            for fname in files:
+                fname = join_path(root, fname)
+                if os.access(fname, os.X_OK):
+                    install(fname, prefix.bin)
