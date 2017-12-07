@@ -25,28 +25,19 @@
 from spack import *
 
 
-class Libszip(AutotoolsPackage):
-    """Szip is an implementation of the extended-Rice lossless
-     compression algorithm.
+class RKegggraph(RPackage):
+    """KEGGGraph is an interface between KEGG pathway and graph object as
+    well as a collection of tools to analyze, dissect and visualize these
+    graphs. It parses the regularly updated KGML (KEGG XML) files into graph
+    models maintaining all essential pathway attributes. The package offers
+    functionalities including parsing, graph operation, visualization and
+    etc."""
 
-    It provides lossless compression of scientific data, and is
-    provided with HDF software products.
-    """
+    homepage = "https://www.bioconductor.org/packages/KEGGgraph/"
+    url      = "https://git.bioconductor.org/packages/KEGGgraph"
 
-    homepage = "https://support.hdfgroup.org/doc_resource/SZIP/"
-    url      = "https://support.hdfgroup.org/ftp/lib-external/szip/2.1.1/src/szip-2.1.1.tar.gz"
-    list_url = "https://support.hdfgroup.org/ftp/lib-external/szip"
-    list_depth = 3
+    version('1.38.1', git='https://git.bioconductor.org/packages/KEGGgraph', commit='dd31665beb36d5aad8ed09ed56c603633b6b2292')
 
-    provides('szip')
-
-    version('2.1.1', '5addbf2a5b1bf928b92c47286e921f72')
-    version('2.1',   '902f831bcefb69c6b635374424acbead')
-
-    def configure_args(self):
-        return [
-            '--enable-production',
-            '--enable-shared',
-            '--enable-static',
-            '--enable-encoding',
-        ]
+    depends_on('r-graph', type=('build', 'run'))
+    depends_on('r-xml', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.38.1')
