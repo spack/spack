@@ -32,4 +32,7 @@ class GlobusToolkit(AutotoolsPackage):
     homepage = "http://toolkit.globus.org"
     url      = "http://toolkit.globus.org/ftppub/gt6/installers/src/globus_toolkit-6.0.1506371041.tar.gz"
 
+    version('6.0.1493989444', '9e9298b61d045e65732e12c9727ceaa8')
     version('6.0.1506371041', 'e17146f68e03b3482aaea3874d4087a5')
+
+    depends_on('openssl')
