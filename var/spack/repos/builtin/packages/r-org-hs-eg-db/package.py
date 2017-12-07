@@ -25,18 +25,14 @@
 from spack import *
 
 
-class Libassuan(AutotoolsPackage):
-    """Libassuan is a small library implementing the so-called Assuan
-       protocol."""
+class ROrgHsEgDb(RPackage):
+    """Genome wide annotation for Human, primarily based on mapping
+    using Entrez Gene identifiers."""
 
-    homepage = "https://gnupg.org/software/libassuan/index.html"
-    url = "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-2.4.5.tar.bz2"
+    homepage = "http://www.example.co://www.bioconductor.org/packages/org.Hs.eg.db/i"
+    url      = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/org.Hs.eg.db_3.4.1.tar.gz"
 
-    version('2.4.5', '4f22bdb70d424cfb41b64fd73b7e1e45')
-    version('2.4.3', '8e01a7c72d3e5d154481230668e6eb5a')
+    version('3.4.1', '0a987ef7d6167df70e91e6f48145e41c')
 
-    depends_on('libgpg-error')
-
-    def configure_args(self):
-        args = ['--with-libgpp-error=%s' % self.spec['libgpg-error'].prefix]
-        return args
+    depends_on('r@3.4.0:3.4.9', when='@3.4.1')
+    depends_on('r-annotationdbi', type=('build', 'run'))

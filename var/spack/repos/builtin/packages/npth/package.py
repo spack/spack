@@ -30,6 +30,7 @@ class Npth(AutotoolsPackage):
        non-preemptive threads implementation."""
 
     homepage = "https://gnupg.org/software/npth/index.html"
-    url = "https://gnupg.org/ftp/gcrypt/npth/npth-1.4.tar.bz2"
+    url = "https://gnupg.org/ftp/gcrypt/npth/npth-1.5.tar.bz2"
 
+    version('1.5', '9ba2dc4302d2f32c66737c43ed191b1b')
     version('1.4', '76cef5542e0db6a339cf960641ed86f8')

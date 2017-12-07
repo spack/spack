@@ -25,18 +25,19 @@
 from spack import *
 
 
-class Libassuan(AutotoolsPackage):
-    """Libassuan is a small library implementing the so-called Assuan
-       protocol."""
+class RKegggraph(RPackage):
+    """KEGGGraph is an interface between KEGG pathway and graph object as
+    well as a collection of tools to analyze, dissect and visualize these
+    graphs. It parses the regularly updated KGML (KEGG XML) files into graph
+    models maintaining all essential pathway attributes. The package offers
+    functionalities including parsing, graph operation, visualization and
+    etc."""
 
-    homepage = "https://gnupg.org/software/libassuan/index.html"
-    url = "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-2.4.5.tar.bz2"
+    homepage = "https://www.bioconductor.org/packages/KEGGgraph/"
+    url      = "https://git.bioconductor.org/packages/KEGGgraph"
 
-    version('2.4.5', '4f22bdb70d424cfb41b64fd73b7e1e45')
-    version('2.4.3', '8e01a7c72d3e5d154481230668e6eb5a')
+    version('1.38.1', git='https://git.bioconductor.org/packages/KEGGgraph', commit='dd31665beb36d5aad8ed09ed56c603633b6b2292')
 
-    depends_on('libgpg-error')
-
-    def configure_args(self):
-        args = ['--with-libgpp-error=%s' % self.spec['libgpg-error'].prefix]
-        return args
+    depends_on('r-graph', type=('build', 'run'))
+    depends_on('r-xml', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.38.1')
