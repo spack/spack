@@ -61,3 +61,12 @@ class Libpng(AutotoolsPackage):
             'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
         ]
         return args
+
+    def dependent_cmake_args(self):
+        # FindPNG.cmake does not have an argument that could be set to enforce
+        # usage of the library in a particular directory but as long as Spack
+        # sets CMAKE_PREFIX_PATH, libpng's 'make install' creates libpng.*
+        # symlink to the library, and the script starts with searching for
+        # names 'png.*' and 'libpng.*', the correct installation of the library
+        # is used in most of the cases.
+        return []

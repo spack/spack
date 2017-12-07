@@ -2021,6 +2021,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
 
+    def dependent_cmake_args(self):
+        """Returns a list of command line arguments that help standard
+        cmake Find<Package>.cmake scripts of a dependent CMakePackage to
+        locate this package.
+
+        Default implementation returns an empty list, but this can be
+        overridden by an extendable package.
+        """
+        return []
+
 
 class Package(PackageBase):
     """General purpose class with a single ``install``

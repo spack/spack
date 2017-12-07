@@ -659,3 +659,8 @@ class Python(AutotoolsPackage):
             self.write_easy_install_pth(
                 exts,
                 prefix=extensions_layout.extendee_target_directory(self))
+
+    def dependent_cmake_args(self):
+        # Both FindPythonInterp.cmake and FindPythonLibs.cmake locate python
+        # correctly if variable PYTHON_EXECUTABLE is set."""
+        return ['-DPYTHON_EXECUTABLE:FILEPATH=' + self.command.path]
