@@ -156,9 +156,11 @@ class CMakePackage(PackageBase):
         args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
         return args
 
-    def flags_to_cl_args(self, flags):
+    def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified
-        compiler flags to cmake. Note CMAKE does not have a cppflags option."""
+        compiler flags to cmake. Note CMAKE does not have a cppflags option,
+        so cppflags will be added to cflags, cxxflags, and fflags to mimic the
+        behavior in other tools."""
         # Has to be dynamic attribute due to caching
         setattr(self, 'cmake_flag_args', [])
 

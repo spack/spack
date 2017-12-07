@@ -1708,12 +1708,22 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         pass
 
     def inject_flags(self, name, flags):
+        """
+        flag_handler that injects all flags through the compiler wrapper.
+        """
         return (flags, None, None)
 
     def env_flags(self, name, flags):
+        """
+        flag_handler that adds all flags to canonical environment variables.
+        """
         return (None, flags, None)
 
-    def command_line_flags(self, name, flags):
+    def build_system_flags(self, name, flags):
+        """
+        flag_handler that passes flags to the build system arguments.
+        Not implemented for all build systems.
+        """
         return (None, None, flags)
 
     flag_handler = inject_flags
@@ -1730,7 +1740,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     # inject_flags, env_flags, and command_line_flags methods are provided in
     #  module scope as easy default options for users.
 
-    def flags_to_cl_args(self, flags):
+    def flags_to_build_system_args(self, flags):
         # Takes flags as a dict name: list of values
         if any(v for v in flags.values()):
             msg = 'The {0} build system'.format(self.__class__.__name__)

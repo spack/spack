@@ -2539,30 +2539,32 @@ Compiler flags
 Compiler flags set by the user through the Spec object can be passed
 to the build in one of three ways. By default, the build environment
 injects these flags directly into the compiler commands using Spack's
-compiler wrappers. The flag_handler method can be used to change this
-behavior.
+compiler wrappers. The flags may alternatively be passed through
+environment variables or through build system arguments. The
+flag_handler method can be used to change this behavior.
 
 Packages can override the flag_handler method with one of three
 builtin flag_handlers. The builtin flag_handlers are named
-``inject_flags``, ``env_flags``, and ``command_line_flags``. The
+``inject_flags``, ``env_flags``, and ``build_system_flags``. The
 ``inject_flags`` method is the default. The ``env_flags`` method puts
 all of the flags into the environment variables that ``make`` uses as
 implicit variables ('CFLAGS', 'CXXFLAGS', etc.). The
-``command_line_flags`` method is only available for
-``AutotoolsPackage`` and ``CMakePackage``. It adds the flags to the
-command line invocation of ``configure`` or ``cmake``, respectively.
+``build_system_flags`` method is only available for
+``AutotoolsPackage`` and ``CMakePackage``. It adds the flags as
+arguments to the invocation of ``configure`` or ``cmake``,
+respectively.
 
 Individual packages may also define their own ``flag_handler``
 methods. The ``flag_handler`` method takes the package instance
 (``self``), the name of the flag, and a list of the values of the
 flag. It will be called on each of the six compiler flags supported in
-Spack. It should return a triple of ``(injf, envf, clf)`` where
+Spack. It should return a triple of ``(injf, envf, bsf)`` where
 ``injf`` is a list of flags to inject via the Spack compiler wrappers,
 ``envf`` is a list of flags to pass to the build system through the
-environment using implicit variables, and ``clf`` is a list of flags
-to pass to the build system on the command line. If ``clf`` is
-non-empty in a package that does not support ``command_line_flags``,
-the build environment will raise a ``NotImplementedError`` .
+environment using implicit variables, and ``bsf`` is a list of flags
+to pass to the build system as arguments. If ``bsf`` is non-empty in a
+package that does not support ``build_system_flags``, the build
+environment will raise a ``NotImplementedError`` .
 
 Here are the definitions of the three builtin flag handlers:
 
@@ -2574,7 +2576,7 @@ Here are the definitions of the three builtin flag handlers:
    def env_flags(self, name, flags):
        return (None, flags, None)
 
-   def command_line_flags(self, name, flags):
+   def build_system_flags(self, name, flags):
        return (None, None, flags)
 
 Note that it would be equivalent to return ``[]`` instead of ``None``.
@@ -2610,11 +2612,11 @@ package methods. In the ``setup_environment`` and
 ``setup_dependent_environment`` methods, use the ``append_flags``
 method of the ``EnvironmentModifications`` class to append values to a
 list of flags whenever the flag handler is ``env_flags``. If the
-package passes flags through the environment or the command line
+package passes flags through the environment or the build system
 manually (in the install method, for example), we recommend using the
 default flag handler or rewriting the package to pass its flags
 through the flag handler rather than manually. Manual flag passing is
-likely to interfere with the ``env_flags`` and ``command_line_flags``
+likely to interfere with the ``env_flags`` and ``build_system_flags``
 methods.
 
 In rare circumstances such as compiling and running small unit tests, a

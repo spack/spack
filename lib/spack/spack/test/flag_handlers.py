@@ -81,11 +81,11 @@ class TestFlagHandlers(object):
         assert os.environ['CPPFLAGS'] == '-g'
         assert 'SPACK_CPPFLAGS' not in os.environ
 
-    def test_command_line_flags_cmake(self, temp_env):
+    def test_build_system_flags_cmake(self, temp_env):
         s = spack.spec.Spec('callpath cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.command_line_flags
+        pkg.flag_handler = pkg.build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_CPPFLAGS' not in os.environ
@@ -95,11 +95,11 @@ class TestFlagHandlers(object):
                         '-DCMAKE_Fortran_FLAGS=-g'])
         assert set(pkg.cmake_flag_args) == expected
 
-    def test_command_line_flags_autotools(self, temp_env):
+    def test_build_system_flags_autotools(self, temp_env):
         s = spack.spec.Spec('libelf cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.command_line_flags
+        pkg.flag_handler = pkg.build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_CPPFLAGS' not in os.environ
@@ -107,11 +107,11 @@ class TestFlagHandlers(object):
 
         assert 'CPPFLAGS=-g' in pkg.configure_flag_args
 
-    def test_command_line_flags_not_implemented(self, temp_env):
+    def test_build_system_flags_not_implemented(self, temp_env):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.command_line_flags
+        pkg.flag_handler = pkg.build_system_flags
 
         # Test the command line flags method raises a NotImplementedError
         try:
@@ -120,7 +120,7 @@ class TestFlagHandlers(object):
         except NotImplementedError:
             assert True
 
-    def test_add_command_line_flags_autotools(self, temp_env):
+    def test_add_build_system_flags_autotools(self, temp_env):
         s = spack.spec.Spec('libelf cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
@@ -132,7 +132,7 @@ class TestFlagHandlers(object):
 
         assert pkg.configure_flag_args == ['CFLAGS=-O3']
 
-    def test_add_command_line_flags_cmake(self, temp_env):
+    def test_add_build_system_flags_cmake(self, temp_env):
         s = spack.spec.Spec('callpath cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
@@ -148,7 +148,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('callpath ldflags=-mthreads')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.command_line_flags
+        pkg.flag_handler = pkg.build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_LDFLAGS' not in os.environ
@@ -164,7 +164,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('callpath ldlibs=-lfoo')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = pkg.command_line_flags
+        pkg.flag_handler = pkg.build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
         assert 'SPACK_LDLIBS' not in os.environ

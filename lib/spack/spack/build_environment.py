@@ -163,14 +163,14 @@ def set_compiler_environment_variables(pkg, env):
     # env_flags are easy to accidentally override.
     inject_flags = {}
     env_flags = {}
-    command_line_flags = {}
+    build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
-        injf, envf, clf = pkg.flag_handler(flag, pkg.spec.compiler_flags[flag])
+        injf, envf, bsf = pkg.flag_handler(flag, pkg.spec.compiler_flags[flag])
         inject_flags[flag] = [] if injf is None else injf
         env_flags[flag] = [] if envf is None else envf
-        command_line_flags[flag] = [] if clf is None else clf
+        build_system_flags[flag] = [] if bsf is None else bsf
 
-    # Add every compiler flag to the appropriate place
+    # Place compiler flags as specified by flag_handler
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Concreteness guarantees key safety here
         if inject_flags[flag]:
@@ -180,7 +180,7 @@ def set_compiler_environment_variables(pkg, env):
         if env_flags[flag]:
             # implicit variables
             env.set(flag.upper(), ' '.join(f for f in env_flags[flag]))
-    pkg.flags_to_cl_args(command_line_flags)
+    pkg.flags_to_build_system_args(build_system_flags)
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 

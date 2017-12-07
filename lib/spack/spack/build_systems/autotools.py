@@ -247,7 +247,7 @@ class AutotoolsPackage(PackageBase):
         """
         return []
 
-    def flags_to_cl_args(self, flags):
+    def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass specified
         compiler flags to configure."""
         # Has to be dynamic attribute due to caching.
