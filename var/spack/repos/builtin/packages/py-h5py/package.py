@@ -40,7 +40,7 @@ class PyH5py(PythonPackage):
 
     # Build dependencies
     depends_on('py-cython@0.19:', type='build')
-    depends_on('py-pkgconfigig', type='build')
+    depends_on('py-pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('hdf5@1.8.4:+hl')
     depends_on('hdf5+mpi', when='+mpi')
