@@ -26,9 +26,10 @@ from spack import *
 
 
 class PyHtseq(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """HTSeq is a Python package that provides infrastructure to process
+    data from high-throughput sequencing assays."""
 
-    homepage = "http://www.example.com"
+    homepage = "http://htseq.readthedocs.io/en/release_0.9.1/overview.html"
     url      = "https://github.com/simon-anders/htseq/archive/release_0.9.1.tar.gz"
 
     version('0.9.1', '269e7de5d39fc31f609cccd4a4740e61')
