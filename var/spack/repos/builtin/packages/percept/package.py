@@ -35,7 +35,7 @@ class Percept(CMakePackage):
 
     # This package file was created at percept
     # commit dc1c8ec0175213146ac139946beca185a84c22e8
-    version('master',
+    version('develop',
             git='https://github.com/PerceptTools/percept.git', branch='master')
 
     depends_on('googletest')
