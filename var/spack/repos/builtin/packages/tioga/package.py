@@ -32,7 +32,7 @@ class Tioga(CMakePackage):
     url      = "https://github.com/jsitaraman/tioga.git"
 
     # The master branch doesn't support CMake
-    version('nalu-api', git="https://github.com/jsitaraman/tioga",
+    version('develop', git="https://github.com/jsitaraman/tioga.git",
             branch='nalu-api')
 
     variant('shared', default=False,
