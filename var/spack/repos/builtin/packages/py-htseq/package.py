@@ -25,18 +25,18 @@
 from spack import *
 
 
-class RRhtslib(RPackage):
-    """This package provides version 1.1 of the 'HTSlib' C library
-    for high-throughput sequence analysis. The package is primarily
-    useful to developers of other R packages who wish to make use
-    of HTSlib. Motivation and instructions for use of this package
-    are in the vignette, vignette(package="Rhtslib", "Rhtslib")."""
+class PyHtseq(PythonPackage):
+    """HTSeq is a Python package that provides infrastructure to process
+    data from high-throughput sequencing assays."""
 
-    homepage = "https://www.bioconductor.org/packages/Rhtslib/"
-    url      = "https://git.bioconductor.org/packages/Rhtslib"
+    homepage = "http://htseq.readthedocs.io/en/release_0.9.1/overview.html"
+    url      = "https://github.com/simon-anders/htseq/archive/release_0.9.1.tar.gz"
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/Rhtslib', commit='3b5493473bed42958614091c58c739932ffcfa79')
+    version('0.9.1', '269e7de5d39fc31f609cccd4a4740e61')
 
-    depends_on('r@3.4.0:3.4.9', when='@1.8.0')
-    depends_on('r-zlibbioc', type=('build', 'run'))
-    depends_on('autoconf@2.67:', type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pysam', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-cython', type=('build', 'run'))
+    depends_on('swig', type=('build', 'run'))

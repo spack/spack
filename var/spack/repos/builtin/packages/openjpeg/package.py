@@ -49,6 +49,11 @@ class Openjpeg(CMakePackage):
     version('1.5.2', '545f98923430369a6b046ef3632ef95c')
     version('1.5.1', 'd774e4b5a0db5f0f171c4fc0aabfa14e')
 
+    # The problem with install name of the library on MacOs was fixed starting
+    # version 2.1.1: https://github.com/uclouvain/openjpeg/commit/b9a247b559e62e55f5561624cf4a19aee3c8afdc
+    # The solution works for the older versions (at least starting 1.5.1) too.
+    patch('macos.patch', when='@:2.1.0 platform=darwin')
+
     def url_for_version(self, version):
         if version >= Version('2.1.1'):
             return super(Openjpeg, self).url_for_version(version)

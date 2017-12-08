@@ -25,18 +25,11 @@
 from spack import *
 
 
-class RRhtslib(RPackage):
-    """This package provides version 1.1 of the 'HTSlib' C library
-    for high-throughput sequence analysis. The package is primarily
-    useful to developers of other R packages who wish to make use
-    of HTSlib. Motivation and instructions for use of this package
-    are in the vignette, vignette(package="Rhtslib", "Rhtslib")."""
+class PyReportlab(PythonPackage):
+    """The ReportLab Toolkit. An Open Source Python library for generating
+    PDFs and graphics."""
 
-    homepage = "https://www.bioconductor.org/packages/Rhtslib/"
-    url      = "https://git.bioconductor.org/packages/Rhtslib"
+    homepage = "https://pypi.python.org/pypi/reportlab"
+    url      = "https://pypi.io/packages/source/r/reportlab/reportlab-3.4.0.tar.gz"
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/Rhtslib', commit='3b5493473bed42958614091c58c739932ffcfa79')
-
-    depends_on('r@3.4.0:3.4.9', when='@1.8.0')
-    depends_on('r-zlibbioc', type=('build', 'run'))
-    depends_on('autoconf@2.67:', type='build')
+    version('3.4.0', '3f2522cf3b69cd84426c216619bbff53')

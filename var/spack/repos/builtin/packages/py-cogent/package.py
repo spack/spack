@@ -25,18 +25,13 @@
 from spack import *
 
 
-class RRhtslib(RPackage):
-    """This package provides version 1.1 of the 'HTSlib' C library
-    for high-throughput sequence analysis. The package is primarily
-    useful to developers of other R packages who wish to make use
-    of HTSlib. Motivation and instructions for use of this package
-    are in the vignette, vignette(package="Rhtslib", "Rhtslib")."""
+class PyCogent(PythonPackage):
+    """A toolkit for statistical analysis of biological sequences."""
 
-    homepage = "https://www.bioconductor.org/packages/Rhtslib/"
-    url      = "https://git.bioconductor.org/packages/Rhtslib"
+    homepage = "http://pycogent.org"
+    url      = "https://pypi.io/packages/source/c/cogent/cogent-1.9.tar.gz"
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/Rhtslib', commit='3b5493473bed42958614091c58c739932ffcfa79')
+    version('1.9', '7d9f28cd17664c1cd18c568fc53060d6')
 
-    depends_on('r@3.4.0:3.4.9', when='@1.8.0')
-    depends_on('r-zlibbioc', type=('build', 'run'))
-    depends_on('autoconf@2.67:', type='build')
+    depends_on('py-setuptools',   type='build')
+    depends_on('py-numpy',        type=('build', 'run'))
