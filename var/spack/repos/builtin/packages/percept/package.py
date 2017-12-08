@@ -55,13 +55,20 @@ class Percept(CMakePackage):
         options.extend([
             '-DSTK_PERCEPT_LITE:BOOL=OFF',
             '-DSTK_ADAPT_HAVE_YAML_CPP:BOOL=ON',
-            '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
-            '-DBOOST_DIR:PATH=%s' % spec['boost'].prefix,
-            '-DOPENNURBS_DIR:PATH=%s' % spec['opennurbs'].prefix,
-            '-DOPENNURBS_INCLUDE_DIR:PATH=%s' % spec['opennurbs'].prefix.include,
-            '-DOPENNURBS_LIBRARY_DIR:PATH=%s' % spec['opennurbs'].prefix.lib,
-            '-DPERCEPT_TPLS_INSTALL_DIR:PATH=%s' % spec['googletest'].prefix,
+            '-DTrilinos_DIR:PATH=%s' %
+            spec['trilinos'].prefix,
+            '-DYAML_DIR:PATH=%s' %
+            spec['yaml-cpp'].prefix,
+            '-DBOOST_DIR:PATH=%s' %
+            spec['boost'].prefix,
+            '-DOPENNURBS_DIR:PATH=%s' %
+            spec['opennurbs'].prefix,
+            '-DOPENNURBS_INCLUDE_DIR:PATH=%s' %
+            spec['opennurbs'].prefix.include,
+            '-DOPENNURBS_LIBRARY_DIR:PATH=%s' %
+            spec['opennurbs'].prefix.lib,
+            '-DPERCEPT_TPLS_INSTALL_DIR:PATH=%s' %
+            spec['googletest'].prefix,
             '-DENABLE_INSTALL:BOOL=ON'
         ])
 
