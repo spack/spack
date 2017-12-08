@@ -108,9 +108,10 @@ class Conduit(Package):
     # experienced on BGQ. When on, the static build tries
     # to link against shared libs.
     #
-    # we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5~cxx~mpi~fortran", when="+hdf5+shared")
-    depends_on("hdf5~shared~cxx~mpi~fortran", when="+hdf5~shared")
+    # Use HDF5 1.8, for wider output compatibly
+    # variants reflect we are not using hdf5's mpi or fortran features.
+    depends_on("hdf5@1.8.19:1.8.999~cxx~mpi~fortran", when="+hdf5+shared")
+    depends_on("hdf5@1.8.19:1.8.999~shared~cxx~mpi~fortran", when="+hdf5~shared")
 
     # we are not using silo's fortran features
     depends_on("silo~fortran", when="+silo+shared")
