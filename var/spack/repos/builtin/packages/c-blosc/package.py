@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,7 @@ class CBlosc(CMakePackage):
     homepage = "http://www.blosc.org"
     url      = "https://github.com/Blosc/c-blosc/archive/v1.11.1.tar.gz"
 
+    version('1.12.1', '6fa4ecb7ef70803a190dd386bf4a2e93')
     version('1.11.1', 'e236550640afa50155f3881f2d300206')
     version('1.9.2',  'dd2d83069d74b36b8093f1c6b49defc5')
     version('1.9.1',  '7d708d3daadfacf984a87b71b1734ce2')
@@ -45,6 +46,8 @@ class CBlosc(CMakePackage):
     depends_on('cmake@2.8.10:', type='build')
     depends_on('snappy')
     depends_on('zlib')
+    depends_on('zstd')
+    depends_on('lz4')
 
     def cmake_args(self):
         args = []
@@ -53,6 +56,12 @@ class CBlosc(CMakePackage):
             args.append('-DDEACTIVATE_AVX2=OFF')
         else:
             args.append('-DDEACTIVATE_AVX2=ON')
+
+        if self.spec.satisfies('@1.12.0:'):
+            args.append('-DPREFER_EXTERNAL_SNAPPY=ON')
+            args.append('-DPREFER_EXTERNAL_ZLIB=ON')
+            args.append('-DPREFER_EXTERNAL_ZSTD=ON')
+            args.append('-DPREFER_EXTERNAL_LZ4=ON')
 
         return args
 

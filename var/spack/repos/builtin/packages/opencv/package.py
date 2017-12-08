@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -229,3 +229,10 @@ class Opencv(CMakePackage):
             ])
 
         return args
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries(
+            "libopencv_*", root=self.prefix, shared=shared, recurse=True
+        )

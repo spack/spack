@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,7 @@ import llnl.util.filesystem as fs
 import spack
 import spack.cmd.install
 from spack.spec import Spec
-from spack.main import SpackCommand
+from spack.main import SpackCommand, SpackCommandError
 
 install = SpackCommand('install')
 
@@ -234,3 +234,14 @@ def test_install_overwrite(
     assert os.path.exists(spec.prefix)
     assert fs.hash_directory(spec.prefix) == expected_md5
     assert fs.hash_directory(spec.prefix) != bad_md5
+
+
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
+)
+def test_install_conflicts(conflict_spec):
+    # Make sure that spec with conflicts exit with 1
+    with pytest.raises(SpackCommandError):
+        install(conflict_spec)
+
+    assert install.returncode == 1

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -221,10 +221,10 @@ class AutotoolsPackage(PackageBase):
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']
-            if 'pkg-config' in spec:
+            if 'pkgconfig' in spec:
                 autoreconf_args += [
                     '-I',
-                    join_path(spec['pkg-config'].prefix, 'share', 'aclocal'),
+                    join_path(spec['pkgconfig'].prefix, 'share', 'aclocal'),
                 ]
             autoreconf_args += self.autoreconf_extra_args
             m.autoreconf(*autoreconf_args)

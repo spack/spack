@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ class Alquimia(CMakePackage):
 
     homepage = "https://github.com/LBL-EESA/alquimia-dev"
 
+    version('xsdk-0.3.0', git='https://github.com/LBL-EESA/alquimia-dev.git', tag='xsdk-0.3.0')
     version('xsdk-0.2.0', git='https://github.com/LBL-EESA/alquimia-dev.git', tag='xsdk-0.2.0')
     version('develop', git='https://github.com/LBL-EESA/alquimia-dev.git')
 
@@ -39,8 +40,10 @@ class Alquimia(CMakePackage):
 
     depends_on('mpi')
     depends_on('hdf5')
+    depends_on('pflotran@xsdk-0.3.0', when='@xsdk-0.3.0')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('pflotran@develop', when='@develop')
+    depends_on('petsc@3.8.0:', when='@xsdk-0.3.0')
     depends_on('petsc@xsdk-0.2.0', when='@xsdk-0.2.0')
     depends_on('petsc@develop', when='@develop')
 

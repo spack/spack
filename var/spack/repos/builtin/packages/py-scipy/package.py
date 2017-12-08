@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -49,7 +49,8 @@ class PyScipy(PythonPackage):
         'scipy.special._precompute'
     ]
 
-    # See https://github.com/LLNL/spack/issues/2737
+    version('1.0.0', '53fa34bd3733a9a4216842b6000f7316')
+    # See https://github.com/spack/spack/issues/2737
     version('0.19.1', '6b4d91b62f1926282b127194a06b72b3',
             url="https://pypi.io/packages/source/s/scipy/scipy-0.19.1.tar.gz")
     version('0.19.0', '91b8396231eec780222a57703d3ec550',

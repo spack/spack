@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,9 +33,10 @@ class RSimpleaffy(RPackage):
        for generating high resolution journal figures..."""
 
     homepage = "http://bioconductor.org/packages/simpleaffy/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/simpleaffy_2.52.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/simpleaffy"
+    list_url = homepage
 
-    version('2.52.0', 'aa305099a57b3d868be53dc8c539b74e')
+    version('2.52.0', git='https://git.bioconductor.org/packages/simpleaffy', commit='f2b43fb9b8e6fa4c03fe28b4efb3144a0a42a385')
 
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

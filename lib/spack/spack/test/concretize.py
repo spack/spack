@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -90,19 +90,6 @@ def check_concretize(abstract_spec):
     ]
 )
 def spec(request):
-    """Spec to be concretized"""
-    return request.param
-
-
-@pytest.fixture(
-    params=[
-        'conflict%clang',
-        'conflict%clang+foo',
-        'conflict-parent%clang',
-        'conflict-parent@0.9^conflict~foo'
-    ]
-)
-def conflict_spec(request):
     """Spec to be concretized"""
     return request.param
 
@@ -202,6 +189,12 @@ class TestConcretize(object):
         assert set(cmake.compiler_flags['cflags']) == set(['-O3'])
         assert set(client.compiler_flags['fflags']) == set(['-O0'])
         assert not set(cmake.compiler_flags['fflags'])
+
+    def test_compiler_flags_from_user_are_grouped(self):
+        spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
+        spec.concretize()
+        cflags = spec.compiler_flags['cflags']
+        assert any(x == '-foo-flag foo-val' for x in cflags)
 
     def concretize_multi_provider(self):
         s = Spec('mpileaks ^multi-provider-mpi@3.0')

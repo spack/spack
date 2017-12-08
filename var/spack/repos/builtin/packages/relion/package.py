@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,13 +32,13 @@ class Relion(CMakePackage):
     electron cryo-microscopy (cryo-EM)."""
 
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
-    url      = "https://github.com/3dem/relion/archive/2.0.3.tar.gz"
+    url      = "https://github.com/3dem/relion"
 
-    version('2.0.3', 'c61be5ef00848806278b341f43893f5d')
+    version('develop', git='https://github.com/3dem/relion.git')
 
     variant('gui', default=True, description="build the gui")
-    variant('cuda', default=False, description="enable compute on gpu")
-    variant('double', default=False, description="double precision (cpu) code")
+    variant('cuda', default=True, description="enable compute on gpu")
+    variant('double', default=True, description="double precision (cpu) code")
     variant('double-gpu', default=False, description="double precision (gpu) code")
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
@@ -48,7 +48,7 @@ class Relion(CMakePackage):
     depends_on('mpi')
     depends_on('fftw+float+double')
     depends_on('fltk', when='+gui')
-    depends_on('cuda', when='+cuda')
+    depends_on('cuda@8.0:8.99', when='+cuda')
 
     def cmake_args(self):
         args = [

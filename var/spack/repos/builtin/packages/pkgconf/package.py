@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,9 +32,12 @@ class Pkgconf(AutotoolsPackage):
     maintaining compatibility."""
 
     homepage = "http://pkgconf.org/"
-    url      = "https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.8.tar.xz"
+    url      = "https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.10.tar.xz"
 
+    version('1.3.10', '9b63707bf6f8da6efb3868101d7525fe')
     version('1.3.8', '484ba3360d983ce07416843d5bc916a8')
+
+    provides('pkgconfig')
 
     @run_after('install')
     def link_pkg_config(self):

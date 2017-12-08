@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,4 +36,5 @@ class PyExecnet(PythonPackage):
     version('1.4.1', '0ff84b6c79d0dafb7e2971629c4d127a')
 
     depends_on('py-setuptools',  type='build')
+    depends_on('py-setuptools-scm',  type='build')
     depends_on('py-apipkg@1.4:', type=('build', 'run'))

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -76,7 +76,7 @@ class Octave(AutotoolsPackage):
     # Octave does not configure with sed from darwin:
     depends_on('sed', when=sys.platform == 'darwin', type='build')
     depends_on('pcre')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     # Strongly recommended dependencies
     depends_on('readline',     when='+readline')
@@ -99,7 +99,7 @@ class Octave(AutotoolsPackage):
     depends_on('qhull',        when='+qhull')
     depends_on('qrupdate',     when='+qrupdate')
     # depends_on('qscintilla',  when='+qscintilla) # TODO: add package
-    depends_on('qt',           when='+qt')
+    depends_on('qt+opengl',    when='+qt')
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('zlib',         when='+zlib')
 

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@ class OntAlbacore(Package):
     homepage = "https://nanoporetech.com"
     url = "https://mirror.oxfordnanoportal.com/software/analysis/ont_albacore-1.2.4-cp35-cp35m-manylinux1_x86_64.whl"
 
+    version('2.1.2', '1e60cfb95628829f2a61a85247f1b6af', expand=False)
     version('1.2.4', '559640bec4693af12e4d923e8d77adf6', expand=False)
     version('1.1.0', 'fab4502ea1bad99d813aa2629e03e83d', expand=False)
     extends('python')

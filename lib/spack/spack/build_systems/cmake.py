@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -144,7 +144,7 @@ class CMakePackage(PackageBase):
 
         # Set up CMake rpath
         args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE')
-        rpaths = ':'.join(spack.build_environment.get_rpaths(pkg))
+        rpaths = ';'.join(spack.build_environment.get_rpaths(pkg))
         args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
         # CMake's find_package() looks in CMAKE_PREFIX_PATH first, help CMake
         # to find immediate link dependencies in right places:

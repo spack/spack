@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,3 +39,5 @@ class Xrootd(CMakePackage):
     version('4.3.0', '39c2fab9f632f35e12ff607ccaf9e16c')
 
     depends_on('cmake@2.6:', type='build')
+    depends_on('zlib')
+    depends_on('openssl')

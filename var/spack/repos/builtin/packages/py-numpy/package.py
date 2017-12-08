@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -48,6 +48,7 @@ class PyNumpy(PythonPackage):
     # FIXME: numpy._build_utils and numpy.core.code_generators failed to import
     # FIXME: Is this expected?
 
+    version('1.13.3', '300a6f0528122128ac07c6deb5c95917')
     version('1.13.1', '2c3c0f4edf720c3a7b525dacc825b9ae')
     version('1.13.0', 'fd044f0b8079abeaf5e6d2e93b2c1d03')
     version('1.12.1', 'c75b072a984028ac746a6a332c209a91')

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,5 +31,5 @@ class RHwriter(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/hwriter/index.html"
     url      = "https://cran.rstudio.com/src/contrib/hwriter_1.3.2.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/hwriter"
     version('1.3.2', '9eef49df2eb68bbf3a16b5860d933517')

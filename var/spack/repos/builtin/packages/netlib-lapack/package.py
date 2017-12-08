@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -73,15 +73,47 @@ class NetlibLapack(Package):
     @property
     def blas_libs(self):
         shared = True if '+shared' in self.spec else False
+        query_parameters = self.spec.last_query.extra_parameters
+        query2libraries = {
+            tuple(): ['libblas'],
+            ('c', 'fortran'): [
+                'libcblas',
+                'libblas',
+            ],
+            ('c',): [
+                'libcblas',
+            ],
+            ('fortran',): [
+                'libblas',
+            ]
+        }
+        key = tuple(sorted(query_parameters))
+        libraries = query2libraries[key]
         return find_libraries(
-            'libblas', root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recurse=True
         )
 
     @property
     def lapack_libs(self):
         shared = True if '+shared' in self.spec else False
+        query_parameters = self.spec.last_query.extra_parameters
+        query2libraries = {
+            tuple(): ['liblapack'],
+            ('c', 'fortran'): [
+                'liblapacke',
+                'liblapack',
+            ],
+            ('c',): [
+                'liblapacke',
+            ],
+            ('fortran',): [
+                'liblapack',
+            ]
+        }
+        key = tuple(sorted(query_parameters))
+        libraries = query2libraries[key]
         return find_libraries(
-            'liblapack', root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recurse=True
         )
 
     def install_one(self, spec, prefix, shared):

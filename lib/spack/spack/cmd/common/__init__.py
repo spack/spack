@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,3 +22,25 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+import spack
+from llnl.util import tty
+
+
+def print_module_placeholder_help():
+    """
+    For use by commands to tell user how to activate shell support.
+    """
+    tty.msg("This command requires spack's shell integration.", "",
+            "To initialize spack's shell commands, you must run one of",
+            "the commands below.  Choose the right command for your shell.",
+            "", "For bash and zsh:",
+            "    . %s/setup-env.sh" % spack.share_path, "",
+            "For csh and tcsh:", "    setenv SPACK_ROOT %s" % spack.prefix,
+            "    source %s/setup-env.csh" % spack.share_path, "",
+            "This exposes a 'spack' shell function, which you can use like",
+            "    $ spack load package-foo", "",
+            "Running the Spack executable directly (for example, invoking",
+            "./bin/spack) will bypass the shell function and print this",
+            "placeholder message, even if you have sourced one of the above",
+            "shell integration scripts.")

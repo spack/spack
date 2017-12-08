@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,9 +32,10 @@ class Mrbayes(AutotoolsPackage):
        of model parameters."""
 
     homepage = "http://mrbayes.sourceforge.net"
-    url      = "https://downloads.sourceforge.net/project/mrbayes/mrbayes/3.2.6/mrbayes-3.2.6.tar.gz"
+    url      = "https://github.com/NBISweden/MrBayes"
 
-    version('3.2.6', '95f9822f24be47b976bf87540b55d1fe')
+    version('2017-11-22', commit='8a9adb11bcc538cb95d91d57568dff383f924503',
+            git='https://github.com/NBISweden/MrBayes.git')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('beagle', default=True, description='Enable BEAGLE library for speed benefits')
@@ -47,8 +48,6 @@ class Mrbayes(AutotoolsPackage):
 
     depends_on('libbeagle', when='+beagle')
     depends_on('mpi', when='+mpi')
-
-    configure_directory = 'src'
 
     def configure_args(self):
         args = []
