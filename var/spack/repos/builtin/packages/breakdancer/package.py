@@ -45,9 +45,3 @@ class Breakdancer(CMakePackage):
     depends_on('zlib')
 
     parallel = False
-
-    def cmake_args(self):
-        args = [
-            '-DCMAKE_BUILD_TYPE=release',
-        ]
-        return args
