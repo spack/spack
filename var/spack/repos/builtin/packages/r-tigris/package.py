@@ -25,23 +25,24 @@
 from spack import *
 
 
-class PySix(PythonPackage):
-    """Python 2 and 3 compatibility utilities."""
+class RTigris(RPackage):
+    """Download TIGER/Line shapefiles from the United States Census Bureau
+    and load into R as 'SpatialDataFrame' or 'sf' objects."""
 
-    homepage = "https://pypi.python.org/pypi/six"
-    url      = "https://pypi.io/packages/source/s/six/six-1.10.0.tar.gz"
+    homepage = "https://cran.r-project.org/package=tigris"
+    url      = "https://cran.rstudio.com/src/contrib/tigris_0.5.3.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/tigris"
 
-    import_modules = ['six']
+    version('0.5.3', 'c11cb459bf134d3deb1a641a60c86413')
 
-    version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
-    version('1.9.0',  '476881ef4012262dfc8adc645ee786c4')
-    version('1.8.0',  '1626eb24cc889110c38f7e786ec69885')
-
-    extends('python', ignore=r'bin/pytest')
-
-    # Newer versions of setuptools require six. Although setuptools is an
-    # optional dependency of six, if it is not found, setup.py will fallback
-    # on distutils.core instead. Don't add a setuptools dependency or we
-    # won't be able to bootstrap setuptools.
-
-    # depends_on('py-setuptools', type='build')
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-rgdal', type=('build', 'run'))
+    depends_on('r-rgeos', type=('build', 'run'))
+    depends_on('r-sp', type=('build', 'run'))
+    depends_on('r-rappdirs', type=('build', 'run'))
+    depends_on('r-maptools', type=('build', 'run'))
+    depends_on('r-httr', type=('build', 'run'))
+    depends_on('r-uuid', type=('build', 'run'))
+    depends_on('r-sf', type=('build', 'run'))
+    depends_on('r-dplyr', type=('build', 'run'))

@@ -25,23 +25,13 @@
 from spack import *
 
 
-class PySix(PythonPackage):
-    """Python 2 and 3 compatibility utilities."""
+class PyCogent(PythonPackage):
+    """A toolkit for statistical analysis of biological sequences."""
 
-    homepage = "https://pypi.python.org/pypi/six"
-    url      = "https://pypi.io/packages/source/s/six/six-1.10.0.tar.gz"
+    homepage = "http://pycogent.org"
+    url      = "https://pypi.io/packages/source/c/cogent/cogent-1.9.tar.gz"
 
-    import_modules = ['six']
+    version('1.9', '7d9f28cd17664c1cd18c568fc53060d6')
 
-    version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
-    version('1.9.0',  '476881ef4012262dfc8adc645ee786c4')
-    version('1.8.0',  '1626eb24cc889110c38f7e786ec69885')
-
-    extends('python', ignore=r'bin/pytest')
-
-    # Newer versions of setuptools require six. Although setuptools is an
-    # optional dependency of six, if it is not found, setup.py will fallback
-    # on distutils.core instead. Don't add a setuptools dependency or we
-    # won't be able to bootstrap setuptools.
-
-    # depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools',   type='build')
+    depends_on('py-numpy',        type=('build', 'run'))

@@ -25,23 +25,15 @@
 from spack import *
 
 
-class PySix(PythonPackage):
-    """Python 2 and 3 compatibility utilities."""
+class PyPlotly(PythonPackage):
+    """An interactive, browser-based graphing library for Python"""
 
-    homepage = "https://pypi.python.org/pypi/six"
-    url      = "https://pypi.io/packages/source/s/six/six-1.10.0.tar.gz"
+    homepage = "https://plot.ly/python/"
+    url      = "https://github.com/plotly/plotly.py/archive/v2.2.0.tar.gz"
 
-    import_modules = ['six']
+    version('2.2.0', '835802cdc6743439ff993447dfe47a0e')
 
-    version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
-    version('1.9.0',  '476881ef4012262dfc8adc645ee786c4')
-    version('1.8.0',  '1626eb24cc889110c38f7e786ec69885')
-
-    extends('python', ignore=r'bin/pytest')
-
-    # Newer versions of setuptools require six. Although setuptools is an
-    # optional dependency of six, if it is not found, setup.py will fallback
-    # on distutils.core instead. Don't add a setuptools dependency or we
-    # won't be able to bootstrap setuptools.
-
-    # depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-requests@2.3.0', type=('build', 'run'))
+    depends_on('py-six@1.8.0', type=('build', 'run'))
+    depends_on('py-pytz@2014.9', type=('build', 'run'))
