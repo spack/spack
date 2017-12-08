@@ -94,19 +94,6 @@ def spec(request):
     return request.param
 
 
-@pytest.fixture(
-    params=[
-        'conflict%clang',
-        'conflict%clang+foo',
-        'conflict-parent%clang',
-        'conflict-parent@0.9^conflict~foo'
-    ]
-)
-def conflict_spec(request):
-    """Spec to be concretized"""
-    return request.param
-
-
 @pytest.mark.usefixtures('config', 'builtin_mock')
 class TestConcretize(object):
     def test_concretize(self, spec):

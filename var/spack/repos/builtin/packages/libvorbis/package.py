@@ -38,7 +38,7 @@ class Libvorbis(AutotoolsPackage):
 
     depends_on('libogg')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
 
     # `make check` crashes when run in parallel
     parallel = False

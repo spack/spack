@@ -38,7 +38,7 @@ class PyPy2cairo(WafPackage):
     depends_on('python', type=('build', 'run'))
     depends_on('cairo@1.10.0:')
     depends_on('pixman')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     # TODO: Add a 'test' deptype
     # depends_on('py-pytest', type='test')

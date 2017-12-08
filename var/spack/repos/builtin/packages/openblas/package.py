@@ -79,6 +79,7 @@ class Openblas(MakefilePackage):
     patch('openblas_icc.patch', when='@:0.2.19%intel')
     patch('openblas_icc_openmp.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
+    patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
@@ -97,10 +98,11 @@ class Openblas(MakefilePackage):
         # As of 06/2016 there is no mechanism to specify that packages which
         # depends on Blas/Lapack need C or/and Fortran symbols. For now
         # require both.
-        if self.compiler.f77 is None:
+        if self.compiler.fc is None:
             raise InstallError(
                 'OpenBLAS requires both C and Fortran compilers!'
             )
+
         # Add support for OpenMP
         if (self.spec.satisfies('threads=openmp') and
             self.spec.satisfies('%clang')):
@@ -115,7 +117,7 @@ class Openblas(MakefilePackage):
 
     @property
     def make_defs(self):
-        # Configure fails to pick up fortran from FC=/abs/path/to/f77, but
+        # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
         # works fine with FC=/abs/path/to/gfortran.
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
@@ -123,7 +125,7 @@ class Openblas(MakefilePackage):
 
         make_defs = [
             'CC={0}'.format(spack_cc),
-            'FC={0}'.format(spack_f77),
+            'FC={0}'.format(spack_fc),
             'MAKE_NO_J=1'
         ]
 
