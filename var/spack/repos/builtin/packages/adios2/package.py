@@ -30,6 +30,7 @@ class Adios2(CMakePackage):
 
     homepage = "https://www.olcf.ornl.gov/center-projects/adios/"
     url      = "https://github.com/ornladios/ADIOS2/archive/v2.0.0.tar.gz"
+    maintainers = ['ax3l']
 
     version('develop', branch='master',
             git='https://github.com/ornladios/ADIOS2.git')
