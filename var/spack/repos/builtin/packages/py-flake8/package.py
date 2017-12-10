@@ -40,7 +40,7 @@ class PyFlake8(PythonPackage):
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-flake8 requires py-setuptools during runtime as well.
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools@30:', type=('build', 'run'))
 
     # pyflakes >= 0.8.1, != 1.2.0, != 1.2.1, != 1.2.2, < 1.3.0
     depends_on('py-pyflakes@0.8.1:1.1.0,1.2.3:1.2.3', when='@3.0.4', type=('build', 'run'))
