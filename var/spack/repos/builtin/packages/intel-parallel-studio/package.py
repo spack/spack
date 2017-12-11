@@ -435,15 +435,16 @@ class IntelParallelStudio(IntelPackage):
 
     @run_after('install')
     def fix_psxevars(self):
-        """Newer versions of Intel Parallel Studio have a bug in the
+        """Newer versions (>2016) of Intel Parallel Studio have a bug in the
         ``psxevars.sh`` script."""
 
         bindir = glob.glob(join_path(
             self.prefix, 'parallel_studio*', 'bin'))[0]
 
-        filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
-                    os.path.join(bindir, 'psxevars.sh'),
-                    os.path.join(bindir, 'psxevars.csh'))
+        if self.version[1] > 2016:
+            filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
+                        os.path.join(bindir, 'psxevars.sh'),
+                        os.path.join(bindir, 'psxevars.csh'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if '+mpi' in self.spec:
