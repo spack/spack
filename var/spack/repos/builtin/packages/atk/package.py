@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,7 @@ class Atk(AutotoolsPackage):
     version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
 
     depends_on('glib')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('gobject-introspection')
 
     def url_for_version(self, version):

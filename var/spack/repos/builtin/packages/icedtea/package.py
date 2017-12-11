@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@ class Icedtea(AutotoolsPackage):
     variant('shenandoah', default=False,
             description="Build with the shenandoah gc. Only for version 3+")
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('gmake', type='build')
     depends_on('cups')
     depends_on('jdk', type='build')

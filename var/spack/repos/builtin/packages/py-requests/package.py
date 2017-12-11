@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,6 +45,7 @@ class PyRequests(PythonPackage):
     version('2.14.2', '4c3c169ed67466088a2a6947784fe444')
     version('2.13.0', '921ec6b48f2ddafc8bb6160957baf444')
     version('2.11.1', 'ad5f9c47b5c5dfdb28363ad7546b0763')
+    version('2.3.0',  '7449ffdc8ec9ac37bbcd286003c80f00')
 
     depends_on('py-setuptools', type='build')
 

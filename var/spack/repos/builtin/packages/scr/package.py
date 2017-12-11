@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,6 +40,8 @@ class Scr(CMakePackage):
     # url      = "https://github.com/LLNL/scr/releases/download/v1.1.8/scr-1.1.8.tar.gz"
     # version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e')
 
+    url = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
+    version('1.2.0', '060e9e9c7604c1765f3991f9cd6e9d2d')
     version('master', git='https://github.com/llnl/scr.git', branch='master')
 
     depends_on('pdsh+static_modules', type=('build', 'run'))
@@ -89,6 +91,8 @@ class Scr(CMakePackage):
     variant('cntl_base', default='/tmp',
             description='Compile time default location for control directory.')
 
+    conflicts('platform=bgq')
+
     def get_abs_path_rel_prefix(self, path):
         # Return path if absolute, otherwise prepend prefix
         if os.path.isabs(path):
@@ -99,6 +103,9 @@ class Scr(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
+
+        if 'platform=cray' in spec:
+            args.append('-DSCR_LINK_STATIC=ON')
 
         args.append('-DENABLE_FORTRAN={0}'.format('+fortran' in spec))
 

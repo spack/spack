@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@ class PySix(PythonPackage):
 
     version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
     version('1.9.0',  '476881ef4012262dfc8adc645ee786c4')
+    version('1.8.0',  '1626eb24cc889110c38f7e786ec69885')
 
     extends('python', ignore=r'bin/pytest')
 

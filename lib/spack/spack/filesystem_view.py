@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -343,7 +343,7 @@ class YamlFilesystemView(FilesystemView):
         # unbearable for whatever reason, this should be the first point of
         # attack.
         #
-        # see: https://github.com/LLNL/spack/pull/3227#discussion_r117147475
+        # see: https://github.com/spack/spack/pull/3227#discussion_r117147475
         remove_extension = ft.partial(self.remove_extension,
                                       with_dependents=with_dependents)
 

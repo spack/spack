@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -46,12 +46,15 @@ class Pexsi(MakefilePackage):
     homepage = 'https://math.berkeley.edu/~linlin/pexsi/index.html'
     url = 'https://math.berkeley.edu/~linlin/pexsi/download/pexsi_v0.9.0.tar.gz'
 
+    # version('1.0', '4600b03e235935fe623acf500df0edfa')
+    version('0.10.2', '012f6800098671ec39c2ed7b38935e27')
     version('0.9.2', '0ce491a3a922d271c4edf9b20aa93076')
     version('0.9.0', '0c1a2de891ba1445dfc184b2fa270ed8')
 
     depends_on('parmetis')
-    depends_on('superlu-dist@3.3', when='@0.9.0')
-    depends_on('superlu-dist@4.3', when='@0.9.2')
+    depends_on('superlu-dist@3.3:3.999', when='@:0.9.0')
+    depends_on('superlu-dist@4.3:4.999', when='@0.9.2')
+    depends_on('superlu-dist@5.1.2:', when='@0.10.2:')
 
     variant(
         'fortran', default=False, description='Builds the Fortran interface'

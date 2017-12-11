@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -81,6 +81,9 @@ class Openfast(CMakePackage):
 
         if '+cxx' in spec:
             options.extend([
+                '-DMPI_CXX_COMPILER:PATH=%s' % spec['mpi'].mpicxx,
+                '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
+                '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc,
                 '-DHDF5_ROOT:PATH=%s' % spec['hdf5'].prefix,
                 '-DYAML_ROOT:PATH=%s' % spec['yaml-cpp'].prefix,
             ])

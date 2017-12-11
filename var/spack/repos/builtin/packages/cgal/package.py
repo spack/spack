@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,12 +33,13 @@ class Cgal(CMakePackage):
     molecular biology, medical imaging, computer graphics, and robotics.
     """
     homepage = 'http://www.cgal.org/'
-    url = 'https://github.com/CGAL/cgal/archive/releases/CGAL-4.7.tar.gz'
+    url      = 'https://github.com/CGAL/cgal/releases/download/releases/CGAL-4.11/CGAL-4.11.tar.xz'
 
-    version('4.9.1', 'df6517df3320bf6c9de2e1b0361738b9')
-    version('4.9', '7b628db3e5614347f776c046b7666089')
-    version('4.7', '4826714810f3b4c65cac96b90fb03b67')
-    version('4.6.3', 'e8ee2ecc8d2b09b94a121c09257b576d')
+    version('4.11',  '0e9566046e402f8dc514caef11155864')
+    version('4.9.1', '820ef17ffa7ed87af6cc9918a961d966')
+    version('4.9',   'ee31343dbc4bf7b5b7501ec1650e9233')
+    version('4.7',   '623d91fb2ab0a35049dc6098a0f235cc')
+    version('4.6.3', '6953897544d41ffcc63ffe58b32a688f')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

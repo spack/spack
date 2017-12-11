@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@ class RGridextra(RPackage):
 
     homepage = "https://cran.r-project.org/package=gridExtra"
     url      = "https://cran.r-project.org/src/contrib/gridExtra_2.2.1.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/gridExtras"
 
     version('2.3', '01e0ea88610756a0fd3b260e83c9bd43')
     version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')

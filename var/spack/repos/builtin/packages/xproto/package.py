@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -41,10 +41,10 @@ class Xproto(AutotoolsPackage):
     version('7.0.31', '04b925bf9e472c80f9212615cd684f1e')
     version('7.0.29', '16a78dd2c5ad73011105c96235f6a0af')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
         # Installation fails in parallel
-        # See https://github.com/LLNL/spack/issues/4805
+        # See https://github.com/spack/spack/issues/4805
         make('install', parallel=False)

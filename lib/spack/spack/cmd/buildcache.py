@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -227,16 +227,16 @@ def createtarball(args):
         except NoOverwriteException as e:
             tty.warn("%s exists, use -f to force overwrite." % e)
         except NoGpgException:
-            tty.warn("gpg2 is not available,"
-                     " use -y to create unsigned build caches")
+            tty.die("gpg2 is not available,"
+                    " use -y to create unsigned build caches")
         except NoKeyException:
-            tty.warn("no default key available for signing,"
-                     " use -y to create unsigned build caches"
-                     " or spack gpg init to create a default key")
+            tty.die("no default key available for signing,"
+                    " use -y to create unsigned build caches"
+                    " or spack gpg init to create a default key")
         except PickKeyException:
-            tty.warn("multi keys available for signing,"
-                     " use -y to create unsigned build caches"
-                     " or -k <key hash> to pick a key")
+            tty.die("multi keys available for signing,"
+                    " use -y to create unsigned build caches"
+                    " or -k <key hash> to pick a key")
 
 
 def installtarball(args):
@@ -267,7 +267,7 @@ def install_tarball(spec, args):
     force = False
     if args.force:
         force = True
-    for d in s.dependencies():
+    for d in s.dependencies(deptype=('link', 'run')):
         tty.msg("Installing buildcache for dependency spec %s" % d)
         install_tarball(d, args)
     package = spack.repo.get(spec)

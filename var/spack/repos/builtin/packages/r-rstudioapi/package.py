@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ class RRstudioapi(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
     url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
 
     version('0.6', 'fdb13bf46aab02421557e713fceab66b')
     version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')

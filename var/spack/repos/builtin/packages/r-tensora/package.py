@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,5 +32,6 @@ class RTensora(RPackage):
 
     homepage = "https://cran.r-project.org/web/packages/tensorA/index.html"
     url      = "https://cran.r-project.org/src/contrib/tensorA_0.36.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/tensorA"
 
     version('0.36', '01c0613491d9b46600bf403d7e3bdd80')

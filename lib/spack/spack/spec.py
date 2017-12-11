@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -1122,7 +1122,7 @@ class Spec(object):
             self._set_architecture(target=value)
         elif name in valid_flags:
             assert(self.compiler_flags is not None)
-            self.compiler_flags[name] = value.split()
+            self.compiler_flags[name] = spack.compiler.tokenize_flags(value)
         else:
             # FIXME:
             # All other flags represent variants. 'foo=true' and 'foo=false'
