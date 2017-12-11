@@ -50,6 +50,7 @@ nonmpipkgs = {"python@2.7.14": ["^readline@system"],
               "ffmpeg@3.2.4": [""],
               "bamtools@2.4.1": [""],
               "bcftools@1.6": [""],
+              "hdf5@1.10.1+cxx+fortran+threadsafe~mpi": [""]
 }
 for pkg,specs in nonmpipkgs.items():
     for spec in specs:
@@ -82,6 +83,7 @@ for pkg,spec in MPIS.items():
 
 # Build MPI packages
 mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
+           "hdf5@1.10.1+cxx+fortran+threadsafe+mpi": [""],
            # "fftw@2.1.5+mpi+openmp": [""],
            "gromacs+mpi~cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
            "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@8.0.61"],
