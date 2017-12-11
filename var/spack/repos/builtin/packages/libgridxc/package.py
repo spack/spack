@@ -47,5 +47,5 @@ class Libgridxc(Package):
             makefile.filter('FC=.*', 'FC = %s' % self.compiler.fc)
 
     def install(self, spec, prefix):
-       with working_dir('build'):
+        with working_dir('build'):
             make('PREFIX=%s' % self.prefix)
