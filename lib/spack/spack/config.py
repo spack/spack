@@ -490,7 +490,7 @@ class ConfigFormatError(ConfigError):
         # Try to get line number from erroneous instance and its parent
         instance_mark = getattr(validation_error.instance, '_start_mark', None)
         parent_mark = getattr(validation_error.parent, '_start_mark', None)
-        path = [str(s) for s in getattr(validation_error, 'path', None)]
+        path = getattr(validation_error, 'path', None)
 
         # Try really hard to get the parent (which sometimes is not
         # set) This digs it out of the validated structure if it's not
@@ -511,7 +511,7 @@ class ConfigFormatError(ConfigError):
         elif parent_mark:
             location = '%s:%d' % (parent_mark.name, parent_mark.line + 1)
         elif path:
-            location = 'At ' + ':'.join(path)
+            location = 'At ' + ':'.join([str(s) for s in path])
         else:
             location = '<unknown line>'
 
