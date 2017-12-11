@@ -44,7 +44,7 @@ class Libgridxc(Package):
             sh('../src/config.sh')
             shutil.copyfile('../extra/fortran.mk', 'fortran.mk')
             makefile = FileFilter('fortran.mk')
-            makefile.filter('FC=.*', 'FC = %s' % self.compiler.fc)
+            makefile.filter('FC=.*', 'FC = fc')
 
     def install(self, spec, prefix):
         with working_dir('build'):

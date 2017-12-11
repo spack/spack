@@ -46,7 +46,7 @@ class AtomDft(MakefilePackage):
                         spec['xmlf90'].prefix)
         makefile.filter('GRIDXC_ROOT=.*', 'GRIDXC_ROOT = %s' %
                         spec['libgridxc'].prefix)
-        makefile.filter('FC=.*', 'FC = %s' % self.compiler.fc)
+        makefile.filter('FC=.*', 'FC = fc')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
