@@ -35,9 +35,9 @@ class Casper(MakefilePackage):
     url      = "http://best.snu.ac.kr/casper/program/casper_v0.8.2.tar.gz"
 
     version('0.8.2', '9e83d32ff46b876f33eb1d7b545ec9c2')
-    
-    def install(self, spec, prefix):
-        distutils.dir_util.copy_tree(".", prefix)
+
     depends_on('jellyfish@2.2.3:')
     depends_on('boost')
-
+   
+    def install(self, spec, prefix):
+        distutils.dir_util.copy_tree(".", prefix)
