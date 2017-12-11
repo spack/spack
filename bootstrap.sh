@@ -73,6 +73,7 @@ fi
 MIRRORS_YAML=mirrors.yaml
 
 # Deploying
+mkdir -p ~/.spack
 cp -f ${CONFIG_YAML} ~/.spack/config.yaml
 cp -f ${PACKAGE_YAML} ~/.spack/packages.yaml
 mkdir -p ~/.spack/linux
