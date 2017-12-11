@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-
+import distutils.dir_util
 
 class Casper(MakefilePackage):
     """CASPER (Context-Aware Scheme for Paired-End Read) is state-of-the art
@@ -35,6 +35,9 @@ class Casper(MakefilePackage):
     url      = "http://best.snu.ac.kr/casper/program/casper_v0.8.2.tar.gz"
 
     version('0.8.2', '9e83d32ff46b876f33eb1d7b545ec9c2')
-
+    
+    def install(self, spec, prefix):
+        distutils.dir_util.copy_tree(".", prefix)
     depends_on('jellyfish')
     depends_on('boost')
+
