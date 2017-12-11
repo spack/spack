@@ -80,7 +80,6 @@ class Xsdk(Package):
     depends_on('alquimia@develop', when='@develop')
 
     depends_on('sundials@3.1.0~int64+hypre', when='@0.3.0')
-    depends_on('plasma', when='@0.3.0 %gcc@4.9:')
     depends_on('magma', when='@0.3.0 +cuda')
 
     # xSDKTrilinos depends on the version of Trilinos built with
