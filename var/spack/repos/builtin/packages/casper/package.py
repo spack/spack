@@ -38,6 +38,6 @@ class Casper(MakefilePackage):
     
     def install(self, spec, prefix):
         distutils.dir_util.copy_tree(".", prefix)
-    depends_on('jellyfish')
+    depends_on('jellyfish@2.2.3:')
     depends_on('boost')
 
