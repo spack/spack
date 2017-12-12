@@ -64,7 +64,7 @@ class Biopieces(Package):
     depends_on('ruby-rubyinline')
     depends_on('ruby-terminal-table')
 
-    depends_on('python@2:6', type=('build', 'run'))
+    depends_on('python@2.6;', type=('build', 'run'))
     depends_on('blast-plus')
     depends_on('muscle')
     depends_on('mummer')
