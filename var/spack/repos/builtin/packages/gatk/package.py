@@ -50,7 +50,7 @@ class Gatk(Package):
     """
     homepage = "http://broadinstitute.github.io/gatk/"
     url      = "https://software.broadinstitute.org/gatk/download/auth?package=GATK"
-    _urlfmt  = "https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version={0}"
+    _urlfmt  = "https://github.com/broadgsa/gatk-protected/archive/{0}.tar.gz"
 
     version('3.8-0', '0581308d2a25f10d11d3dfd0d6e4d28e', extension='tar.gz',
             url="https://software.broadinstitute.org/gatk/download/auth?package=GATK")
