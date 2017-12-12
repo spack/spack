@@ -22,23 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-pybedtools
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-pybedtools
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
-
 
 class PyPybedtools(PythonPackage):
     """pybedtools is a Python package that wraps BEDTools"""
@@ -47,6 +31,7 @@ class PyPybedtools(PythonPackage):
     url      = "https://github.com/daler/pybedtools/archive/v0.7.10.tar.gz"
 
     version('0.7.10', '2791d8005a3ce286e597de5adc68a369')
+    version('0.6.9',  'a24e4bcd0c89beb9535295db964f6a4a')
 
     depends_on('python@2.7:')
     depends_on('py-setuptools', type=('build', 'run'))
