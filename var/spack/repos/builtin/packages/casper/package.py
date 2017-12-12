@@ -25,6 +25,7 @@
 from spack import *
 import distutils.dir_util
 
+
 class Casper(MakefilePackage):
     """CASPER (Context-Aware Scheme for Paired-End Read) is state-of-the art
        merging tool in terms of accuracy and robustness. Using this
@@ -38,6 +39,6 @@ class Casper(MakefilePackage):
 
     depends_on('jellyfish@2.2.3:')
     depends_on('boost')
-   
+ 
     def install(self, spec, prefix):
         distutils.dir_util.copy_tree(".", prefix)
