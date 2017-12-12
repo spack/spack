@@ -46,6 +46,8 @@ class Mesa(AutotoolsPackage):
     version('12.0.6', '1a3d4fea0656c208db59289e4ed33b3f')
     version('12.0.3', '1113699c714042d8c4df4766be8c57d8')
 
+    provides('gl')
+
     variant('swrender', default=True,
             description="Build with (gallium) software rendering.")
     variant('hwrender', default=False,
