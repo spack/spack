@@ -210,21 +210,21 @@ def modify_elf_object(path_name, orig_rpath, new_rpath):
         tty.die('relocation not supported for this platform')
 
 
-def needs_binary_relocation(filetype):
+def needs_binary_relocation(filetype, os_id=None):
     """
     Check whether the given filetype is a binary that may need relocation.
     """
     retval = False
     if "relocatable" in filetype:
         return False
-    if "link" in filetype:
+    if "link to" in filetype:
         return False
-    if platform.system() == 'Darwin':
-        return ('Mach-O' in filetype)
-    elif platform.system() == 'Linux':
-        return ('ELF' in filetype)
+    if os_id == 'Darwin':
+        return ("Mach-O" in filetype)
+    elif os_id == 'Linux':
+        return ("ELF" in filetype)
     else:
-        tty.die("Relocation not implemented for %s" % platform.system())
+        tty.die("Relocation not implemented for %s" % os_id)
     return retval
 
 
@@ -232,7 +232,7 @@ def needs_text_relocation(filetype):
     """
     Check whether the given filetype is text that may need relocation.
     """
-    if "link" in filetype:
+    if "link to" in filetype:
         return False
     return ("text" in filetype)
 
@@ -289,7 +289,7 @@ def relocate_text(path_names, old_dir, new_dir):
     """
     Replace old path with new path in text file path_name
     """
-    filter_file("r'%s'" % old_dir, "r'%s'" % new_dir,
+    filter_file('%s' % old_dir, '%s' % new_dir,
                 *path_names, backup=False)
 
 

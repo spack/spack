@@ -44,8 +44,10 @@ class Wx(AutotoolsPackage):
 
     version('develop', git='https://github.com/wxWidgets/wxWidgets.git', branch='master')
 
+    patch('math_include.patch', when='@3.0.1:3.0.2')
+
     depends_on('pkgconfig', type='build')
-    depends_on('gtkplus')
+    depends_on('gtkplus+X')
 
     @when('@:3.0.2')
     def build(self, spec, prefix):

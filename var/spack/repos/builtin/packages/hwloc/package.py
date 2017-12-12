@@ -58,6 +58,7 @@ class Hwloc(AutotoolsPackage):
     variant('libxml2', default=True, description="Build with libxml2")
     variant('pci', default=(sys.platform != 'darwin'),
             description="Support analyzing devices on PCI bus")
+    variant('shared', default=True, description="Build shared libraries")
 
     depends_on('cuda', when='+cuda')
     depends_on('libpciaccess', when='+pci')
@@ -73,6 +74,7 @@ class Hwloc(AutotoolsPackage):
             "--enable-cuda" if '+cuda' in spec else "--disable-cuda",
             "--enable-libxml2" if '+libxml2' in spec else "--disable-libxml2",
             "--enable-pci" if '+pci' in spec else "--disable-pci",
+            "--enable-shared" if '+shared' in spec else "--disable-shared",
             # Disable OpenCL, since hwloc might pick up an OpenCL
             # library at build time that is then not found at run time
             # (Alternatively, we could require OpenCL as dependency.)
