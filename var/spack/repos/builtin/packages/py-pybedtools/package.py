@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPybedtools(PythonPackage):
     """pybedtools is a Python package that wraps BEDTools"""
 
