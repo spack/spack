@@ -46,7 +46,7 @@ class Vtk(CMakePackage):
 
     patch('gcc.patch', when='@6.1.0')
 
-    depends_on('qt')
+    depends_on('qt+opengl')
     depends_on('hdf5')
     depends_on('netcdf')
     depends_on('netcdf-cxx')
