@@ -34,6 +34,8 @@ class Jellyfish(AutotoolsPackage):
     list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
 
     version('2.2.7', 'f741192d9061f28e34cb67c86a1027ab')
-    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846')
+    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846',
+            url='http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
+
     depends_on('perl', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
