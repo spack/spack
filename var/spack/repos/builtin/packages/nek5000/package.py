@@ -24,6 +24,17 @@
 ##############################################################################
 from spack import *
 
+import numbers
+
+
+def is_integral(x):
+    """Any integer value"""
+    try:
+        return isinstance(int(x), numbers.Integral) and \
+            not isinstance(x, bool) and int(x) > 0
+    except ValueError:
+        return False
+
 
 class Nek5000(Package):
     """A fast and scalable high-order solver for computational fluid
@@ -45,7 +56,15 @@ class Nek5000(Package):
     variant('profiling', default=True, description='Build with profiling data.')
     variant('visit',     default=False, description='Build with Visit.')
 
-    # Tools
+    # Variant for MAXNEL, we need to read this from user
+    variant(
+        'MAXNEL',
+        default=150000,
+        description='Maximum number of elements for Nek5000 tools.',
+        values=is_integral
+    )
+
+    # Variants for Nek tools
     variant('genbox',   default=True, description='Build genbox tool.')
     variant('int_tp',   default=True, description='Build int_tp tool.')
     variant('n2to3',    default=True, description='Build n2to3 tool.')
@@ -55,6 +74,7 @@ class Nek5000(Package):
     variant('nekmerge', default=True, description='Build nekmerge tool.')
     variant('prenek',   default=True, description='Build prenek tool.')
 
+    # Dependencies
     depends_on('mpi', when="+mpi")
     depends_on('visit', when="+visit")
 
@@ -80,6 +100,10 @@ class Nek5000(Package):
             else:
                 filter_file(r'^FC\s*=.*', 'FC=\"' + F77 + '\"', 'maketools')
             filter_file(r'^CC\s*=.*', 'CC=\"' + CC  + '\"',   'maketools')
+
+            maxnel = self.spec.variants['MAXNEL'].value
+            filter_file(r'^#MAXNEL\s*=.*', 'MAXNEL=' + maxnel, 'maketools')
+
             makeTools = Executable('./maketools')
 
             # Build the tools
