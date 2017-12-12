@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPyvcf(PythonPackage):
     """PyVCF - A Variant Call Format Parser for Python"""
 
