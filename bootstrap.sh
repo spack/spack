@@ -82,7 +82,7 @@ cp -f ${MIRRORS_YAML} ~/.spack/linux/
 source ${SPACK_ROOT}/share/spack/setup-env.sh
 
 # Reset config.yaml.template
-git co -- config.yaml.template
+git checkout -- config.yaml.template
 
 # Installing packages
 if [[ $2 == "--install" ]]; then
