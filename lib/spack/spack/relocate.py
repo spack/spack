@@ -57,9 +57,11 @@ def get_existing_elf_rpaths(path_name):
     """
     if platform.system() == 'Linux':
         command = Executable(get_patchelf())
+        rpaths=None
         output = command('--print-rpath', '%s' %
                          path_name, output=str, err=str)
-        return output.rstrip('\n').split(':')
+        rpaths=output.rstrip('\n').split(':')
+        return rpaths
     else:
         tty.die('relocation not supported for this platform')
     return
@@ -255,8 +257,9 @@ def relocate_binary(path_names, old_dir, new_dir):
     elif platform.system() == 'Linux':
         for path_name in path_names:
             orig_rpaths = get_existing_elf_rpaths(path_name)
-            new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
-            modify_elf_object(path_name, orig_rpaths, new_rpaths)
+            if orig_rpaths:
+                new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
+                modify_elf_object(path_name, orig_rpaths, new_rpaths)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
