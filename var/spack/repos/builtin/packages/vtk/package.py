@@ -50,6 +50,14 @@ class Vtk(CMakePackage):
 
     patch('gcc.patch', when='@6.1.0')
 
+    # At the moment, we cannot build with both osmesa and qt, but as of
+    # VTK 8.1, that should change
+    conflicts('+osmesa', when='+qt')
+
+    # The use of the OpenGL2 backend requires at least OpenGL Core Profile
+    # version 3.2 or higher.
+    depends_on('gl@3.2:', when='+opengl2')
+
     # If you didn't ask for osmesa, then hw rendering using vendor-specific
     # drivers is faster, but it must be done externally.
     depends_on('opengl', when='~osmesa')
