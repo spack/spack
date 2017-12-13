@@ -82,7 +82,7 @@ class Caliper(CMakePackage):
             '-DWITH_LIBPFM=%s'   % ('On' if '+libpfm'   in spec else 'Off'),
             '-DWITH_SOSFLOW=%s'  % ('On' if '+sosflow'  in spec else 'Off'),
             '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off'),
-            '-DWITH_MPIT=%s'     % ('On' if spec.satisfies('^mpi@3:') else 'Off')
+            '-DWITH_MPIT=%s' % ('On' if spec.satisfies('^mpi@3:') else 'Off')
         ]
 
         if '+papi' in spec:
