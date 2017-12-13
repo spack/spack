@@ -326,7 +326,8 @@ def test_get_module_cmd_fails(backup_restore_env, tmpdir):
 
     with pytest.raises(ModuleError) as e:
         get_module_cmd_from_bash()
-    assert str(e.value).startswith('Bash function \'module\' is not defined.')
+    assert str(e.value).startswith('Bash function \'module\' is not defined '
+                                   'or exported.')
 
     if 'PATH' in os.environ:
         os.environ.pop('PATH')

@@ -130,7 +130,8 @@ def get_module_cmd_from_bash(bashopts=None):
                            fail_on_error=False)
 
     if bash.returncode != 0:
-        raise ModuleError('Bash function \'module\' is not defined.')
+        raise ModuleError('Bash function \'module\' is not defined or '
+                          'exported.')
 
     # Function definition might use shell variables that are not exported.
     # We export them here.
