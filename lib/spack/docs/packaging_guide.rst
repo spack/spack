@@ -1595,6 +1595,16 @@ dependency needs to be installed in order for the package to be built, it
 can be uninstalled without concern afterwards. ``link`` and ``run`` disallow
 this because uninstalling the dependency would break the package.
 
+.. note::
+
+   Unlike CMake or Autotools, adding Binutils as a ``build`` dependency is not
+   considered as a good practice because every package that is written in
+   C/C++/Fortran would need it. A relevant version of Binutils is supposed to
+   be specified in ``PATH`` before the build process starts. This can be done
+   either by :ref:`loading the corresponding module
+   <CompilersRequiringModules>` or by
+   :ref:`environment modification command <CompilerEnvironmentVariables>`.
+
 If the dependency type is not specified, Spack uses a default of
 ``('build', 'link')``. This is the common case for compiler languages.
 Non-compiled packages like Python modules commonly use

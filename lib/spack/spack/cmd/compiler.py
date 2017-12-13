@@ -152,12 +152,10 @@ def compiler_info(args):
                 print("\tflags:")
                 for flag, flag_value in iteritems(c.flags):
                     print("\t\t%s = %s" % (flag, flag_value))
-            if len(c.environment) != 0:
-                if len(c.environment['set']) != 0:
-                    print("\tenvironment:")
-                    print("\t    set:")
-                    for key, value in iteritems(c.environment['set']):
-                        print("\t        %s = %s" % (key, value))
+            if any(c.environment):
+                print("\tenvironment:")
+                for command in c.environment:
+                    print("\t\t%s" % command)
             if c.extra_rpaths:
                 print("\tExtra rpaths:")
                 for extra_rpath in c.extra_rpaths:

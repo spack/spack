@@ -70,7 +70,7 @@ def _to_dict(compiler):
     d['operating_system'] = str(compiler.operating_system)
     d['target'] = str(compiler.target)
     d['modules'] = compiler.modules if compiler.modules else []
-    d['environment'] = compiler.environment if compiler.environment else {}
+    d['environment'] = compiler.environment if compiler.environment else []
     d['extra_rpaths'] = compiler.extra_rpaths if compiler.extra_rpaths else []
 
     if compiler.alias:
