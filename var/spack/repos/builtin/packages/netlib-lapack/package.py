@@ -119,10 +119,12 @@ class NetlibLapack(Package):
     def install_one(self, spec, prefix, shared):
         cmake_args = [
             '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if shared else 'OFF'),
-            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
-                'Debug' if '+debug' in spec else 'Release'),
-            '-DLAPACKE:BOOL=%s'          % ('ON' if '+lapacke' in spec else 'OFF'),
-            '-DLAPACKE_WITH_TMG:BOOL=%s' % ('ON' if '+lapacke' in spec else 'OFF')]
+            '-DCMAKE_BUILD_TYPE:STRING=%s' %
+                ('Debug' if '+debug' in spec else 'Release'),
+            '-DLAPACKE:BOOL=%s' %
+                ('ON' if '+lapacke' in spec else 'OFF'),
+            '-DLAPACKE_WITH_TMG:BOOL=%s' %
+                ('ON' if '+lapacke' in spec else 'OFF')]
         if spec.satisfies('@3.6.0:'):
             cmake_args.extend(['-DCBLAS=ON'])  # always build CBLAS
 
