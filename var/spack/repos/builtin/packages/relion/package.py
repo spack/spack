@@ -57,12 +57,11 @@ class Relion(CMakePackage):
     depends_on('mpi')
     depends_on('fftw+float+double')
     depends_on('fltk', when='+gui')
-    depends_on('cuda@8.0:8.99', when='+cuda')
-    # compiles with gcc > 5 under cuda8
-    conflicts('%gcc@5.0.0:9.0.0', when='+cuda')
     # cuda 9 not yet supported
     #  https://github.com/3dem/relion/issues/296
-    conflicts('cuda@9')
+    depends_on('cuda@8.0:8.99', when='+cuda')
+    # use gcc < 5 when compiled with cuda 8
+    conflicts('%gcc@5:', when='+cuda')
 
     def cmake_args(self):
         args = [
