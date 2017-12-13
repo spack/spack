@@ -44,6 +44,11 @@ class Git(AutotoolsPackage):
 
     releases = [
         {
+            'version': '2.15.1',
+            'md5': 'da59fc6baa55ab44684011e369af397d',
+            'md5_manpages': '2cb428071c08c7df513cfc103610536e',
+        },
+        {
             'version': '2.14.1',
             'md5': 'e965a37b3d277f2e7e78f5b04de28e2a',
             'md5_manpages': 'da2e75ea3972b9e93fb47023e3bf1401',
