@@ -57,10 +57,10 @@ def get_existing_elf_rpaths(path_name):
     """
     if platform.system() == 'Linux':
         command = Executable(get_patchelf())
-        rpaths=None
+        rpaths = None
         output = command('--print-rpath', '%s' %
                          path_name, output=str, err=str)
-        rpaths=output.rstrip('\n').split(':')
+        rpaths = output.rstrip('\n').split(':')
         return rpaths
     else:
         tty.die('relocation not supported for this platform')
