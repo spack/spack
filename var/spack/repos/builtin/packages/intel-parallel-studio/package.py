@@ -457,11 +457,6 @@ class IntelParallelStudio(IntelPackage):
         """Newer versions of Intel Parallel Studio have a bug in the
         ``psxevars.sh`` script."""
 
-        if self.spec.satisfies('@professional.0:professional.2015.7') or \
-           self.spec.satisfies('@cluster.0:cluster.2015.7') or \
-           self.spec.satisfies('@composer.0:composer.2015.7'):
-            return
-
         bindir = glob.glob(join_path(
             self.prefix, 'parallel_studio*', 'bin'))[0]
 
