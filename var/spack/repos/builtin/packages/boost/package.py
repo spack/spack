@@ -340,6 +340,8 @@ class Boost(Package):
             withLibs.remove('chrono')
         if not spec.satisfies('@1.43.0:'):
             withLibs.remove('random')
+        if not spec.satisfies('@1.39.0:'):
+            withLibs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
             withLibs.append('graph_parallel')
 
