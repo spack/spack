@@ -31,4 +31,5 @@ class PyPyvcf(PythonPackage):
     homepage = "https://github.com/jamescasbon/PyVCF"
     url      = "https://github.com/jamescasbon/PyVCF/archive/v0.6.0.tar.gz"
 
+    version('0.6.7', '51b57ce99e0c2f7be2a18d08d8f87734')
     version('0.6.0', '5e38a610b1bf837e5e74a748e281cec7')
