@@ -83,6 +83,9 @@ class Petsc(Package):
             description='Activates support for Trilinos (only parallel)')
     variant('int64', default=False,
             description='Compile with 64bit indices')
+    variant('clanguage', default='C', values=('C', 'C++'),
+            description='Specify C (recommended) or C++ to compile PETSc',
+            multi=False)
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -198,6 +201,11 @@ class Petsc(Package):
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
+
+        if self.spec.satisfies('clanguage=C++'):
+            options.append('--with-clanguage=C++')
+        else:
+            options.append('--with-clanguage=C')
 
         # Help PETSc pick up Scalapack from MKL:
         if 'scalapack' in spec:
