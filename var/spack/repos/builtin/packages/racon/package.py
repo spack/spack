@@ -55,7 +55,7 @@ class Racon(MakefilePackage):
 
     def edit(self, spec, prefix):
         return
-    
+
     def build(self, spec, prefix):
         make('modules')
         make('tools')
