@@ -53,7 +53,13 @@ class Racon(MakefilePackage):
     depends_on('zlib')
     conflicts('%gcc@:4.8')
 
+    def edit(self, spec, prefix):
+        return
+    
     def build(self, spec, prefix):
         make('modules')
         make('tools')
         make()
+
+    def install(self, spec, prefix):
+        make('prefix={0}'.format(self.prefix),'install')
