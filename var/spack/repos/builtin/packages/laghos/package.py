@@ -37,7 +37,7 @@ class Laghos(MakefilePackage):
     git      = "https://github.com/CEED/Laghos"
     url      = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
 
-    version('1.0', '107c2f693936723e764a4d404d33d44a')
+    version('1.0', '4c091e115883c79bed81c557ef16baff')
     version('develop', git=git, branch='master')
 
     depends_on('mpi')
@@ -53,6 +53,7 @@ class Laghos(MakefilePackage):
                        'share/mfem/config.mk'))
         targets.append('TEST_MK=%s' % join_path(spec['mfem'].prefix,
                        'share/mfem/test.mk'))
+        targets.append('CXX=%s' % spec['mpi'].mpicxx)
 
         return targets
 
