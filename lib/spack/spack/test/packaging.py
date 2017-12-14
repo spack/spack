@@ -72,10 +72,10 @@ def has_patchelf():
     # as we may need patchelf, find out where it is
     patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
     patchelf = spack.repo.get(patchelf_spec)
-    if not patchelf.installed:
-        return None
-    patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
-    return patchelf_executable
+    if patchelf.installed:
+      return True
+    else:
+      return False
 
 
 def fake_fetchify(url, pkg):
