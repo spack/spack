@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -74,7 +74,7 @@ import spack.schema
 import spack.util.spack_yaml as syaml
 
 
-"""Dict from section names -> schema for that section."""
+#: Dict from section names -> schema for that section
 section_schemas = {
     'compilers': spack.schema.compilers.schema,
     'mirrors': spack.schema.mirrors.schema,
@@ -84,9 +84,8 @@ section_schemas = {
     'config': spack.schema.config.schema,
 }
 
-"""OrderedDict of config scopes keyed by name.
-   Later scopes will override earlier scopes.
-"""
+#: OrderedDict of config scopes keyed by name.
+#: Later scopes will override earlier scopes.
 config_scopes = OrderedDict()
 
 
@@ -162,7 +161,7 @@ class ConfigScope(object):
     def __init__(self, name, path):
         self.name = name           # scope name.
         self.path = path           # path to directory containing configs.
-        self.sections = {}         # sections read from config files.
+        self.sections = syaml.syaml_dict()  # sections read from config files.
 
         # Register in a dict of all ConfigScopes
         # TODO: make this cleaner.  Mocking up for testing is brittle.
@@ -197,7 +196,7 @@ class ConfigScope(object):
 
     def clear(self):
         """Empty cached config information."""
-        self.sections = {}
+        self.sections = syaml.syaml_dict()
 
     def __repr__(self):
         return '<ConfigScope: %s: %s>' % (self.name, self.path)
@@ -211,25 +210,25 @@ class ConfigScope(object):
 #
 _platform = spack.architecture.platform().name
 
-"""Default configuration scope is the lowest-level scope. These are
-   versioned with Spack and can be overridden by systems, sites or users."""
+#: Default configuration scope is the lowest-level scope. These are
+#: versioned with Spack and can be overridden by systems, sites or users.
 _defaults_path = os.path.join(spack.etc_path, 'spack', 'defaults')
 ConfigScope('defaults', _defaults_path)
 ConfigScope('defaults/%s' % _platform, os.path.join(_defaults_path, _platform))
 
-"""System configuration is per machine.
-   No system-level configs should be checked into spack by default"""
+#: System configuration is per machine.
+#: No system-level configs should be checked into spack by default
 _system_path = os.path.join(spack.system_etc_path, 'spack')
 ConfigScope('system', _system_path)
 ConfigScope('system/%s' % _platform, os.path.join(_system_path, _platform))
 
-"""Site configuration is per spack instance, for sites or projects.
-   No site-level configs should be checked into spack by default."""
+#: Site configuration is per spack instance, for sites or projects.
+#: No site-level configs should be checked into spack by default.
 _site_path = os.path.join(spack.etc_path, 'spack')
 ConfigScope('site', _site_path)
 ConfigScope('site/%s' % _platform, os.path.join(_site_path, _platform))
 
-"""User configuration can override both spack defaults and site config."""
+#: User configuration can override both spack defaults and site config.
 _user_path = spack.user_config_path
 ConfigScope('user', _user_path)
 ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
@@ -314,7 +313,7 @@ def _mark_overrides(data):
         return [_mark_overrides(elt) for elt in data]
 
     elif isinstance(data, dict):
-        marked = {}
+        marked = syaml.syaml_dict()
         for key, val in iteritems(data):
             if isinstance(key, string_types) and key.endswith(':'):
                 key = syaml.syaml_str(key[:-1])

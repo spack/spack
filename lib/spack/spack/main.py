@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,9 +34,10 @@ import os
 import inspect
 import pstats
 import argparse
+from six import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import *
+from llnl.util.tty.log import log_output
 
 import spack
 import spack.cmd
@@ -57,7 +58,7 @@ intro_by_level = {
 
 # control top-level spack options shown in basic vs. advanced help
 options_by_level = {
-    'short': 'hkV',
+    'short': ['h', 'k', 'V', 'color'],
     'long': 'all'
 }
 
@@ -92,8 +93,8 @@ def set_working_dir():
     try:
         spack.spack_working_dir = os.getcwd()
     except OSError:
-        os.chdir(spack_prefix)
-        spack.spack_working_dir = spack_prefix
+        os.chdir(spack.spack_prefix)
+        spack.spack_working_dir = spack.spack_prefix
 
 
 def add_all_commands(parser):
@@ -225,7 +226,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # epilog
         formatter.add_text("""\
 {help}:
-  spack help -a          list all available commands
+  spack help --all       list all available commands
   spack help <command>   help on a specific command
   spack help --spec      help on the spec syntax
   spack docs             open http://spack.rtfd.io/ in a browser"""
@@ -236,10 +237,14 @@ class SpackArgumentParser(argparse.ArgumentParser):
 
     def add_command(self, name):
         """Add one subcommand to this parser."""
+        # convert CLI command name to python module name
+        name = spack.cmd.get_python_name(name)
+
         # lazily initialize any subparsers
         if not hasattr(self, 'subparsers'):
             # remove the dummy "command" argument.
-            self._remove_action(self._actions[-1])
+            if self._actions[-1].dest == 'command':
+                self._remove_action(self._actions[-1])
             self.subparsers = self.add_subparsers(metavar='COMMAND',
                                                   dest="command")
 
@@ -275,6 +280,9 @@ def make_argument_parser():
 
     parser.add_argument('-h', '--help', action='store_true',
                         help="show this help message and exit")
+    parser.add_argument('--color', action='store', default='auto',
+                        choices=('always', 'never', 'auto'),
+                        help="when to colorize output; default is auto")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="write out debug logs during compile")
     parser.add_argument('-D', '--pdb', action='store_true',
@@ -320,9 +328,12 @@ def setup_main_options(args):
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
         spack.insecure = True
 
+    # when to use color (takes always, auto, or never)
+    tty.color.set_color_when(args.color)
+
 
 def allows_unknown_args(command):
-    """This is a basic argument injection test.
+    """Implements really simple argument injection for unknown arguments.
 
     Commands may add an optional argument called "unknown args" to
     indicate they can handle unknonwn args, and we'll pass the unknown
@@ -334,7 +345,87 @@ def allows_unknown_args(command):
     return (argcount == 3 and varnames[2] == 'unknown_args')
 
 
+def _invoke_spack_command(command, parser, args, unknown_args):
+    """Run a spack command *without* setting spack global options."""
+    if allows_unknown_args(command):
+        return_val = command(parser, args, unknown_args)
+    else:
+        if unknown_args:
+            tty.die('unrecognized arguments: %s' % ' '.join(unknown_args))
+        return_val = command(parser, args)
+
+    # Allow commands to return and error code if they want
+    return 0 if return_val is None else return_val
+
+
+class SpackCommand(object):
+    """Callable object that invokes a spack command (for testing).
+
+    Example usage::
+
+        install = SpackCommand('install')
+        install('-v', 'mpich')
+
+    Use this to invoke Spack commands directly from Python and check
+    their output.
+    """
+    def __init__(self, command):
+        """Create a new SpackCommand that invokes ``command`` when called."""
+        self.parser = make_argument_parser()
+        self.parser.add_command(command)
+        self.command_name = command
+        self.command = spack.cmd.get_command(command)
+
+    def __call__(self, *argv, **kwargs):
+        """Invoke this SpackCommand.
+
+        Args:
+            argv (list of str): command line arguments.
+
+        Keyword Args:
+            fail_on_error (optional bool): Don't raise an exception on error
+
+        Returns:
+            (str): combined output and error as a string
+
+        On return, if ``fail_on_error`` is False, return value of comman
+        is set in ``returncode`` property, and the error is set in the
+        ``error`` property.  Otherwise, raise an error.
+        """
+        # set these before every call to clear them out
+        self.returncode = None
+        self.error = None
+
+        args, unknown = self.parser.parse_known_args(
+            [self.command_name] + list(argv))
+
+        fail_on_error = kwargs.get('fail_on_error', True)
+
+        out = StringIO()
+        try:
+            with log_output(out):
+                self.returncode = _invoke_spack_command(
+                    self.command, self.parser, args, unknown)
+
+        except SystemExit as e:
+            self.returncode = e.code
+
+        except BaseException as e:
+            self.error = e
+            if fail_on_error:
+                raise
+
+        if fail_on_error and self.returncode not in (None, 0):
+            raise SpackCommandError(
+                "Command exited with code %d: %s(%s)" % (
+                    self.returncode, self.command_name,
+                    ', '.join("'%s'" % a for a in argv)))
+
+        return out.getvalue()
+
+
 def _main(command, parser, args, unknown_args):
+    """Run a spack command *and* set spack globaloptions."""
     # many operations will fail without a working directory.
     set_working_dir()
 
@@ -345,12 +436,7 @@ def _main(command, parser, args, unknown_args):
 
     # Now actually execute the command
     try:
-        if allows_unknown_args(command):
-            return_val = command(parser, args, unknown_args)
-        else:
-            if unknown_args:
-                tty.die('unrecognized arguments: %s' % ' '.join(unknown_args))
-            return_val = command(parser, args)
+        return _invoke_spack_command(command, parser, args, unknown_args)
     except SpackError as e:
         e.die()  # gracefully die on any SpackErrors
     except Exception as e:
@@ -360,9 +446,6 @@ def _main(command, parser, args, unknown_args):
     except KeyboardInterrupt:
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")
-
-    # Allow commands to return and error code if they want
-    return 0 if return_val is None else return_val
 
 
 def _profile_wrapper(command, parser, args, unknown_args):
@@ -431,7 +514,7 @@ def main(argv=None):
 
     # Try to load the particular command the caller asked for.  If there
     # is no module for it, just die.
-    command_name = args.command[0].replace('-', '_')
+    command_name = spack.cmd.get_python_name(args.command[0])
     try:
         parser.add_command(command_name)
     except ImportError:
@@ -465,3 +548,7 @@ def main(argv=None):
 
     except SystemExit as e:
         return e.code
+
+
+class SpackCommandError(Exception):
+    """Raised when SpackCommand execution fails."""

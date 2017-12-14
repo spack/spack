@@ -1,0 +1,18 @@
+--- a/src/libqhull_r/qhull_ra.h	2017-06-30 14:24:52.252635925 +0200
++++ b/src/libqhull_r/qhull_ra.h	2017-06-30 14:25:27.356635296 +0200
+@@ -101,13 +101,8 @@
+ 
+ */
+ 
+-#if defined(__cplusplus) && defined(__INTEL_COMPILER) && !defined(QHULL_OS_WIN)
+-template <typename T>
+-inline void qhullUnused(T &x) { (void)x; }
+-#  define QHULL_UNUSED(x) qhullUnused(x);
+-#else
+-#  define QHULL_UNUSED(x) (void)x;
+-#endif
++#define QHULL_UNUSED(x) (void)x;
++
+ 
+ /***** -libqhull_r.c prototypes (alphabetical after qhull) ********************/
+ 

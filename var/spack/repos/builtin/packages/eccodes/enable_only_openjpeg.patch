@@ -1,0 +1,30 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -151,27 +151,8 @@ set( HAVE_LIBOPENJPEG 0 )
+ 
+ if( ENABLE_JPG )
+ 
+-    # Note: This is a deprecated feature but we need it to find Jasper at ECMWF.
+-    #       ecbuild_add_extra_search_paths modifies CMAKE_PREFIX_PATH
+-    #       which can affect future package discovery if not undone by the caller.
+-    #       The current CMAKE_PREFIX_PATH is backed up as _CMAKE_PREFIX_PATH
+-    #
+-    set(CMAKE_WARN_DEPRECATED OFF) # Suppress deprecation message
+-    ecbuild_add_extra_search_paths( jasper )
+-    find_package( Jasper )
+-    set(CMAKE_PREFIX_PATH ${_CMAKE_PREFIX_PATH})    # Restore CMAKE_PREFIX_PATH
+-    set(CMAKE_WARN_DEPRECATED ON)  # Remove suppression
+-
+     find_package( OpenJPEG )
+ 
+-    if( JASPER_FOUND )
+-        list( APPEND ECCODES_TPLS Jasper )
+-        set( HAVE_JPEG 1 )
+-        set( HAVE_LIBJASPER 1 )
+-        # Extract Jasper's major version number to enable conditional code. See ECC-396
+-        string(REGEX REPLACE "^([0-9]+)\\.[0-9]+\\.[0-9]+.*" "\\1" JASPER_VERSION_MAJOR "${JASPER_VERSION_STRING}")
+-    endif()
+-
+     if( OPENJPEG_FOUND )
+         list( APPEND ECCODES_TPLS OpenJPEG )
+         set( HAVE_JPEG 1 )

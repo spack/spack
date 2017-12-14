@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@ class Bazel(Package):
     version('0.2.2b', '75081804f073cbd194da1a07b16cba5f')
     version('0.2.2', '644bc4ea7f429d835e74f255dc1054e6')
 
-    depends_on('jdk@8:')
+    depends_on('java@8:')
     depends_on('zip')
 
     patch('fix_env_handling.patch')

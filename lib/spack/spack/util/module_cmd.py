@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -82,13 +82,13 @@ def get_module_cmd_from_bash(bashopts=''):
     try:
         find_exec = re.search(r'.*`(.*(:? bash | sh ).*)`.*', module_func)
         exec_line = find_exec.group(1)
-    except:
+    except BaseException:
         try:
             # This will fail with nested parentheses. TODO: expand regex.
             find_exec = re.search(r'.*\(([^()]*(:? bash | sh )[^()]*)\).*',
                                   module_func)
             exec_line = find_exec.group(1)
-        except:
+        except BaseException:
             raise ModuleError('get_module_cmd cannot '
                               'determine the module command from bash')
 
@@ -97,7 +97,7 @@ def get_module_cmd_from_bash(bashopts=''):
     module_cmd = which(args[0])
     if module_cmd:
         for arg in args[1:]:
-            if arg == 'bash':
+            if arg in ('bash', 'sh'):
                 module_cmd.add_default_arg('python')
                 break
             else:
@@ -186,6 +186,12 @@ def get_path_from_module(mod):
         L = line.find('-L/')
         if L >= 0:
             return line[L + 2:line.find('/lib')]
+
+    # If it sets the PATH, use it
+    for line in text:
+        if line.find('PATH') >= 0:
+            path = get_argument_from_module_line(line)
+            return path[:path.find('/bin')]
 
     # Unable to find module path
     return None

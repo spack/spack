@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@ class PyFlake8(PythonPackage):
 
     # Most Python packages only require py-setuptools as a build dependency.
     # However, py-flake8 requires py-setuptools during runtime as well.
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools@30:', type=('build', 'run'))
 
     # pyflakes >= 0.8.1, != 1.2.0, != 1.2.1, != 1.2.2, < 1.3.0
     depends_on('py-pyflakes@0.8.1:1.1.0,1.2.3:1.2.3', when='@3.0.4', type=('build', 'run'))
@@ -58,7 +58,7 @@ class PyFlake8(PythonPackage):
     depends_on('py-mccabe@0.2.1:0.4.0', when='@2.5.4', type=('build', 'run'))
 
     # These dependencies breaks concretization
-    # See https://github.com/LLNL/spack/issues/2793
+    # See https://github.com/spack/spack/issues/2793
     # depends_on('py-configparser', when='^python@:3.3', type=('build', 'run'))
     # depends_on('py-enum34', when='^python@:3.1', type=('build', 'run'))
     depends_on('py-configparser', type=('build', 'run'))
@@ -66,3 +66,7 @@ class PyFlake8(PythonPackage):
 
     # TODO: Add test dependencies
     # depends_on('py-nose', type='test')
+
+    def patch(self):
+        """Filter pytest-runner requirement out of setup.py."""
+        filter_file("['pytest-runner']", "[]", 'setup.py', string=True)
