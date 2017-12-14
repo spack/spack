@@ -30,6 +30,7 @@ import re
 import sys
 import os.path
 import subprocess
+from llnl.util.lang import dedupe
 
 
 class NameModifier(object):
@@ -294,6 +295,8 @@ class EnvironmentModifications(object):
                 variables (default: [])
             whitelist ([str or re]): Always respect modifications of these
                 variables (default: []). Has precedence over blacklist.
+            clean (bool): In addition to removing empty entries,
+                also remove duplicate entries (default: False).
 
         Returns:
             EnvironmentModifications: an object that, if executed, has
@@ -312,6 +315,7 @@ class EnvironmentModifications(object):
         concatenate_on_success = kwargs.get('concatenate_on_success', '&&')
         blacklist              = kwargs.get('blacklist', [])
         whitelist              = kwargs.get('whitelist', [])
+        clean                  = kwargs.get('clean', False)
 
         source_file = [source_command, filename]
         source_file.extend(args)
@@ -429,6 +433,14 @@ class EnvironmentModifications(object):
                 before_list = list(filter(None, before_list))
                 after_list = list(filter(None, after_list))
 
+                # Remove duplicate entries (worse matching, bloats env)
+                if clean:
+                    before_list = list(dedupe(before_list))
+                    after_list = list(dedupe(after_list))
+                    # The reassembled cleaned entries
+                    before = sep.join(before_list)
+                    after = sep.join(after_list)
+
                 # Paths that have been removed
                 remove_list = [
                     ii for ii in before_list if ii not in after_list]
@@ -441,11 +453,11 @@ class EnvironmentModifications(object):
                     end = after_list.index(remaining_list[-1])
                     search = sep.join(after_list[start:end + 1])
                 except IndexError:
-                    env.prepend_path(x, env_after[x])
+                    env.prepend_path(x, after)
 
                 if search not in before:
                     # We just need to set the variable to the new value
-                    env.prepend_path(x, env_after[x])
+                    env.prepend_path(x, after)
                 else:
                     try:
                         prepend_list = after_list[:start]
@@ -465,7 +477,7 @@ class EnvironmentModifications(object):
                         env.prepend_path(x, item)
             else:
                 # We just need to set the variable to the new value
-                env.set(x, env_after[x])
+                env.set(x, after)
 
         return env
 
