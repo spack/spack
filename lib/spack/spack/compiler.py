@@ -285,6 +285,10 @@ class Compiler(object):
             try:
                 full_path, prefix, suffix = key
                 version = detect_version(full_path)
+                if (not version) or (not str(version).strip()):
+                    tty.debug(
+                        "Couldn't get version for compiler %s" % full_path)
+                    return None
                 return (version, prefix, suffix, full_path)
             except ProcessError as e:
                 tty.debug(
