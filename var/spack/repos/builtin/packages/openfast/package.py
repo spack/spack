@@ -81,6 +81,9 @@ class Openfast(CMakePackage):
 
         if '+cxx' in spec:
             options.extend([
+                '-DMPI_CXX_COMPILER:PATH=%s' % spec['mpi'].mpicxx,
+                '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
+                '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc,
                 '-DHDF5_ROOT:PATH=%s' % spec['hdf5'].prefix,
                 '-DYAML_ROOT:PATH=%s' % spec['yaml-cpp'].prefix,
             ])

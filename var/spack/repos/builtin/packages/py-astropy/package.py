@@ -50,6 +50,7 @@ class PyAstropy(PythonPackage):
     depends_on('py-pytz', type=('build', 'run'))
     depends_on('py-scikit-image', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-markupsafe', type=('build', 'run'))
 
     # System dependencies
     depends_on('cfitsio')
