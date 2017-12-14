@@ -42,7 +42,8 @@ from spack.spec import Spec
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
-from spack.relocate import get_patchelf
+from spack.relocate import get_patchelf, get_existing_elf_rpaths
+from spack.relocate import relocate_binary
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -62,6 +63,19 @@ def has_gnupg2():
         return True
     except ProcessError:
         return False
+
+
+def has_patchelf():
+    """
+    Returns the full patchelf binary path if available.
+    """
+    # as we may need patchelf, find out where it is
+    patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
+    patchelf = spack.repo.get(patchelf_spec)
+    if not patchelf.installed:
+        return None
+    patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
+    return patchelf_executable
 
 
 def fake_fetchify(url, pkg):
@@ -297,6 +311,25 @@ def test_relocate():
     out = substitute_rpath(
         ('/usr/lib', '/usr/lib64', '/opt/local/lib'), '/usr', '/opt')
     assert out == ['/opt/lib', '/opt/lib64', '/opt/local/lib']
+
+
+@pytest.mark.skipif(sys.platform == 'darwin',
+                    reason="only works with ELF objects")
+def test_empty_rpath(tmpdir):
+    patchelf = has_patchelf()
+    if patchelf:
+        paths = get_existing_elf_rpaths('/bin/bash')
+        assert (paths is None)
+        relocate_binary(('/bin/bash', 'bin/sh'), '/lib', '/opt/lib')
+        paths = get_existing_elf_rpaths('/bin/bash')
+        assert (paths is None)
+        with tmpdir.as_cwd():
+            shutil.copyfile('/bin/perl', 'perl')
+            paths = get_existing_elf_rpaths('perl')
+            assert (paths[0].starts_with('/usr'))
+            relocate_binary('perl', '/usr', '/opt')
+            paths = get_existing_elf_rpaths('perl')
+            assert (paths[0].starts_with('/opt'))
 
 
 @pytest.mark.skipif(sys.platform != 'darwin',

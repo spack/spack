@@ -57,11 +57,12 @@ def get_existing_elf_rpaths(path_name):
     """
     if platform.system() == 'Linux':
         command = Executable(get_patchelf())
-        rpaths = None
         output = command('--print-rpath', '%s' %
                          path_name, output=str, err=str)
-        rpaths = output.rstrip('\n').split(':')
-        return rpaths
+        if output != '':
+            return output.rstrip('\n').split(':')
+        else:
+            return None
     else:
         tty.die('relocation not supported for this platform')
     return
@@ -281,9 +282,10 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
             orig_rpaths = get_existing_elf_rpaths(cur_path)
-            new_rpaths = get_relative_rpaths(orig_path, old_dir,
-                                             orig_rpaths)
-            modify_elf_object(cur_path, orig_rpaths, new_rpaths)
+            if orig_rpaths:
+                new_rpaths = get_relative_rpaths(orig_path, old_dir,
+                                                 orig_rpaths)
+                modify_elf_object(cur_path, orig_rpaths, new_rpaths)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
