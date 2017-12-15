@@ -215,8 +215,11 @@ def modify_elf_object(path_name, orig_rpath, new_rpath):
     if platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
         patchelf = Executable(get_patchelf())
-        patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
-                 '%s' % path_name, output=str, cmd=str)
+        try:
+            patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
+                     '%s' % path_name, output=str, cmd=str)
+        except Exception:
+            pass
     else:
         tty.die('relocation not supported for this platform')
 
