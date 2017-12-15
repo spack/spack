@@ -59,10 +59,8 @@ def get_existing_elf_rpaths(path_name):
         command = Executable(get_patchelf())
         output = command('--print-rpath', '%s' %
                          path_name, output=str, err=str)
-        if output != '':
-            return output.rstrip('\n').split(':')
-        else:
-            return None
+        output = output.strip()  # remove all leading/trailing whitespace
+        return output.split(':')
     else:
         tty.die('relocation not supported for this platform')
     return
@@ -191,13 +189,23 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
 
 def get_filetype(path_name):
     """
-    Return the output of file path_name as a string to identify file type.
+    Return the output of file path_name as a string to identify file type
     """
     file = Executable('file')
     file.add_default_env('LC_ALL', 'C')
     output = file('-b', '-h', '%s' % path_name,
                   output=str, err=str)
     return output.strip()
+
+
+def strings_contains_installroot(path_name):
+    """
+    Check if the file contain the install root string.
+    """
+    strings = Executable('strings')
+    output = strings('%s' % path_name,
+                     output=str, err=str)
+    return (spack.store.layout.root in output)
 
 
 def modify_elf_object(path_name, orig_rpath, new_rpath):
@@ -233,7 +241,7 @@ def needs_binary_relocation(filetype, os_id=None):
 
 def needs_text_relocation(filetype):
     """
-    Check whether the given filetype is text that may need relocation.
+    Check whether the given file has text that may need relocation.
     """
     if "link to" in filetype:
         return False

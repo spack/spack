@@ -42,7 +42,7 @@ from spack.spec import Spec
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
-
+from spack.relocate import strings_contains_installroot
 from spack.relocate import get_patchelf, get_existing_elf_rpaths
 from spack.relocate import relocate_binary, relocate_text
 from spack.relocate import substitute_rpath, get_relative_rpaths
@@ -74,9 +74,9 @@ def has_patchelf():
     patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
     patchelf = spack.repo.get(patchelf_spec)
     if patchelf.installed:
-      return True
+        return True
     else:
-      return False
+        return False
 
 
 def fake_fetchify(url, pkg):
@@ -360,12 +360,10 @@ def test_empty_rpath(tmpdir):
         paths = get_existing_elf_rpaths('/bin/bash')
         assert (paths is None)
         with tmpdir.as_cwd():
-            shutil.copyfile('/bin/perl', 'perl')
-            paths = get_existing_elf_rpaths('perl')
-            assert (paths[0].starts_with('/usr'))
-            relocate_binary('perl', '/usr', '/opt')
-            paths = get_existing_elf_rpaths('perl')
-            assert (paths[0].starts_with('/opt'))
+            shutil.copyfile('/bin/bash', 'bash')
+            paths = get_existing_elf_rpaths('bash')
+            relocate_binary('bash', '/usr', '/opt')
+            assert (strings_contains_installroot('bash') in False)
 
 
 @pytest.mark.skipif(sys.platform != 'darwin',
