@@ -103,6 +103,10 @@ class Octave(AutotoolsPackage):
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('zlib',         when='+zlib')
 
+    # Fail to build Ocatve with Intel Compiler
+    # https://github.com/spack/spack/issues/6647
+    conflicts('%intel')
+
     def configure_args(self):
         # See
         # https://github.com/macports/macports-ports/blob/master/math/octave/
