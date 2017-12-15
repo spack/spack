@@ -40,6 +40,8 @@ class Casper(MakefilePackage):
     depends_on('jellyfish@2.2.3:')
     depends_on('boost')
 
+    conflicts('%gcc@7.1.0')
+
     def install(self, spec, prefix):
         distutils.dir_util.copy_tree(".", prefix)
 
