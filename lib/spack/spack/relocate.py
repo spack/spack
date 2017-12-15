@@ -219,8 +219,8 @@ def modify_elf_object(path_name, orig_rpath, new_rpath):
             patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
                      '%s' % path_name, output=str, error=str)
         except Exception:
-            tty.warn(output)
-            tty.warn(error)
+            tty.warn('patchelf --set-rpath %s %s failed' %
+                     (new_joined, path_name))
             pass
     else:
         tty.die('relocation not supported for this platform')
