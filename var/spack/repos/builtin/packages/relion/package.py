@@ -78,7 +78,7 @@ class Relion(CMakePackage):
 
         carch = self.spec.variants['cuda_arch'].value
 
-        if carch is not None:
+        if '+cuda_arch' in self.spec:
             args += [
                 '-DCUDA_ARCH=%s' % (carch),
             ]
