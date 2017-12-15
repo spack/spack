@@ -88,7 +88,7 @@ git checkout -- config.yaml.template
 if [[ $2 == "--install" ]]; then
     echo "Installing packages..."
     spack clean
-    ./build_${1}.sh
+    ./build_${1}.sh PLATFORM
 fi
 
 # Sync cached source packages to the HTTP servers

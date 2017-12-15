@@ -2,7 +2,12 @@
 
 from spack_install import install
 from spack_install import check_pass
-import os
+import os, sys
+
+if len(sys.argv) > 1:
+          PLATFORM = sys.argv[1]
+else:
+          PLATFORM = sandybridge
 
 COMPILERS = ["gcc@5.4.0", "intel@17.0.5"]
 
@@ -55,7 +60,8 @@ nonmpipkgs = {"python@2.7.14": ["^readline@system"],
 for pkg,specs in nonmpipkgs.items():
     for spec in specs:
         for compiler in COMPILERS:
-            install("{} %{} {}".format(pkg, compiler, spec))
+                if check_pass(pkg, compiler, spec, mpi, PLATFORM):
+                          install("{} %{} {}".format(pkg, compiler, spec))
 
 
 if os.system("lspci | grep Omni-Path") == 0:
@@ -79,7 +85,8 @@ MPIS = {"openmpi@2.1.2~vt~cuda fabrics={},pmi ~java schedulers=slurm".format(OMP
 for pkg,spec in MPIS.items():
     for compiler in COMPILERS:
         if 'intel-parallel' not in pkg:
-            install("{} %{} {}".format(pkg, compiler, spec))
+                if check_pass(pkg, compiler, spec, mpi, PLATFORM):
+                          install("{} %{} {}".format(pkg, compiler, spec))
 
 # Build MPI packages
 mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
@@ -98,7 +105,7 @@ for pkg,specs in mpipkgs.items():
                    concrete_spec = "{} %{} ^{}".format(pkg, compiler, mpi)
                 else:
                    concrete_spec = "{} %{} {} ^{}".format(pkg, compiler, spec, mpi)
-                if check_pass(pkg, compiler, mpi, spec):
+                if check_pass(pkg, compiler, spec, mpi, PLATFORM):
                     install(concrete_spec)
 
 # Remove intermediate dependency
