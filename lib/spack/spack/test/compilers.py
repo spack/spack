@@ -27,6 +27,7 @@ from six import iteritems
 
 import spack.spec
 import spack.compilers as compilers
+from spack.compiler import _get_versioned_tuple
 
 
 @pytest.mark.usefixtures('config')
@@ -47,6 +48,19 @@ class TestCompilers(object):
         filtered = [x for x in all_compilers if str(x.spec) == 'clang@3.3']
         filtered = [x for x in filtered if x.operating_system == 'SuSE11']
         assert len(filtered) == 1
+
+
+def test_version_detection_is_empty():
+    no_version = lambda x: None
+    compiler_check_tuple = ('/usr/bin/gcc', '', r'\d\d', no_version)
+    assert not _get_versioned_tuple(compiler_check_tuple)
+
+
+def test_version_detection_is_successful():
+    version = lambda x: '4.9'
+    compiler_check_tuple = ('/usr/bin/gcc', '', r'\d\d', version)
+    assert _get_versioned_tuple(compiler_check_tuple) == (
+        '4.9', '', r'\d\d', '/usr/bin/gcc')
 
 
 def test_compiler_flags_from_config_are_grouped():
