@@ -41,7 +41,7 @@ class Mefit(Package):
     depends_on('casper %gcc@4.8.5')
 
     def install(self, spec, prefix):
-	distutils.dir_util.copy_tree(".", prefix)
+        distutils.dir_util.copy_tree(".", prefix)
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.prefix)
