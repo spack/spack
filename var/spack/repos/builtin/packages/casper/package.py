@@ -39,6 +39,9 @@ class Casper(MakefilePackage):
 
     depends_on('jellyfish@2.2.3:')
     depends_on('boost')
- 
+
     def install(self, spec, prefix):
         distutils.dir_util.copy_tree(".", prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.spec.prefix)    
