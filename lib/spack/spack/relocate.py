@@ -57,11 +57,10 @@ def get_existing_elf_rpaths(path_name):
     """
     if platform.system() == 'Linux':
         command = Executable(get_patchelf())
-        rpaths=None
         output = command('--print-rpath', '%s' %
                          path_name, output=str, err=str)
-        rpaths=output.rstrip('\n').split(':')
-        return rpaths
+        output = output.strip()  # remove all leading/trailing whitespace
+        return output.split(':')
     else:
         tty.die('relocation not supported for this platform')
     return
@@ -190,13 +189,23 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
 
 def get_filetype(path_name):
     """
-    Return the output of file path_name as a string to identify file type.
+    Return the output of file path_name as a string to identify file type
     """
     file = Executable('file')
     file.add_default_env('LC_ALL', 'C')
     output = file('-b', '-h', '%s' % path_name,
                   output=str, err=str)
     return output.strip()
+
+
+def strings_contains_installroot(path_name):
+    """
+    Check if the file contain the install root string.
+    """
+    strings = Executable('strings')
+    output = strings('%s' % path_name,
+                     output=str, err=str)
+    return (spack.store.layout.root in output)
 
 
 def modify_elf_object(path_name, orig_rpath, new_rpath):
@@ -206,8 +215,13 @@ def modify_elf_object(path_name, orig_rpath, new_rpath):
     if platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
         patchelf = Executable(get_patchelf())
-        patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
-                 '%s' % path_name, output=str, cmd=str)
+        try:
+            patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
+                     '%s' % path_name, output=str, error=str)
+        except Exception:
+            tty.warn('patchelf --set-rpath %s %s failed' %
+                     (new_joined, path_name))
+            pass
     else:
         tty.die('relocation not supported for this platform')
 
@@ -232,7 +246,7 @@ def needs_binary_relocation(filetype, os_id=None):
 
 def needs_text_relocation(filetype):
     """
-    Check whether the given filetype is text that may need relocation.
+    Check whether the given file has text that may need relocation.
     """
     if "link to" in filetype:
         return False
@@ -281,9 +295,10 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
             orig_rpaths = get_existing_elf_rpaths(cur_path)
-            new_rpaths = get_relative_rpaths(orig_path, old_dir,
-                                             orig_rpaths)
-            modify_elf_object(cur_path, orig_rpaths, new_rpaths)
+            if orig_rpaths:
+                new_rpaths = get_relative_rpaths(orig_path, old_dir,
+                                                 orig_rpaths)
+                modify_elf_object(cur_path, orig_rpaths, new_rpaths)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 

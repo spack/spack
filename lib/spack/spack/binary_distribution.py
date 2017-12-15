@@ -145,13 +145,14 @@ def write_buildinfo_file(prefix, workdir, rel=False):
         dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
-            filetype = relocate.get_filetype(path_name)
-            if relocate.needs_binary_relocation(filetype, os_id):
-                rel_path_name = os.path.relpath(path_name, prefix)
-                binary_to_relocate.append(rel_path_name)
-            elif relocate.needs_text_relocation(filetype):
-                rel_path_name = os.path.relpath(path_name, prefix)
-                text_to_relocate.append(rel_path_name)
+            if relocate.strings_contains_installroot(path_name):
+                filetype = relocate.get_filetype(path_name)
+                if relocate.needs_binary_relocation(filetype, os_id):
+                    rel_path_name = os.path.relpath(path_name, prefix)
+                    binary_to_relocate.append(rel_path_name)
+                elif relocate.needs_text_relocation(filetype):
+                    rel_path_name = os.path.relpath(path_name, prefix)
+                    text_to_relocate.append(rel_path_name)
 
     # Create buildinfo data and write it to disk
     buildinfo = {}
