@@ -43,6 +43,17 @@ class Swfft(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
+    @property
+    def build_targets(self):
+        targets = []
+        spec = self.spec
+
+        targets.append('DFFT_MPI_CC=%s' % spec['mpi'].mpicc)
+        targets.append('DFFT_MPI_CXX=%s' % spec['mpi'].mpicxx)
+        targets.append('DFFT_MPI_F90=%s' % spec['mpi'].mpifc)
+
+        return targets
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('build/CheckDecomposition', prefix.bin)

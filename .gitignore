@@ -27,3 +27,5 @@
 *.tgz
 *.gz
 mirror/
+*.in.log
+*.out.log
