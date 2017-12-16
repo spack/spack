@@ -36,5 +36,5 @@ class Inputproto(AutotoolsPackage):
 
     version('2.3.2', '6450bad6f8d5ebe354b01b734d1fd7ca')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

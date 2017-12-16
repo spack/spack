@@ -36,7 +36,7 @@ class Gtkplus(AutotoolsPackage):
 
     variant('X', default=False, description="Enable an X toolkit")
 
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on("atk")
     depends_on("gdk-pixbuf")

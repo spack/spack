@@ -33,7 +33,7 @@ class Exonerate(Package):
 
     version('2.4.0', '126fbade003b80b663a1d530c56f1904')
 
-    depends_on('pkg-config', type="build")
+    depends_on('pkgconfig', type="build")
     depends_on('glib')
 
     parallel = False

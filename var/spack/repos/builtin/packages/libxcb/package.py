@@ -44,7 +44,7 @@ class Libxcb(AutotoolsPackage):
 
     depends_on('xcb-proto', type='build')
     depends_on('python@2:2.8', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
     def patch(self):

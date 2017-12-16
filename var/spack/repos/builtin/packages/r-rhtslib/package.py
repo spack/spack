@@ -39,3 +39,4 @@ class RRhtslib(RPackage):
 
     depends_on('r@3.4.0:3.4.9', when='@1.8.0')
     depends_on('r-zlibbioc', type=('build', 'run'))
+    depends_on('autoconf@2.67:', type='build')

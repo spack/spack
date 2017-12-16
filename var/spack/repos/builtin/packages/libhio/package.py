@@ -33,8 +33,9 @@ class Libhio(AutotoolsPackage):
     homepage = "https://github.com/hpc/libhio/"
     url      = "https://github.com/hpc/libhio/releases/download/hio.1.3.0.1/libhio-1.3.0.1.tar.gz"
 
+    version('1.4.0.0', 'a223effbfd50efd452053e6954e3ccf5')
     version('1.3.0.1', 'c073541de8dd70aeb8878bd00d6d877f')
 
     depends_on("json-c")
     depends_on("bzip2")
-    depends_on("pkg-config", type="build")
+    depends_on("pkgconfig", type="build")

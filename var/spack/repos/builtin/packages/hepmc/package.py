@@ -33,7 +33,8 @@ class Hepmc(CMakePackage):
     homepage = "http://hepmc.web.cern.ch/hepmc/"
     url      = "http://hepmc.web.cern.ch/hepmc/releases/hepmc2.06.09.tgz"
 
-    version('2.06.09', 'c47627ced4255b40e731b8666848b087')
+    version('3.0.0',   '2212a5e8d693fbf726c28b43ebc6377a')
+    version('2.06.09', '52518437a64f6b4284e9acc2ecad6212')
     version('2.06.08', 'a2e889114cafc4f60742029d69abd907')
     version('2.06.07', '11d7035dccb0650b331f51520c6172e7')
     version('2.06.06', '102e5503537a3ecd6ea6f466aa5bc4ae')
@@ -46,3 +47,10 @@ class Hepmc(CMakePackage):
             '-Dmomentum:STRING=GEV',
             '-Dlength:STRING=MM',
         ]
+
+    def url_for_version(self, version):
+        if version <= Version("2.06.08"):
+            url = "http://lcgapp.cern.ch/project/simu/HepMC/download/HepMC-{0}.tar.gz"
+        else:
+            url = "http://hepmc.web.cern.ch/hepmc/releases/hepmc{0}.tgz"
+        return url.format(version)

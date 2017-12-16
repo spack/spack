@@ -36,7 +36,7 @@ class XorgDocs(AutotoolsPackage):
 
     version('1.7.1', 'ca689ccbf8ebc362afbe5cc5792a4abd')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
     depends_on('xorg-sgml-doctools@1.8:', type='build')
     depends_on('xmlto', type='build')
