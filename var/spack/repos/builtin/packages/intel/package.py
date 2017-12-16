@@ -33,6 +33,8 @@ class Intel(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
+    version('18.0.1-cluster', '9c007011e0e3fc72747b58756fbf01cd',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12374/parallel_studio_xe_2018_update1_cluster_edition.tgz')
     version('18.0.1', '28cb807126d713350f4aa6f9f167448a',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12381/parallel_studio_xe_2018_update1_composer_edition.tgz')
     version('18.0.0', '31ba768fba6e7322957b03feaa3add28',
