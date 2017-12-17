@@ -6,8 +6,8 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,28 +25,30 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class Tioga(CMakePackage):
+    """Topology Independent Overset Grid Assembly (TIOGA)"""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "https://github.com/jsitaraman/tioga"
+    url      = "https://github.com/jsitaraman/tioga.git"
 
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    # The master branch doesn't support CMake
+    version('develop', git="https://github.com/jsitaraman/tioga.git",
+            branch='nalu-api')
 
-    depends_on('java', type='run')
+    variant('shared', default=False,
+            description="Enable building shared libraries")
 
-    def install(self, spec, prefix):
+    depends_on('mpi')
 
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
+    # Tioga has the fortran module file problem with parallel builds
+    parallel = False
 
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+    def cmake_args(self):
+        spec = self.spec
+
+        options = [
+            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF')
+        ]
+
+        return options

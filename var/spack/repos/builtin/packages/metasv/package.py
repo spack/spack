@@ -23,42 +23,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Libharu(AutotoolsPackage):
-    """libharu - free PDF library.
+class Metasv(PythonPackage):
+    """An accurate and integrative structural-variant caller
+       for next generation sequencing"""
 
-    Haru is a free, cross platform, open-sourced software library for
-    generating PDF."""
+    homepage = "http://bioinform.github.io/metasv/"
+    url      = "https://github.com/bioinform/metasv/archive/0.5.4.tar.gz"
 
-    homepage = "http://libharu.org"
-    url      = "https://github.com/libharu/libharu/archive/RELEASE_2_3_0.tar.gz"
+    version('0.5.4', 'de2e21ac4f86bc4d1830bdfff95d8391')
 
-    version('2.3.0', '4f916aa49c3069b3a10850013c507460')
-    version('2.2.0', 'b65a6fc33a0bdad89bec6b7def101f01')
-    version('master', branch='master',
-            git='https://github.com/libharu/libharu.git')
-
-    depends_on('libpng')
-    depends_on('zlib')
-
-    def autoreconf(self, spec, prefix):
-        """execute their autotools wrapper script"""
-        if os.path.exists('./buildconf.sh'):
-            bash = which('bash')
-            bash('./buildconf.sh', '--force')
-
-    def configure_args(self):
-        """Point to spack-installed zlib and libpng"""
-        spec = self.spec
-        args = []
-
-        args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
-        args.append('--with-png={0}'.format(spec['libpng'].prefix))
-
-        return args
-
-    def url_for_version(self, version):
-        url = 'https://github.com/libharu/libharu/archive/RELEASE_{0}.tar.gz'
-        return url.format(version.underscored)
+    depends_on('py-pybedtools@0.6.9', type=('build', 'run'))
+    depends_on('py-pysam@0.7.7', type=('build', 'run'))
+    depends_on('py-pyvcf@0.6.7', type=('build', 'run'))

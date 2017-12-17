@@ -23,42 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+import distutils.dir_util
 
 
-class Libharu(AutotoolsPackage):
-    """libharu - free PDF library.
+class Mefit(Package):
+    """This pipeline will merge overlapping paired-end reads, calculate
+    merge statistics, and filter reads for quality."""
 
-    Haru is a free, cross platform, open-sourced software library for
-    generating PDF."""
+    homepage = "https://github.com/nisheth/MeFiT"
+    url      = "https://github.com/nisheth/MeFiT.git"
 
-    homepage = "http://libharu.org"
-    url      = "https://github.com/libharu/libharu/archive/RELEASE_2_3_0.tar.gz"
+    version('1.0', git='https://github.com/nisheth/MeFiT.git', commit='0733326d8917570bbf70ff5c0f710bf66c13db09')
 
-    version('2.3.0', '4f916aa49c3069b3a10850013c507460')
-    version('2.2.0', 'b65a6fc33a0bdad89bec6b7def101f01')
-    version('master', branch='master',
-            git='https://github.com/libharu/libharu.git')
+    depends_on('py-numpy')
+    depends_on('py-htseq')
+    depends_on('jellyfish')
+    depends_on('casper %gcc@4.8.5')
 
-    depends_on('libpng')
-    depends_on('zlib')
+    def install(self, spec, prefix):
+        distutils.dir_util.copy_tree(".", prefix)
 
-    def autoreconf(self, spec, prefix):
-        """execute their autotools wrapper script"""
-        if os.path.exists('./buildconf.sh'):
-            bash = which('bash')
-            bash('./buildconf.sh', '--force')
-
-    def configure_args(self):
-        """Point to spack-installed zlib and libpng"""
-        spec = self.spec
-        args = []
-
-        args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
-        args.append('--with-png={0}'.format(spec['libpng'].prefix))
-
-        return args
-
-    def url_for_version(self, version):
-        url = 'https://github.com/libharu/libharu/archive/RELEASE_{0}.tar.gz'
-        return url.format(version.underscored)
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.prefix)

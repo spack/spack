@@ -23,42 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Libharu(AutotoolsPackage):
-    """libharu - free PDF library.
+class Breakdancer(CMakePackage):
+    """BreakDancer-1.3.6, released under GPLv3, is a Cpp package that provides
+    genome-wide detection of structural variants from next generation
+    paired-end sequencing reads. It includes two complementary programs.
+    BreakDancerMax predicts five types of structural variants: insertions,
+    deletions, inversions, inter- and intra-chromosomal translocations from
+    next-generation short paired-end sequencing reads using read pairs that are
+    mapped with unexpected separation distances or orientation.
+    BreakDancerMini focuses on detecting small indels (usually between 10bp and
+    100bp) using normally mapped read pairs.."""
 
-    Haru is a free, cross platform, open-sourced software library for
-    generating PDF."""
+    homepage = "http://gmt.genome.wustl.edu/packages/breakdancer"
+    url      = "https://github.com/genome/breakdancer.git"
 
-    homepage = "http://libharu.org"
-    url      = "https://github.com/libharu/libharu/archive/RELEASE_2_3_0.tar.gz"
+    version('master', git='https://github.com/genome/breakdancer.git',
+            submodules='true')
 
-    version('2.3.0', '4f916aa49c3069b3a10850013c507460')
-    version('2.2.0', 'b65a6fc33a0bdad89bec6b7def101f01')
-    version('master', branch='master',
-            git='https://github.com/libharu/libharu.git')
-
-    depends_on('libpng')
     depends_on('zlib')
 
-    def autoreconf(self, spec, prefix):
-        """execute their autotools wrapper script"""
-        if os.path.exists('./buildconf.sh'):
-            bash = which('bash')
-            bash('./buildconf.sh', '--force')
-
-    def configure_args(self):
-        """Point to spack-installed zlib and libpng"""
-        spec = self.spec
-        args = []
-
-        args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
-        args.append('--with-png={0}'.format(spec['libpng'].prefix))
-
-        return args
-
-    def url_for_version(self, version):
-        url = 'https://github.com/libharu/libharu/archive/RELEASE_{0}.tar.gz'
-        return url.format(version.underscored)
+    parallel = False

@@ -23,42 +23,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class Libharu(AutotoolsPackage):
-    """libharu - free PDF library.
+class Signify(MakefilePackage):
+    """OpenBSD tool to signs and verify signatures on files."""
 
-    Haru is a free, cross platform, open-sourced software library for
-    generating PDF."""
+    homepage = "https://github.com/aperezdc/signify"
+    url      = "https://github.com/aperezdc/signify/archive/v23.tar.gz"
 
-    homepage = "http://libharu.org"
-    url      = "https://github.com/libharu/libharu/archive/RELEASE_2_3_0.tar.gz"
+    version('23', '0552295572a172740ae8427eb018ede8')
 
-    version('2.3.0', '4f916aa49c3069b3a10850013c507460')
-    version('2.2.0', 'b65a6fc33a0bdad89bec6b7def101f01')
-    version('master', branch='master',
-            git='https://github.com/libharu/libharu.git')
+    depends_on('libbsd@0.8:')
 
-    depends_on('libpng')
-    depends_on('zlib')
-
-    def autoreconf(self, spec, prefix):
-        """execute their autotools wrapper script"""
-        if os.path.exists('./buildconf.sh'):
-            bash = which('bash')
-            bash('./buildconf.sh', '--force')
-
-    def configure_args(self):
-        """Point to spack-installed zlib and libpng"""
-        spec = self.spec
-        args = []
-
-        args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
-        args.append('--with-png={0}'.format(spec['libpng'].prefix))
-
-        return args
-
-    def url_for_version(self, version):
-        url = 'https://github.com/libharu/libharu/archive/RELEASE_{0}.tar.gz'
-        return url.format(version.underscored)
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('PREFIX', self.prefix)
