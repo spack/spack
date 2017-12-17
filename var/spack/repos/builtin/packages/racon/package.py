@@ -22,27 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install racon
-#
-# You can edit this file again by typing:
-#
-#     spack edit racon
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
-
+import os
+import shutil
 
 class Racon(MakefilePackage):
     """Consensus module for raw de novo DNA assembly of long uncorrected
-    reads."""
+    reads.
+
+    If you encounter build errors related to using the generated tar.gz file,
+    try
+    spack clean --all."""
 
     homepage = "https://github.com/isovic/racon"
     url      = "https://github.com/isovic/racon"
@@ -61,5 +51,6 @@ class Racon(MakefilePackage):
         make('tools')
         make()
 
+    # from https://github.com/spack/spack/issues/31
     def install(self, spec, prefix):
-        make('prefix={0}'.format(self.prefix),'install')
+        shutil.copytree('bin',os.path.join(prefix,'bin'),symlinks=True)
