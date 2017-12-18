@@ -1346,7 +1346,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 # In case the stage directory has already been created,
                 # this ensures it's removed after we checked that the spec
                 # is installed
-                self.stage.destroy()
+                if keep_stage is False:
+                    self.stage.destroy()
+
                 return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
