@@ -221,7 +221,7 @@ echo $PATH"""
 def test_relocate_text(tmpdir):
     # Validate the text path replacement
     old_dir = '/home/spack/opt/spack'
-    filename = str(tmpdir)+'/dummy.txt'
+    filename = str(tmpdir) + '/dummy.txt'
     with open(filename, "w") as script:
         script.write(old_dir)
         script.close()
