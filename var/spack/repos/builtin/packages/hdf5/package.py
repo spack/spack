@@ -27,6 +27,7 @@ import shutil
 import sys
 import os
 
+
 class Hdf5(AutotoolsPackage):
 
     """HDF5 is a data model, library, and file format for storing and managing
@@ -219,7 +220,6 @@ class Hdf5(AutotoolsPackage):
             CXXFLAGS.append(self.compiler.pic_flag)
             FFLAGS.append(self.compiler.pic_flag)
 
-
         if '+mpi' in self.spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
             # together. There doesn't seem to be a real reason for this, except
@@ -240,7 +240,6 @@ class Hdf5(AutotoolsPackage):
             CXXFLAGS.append(os.environ['CXXFLAGS'])
             FFLAGS.append(os.environ['FFLAGS'])
             LDFLAGS.append(os.environ['LDFLAGS'])
-
 
         extra_args.append('CFLAGS=' + (' '.join(CFLAGS)))
         extra_args.append('CXXFLAGS=' + (' '.join(CXXFLAGS)))
