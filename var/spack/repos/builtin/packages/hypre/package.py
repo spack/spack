@@ -78,6 +78,21 @@ class Hypre(Package):
             os.environ['CXX'] = spec['mpi'].mpicxx
             os.environ['F77'] = spec['mpi'].mpif77
             configure_args.append('--with-MPI')
+            # If using mpi, explicitly pass in compiler flags
+            spack_cflags = " ".join(self.spec.compiler_flags['cflags'])
+            spack_cxxflags = " ".join(self.spec.compiler_flags['cxxflags'])
+            spack_cppflags = " ".join(self.spec.compiler_flags['cppflags'])
+            spack_fflags = " ".join(self.spec.compiler_flags['fflags'])
+            spack_ldflags = " ".join(self.spec.compiler_flags['ldflags'])
+            spack_ldlibs = " ".join(self.spec.compiler_flags['ldlibs'])
+
+            configure_args.append("CFLAGS=%s" % spack_cflags)
+            configure_args.append("CXXFLAGS=%s" % spack_cxxflags)
+            configure_args.append("CPPFLAGS=%s" % spack_cppflags)
+            configure_args.append("FFLAGS=%s" % spack_fflags)
+            configure_args.append("LDFLAGS=%s" % spack_ldflags)
+            configure_args.append("LIBS=%s" % spack_ldlibs)
+
         else:
             configure_args.append('--without-MPI')
 
