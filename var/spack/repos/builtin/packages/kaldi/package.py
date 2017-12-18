@@ -98,7 +98,8 @@ class Kaldi(Package):    # Does not use Autotools
             mkdirp(prefix.bin)
             for root, dirs, files in os.walk('.'):
                 for name in files:
-                    if name.endswith(".so") or name.endswith(".cc") or name.endswith(".pptx"):
+                    if name.endswith(".so") or name.endswith(".cc") \
+                            or name.endswith(".pptx"):
                         continue
                     if "configure" is name:
                         continue
