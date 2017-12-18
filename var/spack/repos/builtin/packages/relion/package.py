@@ -35,8 +35,7 @@ class Relion(CMakePackage):
     url      = "https://github.com/3dem/relion"
 
     version('2.0.3', git='https://github.com/3dem/relion.git', tag='2.0.3')
-    version('2.1', git='https://github.com/3dem/relion.git', tag='2.1',
-        preferred='true')
+    version('2.1', git='https://github.com/3dem/relion.git', tag='2.1')
     version('develop', git='https://github.com/3dem/relion.git')
 
     variant('gui', default=True, description="build the gui")
