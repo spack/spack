@@ -25,28 +25,23 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class Breakdancer(CMakePackage):
+    """BreakDancer-1.3.6, released under GPLv3, is a Cpp package that provides
+    genome-wide detection of structural variants from next generation
+    paired-end sequencing reads. It includes two complementary programs.
+    BreakDancerMax predicts five types of structural variants: insertions,
+    deletions, inversions, inter- and intra-chromosomal translocations from
+    next-generation short paired-end sequencing reads using read pairs that are
+    mapped with unexpected separation distances or orientation.
+    BreakDancerMini focuses on detecting small indels (usually between 10bp and
+    100bp) using normally mapped read pairs.."""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "http://gmt.genome.wustl.edu/packages/breakdancer"
+    url      = "https://github.com/genome/breakdancer.git"
 
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('master', git='https://github.com/genome/breakdancer.git',
+            submodules='true')
 
-    depends_on('java', type='run')
+    depends_on('zlib')
 
-    def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+    parallel = False

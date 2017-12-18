@@ -25,28 +25,24 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class Pandaseq(AutotoolsPackage):
+    """PANDASEQ is a program to align Illumina reads, optionally with PCR
+    primers embedded in the sequence, and reconstruct an overlapping
+    sequence."""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "https://github.com/neufeld/pandaseq"
+    url      = "https://github.com/neufeld/pandaseq/archive/v2.11.tar.gz"
 
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('2.11', 'a8ae0e938bac592fc07dfa668147d80b')
+    version('2.10', '5b5b04c9b693a999f10a9c9bd643f068')
 
-    depends_on('java', type='run')
+    depends_on('autoconf',    type='build')
+    depends_on('automake',    type='build')
+    depends_on('libtool',     type='build')
+    depends_on('m4',          type='build')
+    depends_on('zlib',        type='build')
+    depends_on('pkg-config',  type='build')
 
-    def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        bash('./autogen.sh')

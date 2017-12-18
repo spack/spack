@@ -25,30 +25,15 @@
 from spack import *
 
 
-class PyPandas(PythonPackage):
-    """pandas is a Python package providing fast, flexible, and expressive
-       data structures designed to make working with relational or
-       labeled data both easy and intuitive. It aims to be the
-       fundamental high-level building block for doing practical, real
-       world data analysis in Python. Additionally, it has the broader
-       goal of becoming the most powerful and flexible open source data
-       analysis / manipulation tool available in any language.
+class PyBxPython(PythonPackage):
+    """The bx-python project is a python library and associated set of scripts
+    to allow for rapid implementation of genome scale analyses."""
 
-    """
-    homepage = "http://pandas.pydata.org/"
-    url = "https://pypi.io/packages/source/p/pandas/pandas-0.19.0.tar.gz"
+    homepage = "https://github.com/bxlab/bx-python"
+    url      = "https://github.com/bxlab/bx-python/archive/v0.7.4.tar.gz"
 
-    version('0.21.1', '42ae7f81b81a86c3f91f663b66c525f7')
-    version('0.19.2', '26df3ef7cd5686fa284321f4f48b38cd')
-    version('0.19.0', 'bc9bb7188e510b5d44fbdd249698a2c3')
-    version('0.18.0', 'f143762cd7a59815e348adf4308d2cf6')
-    version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
-    version('0.16.0', 'bfe311f05dc0c351f8955fbd1e296e73')
+    version('0.7.4', 'a47b8cc55c104ac97440c6cc62be8697')
 
-    depends_on('py-dateutil', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython', type='build')
-    depends_on('py-pytz', type=('build', 'run'))
-    depends_on('py-numexpr', type=('build', 'run'))
-    depends_on('py-bottleneck', type=('build', 'run'))
+    depends_on('py-numpy',      type=('build', 'run'))
+    depends_on('py-six',        type=('build', 'run'))

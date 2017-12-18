@@ -23,30 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import distutils.dir_util
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class Mefit(Package):
+    """This pipeline will merge overlapping paired-end reads, calculate
+    merge statistics, and filter reads for quality."""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "https://github.com/nisheth/MeFiT"
+    url      = "https://github.com/nisheth/MeFiT.git"
 
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('1.0', git='https://github.com/nisheth/MeFiT.git', commit='0733326d8917570bbf70ff5c0f710bf66c13db09')
 
-    depends_on('java', type='run')
+    depends_on('py-numpy')
+    depends_on('py-htseq')
+    depends_on('jellyfish')
+    depends_on('casper %gcc@4.8.5')
 
     def install(self, spec, prefix):
+        distutils.dir_util.copy_tree(".", prefix)
 
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.prefix)

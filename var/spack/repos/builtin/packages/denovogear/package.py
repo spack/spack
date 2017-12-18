@@ -25,28 +25,19 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class Denovogear(CMakePackage):
+    """DeNovoGear is a software package to detect de novo mutations using
+    next-generation sequencing data. It supports the analysis of many
+    differential experimental designs and uses advanced statistical models
+    to reduce the false positve rate."""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "https://github.com/denovogear/denovogear"
+    url      = "https://github.com/denovogear/denovogear/archive/v1.1.1.tar.gz"
 
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('1.1.1', 'da30e46851c3a774653e57f98fe62e5f')
+    version('1.1.0', '7d441d56462efb7ff5d3a6f6bddfd8b9')
 
-    depends_on('java', type='run')
-
-    def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+    depends_on('cmake@3.1:', type=('build'))
+    depends_on('boost@1.47:1.60', type=('build'))
+    depends_on('htslib@1.2:', type=('build'))
+    depends_on('eigen', type=('build'))

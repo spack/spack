@@ -25,28 +25,14 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class PyMoltemplate(PythonPackage):
+    """Moltemplate is a general cross-platform text-based molecule builder for
+    LAMMPS."""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "http://moltemplate.org"
+    url      = "https://github.com/jewettaij/moltemplate/archive/v2.5.8.tar.gz"
 
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('2.5.8', '9e127a254a206222e8a31684780f8dba')
 
-    depends_on('java', type='run')
-
-    def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+    depends_on('python@2.7:',   type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))

@@ -25,28 +25,18 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class PyTetoolkit(PythonPackage):
+    """TEToolkit is a software package that utilizes both unambiguously
+       (uniquely) and ambiguously (multi-) mapped reads to perform
+       differential enrichment analyses from high throughput sequencing
+       experiments."""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "http://hammelllab.labsites.cshl.edu/software"
+    url      = "https://pypi.io/packages/source/T/TEToolkit/TEToolkit-1.5.1.tar.gz"
 
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('1.5.1', '05745b2d5109911e95593e423446a831')
 
-    depends_on('java', type='run')
-
-    def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+    depends_on('py-setuptools')
+    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('py-pysam', type=('build', 'run'))
+    depends_on('r-deseq', type=('build', 'run'))

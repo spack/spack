@@ -25,28 +25,20 @@
 from spack import *
 
 
-class Hadoop(Package):
-    """The Apache Hadoop software library is a framework that
-    allows for the distributed processing of large data sets
-    across clusters of computers using simple programming models.
-    """
+class Breseq(AutotoolsPackage):
+    """breseq is a computational pipeline for finding mutations relative to a
+    reference sequence in short-read DNA re-sequencing data for haploid
+    microbial-sized genomes."""
 
-    homepage = "http://hadoop.apache.org/"
-    url      = "http://mirrors.ocf.berkeley.edu/apache/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz"
+    homepage = "http://barricklab.org/breseq"
+    url      = "https://github.com/barricklab/breseq/archive/v0.31.1.tar.gz"
 
-    version('2.9.0', 'b443ead81aa2bd5086f99e62e66a8f64')
+    version('0.31.1', 'a4e602d5481f8692833ba3d5a3cd0394')
 
-    depends_on('java', type='run')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
 
-    def install(self, spec, prefix):
-
-        def install_dir(dirname):
-            install_tree(dirname, join_path(prefix, dirname))
-
-        install_dir('bin')
-        install_dir('etc')
-        install_dir('include')
-        install_dir('lib')
-        install_dir('libexec')
-        install_dir('sbin')
-        install_dir('share')
+    depends_on('bedtools2', type='run')
+    depends_on('r', type='run')
