@@ -25,9 +25,10 @@
 from spack import *
 import shutil
 import sys
-
+import os
 
 class Hdf5(AutotoolsPackage):
+
     """HDF5 is a data model, library, and file format for storing and managing
     data. It supports an unlimited variety of datatypes, and is designed for
     flexible and efficient I/O and for high volume and complex data.
@@ -170,6 +171,11 @@ class Hdf5(AutotoolsPackage):
             raise RuntimeError(msg)
 
     def configure_args(self):
+        CFLAGS = []
+        CXXFLAGS = []
+        FFLAGS = []
+        LDFLAGS = []
+
         # Always enable this option. This does not actually enable any
         # features: it only *allows* the user to specify certain
         # combinations of other arguments. Enabling it just skips a
@@ -209,8 +215,10 @@ class Hdf5(AutotoolsPackage):
             extra_args.append('--enable-static-exec')
 
         if '+pic' in self.spec:
-            extra_args += ['%s=%s' % (f, self.compiler.pic_flag)
-                           for f in ['CFLAGS', 'CXXFLAGS', 'FCFLAGS']]
+            CFLAGS.append(self.compiler.pic_flag)
+            CXXFLAGS.append(self.compiler.pic_flag)
+            FFLAGS.append(self.compiler.pic_flag)
+
 
         if '+mpi' in self.spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
@@ -226,6 +234,18 @@ class Hdf5(AutotoolsPackage):
 
             if '+fortran' in self.spec:
                 extra_args.append('FC=%s' % self.spec['mpi'].mpifc)
+
+            # If using mpi, explicitly pass in compiler flags
+            CFLAGS.append(os.environ['CFLAGS'])
+            CXXFLAGS.append(os.environ['CXXFLAGS'])
+            FFLAGS.append(os.environ['FFLAGS'])
+            LDFLAGS.append(os.environ['LDFLAGS'])
+
+
+        extra_args.append('CFLAGS=' + (' '.join(CFLAGS)))
+        extra_args.append('CXXFLAGS=' + (' '.join(CXXFLAGS)))
+        extra_args.append('FCFLAGS=' + (' '.join(FFLAGS)))
+        extra_args.append('LDFLAGS=' + (' '.join(LDFLAGS)))
 
         extra_args.append('--with-zlib=%s' % self.spec['zlib'].prefix)
 
