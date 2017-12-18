@@ -43,8 +43,7 @@ from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import strings_contains_installroot
-from spack.relocate import get_patchelf, get_existing_elf_rpaths
-from spack.relocate import relocate_binary, relocate_text
+from spack.relocate import get_patchelf, relocate_text
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
@@ -63,19 +62,6 @@ def has_gnupg2():
         spack.util.gpg.Gpg.gpg()('--version', output=os.devnull)
         return True
     except ProcessError:
-        return False
-
-
-def has_patchelf():
-    """
-    Returns the full patchelf binary path if available.
-    """
-    # as we may need patchelf, find out where it is
-    patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
-    patchelf = spack.repo.get(patchelf_spec)
-    if patchelf.installed:
-        return True
-    else:
         return False
 
 
@@ -232,10 +218,10 @@ echo $PATH"""
     stage.destroy()
 
 
-def test_relocate_text():
+def test_relocate_text(tmpdir):
     # Validate the text path replacement
     old_dir = '/home/spack/opt/spack'
-    filename = 'dummy.txt'
+    filename = str(tmpdir)+'/dummy.txt'
     with open(filename, "w") as script:
         script.write(old_dir)
         script.close()
@@ -244,7 +230,9 @@ def test_relocate_text():
     new_dir = '/opt/rh/devtoolset/'
     relocate_text(filenames, old_dir, new_dir)
 
-    with open(filename, "r")as script:
+    assert(strings_contains_installroot(filename) is False)
+
+    with open(filename, "r") as script:
         for line in script:
             assert(new_dir in line)
 
@@ -347,23 +335,6 @@ def test_elf_paths():
     out = substitute_rpath(
         ('/usr/lib', '/usr/lib64', '/opt/local/lib'), '/usr', '/opt')
     assert out == ['/opt/lib', '/opt/lib64', '/opt/local/lib']
-
-
-@pytest.mark.skipif(sys.platform == 'darwin',
-                    reason="only works with ELF objects")
-def test_empty_rpath(tmpdir):
-    patchelf = has_patchelf()
-    if patchelf:
-        paths = get_existing_elf_rpaths('/bin/bash')
-        assert (paths is None)
-        relocate_binary(('/bin/bash', 'bin/sh'), '/lib', '/opt/lib')
-        paths = get_existing_elf_rpaths('/bin/bash')
-        assert (paths is None)
-        with tmpdir.as_cwd():
-            shutil.copyfile('/bin/bash', 'bash')
-            paths = get_existing_elf_rpaths('bash')
-            relocate_binary('bash', '/usr', '/opt')
-            assert (strings_contains_installroot('bash') in False)
 
 
 @pytest.mark.skipif(sys.platform != 'darwin',

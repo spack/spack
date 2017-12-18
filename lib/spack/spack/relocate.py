@@ -58,9 +58,11 @@ def get_existing_elf_rpaths(path_name):
     if platform.system() == 'Linux':
         command = Executable(get_patchelf())
         output = command('--print-rpath', '%s' %
-                         path_name, output=str, err=str)
-        output = output.strip()  # remove all leading/trailing whitespace
-        return output.split(':')
+                         path_name, output=str, error=str)
+        if command.returncode == 0:
+            return output.rstrip('\n').split(':')
+        else:
+            return []
     else:
         tty.die('relocation not supported for this platform')
     return
@@ -194,7 +196,7 @@ def get_filetype(path_name):
     file = Executable('file')
     file.add_default_env('LC_ALL', 'C')
     output = file('-b', '-h', '%s' % path_name,
-                  output=str, err=str)
+                  output=str, error=str)
     return output.strip()
 
 
@@ -208,12 +210,12 @@ def strings_contains_installroot(path_name):
     return (spack.store.layout.root in output)
 
 
-def modify_elf_object(path_name, orig_rpath, new_rpath):
+def modify_elf_object(path_name, new_rpaths):
     """
     Replace orig_rpath with new_rpath in RPATH of elf object path_name
     """
     if platform.system() == 'Linux':
-        new_joined = ':'.join(new_rpath)
+        new_joined = ':'.join(new_rpaths)
         patchelf = Executable(get_patchelf())
         try:
             patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
@@ -273,7 +275,7 @@ def relocate_binary(path_names, old_dir, new_dir):
             orig_rpaths = get_existing_elf_rpaths(path_name)
             if orig_rpaths:
                 new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
-                modify_elf_object(path_name, orig_rpaths, new_rpaths)
+                modify_elf_object(path_name, new_rpaths)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
@@ -298,7 +300,7 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
             if orig_rpaths:
                 new_rpaths = get_relative_rpaths(orig_path, old_dir,
                                                  orig_rpaths)
-                modify_elf_object(cur_path, orig_rpaths, new_rpaths)
+                modify_elf_object(cur_path, new_rpaths)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
