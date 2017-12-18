@@ -189,7 +189,7 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
 
 def get_filetype(path_name):
     """
-    Return the output of file path_name as a string to identify file type
+    Return the output of file path_name as a string to identify file type.
     """
     file = Executable('file')
     file.add_default_env('LC_ALL', 'C')
@@ -246,7 +246,7 @@ def needs_binary_relocation(filetype, os_id=None):
 
 def needs_text_relocation(filetype):
     """
-    Check whether the given file has text that may need relocation.
+    Check whether the given filetype is text that may need relocation.
     """
     if "link to" in filetype:
         return False
