@@ -232,6 +232,7 @@ def test_relocate_text(tmpdir):
         with open(filename, "r")as script:
             for line in script:
                 assert(new_dir in line)
+        assert(strings_contains_installroot(filename) is False)
 
 
 def test_needs_relocation():
