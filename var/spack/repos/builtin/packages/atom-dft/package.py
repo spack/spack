@@ -41,12 +41,12 @@ class AtomDft(MakefilePackage):
 
     def edit(self, spec, prefix):
         shutil.copyfile('arch.make.sample', 'arch.make')
-        makefile = FileFilter('arch.make')
-        makefile.filter('XMLF90_ROOT=.*', 'XMLF90_ROOT = %s' %
-                        spec['xmlf90'].prefix)
-        makefile.filter('GRIDXC_ROOT=.*', 'GRIDXC_ROOT = %s' %
-                        spec['libgridxc'].prefix)
-        makefile.filter('FC=.*', 'FC = fc')
+
+    @property
+    def build_targets(self):
+        return ['XMLF90_ROOT=%s' % self.spec['xmlf90'].prefix,
+                'GRIDXC_ROOT=%s' % self.spec['libgridxc'].prefix,
+                'FC=fc']
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
