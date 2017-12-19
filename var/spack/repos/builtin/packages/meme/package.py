@@ -39,17 +39,19 @@ class Meme(AutotoolsPackage):
     variant('mpi', default=True, description='Enable MPI support')
 
     depends_on('zlib', type=('link'))
-    depends_on('libxml2', type=('link'))
-    depends_on('libxslt', type=('link'))
     depends_on('libgcrypt', type=('link'))
     depends_on('perl', type=('build', 'run'))
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('mpi', when='+mpi')
+    depends_on('image-magick', type=('run'))
+    depends_on('ghostscript', type=('run'))
+    depends_on('perl-xml-parser', type=('run'))
 
     # disable mpi support
     def configure_args(self):
         spec = self.spec
         args = []
+        args += ['--enable-build-libxml2 --enable-build-libxslt']
         if '~mpi' in spec:
             args += ['--enable-serial']
         return args
