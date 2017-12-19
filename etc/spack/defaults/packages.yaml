@@ -21,7 +21,7 @@ packages:
       blas: [openblas]
       daal: [intel-daal]
       elf: [elfutils]
-      gl: [opengl]
+      gl: [opengl, mesa]
       golang: [gcc]
       ipp: [intel-ipp]
       java: [jdk]
@@ -37,7 +37,3 @@ packages:
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       jpeg: [libjpeg-turbo, libjpeg]
-  opengl:
-    paths:
-      opengl: /usr
-    buildable: False
