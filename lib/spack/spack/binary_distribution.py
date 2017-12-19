@@ -111,6 +111,9 @@ def write_buildinfo_file(prefix, workdir, rel=False):
         dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
+            #  Check if the file contains a string with the installroot.
+            #  This cuts down on the number of files added to the list
+            #  of files potentially needing relocation
             if relocate.strings_contains_installroot(path_name):
                 filetype = relocate.get_filetype(path_name)
                 if relocate.needs_binary_relocation(filetype, os_id):
