@@ -166,9 +166,9 @@ def set_compiler_environment_variables(pkg, env):
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         injf, envf, bsf = pkg.flag_handler(flag, pkg.spec.compiler_flags[flag])
-        inject_flags[flag] = [] if injf is None else injf
-        env_flags[flag] = [] if envf is None else envf
-        build_system_flags[flag] = [] if bsf is None else bsf
+        inject_flags[flag] = injf or []
+        env_flags[flag] = envf or []
+        build_system_flags[flag] = bsf or []
 
     # Place compiler flags as specified by flag_handler
     for flag in spack.spec.FlagMap.valid_compiler_flags():
