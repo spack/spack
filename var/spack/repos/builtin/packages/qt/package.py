@@ -126,8 +126,7 @@ class Qt(Package):
     depends_on("python", when='@5.7.0:', type='build')
 
     # OpenGL hardware acceleration
-    depends_on("mesa", when='@4:+opengl')
-
+    depends_on("gl@3.2:", when='@4:+opengl')
     depends_on("libxcb", when=sys.platform != 'darwin')
     depends_on("libx11", when=sys.platform != 'darwin')
 
