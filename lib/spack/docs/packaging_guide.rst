@@ -2539,9 +2539,11 @@ Compiler flags
 Compiler flags set by the user through the Spec object can be passed
 to the build in one of three ways. By default, the build environment
 injects these flags directly into the compiler commands using Spack's
-compiler wrappers. The flags may alternatively be passed through
-environment variables or through build system arguments. The
-flag_handler method can be used to change this behavior.
+compiler wrappers. In cases where the build system requires knowledge
+of the compiler flags, they can be registered with the build system by
+alternatively passing them through environment variables or as build
+system arguments. The flag_handler method can be used to change this
+behavior.
 
 Packages can override the flag_handler method with one of three
 builtin flag_handlers. The builtin flag_handlers are named
@@ -2549,10 +2551,15 @@ builtin flag_handlers. The builtin flag_handlers are named
 ``inject_flags`` method is the default. The ``env_flags`` method puts
 all of the flags into the environment variables that ``make`` uses as
 implicit variables ('CFLAGS', 'CXXFLAGS', etc.). The
-``build_system_flags`` method is only available for
-``AutotoolsPackage`` and ``CMakePackage``. It adds the flags as
+``build_system_flags`` method adds the flags as
 arguments to the invocation of ``configure`` or ``cmake``,
 respectively.
+
+.. warning::
+
+   Passing compiler flags using build system arguments is only
+   supported for CMake and Autotools packages. Individual packages may
+   also differ in whether they properly respect these arguments.
 
 Individual packages may also define their own ``flag_handler``
 methods. The ``flag_handler`` method takes the package instance
@@ -2560,11 +2567,15 @@ methods. The ``flag_handler`` method takes the package instance
 flag. It will be called on each of the six compiler flags supported in
 Spack. It should return a triple of ``(injf, envf, bsf)`` where
 ``injf`` is a list of flags to inject via the Spack compiler wrappers,
-``envf`` is a list of flags to pass to the build system through the
-environment using implicit variables, and ``bsf`` is a list of flags
-to pass to the build system as arguments. If ``bsf`` is non-empty in a
-package that does not support ``build_system_flags``, the build
-environment will raise a ``NotImplementedError`` .
+``envf`` is a list of flags to set in the appropriate environment
+variables, and ``bsf`` is a list of flags to pass to the build system
+as arguments.
+
+.. warning::
+
+   Passing a non-empty list of flags to ``bsf`` for a build system
+   that does not support build system arguments will result in an
+   error.
 
 Here are the definitions of the three builtin flag handlers:
 
@@ -2579,17 +2590,20 @@ Here are the definitions of the three builtin flag handlers:
    def build_system_flags(self, name, flags):
        return (None, None, flags)
 
-Note that it would be equivalent to return ``[]`` instead of ``None``.
+.. note::
+
+   Returning ``[]`` and ``None`` are equivalent in a ``flag_handler``
+   method.
 
 Packages can override the default behavior either by specifying one of
-the builtin flag handlers
+the builtin flag handlers,
 
 .. code-block:: python
 
    flag_handler = <PackageClass>.env_flags
 
 where ``<PackageClass>`` can be any of the subclasses of PackageBase
-discussed in :ref:`installation_procedure`.
+discussed in :ref:`installation_procedure`,
 
 or by implementing the flag_handler method. Suppose for a package
 ``Foo`` we need to pass ``cflags``, ``cxxflags``, and ``cppflags``
@@ -2607,17 +2621,19 @@ following flag handler method accomplishes that.
        return (flags, None, None)
 
 Because these methods can pass values through environment variables,
-it is important not to override these variables unnecessarily in other
-package methods. In the ``setup_environment`` and
+it is important not to override these variables unnecessarily
+(E.g. setting ``env['CFLAGS']``) in other package methods when using
+non-default flag handlers. In the ``setup_environment`` and
 ``setup_dependent_environment`` methods, use the ``append_flags``
 method of the ``EnvironmentModifications`` class to append values to a
 list of flags whenever the flag handler is ``env_flags``. If the
 package passes flags through the environment or the build system
 manually (in the install method, for example), we recommend using the
-default flag handler or rewriting the package to pass its flags
-through the flag handler rather than manually. Manual flag passing is
-likely to interfere with the ``env_flags`` and ``build_system_flags``
-methods.
+default flag handler, or removind manual references and implementing a
+custom flag handler method that adds the desired flags to export as
+environment variables or pass to the build system. Manual flag passing
+is likely to interfere with the ``env_flags`` and
+``build_system_flags`` methods.
 
 In rare circumstances such as compiling and running small unit tests, a
 package developer may need to know what are the appropriate compiler
