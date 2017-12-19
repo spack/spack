@@ -57,6 +57,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
+    variant('gmsh',     default=False,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
@@ -120,6 +121,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
+    depends_on('gmsh',             when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
     depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
     depends_on('cuda@8:',          when='+cuda')
@@ -150,6 +152,7 @@ class Dealii(CMakePackage, CudaPackage):
 
     # check that the combination of variants makes sense
     conflicts('+assimp', when='@:8.5.1')
+    conflicts('+gmsh', when='@:8.5.1')
     conflicts('+nanoflann', when='@:8.5.1')
     conflicts('+scalapack', when='@:8.5.1')
     conflicts('+sundials', when='@:8.5.1')
@@ -266,7 +269,7 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann', 'assimp'):
+                'sundials', 'nanoflann', 'assimp', 'gmsh'):
             if library in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
