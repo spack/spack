@@ -28,7 +28,7 @@ import platform
 import re
 import spack
 import spack.cmd
-from spack.util.executable import Executable
+from spack.util.executable import Executable, ProcessError
 from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
 
@@ -56,12 +56,14 @@ def get_existing_elf_rpaths(path_name):
     as a list of strings.
     """
     if platform.system() == 'Linux':
-        command = Executable(get_patchelf())
-        output = command('--print-rpath', '%s' %
-                         path_name, output=str, error=str)
-        if command.returncode == 0:
+        patchelf = Executable(get_patchelf())
+        try:
+            output = patchelf('--print-rpath', '%s' %
+                              path_name, output=str, error=str)
             return output.rstrip('\n').split(':')
-        else:
+        except ProcessError as e:
+            tty.debug('patchelf --print-rpath produced an error on %s' %
+                      path_name, e)
             return []
     else:
         tty.die('relocation not supported for this platform')
@@ -220,9 +222,9 @@ def modify_elf_object(path_name, new_rpaths):
         try:
             patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
                      '%s' % path_name, output=str, error=str)
-        except Exception:
-            tty.warn('patchelf --set-rpath %s %s failed' %
-                     (new_joined, path_name))
+        except ProcessError as e:
+            tty.warn('patchelf --set-rpath %s failed' %
+                     path_name, e)
             pass
     else:
         tty.die('relocation not supported for this platform')
