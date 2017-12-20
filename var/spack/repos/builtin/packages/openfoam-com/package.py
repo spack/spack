@@ -165,12 +165,12 @@ def write_environ(environ, **kwargs):
          posix[=None]    If set, the name of the POSIX file to rewrite.
          cshell[=None]   If set, the name of the C-shell file to rewrite.
     """
-    posix = kwargs.get('posix', None)
-    if posix:
-        _write_environ_file(posix, environ, format_export)
-    cshell = kwargs.get('cshell', None)
-    if cshell:
-        _write_environ_file(cshell, environ, format_setenv)
+    rcfile = kwargs.get('posix', None)
+    if rcfile:
+        _write_environ_file(rcfile, environ, format_export)
+    rcfile = kwargs.get('cshell', None)
+    if rcfile:
+        _write_environ_file(rcfile, environ, format_setenv)
 
 
 def rewrite_environ_files(environ, **kwargs):
@@ -179,22 +179,29 @@ def rewrite_environ_files(environ, **kwargs):
          posix[=None]    If set, the name of the POSIX file to rewrite.
          cshell[=None]   If set, the name of the C-shell file to rewrite.
     """
-    posix = kwargs.get('posix', None)
-    if posix and os.path.isfile(posix):
+    rcfile = kwargs.get('posix', None)
+    if rcfile and os.path.isfile(rcfile):
         for k, v in environ.items():
-            filter_file(
-                r'^(\s*export\s+%s)=.*$' % k,
-                r'\1=%s' % v,
-                posix,
-                backup=False)
-    cshell = kwargs.get('cshell', None)
-    if cshell and os.path.isfile(cshell):
+            regex = r'^(\s*export\s+{0})=.*$'.format(k)
+            if not v:
+                replace = r'unset {0}  #SPACK: unset'.format(k)
+            elif v.startswith('#'):
+                replace = r'unset {0}  {1}'.format(k, v)
+            else:
+                replace = r'\1={0}'.format(v)
+            filter_file(regex, replace, rcfile, backup=False)
+
+    rcfile = kwargs.get('cshell', None)
+    if rcfile and os.path.isfile(rcfile):
         for k, v in environ.items():
-            filter_file(
-                r'^(\s*setenv\s+%s)\s+.*$' % k,
-                r'\1 %s' % v,
-                cshell,
-                backup=False)
+            regex = r'^(\s*setenv\s+{0})\s+.*$'.format(k)
+            if not v:
+                replace = r'unsetenv {0}  #SPACK: unset'.format(k)
+            elif v.startswith('#'):
+                replace = r'unsetenv {0}  {1}'.format(k, v)
+            else:
+                replace = r'\1 {0}'.format(v)
+            filter_file(regex, replace, rcfile, backup=False)
 
 
 def foamAddPath(*args):
@@ -222,8 +229,8 @@ def pkglib(package, pre=None):
 
 
 def mplib_content(spec, pre=None):
-    """The mpi settings to have wmake
-    use spack information with minimum modifications to OpenFOAM.
+    """The mpi settings (from spack) for the OpenFOAM wmake includes, which
+    allows later reuse within OpenFOAM.
 
     Optional parameter 'pre' to provide alternative prefix
     """
@@ -231,6 +238,11 @@ def mplib_content(spec, pre=None):
     bin = mpi_spec.prefix.bin
     inc = mpi_spec.prefix.include
     lib = pkglib(mpi_spec)
+
+    libname = 'mpi'
+    if 'mpich' in mpi_spec.name:
+        libname = 'mpich'
+
     if pre:
         bin = join_path(pre, os.path.basename(bin))
         inc = join_path(pre, os.path.basename(inc))
@@ -244,9 +256,9 @@ def mplib_content(spec, pre=None):
         'include': inc,
         'bindir':  bin,
         'libdir':  lib,
-        'FLAGS':  '-DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK',
+        'FLAGS':  '-DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX',
         'PINC':   '-I{0}'.format(inc),
-        'PLIBS':  '-L{0} -lmpi'.format(lib),
+        'PLIBS':  '-L{0} -l{1}'.format(lib, libname),
     }
     return info
 
@@ -296,8 +308,9 @@ class OpenfoamCom(Package):
     provides('openfoam')
     depends_on('mpi')
 
-    # After 1712 require openmpi+thread_multiple for collated output
-    conflicts('^openmpi~thread_multiple', when='@1712:')
+    # After 1712, could suggest openmpi+thread_multiple for collated output
+    # but particular mixes of mpi versions and InfiniBand may not work so well
+    # conflicts('^openmpi~thread_multiple', when='@1712:')
 
     depends_on('zlib')
     depends_on('fftw')
@@ -339,11 +352,7 @@ class OpenfoamCom(Package):
     patch('1612-mgridgen-lib.patch', when='@1612')
     patch('1612-scotch-metis-lib.patch', when='@1612')
     patch('1612-zoltan-lib.patch', when='@1612')
-
-    # This patch is reasonably version-invariant
-    # 1) default site directly under WM_PROJECT_DIR
-    # 2) no FOAM_EXT_LIBBIN required
-    patch('openfoam-site.patch', when='@1706:')
+    patch('1706-site.patch', when='@1706')
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
@@ -474,12 +483,21 @@ class OpenfoamCom(Package):
         # Filtering: bashrc,cshrc (using a patch is less flexible)
         edits = {
             'WM_THIRD_PARTY_DIR':
-            r'$WM_PROJECT_DIR/ThirdParty #SPACK: No separate third-party',
+            r'$WM_PROJECT_DIR/ThirdParty  #SPACK: No separate third-party',
         }
-        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+        rewrite_environ_files(  # etc/{bashrc,cshrc}
             edits,
             posix=join_path('etc', 'bashrc'),
             cshell=join_path('etc', 'cshrc'))
+
+        # Filtering: settings
+        edits = {
+            'FOAM_EXT_LIBBIN': '#SPACK: No separate third-party',  # ie, unset
+        }
+        rewrite_environ_files(  # etc/config.{csh,sh}/settings
+            edits,
+            posix=join_path('etc', 'config.sh', 'settings'),
+            cshell=join_path('etc', 'config.csh', 'settings'))
 
     def configure(self, spec, prefix):
         """Make adjustments to the OpenFOAM configuration files in their various
@@ -490,7 +508,7 @@ class OpenfoamCom(Package):
         # Filtering bashrc, cshrc
         edits = {}
         edits.update(self.foam_arch.foam_dict())
-        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+        rewrite_environ_files(  # etc/{bashrc,cshrc}
             edits,
             posix=join_path('etc', 'bashrc'),
             cshell=join_path('etc', 'cshrc'))
