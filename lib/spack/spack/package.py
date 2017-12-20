@@ -1740,6 +1740,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #  package subclass to be turned into the appropriate part of the standard
     #  arguments. This is implemented for build system classes where
     #  appropriate and will otherwise raise a NotImplementedError.
+
     def flags_to_build_system_args(self, flags):
         # Takes flags as a dict name: list of values
         if any(v for v in flags.values()):
