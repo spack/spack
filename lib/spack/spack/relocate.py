@@ -224,7 +224,7 @@ def modify_elf_object(path_name, new_rpaths):
                      '%s' % path_name, output=str, error=str)
         except ProcessError as e:
             tty.die('patchelf --set-rpath %s failed' %
-                     path_name, e)
+                    path_name, e)
             pass
     else:
         tty.die('relocation not supported for this platform')
