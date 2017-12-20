@@ -52,7 +52,7 @@ class Turbovnc(CMakePackage):
     depends_on('jdk', when='+java')
     depends_on('openssl', when='@2.2:')
     depends_on('openssl@:1.0.999', when='@:2.1')
-    depends_on("pam")
+    depends_on("pam", when='+server')
     depends_on("libxext", when='+x11deps')
     depends_on("libxdmcp", when='+x11deps')
     depends_on("libxau", when='+x11deps')
