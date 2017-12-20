@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class PyLrudict(PythonPackage):
     """ A fast LRU cache"""
 
