@@ -1,3 +1,32 @@
+diff --git a/CMake/FindMKL.cmake b/CMake/FindMKL.cmake
+index a457eaba0..66dc43ce6 100644
+--- a/CMake/FindMKL.cmake
++++ b/CMake/FindMKL.cmake
+@@ -7,21 +7,21 @@ FILE( WRITE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/src_mkl.cxx"
+     "#include <iostream>\n #include <mkl.h>\n int main() { return 0; }\n" )
+ try_compile(HAVE_MKL ${CMAKE_BINARY_DIR}
+       ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/src_mkl.cxx
+-      CMAKE_FLAGS "${CMAKE_CXX_FLAGS} -mkl" )
++      CMAKE_FLAGS "${CMAKE_CXX_FLAGS} -mkl" "-DINCLUDE_DIRECTORIES=${LAPACK_INCLUDE_DIRS}")
+ 
+ # Check for mkl_vml_functions.h
+ FILE( WRITE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/src_mkl_vml.cxx"
+     "#include <iostream>\n #include <mkl_vml_functions.h>\n int main() { return 0; }\n" )
+ try_compile(HAVE_MKL_VML ${CMAKE_BINARY_DIR}
+       ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/src_mkl_vml.cxx
+-      CMAKE_FLAGS "${CMAKE_CXX_FLAGS} -mkl" )
++      CMAKE_FLAGS "${CMAKE_CXX_FLAGS} -mkl" "-DINCLUDE_DIRECTORIES=${LAPACK_INCLUDE_DIRS}")
+ 
+ # Check for fftw3
+ FILE( WRITE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/src_mkl_fftw3.cxx"
+     "#include <iostream>\n #include <fftw/fftw3.h>\n int main() { return 0; }\n" )
+ try_compile(HAVE_MKL_FFTW3 ${CMAKE_BINARY_DIR}
+       ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/src_mkl_fftw3.cxx
+-      CMAKE_FLAGS "${CMAKE_CXX_FLAGS} -mkl" )
++      CMAKE_FLAGS "${CMAKE_CXX_FLAGS} -mkl" "-DINCLUDE_DIRECTORIES=${LAPACK_INCLUDE_DIRS}")
+ 
+ IF ( HAVE_MKL )
+     SET( MKL_FOUND 1 )
 diff --git a/CMake/FindVectorMath.cmake b/CMake/FindVectorMath.cmake
 index c0c919746..f5c511253 100644
 --- a/CMake/FindVectorMath.cmake
