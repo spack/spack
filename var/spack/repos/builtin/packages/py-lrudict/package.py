@@ -25,7 +25,6 @@
 
 from spack import *
 
-
 class PyLrudict(PythonPackage):
     """ A fast LRU cache"""
 
@@ -36,4 +35,3 @@ class PyLrudict(PythonPackage):
 
     depends_on('python@2.7:')
     depends_on('py-setuptools', type=('build'))
-
