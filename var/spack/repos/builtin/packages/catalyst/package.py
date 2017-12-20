@@ -56,6 +56,8 @@ class Catalyst(CMakePackage):
     depends_on('mpi')
     depends_on('python@2:2.8', when='+python')
     depends_on('mesa', when='+rendering')
+    depends_on("libx11", when='+rendering')
+    depends_on("libxt", when='+rendering')
     depends_on('cmake@3.3:', type='build')
 
     def url_for_version(self, version):
