@@ -143,4 +143,4 @@ class Catalyst(CMakePackage):
         """Runs ``cmake`` in the build directory through the cmake.sh script"""
         cmake_script_path = os.path.join(os.path.abspath(self.root_cmakelists_dir), 'cmake.sh')
         with working_dir(self.build_directory, create=True):
-            subprocess.check_call([cmake_script_path, os.path.abspath(self.root_cmakelists_dir)])
+            subprocess.check_call([cmake_script_path, os.path.abspath(self.root_cmakelists_dir)] + self.std_cmake_args)
