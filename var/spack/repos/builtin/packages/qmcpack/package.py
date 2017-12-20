@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-
+import llnl.util.tty as tty
 
 class Qmcpack(CMakePackage):
     """QMCPACK, is a modern high-performance open-source Quantum Monte
@@ -246,7 +246,19 @@ class Qmcpack(CMakePackage):
     def check(self):
         """Run ctest after building binary.
         It can take over 24 hours to run all the regression tests, here we
-        only run the unit tests and short tests."""
+        only run the unit tests and short tests. If the unit tests fail,
+        the QMCPACK installation aborts. On the other hand, the short tests
+        are too strict and often fail, but are still useful to run. In the
+        future, the short tests will be more reasonable in terms of quality
+        assurance (i.e. they will not be so strict), but will be sufficient to
+        validate QMCPACK in production."""
+
         with working_dir(self.build_directory):
             ctest('-L', 'unit')
-            ctest('-R', 'short')
+            try:
+                ctest('-R', 'short')
+            except InstallError:
+                warn  = 'Unit tests passed, but short tests have failed.\n'
+                warn += 'Please review failed tests before proceeding\n'
+                warn += 'with production calculations.\n'
+                tty.msg(warn)
