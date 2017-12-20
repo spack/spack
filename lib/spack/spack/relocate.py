@@ -223,7 +223,7 @@ def modify_elf_object(path_name, new_rpaths):
             patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
                      '%s' % path_name, output=str, error=str)
         except ProcessError as e:
-            tty.warn('patchelf --set-rpath %s failed' %
+            tty.die('patchelf --set-rpath %s failed' %
                      path_name, e)
             pass
     else:
