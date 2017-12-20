@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
+import sys
 
 
 class LibjpegTurbo(Package):
@@ -91,5 +93,5 @@ class LibjpegTurbo(Package):
                 'JNI_CFLAGS',
                 '-I' + self.spec['jdk'].prefix.include +
                 ' ' + '-I' +
-                self.spec['jdk'].prefix.include.linux,
+                os.path.join(self.spec['jdk'].prefix.include, sys.platform),
                 separator=' ')
