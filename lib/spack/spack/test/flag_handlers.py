@@ -36,17 +36,17 @@ def temp_env():
     os.environ = old_env
 
 
-def add_O3_to_cl_cflags(name, flags):
-    cl_flags = []
+def add_O3_to_build_system_cflags(name, flags):
+    build_system_flags = []
     if name == 'cflags':
-        cl_flags.append('-O3')
-    return (flags, None, cl_flags)
+        build_system_flags.append('-O3')
+    return (flags, None, build_system_flags)
 
 
 @pytest.mark.usefixtures('config')
 class TestFlagHandlers(object):
-    def test_no_cl_flags(self, temp_env):
-        # Test that both autotools and cmake are happy getting no cl flags
+    def test_no_build_system_flags(self, temp_env):
+        # Test that both autotools and cmake work getting no build_system flags
         s1 = spack.spec.Spec('callpath')
         s1.concretize()
         pkg1 = spack.repo.get(s1)
@@ -124,7 +124,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('libelf cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = add_O3_to_cl_cflags
+        pkg.flag_handler = add_O3_to_build_system_cflags
         spack.build_environment.setup_package(pkg, False)
 
         assert '-g' in os.environ['SPACK_CPPFLAGS']
@@ -136,7 +136,7 @@ class TestFlagHandlers(object):
         s = spack.spec.Spec('callpath cppflags=-g')
         s.concretize()
         pkg = spack.repo.get(s)
-        pkg.flag_handler = add_O3_to_cl_cflags
+        pkg.flag_handler = add_O3_to_build_system_cflags
         spack.build_environment.setup_package(pkg, False)
 
         assert '-g' in os.environ['SPACK_CPPFLAGS']

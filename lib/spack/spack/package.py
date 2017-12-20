@@ -1722,7 +1722,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     def build_system_flags(self, name, flags):
         """
         flag_handler that passes flags to the build system arguments.
-        Not implemented for all build systems.
+        Any package using `build_system_flags` must also implement
+        `flags_to_build_args`, or derive from a class that implements it.
+        Currently, AutotoolsPackage and CMakePackage implement it.
         """
         return (None, None, flags)
 

@@ -2546,7 +2546,7 @@ system arguments. The flag_handler method can be used to change this
 behavior.
 
 Packages can override the flag_handler method with one of three
-builtin flag_handlers. The builtin flag_handlers are named
+built-in flag_handlers. The built-in flag_handlers are named
 ``inject_flags``, ``env_flags``, and ``build_system_flags``. The
 ``inject_flags`` method is the default. The ``env_flags`` method puts
 all of the flags into the environment variables that ``make`` uses as
@@ -2577,7 +2577,7 @@ as arguments.
    that does not support build system arguments will result in an
    error.
 
-Here are the definitions of the three builtin flag handlers:
+Here are the definitions of the three built-in flag handlers:
 
 .. code-block:: python
 
@@ -2596,7 +2596,7 @@ Here are the definitions of the three builtin flag handlers:
    method.
 
 Packages can override the default behavior either by specifying one of
-the builtin flag handlers,
+the built-in flag handlers,
 
 .. code-block:: python
 
