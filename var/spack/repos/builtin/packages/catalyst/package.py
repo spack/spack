@@ -139,8 +139,16 @@ class Catalyst(CMakePackage):
         """
         return join_path(os.path.abspath(self.root_cmakelists_dir), 'spack-build')
 
+    def cmake_args(self):
+        """Populate cmake arguments for Catalyst."""
+        cmake_args = [
+            '-DPARAVIEW_GIT_DESCRIBE=v%s' % str(self.version)
+        ]
+        return cmake_args
+
     def cmake(self, spec, prefix):
         """Runs ``cmake`` in the build directory through the cmake.sh script"""
         cmake_script_path = os.path.join(os.path.abspath(self.root_cmakelists_dir), 'cmake.sh')
         with working_dir(self.build_directory, create=True):
-            subprocess.check_call([cmake_script_path, os.path.abspath(self.root_cmakelists_dir)] + self.std_cmake_args)
+            subprocess.check_call([cmake_script_path, os.path.abspath(self.root_cmakelists_dir)] +
+                                  self.cmake_args() + self.std_cmake_args)
