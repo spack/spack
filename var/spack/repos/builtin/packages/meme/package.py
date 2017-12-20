@@ -40,8 +40,6 @@ class Meme(AutotoolsPackage):
 
     depends_on('zlib', type=('link'))
     depends_on('libgcrypt', type=('link'))
-    #depends_on('libxml2', type=('link'))
-    #depends_on('libxslt', type=('link'))
     depends_on('perl', type=('build', 'run'))
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('mpi', when='+mpi')
