@@ -64,6 +64,7 @@ import shutil
 import os
 
 from spack import *
+from spack.environment import EnvironmentModifications
 import llnl.util.tty as tty
 
 
@@ -150,8 +151,9 @@ def _write_environ_file(output, environ, formatter):
     Also descends into sub-dict and sub-list, but drops the key.
     """
     with open(output, 'w') as outfile:
-        outfile.write('# SPACK settings\n\n')
+        outfile.write('# spack generated\n')
         _write_environ_entries(outfile, environ, formatter)
+        outfile.write('# spack\n')
 
 
 def write_environ(environ, **kwargs):
@@ -260,6 +262,7 @@ class OpenfoamCom(Package):
     in 2004.
     """
 
+    maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
     baseurl  = "https://sourceforge.net/projects/openfoamplus/files/"
     gitrepo  = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
@@ -367,13 +370,72 @@ class OpenfoamCom(Package):
     #
 
     def setup_environment(self, spack_env, run_env):
-        run_env.set('FOAM_PROJECT_DIR', self.projectdir)
-        run_env.set('WM_PROJECT_DIR', self.projectdir)
-        for d in ['wmake', self.archbin]:  # bin already added automatically
-            run_env.prepend_path('PATH', join_path(self.projectdir, d))
+        """Add environment variables to the generated module file.
+        These environment variables come from running:
+
+        .. code-block:: console
+
+           $ . $WM_PROJECT_DIR/etc/bashrc
+        """
+
+        # NOTE: Spack runs setup_environment twice.
+        # 1) pre-build to set up the build environment
+        # 2) post-install to determine runtime environment variables
+        # The etc/bashrc is only available (with corrrect content)
+        # post-installation.
+
+        bashrc = join_path(self.projectdir, 'etc', 'bashrc')
+        minimal = True
+        if os.path.isfile(bashrc):
+            # post-install: source the installed bashrc
+            try:
+                mods = EnvironmentModifications.from_sourcing_file(
+                    bashrc,
+                    clean=True,  # Remove duplicate entries
+                    blacklist=[  # Blacklist these
+                        # Inadvertent changes
+                        # -------------------
+                        'PS1',            # Leave unaffected
+                        'MANPATH',        # Leave unaffected
+
+                        # Unneeded bits
+                        # -------------
+                        'FOAM_SETTINGS',  # Do not use with modules
+                        'FOAM_INST_DIR',  # Old
+                        'FOAM_(APP|ETC|SRC|SOLVERS|UTILITIES)',
+                        # 'FOAM_TUTORIALS',  # can be useful
+                        'WM_OSTYPE',      # Purely optional value
+
+                        # Third-party cruft - only used for orig compilation
+                        # -----------------
+                        '[A-Z].*_ARCH_PATH',
+                        '(KAHIP|METIS|SCOTCH)_VERSION',
+
+                        # User-specific
+                        # -------------
+                        'FOAM_RUN',
+                        '(FOAM|WM)_.*USER_.*',
+                    ],
+                    whitelist=[  # Whitelist these
+                        'MPI_ARCH_PATH',  # Can be needed for compilation
+                    ])
+
+                run_env.extend(mods)
+                minimal = False
+                tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
+            except Exception:
+                minimal = True
+
+        if minimal:
+            # pre-build or minimal environment
+            tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
+            run_env.set('FOAM_PROJECT_DIR', self.projectdir)
+            run_env.set('WM_PROJECT_DIR', self.projectdir)
+            for d in ['wmake', self.archbin]:  # bin added automatically
+                run_env.prepend_path('PATH', join_path(self.projectdir, d))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Provide location of the OpenFOAM project.
+        """Location of the OpenFOAM project directory.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.
@@ -468,6 +530,7 @@ class OpenfoamCom(Package):
             ],
             'scotch': {},
             'metis': {},
+            'ensight': {},     # Disable settings
             'paraview': [],
             'gperftools': [],  # Currently unused
         }
@@ -612,12 +675,6 @@ class OpenfoamCom(Package):
                 if os.path.isfile(f)
             ]:
                 os.symlink(f, os.path.basename(f))
-
-    def openfoam_run_environment(self, projdir):
-        # This seems to bomb out with an ImportError 'site'!
-        # mods = EnvironmentModifications.from_sourcing_files(
-        #    join_path(projdir, 'etc/bashrc'))
-        pass
 
 
 # -----------------------------------------------------------------------------
