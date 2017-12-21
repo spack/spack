@@ -43,7 +43,7 @@ class Lbann(CMakePackage):
     variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
     variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
     variant('dtype', default='float',
-            description='Data type for floating point representation for weights',
+            description='Type for floating point representation of weights',
             values=('float', 'double'))
     variant('build_type', default='Release',
             description='The build type to build',
@@ -73,11 +73,12 @@ class Lbann(CMakePackage):
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
             '-DLBANN_WITH_TOPO_AWARE:BOOL=%s' % ('+gpu +nccl' in spec),
-            '-DLBANN_SEQUENTIAL_INITIALIZATION:BOOL=%s' % 
+            '-DLBANN_SEQUENTIAL_INITIALIZATION:BOOL=%s' %
             ('+seq_init' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_VTUNE=OFF',
-            '-DElemental_DIR={0}/CMake/elemental'.format(spec['elemental'].prefix),
+            '-DElemental_DIR={0}/CMake/elemental'.format(
+                spec['elemental'].prefix),
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0',
@@ -92,18 +93,18 @@ class Lbann(CMakePackage):
                 '-DLBANN_WITH_CUDA:BOOL=%s' % ('+gpu' in spec),
                 '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+gpu' in spec),
                 '-DCUDA_TOOLKIT_ROOT_DIR={0}'.format(
-                spec['cuda'].prefix)])
+                    spec['cuda'].prefix)])
             args.extend([
                 '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
                 '-DcuDNN_DIR={0}'.format(
-                spec['cudnn'].prefix)])
+                    spec['cudnn'].prefix)])
             args.extend(['-DCUB_DIR={0}'.format(
                 spec['cub'].prefix)])
             if '+nccl' in spec:
                 args.extend([
                     '-DLBANN_WITH_NCCL:BOOL=%s' % ('+gpu +nccl' in spec),
                     '-DNCCL_DIR={0}'.format(
-                    spec['nccl'].prefix)])
+                        spec['nccl'].prefix)])
 
         return args
 
