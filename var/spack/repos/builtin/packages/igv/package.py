@@ -23,38 +23,32 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import glob
 
 
-class Gdb(Package):
-    """GDB, the GNU Project debugger, allows you to see what is going on
-    'inside' another program while it executes -- or what another
-    program was doing at the moment it crashed.
-    """
+class Igv(Package):
+    """The Integrative Genomics Viewer (IGV) is a high-performance
+       visualization tool for interactive exploration of large,
+       integrated genomic datasets."""
 
-    homepage = "https://www.gnu.org/software/gdb"
-    url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
+    homepage = "http://software.broadinstitute.org/software/igv/"
 
-    version('8.0', '9bb49d134916e73b2c01d01bf20363df')
-    version('7.12.1', '06c8f40521ed65fe36ebc2be29b56942')
-    version('7.11', 'f585059252836a981ea5db9a5f8ce97f')
-    version('7.10.1', 'b93a2721393e5fa226375b42d567d90b')
-    version('7.10', 'fa6827ad0fd2be1daa418abb11a54d86')
-    version('7.9.1', 'f3b97de919a9dba84490b2e076ec4cb0')
-    version('7.9', '8f8ced422fe462a00e0135a643544f17')
-    version('7.8.2', '8b0ea8b3559d3d90b3ff4952f0aeafbc')
+    version('2.4.5', '4c45e1b281d8e3d8630aa485c5df6949',
+        url='http://data.broadinstitute.org/igv/projects/downloads/2.4/IGVSource_2.4.5.zip')
+    version('2.3.50', '7fdb903a59d556fad25e668b38e860f8',
+        url='http://data.broadinstitute.org/igv/projects/downloads/2.3/IGVSource_2.3.50.zip')
 
-    variant('python', default=True, description='Compile with Python support')
-
-    # Required dependency
-    depends_on('texinfo', type='build')
-
-    # Optional dependency
-    depends_on('python', when='+python')
+    depends_on('jdk@8:', type=('build', 'run'), when='@2.4:')
+    depends_on('jdk@7u0:7u999', type=('build', 'run'), when='@2.3:2.3.999')
+    depends_on('ant', type='build')
 
     def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix]
-        if '+python' in spec:
-            options.extend(['--with-python'])
-        configure(*options)
-        make()
-        make("install")
+        ant = self.spec['ant'].command
+        ant('all')
+        mkdirp(prefix.bin)
+        install('igv.sh', prefix.bin)
+        install('igv.jar', prefix.bin)
+        mkdirp(prefix.lib)
+        files = [x for x in glob.glob("lib/*jar")]
+        for f in files:
+            install(f, prefix.lib)

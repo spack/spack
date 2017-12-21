@@ -23,38 +23,28 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
-class Gdb(Package):
-    """GDB, the GNU Project debugger, allows you to see what is going on
-    'inside' another program while it executes -- or what another
-    program was doing at the moment it crashed.
-    """
+class OctaveOptim(Package):
+    """Non-linear optimization toolkit for Octave."""
 
-    homepage = "https://www.gnu.org/software/gdb"
-    url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
+    homepage = "https://octave.sourceforge.io/optim/"
+    url      = "https://downloads.sourceforge.net/octave/optim-1.5.2.tar.gz"
 
-    version('8.0', '9bb49d134916e73b2c01d01bf20363df')
-    version('7.12.1', '06c8f40521ed65fe36ebc2be29b56942')
-    version('7.11', 'f585059252836a981ea5db9a5f8ce97f')
-    version('7.10.1', 'b93a2721393e5fa226375b42d567d90b')
-    version('7.10', 'fa6827ad0fd2be1daa418abb11a54d86')
-    version('7.9.1', 'f3b97de919a9dba84490b2e076ec4cb0')
-    version('7.9', '8f8ced422fe462a00e0135a643544f17')
-    version('7.8.2', '8b0ea8b3559d3d90b3ff4952f0aeafbc')
+    version('1.5.2', 'd3d77982869ea7c1807b13b24e044d44')
 
-    variant('python', default=True, description='Compile with Python support')
+    depends_on('octave-struct@1.0.12:')
 
-    # Required dependency
-    depends_on('texinfo', type='build')
-
-    # Optional dependency
-    depends_on('python', when='+python')
+    extends('octave@3.6.0:')
 
     def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix]
-        if '+python' in spec:
-            options.extend(['--with-python'])
-        configure(*options)
-        make()
-        make("install")
+        os.environ.pop('CC', '')
+        os.environ.pop('CXX', '')
+        os.environ.pop('FC', '')
+        octave('--quiet',
+               '--norc',
+               '--built-in-docstrings-file=/dev/null',
+               '--texi-macros-file=/dev/null',
+               '--eval', 'pkg prefix %s; pkg install %s' %
+               (prefix, self.stage.archive_file))

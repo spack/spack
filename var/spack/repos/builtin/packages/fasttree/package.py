@@ -25,36 +25,26 @@
 from spack import *
 
 
-class Gdb(Package):
-    """GDB, the GNU Project debugger, allows you to see what is going on
-    'inside' another program while it executes -- or what another
-    program was doing at the moment it crashed.
-    """
+class Fasttree(Package):
+    """FastTree infers approximately-maximum-likelihood phylogenetic
+       trees from alignments of nucleotide or protein sequences.
+       FastTree can handle alignments with up to a million of sequences
+       in a reasonable amount of time and memory."""
 
-    homepage = "https://www.gnu.org/software/gdb"
-    url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
+    homepage = "http://www.microbesonline.org/fasttree"
+    url      = "http://www.microbesonline.org/fasttree/FastTree-2.1.10.c"
 
-    version('8.0', '9bb49d134916e73b2c01d01bf20363df')
-    version('7.12.1', '06c8f40521ed65fe36ebc2be29b56942')
-    version('7.11', 'f585059252836a981ea5db9a5f8ce97f')
-    version('7.10.1', 'b93a2721393e5fa226375b42d567d90b')
-    version('7.10', 'fa6827ad0fd2be1daa418abb11a54d86')
-    version('7.9.1', 'f3b97de919a9dba84490b2e076ec4cb0')
-    version('7.9', '8f8ced422fe462a00e0135a643544f17')
-    version('7.8.2', '8b0ea8b3559d3d90b3ff4952f0aeafbc')
+    version('2.1.10', '1c2c6425a638ec0c61ef064cda687987', expand=False, url='http://www.microbesonline.org/fasttree/FastTree-2.1.10.c')
 
-    variant('python', default=True, description='Compile with Python support')
+    phases = ['build', 'install']
 
-    # Required dependency
-    depends_on('texinfo', type='build')
-
-    # Optional dependency
-    depends_on('python', when='+python')
+    def build(self, spec, prefix):
+        cc = Executable(spack_cc)
+        cc('-O3', self.compiler.openmp_flag,
+           '-DOPENMP', '-finline-functions', '-funroll-loops', '-Wall',
+           '-oFastTreeMP', 'FastTree-' + format(spec.version.dotted) + '.c',
+           '-lm')
 
     def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix]
-        if '+python' in spec:
-            options.extend(['--with-python'])
-        configure(*options)
-        make()
-        make("install")
+        mkdir(prefix.bin)
+        install('FastTreeMP', prefix.bin)
