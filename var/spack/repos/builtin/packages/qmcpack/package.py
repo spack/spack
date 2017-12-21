@@ -257,7 +257,7 @@ class Qmcpack(CMakePackage):
             ctest('-L', 'unit')
             try:
                 ctest('-R', 'short')
-            except InstallError:
+            except ProcessError:
                 warn  = 'Unit tests passed, but short tests have failed.\n'
                 warn += 'Please review failed tests before proceeding\n'
                 warn += 'with production calculations.\n'
