@@ -207,11 +207,13 @@ class Qmcpack(CMakePackage):
         # header files. Intel MKL requires special case due to differences in
         # Darwin vs. Linux $MKLROOT naming schemes
         if 'intel-mkl' in self.spec:
-            args.append('-DLAPACK_INCLUDE_DIRS=%s' %
+            args.append(
+                '-DLAPACK_INCLUDE_DIRS=%s' %
                 format(join_path(env['MKLROOT'], 'include')))
         else:
-            args.append('-DLAPACK_INCLUDE_DIRS=%s;%s' % (
-                self.spec['lapack'].prefix.include, 
+            args.append(
+                '-DLAPACK_INCLUDE_DIRS=%s;%s' %
+                (self.spec['lapack'].prefix.include,
                 self.spec['blas'].prefix.include))
         return args
 
