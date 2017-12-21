@@ -23,6 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from shutil import copyfile
+import glob
+import os.path
+import re
 
 # Based on package.py for picard
 class Pilon(Package):
@@ -31,10 +35,11 @@ class Pilon(Package):
 
     homepage = "https://github.com/broadinstitute/pilon"
     url      = "https://github.com/broadinstitute/pilon/releases/download/v1.22/pilon-1.22.jar"
+    _urlfmt  = "https://github.com/broadinstitute/pilon/releases/download/v{0}/pilon-{0}.jar"
     
     version('1.22', '3c45568dc1b878a9a0316410ec62ab04', expand=False)
 
-    depends_on('java@7', type='run')
+    depends_on('java@8', type='run')
     
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
@@ -59,14 +64,12 @@ class Pilon(Package):
         filter_file('pilon.jar', join_path(prefix.bin, 'pilon.jar'),
                     script, **kwargs)
 
-#    def setup_environment(self, spack_env, run_env):
-#        """The Picard docs suggest setting this as a convenience."""
-#        run_env.prepend_path('PICARD',
-#                             join_path(self.prefix, 'bin', 'picard.jar'))
-#
-#    def url_for_version(self, version):
-#        if version < Version('2.6.0'):
-#            return self._oldurlfmt.format(version)
-#        else:
-#            return self._urlfmt.format(version)
+        #def setup_environment(self, spack_env, run_env):
+        #"""The Picard docs suggest setting this as a convenience."""
+        #   run_env.prepend_path('PICARD',
+        #                       join_path(self.prefix, 'bin', 'picard.jar'))
+
+
+    def url_for_version(self, version):
+        return self._urlfmt.format(version)
                                         
