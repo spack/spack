@@ -26,11 +26,13 @@ from spack import *
 
 
 class PyXattr(PythonPackage):
-    """A python interface to access extended file attributes, sans libattr dependency"""
+    """A python interface to access extended file attributes,
+        sans libattr dependency"""
 
     homepage = "http://pyxattr.k1024.org/"
 
-    version('develop', git='https://github.com/fwang2/pyxattr.git', branch='dev')
+    version('develop', git='https://github.com/fwang2/pyxattr.git',
+            branch='dev')
 
     depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')
