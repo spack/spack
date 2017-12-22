@@ -39,5 +39,5 @@ class Libfs(AutotoolsPackage):
     depends_on('xproto@7.0.17:', type='build')
     depends_on('fontsproto', type='build')
     depends_on('xtrans', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

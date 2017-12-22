@@ -38,7 +38,7 @@ class XkeyboardConfig(AutotoolsPackage):
     depends_on('libx11@1.4.3:')
 
     depends_on('libxslt', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('intltool@0.30:', type='build')
     depends_on('xproto@7.0.20:', type='build')
 

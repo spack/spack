@@ -33,7 +33,7 @@ class RGetoptlong(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/GetoptLong/index.html"
     url      = "https://cran.rstudio.com/src/contrib/GetoptLong_0.1.6.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/GetoptLong"
 
     version('0.1.6', 'e4b964d0817cb6c6a707297b21405749')
 

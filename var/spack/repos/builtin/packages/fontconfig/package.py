@@ -37,7 +37,7 @@ class Fontconfig(AutotoolsPackage):
     depends_on('freetype')
     depends_on('gperf', type='build', when='@2.12.2:')
     depends_on('libxml2')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('font-util')
 
     def configure_args(self):

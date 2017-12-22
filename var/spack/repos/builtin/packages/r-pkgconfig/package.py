@@ -32,5 +32,5 @@ class RPkgconfig(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/pkgconfig/index.html"
     url      = "https://cran.rstudio.com/src/contrib/pkgconfig_2.0.1.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pkgconfig"
     version('2.0.1', 'a20fd9588e37995995fa62dc4828002e')
