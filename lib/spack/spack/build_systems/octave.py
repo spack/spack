@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import inspect
-import os
 
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
@@ -49,13 +48,15 @@ class OctavePackage(PackageBase):
     extends('octave')
     depends_on('octave', type=('build', 'run'))
 
+    def setup_environment(self, spack_env, run_env):
+        """Set up the compile and runtime environments for a package."""
+        # octave does not like those environment variables to be set:
+        spack_env.unset('CC')
+        spack_env.unset('CXX')
+        spack_env.unset('FC')
+
     def install(self, spec, prefix):
         """Install the package from the archive file"""
-
-        # octave does not like those environment variables to be set:
-        os.environ.pop('CC', '')
-        os.environ.pop('CXX', '')
-        os.environ.pop('FC', '')
         inspect.getmodule(self).octave(
             '--quiet',
             '--norc',
