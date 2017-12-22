@@ -207,6 +207,11 @@ def set_build_environment_variables(pkg, env, dirty):
     build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
 
+    build_deps = order_externals_last(build_deps)
+    link_deps = order_externals_last(link_deps)
+    build_link_deps = order_externals_last(build_link_deps)
+    rpath_deps = order_externals_last(rpath_deps)
+
     build_prefixes      = [dep.prefix for dep in build_deps]
     link_prefixes       = [dep.prefix for dep in link_deps]
     build_link_prefixes = [dep.prefix for dep in build_link_deps]
@@ -325,6 +330,12 @@ def set_build_environment_variables(pkg, env, dirty):
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
     return env
+
+
+def order_externals_last(specs):
+    externals = list(x for x in specs if x.external)
+    non_externals = list(x for x in specs if not x.external)
+    return list(non_externals) + list(externals)
 
 
 def set_module_variables_for_package(pkg, module):
