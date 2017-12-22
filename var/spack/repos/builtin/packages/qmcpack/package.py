@@ -59,7 +59,7 @@ class Qmcpack(CMakePackage):
                         'Array-of-Structure code. Only for CPU code'
                         'and only in mixed precision')
     variant('timers', default=False,
-             description='Build with support for timers')
+            description='Build with support for timers')
     variant('da', default=False,
             description='Install with support for basic data analysis tools')
     variant('gui', default=False,
@@ -212,9 +212,9 @@ class Qmcpack(CMakePackage):
                 format(join_path(env['MKLROOT'], 'include')))
         else:
             args.append(
-                '-DLAPACK_INCLUDE_DIRS=%s;%s' %
-                (self.spec['lapack'].prefix.include,
-                self.spec['blas'].prefix.include))
+                '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
+                    self.spec['lapack'].prefix.include,
+                    self.spec['blas'].prefix.include))
         return args
 
     def install(self, spec, prefix):
