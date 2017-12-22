@@ -80,7 +80,12 @@ class Xsdk(Package):
     depends_on('alquimia@develop', when='@develop')
 
     depends_on('sundials@3.1.0~int64+hypre', when='@0.3.0')
-    depends_on('magma', when='@0.3.0 +cuda')
+    depends_on('sundials@3.1.0~int64+hypre', when='@develop')
+
+    depends_on('plasma@17.1', when='@develop %gcc@4.9:')
+
+    depends_on('magma@2.2.0', when='@0.3.0 +cuda')
+    depends_on('magma@2.2.0', when='@develop +cuda')
 
     # xSDKTrilinos depends on the version of Trilinos built with
     # +tpetra which is turned off for faster xSDK
