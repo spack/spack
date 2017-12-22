@@ -41,7 +41,8 @@ class Geant4(CMakePackage):
     version('10.01.p03', '4fb4175cc0dabcd517443fbdccd97439')
 
     variant('qt', default=False, description='Enable Qt support')
-
+    variant('vecgeom', default=False, description='Enable vecgeom support')
+    
     depends_on('cmake@3.5:', type='build')
 
     depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p02")
@@ -49,9 +50,9 @@ class Geant4(CMakePackage):
     depends_on("clhep@2.2.0.4~cxx11+cxx14", when="@10.01.p03")
     depends_on("expat")
     depends_on("zlib")
-    depends_on("vecgeom")
     depends_on("xerces-c")
     depends_on("qt@:4.9", when="+qt")
+    depends_on("vecgeom", when="+vecgeom")
 
     def cmake_args(self):
         spec = self.spec
@@ -67,9 +68,7 @@ class Geant4(CMakePackage):
             '-DGEANT4_USE_SYSTEM_EXPAT=ON',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
             '-DXERCESC_ROOT_DIR:STRING=%s' %
-            spec['xerces-c'].prefix,
-            '-DUSolids_DIR=%s' %
-            join_path(spec['vecgeom'].prefix, 'lib/CMake/USolids')]
+            spec['xerces-c'].prefix, ]
 
         arch = platform.system().lower()
         if arch is not 'darwin':
@@ -88,6 +87,10 @@ class Geant4(CMakePackage):
                 '-DQT_QMAKE_EXECUTABLE=%s' %
                 spec['qt'].prefix + '/bin/qmake'
             )
+	
+	if '+vecgeom' in spec:
+	    options.append('-DUSolids_DIR=%s' % 
+		join_path(spec['vecgeom'].prefix, 'lib/CMake/USolids'))
 
         return options
 
