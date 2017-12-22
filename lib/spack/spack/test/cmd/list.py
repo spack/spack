@@ -95,6 +95,7 @@ class TestListCommand(object):
         assert 'hdf5' not in pkg_names
 
     def test_list_formatter(self, parser, pkg_names):
+        # TODO: Test the output of the commands
         args = parser.parse_args(['--format', 'name_only'])
         spack.cmd.list.list(parser, args)
 
