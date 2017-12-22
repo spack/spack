@@ -60,7 +60,7 @@ nonmpipkgs = {"python@2.7.14": ["^readline@system"],
 for pkg,specs in nonmpipkgs.items():
     for spec in specs:
         for compiler in COMPILERS:
-                if check_pass(pkg, compiler, spec, mpi, PLATFORM):
+                if check_pass(pkg, compiler, spec, PLATFORM):
                           install("{} %{} {}".format(pkg, compiler, spec))
 
 
@@ -85,7 +85,7 @@ MPIS = {"openmpi@2.1.2~vt~cuda fabrics={},pmi ~java schedulers=slurm".format(OMP
 for pkg,spec in MPIS.items():
     for compiler in COMPILERS:
         if 'intel-parallel' not in pkg:
-                if check_pass(pkg, compiler, spec, mpi, PLATFORM):
+                if check_pass(pkg, compiler, spec, PLATFORM, mpi):
                           install("{} %{} {}".format(pkg, compiler, spec))
 
 # Build MPI packages
