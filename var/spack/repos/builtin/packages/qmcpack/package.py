@@ -25,6 +25,7 @@
 from spack import *
 import llnl.util.tty as tty
 
+
 class Qmcpack(CMakePackage):
     """QMCPACK, is a modern high-performance open-source Quantum Monte
        Carlo (QMC) simulation code."""
@@ -36,7 +37,7 @@ class Qmcpack(CMakePackage):
     # This download method is untrusted, and is not recommended by the
     # Spack manual. However, it is easier to maintain because github hashes
     # can occasionally change.
-    # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack. 
+    # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('3.3.0', git=url, tag='v3.3.0')
     version('3.2.0', git=url, tag='v3.2.0')
     version('3.1.1', git=url, tag='v3.1.1')
@@ -206,12 +207,14 @@ class Qmcpack(CMakePackage):
         # header files. Intel MKL requires special case due to differences in
         # Darwin vs. Linux $MKLROOT naming schemes
         if 'intel-mkl' in self.spec:
-            args.append('-DLAPACK_INCLUDE_DIRS=%s' %
-                format(join_path(env['MKLROOT'],'include')))
+            args.append(
+                '-DLAPACK_INCLUDE_DIRS=%s' %
+                format(join_path(env['MKLROOT'], 'include')))
         else:
-            args.append('-DLAPACK_INCLUDE_DIRS=%s;%s' % (
-                self.spec['lapack'].prefix.include, self.spec['blas'].prefix.include))
-        
+            args.append(
+                '-DLAPACK_INCLUDE_DIRS=%s;%s' %
+                (self.spec['lapack'].prefix.include,
+                self.spec['blas'].prefix.include))
         return args
 
     def install(self, spec, prefix):
@@ -257,7 +260,7 @@ class Qmcpack(CMakePackage):
             ctest('-L', 'unit')
             try:
                 ctest('-R', 'short')
-            except InstallError:
+            except ProcessError:
                 warn  = 'Unit tests passed, but short tests have failed.\n'
                 warn += 'Please review failed tests before proceeding\n'
                 warn += 'with production calculations.\n'
