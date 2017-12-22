@@ -50,7 +50,7 @@ class Sqlite(AutotoolsPackage):
     # defines a macro B0. Sqlite has a shell.c source file that declares a
     # variable named B0 and will fail to compile when the macro is found. The
     # following patch undefines the macro in shell.c
-    patch('sqlite_b0.patch', when='@3.18.0')
+    patch('sqlite_b0.patch', when='@3.18.0:3.21.0')
 
     # Starting version 3.17.0, SQLite uses compiler built-ins
     # __builtin_sub_overflow(), __builtin_add_overflow(), and
