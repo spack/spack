@@ -43,6 +43,6 @@ class Jags(AutotoolsPackage):
     conflicts('^openblas')
 
     def configure_args(self):
-        args = ['--with-blas=-L%s' % self.spec['blas'].prefix.lib,
-                '--with-lapack=-L%s' % self.spec['lapack'].prefix.lib]
+        args = ['--with-blas=%s' % self.spec['blas'].libs.ld_flags,
+                '--with-lapack=%s' % self.spec['lapack'].libs.ld_flags]
         return args
