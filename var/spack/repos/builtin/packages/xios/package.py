@@ -41,9 +41,10 @@ class Xios(Package):
             description='Build for debugging, development or production')
     # NOTE: oasis coupler could be supported with a variant
 
-    # Use spack versions of boost and blitz,
-    # to ensure compatibility with recent compilers:
-    patch('bld_limit_extern.patch')
+    # Use spack versions of blitz and netcdf for compatibility
+    # with recent compilers and optimised platform libraries:
+    patch('bld_extern_1.0.patch', when='@:1.0')
+    patch('bld_extern_1.x.patch', when='@1.1:')
 
     patch('clang_fpos_long_ambiguity.patch', when='%clang')
     patch('clang_boost_shared_ptr.patch', when='%clang')
