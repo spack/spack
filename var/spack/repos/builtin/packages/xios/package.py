@@ -46,9 +46,6 @@ class Xios(Package):
     patch('bld_extern_1.0.patch', when='@:1.0')
     patch('bld_extern_1.x.patch', when='@1.1:')
 
-    patch('clang_fpos_long_ambiguity.patch', when='%clang')
-    patch('clang_boost_shared_ptr.patch', when='%clang')
-
     depends_on('netcdf+mpi')
     depends_on('netcdf-fortran^netcdf+mpi')
     depends_on('hdf5+mpi')
@@ -58,6 +55,19 @@ class Xios(Package):
     depends_on('perl', type='build')
     depends_on('perl-uri-escape', type='build')
     depends_on('gmake', type='build')
+
+    @when('%clang')
+    def patch(self):
+        """Fix type references that are ambiguous for clang."""
+        for dirpath, dirnames, filenames in os.walk('src'):
+            for filename in filenames:
+                filepath = os.path.join(dirpath, filename)
+                # Use boost definition of type shared_ptr:
+                filter_file(r'([^:/])shared_ptr<',
+                            r'\1boost::shared_ptr<', filepath)
+                # Use type long for position in output stream:
+                filter_file(r'oss.tellp\(\) *- *startPos',
+                            r'(long)oss.tellp() - startPos', filepath)
 
     def xios_env(self):
         file = join_path('arch', 'arch-SPACK.env')
