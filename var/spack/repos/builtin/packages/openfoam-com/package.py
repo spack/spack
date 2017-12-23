@@ -250,6 +250,10 @@ def mplib_content(spec, pre=None):
     else:
         pre = mpi_spec.prefix
 
+    libname = 'mpi'
+    if 'mpich' in mpi_spec.name:
+        libname = 'mpich'
+
     info = {
         'name':   '{0}-{1}'.format(mpi_spec.name, mpi_spec.version),
         'prefix':  pre,
@@ -737,6 +741,10 @@ class OpenfoamArch(object):
 
         # spec.architecture.target is like `uname -m`
         target   = spec.architecture.target
+
+        # Platform detects as 'cray' - treat like 'linux'
+        if platform == 'cray':
+            platform = 'linux'
 
         if platform == 'linux':
             if target == 'i686':
