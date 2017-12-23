@@ -67,6 +67,10 @@ class Qt(Package):
     variant('opengl',     default=False,
             description="Build with OpenGL support.")
 
+    # fix installation of pkgconfig files
+    # see https://github.com/Homebrew/homebrew-core/pull/5951
+    patch('restore-pc-files.patch', when='platform=darwin')
+
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
     # see https://bugreports.qt.io/browse/QTBUG-57656
