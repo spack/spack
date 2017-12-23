@@ -69,7 +69,7 @@ class Qt(Package):
 
     # fix installation of pkgconfig files
     # see https://github.com/Homebrew/homebrew-core/pull/5951
-    patch('restore-pc-files.patch', when='platform=darwin')
+    patch('restore-pc-files.patch', when='@5.9: platform=darwin')
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
