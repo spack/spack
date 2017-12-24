@@ -158,8 +158,12 @@ class Esmf(MakefilePackage):
             elif '^mvapich2' in spec:
                 os.environ['ESMF_COMM'] = 'mvapich2'
             elif '^mpich' in spec:
-                # FIXME: mpich or mpich2?
+                # esmf@7.0.1 does not include configs for mpich3,
+                # so we start with the configs for mpich2:
                 os.environ['ESMF_COMM'] = 'mpich2'
+                # The mpich 3 series split apart the Fortran and C bindings,
+                # so we link the Fortran libraries when building C programs:
+                os.environ['ESMF_CXXLINKLIBS'] = '-lmpifort'
             elif '^openmpi' in spec:
                 os.environ['ESMF_COMM'] = 'openmpi'
             elif '^intel-parallel-studio+mpi' in spec:
