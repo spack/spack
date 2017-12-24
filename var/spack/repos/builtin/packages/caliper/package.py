@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@ class Caliper(CMakePackage):
     url      = ""
 
     version('master', git='https://github.com/LLNL/Caliper.git')
+    version('1.6.0',  git='https://github.com/LLNL/Caliper.git', tag='v1.6.0')
 
     variant('mpi', default=True, 
             description='Enable MPI wrappers')
@@ -50,14 +51,20 @@ class Caliper(CMakePackage):
     # pthread_self() signature is incompatible with PAPI_thread_init() on Mac
     variant('papi', default=sys.platform != 'darwin',
             description='Enable PAPI service')
+    variant('libpfm', default=sys.platform == 'linux2',
+            description='Enable libpfm (perf_events) service')
     # gotcha doesn't work on Mac
     variant('gotcha', default=sys.platform != 'darwin',
             description='Enable GOTCHA support')
+    variant('sosflow', default=False,
+            description='Enable SOSflow support')
 
     depends_on('dyninst', when='+dyninst')
     depends_on('papi', when='+papi')
+    depends_on('libpfm4', when='+libpfm')
     depends_on('mpi', when='+mpi')
     depends_on('libunwind', when='+callpath')
+    depends_on('sosflow', when='+sosflow')
 
     depends_on('cmake', type='build')
     depends_on('python', type='build')
@@ -67,17 +74,23 @@ class Caliper(CMakePackage):
 
         args = [
             '-DBUILD_TESTING=Off',
-            '-DWITH_DOCS=Off',
-            '-DWITH_TEST_APPS=Off',
+            '-DBUILD_DOCS=Off',
             '-DWITH_DYNINST=%s'  % ('On' if '+dyninst'  in spec else 'Off'),
             '-DWITH_CALLPATH=%s' % ('On' if '+callpath' in spec else 'Off'),
             '-DWITH_GOTCHA=%s'   % ('On' if '+gotcha'   in spec else 'Off'),
             '-DWITH_PAPI=%s'     % ('On' if '+papi'     in spec else 'Off'),
-            '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off')
+            '-DWITH_LIBPFM=%s'   % ('On' if '+libpfm'   in spec else 'Off'),
+            '-DWITH_SOSFLOW=%s'  % ('On' if '+sosflow'  in spec else 'Off'),
+            '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off'),
+            '-DWITH_MPIT=%s' % ('On' if spec.satisfies('^mpi@3:') else 'Off')
         ]
 
         if '+papi' in spec:
-            args.append('-DPAPI_PREFIX=%s' % spec['papi'].prefix)
+            args.append('-DPAPI_PREFIX=%s'    % spec['papi'].prefix)
+        if '+libpfm' in spec:
+            args.append('-DLIBPFM_INSTALL=%s' % spec['libpfm4'].prefix)
+        if '+sosflow' in spec:
+            args.append('-DSOS_PREFIX=%s'     % spec['sosflow'].prefix)
 
         if '+mpi' in spec:
             args.append('-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc)

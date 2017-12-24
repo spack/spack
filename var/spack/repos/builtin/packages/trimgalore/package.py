@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,6 +33,7 @@ class Trimgalore(Package):
     homepage = "https://github.com/FelixKrueger/TrimGalore"
     url      = "https://github.com/FelixKrueger/TrimGalore/archive/0.4.4.tar.gz"
 
+    version('0.4.5', 'c71756042b2a65c34d483533a29dc206')
     version('0.4.4', 'aae1b807b48e38bae7074470203997bb')
 
     depends_on('perl', type=('build', 'run'))

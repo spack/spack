@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,11 @@ class Git(AutotoolsPackage):
     #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.xz
 
     releases = [
+        {
+            'version': '2.15.1',
+            'md5': 'da59fc6baa55ab44684011e369af397d',
+            'md5_manpages': '2cb428071c08c7df513cfc103610536e',
+        },
         {
             'version': '2.14.1',
             'md5': 'e965a37b3d277f2e7e78f5b04de28e2a',

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -44,8 +44,10 @@ class Ncurses(AutotoolsPackage):
 
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
+    variant('termlib', default=False,
+            description='Enables termlib needs for gnutls in emacs.')
 
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
@@ -70,6 +72,12 @@ class Ncurses(AutotoolsPackage):
 
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')
+
+        if '+termlib' in self.spec:
+            opts.extend(('--with-termlib',
+                         '--enable-termcap',
+                         '--enable-getcap',
+                         '--enable-tcap-names'))
 
         prefix = '--prefix={0}'.format(prefix)
 

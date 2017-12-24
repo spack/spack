@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,8 +29,9 @@ class RA4preproc(RPackage):
     """Automated Affymetrix Array Analysis Preprocessing Package."""
 
     homepage = "https://www.bioconductor.org/packages/a4Preproc/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/a4Preproc_1.24.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/a4Preproc"
 
-    version('1.24.0', '8de73ad20a28155f34a4636c3f7c6539')
+    version('1.24.0', git='https://git.bioconductor.org/packages/a4Preproc', commit='651014b8102807aea4f1274e34e083e70b5e7ee7')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.24.0')
     depends_on('r-annotationdbi', type=('build', 'run'))

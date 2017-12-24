@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 from spack import *
 from llnl.util.link_tree import LinkTree
 import spack.store
-from spack.package import ExtensionConflictError
+from spack.package import ExtensionError, ExtensionConflictError
 
 
 # See also: AspellDictPackage
@@ -47,6 +47,12 @@ class Aspell(AutotoolsPackage):
     #   - extension.prefix.lib instead of extension.prefix in LinkTree()
     #   - dest_dir instead of self.prefix in tree.(find_conflict|merge)()
     def activate(self, extension, **kwargs):
+        extensions_layout = kwargs.get("extensions_layout",
+                                       spack.store.extensions)
+        if extensions_layout is not spack.store.extensions:
+            raise ExtensionError(
+                'aspell does not support non-global extensions')
+
         aspell = which(self.prefix.bin.aspell)
         dest_dir = aspell('dump', 'config', 'dict-dir', output=str).strip()
         tree = LinkTree(extension.prefix.lib)
@@ -62,6 +68,12 @@ class Aspell(AutotoolsPackage):
         tree.merge(dest_dir, ignore=ignore)
 
     def deactivate(self, extension, **kwargs):
+        extensions_layout = kwargs.get("extensions_layout",
+                                       spack.store.extensions)
+        if extensions_layout is not spack.store.extensions:
+            raise ExtensionError(
+                'aspell does not support non-global extensions')
+
         aspell = which(self.prefix.bin.aspell)
         dest_dir = aspell('dump', 'config', 'dict-dir', output=str).strip()
 

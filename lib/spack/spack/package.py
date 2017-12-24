@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@ import functools
 import inspect
 import os
 import re
+import shutil
 import sys
 import textwrap
 import time
@@ -59,16 +60,19 @@ import spack.repository
 import spack.url
 import spack.util.web
 import spack.multimethod
+import spack.binary_distribution as binary_distribution
 
-from llnl.util.filesystem import *
-from llnl.util.lang import *
+from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
+from llnl.util.filesystem import working_dir, install_tree, install
+from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
+from llnl.util.tty.color import colorize
 from spack import directory_layout
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
-from spack.version import *
+from spack.version import Version
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -885,17 +889,28 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             return bool(self.extendees)
 
     def extends(self, spec):
+        '''
+        Returns True if this package extends the given spec.
+
+        If ``self.spec`` is concrete, this returns whether this package extends
+        the given spec.
+
+        If ``self.spec`` is not concrete, this returns whether this package may
+        extend the given spec.
+        '''
         if spec.name not in self.extendees:
             return False
         s = self.extendee_spec
-        return s and s.satisfies(spec)
+        return s and spec.satisfies(s)
 
-    @property
-    def activated(self):
+    def is_activated(self, extensions_layout=None):
+        """Return True if package is activated."""
         if not self.is_extension:
             raise ValueError(
                 "is_extension called on package that is not an extension.")
-        exts = spack.store.layout.extension_map(self.extendee_spec)
+        if extensions_layout is None:
+            extensions_layout = spack.store.extensions
+        exts = extensions_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
     def provides(self, vpkg_name):
@@ -1254,6 +1269,20 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 message = '{s.name}@{s.version} : marking the package explicit'
                 tty.msg(message.format(s=self))
 
+    def try_install_from_binary_cache(self, explicit):
+        tty.msg('Searching for binary cache of %s' % self.name)
+        specs = binary_distribution.get_specs()
+        binary_spec = spack.spec.Spec.from_dict(self.spec.to_dict())
+        binary_spec._mark_concrete()
+        if binary_spec not in specs:
+            return False
+        tty.msg('Installing %s from binary cache' % self.name)
+        tarball = binary_distribution.download_tarball(binary_spec)
+        binary_distribution.extract_tarball(
+            binary_spec, tarball, yes_to_all=False, force=False)
+        spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
+        return True
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -1314,6 +1343,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 msg = '{0.name} is already installed in {0.prefix}'
                 tty.msg(msg.format(self))
                 rec = spack.store.db.get_record(self.spec)
+                # In case the stage directory has already been created,
+                # this ensures it's removed after we checked that the spec
+                # is installed
+                if keep_stage is False:
+                    self.stage.destroy()
+
                 return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
@@ -1335,7 +1370,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     dirty=dirty,
                     **kwargs)
 
-        tty.msg('Installing %s' % self.name)
+        tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
+
+        if kwargs.get('use_cache', False):
+            if self.try_install_from_binary_cache(explicit):
+                tty.msg('Successfully installed %s from binary cache'
+                        % self.name)
+                print_pkg(self.prefix)
+                spack.hooks.post_install(self.spec)
+                return
+
+            tty.msg('No binary for %s found: installing from source'
+                    % self.name)
 
         # Set run_tests flag before starting build.
         self.run_tests = spack.package_testing.check(self.name)
@@ -1667,6 +1713,47 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         pass
 
+    def inject_flags(self, name, flags):
+        """
+        flag_handler that injects all flags through the compiler wrapper.
+        """
+        return (flags, None, None)
+
+    def env_flags(self, name, flags):
+        """
+        flag_handler that adds all flags to canonical environment variables.
+        """
+        return (None, flags, None)
+
+    def build_system_flags(self, name, flags):
+        """
+        flag_handler that passes flags to the build system arguments.  Any
+        package using `build_system_flags` must also implement
+        `flags_to_build_system_args`, or derive from a class that
+        implements it.  Currently, AutotoolsPackage and CMakePackage
+        implement it.
+        """
+        return (None, None, flags)
+
+    flag_handler = inject_flags
+    # The flag handler method is called for each of the allowed compiler flags.
+    # It returns a triple of inject_flags, env_flags, build_system_flags.
+    # The flags returned as inject_flags are injected through the spack
+    #  compiler wrappers.
+    # The flags returned as env_flags are passed to the build system through
+    #  the environment variables of the same name.
+    # The flags returned as build_system_flags are passed to the build system
+    #  package subclass to be turned into the appropriate part of the standard
+    #  arguments. This is implemented for build system classes where
+    #  appropriate and will otherwise raise a NotImplementedError.
+
+    def flags_to_build_system_args(self, flags):
+        # Takes flags as a dict name: list of values
+        if any(v for v in flags.values()):
+            msg = 'The {0} build system'.format(self.__class__.__name__)
+            msg += ' cannot take command line arguments for compiler flags'
+            raise NotImplementedError(msg)
+
     @staticmethod
     def uninstall_by_spec(spec, force=False):
         if not os.path.isdir(spec.prefix):
@@ -1738,7 +1825,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ActivationError("%s does not extend %s!" %
                                   (self.name, self.extendee.name))
 
-    def do_activate(self, force=False):
+    def do_activate(self, force=False, verbose=True, extensions_layout=None):
         """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
@@ -1746,28 +1833,40 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         self._sanity_check_extension()
 
-        spack.store.layout.check_extension_conflict(
+        if extensions_layout is None:
+            extensions_layout = spack.store.extensions
+
+        extensions_layout.check_extension_conflict(
             self.extendee_spec, self.spec)
 
         # Activate any package dependencies that are also extensions.
         if not force:
             for spec in self.dependency_activations():
-                if not spec.package.activated:
-                    spec.package.do_activate(force=force)
+                if not spec.package.is_activated(
+                        extensions_layout=extensions_layout):
+                    spec.package.do_activate(
+                        force=force, verbose=verbose,
+                        extensions_layout=extensions_layout)
 
-        self.extendee_spec.package.activate(self, **self.extendee_args)
+        self.extendee_spec.package.activate(
+            self, extensions_layout=extensions_layout, **self.extendee_args)
 
-        spack.store.layout.add_extension(self.extendee_spec, self.spec)
-        tty.msg(
-            "Activated extension %s for %s" %
-            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
+        extensions_layout.add_extension(self.extendee_spec, self.spec)
+
+        if verbose:
+            tty.msg(
+                "Activated extension %s for %s" %
+                (self.spec.short_spec,
+                 self.extendee_spec.cformat("$_$@$+$%@")))
 
     def dependency_activations(self):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
                 if spec.package.extends(self.extendee_spec))
 
     def activate(self, extension, **kwargs):
-        """Symlinks all files from the extension into extendee's install dir.
+        """Make extension package usable by linking all its files to a target
+        provided by the directory layout (depending if the user wants to
+        activate globally or in a specified file system view).
 
         Package authors can override this method to support other
         extension mechanisms.  Spack internals (commands, hooks, etc.)
@@ -1775,55 +1874,76 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
+        extensions_layout = kwargs.get("extensions_layout",
+                                       spack.store.extensions)
+        target = extensions_layout.extendee_target_directory(self)
 
         def ignore(filename):
             return (filename in spack.store.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
-        conflict = tree.find_conflict(self.prefix, ignore=ignore)
+        conflict = tree.find_conflict(target, ignore=ignore)
         if conflict:
             raise ExtensionConflictError(conflict)
 
-        tree.merge(self.prefix, ignore=ignore)
+        tree.merge(target, ignore=ignore, link=extensions_layout.link)
 
     def do_deactivate(self, **kwargs):
-        """Called on the extension to invoke extendee's deactivate() method."""
+        """Called on the extension to invoke extendee's deactivate() method.
+
+        `remove_dependents=True` deactivates extensions depending on this
+        package instead of raising an error.
+        """
         self._sanity_check_extension()
         force = kwargs.get('force', False)
+        verbose = kwargs.get("verbose", True)
+        remove_dependents = kwargs.get("remove_dependents", False)
+        extensions_layout = kwargs.get("extensions_layout",
+                                       spack.store.extensions)
 
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
         if not force:
-            spack.store.layout.check_activated(
+            extensions_layout.check_activated(
                 self.extendee_spec, self.spec)
 
-            activated = spack.store.layout.extension_map(
+            activated = extensions_layout.extension_map(
                 self.extendee_spec)
             for name, aspec in activated.items():
                 if aspec == self.spec:
                     continue
                 for dep in aspec.traverse(deptype='run'):
                     if self.spec == dep:
-                        msg = ("Cannot deactivate %s because %s is activated "
-                               "and depends on it.")
-                        raise ActivationError(
-                            msg % (self.spec.short_spec, aspec.short_spec))
+                        if remove_dependents:
+                            aspec.package.do_deactivate(**kwargs)
+                        else:
+                            msg = ("Cannot deactivate %s because %s is "
+                                   "activated and depends on it.")
+                            raise ActivationError(
+                                msg % (self.spec.cshort_spec,
+                                       aspec.cshort_spec))
 
-        self.extendee_spec.package.deactivate(self, **self.extendee_args)
+        self.extendee_spec.package.deactivate(
+            self,
+            extensions_layout=extensions_layout,
+            **self.extendee_args)
 
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
-        if self.activated:
-            spack.store.layout.remove_extension(
+        if self.is_activated(extensions_layout):
+            extensions_layout.remove_extension(
                 self.extendee_spec, self.spec)
 
-        tty.msg(
-            "Deactivated extension %s for %s" %
-            (self.spec.short_spec, self.extendee_spec.cformat("$_$@$+$%@")))
+        if verbose:
+            tty.msg(
+                "Deactivated extension %s for %s" %
+                (self.spec.short_spec,
+                 self.extendee_spec.cformat("$_$@$+$%@")))
 
     def deactivate(self, extension, **kwargs):
-        """Unlinks all files from extension out of this package's install dir.
+        """Unlinks all files from extension out of this package's install dir
+        or the corresponding filesystem view.
 
         Package authors can override this method to support other
         extension mechanisms.  Spack internals (commands, hooks, etc.)
@@ -1831,13 +1951,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
+        extensions_layout = kwargs.get("extensions_layout",
+                                       spack.store.extensions)
+        target = extensions_layout.extendee_target_directory(self)
 
         def ignore(filename):
             return (filename in spack.store.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
-        tree.unmerge(self.prefix, ignore=ignore)
+        tree.unmerge(target, ignore=ignore)
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""
@@ -1876,7 +1999,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """Try to find remote versions of this package using the
            list_url and any other URLs described in the package file."""
         if not self.all_urls:
-            raise VersionFetchError(self.__class__)
+            raise spack.util.web.VersionFetchError(self.__class__)
 
         try:
             return spack.util.web.find_versions_of_archive(
@@ -2020,7 +2143,7 @@ def dump_packages(spec, path):
                 source_repo = spack.repository.Repo(source_repo_root)
                 source_pkg_dir = source_repo.dirname_for_package_name(
                     node.name)
-            except RepoError:
+            except spack.repository.RepoError:
                 tty.warn("Warning: Couldn't copy in provenance for %s" %
                          node.name)
 

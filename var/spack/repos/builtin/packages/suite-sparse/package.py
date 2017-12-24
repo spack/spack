@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@ class SuiteSparse(Package):
     homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
     url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.1.tar.gz'
 
+    version('5.1.0', '9c34d7c07ad5ce1624b8187faa132046')
     version('4.5.5', '0a5b38af0016f009409a9606d2f1b555')
     version('4.5.4', 'f6ab689442e64a1624a47aa220072d1b')
     version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')

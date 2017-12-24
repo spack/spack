@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,17 +34,17 @@ TODO: make this customizable and allow users to configure
       concretization  policies.
 """
 from __future__ import print_function
-from six import iteritems
-from spack.version import *
 from itertools import chain
 from functools_backport import reverse_order
+from six import iteritems
 
 import spack
 import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
-from spack.package_prefs import *
+from spack.version import ver, Version, VersionList, VersionRange
+from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
 
 class DefaultConcretizer(object):
@@ -65,7 +65,8 @@ class DefaultConcretizer(object):
         if spec.virtual:
             candidates = spack.repo.providers_for(spec)
             if not candidates:
-                raise UnsatisfiableProviderSpecError(candidates[0], spec)
+                raise spack.spec.UnsatisfiableProviderSpecError(
+                    candidates[0], spec)
 
             # Find nearest spec in the DAG (up then down) that has prefs.
             spec_w_prefs = find_spec(
@@ -365,6 +366,9 @@ class DefaultConcretizer(object):
                 nearest_flags = set(nearest.compiler_flags.get(flag, []))
                 flags = set(spec.compiler_flags.get(flag, []))
                 if (nearest_flags - flags):
+                    # TODO: these set operations may reorder the flags, which
+                    # for some orders of flags can be invalid. See:
+                    # https://github.com/spack/spack/issues/6154#issuecomment-342365573
                     spec.compiler_flags[flag] = list(nearest_flags | flags)
                     ret = True
             except StopIteration:

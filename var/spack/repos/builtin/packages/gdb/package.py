@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,7 @@ class Gdb(Package):
     homepage = "https://www.gnu.org/software/gdb"
     url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
 
+    version('8.0', '9bb49d134916e73b2c01d01bf20363df')
     version('7.12.1', '06c8f40521ed65fe36ebc2be29b56942')
     version('7.11', 'f585059252836a981ea5db9a5f8ce97f')
     version('7.10.1', 'b93a2721393e5fa226375b42d567d90b')

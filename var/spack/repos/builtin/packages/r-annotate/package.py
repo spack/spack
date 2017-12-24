@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,10 +29,11 @@ class RAnnotate(RPackage):
     """Using R enviroments for annotation."""
 
     homepage = "https://www.bioconductor.org/packages/annotate/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/annotate_1.54.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/annotate"
     list_url = homepage
-    version('1.54.0', '01a4961ef28fc88943e168f946592d44')
+    version('1.54.0', git='https://git.bioconductor.org/packages/annotate', commit='860cc5b696795a31b18beaf4869f9c418d74549e')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.54.0')
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))
     depends_on('r-rcurl', type=('build', 'run'))

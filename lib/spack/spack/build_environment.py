@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -62,15 +62,15 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import *
+from llnl.util.filesystem import join_path, mkdirp, install, install_tree
 
 import spack
 import spack.store
 from spack.environment import EnvironmentModifications, validate
-from spack.util.environment import *
+from spack.util.environment import env_flag, filter_system_paths, get_path
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
-from spack.util.log_parse import *
+from spack.util.log_parse import parse_log_events, make_log_context
 
 
 #
@@ -91,6 +91,7 @@ SPACK_PREFIX = 'SPACK_PREFIX'
 SPACK_INSTALL = 'SPACK_INSTALL'
 SPACK_DEBUG = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC = 'SPACK_SHORT_SPEC'
+SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 
 
@@ -127,7 +128,6 @@ class MakeExecutable(Executable):
 def set_compiler_environment_variables(pkg, env):
     assert(pkg.spec.concrete)
     compiler = pkg.compiler
-    flags = pkg.spec.compiler_flags
 
     # Set compiler variables used by CMake and autotools
     assert all(key in compiler.link_paths for key in (
@@ -159,11 +159,28 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
-    # Add every valid compiler flag to the environment, prefixed with "SPACK_"
+    # Trap spack-tracked compiler flags as appropriate.
+    # env_flags are easy to accidentally override.
+    inject_flags = {}
+    env_flags = {}
+    build_system_flags = {}
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
+        injf, envf, bsf = pkg.flag_handler(flag, pkg.spec.compiler_flags[flag])
+        inject_flags[flag] = injf or []
+        env_flags[flag] = envf or []
+        build_system_flags[flag] = bsf or []
+
+    # Place compiler flags as specified by flag_handler
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Concreteness guarantees key safety here
-        if flags[flag] != []:
-            env.set('SPACK_' + flag.upper(), ' '.join(f for f in flags[flag]))
+        if inject_flags[flag]:
+            # variables SPACK_<FLAG> inject flags through wrapper
+            var_name = 'SPACK_{0}'.format(flag.upper())
+            env.set(var_name, ' '.join(f for f in inject_flags[flag]))
+        if env_flags[flag]:
+            # implicit variables
+            env.set(flag.upper(), ' '.join(f for f in env_flags[flag]))
+    pkg.flags_to_build_system_args(build_system_flags)
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
@@ -297,6 +314,7 @@ def set_build_environment_variables(pkg, env, dirty):
     if spack.debug:
         env.set(SPACK_DEBUG, 'TRUE')
     env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set(SPACK_DEBUG_LOG_ID, pkg.spec.format('${PACKAGE}-${HASH:7}'))
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
@@ -370,6 +388,104 @@ def set_module_variables_for_package(pkg, module):
 
     # Platform-specific library suffix.
     m.dso_suffix = dso_suffix
+
+    def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
+        compiler_path = kwargs.get('compiler', m.spack_cc)
+        compiler = Executable(compiler_path)
+
+        return _static_to_shared_library(pkg.spec.architecture, compiler,
+                                         static_lib, shared_lib, **kwargs)
+
+    m.static_to_shared_library = static_to_shared_library
+
+
+def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
+                              **kwargs):
+    """
+    Converts a static library to a shared library. The static library has to
+    be built with PIC for the conversion to work.
+
+    Parameters:
+        static_lib (str): Path to the static library.
+        shared_lib (str): Path to the shared library. Default is to derive
+                          from the static library's path.
+
+    Keyword arguments:
+        compiler (str): Path to the compiler. Default is spack_cc.
+        compiler_output: Where to print compiler output to.
+        arguments (str list): Additional arguments for the compiler.
+        version (str): Library version. Default is unspecified.
+        compat_version (str): Library compatibility version. Default is
+                              version.
+    """
+    compiler_output = kwargs.get('compiler_output', None)
+    arguments = kwargs.get('arguments', [])
+    version = kwargs.get('version', None)
+    compat_version = kwargs.get('compat_version', version)
+
+    if not shared_lib:
+        shared_lib = '{0}.{1}'.format(os.path.splitext(static_lib)[0],
+                                      dso_suffix)
+
+    compiler_args = []
+
+    # TODO: Compiler arguments should not be hardcoded but provided by
+    #       the different compiler classes.
+    if 'linux' in arch:
+        soname = os.path.basename(shared_lib)
+
+        if compat_version:
+            soname += '.{0}'.format(compat_version)
+
+        compiler_args = [
+            '-shared',
+            '-Wl,-soname,{0}'.format(soname),
+            '-Wl,--whole-archive',
+            static_lib,
+            '-Wl,--no-whole-archive'
+        ]
+    elif 'darwin' in arch:
+        install_name = shared_lib
+
+        if compat_version:
+            install_name += '.{0}'.format(compat_version)
+
+        compiler_args = [
+            '-dynamiclib',
+            '-install_name {0}'.format(install_name),
+            '-Wl,-force_load,{0}'.format(static_lib)
+        ]
+
+        if compat_version:
+            compiler_args.append('-compatibility_version {0}'.format(
+                compat_version))
+
+        if version:
+            compiler_args.append('-current_version {0}'.format(version))
+
+    if len(arguments) > 0:
+        compiler_args.extend(arguments)
+
+    shared_lib_base = shared_lib
+
+    if version:
+        shared_lib += '.{0}'.format(version)
+    elif compat_version:
+        shared_lib += '.{0}'.format(compat_version)
+
+    compiler_args.extend(['-o', shared_lib])
+
+    # Create symlinks for version and compat_version
+    shared_lib_link = os.path.basename(shared_lib)
+
+    if version or compat_version:
+        os.symlink(shared_lib_link, shared_lib_base)
+
+    if compat_version and compat_version != version:
+        os.symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
+                                                     compat_version))
+
+    return compiler(*compiler_args, output=compiler_output)
 
 
 def get_rpath_deps(pkg):
@@ -459,19 +575,6 @@ def setup_package(pkg, dirty):
     for s in pkg.spec.traverse():
         assert s.package.spec is s
 
-    # Trap spack-tracked compiler flags as appropriate.
-    # Must be before set_compiler_environment_variables
-    # Current implementation of default flag handler relies on this being
-    # the first thing to affect the spack_env (so there is no appending), or
-    # on no other build_environment methods trying to affect these variables
-    # (CFLAGS, CXXFLAGS, etc). Currently both are true, either is sufficient.
-    for flag in spack.spec.FlagMap.valid_compiler_flags():
-        trap_func = getattr(pkg, flag + '_handler',
-                            getattr(pkg, 'default_flag_handler',
-                                    lambda x, y: y[1]))
-        flag_val = pkg.spec.compiler_flags[flag]
-        pkg.spec.compiler_flags[flag] = trap_func(spack_env, (flag, flag_val))
-
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
@@ -507,7 +610,7 @@ def setup_package(pkg, dirty):
     # Otherwise the environment modifications could undo module changes, such
     # as unsetting LD_LIBRARY_PATH after a module changes it.
     for mod in pkg.compiler.modules:
-        # Fixes issue https://github.com/LLNL/spack/issues/3153
+        # Fixes issue https://github.com/spack/spack/issues/3153
         if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
             load_module("cce")
         load_module(mod)
@@ -567,7 +670,7 @@ def fork(pkg, function, dirty, fake):
             tty.msg(e.message)
             child_pipe.send(None)
 
-        except:
+        except BaseException:
             # catch ANYTHING that goes wrong in the child process
             exc_type, exc, tb = sys.exc_info()
 
@@ -677,11 +780,11 @@ def get_package_context(traceback, context=3):
     # Build a message showing context in the install method.
     sourcelines, start = inspect.getsourcelines(frame)
 
-    l = frame.f_lineno - start
-    start_ctx = max(0, l - context)
-    sourcelines = sourcelines[start_ctx:l + context + 1]
+    fl = frame.f_lineno - start
+    start_ctx = max(0, fl - context)
+    sourcelines = sourcelines[start_ctx:fl + context + 1]
     for i, line in enumerate(sourcelines):
-        is_error = start_ctx + i == l
+        is_error = start_ctx + i == fl
         mark = ">> " if is_error else "   "
         marked = "  %s%-6d%s" % (mark, start_ctx + i, line.rstrip())
         if is_error:

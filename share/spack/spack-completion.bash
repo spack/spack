@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,7 @@ function _bash_completion_spack {
     # and `spack compiler add []` will call _spack_compiler_add
     local subfunction=$(IFS='_'; echo "_${COMP_WORDS_NO_FLAGS[*]}")
     # Translate dashes to underscores, as dashes are not permitted in
-    # compatibility mode. See https://github.com/LLNL/spack/pull/4079
+    # compatibility mode. See https://github.com/spack/spack/pull/4079
     subfunction=${subfunction//-/_}
 
     # However, the word containing the current cursor position needs to be

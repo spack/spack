@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,10 +29,11 @@ class RA4(RPackage):
     """Automated Affymetrix Array Analysis Umbrella Package."""
 
     homepage = "https://www.bioconductor.org/packages/a4/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/a4_1.24.0.tar.gz"
+    url      = "https://git.bioconductor.org/packages/a4"
     list_url = homepage
-    version('1.24.0', 'dfa17ec5b1914300360ff11f43955fdd')
+    version('1.24.0', git='https://git.bioconductor.org/packages/a4', commit='79b5143652176787c85a0d587b3bbfad6b4a19f4')
 
+    depends_on('r@3.4.0:3.4.9', when='@1.24.0')
     depends_on('r-a4base', type=('build', 'run'))
     depends_on('r-a4preproc', type=('build', 'run'))
     depends_on('r-a4classif', type=('build', 'run'))

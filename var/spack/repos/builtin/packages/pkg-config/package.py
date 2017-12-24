@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,8 @@ class PkgConfig(AutotoolsPackage):
     version('0.29.2', 'f6e931e319531b736fadc017f470e68a')
     version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
     version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
+
+    provides('pkgconfig')
 
     variant('internal_glib', default=True,
             description='Builds with internal glib')

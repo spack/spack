@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -44,6 +44,7 @@ class Hwloc(AutotoolsPackage):
     list_url = "http://www.open-mpi.org/software/hwloc/"
     list_depth = 2
 
+    version('1.11.8', 'a0fa1c9109a4d8b4b6568e62cc9b6e30')
     version('1.11.7', '867a5266675e5bf1ef4ab66c459653f8')
     version('1.11.6', 'b4e95eadd2fbdb6d40bbd96be6f03c84')
     version('1.11.5', '8f5fe6a9be2eb478409ad5e640b2d3ba')
@@ -57,11 +58,12 @@ class Hwloc(AutotoolsPackage):
     variant('libxml2', default=True, description="Build with libxml2")
     variant('pci', default=(sys.platform != 'darwin'),
             description="Support analyzing devices on PCI bus")
+    variant('shared', default=True, description="Build shared libraries")
 
     depends_on('cuda', when='+cuda')
     depends_on('libpciaccess', when='+pci')
     depends_on('libxml2', when='+libxml2')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
@@ -72,6 +74,7 @@ class Hwloc(AutotoolsPackage):
             "--enable-cuda" if '+cuda' in spec else "--disable-cuda",
             "--enable-libxml2" if '+libxml2' in spec else "--disable-libxml2",
             "--enable-pci" if '+pci' in spec else "--disable-pci",
+            "--enable-shared" if '+shared' in spec else "--disable-shared",
             # Disable OpenCL, since hwloc might pick up an OpenCL
             # library at build time that is then not found at run time
             # (Alternatively, we could require OpenCL as dependency.)

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,7 @@ import spack.error
 import spack.spec
 import spack.architecture
 from spack.util.multiproc import parmap
-from spack.util.executable import *
+from spack.util.executable import Executable, ProcessError
 from spack.util.environment import get_path
 
 __all__ = ['Compiler', 'get_compiler_version']
@@ -63,6 +63,27 @@ def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
 def dumpversion(compiler_path):
     """Simple default dumpversion method -- this is what gcc does."""
     return get_compiler_version(compiler_path, '-dumpversion')
+
+
+def tokenize_flags(flags_str):
+    """Given a compiler flag specification as a string, this returns a list
+       where the entries are the flags. For compiler options which set values
+       using the syntax "-flag value", this function groups flags and their
+       values together. Any token not preceded by a "-" is considered the
+       value of a prior flag."""
+    tokens = flags_str.split()
+    if not tokens:
+        return []
+    flag = tokens[0]
+    flags = []
+    for token in tokens[1:]:
+        if not token.startswith('-'):
+            flag += ' ' + token
+        else:
+            flags.append(flag)
+            flag = token
+    flags.append(flag)
+    return flags
 
 
 class Compiler(object):
@@ -125,7 +146,6 @@ class Compiler(object):
         def check(exe):
             if exe is None:
                 return None
-            exe = self._find_full_path(exe)
             _verify_executables(exe)
             return exe
 
@@ -148,7 +168,7 @@ class Compiler(object):
         for flag in spack.spec.FlagMap.valid_compiler_flags():
             value = kwargs.get(flag, None)
             if value is not None:
-                self.flags[flag] = value.split()
+                self.flags[flag] = tokenize_flags(value)
 
     @property
     def version(self):
@@ -258,44 +278,17 @@ class Compiler(object):
 
                     match = re.match(regex, exe)
                     if match:
-                        key = (full_path,) + match.groups()
+                        key = (full_path,) + match.groups() + (detect_version,)
                         checks.append(key)
 
-        def check(key):
-            try:
-                full_path, prefix, suffix = key
-                version = detect_version(full_path)
-                return (version, prefix, suffix, full_path)
-            except ProcessError as e:
-                tty.debug(
-                    "Couldn't get version for compiler %s" % full_path, e)
-                return None
-            except Exception as e:
-                # Catching "Exception" here is fine because it just
-                # means something went wrong running a candidate executable.
-                tty.debug("Error while executing candidate compiler %s"
-                          % full_path,
-                          "%s: %s" % (e.__class__.__name__, e))
-                return None
-
-        successful = [k for k in parmap(check, checks) if k is not None]
+        successful = [k for k in parmap(_get_versioned_tuple, checks)
+                      if k is not None]
 
         # The 'successful' list is ordered like the input paths.
         # Reverse it here so that the dict creation (last insert wins)
         # does not spoil the intented precedence.
         successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
-
-    def _find_full_path(self, path):
-        """Return the actual path for a tool.
-
-        Some toolchains use forwarding executables (particularly Xcode-based
-        toolchains) which can be manipulated by external environment variables.
-        This method should be used to extract the actual path used for a tool
-        by finding out the end executable the forwarding executables end up
-        running.
-        """
-        return path
 
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
@@ -311,6 +304,28 @@ class Compiler(object):
             self.name, '\n     '.join((str(s) for s in (
                 self.cc, self.cxx, self.f77, self.fc, self.modules,
                 str(self.operating_system)))))
+
+
+def _get_versioned_tuple(compiler_check_tuple):
+    full_path, prefix, suffix, detect_version = compiler_check_tuple
+    try:
+        version = detect_version(full_path)
+        if (not version) or (not str(version).strip()):
+            tty.debug(
+                "Couldn't get version for compiler %s" % full_path)
+            return None
+        return (version, prefix, suffix, full_path)
+    except ProcessError as e:
+        tty.debug(
+            "Couldn't get version for compiler %s" % full_path, e)
+        return None
+    except Exception as e:
+        # Catching "Exception" here is fine because it just
+        # means something went wrong running a candidate executable.
+        tty.debug("Error while executing candidate compiler %s"
+                  % full_path,
+                  "%s: %s" % (e.__class__.__name__, e))
+        return None
 
 
 class CompilerAccessError(spack.error.SpackError):

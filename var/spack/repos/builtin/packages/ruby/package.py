@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,32 +25,36 @@
 from spack import *
 
 
-class Ruby(Package):
+class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
     homepage = "https://www.ruby-lang.org/"
     url      = "http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
 
+    version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
+
+    variant('openssl', default=False, description="Enable OpenSSL support")
+    variant('readline', default=False, description="Enable Readline support")
+
     extendable = True
 
-    version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
     depends_on('libffi')
     depends_on('zlib')
-    variant('openssl', default=False, description="Enable OpenSSL support")
+    depends_on('libx11')
+    depends_on('tcl')
+    depends_on('tk')
     depends_on('openssl', when='+openssl')
-    variant('readline', default=False, description="Enable Readline support")
     depends_on('readline', when='+readline')
 
-    def install(self, spec, prefix):
-        options = ["--prefix=%s" % prefix]
-        if '+openssl' in spec:
-            options.append("--with-openssl-dir=%s" % spec['openssl'].prefix)
-        if '+readline' in spec:
-            options.append("--with-readline-dir=%s" % spec['readline'].prefix)
-        configure(*options)
-        make()
-        make("install")
+    def configure_args(self):
+        args = []
+        if '+openssl' in self.spec:
+            args.append("--with-openssl-dir=%s" % spec['openssl'].prefix)
+        if '+readline' in self.spec:
+            args.append("--with-readline-dir=%s" % spec['readline'].prefix)
+        args.append('--with-tk=%s' % self.spec['tk'].prefix)
+        return args
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # TODO: do this only for actual extensions.

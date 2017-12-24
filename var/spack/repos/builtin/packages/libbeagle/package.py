@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@ class Libbeagle(AutotoolsPackage):
     depends_on('m4',       type='build')
 
     depends_on('subversion', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     def url_for_version(self, version):
         url = "https://github.com/beagle-dev/beagle-lib/archive/beagle_release_{0}.tar.gz"

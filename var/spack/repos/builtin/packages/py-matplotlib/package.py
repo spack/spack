@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -86,7 +86,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('image-magick', when='+animation')
 
     # --------- Optional dependencies
-    depends_on('pkg-config', type='build')    # why not...
+    depends_on('pkgconfig', type='build')    # why not...
     depends_on('pil', when='+image', type=('build', 'run'))
     depends_on('py-ipython', when='+ipython', type=('build', 'run'))
     depends_on('ghostscript', when='+latex', type='run')

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -45,3 +45,6 @@ class Coinhsl(AutotoolsPackage):
     url = "file://{0}/coinhsl-archive-2014.01.17.tar.gz".format(os.getcwd())
 
     version('2014.01.17', '9eb3dd40ed034814ed8dfee75b281180c1d9d2ae')
+
+    # CoinHSL fails to build in parallel
+    parallel = False

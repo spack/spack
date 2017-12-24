@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,9 +27,13 @@ based on its URL.
 """
 
 import os
-
 import pytest
-from spack.url import *
+
+from spack.url import parse_name_offset, parse_version_offset
+from spack.url import parse_name_and_version, substitute_version
+from spack.url import strip_name_suffixes, strip_version_suffixes
+from spack.url import UndetectableVersionError
+from spack.version import Version
 
 
 @pytest.mark.parametrize('url,expected', [

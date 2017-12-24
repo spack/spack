@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -73,15 +73,47 @@ class NetlibLapack(Package):
     @property
     def blas_libs(self):
         shared = True if '+shared' in self.spec else False
+        query_parameters = self.spec.last_query.extra_parameters
+        query2libraries = {
+            tuple(): ['libblas'],
+            ('c', 'fortran'): [
+                'libcblas',
+                'libblas',
+            ],
+            ('c',): [
+                'libcblas',
+            ],
+            ('fortran',): [
+                'libblas',
+            ]
+        }
+        key = tuple(sorted(query_parameters))
+        libraries = query2libraries[key]
         return find_libraries(
-            'libblas', root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recurse=True
         )
 
     @property
     def lapack_libs(self):
         shared = True if '+shared' in self.spec else False
+        query_parameters = self.spec.last_query.extra_parameters
+        query2libraries = {
+            tuple(): ['liblapack'],
+            ('c', 'fortran'): [
+                'liblapacke',
+                'liblapack',
+            ],
+            ('c',): [
+                'liblapacke',
+            ],
+            ('fortran',): [
+                'liblapack',
+            ]
+        }
+        key = tuple(sorted(query_parameters))
+        libraries = query2libraries[key]
         return find_libraries(
-            'liblapack', root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recurse=True
         )
 
     def install_one(self, spec, prefix, shared):
@@ -89,7 +121,10 @@ class NetlibLapack(Package):
             '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if shared else 'OFF'),
             '-DCMAKE_BUILD_TYPE:STRING=%s' % (
                 'Debug' if '+debug' in spec else 'Release'),
-            '-DLAPACKE:BOOL=%s' % ('ON' if '+lapacke' in spec else 'OFF')]
+            '-DLAPACKE:BOOL=%s' % (
+                'ON' if '+lapacke' in spec else 'OFF'),
+            '-DLAPACKE_WITH_TMG:BOOL=%s' % (
+                'ON' if '+lapacke' in spec else 'OFF')]
         if spec.satisfies('@3.6.0:'):
             cmake_args.extend(['-DCBLAS=ON'])  # always build CBLAS
 

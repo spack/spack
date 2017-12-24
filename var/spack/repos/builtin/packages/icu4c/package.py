@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@ class Icu4c(AutotoolsPackage):
     list_url = "http://download.icu-project.org/files/icu4c"
     list_depth = 2
 
+    version('60.1', '3d164a2d1bcebd1464c6160ebb8315ef')
     version('58.2', 'fac212b32b7ec7ab007a12dff1f3aea1')
     version('57.1', '976734806026a4ef8bdd17937c8898b9')
 

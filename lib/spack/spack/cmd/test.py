@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@ import argparse
 import pytest
 from six import StringIO
 
-from llnl.util.filesystem import *
+from llnl.util.filesystem import working_dir
 from llnl.util.tty.colify import colify
 
 import spack
@@ -96,7 +96,7 @@ def test(parser, args, unknown_args):
         pytest.main(['-h'])
         return
 
-    # pytest.ini lives in the root of the sapck repository.
+    # pytest.ini lives in the root of the spack repository.
     with working_dir(spack.prefix):
         # --list and --long-list print the test output better.
         if args.list or args.long_list:

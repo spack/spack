@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -71,7 +71,7 @@ class Scorep(AutotoolsPackage):
 
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
-    # https://github.com/LLNL/spack/issues/1609
+    # https://github.com/spack/spack/issues/1609
     conflicts('platform=darwin')
 
     def configure_args(self):

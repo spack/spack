@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -56,6 +56,8 @@ class Go(Package):
 
     extendable = True
 
+    version('1.9.2', '44105c865a1a810464df79233a05a568')
+    version('1.9.1', '27bce1ffb05f4f6bd90d90081e5d4169')
     version('1.9',   'da2d44ea384076efec43ee1f8b7d45d2')
     version('1.8.3', '64e9380e07bba907e26a00cf5fcbe77e')
     version('1.8.1', '409dd21e7347dd1ea9efe64a700073cc')

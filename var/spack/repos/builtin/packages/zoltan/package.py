@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -53,8 +53,13 @@ class Zoltan(Package):
 
     variant('fortran', default=True, description='Enable Fortran support.')
     variant('mpi', default=True, description='Enable MPI support.')
+    variant('parmetis', default=False, description='Enable ParMETIS support.')
 
     depends_on('mpi', when='+mpi')
+
+    depends_on('parmetis@4:', when='+parmetis')
+
+    conflicts('+parmetis', when='~mpi')
 
     def install(self, spec, prefix):
         # FIXME: The older Zoltan versions fail to compile the F90 MPI wrappers
@@ -79,6 +84,13 @@ class Zoltan(Package):
             config_cflags.append(self.compiler.pic_flag)
             if spec.satisfies('%gcc'):
                 config_args.append('--with-libs={0}'.format('-lgfortran'))
+
+        if '+parmetis' in spec:
+            config_args.append('--with-parmetis')
+            config_args.append('--with-parmetis-libdir={0}'
+                               .format(spec['parmetis'].prefix.lib))
+            config_args.append('--with-parmetis-incdir={0}'
+                               .format(spec['parmetis'].prefix.include))
 
         if '+mpi' in spec:
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -50,3 +50,5 @@ class DialignTx(MakefilePackage):
             install('dialign-tx', prefix.bin)
             # t-coffee recognizes as dialign-t
             install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+
+    patch('dialign-1-0-2-gcc-5-4-0.patch', when='%gcc@5.4.0')

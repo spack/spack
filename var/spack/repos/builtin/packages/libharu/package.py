@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,11 +40,24 @@ class Libharu(AutotoolsPackage):
     version('master', branch='master',
             git='https://github.com/libharu/libharu.git')
 
+    depends_on('libpng')
+    depends_on('zlib')
+
     def autoreconf(self, spec, prefix):
         """execute their autotools wrapper script"""
         if os.path.exists('./buildconf.sh'):
             bash = which('bash')
             bash('./buildconf.sh', '--force')
+
+    def configure_args(self):
+        """Point to spack-installed zlib and libpng"""
+        spec = self.spec
+        args = []
+
+        args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
+        args.append('--with-png={0}'.format(spec['libpng'].prefix))
+
+        return args
 
     def url_for_version(self, version):
         url = 'https://github.com/libharu/libharu/archive/RELEASE_{0}.tar.gz'

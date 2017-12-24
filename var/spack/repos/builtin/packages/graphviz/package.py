@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -79,6 +79,9 @@ class Graphviz(AutotoolsPackage):
     variant('libgd', default=False,
             description='Build with libgd support (more output formats)')
 
+    variant('gts', default=False,
+            description='Build with GNU Triangulated Surface Library')
+
     parallel = False
 
     # These language bindings have been tested, we know they work.
@@ -98,11 +101,12 @@ class Graphviz(AutotoolsPackage):
     depends_on('cairo', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
     depends_on('libgd', when='+libgd')
+    depends_on('gts', when='+gts')
     depends_on('ghostscript')
     depends_on('freetype')
     depends_on('expat')
     depends_on('libtool')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on('java', when='+java')
     depends_on('python@2:2.8', when='+python')
@@ -131,7 +135,7 @@ class Graphviz(AutotoolsPackage):
                     "`tested_bindings` list.  Be prepared to add "
                     "required dependencies.  "
                     "Please then submit a pull request to "
-                    "http://github.com/llnl/spack".format(var))
+                    "http://github.com/spack/spack".format(var))
             options.append('--disable-%s' % var[1:])
 
         for var in self.tested_bindings:
@@ -146,7 +150,7 @@ class Graphviz(AutotoolsPackage):
         else:
             options.append('--enable-swig=no')
 
-        for var in ('+pangocairo', '+libgd'):
+        for var in ('+pangocairo', '+libgd', '+gts'):
             if var in spec:
                 options.append('--with-{0}'.format(var[1:]))
             else:
