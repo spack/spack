@@ -45,9 +45,16 @@ class Geant4(CMakePackage):
     
     depends_on('cmake@3.5:', type='build')
 
-    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p02")
-    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p01")
-    depends_on("clhep@2.2.0.4~cxx11+cxx14", when="@10.01.p03")
+    # C++11 support
+    depends_on("clhep@2.3.1.1+cxx11~cxx14", when="@10.02.p01+cxx11~cxx14")
+    depends_on("clhep@2.3.1.1+cxx11~cxx14", when="@10.02.p01+cxx11~cxx14")
+    depends_on("clhep@2.2.0.4+cxx11~cxx14", when="@10.01.p03+cxx11~cxx14")
+
+    # C++14 support
+    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p02~cxx11+cxx14")
+    depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p01~cxx11+cxx14")
+    depends_on("clhep@2.2.0.4~cxx11+cxx14", when="@10.01.p03~cxx11+cxx14")
+    
     depends_on("expat")
     depends_on("zlib")
     depends_on("xerces-c")
