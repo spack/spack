@@ -71,7 +71,6 @@ class Geant4(CMakePackage):
             '-DGEANT4_INSTALL_DATA=ON',
             '-DGEANT4_BUILD_TLS_MODEL=global-dynamic',
             '-DGEANT4_BUILD_MULTITHREADED=ON',
-            '-DGEANT4_USE_USOLIDS=ON',
             '-DGEANT4_USE_SYSTEM_EXPAT=ON',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
             '-DXERCESC_ROOT_DIR:STRING=%s' %
@@ -96,6 +95,7 @@ class Geant4(CMakePackage):
             )
 	
 	if '+vecgeom' in spec:
+	    options.append('-DGEANT4_USE_USOLIDS=ON')
 	    options.append('-DUSolids_DIR=%s' % 
 		join_path(spec['vecgeom'].prefix, 'lib/CMake/USolids'))
 
