@@ -34,9 +34,9 @@ class Pfunit(CMakePackage):
     homepage = "http://pfunit.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/pfunit/Source/pFUnit.tar.gz"
 
-    version('3.2.8', commit='14339d668c3f7440c408422dea68d750ee59ad9d',
+    version('3.2.9', commit='3c1d47f594a7e756f21be59074cb730d1a1e9a79',
             git='https://git.code.sf.net/p/pfunit/code')
-    version('master', branch='master',
+    version('develop', branch='master',
             git='https://git.code.sf.net/p/pfunit/code')
 
     variant('mpi', default=False, description='Enable MPI')
@@ -45,8 +45,6 @@ class Pfunit(CMakePackage):
     depends_on('python', type=('build','run'))
     depends_on('py-unittest2', type=('run'))
     depends_on('mpi', when='+mpi')
-
-    patch('Test_UnixProcess_delay_after_kill.patch', when='@3.2.8')
 
     def patch(self):
         # The package tries to put .mod files in directory ./mod;
