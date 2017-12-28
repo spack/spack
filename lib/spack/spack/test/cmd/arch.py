@@ -28,7 +28,7 @@ from spack.main import SpackCommand
 arch = SpackCommand('arch')
 
 
-def test_arch(builtin_mock):
+def test_arch():
     """Sanity check the arch command to make sure it works."""
 
     arch()
