@@ -135,7 +135,7 @@ OASIS_LIB=""
 %DEBUG_FFLAGS   -g 
 
 %BASE_INC       -D__NONE__
-%BASE_LD        -L{BOOST_LIB_DIR} -L{BLITZ_LIB_DIR} {LIBCXX}
+%BASE_LD        -L{BOOST_LIB_DIR} -L{BLITZ_LIB_DIR} -lblitz {LIBCXX}
 
 %CPP            {CC} -E
 %FPP            {CC} -E -P -x c
@@ -166,7 +166,7 @@ OASIS_LIB=""
 %DEBUG_FFLAGS   -g 
 
 %BASE_INC       -D__NONE__
-%BASE_LD        -D__NONE__ -L{BOOST_LIB_DIR} -L{BLITZ_LIB_DIR}
+%BASE_LD        -D__NONE__ -L{BOOST_LIB_DIR} -L{BLITZ_LIB_DIR} -lblitz
 
 %CPP            cpp
 %FPP            cpp -P -CC
