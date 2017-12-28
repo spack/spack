@@ -46,6 +46,10 @@ class Xios(Package):
     patch('bld_extern_1.0.patch', when='@:1.0')
     patch('bld_extern_1.x.patch', when='@1.1:')
 
+    # Workaround bug #17782 in llvm, where reading a double
+    # followed by a character is broken (e.g. duration '1d'):
+    patch('llvm_bug_17782.patch', when='@1.1: %clang')
+
     depends_on('netcdf+mpi')
     depends_on('netcdf-fortran^netcdf+mpi')
     depends_on('hdf5+mpi')
