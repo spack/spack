@@ -21,9 +21,12 @@ class FormatChecker(object):
     returns a ``bool``, use the :meth:`FormatChecker.checks` or
     :meth:`FormatChecker.cls_checks` decorators.
 
-    :argument iterable formats: the known formats to validate. This argument
-                                can be used to limit which formats will be used
-                                during validation.
+    Arguments:
+
+        formats (iterable):
+
+            The known formats to validate. This argument can be used to
+            limit which formats will be used during validation.
 
     """
 
@@ -39,11 +42,20 @@ class FormatChecker(object):
         """
         Register a decorated function as validating a new format.
 
-        :argument str format: the format that the decorated function will check
-        :argument Exception raises: the exception(s) raised by the decorated
-            function when an invalid instance is found. The exception object
-            will be accessible as the :attr:`ValidationError.cause` attribute
-            of the resulting validation error.
+        Arguments:
+
+            format (str):
+
+                The format that the decorated function will check.
+
+            raises (Exception):
+
+                The exception(s) raised by the decorated function when
+                an invalid instance is found.
+
+                The exception object will be accessible as the
+                :attr:`ValidationError.cause` attribute of the resulting
+                validation error.
 
         """
 
@@ -58,10 +70,20 @@ class FormatChecker(object):
         """
         Check whether the instance conforms to the given format.
 
-        :argument instance: the instance to check
-        :type: any primitive type (str, number, bool)
-        :argument str format: the format that instance should conform to
-        :raises: :exc:`FormatError` if instance does not conform to format
+        Arguments:
+
+            instance (any primitive type, i.e. str, number, bool):
+
+                The instance to check
+
+            format (str):
+
+                The format that instance should conform to
+
+
+        Raises:
+
+            :exc:`FormatError` if instance does not conform to ``format``
 
         """
 
@@ -83,10 +105,19 @@ class FormatChecker(object):
         """
         Check whether the instance conforms to the given format.
 
-        :argument instance: the instance to check
-        :type: any primitive type (str, number, bool)
-        :argument str format: the format that instance should conform to
-        :rtype: bool
+        Arguments:
+
+            instance (any primitive type, i.e. str, number, bool):
+
+                The instance to check
+
+            format (str):
+
+                The format that instance should conform to
+
+        Returns:
+
+            bool: Whether it conformed
 
         """
 
@@ -125,6 +156,7 @@ def is_email(instance):
 
 _ipv4_re = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
 
+
 @_checks_drafts(draft3="ip-address", draft4="ipv4")
 def is_ipv4(instance):
     if not isinstance(instance, str_types):
@@ -143,6 +175,7 @@ if hasattr(socket, "inet_pton"):
 
 
 _host_name_re = re.compile(r"^[A-Za-z0-9][A-Za-z0-9\.\-]{1,255}$")
+
 
 @_checks_drafts(draft3="host-name", draft4="hostname")
 def is_host_name(instance):
@@ -178,16 +211,16 @@ except ImportError:
         pass
     else:
         @_checks_drafts("date-time", raises=(ValueError, isodate.ISO8601Error))
-        def is_date(instance):
+        def is_datetime(instance):
             if not isinstance(instance, str_types):
                 return True
             return isodate.parse_datetime(instance)
 else:
-        @_checks_drafts("date-time")
-        def is_date(instance):
-            if not isinstance(instance, str_types):
-                return True
-            return strict_rfc3339.validate_rfc3339(instance)
+    @_checks_drafts("date-time")
+    def is_datetime(instance):
+        if not isinstance(instance, str_types):
+            return True
+        return strict_rfc3339.validate_rfc3339(instance)
 
 
 @_checks_drafts("regex", raises=re.error)
@@ -219,7 +252,6 @@ else:
     def is_css_color_code(instance):
         return webcolors.normalize_hex(instance)
 
-
     @_checks_drafts(draft3="color", raises=(ValueError, TypeError))
     def is_css21_color(instance):
         if (
@@ -228,7 +260,6 @@ else:
         ):
             return True
         return is_css_color_code(instance)
-
 
     def is_css3_color(instance):
         if instance.lower() in webcolors.css3_names_to_hex:

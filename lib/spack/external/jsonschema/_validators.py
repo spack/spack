@@ -5,9 +5,6 @@ from jsonschema.exceptions import FormatError, ValidationError
 from jsonschema.compat import iteritems
 
 
-FLOAT_TOLERANCE = 10 ** -15
-
-
 def patternProperties(validator, patternProperties, instance, schema):
     if not validator.is_type(instance, "object"):
         return
@@ -32,8 +29,21 @@ def additionalProperties(validator, aP, instance, schema):
             for error in validator.descend(instance[extra], aP, path=extra):
                 yield error
     elif not aP and extras:
-        error = "Additional properties are not allowed (%s %s unexpected)"
-        yield ValidationError(error % _utils.extras_msg(extras))
+        if "patternProperties" in schema:
+            patterns = sorted(schema["patternProperties"])
+            if len(extras) == 1:
+                verb = "does"
+            else:
+                verb = "do"
+            error = "%s %s not match any of the regexes: %s" % (
+                ", ".join(map(repr, sorted(extras))),
+                verb,
+                ", ".join(map(repr, patterns)),
+            )
+            yield ValidationError(error)
+        else:
+            error = "Additional properties are not allowed (%s %s unexpected)"
+            yield ValidationError(error % _utils.extras_msg(extras))
 
 
 def items(validator, items, instance, schema):
@@ -77,10 +87,10 @@ def minimum(validator, minimum, instance, schema):
         return
 
     if schema.get("exclusiveMinimum", False):
-        failed = float(instance) <= minimum
+        failed = instance <= minimum
         cmp = "less than or equal to"
     else:
-        failed = float(instance) < minimum
+        failed = instance < minimum
         cmp = "less than"
 
     if failed:
@@ -111,8 +121,8 @@ def multipleOf(validator, dB, instance, schema):
         return
 
     if isinstance(dB, float):
-        mod = instance % dB
-        failed = (mod > FLOAT_TOLERANCE) and (dB - mod) > FLOAT_TOLERANCE
+        quotient = instance / dB
+        failed = int(quotient) != quotient
     else:
         failed = instance % dB
 
@@ -136,7 +146,7 @@ def uniqueItems(validator, uI, instance, schema):
         validator.is_type(instance, "array") and
         not _utils.uniq(instance)
     ):
-        yield ValidationError("%r has non-unique elements" % instance)
+        yield ValidationError("%r has non-unique elements" % (instance,))
 
 
 def pattern(validator, patrn, instance, schema):
@@ -193,9 +203,20 @@ def enum(validator, enums, instance, schema):
 
 
 def ref(validator, ref, instance, schema):
-    with validator.resolver.resolving(ref) as resolved:
-        for error in validator.descend(instance, resolved):
-            yield error
+    resolve = getattr(validator.resolver, "resolve", None)
+    if resolve is None:
+        with validator.resolver.resolving(ref) as resolved:
+            for error in validator.descend(instance, resolved):
+                yield error
+    else:
+        scope, resolved = validator.resolver.resolve(ref)
+        validator.resolver.push_scope(scope)
+
+        try:
+            for error in validator.descend(instance, resolved):
+                yield error
+        finally:
+            validator.resolver.pop_scope()
 
 
 def type_draft3(validator, types, instance, schema):
@@ -247,7 +268,7 @@ def properties_draft3(validator, properties, instance, schema):
 
 def disallow_draft3(validator, disallow, instance, schema):
     for disallowed in _utils.ensure_list(disallow):
-        if validator.is_valid(instance, {"type" : [disallowed]}):
+        if validator.is_valid(instance, {"type": [disallowed]}):
             yield ValidationError(
                 "%r is disallowed for %r" % (disallowed, instance)
             )
