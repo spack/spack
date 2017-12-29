@@ -1,6 +1,10 @@
 """
 """
-import os, sys, posixpath
+import warnings
+import os
+import sys
+import posixpath
+import fnmatch
 import py
 
 # Moved from local.py.
@@ -169,11 +173,16 @@ class PathBase(object):
     def readlines(self, cr=1):
         """ read and return a list of lines from the path. if cr is False, the
 newline will be removed from the end of each line. """
+        if sys.version_info < (3, ):
+            mode = 'rU'
+        else:  # python 3 deprecates mode "U" in favor of "newline" option
+            mode = 'r'
+
         if not cr:
-            content = self.read('rU')
+            content = self.read(mode)
             return content.split('\n')
         else:
-            f = self.open('rU')
+            f = self.open(mode)
             try:
                 return f.readlines()
             finally:
@@ -183,14 +192,16 @@ newline will be removed from the end of each line. """
         """ (deprecated) return object unpickled from self.read() """
         f = self.open('rb')
         try:
-            return py.error.checked_call(py.std.pickle.load, f)
+            import pickle
+            return py.error.checked_call(pickle.load, f)
         finally:
             f.close()
 
     def move(self, target):
         """ move this path to target. """
         if target.relto(self):
-            raise py.error.EINVAL(target,
+            raise py.error.EINVAL(
+                target,
                 "cannot move path into a subdirectory of itself")
         try:
             self.rename(target)
@@ -220,7 +231,7 @@ newline will be removed from the end of each line. """
                 path.check(file=1, link=1)  # a link pointing to a file
         """
         if not kw:
-            kw = {'exists' : 1}
+            kw = {'exists': 1}
         return self.Checkers(self)._evaluate(kw)
 
     def fnmatch(self, pattern):
@@ -369,6 +380,9 @@ newline will be removed from the end of each line. """
     def _sortlist(self, res, sort):
         if sort:
             if hasattr(sort, '__call__'):
+                warnings.warn(DeprecationWarning(
+                    "listdir(sort=callable) is deprecated and breaks on python3"
+                ), stacklevel=3)
                 res.sort(sort)
             else:
                 res.sort()
@@ -378,7 +392,7 @@ newline will be removed from the end of each line. """
         return self.strpath == str(other)
 
     def __fspath__(self):
-        return str(self)
+        return self.strpath
 
 class Visitor:
     def __init__(self, fil, rec, ignore, bf, sort):
@@ -436,4 +450,4 @@ class FNMatcher:
             name = str(path) # path.strpath # XXX svn?
             if not os.path.isabs(pattern):
                 pattern = '*' + path.sep + pattern
-        return py.std.fnmatch.fnmatch(name, pattern)
+        return fnmatch.fnmatch(name, pattern)
