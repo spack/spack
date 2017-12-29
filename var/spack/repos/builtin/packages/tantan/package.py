@@ -34,6 +34,5 @@ class Tantan(MakefilePackage):
 
     version('13', '90a30284a7d0cd04d797527d47bc8bd0')
 
-
     def install(self, spec, prefix):
         make('prefix={0}'.format(self.prefix), 'install')
