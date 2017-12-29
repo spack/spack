@@ -26,7 +26,8 @@ from spack import *
 
 
 class PerlXmlLibxml(PerlPackage):
-    """This module is an interface to libxml2, providing XML and HTML parsers with DOM, SAX and XMLReader interfaces"""
+    """This module is an interface to libxml2, providing XML and HTML parsers
+       with DOM, SAX and XMLReader interfaces"""
 
     homepage = "http://search.cpan.org/~shlomif/XML-LibXML-2.0132/LibXML.pod"
     url      = "http://search.cpan.org/CPAN/authors/id/S/SH/SHLOMIF/XML-LibXML-2.0132.tar.gz"
