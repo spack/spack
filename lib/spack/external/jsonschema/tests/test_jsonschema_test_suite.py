@@ -122,14 +122,14 @@ def load_json_cases(tests_glob, ignore_glob="", basedir=TESTS_DIR, skip=None):
 class TypesMixin(object):
     @unittest.skipIf(PY3, "In Python 3 json.load always produces unicode")
     def test_string_a_bytestring_is_a_string(self):
-        self.validator_class({"type" : "string"}).validate(b"foo")
+        self.validator_class({"type": "string"}).validate(b"foo")
 
 
 class DecimalMixin(object):
     def test_it_can_validate_with_decimals(self):
-        schema = {"type" : "number"}
+        schema = {"type": "number"}
         validator = self.validator_class(
-            schema, types={"number" : (int, float, Decimal)}
+            schema, types={"number": (int, float, Decimal)}
         )
 
         for valid in [1, 1.1, Decimal(1) / Decimal(8)]:
@@ -158,7 +158,7 @@ def missing_format(checker):
 class FormatMixin(object):
     def test_it_returns_true_for_formats_it_does_not_know_about(self):
         validator = self.validator_class(
-            {"format" : "carrot"}, format_checker=FormatChecker(),
+            {"format": "carrot"}, format_checker=FormatChecker(),
         )
         validator.validate("bugs")
 
@@ -169,7 +169,7 @@ class FormatMixin(object):
     def test_it_validates_formats_if_a_checker_is_provided(self):
         checker = mock.Mock(spec=FormatChecker)
         validator = self.validator_class(
-            {"format" : "foo"}, format_checker=checker,
+            {"format": "foo"}, format_checker=checker,
         )
 
         validator.validate("bar")
@@ -187,7 +187,7 @@ class FormatMixin(object):
     def test_it_validates_formats_of_any_type(self):
         checker = mock.Mock(spec=FormatChecker)
         validator = self.validator_class(
-            {"format" : "foo"}, format_checker=checker,
+            {"format": "foo"}, format_checker=checker,
         )
 
         validator.validate([1, 2, 3])
@@ -224,10 +224,10 @@ else:
 @load_json_cases("draft3/optional/zeroTerminatedFloats.json")
 class TestDraft3(unittest.TestCase, TypesMixin, DecimalMixin, FormatMixin):
     validator_class = Draft3Validator
-    validator_kwargs = {"format_checker" : draft3_format_checker}
+    validator_kwargs = {"format_checker": draft3_format_checker}
 
     def test_any_type_is_valid_for_type_any(self):
-        validator = self.validator_class({"type" : "any"})
+        validator = self.validator_class({"type": "any"})
         validator.validate(mock.Mock())
 
     # TODO: we're in need of more meta schema tests
@@ -239,7 +239,7 @@ class TestDraft3(unittest.TestCase, TypesMixin, DecimalMixin, FormatMixin):
     def test_minItems_invalid_string(self):
         with self.assertRaises(SchemaError):
             # needs to be an integer
-            validate([1], {"minItems" : "1"}, cls=self.validator_class)
+            validate([1], {"minItems": "1"}, cls=self.validator_class)
 
 
 @load_json_cases(
@@ -254,7 +254,7 @@ class TestDraft3(unittest.TestCase, TypesMixin, DecimalMixin, FormatMixin):
 @load_json_cases("draft4/optional/zeroTerminatedFloats.json")
 class TestDraft4(unittest.TestCase, TypesMixin, DecimalMixin, FormatMixin):
     validator_class = Draft4Validator
-    validator_kwargs = {"format_checker" : draft4_format_checker}
+    validator_kwargs = {"format_checker": draft4_format_checker}
 
     # TODO: we're in need of more meta schema tests
     def test_invalid_properties(self):
@@ -265,7 +265,7 @@ class TestDraft4(unittest.TestCase, TypesMixin, DecimalMixin, FormatMixin):
     def test_minItems_invalid_string(self):
         with self.assertRaises(SchemaError):
             # needs to be an integer
-            validate([1], {"minItems" : "1"}, cls=self.validator_class)
+            validate([1], {"minItems": "1"}, cls=self.validator_class)
 
 
 class RemoteRefResolutionMixin(object):
@@ -277,7 +277,7 @@ class RemoteRefResolutionMixin(object):
 
     def resolve(self, reference):
         _, _, reference = reference.partition("http://localhost:1234/")
-        return mock.Mock(**{"json.return_value" : REMOTES.get(reference)})
+        return mock.Mock(**{"json.return_value": REMOTES.get(reference)})
 
 
 @load_json_cases("draft3/refRemote.json")

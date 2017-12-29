@@ -24,7 +24,7 @@ class TestFormatChecker(unittest.TestCase):
     def test_it_can_register_cls_checkers(self):
         with mock.patch.dict(FormatChecker.checkers, clear=True):
             FormatChecker.cls_checks("new")(self.fn)
-            self.assertEqual(FormatChecker.checkers, {"new" : (self.fn, ())})
+            self.assertEqual(FormatChecker.checkers, {"new": (self.fn, ())})
 
     def test_it_can_register_checkers(self):
         checker = FormatChecker()
@@ -55,7 +55,7 @@ class TestFormatChecker(unittest.TestCase):
         checker = FormatChecker()
         checker.checks("foo", raises=ValueError)(self.fn)
         cause = self.fn.side_effect = ValueError()
-        validator = Draft4Validator({"format" : "foo"}, format_checker=checker)
+        validator = Draft4Validator({"format": "foo"}, format_checker=checker)
 
         with self.assertRaises(ValidationError) as cm:
             validator.validate("bar")

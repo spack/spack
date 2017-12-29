@@ -54,7 +54,7 @@ def load_schema(name):
 
     """
 
-    data = pkgutil.get_data(__package__, "schemas/{0}.json".format(name))
+    data = pkgutil.get_data('jsonschema', "schemas/{0}.json".format(name))
     return json.loads(data.decode("utf-8"))
 
 
@@ -73,7 +73,11 @@ def format_as_index(indices):
 
     For example, [1, 2, "foo"] -> [1][2]["foo"]
 
-    :type indices: sequence
+    Arguments:
+
+        indices (sequence):
+
+            The indices to format.
 
     """
 

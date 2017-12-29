@@ -27,6 +27,18 @@ class _Error(Exception):
         schema_path=(),
         parent=None,
     ):
+        super(_Error, self).__init__(
+            message,
+            validator,
+            path,
+            cause,
+            context,
+            validator_value,
+            instance,
+            schema,
+            schema_path,
+            parent,
+        )
         self.message = message
         self.path = self.relative_path = deque(path)
         self.schema_path = self.relative_schema_path = deque(schema_path)
@@ -43,9 +55,6 @@ class _Error(Exception):
 
     def __repr__(self):
         return "<%s: %r>" % (self.__class__.__name__, self.message)
-
-    def __str__(self):
-        return unicode(self).encode("utf-8")
 
     def __unicode__(self):
         essential_for_verbose = (
@@ -74,6 +83,9 @@ class _Error(Exception):
 
     if PY3:
         __str__ = __unicode__
+    else:
+        def __str__(self):
+            return unicode(self).encode("utf-8")
 
     @classmethod
     def create_from(cls, other):
@@ -86,7 +98,7 @@ class _Error(Exception):
             return self.relative_path
 
         path = deque(self.relative_path)
-        path.extendleft(parent.absolute_path)
+        path.extendleft(reversed(parent.absolute_path))
         return path
 
     @property
@@ -96,7 +108,7 @@ class _Error(Exception):
             return self.relative_schema_path
 
         path = deque(self.relative_schema_path)
-        path.extendleft(parent.absolute_schema_path)
+        path.extendleft(reversed(parent.absolute_schema_path))
         return path
 
     def _set(self, **kwargs):
@@ -130,9 +142,6 @@ class UnknownType(Exception):
         self.instance = instance
         self.schema = schema
 
-    def __str__(self):
-        return unicode(self).encode("utf-8")
-
     def __unicode__(self):
         pschema = pprint.pformat(self.schema, width=72)
         pinstance = pprint.pformat(self.instance, width=72)
@@ -147,7 +156,9 @@ class UnknownType(Exception):
 
     if PY3:
         __str__ = __unicode__
-
+    else:
+        def __str__(self):
+            return unicode(self).encode("utf-8")
 
 
 class FormatError(Exception):
@@ -156,14 +167,14 @@ class FormatError(Exception):
         self.message = message
         self.cause = self.__cause__ = cause
 
-    def __str__(self):
-        return self.message.encode("utf-8")
-
     def __unicode__(self):
         return self.message
 
     if PY3:
         __str__ = __unicode__
+    else:
+        def __str__(self):
+            return self.message.encode("utf-8")
 
 
 class ErrorTree(object):
@@ -184,7 +195,7 @@ class ErrorTree(object):
                 container = container[element]
             container.errors[error.validator] = error
 
-            self._instance = error.instance
+            container._instance = error.instance
 
     def __contains__(self, index):
         """

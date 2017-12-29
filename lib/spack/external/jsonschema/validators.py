@@ -12,9 +12,9 @@ except ImportError:
 from jsonschema import _utils, _validators
 from jsonschema.compat import (
     Sequence, urljoin, urlsplit, urldefrag, unquote, urlopen,
-    str_types, int_types, iteritems,
+    str_types, int_types, iteritems, lru_cache,
 )
-from jsonschema.exceptions import ErrorTree  # Backwards compatibility  # noqa
+from jsonschema.exceptions import ErrorTree  # Backwards compat  # noqa: F401
 from jsonschema.exceptions import RefResolutionError, SchemaError, UnknownType
 
 
@@ -31,8 +31,15 @@ def validates(version):
     Registered validators and their meta schemas will be considered when
     parsing ``$schema`` properties' URIs.
 
-    :argument str version: an identifier to use as the version's name
-    :returns: a class decorator to decorate the validator with the version
+    Arguments:
+
+        version (str):
+
+            An identifier to use as the version's name
+
+    Returns:
+
+        callable: a class decorator to decorate the validator with the version
 
     """
 
@@ -44,12 +51,12 @@ def validates(version):
     return _validates
 
 
-def create(meta_schema, validators=(), version=None, default_types=None):  # noqa
+def create(meta_schema, validators=(), version=None, default_types=None):  # noqa: C901, E501
     if default_types is None:
         default_types = {
-            u"array" : list, u"boolean" : bool, u"integer" : int_types,
-            u"null" : type(None), u"number" : numbers.Number, u"object" : dict,
-            u"string" : str_types,
+            u"array": list, u"boolean": bool, u"integer": int_types,
+            u"null": type(None), u"number": numbers.Number, u"object": dict,
+            u"string": str_types,
         }
 
     class Validator(object):
@@ -79,7 +86,10 @@ def create(meta_schema, validators=(), version=None, default_types=None):  # noq
             if _schema is None:
                 _schema = self.schema
 
-            with self.resolver.in_scope(_schema.get(u"id", u"")):
+            scope = _schema.get(u"id")
+            if scope:
+                self.resolver.push_scope(scope)
+            try:
                 ref = _schema.get(u"$ref")
                 if ref is not None:
                     validators = [(u"$ref", ref)]
@@ -103,6 +113,9 @@ def create(meta_schema, validators=(), version=None, default_types=None):  # noq
                         if k != u"$ref":
                             error.schema_path.appendleft(k)
                         yield error
+            finally:
+                if scope:
+                    self.resolver.pop_scope()
 
         def descend(self, instance, schema, path=None, schema_path=None):
             for error in self.iter_errors(instance, schema):
@@ -156,28 +169,28 @@ def extend(validator, validators, version=None):
 Draft3Validator = create(
     meta_schema=_utils.load_schema("draft3"),
     validators={
-        u"$ref" : _validators.ref,
-        u"additionalItems" : _validators.additionalItems,
-        u"additionalProperties" : _validators.additionalProperties,
-        u"dependencies" : _validators.dependencies,
-        u"disallow" : _validators.disallow_draft3,
-        u"divisibleBy" : _validators.multipleOf,
-        u"enum" : _validators.enum,
-        u"extends" : _validators.extends_draft3,
-        u"format" : _validators.format,
-        u"items" : _validators.items,
-        u"maxItems" : _validators.maxItems,
-        u"maxLength" : _validators.maxLength,
-        u"maximum" : _validators.maximum,
-        u"minItems" : _validators.minItems,
-        u"minLength" : _validators.minLength,
-        u"minimum" : _validators.minimum,
-        u"multipleOf" : _validators.multipleOf,
-        u"pattern" : _validators.pattern,
-        u"patternProperties" : _validators.patternProperties,
-        u"properties" : _validators.properties_draft3,
-        u"type" : _validators.type_draft3,
-        u"uniqueItems" : _validators.uniqueItems,
+        u"$ref": _validators.ref,
+        u"additionalItems": _validators.additionalItems,
+        u"additionalProperties": _validators.additionalProperties,
+        u"dependencies": _validators.dependencies,
+        u"disallow": _validators.disallow_draft3,
+        u"divisibleBy": _validators.multipleOf,
+        u"enum": _validators.enum,
+        u"extends": _validators.extends_draft3,
+        u"format": _validators.format,
+        u"items": _validators.items,
+        u"maxItems": _validators.maxItems,
+        u"maxLength": _validators.maxLength,
+        u"maximum": _validators.maximum,
+        u"minItems": _validators.minItems,
+        u"minLength": _validators.minLength,
+        u"minimum": _validators.minimum,
+        u"multipleOf": _validators.multipleOf,
+        u"pattern": _validators.pattern,
+        u"patternProperties": _validators.patternProperties,
+        u"properties": _validators.properties_draft3,
+        u"type": _validators.type_draft3,
+        u"uniqueItems": _validators.uniqueItems,
     },
     version="draft3",
 )
@@ -185,32 +198,32 @@ Draft3Validator = create(
 Draft4Validator = create(
     meta_schema=_utils.load_schema("draft4"),
     validators={
-        u"$ref" : _validators.ref,
-        u"additionalItems" : _validators.additionalItems,
-        u"additionalProperties" : _validators.additionalProperties,
-        u"allOf" : _validators.allOf_draft4,
-        u"anyOf" : _validators.anyOf_draft4,
-        u"dependencies" : _validators.dependencies,
-        u"enum" : _validators.enum,
-        u"format" : _validators.format,
-        u"items" : _validators.items,
-        u"maxItems" : _validators.maxItems,
-        u"maxLength" : _validators.maxLength,
-        u"maxProperties" : _validators.maxProperties_draft4,
-        u"maximum" : _validators.maximum,
-        u"minItems" : _validators.minItems,
-        u"minLength" : _validators.minLength,
-        u"minProperties" : _validators.minProperties_draft4,
-        u"minimum" : _validators.minimum,
-        u"multipleOf" : _validators.multipleOf,
-        u"not" : _validators.not_draft4,
-        u"oneOf" : _validators.oneOf_draft4,
-        u"pattern" : _validators.pattern,
-        u"patternProperties" : _validators.patternProperties,
-        u"properties" : _validators.properties_draft4,
-        u"required" : _validators.required_draft4,
-        u"type" : _validators.type_draft4,
-        u"uniqueItems" : _validators.uniqueItems,
+        u"$ref": _validators.ref,
+        u"additionalItems": _validators.additionalItems,
+        u"additionalProperties": _validators.additionalProperties,
+        u"allOf": _validators.allOf_draft4,
+        u"anyOf": _validators.anyOf_draft4,
+        u"dependencies": _validators.dependencies,
+        u"enum": _validators.enum,
+        u"format": _validators.format,
+        u"items": _validators.items,
+        u"maxItems": _validators.maxItems,
+        u"maxLength": _validators.maxLength,
+        u"maxProperties": _validators.maxProperties_draft4,
+        u"maximum": _validators.maximum,
+        u"minItems": _validators.minItems,
+        u"minLength": _validators.minLength,
+        u"minProperties": _validators.minProperties_draft4,
+        u"minimum": _validators.minimum,
+        u"multipleOf": _validators.multipleOf,
+        u"not": _validators.not_draft4,
+        u"oneOf": _validators.oneOf_draft4,
+        u"pattern": _validators.pattern,
+        u"patternProperties": _validators.patternProperties,
+        u"properties": _validators.properties_draft4,
+        u"required": _validators.required_draft4,
+        u"type": _validators.type_draft4,
+        u"uniqueItems": _validators.uniqueItems,
     },
     version="draft4",
 )
@@ -220,26 +233,61 @@ class RefResolver(object):
     """
     Resolve JSON References.
 
-    :argument str base_uri: URI of the referring document
-    :argument referrer: the actual referring document
-    :argument dict store: a mapping from URIs to documents to cache
-    :argument bool cache_remote: whether remote refs should be cached after
-        first resolution
-    :argument dict handlers: a mapping from URI schemes to functions that
-        should be used to retrieve them
+    Arguments:
+
+        base_uri (str):
+
+            The URI of the referring document
+
+        referrer:
+
+            The actual referring document
+
+        store (dict):
+
+            A mapping from URIs to documents to cache
+
+        cache_remote (bool):
+
+            Whether remote refs should be cached after first resolution
+
+        handlers (dict):
+
+            A mapping from URI schemes to functions that should be used
+            to retrieve them
+
+        urljoin_cache (functools.lru_cache):
+
+            A cache that will be used for caching the results of joining
+            the resolution scope to subscopes.
+
+        remote_cache (functools.lru_cache):
+
+            A cache that will be used for caching the results of
+            resolved remote URLs.
 
     """
 
     def __init__(
-        self, base_uri, referrer, store=(), cache_remote=True, handlers=(),
+        self,
+        base_uri,
+        referrer,
+        store=(),
+        cache_remote=True,
+        handlers=(),
+        urljoin_cache=None,
+        remote_cache=None,
     ):
-        self.base_uri = base_uri
-        self.resolution_scope = base_uri
-        # This attribute is not used, it is for backwards compatibility
+        if urljoin_cache is None:
+            urljoin_cache = lru_cache(1024)(urljoin)
+        if remote_cache is None:
+            remote_cache = lru_cache(1024)(self.resolve_from_url)
+
         self.referrer = referrer
         self.cache_remote = cache_remote
         self.handlers = dict(handlers)
 
+        self._scopes_stack = [base_uri]
         self.store = _utils.URIDict(
             (id, validator.META_SCHEMA)
             for id, validator in iteritems(meta_schemas)
@@ -247,26 +295,59 @@ class RefResolver(object):
         self.store.update(store)
         self.store[base_uri] = referrer
 
+        self._urljoin_cache = urljoin_cache
+        self._remote_cache = remote_cache
+
     @classmethod
     def from_schema(cls, schema, *args, **kwargs):
         """
         Construct a resolver from a JSON schema object.
 
-        :argument schema schema: the referring schema
-        :rtype: :class:`RefResolver`
+        Arguments:
+
+            schema:
+
+                the referring schema
+
+        Returns:
+
+            :class:`RefResolver`
 
         """
 
         return cls(schema.get(u"id", u""), schema, *args, **kwargs)
 
+    def push_scope(self, scope):
+        self._scopes_stack.append(
+            self._urljoin_cache(self.resolution_scope, scope),
+        )
+
+    def pop_scope(self):
+        try:
+            self._scopes_stack.pop()
+        except IndexError:
+            raise RefResolutionError(
+                "Failed to pop the scope from an empty stack. "
+                "`pop_scope()` should only be called once for every "
+                "`push_scope()`"
+            )
+
+    @property
+    def resolution_scope(self):
+        return self._scopes_stack[-1]
+
+    @property
+    def base_uri(self):
+        uri, _ = urldefrag(self.resolution_scope)
+        return uri
+
     @contextlib.contextmanager
     def in_scope(self, scope):
-        old_scope = self.resolution_scope
-        self.resolution_scope = urljoin(old_scope, scope)
+        self.push_scope(scope)
         try:
             yield
         finally:
-            self.resolution_scope = old_scope
+            self.pop_scope()
 
     @contextlib.contextmanager
     def resolving(self, ref):
@@ -274,36 +355,50 @@ class RefResolver(object):
         Context manager which resolves a JSON ``ref`` and enters the
         resolution scope of this ref.
 
-        :argument str ref: reference to resolve
+        Arguments:
+
+            ref (str):
+
+                The reference to resolve
 
         """
 
-        full_uri = urljoin(self.resolution_scope, ref)
-        uri, fragment = urldefrag(full_uri)
-        if not uri:
-            uri = self.base_uri
+        url, resolved = self.resolve(ref)
+        self.push_scope(url)
+        try:
+            yield resolved
+        finally:
+            self.pop_scope()
 
-        if uri in self.store:
-            document = self.store[uri]
-        else:
+    def resolve(self, ref):
+        url = self._urljoin_cache(self.resolution_scope, ref)
+        return url, self._remote_cache(url)
+
+    def resolve_from_url(self, url):
+        url, fragment = urldefrag(url)
+        try:
+            document = self.store[url]
+        except KeyError:
             try:
-                document = self.resolve_remote(uri)
+                document = self.resolve_remote(url)
             except Exception as exc:
                 raise RefResolutionError(exc)
 
-        old_base_uri, self.base_uri = self.base_uri, uri
-        try:
-            with self.in_scope(uri):
-                yield self.resolve_fragment(document, fragment)
-        finally:
-            self.base_uri = old_base_uri
+        return self.resolve_fragment(document, fragment)
 
     def resolve_fragment(self, document, fragment):
         """
         Resolve a ``fragment`` within the referenced ``document``.
 
-        :argument document: the referrant document
-        :argument str fragment: a URI fragment to resolve within it
+        Arguments:
+
+            document:
+
+                The referrant document
+
+            fragment (str):
+
+                a URI fragment to resolve within it
 
         """
 
@@ -332,8 +427,9 @@ class RefResolver(object):
         """
         Resolve a remote ``uri``.
 
-        Does not check the store first, but stores the retrieved document in
-        the store if :attr:`RefResolver.cache_remote` is True.
+        If called directly, does not check the store first, but after
+        retrieving the document at the specified URI it will be saved in
+        the store if :attr:`cache_remote` is True.
 
         .. note::
 
@@ -344,8 +440,15 @@ class RefResolver(object):
             If it isn't, or if the scheme of the ``uri`` is not ``http`` or
             ``https``, UTF-8 is assumed.
 
-        :argument str uri: the URI to resolve
-        :returns: the retrieved document
+        Arguments:
+
+            uri (str):
+
+                The URI to resolve
+
+        Returns:
+
+            The retrieved document
 
         .. _requests: http://pypi.python.org/pypi/requests/
 
@@ -385,7 +488,7 @@ def validate(instance, schema, cls=None, *args, **kwargs):
     """
     Validate an instance under the given schema.
 
-        >>> validate([2, 3, 4], {"maxItems" : 2})
+        >>> validate([2, 3, 4], {"maxItems": 2})
         Traceback (most recent call last):
             ...
         ValidationError: [2, 3, 4] is too long
@@ -398,10 +501,19 @@ def validate(instance, schema, cls=None, *args, **kwargs):
     (e.g. :meth:`Draft4Validator.validate`).
 
 
-    :argument instance: the instance to validate
-    :argument schema: the schema to validate with
-    :argument cls: an :class:`IValidator` class that will be used to validate
-                   the instance.
+    Arguments:
+
+        instance:
+
+            The instance to validate
+
+        schema:
+
+            The schema to validate with
+
+        cls (:class:`IValidator`):
+
+            The class that will be used to validate the instance.
 
     If the ``cls`` argument is not provided, two things will happen in
     accordance with the specification. First, if the schema has a
@@ -414,7 +526,8 @@ def validate(instance, schema, cls=None, *args, **kwargs):
     Any other provided positional and keyword arguments will be passed on when
     instantiating the ``cls``.
 
-    :raises:
+    Raises:
+
         :exc:`ValidationError` if the instance is invalid
 
         :exc:`SchemaError` if the schema itself is invalid

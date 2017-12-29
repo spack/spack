@@ -26,26 +26,32 @@ parser.add_argument(
     action="append",
     dest="instances",
     type=_json_file,
-    help="a path to a JSON instance to validate "
-         "(may be specified multiple times)",
+    help=(
+        "a path to a JSON instance (i.e. filename.json)"
+        "to validate (may be specified multiple times)"
+    ),
 )
 parser.add_argument(
     "-F", "--error-format",
     default="{error.instance}: {error.message}\n",
-    help="the format to use for each error output message, specified in "
-         "a form suitable for passing to str.format, which will be called "
-         "with 'error' for each error",
+    help=(
+        "the format to use for each error output message, specified in "
+        "a form suitable for passing to str.format, which will be called "
+        "with 'error' for each error"
+    ),
 )
 parser.add_argument(
     "-V", "--validator",
     type=_namedAnyWithDefault,
-    help="the fully qualified object name of a validator to use, or, for "
-         "validators that are registered with jsonschema, simply the name "
-         "of the class.",
+    help=(
+        "the fully qualified object name of a validator to use, or, for "
+        "validators that are registered with jsonschema, simply the name "
+        "of the class."
+    ),
 )
 parser.add_argument(
     "schema",
-    help="the JSON Schema to validate with",
+    help="the JSON Schema to validate with (i.e. filename.schema)",
     type=_json_file,
 )
 
@@ -64,6 +70,9 @@ def main(args=sys.argv[1:]):
 def run(arguments, stdout=sys.stdout, stderr=sys.stderr):
     error_format = arguments["error_format"]
     validator = arguments["validator"](schema=arguments["schema"])
+
+    validator.check_schema(arguments["schema"])
+
     errored = False
     for instance in arguments["instances"] or ():
         for error in validator.iter_errors(instance):
