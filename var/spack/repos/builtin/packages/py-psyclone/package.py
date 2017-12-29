@@ -34,6 +34,8 @@ class PyPsyclone(PythonPackage):
     url      = "https://github.com/stfc/PSyclone/archive/1.4.1.tar.gz"
 
     version('1.5.0', 'd84643ad51e737e4fd0b6cadd7c92aff')
+    version('develop', branch='master',
+            git='https://github.com/stfc/PSyclone.git')
 
     depends_on('py-setuptools', type='build')
 
