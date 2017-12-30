@@ -31,11 +31,12 @@ class PyPsyclone(PythonPackage):
        as used by the LFRic model at the UK Met Office."""
 
     homepage = "https://github.com/stfc/PSyclone"
-    url      = "https://github.com/stfc/PSyclone/archive/1.4.1.tar.gz"
+    url      = "https://github.com/stfc/PSyclone/archive/1.5.1.tar.gz"
+    giturl   = "https://github.com/stfc/PSyclone.git"
 
-    version('1.5.0', 'd84643ad51e737e4fd0b6cadd7c92aff')
-    version('develop', branch='master',
-            git='https://github.com/stfc/PSyclone.git')
+    version('1.5.1', git=giturl,
+            commit='eba7a097175b02f75dec70616cf267b7b3170d78')
+    version('develop', git=giturl, branch='master')
 
     depends_on('py-setuptools', type='build')
 
