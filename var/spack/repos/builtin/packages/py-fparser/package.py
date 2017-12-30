@@ -33,7 +33,8 @@ class PyFparser(PythonPackage):
     url      = "https://github.com/stfc/fparser/archive/0.0.5.tar.gz"
     giturl   = "https://github.com/stfc/fparser.git"
 
-    version('0.0.5', 'e93d2eae721bf820cf60135473e9c5c7')
+    version('0.0.5', git=giturl,
+            commit='a3ff86b635f7bd7bd281ee94cbd3d9455b288fd9')
     version('develop', git=giturl, branch='master')
 
     depends_on('py-setuptools', type='build')
