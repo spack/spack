@@ -37,7 +37,7 @@ class Xios(Package):
             svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-1.0')
     version('develop', svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
 
-    variant('mode', values=('debug','dev','prod'), default='dev',
+    variant('mode', values=('debug', 'dev', 'prod'), default='dev',
             description='Build for debugging, development or production')
     # NOTE: oasis coupler could be supported with a variant
 
@@ -80,10 +80,10 @@ class Xios(Package):
     def xios_path(self):
         file = join_path('arch', 'arch-SPACK.path')
         spec = self.spec
-        paths = {'NETCDF_INC_DIR' : spec['netcdf'].prefix.include,
-                 'NETCDF_LIB_DIR' : spec['netcdf'].prefix.lib,
-                 'HDF5_INC_DIR' : spec['hdf5'].prefix.include,
-                 'HDF5_LIB_DIR' : spec['hdf5'].prefix.lib}
+        paths = {'NETCDF_INC_DIR': spec['netcdf'].prefix.include,
+                 'NETCDF_LIB_DIR': spec['netcdf'].prefix.lib,
+                 'HDF5_INC_DIR': spec['hdf5'].prefix.include,
+                 'HDF5_LIB_DIR': spec['hdf5'].prefix.lib}
         text = r"""
 NETCDF_INCDIR="-I {NETCDF_INC_DIR}"
 NETCDF_LIBDIR="-L {NETCDF_LIB_DIR}"
@@ -107,7 +107,6 @@ OASIS_LIB=""
     def xios_fcm(self):
         file = join_path('arch', 'arch-SPACK.fcm')
         spec = self.spec
-        mode = spec.variants['mode'].value
         param = dict()
         param['MPICXX'] = spec['mpi'].mpicxx
         param['MPIFC'] = spec['mpi'].mpifc
@@ -118,9 +117,9 @@ OASIS_LIB=""
         param['BLITZ_INC_DIR'] = spec['blitz'].prefix.include
         param['BLITZ_LIB_DIR'] = spec['blitz'].prefix.lib
         if spec.satisfies('%clang platform=darwin'):
-          param['LIBCXX'] = '-lc++'
+            param['LIBCXX'] = '-lc++'
         else:
-          param['LIBCXX'] = '-lstdc++'
+            param['LIBCXX'] = '-lstdc++'
 
         if any(map(spec.satisfies, ('%gcc', '%intel', '%clang'))):
             text = r"""
@@ -128,15 +127,16 @@ OASIS_LIB=""
 %FCOMPILER      {MPIFC}
 %LINKER         {MPIFC}
 
-%BASE_CFLAGS    -ansi -w -D_GLIBCXX_USE_CXX11_ABI=0 -I{BOOST_INC_DIR} -I{BLITZ_INC_DIR}
+%BASE_CFLAGS    -ansi -w -D_GLIBCXX_USE_CXX11_ABI=0 \
+                -I{BOOST_INC_DIR} -I{BLITZ_INC_DIR}
 %PROD_CFLAGS    -O3 -DBOOST_DISABLE_ASSERTS
-%DEV_CFLAGS     -g -O2 
-%DEBUG_CFLAGS   -g 
+%DEV_CFLAGS     -g -O2
+%DEBUG_CFLAGS   -g
 
-%BASE_FFLAGS    -D__NONE__ 
+%BASE_FFLAGS    -D__NONE__
 %PROD_FFLAGS    -O3
 %DEV_FFLAGS     -g -O2
-%DEBUG_FFLAGS   -g 
+%DEBUG_FFLAGS   -g
 
 %BASE_INC       -D__NONE__
 %BASE_LD        -L{BOOST_LIB_DIR} -L{BLITZ_LIB_DIR} -lblitz {LIBCXX}
@@ -159,7 +159,8 @@ OASIS_LIB=""
 %FCOMPILER      {MPIFC}
 %LINKER         {MPIFC}
 
-%BASE_CFLAGS    -DMPICH_SKIP_MPICXX -h msglevel_4 -h zero -h gnu -I{BOOST_INC_DIR} -I{BLITZ_INC_DIR}
+%BASE_CFLAGS    -DMPICH_SKIP_MPICXX -h msglevel_4 -h zero -h gnu \
+                -I{BOOST_INC_DIR} -I{BLITZ_INC_DIR}
 %PROD_CFLAGS    {CC_OPT_PROD} -DBOOST_DISABLE_ASSERTS
 %DEV_CFLAGS     {CC_OPT_DEV}
 %DEBUG_CFLAGS   -g
@@ -167,7 +168,7 @@ OASIS_LIB=""
 %BASE_FFLAGS    -em -m 4 -e0 -eZ
 %PROD_FFLAGS    -O3
 %DEV_FFLAGS     -G2
-%DEBUG_FFLAGS   -g 
+%DEBUG_FFLAGS   -g
 
 %BASE_INC       -D__NONE__
 %BASE_LD        -D__NONE__ -L{BOOST_LIB_DIR} -L{BLITZ_LIB_DIR} -lblitz
@@ -211,13 +212,13 @@ OASIS_LIB=""
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-         mpirun = os.getenv('MPIRUN')
-         if mpirun is None:
-           mpirun = 'mpiexec'
-         mpiexec = Executable(mpirun)
-         with working_dir('inputs'):
-             try:
-                 mpiexec('-n', '2', join_path('..', 'bin', 'test_client.exe'))
-             except:
-                 raise InstallError('Test failed; defining MPIRUN variable may help.')
-
+        mpirun = os.getenv('MPIRUN')
+        if mpirun is None:
+            mpirun = 'mpiexec'
+        mpiexec = Executable(mpirun)
+        with working_dir('inputs'):
+            try:
+                mpiexec('-n', '2', join_path('..', 'bin', 'test_client.exe'))
+            except:
+                raise InstallError(
+                    'Test failed; defining MPIRUN variable may help.')
