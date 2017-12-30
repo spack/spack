@@ -52,10 +52,10 @@ class PyPsyclone(PythonPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-         # Limit py.test to search inside the build tree:
-         touch('pytest.ini')
-         with working_dir('src'):
-             Executable('py.test')()
+        # Limit py.test to search inside the build tree:
+        touch('pytest.ini')
+        with working_dir('src'):
+            Executable('py.test')()
 
     def setup_environment(self, spack_env, run_env):
         # Allow testing with installed executables:
