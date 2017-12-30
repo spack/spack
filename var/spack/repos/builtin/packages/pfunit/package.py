@@ -33,11 +33,11 @@ class Pfunit(CMakePackage):
 
     homepage = "http://pfunit.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/pfunit/Source/pFUnit.tar.gz"
+    giturl   = "https://git.code.sf.net/p/pfunit/code"
 
-    version('3.2.9', commit='3c1d47f594a7e756f21be59074cb730d1a1e9a79',
-            git='https://git.code.sf.net/p/pfunit/code')
-    version('develop', branch='master',
-            git='https://git.code.sf.net/p/pfunit/code')
+    version('3.2.9', git=giturl,
+            commit='3c1d47f594a7e756f21be59074cb730d1a1e9a79')
+    version('develop', git=giturl, branch='master')
 
     variant('mpi', default=False, description='Enable MPI')
     variant('openmp', default=False, description='Enable OpenMP')
