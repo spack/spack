@@ -42,7 +42,10 @@ class PyPsyclone(PythonPackage):
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
-    depends_on('py-fparser', type=('build', 'run'))
+
+    # Test cases fail without compatible versions of py-fparser:
+    depends_on('py-fparser@0.0.5', type=('build', 'run'), when='@1.5.1')
+    depends_on('py-fparser', type=('build', 'run'), when='@1.5.2:')
 
     # Use type='test' when available:
     depends_on('py-numpy', type='build')
