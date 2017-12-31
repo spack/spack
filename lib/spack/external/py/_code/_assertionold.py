@@ -2,7 +2,6 @@ import py
 import sys, inspect
 from compiler import parse, ast, pycodegen
 from py._code.assertion import BuiltinAssertionError, _format_explanation
-import types
 
 passthroughex = py.builtin._sysex
 
@@ -471,7 +470,7 @@ def check(s, frame=None):
 def interpret(source, frame, should_fail=False):
     module = Interpretable(parse(source, 'exec').node)
     #print "got module", module
-    if isinstance(frame, types.FrameType):
+    if isinstance(frame, py.std.types.FrameType):
         frame = py.code.Frame(frame)
     try:
         module.run(frame)

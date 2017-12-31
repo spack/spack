@@ -193,8 +193,7 @@ class Source(object):
             if flag & _AST_FLAG:
                 return co
             lines = [(x + "\n") for x in self.lines]
-            import linecache
-            linecache.cache[filename] = (1, None, lines, filename)
+            py.std.linecache.cache[filename] = (1, None, lines, filename)
             return co
 
 #
@@ -225,8 +224,8 @@ def getfslineno(obj):
         code = py.code.Code(obj)
     except TypeError:
         try:
-            fn = (inspect.getsourcefile(obj) or
-                  inspect.getfile(obj))
+            fn = (py.std.inspect.getsourcefile(obj) or
+                  py.std.inspect.getfile(obj))
         except TypeError:
             return "", -1
 
@@ -249,7 +248,7 @@ def getfslineno(obj):
 
 def findsource(obj):
     try:
-        sourcelines, lineno = inspect.findsource(obj)
+        sourcelines, lineno = py.std.inspect.findsource(obj)
     except py.builtin._sysex:
         raise
     except:
@@ -335,6 +334,8 @@ def get_statement_startend2(lineno, node):
 def getstatementrange_ast(lineno, source, assertion=False, astnode=None):
     if astnode is None:
         content = str(source)
+        if sys.version_info < (2,7):
+            content += "\n"
         try:
             astnode = compile(content, "source", "exec", 1024)  # 1024 for AST
         except ValueError:

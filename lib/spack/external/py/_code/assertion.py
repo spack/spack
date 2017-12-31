@@ -87,4 +87,8 @@ if sys.version_info > (3, 0):
     reinterpret_old = "old reinterpretation not available for py3"
 else:
     from py._code._assertionold import interpret as reinterpret_old
-from py._code._assertionnew import interpret as reinterpret
+if sys.version_info >= (2, 6) or (sys.platform.startswith("java")):
+    from py._code._assertionnew import interpret as reinterpret
+else:
+    reinterpret = reinterpret_old
+
