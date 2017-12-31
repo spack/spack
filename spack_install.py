@@ -5,7 +5,7 @@ def install(spec):
     # Install the spec package if absent
     if "No package" in subprocess.check_output("spack find {}".format(spec), shell=True).decode("utf-8"):
         print("{} not found. Build it.".format(spec))
-        os.system("spack install --restage {}".format(spec))
+        os.system("spack install {}".format(spec))
 
 def check_pass(pkg, compiler, spec, platform="sandybridge", mpi=""):
     if ('cuda' not in pkg) and ('+cuda' not in mpi): return True

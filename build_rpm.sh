@@ -24,25 +24,25 @@ for pkg in ["jdk@8u141-b15%gcc@4.8.5",
           os.system("spack install {}".format(pkg))
 
 # Build non-MPI packages
-nonmpipkgs = {"python@2.7.14": ["^readline@system"],
-              "python@3.6.3": ["^readline@system"],
+nonmpipkgs = {"python@2.7.14": [""],
+              "python@3.6.3": [""],
               "miniconda2@4.3.30": [""],
               "miniconda3@4.3.30": [""],
               "openblas@0.2.20 threads=openmp": [""],
-              "perl@5.24.1": ["^readline@system"],
+              "perl@5.24.1": [""],
               "sga@0.10.15": [""],
               "boost@1.64.0": [""],
-              "cuda@9.0.176": [""],
+              "cuda@9.1.85": [""],
               "cuda@8.0.61": [""],
               "cuda@7.5.18": [""],
               "cuda@6.5.14": [""],
-              "cudnn@7.0": ["^cuda@9.0.176", "^cuda@8.0.61"],
+              "cudnn@7.0": ["^cuda@9.1.85", "^cuda@8.0.61"],
               "cudnn@6.0": ["^cuda@8.0.61"],
               "cudnn@5.1": ["^cuda@8.0.61"],
               "samtools@1.6": [""],
-              "glib@2.53.1": ["^readline@system"],
+              "glib@2.53.1": [""],
               "bwa@0.7.17": [""],
-              "r@3.4.2+external-lapack": ["^readline@system ^openblas threads=openmp", "^readline@system ^intel-parallel-studio+mkl"],
+              "r@3.4.3+external-lapack": ["^openblas threads=openmp", "^intel-parallel-studio+mkl"],
               "octave+qt~readline@4.2.1": ["^openblas threads=openmp"],
               "fftw@3.3.6-pl2~mpi+openmp": [""],
               # "fftw@2.1.5~mpi+openmp": [""],
@@ -76,24 +76,24 @@ else:
 
 # Build MPI libraries
 MPIS = {"openmpi@2.1.2~vt~cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "",
-        "openmpi@2.1.2~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@8.0.61",
+        "openmpi@2.1.2~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@9.1.85",
         "mvapich2@2.2~cuda fabrics={} process_managers=slurm".format(MVFAB): "",
-        "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@8.0.61",
+        "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@9.1.85",
         "mpich@3.2~hydra+pmi+romio+verbs netmod=ofi": "",
        "intel-parallel-studio@cluster.2017.5+mpi": ""
 }
 for pkg,spec in MPIS.items():
     for compiler in COMPILERS:
         if 'intel-parallel' not in pkg:
-                if check_pass(pkg, compiler, spec, PLATFORM, mpi):
+                if check_pass(pkg, compiler, spec, PLATFORM):
                           install("{} %{} {}".format(pkg, compiler, spec))
 
 # Build MPI packages
 mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
            "hdf5@1.10.1+cxx+fortran+threadsafe+mpi": [""],
            # "fftw@2.1.5+mpi+openmp": [""],
-           "gromacs+mpi~cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
-           "gromacs+mpi+cuda@5.1.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@8.0.61"],
+           "gromacs+mpi~cuda@2016.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
+           "gromacs+mpi+cuda@2016.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@9.1.85"],
            "hpl@2.2": ["^openblas threads=openmp", ""]
            # "scotch+mpi@6.0.4": [""]
 }

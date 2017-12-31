@@ -15,21 +15,31 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    compiler: [gcc@6, intel@17, pgi@16]
+    compiler: [gcc@5, intel@17, pgi@16]
 
   openssl:
       paths:
           openssl@system: /usr
       version: [system]
       buildable: False
+
+  readline:
+      paths:
+          readline@system: /usr
+      version: [system]
+      buildable: False
+
+  ncurses:
+      paths:
+          ncurses@system: /usr
+      version: [system]
+      buildable: False
+
   vim:
     variants: +lua +perl +python +ruby +huge
 
   pgi:
     variants: +network +nvidia
-
-  intel:
-      buildable: False
 
   intel-parallel-studio:
     variants: +ipp +mkl +mpi +openmp

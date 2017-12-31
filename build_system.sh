@@ -34,6 +34,15 @@ packages = {"gcc~binutils@4.9.4": [""],
             "pgi+nvidia+single~network@17.10": [""],
             "cmake@3.9.4": [""],
             "environment-modules@3.2.10": [""],
+            "cuda@9.1.85": [""],
+            "cuda@8.0.61": [""],
+            "cuda@7.5.18": [""],
+            "cuda@6.5.14": [""],
+            "cudnn@7.0": ["^cuda@9.1.85", "^cuda@8.0.61"],
+            "cudnn@6.0": ["^cuda@8.0.61"],
+            "cudnn@5.1": ["^cuda@8.0.61"],
+            "vim@8.0.1376": [""],
+            "emacs@25.3": [""]
 }
 for pkg,specs in packages.items():
     for spec in specs:
@@ -41,5 +50,5 @@ for pkg,specs in packages.items():
             install("{} %{} {}".format(pkg, cc, spec))
 
 # Remove intermediate dependency
-for pkg in ["automake", "autoconf", "perl", "m4", "pkg-conf", "gdbm", "readline"]:
+for pkg in ["automake", "autoconf", "perl", "m4", "pkg-conf"]:
     os.system("spack uninstall {}".format(pkg))
