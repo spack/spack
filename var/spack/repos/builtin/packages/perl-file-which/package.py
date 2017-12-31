@@ -31,5 +31,4 @@ class PerlFileWhich(PerlPackage):
     homepage = "http://cpansearch.perl.org/src/PLICEASE/File-Which-1.22/lib/File/Which.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/P/PL/PLICEASE/File-Which-1.22.tar.gz"
 
-    version('1.22','face60fafd220dc83fa581ef6f96d480')
-
+    version('1.22', 'face60fafd220dc83fa581ef6f96d480')
