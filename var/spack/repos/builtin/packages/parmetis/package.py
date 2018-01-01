@@ -27,7 +27,7 @@ from spack import *
 import sys
 
 
-class Parmetis(Package):
+class Parmetis(CMakePackage):
     """ParMETIS is an MPI-based parallel library that implements a variety of
        algorithms for partitioning unstructured graphs, meshes, and for
        computing fill-reducing orderings of sparse matrices."""
@@ -61,11 +61,10 @@ class Parmetis(Package):
         url += '/parmetis-{0}.tar.gz'.format(version)
         return url
 
-    def install(self, spec, prefix):
-        source_directory = self.stage.source_path
-        build_directory = join_path(source_directory, 'build')
+    def cmake_args(self):
+        spec = self.spec
 
-        options = std_cmake_args[:]
+        options = []
         options.extend([
             '-DGKLIB_PATH:PATH=%s/GKlib' % spec['metis'].prefix.include,
             '-DMETIS_PATH:PATH=%s' % spec['metis'].prefix,
@@ -93,11 +92,10 @@ class Parmetis(Package):
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
 
-        with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
-            make()
-            make('install')
+        return options
 
-            # The shared library is not installed correctly on Darwin; fix this
-            if (sys.platform == 'darwin') and ('+shared' in spec):
-                fix_darwin_install_name(prefix.lib)
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if (sys.platform == 'darwin') and ('+shared' in spec):
+            fix_darwin_install_name(prefix.lib)
