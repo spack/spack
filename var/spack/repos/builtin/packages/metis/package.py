@@ -51,6 +51,11 @@ class Metis(Package):
     variant('int64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
     variant('real64', default=False, description='Sets the bit width of METIS\'s real type to 64.')
 
+    # For Metis version 5:, the build system is CMake, provide the `build_type` variant.
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
     depends_on('cmake@2.8:', when='@5:', type='build')
 
     patch('install_gklib_defs_rename.patch', when='@5:')
@@ -184,6 +189,11 @@ class Metis(Package):
         options = std_cmake_args[:]
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
+
+        # Normally this is available via the CMakePackage ojbect, but metis IS-A
+        # Package (not a CMakePackage) to support non-cmake metis@:5.
+        build_type = spec.variants['build_type'].value
+        options.extend(['-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type)])
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
