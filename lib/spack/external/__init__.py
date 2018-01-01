@@ -42,7 +42,7 @@ ctest_log_parser
 * Homepage: https://github.com/Kitware/CMake/blob/master/Source/CTest/cmCTestBuildHandler.cxx
 * Usage: Functions to parse build logs and extract error messages.
 * Version: Unversioned
-* Note: This is a handmade port of Kitware's CTest build handler.
+* Note: This is a homemade port of Kitware's CTest build handler.
 
 distro
 ------
@@ -72,7 +72,9 @@ jsonschema
 
 * Homepage: https://pypi.python.org/pypi/jsonschema
 * Usage: An implementation of JSON Schema for Python.
-* Version: 2.5.1 (last version supporting Python 2.6)
+* Version: 2.4.0 (last version before functools32 dependency was added)
+* Note: functools32 doesn't support Python 2.6 or 3.0, so jsonschema
+  cannot be upgraded any further
 
 markupsafe
 ----------
