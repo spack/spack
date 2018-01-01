@@ -273,7 +273,7 @@ class TestErrorTree(unittest.TestCase):
         self.assertIsInstance(tree["foo"], exceptions.ErrorTree)
 
 
-class TestErrorReprStr(unittest.TestCase):
+class TestErrorInitReprStr(unittest.TestCase):
     def make_error(self, **kwargs):
         defaults = dict(
             message=u"hello",
@@ -294,6 +294,10 @@ class TestErrorReprStr(unittest.TestCase):
         message_line, _, rest = str(error).partition("\n")
         self.assertEqual(message_line, error.message)
         self.assertEqual(rest, expected)
+
+    def test_it_calls_super_and_sets_args(self):
+        error = self.make_error()
+        self.assertGreater(len(error.args), 1)
 
     def test_repr(self):
         self.assertEqual(
