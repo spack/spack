@@ -123,6 +123,9 @@
             "default": false,
             "type": "boolean"
         },
+        "format": {
+            "type": "string"
+        },
         "id": {
             "format": "uri",
             "type": "string"
