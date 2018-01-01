@@ -51,7 +51,7 @@ class Xios(Package):
     patch('llvm_bug_17782.patch', when='@1.1: %clang')
 
     depends_on('netcdf+mpi')
-    depends_on('netcdf-fortran^netcdf+mpi')
+    depends_on('netcdf-fortran')
     depends_on('hdf5+mpi')
     depends_on('mpi')
     depends_on('boost')
