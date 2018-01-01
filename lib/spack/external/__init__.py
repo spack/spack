@@ -39,9 +39,10 @@ argparse
 ctest_log_parser
 ----------------
 
-* Homepage: ???
+* Homepage: https://github.com/Kitware/CMake/blob/master/Source/CTest/cmCTestBuildHandler.cxx
 * Usage: Functions to parse build logs and extract error messages.
-* Version: ???
+* Version: Unversioned
+* Note: This is a handmade port of Kitware's CTest build handler.
 
 distro
 ------
@@ -53,9 +54,11 @@ distro
 functools
 ---------
 
-* Homepage: ???
+* Homepage: https://github.com/python/cpython/blob/2.7/Lib/functools.py
 * Usage: Used for implementation of total_ordering.
-* Version: ???
+* Version: Unversioned
+* Note: This is the functools.total_ordering implementation
+  from Python 2.7 backported so we can run on Python 2.6.
 
 jinja2
 ------
@@ -81,9 +84,9 @@ markupsafe
 orderddict
 ----------
 
-* Homepage: ???
+* Homepage: http://code.activestate.com/recipes/576693-ordered-dictionary-for-py24/
 * Usage: We include our own version to be Python 2.6 compatible.
-* Version: ???
+* Version: Unversioned
 
 py
 --
@@ -99,7 +102,7 @@ pyqver2
 * Homepage: https://github.com/ghewgill/pyqver
 * Usage: External script to query required python version of
   python source code. Used for ensuring 2.6 compatibility.
-* Version: unversioned
+* Version: Unversioned
 
 pytest
 ------
