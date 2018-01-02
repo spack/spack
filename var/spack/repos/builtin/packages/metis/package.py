@@ -45,7 +45,6 @@ class Metis(Package):
     version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
-    variant('debug', default=False, description='Builds the library in debug mode.')
     variant('gdb', default=False, description='Enables gdb support.')
 
     variant('int64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
@@ -53,7 +52,7 @@ class Metis(Package):
 
     # For Metis version 5:, the build system is CMake, provide the
     # `build_type` variant.
-    variant('build_type', default='RelWithDebInfo',
+    variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
@@ -98,7 +97,7 @@ class Metis(Package):
                                'variants: gdb, int64, real64.')
 
         options = ['COPTIONS={0}'.format(self.compiler.pic_flag)]
-        if '+debug' in spec:
+        if spec.variants['build_type'].value == 'Debug':
             options.append('OPTFLAGS=-g -O0')
         make(*options)
 
@@ -207,10 +206,6 @@ class Metis(Package):
                     rpath_options.append(o)
             for o in rpath_options:
                 options.remove(o)
-        if '+debug' in spec:
-            if build_type != 'Debug':
-                raise InstallError("Found +debug but build_type!=Debug.")
-            options.append('-DDEBUG:BOOL=ON')
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
 
