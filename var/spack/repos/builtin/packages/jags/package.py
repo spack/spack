@@ -30,7 +30,7 @@ class Jags(AutotoolsPackage):
        Bayesian hierarchical models using Markov Chain Monte Carlo (MCMC)
        simulation not wholly unlike BUGS"""
 
-    tags=['mcmc','Gibbs sampler']
+    tags = ['mcmc', 'Gibbs sampler']
 
     homepage = "http://mcmc-jags.sourceforge.net/"
     url = "https://downloads.sourceforge.net/project/mcmc-jags/JAGS/4.x/Source/JAGS-4.2.0.tar.gz"
@@ -39,7 +39,6 @@ class Jags(AutotoolsPackage):
 
     depends_on('blas')
     depends_on('lapack')
-
 
     def configure_args(self):
         args = ['--with-blas=%s' % self.spec['blas'].libs.ld_flags,
