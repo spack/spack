@@ -40,7 +40,6 @@ class Jags(AutotoolsPackage):
     depends_on('blas')
     depends_on('lapack')
 
-    conflicts('^openblas')
 
     def configure_args(self):
         args = ['--with-blas=%s' % self.spec['blas'].libs.ld_flags,
