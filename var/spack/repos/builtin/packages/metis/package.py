@@ -51,7 +51,8 @@ class Metis(Package):
     variant('int64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
     variant('real64', default=False, description='Sets the bit width of METIS\'s real type to 64.')
 
-    # For Metis version 5:, the build system is CMake, provide the `build_type` variant.
+    # For Metis version 5:, the build system is CMake, provide the
+    # `build_type` variant.
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
@@ -190,8 +191,8 @@ class Metis(Package):
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
-        # Normally this is available via the CMakePackage ojbect, but metis IS-A
-        # Package (not a CMakePackage) to support non-cmake metis@:5.
+        # Normally this is available via the 'CMakePackage' object, but metis
+        # IS-A 'Package' (not a 'CMakePackage') to support non-cmake metis@:5.
         build_type = spec.variants['build_type'].value
         options.extend(['-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type)])
 
@@ -207,8 +208,9 @@ class Metis(Package):
             for o in rpath_options:
                 options.remove(o)
         if '+debug' in spec:
-            options.extend(['-DDEBUG:BOOL=ON',
-                            '-DCMAKE_BUILD_TYPE:STRING=Debug'])
+            if build_type != 'Debug':
+                raise InstallError("Found +debug but build_type!=Debug.")
+            options.append('-DDEBUG:BOOL=ON')
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
 
