@@ -31,6 +31,7 @@ for pgk in ["maven@3.3.9", "gradle@3.4", "ant@1.9.9", "sbt@0.13.12", "bazel@0.4.
 packages = {"gcc~binutils@4.9.4": [""],
             "gcc~binutils@5.4.0": [""],
             "gcc~binutils@6.4.0": [""],
+            "gcc~binutils@7.2.0": [""],
             "pgi+nvidia+single~network@17.10": [""],
             "cmake@3.10.0": ["~openssl"],
             "environment-modules@3.2.10": [""],
