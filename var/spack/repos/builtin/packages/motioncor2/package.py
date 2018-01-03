@@ -44,6 +44,7 @@ class Motioncor2(Package):
     version('1.0.0',        '490f4df8daa9f5ddb9eec3962ba3ddf5')
 
     depends_on('cuda@8.0:8.99', type='run')
+    # libtiff.so.3 is required
     depends_on('libtiff@3.0:3.99', type='run')
 
     def install(self, spec, prefix):
