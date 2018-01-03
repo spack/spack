@@ -33,7 +33,8 @@ class PyUmiTools(PythonPackage):
 
     version('0.5.3', '08bdebe30f84867d352ff5e1a2fe4d94')
 
-    depends_on('py-setuptools',        type='build')
+    depends_on('python@2.7:')
+    depends_on('py-setuptools@1.1:',   type='build')
     depends_on('py-numpy@1.7:',        type=('build', 'run'))
     depends_on('py-pandas@0.12:',      type=('build', 'run'))
     depends_on('py-pysam@0.8.4:',      type=('build', 'run'))
