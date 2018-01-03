@@ -105,7 +105,8 @@ class Mvapich2(AutotoolsPackage):
 
     depends_on('bison', type='build')
     depends_on('libpciaccess', when=(sys.platform != 'darwin'))
-    depends_on('cuda', when='+cuda')
+    # cuda 9 not yet supported
+    depends_on('cuda@8.0:8.99', when='+cuda')
 
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"
