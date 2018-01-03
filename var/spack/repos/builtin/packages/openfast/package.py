@@ -80,12 +80,10 @@ class Openfast(CMakePackage):
         ])
 
         # Make sure we use Spack's blas/lapack:
-        lapack_libs = spec['lapack'].libs.joined(';')
-        blas_libs = spec['blas'].libs.joined(';')
-
+        blas_libs = spec['blas'].libs + spec['lapack'].libs
         options.extend([
-            '-DLAPACK_LIBRARIES=%s;%s' % (lapack_libs,blas_libs),
-            '-DBLAS_LIBRARIES=%s;%s' % (blas_libs,lapack_libs)
+            '-DBLAS_LIBRARIES=%s' % blas_libs.joined(';'),
+            '-DLAPACK_LIBRARIES=%s' % blas_libs.joined(';')
         ])
 
         if '+cxx' in spec:
