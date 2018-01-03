@@ -34,6 +34,7 @@ class Libtiff(AutotoolsPackage):
     version('4.0.7', '77ae928d2c6b7fb46a21c3a29325157b')
     version('4.0.6', 'd1d2e940dea0b5ad435f21f03d96dd72')
     version('4.0.3', '051c1068e6a0627f461948c365290410')
+    version('3.9.7', '626102f448ba441d42e3212538ad67d2')
 
     depends_on('jpeg')
     depends_on('zlib')
