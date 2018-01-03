@@ -32,6 +32,7 @@ on these ideas for each distinct build system that Spack supports:
    build_systems/rpackage
    build_systems/perlpackage
    build_systems/rubypackage
+   build_systems/octavepackage
 
 .. toctree::
    :maxdepth: 1
@@ -46,6 +47,7 @@ on these ideas for each distinct build system that Spack supports:
 
    build_systems/intelpackage
    build_systems/custompackage
+   build_systems/cudapackage
 
 For reference, the :py:mod:`Build System API docs <spack.build_systems>`
 provide a list of build systems and methods/attributes that can be
