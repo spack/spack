@@ -36,7 +36,7 @@ class Qt(Package):
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
 
-    version('5.10.0', 'c5e275ab0ed7ee61d0f4b82cd471770d', url='https://download.qt.io/official_releases/qt/5.10/5.10.0/single/qt-everywhere-src-5.10.0.tar.xz')
+    version('5.10.0', 'c5e275ab0ed7ee61d0f4b82cd471770d')
     version('5.9.1',  '77b4af61c49a09833d4df824c806acaf')
     version('5.9.0',  '9c8bc8b828c2b56721980368266df9d9')
     version('5.8.0',  'a9f2494f75f966e2f22358ec367d8f41')
@@ -174,7 +174,9 @@ class Qt(Package):
         elif version >= Version('2.1'):
             url += 'x11-'
 
-        if version >= Version('4.0'):
+        if version >= Version('5.10.0'):
+            url += 'src-'
+        elif version >= Version('4.0'):
             url += 'opensource-src-'
         elif version >= Version('3'):
             url += 'free-'
