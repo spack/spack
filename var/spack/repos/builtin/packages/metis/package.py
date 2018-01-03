@@ -95,6 +95,13 @@ class Metis(Package):
         if any('+{0}'.format(v) in spec for v in ['gdb', 'int64', 'real64']):
             raise InstallError('METIS@:4 does not support the following '
                                'variants: gdb, int64, real64.')
+        # This build system only supports 'Release' or 'Debug' build_types.
+        if spec.variants['build_type'].value != 'Release' and \
+                spec.variants['build_type'].value != 'Debug':
+            raise InstallError('METIS@:4 only supports build_type=Release or '
+                               'build_type=Debug, but build_type={0} '
+                               'was specified'.
+                               format(spec.variants['build_type'].value))
 
         options = ['COPTIONS={0}'.format(self.compiler.pic_flag)]
         if spec.variants['build_type'].value == 'Debug':
