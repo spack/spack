@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class RRjags(RPackage):
     """Interface to the JAGS MCMC library.
        Usage: $ spack load r-rjags """
@@ -40,6 +41,6 @@ class RRjags(RPackage):
     def configure_args(self):
         args = ['--with-jags-lib=%s' % self.spec['jags'].prefix.lib,
                 '--with-jags-include=%s' % self.spec['jags'].prefix.include,
-                '--with-jags-modules=%s/JAGS/modules-4' \
-                                              % self.spec['jags'].prefix.lib]
+                '--with-jags-modules=%s/JAGS/modules-4'
+                % self.spec['jags'].prefix.lib]
         return args
