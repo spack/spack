@@ -36,7 +36,6 @@ class PyPybedtools(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('bedtools2',     type=('build', 'run'))
-    depends_on('py-cython',     type=('build', 'run'))
     depends_on('py-numpy',      type=('build', 'run'))
     depends_on('py-pandas',     type=('build', 'run'))
     depends_on('py-pysam',      type=('build', 'run'))
