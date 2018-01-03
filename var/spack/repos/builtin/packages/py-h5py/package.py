@@ -32,6 +32,8 @@ class PyH5py(PythonPackage):
     homepage = "https://pypi.python.org/pypi/h5py"
     url      = "https://pypi.io/packages/source/h/h5py/h5py-2.4.0.tar.gz"
 
+    version('2.7.1', 'da630aebe3ab9fa218ac405a218e95e0')
+    version('2.7.0', 'f62937f40f68d3b128b3941be239dd93')
     version('2.6.0', 'ec476211bd1de3f5ac150544189b0bf4')
     version('2.5.0', '6e4301b5ad5da0d51b0a1e5ac19e3b74')
     version('2.4.0', '80c9a94ae31f84885cc2ebe1323d6758')

@@ -34,6 +34,6 @@ class RNor1mix(RPackage):
 
     homepage = "https://CRAN.R-project.org/package=nor1mix"
     url      = "https://cran.rstudio.com/src/contrib/nor1mix_1.2-3.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/nor1mix"
 
     version('1.2-3', '60eb5cc1ea6b366f53042087a080b105')

@@ -36,5 +36,5 @@ class Bigreqsproto(AutotoolsPackage):
 
     version('1.1.2', '9b83369ac7a5eb2bf54c8f34db043a0e')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

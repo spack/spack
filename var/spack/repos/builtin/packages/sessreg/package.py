@@ -36,7 +36,7 @@ class Sessreg(AutotoolsPackage):
     version('1.1.0', '5d7eb499043c7fdd8d53c5ba43660312')
 
     depends_on('xproto@7.0.25:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
     def patch(self):

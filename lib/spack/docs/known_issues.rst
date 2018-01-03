@@ -77,26 +77,6 @@ See https://github.com/spack/spack/issues/267 and
 https://github.com/spack/spack/issues/2546 for further details.
 
 
----------------------------------
-``spack extensions`` doesn't work
----------------------------------
-
-**Status:** Up for grabs if you want to try to fix it
-
-Spack provides an ``extensions`` command that lists all available extensions
-of a package, the ones that are installed, and the ones that are already
-activated. This is very useful in conjunction with ``spack activate``.
-Unfortunately, this command no longer works:
-
-.. code-block:: console
-
-   $ spack extensions python
-   ==> python@2.7.13%clang@8.0.0-apple~tk~ucs4 arch=darwin-sierra-x86_64 -ckrr4mg has no extensions.
-
-
-See https://github.com/spack/spack/issues/2895 for further details.
-
-
 ----------------------------
 ``spack setup`` doesn't work
 ----------------------------

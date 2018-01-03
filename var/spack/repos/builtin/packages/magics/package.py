@@ -68,7 +68,7 @@ class Magics(CMakePackage):
 
     # Build dependencies
     depends_on('cmake@2.8.11:', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('python@:2', type='build')
     depends_on('perl', type='build')
     depends_on('perl-xml-parser', type='build')

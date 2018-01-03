@@ -36,6 +36,7 @@ class Libsplash(CMakePackage):
 
     homepage = "https://github.com/ComputationalRadiationPhysics/libSplash"
     url      = "https://github.com/ComputationalRadiationPhysics/libSplash/archive/v1.4.0.tar.gz"
+    maintainers = ['ax3l']
 
     version('develop', branch='dev',
             git='https://github.com/ComputationalRadiationPhysics/libSplash.git')

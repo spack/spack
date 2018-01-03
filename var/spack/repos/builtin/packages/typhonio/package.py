@@ -40,7 +40,7 @@ class Typhonio(CMakePackage):
         values=('Debug', 'Release'))
     variant('fortran', default=False, description='Enable Fortran support')
     variant('shared', default=False, description='Build shared libraries')
-    variant('docs', default=False, description='Build user guide and doxygen documentation')
+    variant('doc', default=False, description='Build user guide and doxygen documentation')
 
     depends_on('mpi')
     depends_on('hdf5')

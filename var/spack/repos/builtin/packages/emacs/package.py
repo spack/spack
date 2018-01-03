@@ -43,8 +43,9 @@ class Emacs(AutotoolsPackage):
         values=('gtk', 'athena'),
         description="Select an X toolkit (gtk, athena)"
     )
+    variant('tls', default=False, description="Build Emacs with gnutls")
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on('ncurses')
     depends_on('zlib')
@@ -55,6 +56,9 @@ class Emacs(AutotoolsPackage):
     depends_on('libx11', when='+X')
     depends_on('libxaw', when='+X toolkit=athena')
     depends_on('gtkplus+X', when='+X toolkit=gtk')
+    depends_on('gnutls', when='+tls')
+    depends_on('libxpm ^gettext+libunistring', when='+tls')
+    depends_on('ncurses+termlib', when='+tls')
 
     def configure_args(self):
         spec = self.spec
