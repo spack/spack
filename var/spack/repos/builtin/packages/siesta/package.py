@@ -36,7 +36,7 @@ class Siesta(Package):
     version('4.0.1', '5cb60ce068f2f6e84fa9184ffca94c08', url='https://launchpad.net/siesta/4.0/4.0.1/+download/siesta-4.0.1.tar.gz')
     version('3.2-pl-5', '27a300c65eb2a25d107d910d26aaf81a', url='http://departments.icmab.es/leem/siesta/CodeAccess/Code/siesta-3.2-pl-5.tgz')
 
-    patch('configure.patch', when='@:4.0.9')
+    patch('configure.patch', when='@:4.0')
 
     depends_on('mpi')
     depends_on('blas')
@@ -64,10 +64,10 @@ class Siesta(Package):
                           # Intel's mpiifort is not found
                           'MPIFC=%s' % spec['mpi'].mpifc
                           ]
-        for dir, create in [('Obj', False), ('Obj_trans', True)]:
-            with working_dir(dir, create=create):
+        for d in ['Obj', 'Obj_trans']:
+            with working_dir(d, create=True):
                 sh('../Src/configure', *configure_args)
-                if spec.satisfies('@:4.0.9%intel'):
+                if spec.satisfies('@:4.0%intel'):
                     with open('arch.make', 'a') as f:
                         f.write('\natom.o: atom.F\n')
                         f.write('\t$(FC) -c $(FFLAGS) -O1')
