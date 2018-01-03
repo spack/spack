@@ -77,8 +77,10 @@ else:
 # Build MPI libraries
 MPIS = {"openmpi@2.1.2~vt~cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "",
         "openmpi@2.1.2~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@9.1.85",
+        "openmpi@2.1.2~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@8.0.61",
         "mvapich2@2.2~cuda fabrics={} process_managers=slurm".format(MVFAB): "",
         "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@9.1.85",
+        "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@8.0.61",
         "mpich@3.2~hydra+pmi+romio+verbs netmod=ofi": "",
        "intel-parallel-studio@cluster.2017.5+mpi": ""
 }
@@ -93,7 +95,7 @@ mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
            "hdf5@1.10.1+cxx+fortran+threadsafe+mpi": [""],
            # "fftw@2.1.5+mpi+openmp": [""],
            "gromacs+mpi~cuda@2016.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
-           "gromacs+mpi+cuda@2016.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@9.1.85"],
+           "gromacs+mpi+cuda@2016.4": ["^fftw+mpi+openmp@3.3.6-pl2 ^cuda@9.1.85", "^fftw+mpi+openmp@3.3.6-pl2 ^cuda@8.0.61"],
            "hpl@2.2": ["^openblas threads=openmp", ""]
            # "scotch+mpi@6.0.4": [""]
 }
