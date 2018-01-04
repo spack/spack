@@ -33,5 +33,5 @@ class Sailfish(CMakePackage):
 
     version('0.10.1', 'e6dab4cf3a39f346df7c28f40eb58cad')
 
-    depends_on('boost@1.55:', type=('build', 'run'))
-    depends_on('tbb',   type=('build', 'run'))
+    depends_on('boost@1.55:')
+    depends_on('tbb')
