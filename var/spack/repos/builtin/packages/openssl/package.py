@@ -62,7 +62,11 @@ class Openssl(Package):
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
 
     depends_on('zlib')
-    depends_on('perl@5.14.0:', type='build')
+
+    # TODO: 'make test' requires Perl module Test::More version 0.96
+    # TODO: uncomment when test dependency types are supported.
+    # TODO: This is commented in the meantime to avoid dependnecy bloat.
+    # depends_on('perl@5.14.0:', type='build', when='+tests')
 
     parallel = False
 
