@@ -45,16 +45,24 @@ class Metis(Package):
     version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
-    variant('gdb', default=False, description='Enables gdb support.')
-
+    variant('gdb', default=False, description='Enables gdb support (version 5+).')
     variant('int64', default=False, description='Sets the bit width of METIS\'s index type to 64.')
     variant('real64', default=False, description='Sets the bit width of METIS\'s real type to 64.')
 
     # For Metis version 5:, the build system is CMake, provide the
     # `build_type` variant.
     variant('build_type', default='Release',
-            description='The build type to build',
+            description='The build type for the installation (only Debug or'
+            ' Release allowed for version 4).',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
+    # Prior to version 5, the (non-cmake) build system only knows about
+    # 'build_type=Debug|Release'.
+    conflicts('@:4.999', when='build_type=RelWithDebInfo')
+    conflicts('@:4.999', when='build_type=MinSizeRel')
+    conflicts('@:4.999', when='+gdb')
+    conflicts('@:4.999', when='+int64')
+    conflicts('@:4.999', when='+real64')
 
     depends_on('cmake@2.8:', when='@5:', type='build')
 
@@ -92,17 +100,6 @@ class Metis(Package):
     @when('@:4')
     def install(self, spec, prefix):
         # Process library spec and options
-        if any('+{0}'.format(v) in spec for v in ['gdb', 'int64', 'real64']):
-            raise InstallError('METIS@:4 does not support the following '
-                               'variants: gdb, int64, real64.')
-        # This build system only supports 'Release' or 'Debug' build_types.
-        if spec.variants['build_type'].value != 'Release' and \
-                spec.variants['build_type'].value != 'Debug':
-            raise InstallError('METIS@:4 only supports build_type=Release or '
-                               'build_type=Debug, but build_type={0} '
-                               'was specified'.
-                               format(spec.variants['build_type'].value))
-
         options = ['COPTIONS={0}'.format(self.compiler.pic_flag)]
         if spec.variants['build_type'].value == 'Debug':
             options.append('OPTFLAGS=-g -O0')
