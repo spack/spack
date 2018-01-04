@@ -151,7 +151,10 @@ class Paraview(CMakePackage):
         if '+mpi' in spec:
             cmake_args.extend([
                 '-DPARAVIEW_USE_MPI:BOOL=ON',
-                '-DMPIEXEC:FILEPATH=%s/bin/mpiexec' % spec['mpi'].prefix
+                '-DMPIEXEC:FILEPATH=%s/bin/mpiexec' % spec['mpi'].prefix,
+                '-DMPI_CXX_COMPILER:PATH=%s' % spec['mpi'].mpicxx,
+                '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
+                '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc
             ])
 
         if 'darwin' in spec.architecture:
