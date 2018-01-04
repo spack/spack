@@ -49,6 +49,8 @@ class Paraview(CMakePackage):
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt (gui) support')
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
+    variant('examples', default=False, description="Build examples")
+    variant('hdf5', default=False, description="Use external HDF5")
 
     depends_on('python@2:2.8', when='+python')
     depends_on('py-numpy', when='+python', type='run')
@@ -59,12 +61,15 @@ class Paraview(CMakePackage):
     depends_on('qt@:4', when='@:5.2.0+qt')
 
     depends_on('mesa+swrender', when='+osmesa')
+    depends_on('libxt', when='+qt')
     conflicts('+qt', when='+osmesa')
 
     depends_on('bzip2')
     depends_on('freetype')
     # depends_on('hdf5+mpi', when='+mpi')
     # depends_on('hdf5~mpi', when='~mpi')
+    depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
+    depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
@@ -101,6 +106,13 @@ class Paraview(CMakePackage):
                              paraview_version))
         run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
                              paraview_version))
+        if '+python' in self.spec:
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 paraview_version))
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 paraview_version, 'site-packages'))
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 paraview_version, 'site-packages', 'vtk'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
@@ -126,8 +138,9 @@ class Paraview(CMakePackage):
             '-DVTK_RENDERING_BACKEND:STRING=%s' % rendering,
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
+            '-DBUILD_EXAMPLES:BOOL=%s' % variant_bool('+examples'),
             '-DVTK_USE_SYSTEM_FREETYPE:BOOL=ON',
-            '-DVTK_USE_SYSTEM_HDF5:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'),
             '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
             '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
             '-DVTK_USE_SYSTEM_NETCDF:BOOL=OFF',
