@@ -32,6 +32,7 @@ class Nekbone(Package):
        the spectral element method."""
 
     homepage = "https://github.com/Nek5000/Nekbone"
+    url = "https://github.com/Nek5000/Nekbone/tarball/v17.0"
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
