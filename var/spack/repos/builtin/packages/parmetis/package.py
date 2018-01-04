@@ -40,7 +40,6 @@ class Parmetis(CMakePackage):
     version('4.0.2', '0912a953da5bb9b5e5e10542298ffdce')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
-    variant('debug', default=False, description='Builds the library in debug mode.')
     variant('gdb', default=False, description='Enables gdb support.')
 
     depends_on('cmake@2.8:', type='build')
@@ -86,9 +85,6 @@ class Parmetis(CMakePackage):
             for o in rpath_options:
                 options.remove(o)
 
-        if '+debug' in spec:
-            options.extend(['-DDEBUG:BOOL=ON',
-                            '-DCMAKE_BUILD_TYPE:STRING=Debug'])
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
 
@@ -97,5 +93,5 @@ class Parmetis(CMakePackage):
     @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
-        if (sys.platform == 'darwin') and ('+shared' in spec):
+        if (sys.platform == 'darwin') and ('+shared' in self.spec):
             fix_darwin_install_name(prefix.lib)
