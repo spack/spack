@@ -40,7 +40,7 @@ class Geant4(CMakePackage):
     version('10.02.p01', 'b81f7082a15f6a34b720b6f15c6289cfe4ddbbbdcef0dc52719f71fac95f7f1c')
     version('10.01.p03', '4fb4175cc0dabcd517443fbdccd97439')
 
-    variant('qt', default=True, description='Enable Qt support')
+    variant('qt', default=False, description='Enable Qt support')
 
     depends_on('cmake@3.5:', type='build')
 
@@ -51,7 +51,7 @@ class Geant4(CMakePackage):
     depends_on("zlib")
     depends_on("vecgeom")
     depends_on("xerces-c")
-    depends_on("qt@4.8:", when="+qt")
+    depends_on("qt@4.8:4.999", when="+qt")
 
     def cmake_args(self):
         spec = self.spec
