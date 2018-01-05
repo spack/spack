@@ -41,7 +41,6 @@ class PyFparser(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    depends_on('python', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
 
     # Use type='test' when available:
