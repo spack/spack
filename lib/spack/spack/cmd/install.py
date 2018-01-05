@@ -46,9 +46,9 @@ level = "short"
 def setup_parser(subparser):
     subparser.add_argument(
         '--only',
-        default='package,dependencies',
+        default='root,dependencies',
         dest='things_to_install',
-        choices=['package', 'dependencies'],
+        choices=['root', 'dependencies'],
         help="""select the mode of installation.
 the default is to install the package along with all its dependencies.
 alternatively one can decide to install only the package or only
@@ -141,16 +141,10 @@ def default_log_file(spec):
 def install_spec(cli_args, kwargs, spec):
     # Do the actual installation
     try:
-        if cli_args.things_to_install == 'dependencies':
-            # Install dependencies as-if they were installed
-            # for root (explicit=False in the DB)
-            kwargs['explicit'] = False
-            for s in spec.dependencies():
-                s.package.do_install(**kwargs)
-        else:
-            kwargs['explicit'] = True
-            spec.package.do_install(**kwargs)
-
+        # decorate the install if necessary
+        PackageBase.do_install = decorator(PackageBase.do_install)
+        what = cli_args.things_to_install.split(',')
+        spack.package.install(spec, what=what, **kwargs)
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:
             e.print_context()

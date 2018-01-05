@@ -26,6 +26,7 @@ import os
 import pytest
 
 import spack
+import spack.package
 import spack.store
 from spack.spec import Spec
 
@@ -36,14 +37,11 @@ def test_install_and_uninstall(install_mockery, mock_fetch):
     spec.concretize()
     assert spec.concrete
 
-    # Get the package
-    pkg = spack.repo.get(spec)
-
     try:
-        pkg.do_install()
-        pkg.do_uninstall()
+        spack.package.install(spec)
+        spec.package.do_uninstall()
     except Exception:
-        pkg.remove_prefix()
+        spec.package.remove_prefix()
         raise
 
 
@@ -89,7 +87,7 @@ class MockStage(object):
 
 def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
     spec = Spec('canfail').concretized()
-    pkg = spack.repo.get(spec)
+    pkg = spec.package
     remove_prefix = spack.package.Package.remove_prefix
     instance_rm_prefix = pkg.remove_prefix
 
@@ -97,7 +95,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         pkg.succeed = False
         spack.package.Package.remove_prefix = mock_remove_prefix
         with pytest.raises(MockInstallError):
-            pkg.do_install()
+            spack.package.install(spec)
         assert os.path.isdir(pkg.prefix)
         rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
         spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
@@ -105,7 +103,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         pkg.succeed = True
         pkg.stage = MockStage(pkg.stage)
 
-        pkg.do_install(restage=True)
+        spack.package.install(spec, restage=True)
         assert rm_prefix_checker.removed
         assert pkg.stage.test_destroyed
         assert pkg.installed
@@ -118,7 +116,7 @@ def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
     import sys
     dependency = Spec('dependency-install')
     dependency.concretize()
-    dependency.package.do_install()
+    spack.package.install(dependency)
 
     dependency.package.patches['dependency-install'] = [
         sys.modules['spack.patch'].Patch.create(
@@ -135,7 +133,7 @@ def test_installed_dependency_request_conflicts(
         install_mockery, mock_fetch, refresh_builtin_mock):
     dependency = Spec('dependency-install')
     dependency.concretize()
-    dependency.package.do_install()
+    spack.package.install(dependency)
 
     dependency_hash = dependency.dag_hash()
     dependent = Spec(
@@ -158,12 +156,12 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch):
         pkg.succeed = False  # make the build fail
         spack.package.Package.remove_prefix = mock_remove_prefix
         with pytest.raises(spack.build_environment.ChildError):
-            pkg.do_install(keep_prefix=True)
+            spack.package.install(spec, keep_prefix=True)
         assert os.path.exists(pkg.prefix)
 
         pkg.succeed = True   # make the build succeed
         pkg.stage = MockStage(pkg.stage)
-        pkg.do_install(keep_prefix=True)
+        spack.package.install(spec, keep_prefix=True)
         assert pkg.installed
         assert not pkg.stage.test_destroyed
 
@@ -179,12 +177,12 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
         spack.package.Package.remove_prefix = mock_remove_prefix
 
         pkg.succeed = True
-        pkg.do_install()
+        spack.package.install(spec)
         assert pkg.installed
 
         # If Package.install is called after this point, it will fail
         pkg.succeed = False
-        pkg.do_install()
+        spack.package.install(spec)
 
     finally:
         spack.package.Package.remove_prefix = remove_prefix
@@ -192,17 +190,14 @@ def test_second_install_no_overwrite_first(install_mockery, mock_fetch):
 
 def test_store(install_mockery, mock_fetch):
     spec = Spec('cmake-client').concretized()
-    pkg = spec.package
-    pkg.do_install()
+    spack.package.install(spec)
 
 
 @pytest.mark.disable_clean_stage_check
 def test_failing_build(install_mockery, mock_fetch):
     spec = Spec('failing-build').concretized()
-    pkg = spec.package
-
     with pytest.raises(spack.build_environment.ChildError):
-        pkg.do_install()
+        spack.package.install(spec)
 
 
 class MockInstallError(spack.error.SpackError):

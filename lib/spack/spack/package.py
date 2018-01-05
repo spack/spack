@@ -48,6 +48,7 @@ from six import string_types
 from six import with_metaclass
 
 import llnl.util.tty as tty
+import llnl.util.filesystem as filesystem
 import spack
 import spack.store
 import spack.compilers
@@ -64,7 +65,7 @@ import spack.multimethod
 import spack.binary_distribution as binary_distribution
 
 from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
-from llnl.util.filesystem import working_dir, install_tree, install
+from llnl.util.filesystem import working_dir, install_tree
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
@@ -558,6 +559,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     #: index of patches by sha256 sum, built lazily
     _patches_by_hash = None
+
+    #: Used to stop early during installation, if set in instances
+    last_phase = None
 
     #: List of strings which contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
@@ -1296,7 +1300,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    keep_prefix=False,
                    keep_stage=False,
                    install_source=False,
-                   install_deps=True,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
@@ -1304,10 +1307,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                    explicit=False,
                    dirty=None,
                    **kwargs):
-        """Called by commands to install a package and its dependencies.
+        """Called by :py:func:`install` to install *this* package.
 
-        Package implementations should override install() to describe
-        their build process.
+        This method installs only ``self.spec`` and assumes all its
+        dependencies are already installed and the spec itself is
+        concrete.
 
         Args:
             keep_prefix (bool): Keep install prefix on failure. By default,
@@ -1317,8 +1321,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 even with exceptions.
             install_source (bool): By default, source is not installed, but
                 for debugging it might be useful to keep it around.
-            install_deps (bool): Install dependencies before installing this
-                package
             skip_patch (bool): Skip patch stage of build if True.
             verbose (bool): Display verbose build output (by default,
                 suppresses it)
@@ -1328,11 +1330,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
             dirty (bool): Don't clean the build environment before installing.
-            force (bool): Install again, even if already installed.
+
+        Raises:
+            ValueError: if the ``self.spec`` is not concrete
         """
         if not self.spec.concrete:
-            raise ValueError("Can only install concrete packages: %s."
-                             % self.spec.name)
+            msg = "Can only install concrete packages: {0}."
+            raise ValueError(msg.format(self.spec.name))
 
         # For external packages the workflow is simplified, and basically
         # consists in module file generation and registration in the DB
@@ -1359,25 +1363,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     self.stage.destroy()
 
                 return self._update_explicit_entry_in_db(rec, explicit)
-
-        self._do_install_pop_kwargs(kwargs)
-
-        # First, install dependencies recursively.
-        if install_deps:
-            tty.debug('Installing {0} dependencies'.format(self.name))
-            for dep in self.spec.traverse(order='post', root=False):
-                dep.package.do_install(
-                    install_deps=False,
-                    explicit=False,
-                    keep_prefix=keep_prefix,
-                    keep_stage=keep_stage,
-                    install_source=install_source,
-                    fake=fake,
-                    skip_patch=skip_patch,
-                    verbose=verbose,
-                    make_jobs=make_jobs,
-                    dirty=dirty,
-                    **kwargs)
 
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
@@ -1551,19 +1536,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         return partial
 
-    def _do_install_pop_kwargs(self, kwargs):
-        """Pops kwargs from do_install before starting the installation
-
-        Args:
-            kwargs:
-              'stop_at': last installation phase to be executed (or None)
-
-        """
-        self.last_phase = kwargs.pop('stop_at', None)
-        if self.last_phase is not None and self.last_phase not in self.phases:
-            tty.die('\'{0}\' is not an allowed phase for package {1}'
-                    .format(self.last_phase, self.name))
-
     def log(self):
         # Copy provenance into the install directory on success
         log_install_path = spack.store.layout.build_log_path(self.spec)
@@ -1579,8 +1551,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             # FIXME : this potentially catches too many things...
             pass
 
-        install(self.log_path, log_install_path)
-        install(self.env_path, env_install_path)
+        filesystem.install(self.log_path, log_install_path)
+        filesystem.install(self.env_path, env_install_path)
         dump_packages(self.spec, packages_dir)
 
     def sanity_check_prefix(self):
@@ -2105,6 +2077,51 @@ class Package(PackageBase):
     # This will be used as a registration decorator in user
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
+
+
+def install(spec, what=('root', 'dependencies'), stop_at=None, **kwargs):
+    """Install a concretized spec and / or its dependencies.
+
+    This function permits to install either the entire DAG, only the
+    dependencies or only the root package. In any case the root package
+    will be installed as 'explicit', while the children as 'non-explicit'.
+
+    The keyword arguments are forwarded directly to
+    :py:meth:`PackageBase.do_install` during the installation of the
+    various nodes.
+
+    Args:
+        spec (Spec): spec to be installed. Must be concrete.
+        what (tuple of str): specifies what needs to be installed. If 'root'
+            is in the argument, then the root package of the spec will be
+            installed. If 'dependencies' is in the argument the child nodes
+            of the DAG will be installed. By default it installs both.
+        stop_at (str or None): if specified, stops the installation at the
+            given phase. Valid only for the root package.
+        **kwargs: keyword arguments to be forwarded to
+            :py:meth:`PackageBase.do_install`.
+    """
+    # Check if we should stop early during the installation of the root spec
+    pkg = spec.package
+    pkg.last_phase = stop_at
+
+    if pkg.last_phase is not None and pkg.last_phase not in pkg.phases:
+        msg = '"{0}" is not an allowed phase for package {1}'
+        raise ValueError(msg.format(pkg.last_phase, pkg.name))
+
+    # Remove the keyword explicit if present: the root spec will be marked
+    # explicit, all the child specs will be non-explicit
+    kwargs.pop('explicit', None)
+
+    # Install the dependencies if required to, traversing the DAG
+    # in post order and omitting root
+    if 'dependencies' in what:
+        tty.debug('Installing {0} dependencies'.format(spec.name))
+        for dep in spec.traverse(order='post', root=False):
+            dep.package.do_install(explicit=False, **kwargs)
+
+    if 'root' in what:
+        spec.package.do_install(explicit=True, **kwargs)
 
 
 def install_dependency_symlinks(pkg, spec, prefix):

@@ -28,6 +28,7 @@ import platform
 import re
 import spack
 import spack.cmd
+import spack.package
 from spack.util.executable import Executable, ProcessError
 from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
@@ -42,10 +43,9 @@ def get_patchelf():
     # as we may need patchelf, find out where it is
     if platform.system() == 'Darwin':
         return None
-    patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
-    patchelf = spack.repo.get(patchelf_spec)
+    patchelf = spack.cmd.parse_specs("patchelf", concretize=True)[0]
     if not patchelf.installed:
-        patchelf.do_install()
+        spack.package.install(patchelf)
     patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
     return patchelf_executable
 

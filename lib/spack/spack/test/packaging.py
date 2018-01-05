@@ -95,7 +95,7 @@ echo $PATH"""
     assert spec.concrete
     pkg = spec.package
     fake_fetchify(mock_archive.url, pkg)
-    pkg.do_install()
+    spack.package.install(spec)
     pkghash = '/' + spec.dag_hash(7)
 
     # Put some non-relocatable file in there

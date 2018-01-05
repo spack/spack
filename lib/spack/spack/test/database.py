@@ -33,6 +33,7 @@ import pytest
 from llnl.util.tty.colify import colify
 
 import spack
+import spack.package
 import spack.store
 from spack.test.conftest import MockPackageMultiRepo
 from spack.util.executable import Executable
@@ -141,8 +142,7 @@ def _check_remove_and_add_package(install_db, spec):
 def _mock_install(spec):
     s = spack.spec.Spec(spec)
     s.concretize()
-    pkg = spack.repo.get(s)
-    pkg.do_install(fake=True)
+    spack.package.install(s, fake=True)
 
 
 def _mock_remove(spec):
@@ -426,7 +426,7 @@ def test_external_entries_in_db(database):
     assert rec.spec.external_module is None
     assert rec.explicit is False
 
-    rec.spec.package.do_install(fake=True, explicit=True)
+    spack.package.install(rec.spec, fake=True)
     rec = install_db.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None

@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
 import os
 import argparse
 
@@ -78,22 +77,23 @@ def diy(self, args):
             "Did you forget a package version number?")
 
     spec.concretize()
-    package = spack.repo.get(spec)
 
-    if package.installed:
-        tty.error("Already installed in %s" % package.prefix)
-        tty.msg("Uninstall or try adding a version suffix for this DIY build.")
-        sys.exit(1)
+    if spec.package.installed:
+        msg = "Already installed in {0}. "
+        msg += "Uninstall or try adding a version suffix for this DIY build."
+        tty.die(msg.format(spec.prefix))
 
     # Forces the build to run out of the current directory.
-    package.stage = DIYStage(os.getcwd())
+    spec.package.stage = DIYStage(os.getcwd())
 
     # TODO: make this an argument, not a global.
     spack.do_checksum = False
 
-    package.do_install(
+    spack.package.install(
+        spec,
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
         keep_stage=True,   # don't remove source dir for DIY.
-        dirty=args.dirty)
+        dirty=args.dirty
+    )

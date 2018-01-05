@@ -137,8 +137,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     # logging. TODO: see whether we can get multiple log_outputs to work
     # when nested AND in pytest
     spec = Spec('printing-package').concretized()
-    pkg = spec.package
-    pkg.do_install(verbose=True)
+    spack.package.install(spec, verbose=True)
 
     log_file = os.path.join(spec.prefix, '.spack', 'build.out')
     with open(log_file) as f:

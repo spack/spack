@@ -86,7 +86,7 @@ def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
         inst.install(parser, install_args)
         # Install package and stop at the given phase
         cli_args = ['-v'] if args.verbose else []
-        install_args = parser.parse_args(cli_args + ['--only=package'])
+        install_args = parser.parse_args(cli_args + ['--only=root'])
         install_args.package = args.package
         inst.install(parser, install_args, stop_at=phase)
     except IndexError:

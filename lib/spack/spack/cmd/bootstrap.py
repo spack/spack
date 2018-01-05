@@ -26,6 +26,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.package
 
 description = "Bootstrap packages needed for spack to run smoothly"
 section = "admin"
@@ -86,5 +87,4 @@ def bootstrap(parser, args, **kwargs):
             tty.msg("Installing %s to satisfy requirement for %s" %
                     (spec_to_install, requirement))
             kwargs['explicit'] = True
-            package = spack.repo.get(spec_to_install)
-            package.do_install(**kwargs)
+            spack.package.install(spec_to_install, **kwargs)

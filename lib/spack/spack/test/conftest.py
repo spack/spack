@@ -40,12 +40,12 @@ import spack.architecture
 import spack.database
 import spack.directory_layout
 import spack.platforms.test
+import spack.package
 import spack.repository
 import spack.stage
 import spack.util.executable
 import spack.util.pattern
 from spack.dependency import Dependency
-from spack.package import PackageBase
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
@@ -306,8 +306,7 @@ def database(tmpdir_factory, builtin_mock, config):
     def _install(spec):
         s = spack.spec.Spec(spec)
         s.concretize()
-        pkg = spack.repo.get(s)
-        pkg.do_install(fake=True)
+        spack.package.install(s, fake=True)
 
     def _uninstall(spec):
         spec.package.do_uninstall(spec)
@@ -393,10 +392,10 @@ def mock_fetch(mock_archive):
     def fake_fn(self):
         return fetcher
 
-    orig_fn = PackageBase.fetcher
-    PackageBase.fetcher = fake_fn
+    orig_fn = spack.package.PackageBase.fetcher
+    spack.package.PackageBase.fetcher = fake_fn
     yield
-    PackageBase.fetcher = orig_fn
+    spack.package.PackageBase.fetcher = orig_fn
 
 
 ##########
