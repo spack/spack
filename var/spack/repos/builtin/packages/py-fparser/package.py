@@ -41,18 +41,12 @@ class PyFparser(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'), when='@0:0.0.5')
+    depends_on('py-nose', type='build')
+    depends_on('py-six', type='build')
 
     # Use type='test' when available:
-    depends_on('py-nose', type='build')
-    depends_on('py-py', type='build')
     depends_on('py-pytest', type='build')
-    depends_on('py-six', type='build')
-    depends_on('py-appdirs', type='build')
-    depends_on('py-enum34', type='build')
-    depends_on('py-hypothesis', type='build')
-    depends_on('py-packaging', type='build')
-    depends_on('py-pyparsing', type='build')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
