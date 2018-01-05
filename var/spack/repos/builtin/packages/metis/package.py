@@ -101,8 +101,16 @@ class Metis(Package):
     def install(self, spec, prefix):
         # Process library spec and options
         options = ['COPTIONS={0}'.format(self.compiler.pic_flag)]
-        if spec.variants['build_type'].value == 'Debug':
-            options.append('OPTFLAGS=-g -O0')
+
+        # If spack's cflags is set, use it instead of any default flags.  Assume
+        # the user knows what they are asking for (e.g.: no '-g' flag unless
+        # cflags provides it!)
+        if 'SPACK_CFLAGS' in env and env['SPACK_CFLAGS']:
+            options.append('OPTFLAGS={0}'.format(env['SPACK_CFLAGS']))
+        else:
+            if spec.variants['build_type'].value == 'Debug':
+                options.append('OPTFLAGS=-g -O0')
+
         make(*options)
 
         # Compile and install library files
@@ -191,6 +199,16 @@ class Metis(Package):
         build_directory = join_path(source_directory, 'build')
 
         options = std_cmake_args[:]
+
+        # If spack's cflags is set, use it instead of cmake's default flags.
+        # Assume the user knows what they are asking for (e.g.: no '-g' flag
+        # unless cflags provides it!)
+        if 'SPACK_CFLAGS' in env and env['SPACK_CFLAGS']:
+            options.extend(['-DCMAKE_C_FLAGS_RELEASE=',
+                            '-DCMAKE_C_FLAGS_DEBUG=',
+                            '-DCMAKE_C_FLAGS_MINSIZEREL=',
+                            '-DCMAKE_C_FLAGS_RELWITHDEBINFO='])
+
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
