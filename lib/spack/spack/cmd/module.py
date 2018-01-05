@@ -71,6 +71,11 @@ def setup_parser(subparser):
 
     # spack module find
     find_parser = sp.add_parser('find', help='find module files for packages')
+    find_parser.add_argument(
+        '--full-path',
+        help='display full path to module file',
+        action='store_true'
+    )
     arguments.add_common_arguments(find_parser, ['constraint', 'module_type'])
 
     # spack module rm
@@ -209,7 +214,10 @@ def find(module_types, specs, args):
         tty.die(msg.format(module_type, spec))
 
     # ... and if it is print its use name
-    print(writer.layout.use_name)
+    if args.full_path:
+        print(writer.layout.filename)
+    else:
+        print(writer.layout.use_name)
 
 
 @subcommand('rm')
