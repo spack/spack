@@ -25,15 +25,18 @@
 from spack import *
 
 
-class PyMongo(PythonPackage):
-    """Python driver for MongoDB <http://www.mongodb.org>"""
+class Libev(AutotoolsPackage):
+    """A full-featured and high-performance event loop that is loosely modelled
+    after libevent, but without its limitations and bugs."""
 
-    homepage = "http://github.com/mongodb/mongo-python-driver"
-    url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.6.0.tar.gz"
+    homepage = "http://software.schmorp.de/pkg/libev.html"
+    url      = "http://dist.schmorp.de/libev/libev-4.24.tar.gz"
+    list_url = "http://dist.schmorp.de/libev/Attic/"
 
-    version('3.6.0', '2f64fa7691c77535b72050704cc12afb')
-    version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+    version('develop', git='https://github.com/enki/libev')
+    version('4.24', '94459a5a22db041dec6f98424d6efe54')
 
-    depends_on('python@2.6:2.8,3.3:')
-
-    depends_on('py-setuptools', type='build')
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+    depends_on('m4',       type='build', when='@develop')

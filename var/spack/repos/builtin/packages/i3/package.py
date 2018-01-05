@@ -25,15 +25,29 @@
 from spack import *
 
 
-class PyMongo(PythonPackage):
-    """Python driver for MongoDB <http://www.mongodb.org>"""
+class I3(AutotoolsPackage):
+    """i3, improved tiling wm. i3 is a tiling window manager, completely
+    written from scratch. The target platforms are GNU/Linux and BSD operating
+    systems, our code is Free and Open Source Software (FOSS) under the BSD
+    license. i3 is primarily targeted at advanced users and developers."""
 
-    homepage = "http://github.com/mongodb/mongo-python-driver"
-    url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.6.0.tar.gz"
+    homepage = "https://i3wm.org/"
+    url      = "https://github.com/i3/i3/archive/4.14.1.tar.gz"
 
-    version('3.6.0', '2f64fa7691c77535b72050704cc12afb')
-    version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+    version('4.14.1', 'bdbb6d7bb5a647c8b7b53ed10de84cc5')
 
-    depends_on('python@2.6:2.8,3.3:')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('libev')
+    depends_on('startup-notification')
+    depends_on('xcb-util-cursor')
+    depends_on('xcb-util-keysyms')
+    depends_on('xcb-util-wm')
+    depends_on('xcb-util-xrm')
+    depends_on('libxkbcommon')
+    depends_on('yajl')
+    depends_on('cairo+X')
+    depends_on('pango+X')

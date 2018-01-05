@@ -25,15 +25,21 @@
 from spack import *
 
 
-class PyMongo(PythonPackage):
-    """Python driver for MongoDB <http://www.mongodb.org>"""
+class PyUmiTools(PythonPackage):
+    """Tools for handling Unique Molecular Identifiers in NGS data sets"""
 
-    homepage = "http://github.com/mongodb/mongo-python-driver"
-    url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.6.0.tar.gz"
+    homepage = "https://github.com/CGATOxford/UMI-tools"
+    url      = "https://github.com/CGATOxford/UMI-tools/archive/0.5.3.tar.gz"
 
-    version('3.6.0', '2f64fa7691c77535b72050704cc12afb')
-    version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+    version('0.5.3', '08bdebe30f84867d352ff5e1a2fe4d94')
 
-    depends_on('python@2.6:2.8,3.3:')
-
-    depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:')
+    depends_on('py-setuptools@1.1:',   type='build')
+    depends_on('py-numpy@1.7:',        type=('build', 'run'))
+    depends_on('py-pandas@0.12:',      type=('build', 'run'))
+    depends_on('py-pysam@0.8.4:',      type=('build', 'run'))
+    depends_on('py-future',            type=('build', 'run'))
+    depends_on('py-six',               type=('build', 'run'))
+    depends_on('py-regex',             type=('build', 'run'))
+    depends_on('py-scipy',             type=('build', 'run'))
+    depends_on('py-matplotlib',        type=('build', 'run'))

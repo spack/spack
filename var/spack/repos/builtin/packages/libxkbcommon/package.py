@@ -25,15 +25,27 @@
 from spack import *
 
 
-class PyMongo(PythonPackage):
-    """Python driver for MongoDB <http://www.mongodb.org>"""
+class Libxkbcommon(AutotoolsPackage):
+    """xkbcommon is a library to handle keyboard descriptions, including
+    loading them from disk, parsing them and handling their state. It's mainly
+    meant for client toolkits, window systems, and other system
+    applications."""
 
-    homepage = "http://github.com/mongodb/mongo-python-driver"
-    url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.6.0.tar.gz"
+    homepage = "https://xkbcommon.org/"
+    url      = "https://github.com/xkbcommon/libxkbcommon/archive/xkbcommon-0.8.0.tar.gz"
 
-    version('3.6.0', '2f64fa7691c77535b72050704cc12afb')
-    version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+    version('0.8.0', '0d9738fb2ed2dcc6e2c6920d94e135ce')
 
-    depends_on('python@2.6:2.8,3.3:')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+    depends_on('bison',    type='build')
+    depends_on('xkbdata')
 
-    depends_on('py-setuptools', type='build')
+    def configure_args(self):
+        spec = self.spec
+        args = []
+        args.append('--with-xkb-config-root={0}'
+                    .format(spec['xkbdata'].prefix))
+        return args

@@ -25,15 +25,24 @@
 from spack import *
 
 
-class PyMongo(PythonPackage):
-    """Python driver for MongoDB <http://www.mongodb.org>"""
+class XcbUtilXrm(AutotoolsPackage):
+    """XCB util-xrm module provides the 'xrm' library, i.e.  utility functions
+    for the X resource manager."""
 
-    homepage = "http://github.com/mongodb/mongo-python-driver"
-    url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.6.0.tar.gz"
+    homepage = "https://github.com/Airblader/xcb-util-xrm"
+    url      = "https://github.com/Airblader/xcb-util-xrm/archive/v1.2.tar.gz"
 
-    version('3.6.0', '2f64fa7691c77535b72050704cc12afb')
-    version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+    # This GitHub project includes some git submodules, which must be fetched
+    # in order to build it.
+    version('1.2',
+            git='https://github.com/Airblader/xcb-util-xrm',
+            tag='v1.2',
+            submodules=True)
 
-    depends_on('python@2.6:2.8,3.3:')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+    depends_on('pkgconfig', type='build')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('libxcb@1.4:')

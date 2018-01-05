@@ -25,15 +25,15 @@
 from spack import *
 
 
-class PyMongo(PythonPackage):
-    """Python driver for MongoDB <http://www.mongodb.org>"""
+class StartupNotification(AutotoolsPackage):
+    """startup-notification contains a reference implementation of the
+    freedesktop startup notification protocol."""
 
-    homepage = "http://github.com/mongodb/mongo-python-driver"
-    url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.6.0.tar.gz"
+    homepage = "https://www.freedesktop.org/wiki/Software/startup-notification/"
+    url      = "http://www.freedesktop.org/software/startup-notification/releases/startup-notification-0.12.tar.gz"
 
-    version('3.6.0', '2f64fa7691c77535b72050704cc12afb')
-    version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+    version('0.12', '2cd77326d4dcaed9a5a23a1232fb38e9')
 
-    depends_on('python@2.6:2.8,3.3:')
-
-    depends_on('py-setuptools', type='build')
+    depends_on('libx11')
+    depends_on('libxcb')
+    depends_on('xcb-util')

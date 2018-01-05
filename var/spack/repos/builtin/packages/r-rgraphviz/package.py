@@ -25,15 +25,14 @@
 from spack import *
 
 
-class PyMongo(PythonPackage):
-    """Python driver for MongoDB <http://www.mongodb.org>"""
+class RRgraphviz(RPackage):
+    """Interfaces R with the AT and T graphviz library for plotting
+    R graph objects from the graph package."""
 
-    homepage = "http://github.com/mongodb/mongo-python-driver"
-    url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.6.0.tar.gz"
+    homepage = "http://bioconductor.org/packages/Rgraphviz/"
+    url      = "https://git.bioconductor.org/packages/Rgraphviz"
 
-    version('3.6.0', '2f64fa7691c77535b72050704cc12afb')
-    version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+    version('2.20.0', git='https://git.bioconductor.org/packages/Rgraphviz', commit='eface6298150667bb22eac672f1a45e52fbf8c90')
 
-    depends_on('python@2.6:2.8,3.3:')
-
-    depends_on('py-setuptools', type='build')
+    depends_on('r@3.4.0:3.4.9', when='@2.20.0')
+    depends_on('r-graph', type=('build', 'run'))

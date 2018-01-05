@@ -49,6 +49,7 @@ class Motioncor2(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('MotionCor2_{}'.format(spec.version), prefix.bin)
+        for files in glob("MotionCor2_*"):
+            install(files, prefix.bin)
         with working_dir(prefix.bin):
-            symlink('MotionCor2_{}'.format(spec.version), 'MotionCor2')
+            symlink('MotionCor2_{0}'.format(spec.version), 'MotionCor2')

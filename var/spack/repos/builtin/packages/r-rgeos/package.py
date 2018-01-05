@@ -25,15 +25,18 @@
 from spack import *
 
 
-class PyMongo(PythonPackage):
-    """Python driver for MongoDB <http://www.mongodb.org>"""
+class RRgeos(RPackage):
+    """Interface to Geometry Engine - Open Source ('GEOS') using the C
+    'API' for topology operations on geometries. The 'GEOS' library is
+    external to the package, and, when installing the package from source,
+    must be correctly installed first. Windows and Mac Intel OS X binaries
+    are provided on 'CRAN'."""
 
-    homepage = "http://github.com/mongodb/mongo-python-driver"
-    url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.6.0.tar.gz"
+    homepage = "https://cran.r-project.org/package=rgeos"
+    url      = "https://cran.rstudio.com/src/contrib/rgeos_0.3-26.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/rgeos"
 
-    version('3.6.0', '2f64fa7691c77535b72050704cc12afb')
-    version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+    version('0.3-26', '7d10a28011b49f68c5817b6fbca132df')
 
-    depends_on('python@2.6:2.8,3.3:')
-
-    depends_on('py-setuptools', type='build')
+    depends_on('r-sp', type=('build', 'run'))
+    depends_on('geos')
