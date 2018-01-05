@@ -213,7 +213,7 @@ def find(module_types, specs, args):
         msg += 'no {0} module has been generated for it.'
         tty.die(msg.format(module_type, spec))
 
-    # ... and if it is print its use name
+    # ... and if it is print its use name or full-path if requested
     if args.full_path:
         print(writer.layout.filename)
     else:
