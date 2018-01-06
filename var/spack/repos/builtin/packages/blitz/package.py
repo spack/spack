@@ -31,7 +31,7 @@ class Blitz(AutotoolsPackage):
     url = "https://github.com/blitzpp/blitz/archive/1.0.1.tar.gz"
 
     version('1.0.1', 'fe43e2cf6c9258bc8b369264dd008971')
-    version('1.0.0', '9f040b9827fe22228a892603671a77af')
+    version('1.0.0', '971c43e22318bbfe8da016e6ef596234')
 
     build_targets = ['lib']
 
