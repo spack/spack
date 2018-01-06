@@ -52,7 +52,6 @@ class Elpa(AutotoolsPackage):
             t = 'http://elpa.mpcdf.mpg.de/elpa-{0}.tar.gz'
         return t.format(str(version))
 
-    # override default implementation which returns static lib
     @property
     def libs(self):
         shared = (False if 'static' in self.spec.last_query.extra_parameters
@@ -71,25 +70,50 @@ class Elpa(AutotoolsPackage):
         spack_env.set('FC', spec['mpi'].mpifc)
         spack_env.set('CXX', spec['mpi'].mpicxx)
 
-        spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
-        spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
-        spack_env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
+        if spec.satisfies('%intel'):
+            spack_env.set('CPP', 'gcc -E')
 
     def configure_args(self):
+        spec = self.spec
+        options = []
+
         # TODO: set optimum flags for platform+compiler combo, see
-        # https://github.com/hfp/xconfigure/tree/master/elpa
+        # https://xconfigure.readthedocs.io/en/latest/elpa/README/
         # also see:
         # https://src.fedoraproject.org/cgit/rpms/elpa.git/
         # https://packages.qa.debian.org/e/elpa.html
-        options = []
-        # without -march=native there is configure error for 2017.05.02
-        # Could not compile test program, try with --disable-sse, or
-        # adjust the C compiler or CFLAGS
-        if '+optflags' in self.spec:
-            options.extend([
-                'FCFLAGS=-O2 -march=native -ffree-line-length-none',
-                'CFLAGS=-O2 -march=native'
-            ])
-        if '+openmp' in self.spec:
+        cflags = []
+        fflags = []
+        if '+optflags' in spec:
+            optflags = {
+                'gcc': [
+                    '-O3',
+                    '-funsafe-loop-optimizations',
+                    '-ftree-vect-loop-version',
+                    '-ftree-vectorize',
+                ], 'intel': [
+                    '-O3',
+                    '-ip',
+                ]
+            }
+            cflags.extend(optflags[spec.compiler.name])
+            fflags.extend(optflags[spec.compiler.name])
+
+        if '%intel' in spec:
+            fflags.extend(['-free', '-fpp'])
+        elif '%gcc' in spec:
+            fflags.extend(['-ffree-form', '-ffree-line-length-none', '-cpp'])
+
+        math_libs = (spec['scalapack'].libs + spec['lapack'].libs +
+                     spec['blas'].libs)
+
+        options.extend([
+            'FCFLAGS=' + ' '.join(fflags),
+            'CFLAGS=' + ' '.join(cflags),
+            'SCALAPACK_LDFLAGS=' + math_libs.joined(),
+        ])
+
+        if '+openmp' in spec:
             options.append('--enable-openmp')
+
         return options
