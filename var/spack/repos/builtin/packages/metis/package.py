@@ -102,7 +102,7 @@ class Metis(Package):
         # Process library spec and options
         options = ['COPTIONS={0}'.format(self.compiler.pic_flag)]
 
-        # If spack's cflags is set, use it instead of any default flags.  Assume
+        # If spack's cflags is set, use it instead of any default flags. Assume
         # the user knows what they are asking for (e.g.: no '-g' flag unless
         # cflags provides it!)
         if 'SPACK_CFLAGS' in env and env['SPACK_CFLAGS']:
