@@ -47,10 +47,10 @@ class PyPsyclone(PythonPackage):
     depends_on('py-fparser@0.0.5', type=('build', 'run'), when='@1.5.1')
     depends_on('py-fparser', type=('build', 'run'), when='@1.5.2:')
 
-    # Use type='test' when available:
-    depends_on('py-numpy', type='build')
-    depends_on('py-nose', type='build')
-    depends_on('py-pytest', type='build')
+    # Dependencies only required for tests:
+    depends_on('py-numpy', type='test')
+    depends_on('py-nose', type='test')
+    depends_on('py-pytest', type='test')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
