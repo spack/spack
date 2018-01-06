@@ -207,6 +207,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
+    #jgw
+    #depends_on('binutils+libiberty')
     depends_on('ucx', when='+ucx')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
@@ -302,6 +304,10 @@ class Openmpi(AutotoolsPackage):
         # Fabrics and schedulers
         config_args.extend(self.with_or_without('fabrics'))
         config_args.extend(self.with_or_without('schedulers'))
+        # jgw
+        os.environ["LIBS"] = "-ldl"
+        config_args.extend(['--with-tm=/opt/pbs/default'])
+        # jgw
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
