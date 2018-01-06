@@ -34,13 +34,12 @@ class Pilon(Package):
        tool."""
 
     homepage = "https://github.com/broadinstitute/pilon"
-    url      = "https://github.com/broadinstitute/pilon/releases/download/v1.22/pilon-1.22.jar"
     _urlfmt  = "https://github.com/broadinstitute/pilon/releases/download/v{0}/pilon-{0}.jar"
-    
+
     version('1.22', '3c45568dc1b878a9a0316410ec62ab04', expand=False)
 
     depends_on('java@8', type='run')
-    
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         # The list of files to install varies with release...
@@ -61,15 +60,9 @@ class Pilon(Package):
         java = join_path(self.spec['java'].prefix, 'bin', 'java')
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
-        filter_file('pilon.jar', join_path(prefix.bin, 'pilon.jar'),
+        filter_file('pilon.jar',
+                    join_path(prefix.bin,'pilon-{0}.jar'.format(self.version)),
                     script, **kwargs)
-
-        #def setup_environment(self, spack_env, run_env):
-        #"""The Picard docs suggest setting this as a convenience."""
-        #   run_env.prepend_path('PICARD',
-        #                       join_path(self.prefix, 'bin', 'picard.jar'))
-
 
     def url_for_version(self, version):
         return self._urlfmt.format(version)
-                                        
