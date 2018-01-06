@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.build_systems.cuda import CudaPackage
 from spack import *
 from spack.package_test import compare_output
 from spack.util.executable import Executable

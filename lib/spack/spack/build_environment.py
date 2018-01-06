@@ -667,7 +667,7 @@ def fork(pkg, function, dirty, fake):
         except StopIteration as e:
             # StopIteration is used to stop installations
             # before the final stage, mainly for debug purposes
-            tty.msg(e.message)
+            tty.msg(e)
             child_pipe.send(None)
 
         except BaseException:
