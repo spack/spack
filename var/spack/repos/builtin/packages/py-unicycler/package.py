@@ -23,36 +23,34 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
-import shutil
 
-class Racon(MakefilePackage):
-    """Consensus module for raw de novo DNA assembly of long uncorrected
-    reads.
 
-    If you encounter build errors related to using the generated tar.gz file,
-    try
-    spack clean --all."""
+class PyUnicycler(PythonPackage):
+    """hybrid assembly pipeline for bacterial genomes"""
 
-    homepage = "https://github.com/isovic/racon"
-    url      = "https://github.com/isovic/racon"
+    homepage = "https://github.com/rrwick/Unicycler"
+    url      = "https://github.com/rrwick/Unicycler"
 
-    version('master', git='git@github.com:isovic/racon.git',
-            commit='0834442')
+    version('master', git='https://github.com/rrwick/Unicycler.git',
+            commit='947fdc8')
 
-    depends_on('zlib')
-    conflicts('%gcc@:4.8')
+    # minimum required compiler versions
+    conflicts('%gcc@:4.9')
+    conflicts('%clang@:3.4.2')
 
-    parallel = False
-    
-    def edit(self, spec, prefix):
-        return
+    depends_on('python@3.4:', type=('build','run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('spades@3.6.2:')
+    depends_on('racon')
+    depends_on('pilon')
+    depends_on('java@8', type='run')
+    depends_on('bowtie2')
+    depends_on('samtools')
 
-    def build(self, spec, prefix):
-        make('modules')
-        make('tools')
-        make()
+    # without ~python, i.e., +python, for some reason the blast configure
+    # script barfs on finding python3.6 installation.
+    depends_on('blast-plus~python')
 
-    # from https://github.com/spack/spack/issues/31
-    def install(self, spec, prefix):
-        shutil.copytree('bin',os.path.join(prefix,'bin'),symlinks=True)
+    def build_args(self, spec, prefix):
+        args = []
+        return args
