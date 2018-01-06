@@ -2240,6 +2240,10 @@ The classes that are currently provided by Spack are:
     | :py:class:`.CMakePackage`     | Specialized class for packages   |
     |                               | built using CMake                |
     +-------------------------------+----------------------------------+
+    | :py:class:`.CudaPackage`      | A helper class for packages that |
+    |                               | use CUDA. It is intended to be   |
+    |                               | used in combination with others  |
+    +-------------------------------+----------------------------------+
     | :py:class:`.QMakePackage`     | Specialized class for packages   |
     |                               | build using QMake                |
     +-------------------------------+----------------------------------+
@@ -2251,6 +2255,9 @@ The classes that are currently provided by Spack are:
     +-------------------------------+----------------------------------+
     | :py:class:`.RPackage`         | Specialized class for            |
     |                               | :py:class:`.R` extensions        |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.OctavePackage`    | Specialized class for            |
+    |                               | :py:class:`.Octave` packages     |
     +-------------------------------+----------------------------------+
     | :py:class:`.PythonPackage`    | Specialized class for            |
     |                               | :py:class:`.Python` extensions   |
