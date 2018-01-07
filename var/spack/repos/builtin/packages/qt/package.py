@@ -73,6 +73,7 @@ class Qt(Package):
 
     patch('qt3accept.patch', when='@3.3.8b')
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
+    patch('qt3ptrdiff.patch', when='@3.3.8b')
 
     # see https://bugreports.qt.io/browse/QTBUG-57656
     patch('QTBUG-57656.patch', when='@5.8.0')
