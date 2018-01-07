@@ -370,6 +370,11 @@ class Qt(Package):
                 '-skip', 'webengine',
             ])
 
+        if '~opengl' in self.spec and self.spec.satisfies('@5.10:'):
+            config_args.extend([
+                '-skip', 'webglplugin',
+            ])
+
         configure('-no-eglfs',
                   '-no-directfb',
                   '-{0}gtk'.format('' if '+gtk' in self.spec else 'no-'),
