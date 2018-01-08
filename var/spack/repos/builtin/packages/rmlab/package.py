@@ -47,3 +47,12 @@ class Rmlab(CMakePackage):
     conflicts('%pgi@:14')
 
     depends_on('pngwriter@0.6.0:', when='+png')
+
+    def cmake_args(self):
+        spec = self.spec
+
+        args = [
+            '-DRmlab_USE_PNG={0}'.format(
+                'ON' if '+png' in spec else 'OFF')
+        ]
+        return args
