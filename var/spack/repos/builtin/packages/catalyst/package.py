@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2017 Simone Bna, CINECA.
+# Copyright (c) 2018 Simone Bna, CINECA.
 #
 # This file was authored by Simone Bna <simone.bna@cineca.it>
 # and is released as part of spack under the LGPL license.
@@ -32,8 +32,9 @@ import llnl.util.tty as tty
 
 
 class Catalyst(CMakePackage):
-    """Catalyst is an in situ use case library, with an adaptable application programming interface (API),
-    that orchestrates the alliance between simulation and analysis and/or visualization tasks."""
+    """Catalyst is an in situ use case library, with an adaptable application
+    programming interface (API), that orchestrates the alliance between
+    simulation and analysis and/or visualization tasks."""
 
     homepage = 'http://www.paraview.org'
     url      = "http://www.paraview.org/files/v5.4/ParaView-v5.4.1.tar.gz"
@@ -68,34 +69,41 @@ class Catalyst(CMakePackage):
             return self._urlfmt.format(version.up_to(2), version, '')
 
     def do_stage(self, mirror_only=False):
-        """Unpacks and expands the fetched tarball. Then, generate the catalyst source files."""
+        """Unpacks and expands the fetched tarball.
+        Then, generate the catalyst source files."""
         super(Catalyst, self).do_stage(mirror_only)
 
         # extract the catalyst part
-        paraview_dir = os.path.join(self.stage.path, 'ParaView-v' + str(self.version))
+        paraview_dir = os.path.join(self.stage.path,
+                                    'ParaView-v' + str(self.version))
         catalyst_script = os.path.join(paraview_dir, 'Catalyst', 'catalyze.py')
         catalyst_source_dir = os.path.abspath(self.root_cmakelists_dir)
 
         command = ['python', catalyst_script,
                    '-r', paraview_dir]
 
-        catalyst_edition = os.path.join(paraview_dir, 'Catalyst', 'Editions', 'Base')
+        catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
+                                        'Editions', 'Base')
         command.append('-i')
         command.append(catalyst_edition)
         if '+python' in self.spec:
-            catalyst_edition = os.path.join(paraview_dir, 'Catalyst', 'Editions', 'Enable-Python')
+            catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
+                                            'Editions', 'Enable-Python')
             command.append('-i')
             command.append(catalyst_edition)
         if '+essentials' in self.spec:
-            catalyst_edition = os.path.join(paraview_dir, 'Catalyst', 'Editions', 'Essentials')
+            catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
+                                            'Editions', 'Essentials')
             command.append('-i')
             command.append(catalyst_edition)
         if '+extras' in self.spec:
-            catalyst_edition = os.path.join(paraview_dir, 'Catalyst', 'Editions', 'Extras')
+            catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
+                                            'Editions', 'Extras')
             command.append('-i')
             command.append(catalyst_edition)
         if '+rendering' in self.spec:
-            catalyst_edition = os.path.join(paraview_dir, 'Catalyst', 'Editions', 'Rendering-Base')
+            catalyst_edition = os.path.join(paraview_dir, 'Catalyst',
+                                            'Editions', 'Rendering-Base')
             command.append('-i')
             command.append(catalyst_edition)
 
@@ -107,7 +115,8 @@ class Catalyst(CMakePackage):
             subprocess.check_call(command)
             tty.msg("Generated catalyst source in %s" % self.stage.path)
         else:
-            tty.msg("Already generated %s in %s" % (self.name, self.stage.path))
+            tty.msg("Already generated %s in %s" % (self.name,
+                                                    self.stage.path))
 
     def setup_environment(self, spack_env, run_env):
         if os.path.isdir(self.prefix.lib64):
@@ -137,7 +146,8 @@ class Catalyst(CMakePackage):
 
         :return: directory where to build the package
         """
-        return join_path(os.path.abspath(self.root_cmakelists_dir), 'spack-build')
+        return join_path(os.path.abspath(self.root_cmakelists_dir),
+                         'spack-build')
 
     def cmake_args(self):
         """Populate cmake arguments for Catalyst."""
@@ -148,7 +158,10 @@ class Catalyst(CMakePackage):
 
     def cmake(self, spec, prefix):
         """Runs ``cmake`` in the build directory through the cmake.sh script"""
-        cmake_script_path = os.path.join(os.path.abspath(self.root_cmakelists_dir), 'cmake.sh')
+        cmake_script_path = os.path.join(
+            os.path.abspath(self.root_cmakelists_dir),
+            'cmake.sh')
         with working_dir(self.build_directory, create=True):
-            subprocess.check_call([cmake_script_path, os.path.abspath(self.root_cmakelists_dir)] +
+            subprocess.check_call([cmake_script_path,
+                                   os.path.abspath(self.root_cmakelists_dir)] +
                                   self.cmake_args() + self.std_cmake_args)
