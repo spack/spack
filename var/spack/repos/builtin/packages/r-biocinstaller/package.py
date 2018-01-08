@@ -30,10 +30,9 @@ class RBiocinstaller(RPackage):
     and (some) github packages."""
 
     homepage = "https://bioconductor.org/packages/BiocInstaller/"
-    url      = "https://bioconductor.org/packages/3.5/bioc/src/contrib/BiocInstaller_1.26.1.tar.gz"
+    url      = "https://git.bioconductor.org/packages/BiocInstaller"
     list_url = homepage
 
-    version('1.26.1', 'ec0f8866639475bcd91179dcc840b5f4')
-    version('1.25.3', '6214770455a5122dca5544861f52c91d')
+    version('1.26.1', git='https://git.bioconductor.org/packages/BiocInstaller', commit='9049b82a77aefa98e3f8e4dd7068317505d70e98')
 
     depends_on('r@3.4.0:3.4.9', when='@1.26.1')

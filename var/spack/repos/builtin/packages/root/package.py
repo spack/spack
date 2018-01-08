@@ -53,8 +53,9 @@ class Root(CMakePackage):
     variant('graphviz', default=False, description='Enable graphviz support')
 
     depends_on('cmake@3.4.3:', type='build')
-    depends_on('pkg-config',   type='build')
+    depends_on('pkgconfig',   type='build')
 
+    depends_on('binutils')
     depends_on('zlib')
     # depends_on('unuran')
     depends_on('freetype')

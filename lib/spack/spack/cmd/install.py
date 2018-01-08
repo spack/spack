@@ -71,8 +71,8 @@ the dependencies"""
         '--keep-stage', action='store_true',
         help="don't remove the build stage if installation succeeds")
     subparser.add_argument(
-        '--restage', action='store_true',
-        help="if a partial install is detected, delete prior state")
+        '--dont-restage', action='store_true',
+        help="if a partial install is detected, don't delete prior state")
     subparser.add_argument(
         '--use-cache', action='store_true', dest='use_cache',
         help="check for pre-built Spack packages in mirrors")
@@ -392,7 +392,7 @@ def install(parser, args, **kwargs):
     kwargs.update({
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
-        'restage': args.restage,
+        'restage': not args.dont_restage,
         'install_source': args.install_source,
         'install_deps': 'dependencies' in args.things_to_install,
         'make_jobs': args.jobs,

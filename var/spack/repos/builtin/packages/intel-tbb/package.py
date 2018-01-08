@@ -35,6 +35,8 @@ class IntelTbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # Only version-specific URL's work for TBB
+    version('2018.2', '0b8dfe30917a54e40828eeb0ed7562ae',
+            url='https://github.com/01org/tbb/archive/2018_U2.tar.gz')
     version('2018.1', 'b2f2fa09adf44a22f4024049907f774b',
             url='https://github.com/01org/tbb/archive/2018_U1.tar.gz')
     version('2018.0', 'e54de69981905ad69eb9cf0226b9bf5f9a4ba065',
@@ -53,6 +55,9 @@ class IntelTbb(Package):
             url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160128oss_src_0.tgz')
 
     provides('tbb')
+
+    # include patch for gcc rtm options
+    patch("tbb_gcc_rtm_key.patch", level=0)
 
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:

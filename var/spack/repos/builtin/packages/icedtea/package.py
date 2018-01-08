@@ -42,7 +42,7 @@ class Icedtea(AutotoolsPackage):
     variant('shenandoah', default=False,
             description="Build with the shenandoah gc. Only for version 3+")
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('gmake', type='build')
     depends_on('cups')
     depends_on('jdk', type='build')

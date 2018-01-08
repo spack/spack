@@ -36,5 +36,5 @@ class Recordproto(AutotoolsPackage):
 
     version('1.14.2', '868235e1e150e68916d5a316ebc4ccc4')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

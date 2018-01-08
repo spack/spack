@@ -28,6 +28,7 @@ import re
 import tarfile
 import yaml
 import shutil
+import platform
 
 import llnl.util.tty as tty
 from spack.util.gpg import Gpg
@@ -95,7 +96,7 @@ def read_buildinfo_file(prefix):
     return buildinfo
 
 
-def write_buildinfo_file(prefix):
+def write_buildinfo_file(prefix, workdir, rel=False):
     """
     Create a cache file containing information
     required for the relocation
@@ -103,26 +104,32 @@ def write_buildinfo_file(prefix):
     text_to_relocate = []
     binary_to_relocate = []
     blacklist = (".spack", "man")
+    os_id = platform.system()
     # Do this at during tarball creation to save time when tarball unpacked.
     # Used by make_package_relative to determine binaries to change.
     for root, dirs, files in os.walk(prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
-            filetype = relocate.get_filetype(path_name)
-            if relocate.needs_binary_relocation(filetype):
-                rel_path_name = os.path.relpath(path_name, prefix)
-                binary_to_relocate.append(rel_path_name)
-            elif relocate.needs_text_relocation(filetype):
-                rel_path_name = os.path.relpath(path_name, prefix)
-                text_to_relocate.append(rel_path_name)
+            #  Check if the file contains a string with the installroot.
+            #  This cuts down on the number of files added to the list
+            #  of files potentially needing relocation
+            if relocate.strings_contains_installroot(path_name):
+                filetype = relocate.get_filetype(path_name)
+                if relocate.needs_binary_relocation(filetype, os_id):
+                    rel_path_name = os.path.relpath(path_name, prefix)
+                    binary_to_relocate.append(rel_path_name)
+                elif relocate.needs_text_relocation(filetype):
+                    rel_path_name = os.path.relpath(path_name, prefix)
+                    text_to_relocate.append(rel_path_name)
 
     # Create buildinfo data and write it to disk
     buildinfo = {}
+    buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
-    filename = buildinfo_file_name(prefix)
+    filename = buildinfo_file_name(workdir)
     with open(filename, 'w') as outfile:
         outfile.write(yaml.dump(buildinfo, default_flow_style=True))
 
@@ -132,7 +139,7 @@ def tarball_directory_name(spec):
     Return name of the tarball directory according to the convention
     <os>-<architecture>/<compiler>/<package>-<version>/
     """
-    return "%s/%s/%s-%s" % (spack.architecture.sys_type(),
+    return "%s/%s/%s-%s" % (spec.architecture,
                             str(spec.compiler).replace("@", "-"),
                             spec.name, spec.version)
 
@@ -142,7 +149,7 @@ def tarball_name(spec, ext):
     Return the name of the tarfile according to the convention
     <os>-<architecture>-<package>-<dag_hash><ext>
     """
-    return "%s-%s-%s-%s-%s%s" % (spack.architecture.sys_type(),
+    return "%s-%s-%s-%s-%s%s" % (spec.architecture,
                                  str(spec.compiler).replace("@", "-"),
                                  spec.name,
                                  spec.version,
@@ -246,7 +253,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
-    write_buildinfo_file(workdir)
+    write_buildinfo_file(spec.prefix, workdir, rel=rel)
 
     # optinally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
@@ -333,10 +340,13 @@ def make_package_relative(workdir, prefix):
     """
     buildinfo = read_buildinfo_file(workdir)
     old_path = buildinfo['buildpath']
+    orig_path_names = list()
+    cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
-        orig_path_name = os.path.join(prefix, filename)
-        cur_path_name = os.path.join(workdir, filename)
-        relocate.make_binary_relative(cur_path_name, orig_path_name, old_path)
+        orig_path_names.append(os.path.join(prefix, filename))
+        cur_path_names.append(os.path.join(workdir, filename))
+        relocate.make_binary_relative(cur_path_names, orig_path_names,
+                                      old_path)
 
 
 def relocate_package(prefix):
@@ -346,18 +356,27 @@ def relocate_package(prefix):
     buildinfo = read_buildinfo_file(prefix)
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
-    if new_path == old_path:
+    rel = buildinfo.get('relative_rpaths', False)
+    if new_path == old_path and not rel:
         return
 
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
-    for filename in buildinfo['relocate_binaries']:
-        path_name = os.path.join(prefix, filename)
-        relocate.relocate_binary(path_name, old_path, new_path)
-
+    path_names = set()
     for filename in buildinfo['relocate_textfiles']:
         path_name = os.path.join(prefix, filename)
-        relocate.relocate_text(path_name, old_path, new_path)
+        # Don't add backup files generated by filter_file during install step.
+        if not path_name.endswith('~'):
+            path_names.add(path_name)
+    relocate.relocate_text(path_names, old_path, new_path)
+    # If the binary files in the package were not edited to use
+    # relative RPATHs, then the RPATHs need to be relocated
+    if not rel:
+        path_names = set()
+        for filename in buildinfo['relocate_binaries']:
+            path_name = os.path.join(prefix, filename)
+            path_names.add(path_name)
+        relocate.relocate_binary(path_names, old_path, new_path)
 
 
 def extract_tarball(spec, filename, yes_to_all=False, force=False):
@@ -391,17 +410,16 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
 
-    if not yes_to_all:
-        # get the sha256 checksum recorded at creation
-        spec_dict = {}
-        with open(specfile_path, 'r') as inputfile:
-            content = inputfile.read()
-            spec_dict = yaml.load(content)
-        bchecksum = spec_dict['binary_cache_checksum']
+    # get the sha256 checksum recorded at creation
+    spec_dict = {}
+    with open(specfile_path, 'r') as inputfile:
+        content = inputfile.read()
+        spec_dict = yaml.load(content)
+    bchecksum = spec_dict['binary_cache_checksum']
 
-        # if the checksums don't match don't install
-        if bchecksum['hash'] != checksum:
-            raise NoChecksumException()
+    # if the checksums don't match don't install
+    if bchecksum['hash'] != checksum:
+        raise NoChecksumException()
 
     # delay creating installpath until verification is complete
     mkdirp(installpath)

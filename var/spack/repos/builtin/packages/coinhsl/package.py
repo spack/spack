@@ -45,3 +45,6 @@ class Coinhsl(AutotoolsPackage):
     url = "file://{0}/coinhsl-archive-2014.01.17.tar.gz".format(os.getcwd())
 
     version('2014.01.17', '9eb3dd40ed034814ed8dfee75b281180c1d9d2ae')
+
+    # CoinHSL fails to build in parallel
+    parallel = False
