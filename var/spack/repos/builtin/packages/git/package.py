@@ -165,13 +165,20 @@ class Git(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    def patch(self):
+        filter_file(r'^EXTLIBS =$',
+                    '#EXTLIBS =',
+                    'Makefile')
+
     def setup_environment(self, spack_env, run_env):
         # This is done to avoid failures when git is an external package.
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
         if 'gettext' in self.spec:
-            spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
+            spack_env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
                 self.spec['gettext'].prefix.lib))
+            spack_env.append_flags('CFLAGS', '-I{0}'.format(
+                self.spec['gettext'].prefix.include))
 
     def configure_args(self):
         spec = self.spec
