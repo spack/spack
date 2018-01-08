@@ -150,6 +150,8 @@ class Git(AutotoolsPackage):
             placement='git-manpages',
             when='@{0}'.format(release['version']))
 
+    variant('subversion', default=False, description='Build svn-fe for git svn')
+
     depends_on('curl')
     depends_on('expat')
     depends_on('gettext')
@@ -159,6 +161,7 @@ class Git(AutotoolsPackage):
     depends_on('pcre+jit', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
+    depends_on('subversion', when="+subversion")
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -192,6 +195,11 @@ class Git(AutotoolsPackage):
             # Don't link with -lrt; the system has no (and needs no) librt
             filter_file(r' -lrt$', '', 'Makefile')
 
+    @run_after('build')
+    def make_svn_fe(self):
+        make("-C", "contrib/svn-fe", "EXTLIBS={0} {1} {2} {3} {4}".format(
+            '-lpcre', '-liconv', '-lcharset', '-lpthread', '-lz'))
+
     @run_after('install')
     def install_completions(self):
         copy_tree('contrib/completion', self.prefix.share)
@@ -204,3 +212,7 @@ class Git(AutotoolsPackage):
             install_tree('man1', prefix.share.man.man1)
             install_tree('man5', prefix.share.man.man5)
             install_tree('man7', prefix.share.man.man7)
+
+        if '+subversion' in self.spec:
+            with working_dir('contrib/svn-fe'):
+                install('svn-fe', prefix.bin)
