@@ -127,8 +127,13 @@ class Qt(Package):
 
     # OpenGL hardware acceleration
     depends_on("mesa", when='@4:+opengl')
+
     depends_on("libxcb", when=sys.platform != 'darwin')
     depends_on("libx11", when=sys.platform != 'darwin')
+
+    # This is only needed for qt@3:4.99, but combining
+    # spec string with boolean expression does not work:
+    depends_on("libxext", when=sys.platform != 'darwin')
 
     # Webkit
     depends_on("flex", when='+webkit', type='build')
