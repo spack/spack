@@ -63,15 +63,35 @@ class Parmetis(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
+        # self.flag_handler = self.build_system_flags
+
         options = []
         options.extend([
             '-DGKLIB_PATH:PATH=%s/GKlib' % spec['metis'].prefix.include,
             '-DMETIS_PATH:PATH=%s' % spec['metis'].prefix,
             '-DCMAKE_C_COMPILER:STRING=%s' % spec['mpi'].mpicc,
-            '-DCMAKE_CXX_COMPILER:STRING=%s' % spec['mpi'].mpicxx,
-            '-DCMAKE_C_FLAGS:STRING=%s' % (
-                '-c11' if '%pgi' in spec else ''),
+            '-DCMAKE_CXX_COMPILER:STRING=%s' % spec['mpi'].mpicxx
         ])
+
+        # If spack's cflags is set, use it instead of cmake's default flags.
+        # Assume the user knows what they are asking for (e.g.: no '-g' flag
+        # unless cflags provides it!)
+        if 'SPACK_CFLAGS' in env and env['SPACK_CFLAGS']:
+            options.extend(['-DCMAKE_C_FLAGS_RELEASE=',
+                            '-DCMAKE_C_FLAGS_DEBUG=',
+                            '-DCMAKE_C_FLAGS_MINSIZEREL=',
+                            '-DCMAKE_C_FLAGS_RELWITHDEBINFO='
+            ])
+        if 'SPACK_CXXFLAGS' in env and env['SPACK_CXXFLAGS']:
+            options.extend(['-DCMAKE_CXX_FLAGS_RELEASE=',
+                            '-DCMAKE_CXX_FLAGS_DEBUG=',
+                            '-DCMAKE_CXX_FLAGS_MINSIZEREL=',
+                            '-DCMAKE_CXX_FLAGS_RELWITHDEBINFO='
+            ])
+        else:
+            options.extend(['-DCMAKE_C_FLAGS:STRING=%s' % (
+                '-c11' if '%pgi' in spec else ''),
+            ])
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
