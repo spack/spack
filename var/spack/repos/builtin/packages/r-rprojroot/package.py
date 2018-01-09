@@ -36,3 +36,4 @@ class RRprojroot(RPackage):
     version('1.2', 'c1a0574aaac2a43a72f804abbaea19c3')
 
     depends_on('r-backports', type=('build', 'run'))
+    depends_on('r@3.0.0:')
