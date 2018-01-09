@@ -128,7 +128,6 @@ class MakeExecutable(Executable):
 def set_compiler_environment_variables(pkg, env):
     assert(pkg.spec.concrete)
     compiler = pkg.compiler
-    flags = pkg.spec.compiler_flags
 
     # Set compiler variables used by CMake and autotools
     assert all(key in compiler.link_paths for key in (
@@ -160,11 +159,28 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
-    # Add every valid compiler flag to the environment, prefixed with "SPACK_"
+    # Trap spack-tracked compiler flags as appropriate.
+    # env_flags are easy to accidentally override.
+    inject_flags = {}
+    env_flags = {}
+    build_system_flags = {}
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
+        injf, envf, bsf = pkg.flag_handler(flag, pkg.spec.compiler_flags[flag])
+        inject_flags[flag] = injf or []
+        env_flags[flag] = envf or []
+        build_system_flags[flag] = bsf or []
+
+    # Place compiler flags as specified by flag_handler
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Concreteness guarantees key safety here
-        if flags[flag] != []:
-            env.set('SPACK_' + flag.upper(), ' '.join(f for f in flags[flag]))
+        if inject_flags[flag]:
+            # variables SPACK_<FLAG> inject flags through wrapper
+            var_name = 'SPACK_{0}'.format(flag.upper())
+            env.set(var_name, ' '.join(f for f in inject_flags[flag]))
+        if env_flags[flag]:
+            # implicit variables
+            env.set(flag.upper(), ' '.join(f for f in env_flags[flag]))
+    pkg.flags_to_build_system_args(build_system_flags)
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
 
@@ -559,19 +575,6 @@ def setup_package(pkg, dirty):
     for s in pkg.spec.traverse():
         assert s.package.spec is s
 
-    # Trap spack-tracked compiler flags as appropriate.
-    # Must be before set_compiler_environment_variables
-    # Current implementation of default flag handler relies on this being
-    # the first thing to affect the spack_env (so there is no appending), or
-    # on no other build_environment methods trying to affect these variables
-    # (CFLAGS, CXXFLAGS, etc). Currently both are true, either is sufficient.
-    for flag in spack.spec.FlagMap.valid_compiler_flags():
-        trap_func = getattr(pkg, flag + '_handler',
-                            getattr(pkg, 'default_flag_handler',
-                                    lambda x, y: y[1]))
-        flag_val = pkg.spec.compiler_flags[flag]
-        pkg.spec.compiler_flags[flag] = trap_func(spack_env, (flag, flag_val))
-
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
@@ -664,7 +667,7 @@ def fork(pkg, function, dirty, fake):
         except StopIteration as e:
             # StopIteration is used to stop installations
             # before the final stage, mainly for debug purposes
-            tty.msg(e.message)
+            tty.msg(e)
             child_pipe.send(None)
 
         except BaseException:

@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.build_systems.cuda import CudaPackage
 
 
 class Dealii(CMakePackage, CudaPackage):
@@ -57,6 +56,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
+    variant('gmsh',     default=False,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
             description='Compile with HDF5 (only with MPI)')
@@ -89,30 +89,22 @@ class Dealii(CMakePackage, CudaPackage):
 
     # required dependencies, light version
     depends_on('blas')
-    # Boost 1.58 is blacklisted, see
+    # Boost 1.58 is blacklisted, require at least 1.59, see
     # https://github.com/dealii/dealii/issues/1591
-    # Require at least 1.59
-    # There are issues with 1.65.1 but not with 1.65.0:
+    # There are issues with 1.65.1 and 1.65.0:
     # https://github.com/dealii/dealii/issues/5262
-    # +python won't affect @:8.4.2
-    # FIXME: once concretizer can unite unconditional and
-    # conditional dependencies, simplify to:
-    # depends_on('boost@1.59.0+thread+system+serialization+iostreams')
-    # depends_on('boost+mpi', when='+mpi')
-    # depends_on('boost+python', when='+python')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams',
-               when='@:8.4.2~mpi')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams+mpi',
-               when='@:8.4.2+mpi')
-    # since @8.5.0: (and @develop) python bindings are introduced:
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams',
-               when='@8.5.0:~mpi~python')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams+mpi',
-               when='@8.5.0:+mpi~python')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams+python',
-               when='@8.5.0:~mpi+python')
-    depends_on('boost@1.59.0:1.63,1.65.0,1.66:+thread+system+serialization+iostreams+mpi+python',
-               when='@8.5.0:+mpi+python')
+    # we take the patch from https://github.com/boostorg/serialization/pull/79
+    # more precisely its variation https://github.com/dealii/dealii/pull/5572#issuecomment-349742019
+    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams',
+               patches=patch('boost_1.65.1_singleton.patch',
+                       level=1,
+                       when='@1.65.1'),
+               when='~python')
+    depends_on('boost@1.59.0:1.63,1.65.1+thread+system+serialization+iostreams+python',
+               patches=patch('boost_1.65.1_singleton.patch',
+                       level=1,
+                       when='@1.65.1'),
+               when='+python')
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
@@ -128,6 +120,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('assimp',           when='@9.0:+assimp')
     depends_on('doxygen+graphviz', when='+doc')
     depends_on('graphviz',         when='+doc')
+    depends_on('gmsh',             when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
     depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
     depends_on('cuda@8:',          when='+cuda')
@@ -157,7 +150,11 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64')
 
     # check that the combination of variants makes sense
+    conflicts('^openblas+ilp64', when='@:8.5.1')
+    conflicts('^intel-mkl+ilp64', when='@:8.5.1')
+    conflicts('^intel-parallel-studio+mkl+ilp64', when='@:8.5.1')
     conflicts('+assimp', when='@:8.5.1')
+    conflicts('+gmsh', when='@:8.5.1')
     conflicts('+nanoflann', when='@:8.5.1')
     conflicts('+scalapack', when='@:8.5.1')
     conflicts('+sundials', when='@:8.5.1')
@@ -194,6 +191,11 @@ class Dealii(CMakePackage, CudaPackage):
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
+
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            options.append('-DLAPACK_WITH_64BIT_BLAS_INDICES=ON')
 
         if spec.satisfies('@:8.99'):
             options.extend([
@@ -274,8 +276,8 @@ class Dealii(CMakePackage, CudaPackage):
         # variables:
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
-                'sundials', 'nanoflann', 'assimp'):
-            if library in spec:
+                'sundials', 'nanoflann', 'assimp', 'gmsh'):
+            if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
                     '-DDEAL_II_WITH_%s:BOOL=ON' % library.upper()

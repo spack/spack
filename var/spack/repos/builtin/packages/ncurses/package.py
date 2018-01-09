@@ -44,6 +44,8 @@ class Ncurses(AutotoolsPackage):
 
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
+    variant('termlib', default=False,
+            description='Enables termlib needs for gnutls in emacs.')
 
     depends_on('pkgconfig', type='build')
 
@@ -70,6 +72,12 @@ class Ncurses(AutotoolsPackage):
 
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')
+
+        if '+termlib' in self.spec:
+            opts.extend(('--with-termlib',
+                         '--enable-termcap',
+                         '--enable-getcap',
+                         '--enable-tcap-names'))
 
         prefix = '--prefix={0}'.format(prefix)
 
