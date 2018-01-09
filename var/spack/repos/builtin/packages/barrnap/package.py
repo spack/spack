@@ -22,23 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Stc(AutotoolsPackage):
-    """STC: The Swift-Turbine Compiler"""
+class Barrnap(Package):
+    """Barrnap predicts the location of ribosomal RNA genes in genomes."""
 
-    homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/stc-0.7.3.tar.gz'
+    homepage = "https://github.com/tseemann/barrnap"
+    url      = "https://github.com/tseemann/barrnap/archive/0.8.tar.gz"
 
-    version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
+    version('0.8', 'd02ccb800d60fa824bae946dd4fa2358')
 
-    depends_on('java')
-    depends_on('ant')
-    depends_on('turbine')
-    depends_on('zsh', type='run')
+    depends_on('hmmer@3.1b:', type='run')
 
-    def configure_args(self):
-        args = ['--with-turbine=' + self.spec['turbine'].prefix]
-        return args
+    def install(self, spec, prefix):
+        install_tree('bin', prefix.bin)
+        install_tree('db', prefix.db)

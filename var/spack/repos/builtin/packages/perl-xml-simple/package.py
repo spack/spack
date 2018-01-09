@@ -22,23 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Stc(AutotoolsPackage):
-    """STC: The Swift-Turbine Compiler"""
+class PerlXmlSimple(PerlPackage):
+    """An API for simple XML files"""
 
-    homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/stc-0.7.3.tar.gz'
+    homepage = "http://search.cpan.org/~grantm/XML-Simple/lib/XML/Simple.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/G/GR/GRANTM/XML-Simple-2.24.tar.gz"
 
-    version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
+    version('2.24', '1cd2e8e3421160c42277523d5b2f4dd2')
 
-    depends_on('java')
-    depends_on('ant')
-    depends_on('turbine')
-    depends_on('zsh', type='run')
-
-    def configure_args(self):
-        args = ['--with-turbine=' + self.spec['turbine'].prefix]
-        return args
+    depends_on('perl-xml-parser', type=('build', 'run'))

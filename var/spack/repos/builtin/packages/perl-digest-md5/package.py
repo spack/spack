@@ -22,23 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Stc(AutotoolsPackage):
-    """STC: The Swift-Turbine Compiler"""
+class PerlDigestMd5(PerlPackage):
+    """Perl interface to the MD5 Algorithm"""
 
-    homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/stc-0.7.3.tar.gz'
+    homepage = "http://search.cpan.org/dist/Digest-MD5/MD5.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/Digest-MD5-2.55.tar.gz"
 
-    version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
-
-    depends_on('java')
-    depends_on('ant')
-    depends_on('turbine')
-    depends_on('zsh', type='run')
-
-    def configure_args(self):
-        args = ['--with-turbine=' + self.spec['turbine'].prefix]
-        return args
+    version('2.55', '601519b826ca14c233f13a4578b967ef')

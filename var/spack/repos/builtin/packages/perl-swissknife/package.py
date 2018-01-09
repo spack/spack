@@ -22,23 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Stc(AutotoolsPackage):
-    """STC: The Swift-Turbine Compiler"""
+class PerlSwissknife(PerlPackage):
+    """An object-oriented Perl library to handle Swiss-Prot entries"""
 
-    homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/stc-0.7.3.tar.gz'
+    homepage = "http://swissknife.sourceforge.net"
+    url      = "https://downloads.sourceforge.net/project/swissknife/swissknife/1.75/Swissknife_1.75.tar.gz"
 
-    version('0.7.3', '6bf769f406f6c33d1c134521373718d3')
+    version('1.75', '09d008cb1d1d211ae4eb9f087c213edf')
 
-    depends_on('java')
-    depends_on('ant')
-    depends_on('turbine')
-    depends_on('zsh', type='run')
-
-    def configure_args(self):
-        args = ['--with-turbine=' + self.spec['turbine'].prefix]
-        return args
+    depends_on('perl-module-build', type='build')
