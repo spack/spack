@@ -2087,13 +2087,8 @@ class Spec(object):
         # If it's a virtual dependency, try to find an existing
         # provider in the spec, and merge that.
         if dep.virtual:
-            if in_build:
-                parents = list(
-                    x.name for x in self.traverse(direction='parents'))
-                raise VirtualBuildDependencyError(
-                    "The dependency chain contains a build-only dependency" +
-                    " and {0} is virtual: {1}".format(
-                        dep.name, ' '.join(parents)))
+            if in_build and not all_deps:
+                return False
             provider = self._find_provider(dep, provider_index)
             if provider:
                 dep = provider
@@ -2811,6 +2806,7 @@ class Spec(object):
                 (not x.virtual) and x.package.provides(name)
             )
         except StopIteration:
+            import pdb; pdb.set_trace()
             raise KeyError("No spec with name %s in %s" % (name, self))
 
         if self._concrete:
