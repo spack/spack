@@ -51,5 +51,4 @@ class OpaPsm2(MakefilePackage):
                              join_path(self.prefix, 'usr', 'lib64'))
 
     def install(self, spec, prefix):
-        make()
         make('--environment-overrides', 'install')
