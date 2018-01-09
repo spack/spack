@@ -1,0 +1,17 @@
+diff --git a/packages/zoltan/src/phg/phg_build.c b/packages/zoltan/src/phg/phg_build.c
+index bd46bbd358..5e8db03fa3 100644
+--- a/packages/zoltan/src/phg/phg_build.c
++++ b/packages/zoltan/src/phg/phg_build.c
+@@ -1771,12 +1771,6 @@ MPI_Datatype zoltan_gno_mpi_type;
+ 
+   numGlobalEdges = zhg->globalHedges - global_nremove;
+ 
+-  if ((zhg->globalHedges > zz->Num_Proc) && (numGlobalEdges < zz->Num_Proc)){
+-    if (zz->Proc == 0) fprintf(stderr,
+-     "\nWARNING: PHG_EDGE_SIZE_THRESHOLD is low (%f), resulting in only " ZOLTAN_GNO_SPEC " edges\n remaining.",
+-        esize_threshold, numGlobalEdges);
+-  }
+-
+   *nGlobalEdges = numGlobalEdges;
+   *nEdge = nkeep;
+   *nPins = nkeep_size;
