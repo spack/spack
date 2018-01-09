@@ -25,16 +25,18 @@
 from spack import *
 
 
-class Blitz(AutotoolsPackage):
-    """N-dimensional arrays for C++"""
-    homepage = "http://github.com/blitzpp/blitz"
-    url = "https://github.com/blitzpp/blitz/archive/1.0.1.tar.gz"
+class PyPybedtools(PythonPackage):
+    """pybedtools wraps and extends BEDTools and offers
+    feature-level manipulations from within Python."""
 
-    version('1.0.1', 'fe43e2cf6c9258bc8b369264dd008971')
-    version('1.0.0', '971c43e22318bbfe8da016e6ef596234')
+    homepage = "http://daler.github.io/pybedtools"
+    url      = "https://pypi.io/packages/source/p/pybedtools/pybedtools-0.7.10.tar.gz"
 
-    build_targets = ['lib']
+    version('0.7.10', 'f003c67e22c48b77f070538368ece70c')
 
-    def check(self):
-        make('check-testsuite')
-        make('check-examples')
+    depends_on('py-setuptools', type='build')
+    depends_on('bedtools2',     type=('build', 'run'))
+    depends_on('py-numpy',      type=('build', 'run'))
+    depends_on('py-pandas',     type=('build', 'run'))
+    depends_on('py-pysam@0.8.1:', type=('build', 'run'))
+    depends_on('py-six',        type=('build', 'run'))

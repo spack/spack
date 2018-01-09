@@ -25,16 +25,13 @@
 from spack import *
 
 
-class Blitz(AutotoolsPackage):
-    """N-dimensional arrays for C++"""
-    homepage = "http://github.com/blitzpp/blitz"
-    url = "https://github.com/blitzpp/blitz/archive/1.0.1.tar.gz"
+class Sailfish(CMakePackage):
+    """Sailfish is a tool for transcript quantification from RNA-seq data."""
 
-    version('1.0.1', 'fe43e2cf6c9258bc8b369264dd008971')
-    version('1.0.0', '971c43e22318bbfe8da016e6ef596234')
+    homepage = "http://www.cs.cmu.edu/~ckingsf/software/sailfish"
+    url      = "https://github.com/kingsfordgroup/sailfish/archive/v0.10.0.tar.gz"
 
-    build_targets = ['lib']
+    version('0.10.1', 'e6dab4cf3a39f346df7c28f40eb58cad')
 
-    def check(self):
-        make('check-testsuite')
-        make('check-examples')
+    depends_on('boost@1.55:')
+    depends_on('tbb')
