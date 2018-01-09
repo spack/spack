@@ -32,6 +32,7 @@ class RRprojroot(RPackage):
 
     homepage = "https://cran.r-project.org/package=rprojroot"
     url      = "https://cran.rstudio.com/src/contrib/rprojroot_1.2.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/rprojroot"
 
     version('1.2', 'c1a0574aaac2a43a72f804abbaea19c3')
 
