@@ -25,30 +25,29 @@
 from spack import *
 
 
-class Jbigkit(MakefilePackage):
-    """JBIG-Kit is a software implementation of
-    the JBIG1 data compression standard."""
+class Unblur(Package):
+    """
+    Unblur is used to align the frames of movies recorded on an
+    electron microscope to reduce image blurring due to beam-induced motion.
+    """
 
-    homepage = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/"
-    url      = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz"
+    homepage = "http://grigoriefflab.janelia.org/unblur"
+    url      = "http://grigoriefflab.janelia.org/sites/default/files/unblur_1.0.2.tar.gz"
 
-    version('2.1', 'ebcf09bed9f14d7fa188d3bd57349522')
-    version('1.6', 'ce196e45f293d40ba76af3dc981ccfd7')
+    version('1.0.2', 'b6e367061cd0cef1b62a391a6289f681')
 
-    build_directory = 'libjbig'
+    variant('openmp', default=False, description='Build with OpenMP support')
 
-    def edit(self, spec, prefix):
-        makefile = FileFilter('libjbig/Makefile')
-        makefile.filter('CC = .*', 'CC = cc')
+    depends_on('zlib')
+    depends_on('jbigkit')
+    depends_on('gsl')
+    depends_on('fftw@3:')
+    depends_on('jpeg')
+    depends_on('libtiff')
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            mkdir(prefix.include)
-            for f in ['jbig85.h', 'jbig_ar.h', 'jbig.h']:
-                install(f, prefix.include)
-            mkdir(prefix.lib)
-            for f in ['libjbig85.a', 'libjbig.a']:
-                install(f, prefix.lib)
-            mkdir(prefix.bin)
-            for f in ['tstcodec', 'tstcodec85']:
-                install(f, prefix.bin)
+        with working_dir('src'):
+            filter_file('<<<<<<< .mine', '', 'missing')
+            configure('--enable-optimisations=yes',
+                       '--enable-openmp={0}'.format('yes' if '+openmp' in spec else 'no'))
+            make('install', parallel=False)
