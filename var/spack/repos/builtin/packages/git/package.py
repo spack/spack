@@ -165,13 +165,22 @@ class Git(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    # See the comment in setup_environment re EXTLIBS.
     def patch(self):
         filter_file(r'^EXTLIBS =$',
                     '#EXTLIBS =',
                     'Makefile')
 
     def setup_environment(self, spack_env, run_env):
-        # This is done to avoid failures when git is an external package.
+        # We use EXTLIBS rather than LDFLAGS so that git's Makefile
+        # inserts the information into the proper place in the link commands
+        # (alongside the # other libraries/paths that configure discovers).
+        # LDFLAGS is inserted *before* libgit.a, which requires libintl.
+        # EXTFLAGS is inserted *after* libgit.a.
+        # This depends on the patch method above, which keeps the Makefile
+        # from stepping on the value that we pass in via the environment.
+        #
+        # The test avoids failures when git is an external package.
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
         if 'gettext' in self.spec:
