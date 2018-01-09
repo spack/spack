@@ -33,6 +33,8 @@ class Astyle(MakefilePackage):
 
     homepage = "http://astyle.sourceforge.net/"
     url = "https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/astyle_3.0.1_linux.tar.gz"
+    # Gentoo alternative
+    # url = "http://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
 
     maintainers = ['davydden']
 
