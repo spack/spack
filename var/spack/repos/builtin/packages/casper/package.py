@@ -46,4 +46,4 @@ class Casper(MakefilePackage):
         distutils.dir_util.copy_tree(".", prefix)
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec.prefix)    
+        run_env.prepend_path('PATH', self.spec.prefix)
