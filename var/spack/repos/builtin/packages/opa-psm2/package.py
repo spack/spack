@@ -55,3 +55,10 @@ class OpaPsm2(MakefilePackage):
     version('10.2-175', 'c542b8641ad573f08f61d0a6a70f4013')
 
     depends_on('numactl')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('DESTDIR', self.prefix)
+
+    def install(self, spec, prefix):
+        make()
+        make('--environment-overrides','install')
