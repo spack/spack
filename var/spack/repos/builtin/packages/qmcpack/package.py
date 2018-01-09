@@ -112,9 +112,16 @@ class Qmcpack(CMakePackage):
                patches=patch(patch_url, sha256=patch_checksum),
                when='~mpi')
 
-    # This is Spack specific patch, we may need to enhance QMCPACK's CMake
-    # in the near future.
-    patch('cmake.diff')
+    # Backport several patches from recent versions of QMCPACK
+    # The test_numerics unit test is broken prior to QMCPACK 3.3.0
+    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/621.patch'
+    patch_checksum = 'e2ff7a6f0f006856085d4aab6d31f32f16353e41f760a33a7ef75f3ecce6a5d6'
+    patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
+
+    # FindMKL.cmake has an issues prior to QMCPACK 3.3.0
+    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/623.patch'
+    patch_checksum = '3eb9dec05fd1a544318ff84cd8b5926cfc6b46b375c7f3b012ccf0b50cf617b7'
+    patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
@@ -208,11 +215,11 @@ class Qmcpack(CMakePackage):
         # Darwin vs. Linux $MKLROOT naming schemes
         if 'intel-mkl' in self.spec:
             args.append(
-                '-DLAPACK_INCLUDE_DIRS=%s' %
-                format(join_path(env['MKLROOT'], 'include')))
+                '-DCMAKE_CXX_FLAGS=-I%s' % (
+                    format(join_path(env['MKLROOT'], 'include'))))
         else:
             args.append(
-                '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
+                '-DCMAKE_CXX_FLAGS=-I%s:%s' % (
                     self.spec['lapack'].prefix.include,
                     self.spec['blas'].prefix.include))
         return args
