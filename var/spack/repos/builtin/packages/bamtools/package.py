@@ -32,6 +32,7 @@ class Bamtools(CMakePackage):
     homepage = "https://github.com/pezmaster31/bamtools"
     url      = "https://github.com/pezmaster31/bamtools/archive/v2.4.0.tar.gz"
 
+    version('2.5.1', '98e90632058f85bd5eed6088b3ff912e')
     version('2.5.0', 'dd4185bdba6e3adf2c24b7f93a57233d')
     version('2.4.1', '41cadf513f2744256851accac2bc7baa')
     version('2.4.0', '6139d00c1b1fe88fe15d094d8a74d8b9')
