@@ -23,19 +23,27 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import distutils.dir_util
 
 
-class Jellyfish(AutotoolsPackage):
-    """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in
-       DNA."""
+class Casper(MakefilePackage):
+    """CASPER (Context-Aware Scheme for Paired-End Read) is state-of-the art
+       merging tool in terms of accuracy and robustness. Using this
+       sophisticated merging method, we could get elongated reads from the
+       forward and reverse reads."""
 
-    homepage = "http://www.cbcb.umd.edu/software/jellyfish/"
-    url      = "https://github.com/gmarcais/Jellyfish/releases/download/v2.2.7/jellyfish-2.2.7.tar.gz"
-    list_url = "http://www.cbcb.umd.edu/software/jellyfish/"
+    homepage = "http://best.snu.ac.kr/casper/index.php?name=main"
+    url      = "http://best.snu.ac.kr/casper/program/casper_v0.8.2.tar.gz"
 
-    version('2.2.7', 'f741192d9061f28e34cb67c86a1027ab')
-    version('1.1.11', 'dc994ea8b0896156500ea8c648f24846',
-            url='http://www.cbcb.umd.edu/software/jellyfish/jellyfish-1.1.11.tar.gz')
+    version('0.8.2', '9e83d32ff46b876f33eb1d7b545ec9c2')
 
-    depends_on('perl', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))
+    depends_on('jellyfish@2.2.3:')
+    depends_on('boost')
+
+    conflicts('%gcc@7.1.0')
+
+    def install(self, spec, prefix):
+        distutils.dir_util.copy_tree(".", prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.spec.prefix)
