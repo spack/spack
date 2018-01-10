@@ -25,30 +25,17 @@
 from spack import *
 
 
-class Jbigkit(MakefilePackage):
-    """JBIG-Kit is a software implementation of
-    the JBIG1 data compression standard."""
+class Prodigal(MakefilePackage):
+    """Fast, reliable protein-coding gene prediction for prokaryotic
+    genomes."""
 
-    homepage = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/"
-    url      = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz"
+    homepage = "https://github.com/hyattpd/Prodigal"
+    url      = "https://github.com/hyattpd/Prodigal/archive/v2.6.3.tar.gz"
 
-    version('2.1', 'ebcf09bed9f14d7fa188d3bd57349522')
-    version('1.6', 'ce196e45f293d40ba76af3dc981ccfd7')
-
-    build_directory = 'libjbig'
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('libjbig/Makefile')
-        makefile.filter('CC = .*', 'CC = cc')
+    version('2.6.3', '5181809fdb740e9a675cfdbb6c038466')
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            mkdir(prefix.include)
-            for f in ['jbig85.h', 'jbig_ar.h', 'jbig.h']:
-                install(f, prefix.include)
-            mkdir(prefix.lib)
-            for f in ['libjbig85.a', 'libjbig.a']:
-                install(f, prefix.lib)
-            mkdir(prefix.bin)
-            for f in ['tstcodec', 'tstcodec85']:
-                install(f, prefix.bin)
+        make('INSTALLDIR={0}'.format(self.prefix), 'install')
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', prefix)

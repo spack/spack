@@ -22,33 +22,55 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+from spack.main import SpackCommand, SpackCommandError
+
+import pytest
 
 
-class Jbigkit(MakefilePackage):
-    """JBIG-Kit is a software implementation of
-    the JBIG1 data compression standard."""
+graph = SpackCommand('graph')
 
-    homepage = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/"
-    url      = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz"
 
-    version('2.1', 'ebcf09bed9f14d7fa188d3bd57349522')
-    version('1.6', 'ce196e45f293d40ba76af3dc981ccfd7')
+def test_graph_ascii(builtin_mock, database):
+    """Tests spack graph --ascii"""
 
-    build_directory = 'libjbig'
+    graph('--ascii', 'dt-diamond')
 
-    def edit(self, spec, prefix):
-        makefile = FileFilter('libjbig/Makefile')
-        makefile.filter('CC = .*', 'CC = cc')
 
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            mkdir(prefix.include)
-            for f in ['jbig85.h', 'jbig_ar.h', 'jbig.h']:
-                install(f, prefix.include)
-            mkdir(prefix.lib)
-            for f in ['libjbig85.a', 'libjbig.a']:
-                install(f, prefix.lib)
-            mkdir(prefix.bin)
-            for f in ['tstcodec', 'tstcodec85']:
-                install(f, prefix.bin)
+def test_graph_dot(builtin_mock, database):
+    """Tests spack graph --dot"""
+
+    graph('--dot', 'dt-diamond')
+
+
+def test_graph_normalize(builtin_mock, database):
+    """Tests spack graph --normalize"""
+
+    graph('--normalize', 'dt-diamond')
+
+
+def test_graph_static(builtin_mock, database):
+    """Tests spack graph --static"""
+
+    graph('--static', 'dt-diamond')
+
+
+def test_graph_installed(builtin_mock, database):
+    """Tests spack graph --installed"""
+
+    graph('--installed')
+
+    with pytest.raises(SpackCommandError):
+        graph('--installed', 'dt-diamond')
+
+
+def test_graph_deptype(builtin_mock, database):
+    """Tests spack graph --deptype"""
+
+    graph('--deptype', 'all', 'dt-diamond')
+
+
+def test_graph_no_specs():
+    """Tests spack graph with no arguments"""
+
+    with pytest.raises(SpackCommandError):
+        graph()

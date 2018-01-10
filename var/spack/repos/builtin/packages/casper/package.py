@@ -23,32 +23,27 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import distutils.dir_util
 
 
-class Jbigkit(MakefilePackage):
-    """JBIG-Kit is a software implementation of
-    the JBIG1 data compression standard."""
+class Casper(MakefilePackage):
+    """CASPER (Context-Aware Scheme for Paired-End Read) is state-of-the art
+       merging tool in terms of accuracy and robustness. Using this
+       sophisticated merging method, we could get elongated reads from the
+       forward and reverse reads."""
 
-    homepage = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/"
-    url      = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz"
+    homepage = "http://best.snu.ac.kr/casper/index.php?name=main"
+    url      = "http://best.snu.ac.kr/casper/program/casper_v0.8.2.tar.gz"
 
-    version('2.1', 'ebcf09bed9f14d7fa188d3bd57349522')
-    version('1.6', 'ce196e45f293d40ba76af3dc981ccfd7')
+    version('0.8.2', '9e83d32ff46b876f33eb1d7b545ec9c2')
 
-    build_directory = 'libjbig'
+    depends_on('jellyfish@2.2.3:')
+    depends_on('boost')
 
-    def edit(self, spec, prefix):
-        makefile = FileFilter('libjbig/Makefile')
-        makefile.filter('CC = .*', 'CC = cc')
+    conflicts('%gcc@7.1.0')
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            mkdir(prefix.include)
-            for f in ['jbig85.h', 'jbig_ar.h', 'jbig.h']:
-                install(f, prefix.include)
-            mkdir(prefix.lib)
-            for f in ['libjbig85.a', 'libjbig.a']:
-                install(f, prefix.lib)
-            mkdir(prefix.bin)
-            for f in ['tstcodec', 'tstcodec85']:
-                install(f, prefix.bin)
+        distutils.dir_util.copy_tree(".", prefix)
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', self.spec.prefix)

@@ -22,33 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+from spack.main import SpackCommand
 
 
-class Jbigkit(MakefilePackage):
-    """JBIG-Kit is a software implementation of
-    the JBIG1 data compression standard."""
+arch = SpackCommand('arch')
 
-    homepage = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/"
-    url      = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz"
 
-    version('2.1', 'ebcf09bed9f14d7fa188d3bd57349522')
-    version('1.6', 'ce196e45f293d40ba76af3dc981ccfd7')
+def test_arch():
+    """Sanity check the arch command to make sure it works."""
 
-    build_directory = 'libjbig'
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('libjbig/Makefile')
-        makefile.filter('CC = .*', 'CC = cc')
-
-    def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            mkdir(prefix.include)
-            for f in ['jbig85.h', 'jbig_ar.h', 'jbig.h']:
-                install(f, prefix.include)
-            mkdir(prefix.lib)
-            for f in ['libjbig85.a', 'libjbig.a']:
-                install(f, prefix.lib)
-            mkdir(prefix.bin)
-            for f in ['tstcodec', 'tstcodec85']:
-                install(f, prefix.bin)
+    arch()
