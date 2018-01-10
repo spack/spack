@@ -44,7 +44,7 @@ nonmpipkgs = {"python@2.7.14": [""],
               "bwa@0.7.17": [""],
               "r@3.4.3+external-lapack": ["^openblas threads=openmp", "^intel-parallel-studio+mkl"],
               "octave+qt~readline@4.2.1": ["^openblas threads=openmp"],
-              "fftw@3.3.6-pl2~mpi+openmp": [""],
+              "fftw@3.3.7~mpi+openmp": [""],
               # "fftw@2.1.5~mpi+openmp": [""],
               "eigen~fftw~metis~scotch~suitesparse@3.3.3": [""],
               "opencv+core+eigen+imgproc+openmp+jpeg+png+tiff@3.3.0": ["^eigen~fftw~metis~scotch~suitesparse@3.3.3"],
@@ -75,12 +75,12 @@ else:
     OMPIFAB = ""
 
 # Build MPI libraries
-MPIS = {"openmpi@2.1.2~vt~cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "",
-        "openmpi@2.1.2~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@9.1.85",
-        "openmpi@2.1.2~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@8.0.61",
+MPIS = {"openmpi@1.10.7~vt~cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "",
+        # "openmpi@1.10.7~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@9.1.85",
+        # "openmpi@1.10.7~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@8.0.61",
         "mvapich2@2.2~cuda fabrics={} process_managers=slurm".format(MVFAB): "",
-        "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@9.1.85",
-        "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@8.0.61",
+        # "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@9.1.85",
+        # "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@8.0.61",
         "mpich@3.2~hydra+pmi+romio+verbs netmod=ofi": "",
        "intel-parallel-studio@cluster.2017.5+mpi": ""
 }
@@ -91,7 +91,7 @@ for pkg,spec in MPIS.items():
                           install("{} %{} {}".format(pkg, compiler, spec))
 
 # Build MPI packages
-mpipkgs = {"fftw@3.3.6-pl2+mpi+openmp": [""],
+mpipkgs = {"fftw@3.3.7+mpi+openmp": [""],
            "hdf5@1.10.1+cxx+fortran+threadsafe+mpi": [""],
            # "fftw@2.1.5+mpi+openmp": [""],
            "gromacs+mpi~cuda@2016.4": ["^fftw+mpi+openmp@3.3.6-pl2"],
