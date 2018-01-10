@@ -22,21 +22,15 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.cmd.common import print_module_placeholder_help
-
-import spack.cmd.location
-
-description = "cd to spack directories in the shell"
-section = "environment"
-level = "long"
+from spack.main import SpackCommand
 
 
-def setup_parser(subparser):
-    """This is for decoration -- spack cd is used through spack's
-       shell support.  This allows spack cd to print a descriptive
-       help message when called with -h."""
-    spack.cmd.location.setup_parser(subparser)
+cd = SpackCommand('cd')
 
 
-def cd(parser, args):
-    print_module_placeholder_help()
+def test_cd():
+    """Sanity check the cd command to make sure it works."""
+
+    out = cd()
+
+    assert "To initialize spack's shell commands, you must run one of" in out
