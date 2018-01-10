@@ -49,7 +49,7 @@ class Meme(AutotoolsPackage):
     # disable mpi support
     def configure_args(self):
         spec = self.spec
-        args = ['--enable-build-libxml2 --enable-build-libxslt']
+        args = ['--enable-build-libxml2', '--enable-build-libxslt']
         if '~mpi' in spec:
             args += ['--enable-serial']
         return args
