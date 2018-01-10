@@ -56,10 +56,10 @@ class Unblur(AutotoolsPackage):
         spec = self.spec
         return ['FC=ifort',
                'F77=ifort',
-               '--enable-static={0}'\
-                .format('yes' if '~shared' in spec else 'no'),
-               '--enable-openmp={0}'\
-                .format('yes' if '+openmp' in spec else 'no'),
+               '--enable-static={0}'
+               .format('yes' if '~shared' in spec else 'no'),
+               '--enable-openmp={0}'
+               .format('yes' if '+openmp' in spec else 'no'),
                '--enable-optimisations=yes']
 
     def build(self, spec, prefix):
