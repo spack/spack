@@ -24,7 +24,7 @@ from _pytest.outcomes import fail, TEST_OUTCOME
 if sys.version_info[:2] == (2, 6):
     from ordereddict import OrderedDict
 else:
-    from collections import OrderedDict
+    from collections import OrderedDict  # nopyqver
 
 
 def pytest_sessionstart(session):
