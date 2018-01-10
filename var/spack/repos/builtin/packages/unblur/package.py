@@ -25,9 +25,9 @@
 from spack import *
 
 
-class Unblur(Package):
-    """Unblur is used to align the frames of movies recorded
-    on an electron microscope to reduce image blurring due to beam-induced motion."""
+class Unblur(AutotoolsPackage):
+    """Unblur is used to align the frames of movies recorded on an electron
+    microscope to reduce image blurring due to beam-induced motion."""
 
     homepage = "http://grigoriefflab.janelia.org/unblur"
     url      = "http://grigoriefflab.janelia.org/sites/default/files/unblur_1.0.2.tar.gz"
@@ -44,16 +44,24 @@ class Unblur(Package):
     depends_on('jbigkit')
     depends_on('fftw@3:')
     # Requires Intel Fortran compiler
-    #depends_on('%intel')
+    conflicts('%gcc')
+    conflicts('%pgi')
 
-    def install(self, spec, prefix):
+    configure_directory = 'src'
+
+    def patch(self):
+        filter_file(r'<<<<<<<.*', '', 'src/missing')
+
+    def configure_args(self):
+        spec = self.spec
+        return ['FC=ifort',
+               'F77=ifort',
+               '--enable-static={0}'\
+                .format('yes' if '~shared' in spec else 'no'),
+               '--enable-openmp={0}'\
+                .format('yes' if '+openmp' in spec else 'no'),
+               '--enable-optimisations=yes']
+
+    def build(self, spec, prefix):
         with working_dir('src'):
-            filter_file(r'<<<<<<<.*', '', 'missing')
-            configure('FC=ifort',
-                      'F77=ifort',
-                      '--prefix={0}'.format(prefix),
-                      '--enable-static={0}'.format('yes' if '~shared' in spec else 'no'),
-                      '--enable-openmp={0}'.format('yes' if '+openmp' in spec else 'no'),
-                      '--enable-optimisations=yes')
             make(parallel=False)
-            make('install')
