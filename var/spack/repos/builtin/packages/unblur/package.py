@@ -46,6 +46,11 @@ class Unblur(AutotoolsPackage):
     # Requires Intel Fortran compiler
     conflicts('%gcc')
     conflicts('%pgi')
+    conflicts('%clang')
+    conflicts('%cce')
+    conflicts('%xl')
+    conflicts('%xl_r')
+    conflicts('%nag')
 
     configure_directory = 'src'
 
@@ -55,12 +60,12 @@ class Unblur(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         return ['FC=ifort',
-               'F77=ifort',
-               '--enable-static={0}'
-               .format('yes' if '~shared' in spec else 'no'),
-               '--enable-openmp={0}'
-               .format('yes' if '+openmp' in spec else 'no'),
-               '--enable-optimisations=yes']
+                'F77=ifort',
+                '--enable-static={0}'
+                .format('yes' if '~shared' in spec else 'no'),
+                '--enable-openmp={0}'
+                .format('yes' if '+openmp' in spec else 'no'),
+                '--enable-optimisations=yes']
 
     def build(self, spec, prefix):
         with working_dir('src'):
