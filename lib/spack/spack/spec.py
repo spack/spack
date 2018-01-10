@@ -1698,7 +1698,7 @@ class Spec(object):
             if concrete.name not in dependent._dependencies:
                 dependent._add_dependency(concrete, deptypes)
 
-    def _expand_virtual_packages(self, dep_constraints):
+    def _expand_virtual_packages(self, dep_constraints, test_candidates=True):
         """Find virtual packages in this spec, replace them with providers,
            and normalize again to include the provider's (potentially virtual)
            dependencies.  Repeat until there are no virtual deps.
@@ -1745,6 +1745,8 @@ class Spec(object):
                     # satisfiability problems.
                     for replacement in candidates:
                         if replacement is spec:
+                            break
+                        elif not test_candidates:
                             break
 
                         # Replace spec with the candidate and normalize
@@ -1854,14 +1856,17 @@ class Spec(object):
 
         changed = True
         while changed:
-            # In this second concretization phase, _expand_virtual_packages
-            # will only be doing replacement of externals (since build-only
-            # dependencies are disallowed from depending on virtuals)
             changes = (
                 self._normalize(
                     dep_constraints, force, all_deps=True,
                     user_build_constraints=remaining_user_specified),
-                self._expand_virtual_packages(dep_constraints),
+                # In this second concretization loop, virtuals/externals will
+                # only be resolved for build-only dependencies (or their
+                # children). These are not necessarily uniquely accessible by
+                # name or even by hash, so testing concretization on a
+                # duplicate is not possible.
+                self._expand_virtual_packages(
+                    dep_constraints, test_candidates=False),
                 self._concretize_helper())
             changed = any(changes)
 
@@ -2806,7 +2811,6 @@ class Spec(object):
                 (not x.virtual) and x.package.provides(name)
             )
         except StopIteration:
-            import pdb; pdb.set_trace()
             raise KeyError("No spec with name %s in %s" % (name, self))
 
         if self._concrete:
