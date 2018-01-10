@@ -98,8 +98,8 @@ py
   ini-parsing, io, code, and log facilities.
 * Version: 1.4.34 (last version supporting Python 2.6)
 
-pyqver2
--------
+pyqver
+------
 
 * Homepage: https://github.com/ghewgill/pyqver
 * Usage: External script to query required python version of
@@ -112,6 +112,10 @@ pytest
 * Homepage: https://pypi.python.org/pypi/pytest
 * Usage: Testing framework used by Spack.
 * Version: 3.2.5 (last version supporting Python 2.6)
+* Note: This package has been slightly modified to improve
+  Python 2.6 compatibility. See the following commit if the
+  vendored copy ever needs to be updated again:
+  https://github.com/spack/spack/pull/6801/commits/ff513c39f2c67ff615de5cbc581dd69a8ec96526
 
 pyyaml
 ------
