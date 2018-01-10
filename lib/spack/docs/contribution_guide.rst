@@ -184,7 +184,9 @@ to update them.
 
    Flake8 requires setuptools in order to run. If you installed ``py-flake8``
    with Spack, make sure to add ``py-setuptools`` to your ``PYTHONPATH``.
-   Otherwise, you will get an error message like:
+   The easiest way to do this is to run ``spack activate py-flake8`` so that
+   all of the dependencies are symlinked to a central location. If you see an
+   error message like:
 
    .. code-block:: console
 
@@ -192,6 +194,8 @@ to update them.
         File: "/usr/bin/flake8", line 5, in <module>
           from pkg_resources import load_entry_point
       ImportError: No module named pkg_resources
+
+   that means Flake8 couldn't find setuptools in your ``PYTHONPATH``.
 
 ^^^^^^^^^^^^^^^^^^^
 Documentation Tests
@@ -216,18 +220,24 @@ installed with Spack:
 
    Sphinx has `several required dependencies <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-sphinx/package.py>`_.
    If you installed ``py-sphinx`` with Spack, make sure to add all of these
-   dependencies to your ``PYTHONPATH``. The easiest way to do this is to run
-   ``spack activate py-sphinx`` so that all of the dependencies are symlinked
-   to a central location. If you see an error message like:
+   dependencies to your ``PYTHONPATH``. The easiest way to do this is to run:
 
    .. code-block:: console
 
-      Traceback (most recent call last):
-        File: "/usr/bin/flake8", line 5, in <module>
-          from pkg_resources import load_entry_point
-      ImportError: No module named pkg_resources
+      $ spack activate py-sphinx
+      $ spack activate py-sphinxcontrib-programoutput
 
-   that means Sphinx couldn't find setuptools in your ``PYTHONPATH``.
+   so that all of the dependencies are symlinked to a central location.
+   If you see an error message like:
+
+   .. code-block:: console
+
+      Extension error:
+      Could not import extension sphinxcontrib.programoutput (exception: No module named sphinxcontrib.programoutput)
+      make: *** [html] Error 1
+
+   that means Sphinx couldn't find ``py-sphinxcontrib-programoutput`` in your
+   ``PYTHONPATH``.
 
 Once all of the dependencies are installed, you can try building the documentation:
 
