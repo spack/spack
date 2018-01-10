@@ -146,8 +146,16 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials~pthread', when='@9.0:+sundials')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos',       when='+trilinos+mpi~int64')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos+zoltan',
+               patches=patch('trilinos_12.12.1_phg_warning.patch',
+                       level=1,
+                       when='@12.12.1'),
+               when='+trilinos+mpi~int64')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos+zoltan~hypre',
+               patches=patch('trilinos_12.12.1_phg_warning.patch',
+                       level=1,
+                       when='@12.12.1'),
+               when='+trilinos+mpi+int64')
 
     # check that the combination of variants makes sense
     conflicts('^openblas+ilp64', when='@:8.5.1')
