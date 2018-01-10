@@ -26,22 +26,23 @@ from spack import *
 
 
 class Jbigkit(MakefilePackage):
-    """JBIG-Kit is a software implementation of the JBIG1 data compression standard."""
+    """JBIG-Kit is a software implementation of
+    the JBIG1 data compression standard."""
 
     homepage = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/"
     url      = "http://www.cl.cam.ac.uk/~mgk25/jbigkit/download/jbigkit-2.1.tar.gz"
 
     version('2.1', 'ebcf09bed9f14d7fa188d3bd57349522')
-    version('2.0', '3dd87f605abb1a97a22dc79d8b3e8f6c')
     version('1.6', 'ce196e45f293d40ba76af3dc981ccfd7')
+
+    build_directory = 'libjbig'
 
     def edit(self, spec, prefix):
         makefile = FileFilter('libjbig/Makefile')
         makefile.filter('CC = .*', 'CC = cc')
 
     def install(self, spec, prefix):
-        with working_dir('libjbig'):
-            make()
+        with working_dir(self.build_directory):
             mkdir(prefix.include)
             for f in ['jbig85.h', 'jbig_ar.h', 'jbig.h']:
                 install(f, prefix.include)

@@ -915,7 +915,7 @@ def from_kwargs(**kwargs):
     # Raise an error in case we can't instantiate any known strategy
     message = "Cannot instantiate any FetchStrategy"
     long_message = message + " from the given arguments : {arguments}".format(
-        srguments=kwargs)
+        arguments=kwargs)
     raise FetchError(message, long_message)
 
 

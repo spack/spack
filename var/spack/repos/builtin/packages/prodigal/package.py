@@ -25,21 +25,17 @@
 from spack import *
 
 
-class Bcftools(AutotoolsPackage):
-    """BCFtools is a set of utilities that manipulate variant calls in the
-       Variant Call Format (VCF) and its binary counterpart BCF. All
-       commands work transparently with both VCFs and BCFs, both
-       uncompressed and BGZF-compressed."""
+class Prodigal(MakefilePackage):
+    """Fast, reliable protein-coding gene prediction for prokaryotic
+    genomes."""
 
-    homepage = "http://samtools.github.io/bcftools/"
-    url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
+    homepage = "https://github.com/hyattpd/Prodigal"
+    url      = "https://github.com/hyattpd/Prodigal/archive/v2.6.3.tar.gz"
 
-    version('1.6', 'c4dba1e8cb55db0f94b4c47724b4f9fa')
-    version('1.4', '50ccf0a073bd70e99cdb3c8be830416e')
-    version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
-    version('1.2', '8044bed8fce62f7072fc6835420f0906')
+    version('2.6.3', '5181809fdb740e9a675cfdbb6c038466')
 
-    depends_on('htslib@1.6',   when='@1.6')
-    depends_on('htslib@1.4',   when='@1.4')
-    depends_on('htslib@1.3.1', when='@1.3.1')
-    depends_on('htslib@1.2', when='@1.2')
+    def install(self, spec, prefix):
+        make('INSTALLDIR={0}'.format(self.prefix), 'install')
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('PATH', prefix)
