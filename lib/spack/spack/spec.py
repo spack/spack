@@ -2147,6 +2147,10 @@ class Spec(object):
                             set(dep.type) - set(['test'])):
                     changed |= self._merge_dependency(
                         dep, visited, spec_deps, provider_index)
+                elif dep is None:
+                    # dep_name didn't satisfy conditions, but we still need
+                    # to mark it as visited
+                    visited.add(dep_name)
             any_change |= changed
 
         return any_change
