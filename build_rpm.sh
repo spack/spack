@@ -76,11 +76,11 @@ else:
 
 # Build MPI libraries
 MPIS = {"openmpi@1.10.7~vt~cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "",
-        "openmpi@1.10.7~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@9.1.85",
-        "openmpi@1.10.7~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@8.0.61",
+        # "openmpi@1.10.7~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@9.1.85",
+        # "openmpi@1.10.7~vt+cuda fabrics={},pmi ~java schedulers=slurm".format(OMPIFAB): "^cuda@8.0.61",
         "mvapich2@2.2~cuda fabrics={} process_managers=slurm".format(MVFAB): "",
-        "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@9.1.85",
-        "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@8.0.61",
+        # "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@9.1.85",
+        # "mvapich2@2.2+cuda fabrics={} process_managers=slurm".format(MVFAB): "^cuda@8.0.61",
         "mpich@3.2~hydra+pmi+romio+verbs netmod=ofi": "",
        "intel-parallel-studio@cluster.2017.5+mpi": ""
 }
