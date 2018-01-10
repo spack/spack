@@ -44,9 +44,6 @@ from spack.util.executable import ProcessError
 import spack.relocate as relocate
 
 
-_relocation_blacklist = (".spack", "man")
-
-
 class NoOverwriteException(Exception):
     pass
 
@@ -98,14 +95,18 @@ def read_buildinfo_file(prefix):
     return buildinfo
 
 
-def _find_relocations(prefix):
+def write_buildinfo_file(prefix, rel=False):
+    """
+    Create a cache file containing information
+    required for the relocation
+    """
     text_to_relocate = []
     binary_to_relocate = []
+    blacklist = (".spack", "man")
     # Do this at during tarball creation to save time when tarball unpacked.
     # Used by make_package_relative to determine binaries to change.
     for root, dirs, files in os.walk(prefix, topdown=True):
-        dirs[:] = [d for d in dirs if d not in _relocation_blacklist]
-
+        dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
             filetype = relocate.get_filetype(path_name)
@@ -115,16 +116,6 @@ def _find_relocations(prefix):
             elif relocate.needs_text_relocation(filetype):
                 rel_path_name = os.path.relpath(path_name, prefix)
                 text_to_relocate.append(rel_path_name)
-
-    return text_to_relocate, binary_to_relocate
-
-
-def write_buildinfo_file(prefix, rel=False):
-    """
-    Create a cache file containing information
-    required for the relocation
-    """
-    text_to_relocate, binary_to_relocate = _find_relocations(prefix)
 
     # Create buildinfo data and write it to disk
     buildinfo = {}
@@ -363,28 +354,18 @@ def relocate_package(prefix):
     if new_path == old_path and not rel:
         return
 
-    text_relocs = buildinfo['relocate_textfiles']
-    binary_relocs = buildinfo['relocate_binaries']
-
-    # if there are no relocations, search for them instead
-    # TODO: revisit this in a 0.11 point release
-    if not text_relocs or not binary_relocs:
-        text_relocs, binary_relocs = _find_relocations(prefix)
-        rel = False
-
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
     path_names = set()
-    for filename in text_relocs:
+    for filename in buildinfo['relocate_textfiles']:
         path_name = os.path.join(prefix, filename)
         path_names.add(path_name)
     relocate.relocate_text(path_names, old_path, new_path)
-
     # If the binary files in the package were not edited to use
     # relative RPATHs, then the RPATHs need to be relocated
     if not rel:
         path_names = set()
-        for filename in binary_relocs:
+        for filename in buildinfo['relocate_binaries']:
             path_name = os.path.join(prefix, filename)
             path_names.add(path_name)
         relocate.relocate_binary(path_names, old_path, new_path)
