@@ -25,7 +25,6 @@
 from spack import *
 import os
 import sys
-import shutil
 
 
 class Graphviz(AutotoolsPackage):
@@ -120,10 +119,10 @@ class Graphviz(AutotoolsPackage):
     depends_on('gts', when='+gts')
     # +expat
     depends_on('expat', when='+expat')
- 
+
     # Build dependencies
     depends_on('pkg-config', type='build')
-    ## The following are needed when building from git
+    # The following are needed when building from git
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('bison', type='build')
