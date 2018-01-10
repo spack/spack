@@ -38,11 +38,11 @@ class RTidyr(RPackage):
     version('0.5.1', '3cadc869510c054ed93d374ab44120bd')
 
     depends_on('r-tibble', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-dplyr@0.7.0:', type=('build', 'run'))
     depends_on('r-stringi', type=('build', 'run'))
-    depends_on('r-lazyeval', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-glue', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-purrr', type=('build', 'run'))
     depends_on('r-tidyselect', type=('build', 'run'))
+    depends_on('r-rlang', type=('build', 'run'))
