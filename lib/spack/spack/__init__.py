@@ -62,6 +62,7 @@ mock_packages_path = join_path(repos_path, "builtin.mock")
 
 # User configuration location
 user_config_path = os.path.expanduser('~/.spack')
+cmd_line_config_path = None
 
 prefix = spack_root
 opt_path        = join_path(prefix, "opt")
@@ -73,6 +74,53 @@ gpg_keys_path      = join_path(var_path, "gpg")
 mock_gpg_data_path = join_path(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = join_path(var_path, "gpg.mock", "keys")
 gpg_path           = join_path(opt_path, "spack", "gpg")
+
+
+#-----------------------------------------------------------------------------
+# Special early command-line options.
+#-----------------------------------------------------------------------------
+
+# Read the command line for special options that need to be parsed
+# early, before main.  This is for options that are used in modules
+# imported below.
+#
+# Note: although we only parse some special options, we must account
+# for all options and their arguments that come before the command to
+# keep the parsing in sync.  (Alternatively, we could require that the
+# special options always come first.)  Early parsing ends at the spack
+# command.
+#
+#  -C, --config DIR
+#    additional directory for config files
+
+_num = 1
+while _num < len(sys.argv):
+    _arg = sys.argv[_num]
+    _num += 1
+
+    if _arg == '':
+        # ignore empty argument
+        pass
+    elif _arg == '-C' or _arg == '--config':
+        # additional directory for config files, warn if does not
+        # exist
+        if _num < len(sys.argv):
+            cmd_line_config_path = os.path.abspath(sys.argv[_num])
+            _num += 1
+            if not os.path.isdir(cmd_line_config_path):
+                tty.warn("No such directory for --config: '%s'"
+                         % cmd_line_config_path)
+    elif (_arg == '--color' or _arg == '--lines'
+          or _arg == '-P' or _arg == '--sorted-profile'):
+        # options with one argument that we ignore, skip both the
+        # option and its argument
+        _num += 1
+    elif _arg[0] == '-':
+        # options with no arguments that we skip
+        pass
+    else:
+        # anything else is the spack command and ends parsing
+        break
 
 
 #-----------------------------------------------------------------------------
