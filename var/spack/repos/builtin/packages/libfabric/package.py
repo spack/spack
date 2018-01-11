@@ -40,7 +40,7 @@ class Libfabric(AutotoolsPackage):
                'sockets',
                'verbs',
                'usnic',
-               'mxm',
+               'mlx',
                'gni',
                'xpmem',
                'udp',
