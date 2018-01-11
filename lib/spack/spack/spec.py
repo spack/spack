@@ -1897,7 +1897,7 @@ class Spec(object):
         """This is a non-destructive version of concretize().  First clones,
            then returns a concrete version of this package without modifying
            this package. """
-        clone = self.copy()
+        clone = self.copy(caches=False)
         clone.concretize()
         return clone
 

@@ -245,3 +245,24 @@ def test_install_conflicts(conflict_spec):
         install(conflict_spec)
 
     assert install.returncode == 1
+
+
+@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.parametrize('spec,concretize,error_code', [
+    (Spec('mpi'), False, 1),
+    (Spec('mpi'), True, 0),
+    (Spec('boost'), False, 1),
+    (Spec('boost'), True, 0)
+])
+def test_install_from_file(spec, concretize, error_code, tmpdir):
+
+    if concretize:
+        spec.concretize()
+
+    with fs.working_dir(str(tmpdir)):
+        # A non-concrete spec will fail to be installed
+        with open('spec.yaml', 'w') as f:
+            spec.to_yaml(f)
+        install('-f', 'spec.yaml', fail_on_error=False)
+
+    assert install.returncode == error_code
