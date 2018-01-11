@@ -180,8 +180,8 @@ class Openmpi(AutotoolsPackage):
     variant(
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
-        description='List of fabrics that are enabled',
-        values=('psm', 'psm2', 'verbs', 'mxm'),
+        description=("List of fabrics that are enabled"),
+        values=('psm', 'psm2', 'pmi', 'verbs', 'mxm', 'libfabric'),
         multi=True
     )
 
@@ -218,15 +218,20 @@ class Openmpi(AutotoolsPackage):
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('ucx', when='+ucx')
+    depends_on('libfabric', when='fabrics=libfabric')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
+<<<<<<< HEAD
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
+=======
+    conflicts('fabrics=libfabric', when='@:1.8') #libfabric support was added in 1.10.0
+>>>>>>> f18c858... libfabic: adding variant to openmpi
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -316,7 +321,7 @@ class Openmpi(AutotoolsPackage):
             '--enable-shared',
             '--enable-static'
         ]
-        if self.spec.satisfies('@2.0:'):
+        if spec.satisfies('@2.0:'):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
 
