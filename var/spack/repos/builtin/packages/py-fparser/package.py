@@ -43,7 +43,6 @@ class PyFparser(PythonPackage):
     depends_on('py-nose', type='build')
     depends_on('py-six', type='build')
 
-    # Use type='test' when available:
     depends_on('py-pytest', type='test')
 
     @run_after('install')
