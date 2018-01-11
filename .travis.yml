@@ -134,14 +134,26 @@ install:
 - if [[ "$TEST_SUITE" == "doc" ]]; then pip install --upgrade -r lib/spack/docs/requirements.txt;
   fi
 before_script:
-- git config --global user.email "spack@example.com"
-- git config --global user.name "Test User"
-- git fetch origin develop:develop
-- if [[ "$TEST_SUITE" == "build" ]]; then cp share/spack/qa/configuration/packages.yaml
-  etc/spack/packages.yaml; fi
-script: share/spack/qa/run-$TEST_SUITE-tests
-after_success:
-- codecov --env PY_VERSION
+  # Need this for the git tests to succeed.
+  - git config --global user.email "spack@example.com"
+  - git config --global user.name "Test User"
+
+  # Need this to be able to compute the list of changed files
+  - git fetch origin develop:develop
+
+  # Set up external dependencies for build tests, because the take too long to compile
+  - if [[ "$TEST_SUITE" == "build" ]]; then cp share/spack/qa/configuration/packages.yaml etc/spack/packages.yaml; fi
+
+#=============================================================================
+# Building
+#=============================================================================
+script:
+  - share/spack/qa/run-$TEST_SUITE-tests
+  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PY_VERSION --required ; fi
+
+#=============================================================================
+# Notifications
+#=============================================================================
 notifications:
   slack:
     secure: URUDHl7AJRCT8cykDCIuaMpHEPDY9VWHGi+jjmoKXZkZJY1wqpQsMQSRoDK59NIFFnLfbSmAISFEw1Tyn3wwyJE9088RD4dp8y1uoH1mZk+s/jPpJsH6OS1erTn1CnWo6k9/GceZldc1dBnOk6F+rciLLvmEIgYmCueSmp99DQcUIMzdU3zsrBfNRHmbahBxvwL3sPElzWJrnMT35q+ve5Sxbw1hnxkkHjfDDU48EE2Pc8Lw8GLFiYEFvKv7jNKlH8UTsBTOGJV4YDgVXEIZyjE1KxNqaGrE2DHDrMYGfX65oi84Nee+Fc9ecJ0NdhStFaF0sKpwhZ9DHULQ0IHBBitsioa8iW+Q8evaKlSkIi44JNHsBJXGdZ0LTPZBhsguVm3dpdKR55piwNG4IvLgPZzaHBrjdG2HY4yIb95dwihMeCEJlMe0vHO0D58FrC4ZpwN97oBfSAlViBglZcrnv0zWkQVDjYjnzlwCrL6GBcDF4EB3Dd2Ur8RQrlaJ19rtiAk69GRw6YbPLd/jFu5UYuL7VMsYYO13wYzZsxUMpv7lRCLfs+zmlRnJb1PJoGTHorEF+Nu12lcJRyX8lCQY2XktopfWfSoeLxaElWNaIRPE++eMYXSXdqjUIpTky/BQUsl7j1nR4i3tfUFekcRIBoZSQv+z4k/yhJrnhqEp5m0=

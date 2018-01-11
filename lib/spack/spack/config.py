@@ -445,16 +445,8 @@ def update_config(section, update_data, scope=None):
     validate_section_name(section)  # validate section name
     scope = validate_scope(scope)  # get ConfigScope object from string.
 
-    # read in the config to ensure we've got current data
-    configuration = get_config(section)
-
-    if isinstance(update_data, list):
-        configuration = update_data
-    else:
-        configuration.update(update_data)
-
     # read only the requested section's data.
-    scope.sections[section] = {section: configuration}
+    scope.sections[section] = {section: update_data}
     scope.write_section(section)
 
 

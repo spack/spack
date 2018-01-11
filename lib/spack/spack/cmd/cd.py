@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack.cmd.common import print_module_placeholder_help
+
 import spack.cmd.location
-import spack.modules
 
 description = "cd to spack directories in the shell"
 section = "environment"
@@ -38,4 +39,4 @@ def setup_parser(subparser):
 
 
 def cd(parser, args):
-    spack.modules.print_help()
+    print_module_placeholder_help()
