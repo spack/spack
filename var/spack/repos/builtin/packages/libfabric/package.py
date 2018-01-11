@@ -69,6 +69,10 @@ class Libfabric(AutotoolsPackage):
                              join_path(self.spec['opa-psm2'].prefix, 'usr', 'lib64'), when='+spackfabrics fabrics=psm2')
         spack_env.prepend_path('LD_LIBRARY_PATH',
                              join_path(self.spec['opa-psm2'].prefix, 'usr', 'lib64'), when='+spackfabrics fabrics=psm2')
+        spack_env.prepend_path('LIBRARY_PATH',
+                             join_path(self.spec['rdma-core'].prefix, 'usr', 'lib64'), when='+spackfabrics fabrics=verbs')
+        spack_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.spec['rdma-core'].prefix, 'usr', 'lib64'), when='+spackfabrics fabrics=verbs')
 
 
     def configure_args(self):
@@ -78,6 +82,10 @@ class Libfabric(AutotoolsPackage):
                      (f, 'yes' if 'fabrics=%s' % f in self.spec else 'no')
                      for f in self.fabrics])
 
-        args.append('--enable-psm2={0}'.format(join_path(self.spec['opa-psm2'].prefix,'usr')))
+        if "+spackfabrics" in self.spec:
+            if "psm2" in self.fabrics:
+                args.append('--enable-psm2={0}'.format(join_path(self.spec['opa-psm2'].prefix,'usr')))
+            if "verbs" in self.fabrics:
+                args.append('--enable-verbs={0}'.format(self.spec['rdma-core'].prefix))
 
         return args
