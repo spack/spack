@@ -56,19 +56,19 @@ class Libfabric(AutotoolsPackage):
     )
 
 
-    variant('spackfabrics', default=False, description="""for any fabrics in list of 
+    variant('spackfabrics', default=False, description="""for any fabric in list of 
                          enabled fabrics, use spack dependencies instead of system
                          libraries"""
     )
 
-    #depends_on('rdma-core', when='verbs' in fabrics)
-    depends_on('opa-psm2', when='+spackfabrics')
+    depends_on('rdma-core', when='+spackfabrics fabrics=verbs')
+    depends_on('opa-psm2', when='+spackfabrics fabrics=psm2')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.spec['opa-psm2'].prefix, 'usr', 'lib64'))
+                             join_path(self.spec['opa-psm2'].prefix, 'usr', 'lib64'), when='+spackfabrics fabrics=psm2')
         spack_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.spec['opa-psm2'].prefix, 'usr', 'lib64'))
+                             join_path(self.spec['opa-psm2'].prefix, 'usr', 'lib64'), when='+spackfabrics fabrics=psm2')
 
 
     def configure_args(self):
