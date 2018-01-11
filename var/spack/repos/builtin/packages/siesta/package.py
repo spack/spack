@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import os
 
 
 class Siesta(Package):
@@ -31,11 +32,11 @@ class Siesta(Package):
        dynamics simulations of molecules and solids."""
 
     homepage = "https://departments.icmab.es/leem/siesta/"
-    url      = "https://launchpad.net/siesta/4.0/4.0.1/+download/siesta-4.0.1.tar.gz"
 
-    version('4.0.1', '5cb60ce068f2f6e84fa9184ffca94c08')
+    version('4.0.1', '5cb60ce068f2f6e84fa9184ffca94c08', url='https://launchpad.net/siesta/4.0/4.0.1/+download/siesta-4.0.1.tar.gz')
+    version('3.2-pl-5', '27a300c65eb2a25d107d910d26aaf81a', url='http://departments.icmab.es/leem/siesta/CodeAccess/Code/siesta-3.2-pl-5.tgz')
 
-    patch('configure.patch')
+    patch('configure.patch', when='@:4.0')
 
     depends_on('mpi')
     depends_on('blas')
@@ -63,18 +64,24 @@ class Siesta(Package):
                           # Intel's mpiifort is not found
                           'MPIFC=%s' % spec['mpi'].mpifc
                           ]
-        with working_dir('Obj'):
-            sh('../Src/configure', *configure_args)
-            sh('../Src/obj_setup.sh')
-        with working_dir('Obj_trans', create=True):
-            sh('../Src/configure', *configure_args)
-            sh('../Src/obj_setup.sh')
+        for d in ['Obj', 'Obj_trans']:
+            with working_dir(d, create=True):
+                sh('../Src/configure', *configure_args)
+                if spec.satisfies('@:4.0%intel'):
+                    with open('arch.make', 'a') as f:
+                        f.write('\natom.o: atom.F\n')
+                        f.write('\t$(FC) -c $(FFLAGS) -O1')
+                        f.write('$(INCFLAGS) $(FPPFLAGS) $<')
+                sh('../Src/obj_setup.sh')
 
     def build(self, spec, prefix):
         with working_dir('Obj'):
             make(parallel=False)
         with working_dir('Obj_trans'):
             make('transiesta', parallel=False)
+        with working_dir('Util'):
+            sh = which('sh')
+            sh('build_all.sh')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
@@ -82,3 +89,8 @@ class Siesta(Package):
             install('siesta', prefix.bin)
         with working_dir('Obj_trans'):
             install('transiesta', prefix.bin)
+        for root, _, files in os.walk('Util'):
+            for fname in files:
+                fname = join_path(root, fname)
+                if os.access(fname, os.X_OK):
+                    install(fname, prefix.bin)

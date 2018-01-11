@@ -64,8 +64,7 @@ class Vtk(CMakePackage):
         qt_ver = spec['qt'].version.up_to(1)
         qt_bin = spec['qt'].prefix.bin
 
-        cmake_args = std_cmake_args[:]
-        cmake_args.extend([
+        cmake_args = [
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
             '-DVTK_USE_SYSTEM_HDF5=ON',
@@ -86,7 +85,7 @@ class Vtk(CMakePackage):
             '-DVTK_QT_VERSION:STRING={0}'.format(qt_ver),
             '-DQT_QMAKE_EXECUTABLE:PATH={0}/qmake'.format(qt_bin),
             '-DVTK_Group_Qt:BOOL=ON',
-        ])
+        ]
 
         # NOTE: The following definitions are required in order to allow
         # VTK to build with qt~webkit versions (see the documentation for
@@ -99,7 +98,9 @@ class Vtk(CMakePackage):
             ])
 
         if spec.satisfies('@:6.1.0'):
-            cmake_args.append('-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY')
-            cmake_args.append('-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY')
+            cmake_args.extend([
+                '-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY',
+                '-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY'
+            ])
 
         return cmake_args
