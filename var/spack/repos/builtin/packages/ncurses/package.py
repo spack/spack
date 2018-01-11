@@ -46,6 +46,8 @@ class Ncurses(AutotoolsPackage):
             description='Enables symlinks. Needed on AFS filesystem.')
     variant("shared", default=True,
             description="Enable shared libs")
+    variant('termlib', default=False,
+            description='Enables termlib needs for gnutls in emacs.')
 
     depends_on('pkgconfig', type='build')
 
@@ -74,6 +76,12 @@ class Ncurses(AutotoolsPackage):
             opts.append("--with-shared")
             opts.append("--with-cxx-shared")
 
+
+        if '+termlib' in self.spec:
+            opts.extend(('--with-termlib',
+                         '--enable-termcap',
+                         '--enable-getcap',
+                         '--enable-tcap-names'))
 
         prefix = '--prefix={0}'.format(prefix)
 

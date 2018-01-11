@@ -140,7 +140,10 @@ def load_module(mod):
         if word == 'conflict':
             unload_module(text[i + 1])
     # Load the module now that there are no conflicts
-    load = modulecmd('load', mod, output=str, error=str)
+    # Some module systems use stdout and some use stderr
+    load = modulecmd('load', mod, output=str, error='/dev/null')
+    if not load:
+        load = modulecmd('load', mod, error=str)
     exec(compile(load, '<string>', 'exec'))
 
 

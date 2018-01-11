@@ -35,3 +35,6 @@ class GlobusToolkit(AutotoolsPackage):
     version('6.0.1493989444', '9e9298b61d045e65732e12c9727ceaa8')
     version('6.0.1470089956', 'b77fe3cc5a5844df995688b0e630d077')
     version('6.0.1506371041', 'e17146f68e03b3482aaea3874d4087a5')
+    version('6.0.1493989444', '9e9298b61d045e65732e12c9727ceaa8')
+
+    depends_on('openssl')

@@ -79,7 +79,7 @@ def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
         # Install package dependencies if needed
         parser = argparse.ArgumentParser()
         inst.setup_parser(parser)
-        tty.msg('Checking dependencies for {0}'.format(args.package))
+        tty.msg('Checking dependencies for {0}'.format(args.package[0]))
         cli_args = ['-v'] if args.verbose else []
         install_args = parser.parse_args(cli_args + ['--only=dependencies'])
         install_args.package = args.package

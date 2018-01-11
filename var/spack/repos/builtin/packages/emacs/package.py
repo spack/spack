@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 
+import sys
+
 
 class Emacs(AutotoolsPackage):
     """The Emacs programmable text editor."""
@@ -43,6 +45,7 @@ class Emacs(AutotoolsPackage):
         values=('gtk', 'athena'),
         description="Select an X toolkit (gtk, athena)"
     )
+    variant('tls', default=False, description="Build Emacs with gnutls")
 
     depends_on('pkgconfig', type='build')
 
@@ -55,6 +58,9 @@ class Emacs(AutotoolsPackage):
     depends_on('libx11', when='+X')
     depends_on('libxaw', when='+X toolkit=athena')
     depends_on('gtkplus+X', when='+X toolkit=gtk')
+    depends_on('gnutls', when='+tls')
+    depends_on('libxpm ^gettext+libunistring', when='+tls')
+    depends_on('ncurses+termlib', when='+tls')
 
     def setup_environment(self, spack_env, run_env):
         # building emacs requires c11 - gcc supports it with -std=c11
@@ -91,5 +97,9 @@ class Emacs(AutotoolsPackage):
         # .. except for -std=c11 (for gnu - or whatever the compiler c11
         # flag is. Just hardcode it for now
         #    options.insert(0, 'CFLAGS=-std=c11')
+        # On OS X/macOS, do not build "nextstep/Emacs.app", because
+        # doing so throws an error at build-time
+        if sys.platform == 'darwin':
+            args.append('--without-ns')
 
         return args
