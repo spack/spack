@@ -65,7 +65,7 @@ This automatically adds Spack to your ``PATH`` and allows the ``spack``
 command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
 
-If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
+If :ref:`environment-modules, lmod, or dotkit <ModuleSystems>` is
 installed and available, the ``spack`` command can also load and unload
 :ref:`modules <modules>`.
 
@@ -891,7 +891,7 @@ environment module that may be loaded.  Either way works.
 
 If you find that you are missing some of these programs, ``spack`` can
 build some of them for you with ``spack bootstrap``. Currently supported
-programs are ``environment-modules``.
+programs are ``environment-modules``, ``lmod``, and ``dotkit``.
 
 A few notes on specific programs in this list:
 
@@ -920,43 +920,40 @@ other programs will also not work, because they also rely on OpenSSL.
 Once ``curl`` has been installed, you can similarly install the others.
 
 
-.. _InstallEnvironmentModules:
+.. _ModuleSystems:
 
-"""""""""""""""""""
-Environment Modules
-"""""""""""""""""""
+^^^^^^^^^^^^^^
+Module Systems
+^^^^^^^^^^^^^^
 
-In order to use Spack's generated module files, you must have
-installed ``environment-modules`` or ``lmod``. The simplest way
-to get the latest version of either of these tools is installing
-it as part of Spack's bootstrap procedure:
+In order to use Spack's generated environment modules, you must have
+installed at least one of three supported module systems,
+``environment-modules``, ``lmod``, and ``dotkit``. Spack offers the option
+to install and manage any of these systems with ``spack bootstrap``.
+By looking at the contents of the `enabled` configuration key defined in
+`modules.yaml`, ``spack bootstrap`` installs the requested module systems.
+These systems can then be seemlessly activated by sourcing Spack's shell
+integration script ``setup-env.sh`` for ``bash``-like shell users.
 
-.. code-block:: console
-
-   $ spack bootstrap
-
-.. warning::
-   At the moment ``spack bootstrap`` is only able to install ``environment-modules``.
-   Extending its capabilities to prefer ``lmod`` where possible is in the roadmap,
-   and likely to happen before the next release.
-
-Alternatively, on many Linux distributions, you can install a pre-built binary
-from the vendor's repository. On Fedora/RHEL/CentOS, for example, this can be
-done with the command:
+On many Linux distributions, you can install a pre-built binary
+from the vendor's repository. Some users may want to use such a system-wide
+installation of one of these module systems or may wish to install and
+manage it manually. On Fedora/RHEL/CentOS, for example,
+``environment-modules`` can be done with the command:
 
 .. code-block:: console
 
    $ yum install environment-modules
 
-Once you have the tool installed and available in your path, you can source
-Spack's setup file:
+When manually managing in this way, all that is necessary is making sure
+the appropriate command is available. ``module`` for ``environment-modules``
+and ``lmod``, and ``use`` for ``dotkit``.
 
-.. code-block:: console
+While Spack supports all three module systems, we recommend you use either
+``environment-modules`` or ``lmod``.
 
-   $ source share/spack/setup-env.sh
-
-This activates :ref:`shell support <shell-support>` and makes commands like
-``spack load`` available for use.
+See :ref:`modules` and :ref:`modules-tutorial` for detailed information
+about modules and how to use and maintain them.
 
 
 ^^^^^^^^^^^^^^^^^

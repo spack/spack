@@ -15,7 +15,7 @@ providing post-install hooks that generate module files and commands to manipula
 .. note::
 
    If your machine does not already have a module system installed,
-   we advise you to use either Environment Modules or LMod. See :ref:`InstallEnvironmentModules`
+   we advise you to use either Environment Modules or LMod. See :ref:`ModuleSystems`
    for more details.
 
 .. _shell-support:
@@ -88,7 +88,7 @@ Note that in the latter case it is necessary to explicitly set ``SPACK_ROOT``
 before sourcing the setup file (you will get a meaningful error message
 if you don't).
 
-When ``bash`` and ``ksh`` users update their environment with ``setup-env.sh``, it will check for spack-installed environment modules and add the ``module`` command to their environment; This only occurs if the module command is not already available. You can install ``environment-modules`` with ``spack bootstrap`` as described in :ref:`InstallEnvironmentModules`.
+When ``bash`` and ``ksh`` users update their environment with ``setup-env.sh``, it will check for spack-installed modules systems and add appropriate command to their environment (``module`` for ``environment-modules`` and ``lmod``, and ``use`` for ``dotkit``); This only occurs if said command is not already available. You can install any of the three module systems with ``spack bootstrap`` as described in :ref:`ModuleSystems`.
 
 Finally, if you want to have Spack's shell support available on the command line at
 any login you can put this source line in one of the files that are sourced
