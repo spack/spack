@@ -89,14 +89,14 @@ class Libxsmm(Package):
         install_tree('include', prefix.include)
         if '~header-only' in spec:
             install_tree('lib', prefix.lib)
-        doc_path = prefix.share + '/libxsmm/doc'
+        doc_path = join_path(prefix.share, 'libxsmm', 'doc')
         mkdirp(doc_path)
-        for doc_file in glob('documentation/*.md'):
+        for doc_file in glob(join_path('documentation', '*.md')):
             install(doc_file, doc_path)
-        for doc_file in glob('documentation/*.pdf'):
+        for doc_file in glob(join_path('documentation', '*.pdf')):
             install(doc_file, doc_path)
-        install('README.md', doc_path)
-        install('LICENSE', doc_path)
+        install('version.txt', doc_path)
+        install('LICENSE.md', doc_path)
 
     def install(self, spec, prefix):
         if '+header-only' in spec and '@1.6.2:' not in spec:
