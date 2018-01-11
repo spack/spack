@@ -263,6 +263,10 @@ class Openmpi(AutotoolsPackage):
                              join_path(self.spec['libfabric'].prefix, 'lib'), when='fabrics=libfabric')
         spack_env.prepend_path('LD_LIBRARY_PATH',
                              join_path(self.spec['libfabric'].prefix, 'lib'), when='fabrics=libfabric')
+        spack_env.prepend_path('CPATH',
+                             join_path(self.spec['libfabric'].prefix, 'include'), when='fabrics=libfabric')
+        spack_env.prepend_path('PKG_CONFIG_PATH',
+                join_path(self.spec['libfabric'].prefix, 'lib/pkgconfig'), when='fabrics=libfabric')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
