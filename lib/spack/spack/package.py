@@ -798,7 +798,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     @property
     def log_path(self):
-        return os.path.join(self.stage.source_path, 'spack-build.out')
+        if self.stage.source_path is not None:
+            return os.path.join(self.stage.source_path, 'spack-build.out')
+        else:
+            return None
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
