@@ -36,7 +36,6 @@ class Graphviz(AutotoolsPackage):
 
     version('2.40.1', git='https://gitlab.com/graphviz/graphviz.git',
             commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
-            # this hash refers to tag='stable_release_2.40.1'
 
     # We try to leave language bindings enabled if they don't cause
     # build issues or add dependencies.
