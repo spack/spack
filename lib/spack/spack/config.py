@@ -238,7 +238,8 @@ ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 _cmd_path = spack.cmd_line_config_path
 if _cmd_path:
     ConfigScope('command-line', _cmd_path)
-    ConfigScope('command-line/%s' % _platform, os.path.join(_cmd_path, _platform))
+    ConfigScope('command-line/%s' % _platform,
+                os.path.join(_cmd_path, _platform))
 
 
 def highest_precedence_scope():
