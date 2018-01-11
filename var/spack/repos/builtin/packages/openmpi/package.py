@@ -177,11 +177,13 @@ class Openmpi(AutotoolsPackage):
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
 
+    fabrics = ('psm', 'psm2', 'pmi', 'verbs', 'mxm', 'libfabric')
+    
     variant(
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
         description=("List of fabrics that are enabled"),
-        values=('psm', 'psm2', 'pmi', 'verbs', 'mxm', 'libfabric'),
+        values=fabrics,
         multi=True
     )
 
@@ -331,6 +333,9 @@ class Openmpi(AutotoolsPackage):
         config_args.extend(self.with_or_without('schedulers'))
         # PMI
         config_args.extend(self.with_or_without('pmi'))
+
+        if 'libfabric' in self.fabrics:
+            config_args.append('--with-libfabric={0}'.format(spec['libfabric'].prefix))
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
