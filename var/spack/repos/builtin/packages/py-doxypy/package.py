@@ -33,4 +33,4 @@ class PyDoxypy(PythonPackage):
 
     version('0.3', '3b52289e0962d31b92af8be0eef8cbb2')
 
-    conflicts('python@3:')
+    depends_on('python@:2.8')
