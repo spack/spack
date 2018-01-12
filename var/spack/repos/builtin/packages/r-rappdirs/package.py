@@ -35,3 +35,5 @@ class RRappdirs(RPackage):
     list_url = "https://cran.rstudio.com/src/contrib/Archive/rappdirs"
 
     version('0.3.1', 'fbbdceda2aa49374e61c7d387bf9ea21')
+
+    depends_on('r@2.14:', type=('build', 'run'))
