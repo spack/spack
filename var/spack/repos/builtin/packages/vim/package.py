@@ -96,9 +96,14 @@ class Vim(AutotoolsPackage):
         configure_args.append("--with-features=" + feature_set)
 
         if '+python' in spec:
-            configure_args.append("--enable-pythoninterp=yes")
+            if 'python@3:' in self.spec:
+                configure_args.append("--enable-python3interp=yes")
+                configure_args.append("--enable-pythoninterp=no")
+            else:
+                configure_args.append("--enable-python3interp=no")
+                configure_args.append("--enable-pythoninterp=yes")
         else:
-            configure_args.append("--enable-pythoninterp=no")
+            configure_args.append("--enable-python3interp=no")
 
         if '+ruby' in spec:
             configure_args.append("--enable-rubyinterp=yes")
