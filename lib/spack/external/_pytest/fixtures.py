@@ -22,7 +22,7 @@ from _pytest.outcomes import fail, TEST_OUTCOME
 
 
 if sys.version_info[:2] == (2, 6):
-    from ordereddict import OrderedDict
+    from ordereddict_backport import OrderedDict
 else:
     from collections import OrderedDict  # nopyqver
 
