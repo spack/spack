@@ -45,6 +45,21 @@ class Coinhsl(AutotoolsPackage):
     url = "file://{0}/coinhsl-archive-2014.01.17.tar.gz".format(os.getcwd())
 
     version('2014.01.17', '9eb3dd40ed034814ed8dfee75b281180c1d9d2ae')
+    version('2014.01.10', '7c2be60a3913b406904c66ee83acdbd0709f229b652c4e39ee5d0876f6b2e907',
+            preferred=True)
 
     # CoinHSL fails to build in parallel
     parallel = False
+
+    variant('blas', default=False, description='Link to external BLAS library')
+
+    depends_on('blas', when='+blas')
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+
+        if spec.satisfies('+blas'):
+            args.append('--with-blas={0}'.format(spec['blas'].libs.ld_flags))
+
+        return args
