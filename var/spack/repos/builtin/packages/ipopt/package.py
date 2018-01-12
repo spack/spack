@@ -51,7 +51,7 @@ class Ipopt(Package):
     depends_on("pkgconfig", type='build')
     depends_on("mumps+double~mpi")
     depends_on('coinhsl', when='+coinhsl')
-    depends_on('metis@4.0:4.999', when='+metis')
+    depends_on('metis@4.0:', when='+metis')
 
     patch('ipopt_ppc_build.patch', when='arch=ppc64le')
 
