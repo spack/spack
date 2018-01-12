@@ -22,27 +22,33 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class RRmarkdown(RPackage):
-    """Convert R Markdown documents into a variety of formats."""
+class Ethminer(CMakePackage):
+    """The ethminer is an Ethereum GPU mining worker."""
 
-    homepage = "http://rmarkdown.rstudio.com/"
-    url      = "https://cran.r-project.org/src/contrib/rmarkdown_1.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rmarkdown"
+    homepage = "https://github.com/ethereum-mining/ethminer"
+    url = "https://github.com/ethereum-mining/ethminer/archive/v0.12.0.tar.gz"
 
-    version('1.7', '477c50840581ba7947b3d905c67a511b')
-    version('1.0', '264aa6a59e9680109e38df8270e14c58')
+    version('0.12.0', '1c7e3df8476a146702a4050ad984ae5a')
 
-    depends_on('r-knitr@1.14:', type=('build', 'run'))
-    depends_on('r-yaml@2.1.5:', type=('build', 'run'))
-    depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
-    depends_on('r-evaluate@0.8:', type=('build', 'run'))
-    depends_on('r-base64enc', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-rprojroot', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-stringr@1.2.0:', type=('build', 'run'))
-    depends_on('r@3.0:')
+    variant('opencl', default=True, description='Enable OpenCL mining.')
+    variant('cuda', default=False, description='Enable CUDA mining.')
+    variant('stratum', default=True,
+            description='Build with Stratum protocol support.')
+
+    depends_on('python')
+    depends_on('boost')
+    depends_on('json-c')
+    depends_on('curl')
+    depends_on('zlib')
+    depends_on('cuda', when='+cuda')
+    depends_on('mesa', when='+opencl')
+
+    def cmake_args(self):
+        spec = self.spec
+        return [
+            '-DETHASHCL=%s' % ('YES' if '+opencl' in spec else 'NO'),
+            '-DETHASHCUDA=%s' % ('YES' if '+cuda' in spec else 'NO'),
+            '-DETHSTRATUM=%s' % ('YES' if '+stratum' in spec else 'NO')]

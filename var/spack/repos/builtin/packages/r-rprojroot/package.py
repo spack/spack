@@ -22,27 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class RRmarkdown(RPackage):
-    """Convert R Markdown documents into a variety of formats."""
+class RRprojroot(RPackage):
+    """Robust, reliable and flexible paths to files below a project root.
+    The 'root' of a project is defined as a directory that matches a
+    certain criterion, e.g., it contains a certain regular file."""
 
-    homepage = "http://rmarkdown.rstudio.com/"
-    url      = "https://cran.r-project.org/src/contrib/rmarkdown_1.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rmarkdown"
+    homepage = "https://cran.r-project.org/package=rprojroot"
+    url      = "https://cran.rstudio.com/src/contrib/rprojroot_1.2.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/rprojroot"
 
-    version('1.7', '477c50840581ba7947b3d905c67a511b')
-    version('1.0', '264aa6a59e9680109e38df8270e14c58')
+    version('1.2', 'c1a0574aaac2a43a72f804abbaea19c3')
 
-    depends_on('r-knitr@1.14:', type=('build', 'run'))
-    depends_on('r-yaml@2.1.5:', type=('build', 'run'))
-    depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
-    depends_on('r-evaluate@0.8:', type=('build', 'run'))
-    depends_on('r-base64enc', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-rprojroot', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-stringr@1.2.0:', type=('build', 'run'))
-    depends_on('r@3.0:')
+    depends_on('r-backports', type=('build', 'run'))
+    depends_on('r@3.0.0:')

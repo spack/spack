@@ -22,27 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class RRmarkdown(RPackage):
-    """Convert R Markdown documents into a variety of formats."""
+class RBiocstyle(RPackage):
+    """Provides standard formatting styles for Bioconductor PDF and HTML
+    documents. Package vignettes illustrate use and functionality."""
 
-    homepage = "http://rmarkdown.rstudio.com/"
-    url      = "https://cran.r-project.org/src/contrib/rmarkdown_1.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rmarkdown"
+    homepage = "https://www.bioconductor.org/packages/BiocStyle/"
+    url      = "https://git.bioconductor.org/packages/BiocStyle"
 
-    version('1.7', '477c50840581ba7947b3d905c67a511b')
-    version('1.0', '264aa6a59e9680109e38df8270e14c58')
+    version('2.4.1', git='https://git.bioconductor.org/packages/BiocStyle', commit='ef10764b68ac23a3a7a8ec3b6a6436187309c138')
 
-    depends_on('r-knitr@1.14:', type=('build', 'run'))
-    depends_on('r-yaml@2.1.5:', type=('build', 'run'))
-    depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
-    depends_on('r-evaluate@0.8:', type=('build', 'run'))
-    depends_on('r-base64enc', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-rprojroot', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-stringr@1.2.0:', type=('build', 'run'))
-    depends_on('r@3.0:')
+    depends_on('r-bookdown', type=('build', 'run'))
+    depends_on('r-knitr@1.12:', type=('build', 'run'))
+    depends_on('r-rmarkdown@1.2:', type=('build', 'run'))
+    depends_on('r-yaml', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@2.4.1')

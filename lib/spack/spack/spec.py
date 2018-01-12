@@ -1869,9 +1869,9 @@ class Spec(object):
         matches = []
         for x in self.traverse():
             for conflict_spec, when_list in x.package.conflicts.items():
-                if x.satisfies(conflict_spec):
+                if x.satisfies(conflict_spec, strict=True):
                     for when_spec, msg in when_list:
-                        if x.satisfies(when_spec):
+                        if x.satisfies(when_spec, strict=True):
                             matches.append((x, conflict_spec, when_spec, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
