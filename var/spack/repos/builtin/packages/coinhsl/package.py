@@ -50,3 +50,16 @@ class Coinhsl(AutotoolsPackage):
 
     # CoinHSL fails to build in parallel
     parallel = False
+
+    variant('blas', default=False, description='Link to external BLAS library')
+
+    depends_on('blas', when='+blas')
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+
+        if spec.satisfies('+blas'):
+            args.append('--with-blas={0}'.format(spec['blas'].libs.ld_flags))
+
+        return args
