@@ -131,9 +131,8 @@ class Qt(Package):
     depends_on("libxcb", when=sys.platform != 'darwin')
     depends_on("libx11", when=sys.platform != 'darwin')
 
-    # This is only needed for qt@3:4.99, but combining
-    # spec string with boolean expression does not work:
-    depends_on("libxext", when=sys.platform != 'darwin')
+    if sys.platform != 'darwin':
+        depends_on("libxext", when='@3:4.99')
 
     # Webkit
     depends_on("flex", when='+webkit', type='build')
