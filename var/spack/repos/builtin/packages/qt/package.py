@@ -125,12 +125,15 @@ class Qt(Package):
     # QtQml
     depends_on("python", when='@5.7.0:', type='build')
 
-    # X window system:
-    if sys.platform != 'darwin':
-        depends_on("mesa", when='@4:+opengl')
-        depends_on("libxcb")
-        depends_on("libx11")
-        depends_on("libxext", when='@3:4.99')
+    # OpenGL hardware acceleration
+    depends_on("mesa", when='@4:+opengl')
+
+    depends_on("libxcb", when=sys.platform != 'darwin')
+    depends_on("libx11", when=sys.platform != 'darwin')
+
+    # This is only needed for qt@3:4.99, but combining
+    # spec string with boolean expression does not work:
+    depends_on("libxext", when=sys.platform != 'darwin')
 
     # Webkit
     depends_on("flex", when='+webkit', type='build')
