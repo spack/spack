@@ -41,7 +41,7 @@ class PyFparser(PythonPackage):
 
     depends_on('py-numpy', type=('build', 'run'), when='@0:0.0.5')
     depends_on('py-nose', type='build')
-    depends_on('py-six', type='build')
+    depends_on('py-six', type='build', when='@0.0.6:')
 
     depends_on('py-pytest', type='test')
 
