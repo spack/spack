@@ -26,12 +26,15 @@
 
 # TODO: this file can be removed when support for python 2.6 will be dropped
 
+# Removing this import will make python 2.6
+# fail on import of ordereddict
+from __future__ import absolute_import
+
 import sys
 
 if sys.version_info[:2] == (2, 6):
-    # This hack is needed because otherwise we'll load
-    # spack.util.ordereddict for some reason.
-    OrderedDict = sys.modules['ordereddict'].OrderedDict
+    import ordereddict
+    OrderedDict = ordereddict.OrderedDict
 else:
     import collections
     OrderedDict = collections.OrderedDict

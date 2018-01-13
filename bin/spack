@@ -46,7 +46,6 @@ spack_external_libs = os.path.join(spack_lib_path, "external")
 
 if sys.version_info[:2] == (2, 6):
     sys.path.insert(0, os.path.join(spack_external_libs, 'py26'))
-    import ordereddict
 
 sys.path.insert(0, spack_external_libs)
 
