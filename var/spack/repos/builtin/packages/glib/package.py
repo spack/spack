@@ -48,6 +48,7 @@ class Glib(AutotoolsPackage):
     depends_on('zlib')
     depends_on('gettext')
     depends_on('perl', type=('build', 'run'))
+    depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
     depends_on('util-linux', when='+libmount')
 
@@ -73,10 +74,30 @@ class Glib(AutotoolsPackage):
 
         return args
 
-    @run_before('install')
-    def filter_sbang(self):
-        # Filter sbang before install so Spack's sbang hook can fix it up
-        perl = join_path(self.spec['perl'].prefix.bin, 'perl')
-        files = ['gobject/glib-mkenums']
+    @run_before('configure')
+    def fix_python_path(self):
+        if not self.spec.satisfies('@2.53.4:'):
+            return
 
-        filter_file('^#! /usr/bin/perl', '#!{0}'.format(perl), *files)
+        files = ['gobject/glib-genmarshal.in', 'gobject/glib-mkenums.in']
+
+        filter_file('^#!/usr/bin/env @PYTHON@',
+                    '#!/usr/bin/env python',
+                    *files)
+
+    @run_after('install')
+    def filter_sbang(self):
+        # Revert sbang, so Spack's sbang hook can fix it up (we have to do
+        # this after install because otherwise the install target will try
+        # to rebuild files as filter_file updates the timestamps)
+        if self.spec.satisfies('@2.53.4:'):
+            pattern = '^#!/usr/bin/env python'
+            repl = '#!{0}'.format(self.spec['python'].command.path)
+            files = ['glib-genmarshal', 'glib-mkenums']
+        else:
+            pattern = '^#! /usr/bin/perl'
+            repl = '#!{0}'.format(self.spec['perl'].command.path)
+            files = ['glib-mkenums']
+
+        files = [join_path(self.prefix.bin, file) for file in files]
+        filter_file(pattern, repl, *files, backup=False)
