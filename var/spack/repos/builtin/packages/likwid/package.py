@@ -64,10 +64,11 @@ class Likwid(Package):
     @run_before('install')
     def filter_sbang(self):
         # Filter sbang before install so Spack's sbang hook can fix it up
-        perl = join_path(self.spec['perl'].prefix.bin, 'perl')
         files = ['perl/feedGnuplot'] + glob.glob('filters/*')
 
-        filter_file('^#!/usr/bin/perl', '#!{0}'.format(perl), *files)
+        filter_file('^#!/usr/bin/perl',
+                    '#!{0}'.format(self.spec['perl'].command.path),
+                    *files)
 
     def install(self, spec, prefix):
         if self.compiler.name not in self.supported_compilers:
