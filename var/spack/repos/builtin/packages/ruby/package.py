@@ -50,9 +50,10 @@ class Ruby(AutotoolsPackage):
     def configure_args(self):
         args = []
         if '+openssl' in self.spec:
-            args.append("--with-openssl-dir=%s" % spec['openssl'].prefix)
+            args.append("--with-openssl-dir=%s" % self.spec['openssl'].prefix)
         if '+readline' in self.spec:
-            args.append("--with-readline-dir=%s" % spec['readline'].prefix)
+            args.append("--with-readline-dir=%s"
+                        % self.spec['readline'].prefix)
         args.append('--with-tk=%s' % self.spec['tk'].prefix)
         return args
 
