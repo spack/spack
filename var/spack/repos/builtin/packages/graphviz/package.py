@@ -31,6 +31,7 @@ class Graphviz(AutotoolsPackage):
     """Graph Visualization Software"""
     homepage = 'http://www.graphviz.org'
 
+    # This commit hash is tag='stable_release_2.40.1'
     version('2.40.1', git='https://gitlab.com/graphviz/graphviz.git',
             commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
 
@@ -82,6 +83,12 @@ class Graphviz(AutotoolsPackage):
             description='Build with GNU Triangulated Surface Library')
     variant('expat', default=False,
             description='Build with Expat support (enables HTML-like labels)')
+    variant('ghostscript', default=False,
+            description='Build with Ghostscript support')
+    variant('qt', default=False,
+            description='Build with Qt support')
+    variant('gtkplus', default=False,
+            description='Build with GTK+ support')
 
     parallel = False
 
@@ -118,6 +125,12 @@ class Graphviz(AutotoolsPackage):
     depends_on('gts', when='+gts')
     # +expat
     depends_on('expat', when='+expat')
+    # +ghostscript
+    depends_on('ghostscript', when='+ghostscript')
+    # +qt
+    depends_on('qt', when='+qt')
+    # +gtkplus
+    depends_on('gtkplus', when='+gtkplus')
 
     # Build dependencies
     depends_on('pkg-config', type='build')
@@ -168,11 +181,17 @@ class Graphviz(AutotoolsPackage):
         else:
             options.append('--enable-swig=no')
 
-        for var in ('+pangocairo', '+libgd', '+gts', '+expat'):
+        for var in ('+pangocairo', '+libgd', '+gts', '+expat', '+ghostscript',
+                    '+qt', '+gtkplus'):
+            feature = var[1:]
+            if feature == 'gtkplus':
+                # In spack terms, 'gtk+' is 'gtkplus' while
+                # the relative configure option is 'gtk'
+                feature = 'gtk'
             if var in spec:
-                options.append('--with-{0}'.format(var[1:]))
+                options.append('--with-{0}'.format(feature))
             else:
-                options.append('--without-{0}'.format(var[1:]))
+                options.append('--without-{0}'.format(feature))
 
         # On OSX fix the compiler error:
         # In file included from tkStubLib.c:15:
