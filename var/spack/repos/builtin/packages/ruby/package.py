@@ -34,7 +34,7 @@ class Ruby(AutotoolsPackage):
 
     version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
 
-    variant('openssl', default=False, description="Enable OpenSSL support")
+    variant('openssl', default=True, description="Enable OpenSSL support")
     variant('readline', default=False, description="Enable Readline support")
 
     extendable = True
