@@ -43,21 +43,26 @@ class Visit(CMakePackage):
     depends_on('qt@4.8.6')
     depends_on('python')
     depends_on('silo+shared')
-    depends_on('hdf5~mpi')
+    depends_on('hdf5')
 
     root_cmakelists_dir = 'src'
 
     def cmake_args(self):
         spec = self.spec
         qt_bin = spec['qt'].prefix.bin
-
-        return [
+        args = [
             '-DVTK_MAJOR_VERSION={0}'.format(spec['vtk'].version[0]),
             '-DVTK_MINOR_VERSION={0}'.format(spec['vtk'].version[1]),
+            '-DVISIT_VTK_DIR:PATH={0}'.format(spec['vtk'].prefix),
             '-DVISIT_USE_GLEW=OFF',
             '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin),
             '-DPYTHON_DIR:PATH={0}'.format(spec['python'].home),
             '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix),
             '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix),
-            '-DVISIT_VTK_DIR:PATH={0}'.format(spec['vtk'].prefix),
         ]
+
+        if spec.satisfies('^hdf5+mpi', strict=True):
+            args.append('-DVISIT_HDF5_MPI_DIR:PATH={0}'.format(
+                spec['hdf5'].prefix))
+
+        return args
