@@ -31,6 +31,7 @@ class Visit(CMakePackage):
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
     url = "http://portal.nersc.gov/project/visit/releases/2.10.1/visit2.10.1.tar.gz"
 
+    version('2.13.0', '716644b8e78a00ff82691619d4d1e7a914965b6535884890b667b97ba08d6a0f')
     version('2.12.3', '2dd351a291ee3e79926bc00391ca89b202cfa4751331b0fdee1b960c7922161f')
     version('2.12.2', '355779b1dbf440cdd548526eecd77b60')
     version('2.10.3', 'a1082a6f6dab3e2dcb58993603456c2b')
