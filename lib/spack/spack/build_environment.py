@@ -581,7 +581,8 @@ def setup_package(pkg, dirty):
 
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post', root=False, deptype='build'):
+    for dspec in pkg.spec.traverse(order='post', root=False,
+                                   deptype=('build', 'test')):
         # If a user makes their own package repo, e.g.
         # spack.repos.mystuff.libelf.Libelf, and they inherit from
         # an existing class like spack.repos.original.libelf.Libelf,
