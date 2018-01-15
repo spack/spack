@@ -42,8 +42,10 @@ class Geant4(CMakePackage):
 
     variant('qt', default=False, description='Enable Qt support')
     variant('vecgeom', default=False, description='Enable vecgeom support')
-    
-depends_on('cmake@3.5:', type='build')
+    variant('cxx11', default=True, description='Enable CXX11 support')
+    variant('cxx14', default=False, description='Enable CXX14 support')    
+
+    depends_on('cmake@3.5:', type='build')
 
     # C++11 support
     depends_on("clhep@2.3.1.1+cxx11~cxx14", when="@10.02.p01+cxx11~cxx14")
