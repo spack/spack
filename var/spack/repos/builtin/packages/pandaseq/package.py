@@ -38,7 +38,7 @@ class Pandaseq(AutotoolsPackage):
 
     depends_on('autoconf',    type='build')
     depends_on('automake',    type='build')
-    depends_on('libtool',     type='build')
+    depends_on('libtool')
     depends_on('m4',          type='build')
     depends_on('zlib',        type='build')
     depends_on('pkg-config',  type='build')
