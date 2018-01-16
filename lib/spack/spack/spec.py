@@ -3283,10 +3283,10 @@ def tree(spec, **kwargs):
         if show_types:
             out += '['
             if dep_spec.deptypes:
-                for t in alldeps:
+                for t in all_deptypes:
                     out += ''.join(t[0] if t in dep_spec.deptypes else ' ')
             else:
-                out += ' ' * len(alldeps)
+                    out += ' ' * len(all_deptypes)
             out += ']  '
 
         out += ("    " * d)
