@@ -151,7 +151,7 @@ before_script:
 #=============================================================================
 script:
   - share/spack/qa/run-$TEST_SUITE-tests
-  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PY_VERSION --required ; fi
+  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PYTHON_VERSION --required --flags $TESTSUITE; fi
 
 #=============================================================================
 # Notifications
