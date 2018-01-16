@@ -103,4 +103,15 @@ class Vtk(CMakePackage):
                 '-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY'
             ])
 
+            # VTK 6.1.0 (and possibly earlier) does not use
+            # NETCDF_CXX_ROOT to detect NetCDF C++ bindings, so
+            # NETCDF_CXX_INCLUDE_DIR and NETCDF_CXX_LIBRARY must be
+            # used instead to detect these bindings
+            netcdf_cxx_lib = spec['netcdf-cxx'].libs.joined()
+            cmake_args.extend([
+                '-DNETCDF_CXX_INCLUDE_DIR={0}'.format(
+                    spec['netcdf-cxx'].prefix.include),
+                '-DNETCDF_CXX_LIBRARY={0}'.format(netcdf_cxx_lib),
+            ])
+
         return cmake_args
