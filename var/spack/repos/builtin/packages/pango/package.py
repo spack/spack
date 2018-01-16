@@ -35,6 +35,7 @@ class Pango(AutotoolsPackage):
     list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
     list_depth = 1
 
+    version('1.41.0', '1f76ef95953dc58ee5d6a53e5f1cb6db913f3e0eb489713ee9266695cae580ba')
     version('1.40.3', 'abba8b5ce728520c3a0f1535eab19eac3c14aeef7faa5aded90017ceac2711d3')
     version('1.40.1', 'e27af54172c72b3ac6be53c9a4c67053e16c905e02addcf3a603ceb2005c1a40')
     version('1.36.8', '18dbb51b8ae12bae0ab7a958e7cf3317c9acfc8a1e1103ec2f147164a0fc2d07')
@@ -49,6 +50,10 @@ class Pango(AutotoolsPackage):
     depends_on("libxft", when='+X')
     depends_on("glib")
     depends_on('gobject-introspection')
+
+    def url_for_version(self, version):
+        url = "http://ftp.gnome.org/pub/GNOME/sources/pango/{0}/pango-{1}.tar.xz"
+        return url.format(version.up_to(2), version)
 
     def configure_args(self):
         args = []
