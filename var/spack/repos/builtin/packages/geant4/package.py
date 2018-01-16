@@ -49,6 +49,7 @@ class Geant4(CMakePackage):
     variant('cxx14', default=False, description='Enable CXX14 support')
     variant('opengl', default=False, description='Optional OpenGL support')
     variant('x11', default=False, description='Optional X11 support')
+    variant('motif', default=False, description='Optional motif support')
 
     depends_on('cmake@3.5:', type='build')
 
@@ -71,6 +72,8 @@ class Geant4(CMakePackage):
     depends_on("xerces-c")
     depends_on("mesa", when='+opengl')
     depends_on("libx11", when='+x11')
+    depends_on("libxmu", when='+x11')
+    depends_on("motif", when='+motif')
     depends_on("vecgeom", when="+vecgeom")
     depends_on("qt@4.8:4.999", when="+qt")
 
@@ -91,8 +94,9 @@ class Geant4(CMakePackage):
 
         arch = platform.system().lower()
         if arch is not 'darwin':
-            if "+x11" and "+opengl" in spec:
+            if "+x11" in spec and "+opengl" in spec:
                 options.append('-DGEANT4_USE_OPENGL_X11=ON')
+            if "+motif" in spec and "+opengl" in spec:
                 options.append('-DGEANT4_USE_XM=ON')
             if "+x11" in spec:
                 options.append('-DGEANT4_USE_RAYTRACER_X11=ON')
