@@ -31,6 +31,7 @@ class Ipopt(Package):
     homepage = "https://projects.coin-or.org/Ipopt"
     url      = "http://www.coin-or.org/download/source/Ipopt/Ipopt-3.12.4.tgz"
 
+    version('3.12.8', '62c6de314220851b8f4d6898b9ae8cf0a8f1e96b68429be1161f8550bb7ddb03')
     version('3.12.7', '2a36e4a04717a8ed7012ac7d1253ae4ffbc1a8fd')
     version('3.12.6', 'ed4072427fab786fcf6082fe7e6f6c2ed9b5e6f8')
     version('3.12.5', '3f63ddfff517235ead17af6cceb426ca858dda37')
@@ -50,7 +51,7 @@ class Ipopt(Package):
     depends_on("pkgconfig", type='build')
     depends_on("mumps+double~mpi")
     depends_on('coinhsl', when='+coinhsl')
-    depends_on('metis@4.0:4.999', when='+metis')
+    depends_on('metis@4.0:', when='+metis')
 
     patch('ipopt_ppc_build.patch', when='arch=ppc64le')
 
