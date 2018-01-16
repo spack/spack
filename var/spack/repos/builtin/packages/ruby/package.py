@@ -34,7 +34,7 @@ class Ruby(AutotoolsPackage):
 
     version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
 
-    variant('openssl', default=False, description="Enable OpenSSL support")
+    variant('openssl', default=True, description="Enable OpenSSL support")
     variant('readline', default=False, description="Enable Readline support")
 
     extendable = True
@@ -47,12 +47,23 @@ class Ruby(AutotoolsPackage):
     depends_on('openssl', when='+openssl')
     depends_on('readline', when='+readline')
 
+    resource(
+        name='rubygems-updated-ssl-cert',
+        url='https://raw.githubusercontent.com/rubygems/rubygems/master/lib/rubygems/ssl_certs/index.rubygems.org/GlobalSignRootCA.pem',
+        sha256='df68841998b7fd098a9517fe971e97890be0fc93bbe1b2a1ef63ebdea3111c80',
+        when='+openssl',
+        destination='',
+        placement='rubygems-updated-ssl-cert',
+        expand=False
+    )
+
     def configure_args(self):
         args = []
         if '+openssl' in self.spec:
-            args.append("--with-openssl-dir=%s" % spec['openssl'].prefix)
+            args.append("--with-openssl-dir=%s" % self.spec['openssl'].prefix)
         if '+readline' in self.spec:
-            args.append("--with-readline-dir=%s" % spec['readline'].prefix)
+            args.append("--with-readline-dir=%s"
+                        % self.spec['readline'].prefix)
         args.append('--with-tk=%s' % self.spec['tk'].prefix)
         return args
 
@@ -80,3 +91,21 @@ class Ruby(AutotoolsPackage):
         # Ruby extension builds have global ruby and gem functions
         module.ruby = Executable(join_path(self.spec.prefix.bin, 'ruby'))
         module.gem = Executable(join_path(self.spec.prefix.bin, 'gem'))
+
+    @run_after('install')
+    def post_install(self):
+        """ RubyGems updated their SSL certificates at some point, so
+        new certificates must be installed after Ruby is installed
+        in order to download gems; see
+        http://guides.rubygems.org/ssl-certificate-update/
+        for details.
+        """
+        rubygems_updated_cert_path = join_path(self.stage.source_path,
+                                               'rubygems-updated-ssl-cert',
+                                               'GlobalSignRootCA.pem')
+        rubygems_certs_path = join_path(self.spec.prefix.lib,
+                                        'ruby',
+                                        '{0}'.format(self.spec.version.dotted),
+                                        'rubygems',
+                                        'ssl_certs')
+        install(rubygems_updated_cert_path, rubygems_certs_path)

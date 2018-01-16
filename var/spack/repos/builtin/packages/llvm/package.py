@@ -365,6 +365,10 @@ class Llvm(CMakePackage):
     def setup_environment(self, spack_env, run_env):
         spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
 
+        if '+clang' in self.spec:
+            run_env.set('CC', join_path(self.spec.prefix.bin, 'clang'))
+            run_env.set('CXX', join_path(self.spec.prefix.bin, 'clang++'))
+
     def cmake_args(self):
         spec = self.spec
 

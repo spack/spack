@@ -37,5 +37,4 @@ class PyBiopython(PythonPackage):
     version('1.70', 'feff7a3e2777e43f9b13039b344e06ff')
     version('1.65', '143e7861ade85c0a8b5e2bbdd1da1f67')
 
-    depends_on('py-mx', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))

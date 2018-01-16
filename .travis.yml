@@ -149,10 +149,9 @@ before_script:
 #=============================================================================
 # Building
 #=============================================================================
-script: share/spack/qa/run-$TEST_SUITE-tests
-
-after_success:
-  - codecov --env PY_VERSION
+script:
+  - share/spack/qa/run-$TEST_SUITE-tests
+  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PY_VERSION --required ; fi
 
 #=============================================================================
 # Notifications
