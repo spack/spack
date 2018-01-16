@@ -41,6 +41,7 @@ class Visit(CMakePackage):
     depends_on('cmake@3.0:', type='build')
     depends_on('vtk@6.1.0~opengl2')
     depends_on('qt@4.8.6')
+    depends_on('qwt')
     depends_on('python')
     depends_on('silo+shared')
     depends_on('hdf5')
@@ -59,6 +60,7 @@ class Visit(CMakePackage):
             '-DPYTHON_DIR:PATH={0}'.format(spec['python'].home),
             '-DVISIT_SILO_DIR:PATH={0}'.format(spec['silo'].prefix),
             '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix),
+            '-DVISIT_QWT_DIR:PATH={0}'.format(spec['qwt'].prefix)
         ]
 
         if spec.satisfies('^hdf5+mpi', strict=True):
