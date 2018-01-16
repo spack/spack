@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -78,7 +78,7 @@ class Openspeedshop(CMakePackage):
     variant('cuda', default=False,
             description="build with cuda packages included.")
 
-    variant('gui', default='qt3', values=('none', 'qt3', 'qt4'), 
+    variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
             description='Build or not build a GUI of choice'
     )
 
@@ -111,7 +111,7 @@ class Openspeedshop(CMakePackage):
     depends_on("libtool", type='build')
     depends_on("bison", type='build')
     depends_on("flex", type='build')
-    depends_on("binutils@2.24+krellpatch", type='build')
+    depends_on("binutils", type='build')
     depends_on("elf", type="link")
     depends_on("libdwarf")
     depends_on("sqlite")

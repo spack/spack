@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -43,7 +43,7 @@ class Kripke(CMakePackage):
 
     def cmake_args(self):
         def enabled(variant):
-            return (1 if variant in spec else 0)
+            return (1 if variant in self.spec else 0)
 
         return [
             '-DENABLE_OPENMP=%d' % enabled('+openmp'),
@@ -54,4 +54,4 @@ class Kripke(CMakePackage):
         # Kripke does not provide install target, so we have to copy
         # things into place.
         mkdirp(prefix.bin)
-        install('kripke', prefix.bin)
+        install('spack-build/kripke', prefix.bin)

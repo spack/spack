@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,8 @@ import re
 import pytest
 from spack.url import UndetectableVersionError
 from spack.main import SpackCommand
-from spack.cmd.url import *
+from spack.cmd.url import name_parsed_correctly, version_parsed_correctly
+from spack.cmd.url import url_summary
 
 url = SpackCommand('url')
 
@@ -83,30 +84,30 @@ def test_url_with_no_version_fails():
 
 
 def test_url_list():
-    out, err = url('list')
+    out = url('list')
     total_urls = len(out.split('\n'))
 
     # The following two options should not change the number of URLs printed.
-    out, err = url('list', '--color', '--extrapolation')
+    out = url('list', '--color', '--extrapolation')
     colored_urls = len(out.split('\n'))
     assert colored_urls == total_urls
 
     # The following options should print fewer URLs than the default.
     # If they print the same number of URLs, something is horribly broken.
     # If they say we missed 0 URLs, something is probably broken too.
-    out, err = url('list', '--incorrect-name')
+    out = url('list', '--incorrect-name')
     incorrect_name_urls = len(out.split('\n'))
     assert 0 < incorrect_name_urls < total_urls
 
-    out, err = url('list', '--incorrect-version')
+    out = url('list', '--incorrect-version')
     incorrect_version_urls = len(out.split('\n'))
     assert 0 < incorrect_version_urls < total_urls
 
-    out, err = url('list', '--correct-name')
+    out = url('list', '--correct-name')
     correct_name_urls = len(out.split('\n'))
     assert 0 < correct_name_urls < total_urls
 
-    out, err = url('list', '--correct-version')
+    out = url('list', '--correct-version')
     correct_version_urls = len(out.split('\n'))
     assert 0 < correct_version_urls < total_urls
 
@@ -121,7 +122,7 @@ def test_url_summary():
     assert 0 < correct_versions <= sum(version_count_dict.values()) <= total_urls  # noqa
 
     # make sure it agrees with the actual command.
-    out, err = url('summary')
+    out = url('summary')
     out_total_urls = int(
         re.search(r'Total URLs found:\s*(\d+)', out).group(1))
     assert out_total_urls == total_urls

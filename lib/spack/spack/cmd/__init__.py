@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,9 +29,10 @@ import re
 import sys
 
 import llnl.util.tty as tty
-from llnl.util.lang import *
-from llnl.util.tty.colify import *
-from llnl.util.tty.color import *
+from llnl.util.lang import attr_setdefault, index_by
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import colorize
+from llnl.util.filesystem import working_dir
 
 import spack
 import spack.config
@@ -126,7 +127,12 @@ def parse_specs(args, **kwargs):
         sys.exit(1)
 
     except spack.spec.SpecError as e:
-        tty.error(e.message)
+
+        msgs = [e.message]
+        if e.long_message:
+            msgs.append(e.long_message)
+
+        tty.error(*msgs)
         sys.exit(1)
 
 
@@ -211,6 +217,7 @@ def display_specs(specs, args=None, **kwargs):
     hashes    = get_arg('long', False)
     namespace = get_arg('namespace', False)
     flags     = get_arg('show_flags', False)
+    full_compiler = get_arg('show_full_compiler', False)
     variants  = get_arg('variants', False)
 
     hlen = 7
@@ -219,7 +226,12 @@ def display_specs(specs, args=None, **kwargs):
         hlen = None
 
     nfmt = '.' if namespace else '_'
-    ffmt = '$%+' if flags else ''
+    ffmt = ''
+    if full_compiler or flags:
+        ffmt += '$%'
+        if full_compiler:
+            ffmt += '@'
+        ffmt += '+'
     vfmt = '$+' if variants else ''
     format_string = '$%s$@%s%s' % (nfmt, ffmt, vfmt)
 
@@ -259,7 +271,7 @@ def display_specs(specs, args=None, **kwargs):
 
         elif mode == 'short':
             # Print columns of output if not printing flags
-            if not flags:
+            if not flags and not full_compiler:
 
                 def fmt(s):
                     string = ""
@@ -281,3 +293,9 @@ def display_specs(specs, args=None, **kwargs):
             raise ValueError(
                 "Invalid mode for display_specs: %s. Must be one of (paths,"
                 "deps, short)." % mode)
+
+
+def spack_is_git_repo():
+    """Ensure that this instance of Spack is a git clone."""
+    with working_dir(spack.prefix):
+        return os.path.isdir('.git')

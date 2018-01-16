@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,7 @@ class Opencv(CMakePackage):
     url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
 
     version('master', git="https://github.com/opencv/opencv.git", branch="master")
+    version('3.3.0',    '98a4e4c6f23ec725e808a891dc11eec4')
     version('3.2.0',    'a43b65488124ba33dde195fea9041b70')
     version('3.1.0',    '70e1dd07f0aa06606f1bc0e3fa15abd3')
     version('2.4.13.2', 'fe52791ce523681a67036def4c25261b')
@@ -67,20 +68,21 @@ class Opencv(CMakePackage):
     variant('java', default=False,
             description='Activates support for Java')
     variant('openmp', default=False, description='Activates support for OpenMP threads')
-    variant('core', default=False, description='Include opencv_core module into the OpenCV build')
+    variant('core', default=True, description='Include opencv_core module into the OpenCV build')
     variant('highgui', default=False, description='Include opencv_highgui module into the OpenCV build')
     variant('imgproc', default=False, description='Include opencv_imgproc module into the OpenCV build')
     variant('jpeg', default=False, description='Include JPEG support')
     variant('png', default=False, description='Include PNG support')
     variant('tiff', default=False, description='Include TIFF support')
     variant('zlib', default=False, description='Build zlib from source')
+    variant('dnn', default=False, description='Build DNN support')
 
-    depends_on('eigen', when='+eigen', type='build')
+    depends_on('eigen~mpfr', when='+eigen', type='build')
 
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
-    depends_on('libjpeg-turbo', when='+jpeg')
-    depends_on('libtiff+turbo', when='+tiff')
+    depends_on('jpeg', when='+jpeg')
+    depends_on('libtiff', when='+tiff')
 
     depends_on('jasper', when='+jasper')
     depends_on('cuda', when='+cuda')
@@ -89,6 +91,7 @@ class Opencv(CMakePackage):
     depends_on('qt', when='+qt')
     depends_on('java', when='+java')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('protobuf@3.1.0', when='@3.3.0: +dnn')
 
     extends('python', when='+python')
 
@@ -125,30 +128,34 @@ class Opencv(CMakePackage):
                 'ON' if '+zlib' in spec else 'OFF')),
             '-DWITH_OPENMP:BOOL={0}'.format((
                 'ON' if '+openmp' in spec else 'OFF')),
+            '-DBUILD_opencv_dnn:BOOL={0}'.format((
+                'ON' if '+dnn' in spec else 'OFF')),
         ]
 
         # Media I/O
-        zlib = spec['zlib']
-        args.extend([
-            '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(zlib.prefix.lib,
-                          'libz.{0}'.format(dso_suffix))),
-            '-DZLIB_INCLUDE_DIR:PATH={0}'.format(zlib.prefix.include)
-        ])
+        if '+zlib' in spec:
+            zlib = spec['zlib']
+            args.extend([
+                '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(zlib.prefix.lib,
+                              'libz.{0}'.format(dso_suffix))),
+                '-DZLIB_INCLUDE_DIR:PATH={0}'.format(zlib.prefix.include)
+            ])
 
-        libpng = spec['libpng']
-        args.extend([
-            '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
-                'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(libpng.prefix.lib,
-                          'libpng.{0}'.format(dso_suffix))),
-            '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
-        ])
+        if '+png' in spec:
+            libpng = spec['libpng']
+            args.extend([
+                '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
+                    'DEBUG' if '+debug' in spec else 'RELEASE'),
+                    join_path(libpng.prefix.lib,
+                              'libpng.{0}'.format(dso_suffix))),
+                '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
+            ])
 
         if '+jpeg' in spec:
-            libjpeg = spec['libjpeg-turbo']
-            cmake_options.extend([
+            libjpeg = spec['jpeg']
+            args.extend([
                 '-DBUILD_JPEG:BOOL=OFF',
                 '-DJPEG_LIBRARY:FILEPATH={0}'.format(
                     join_path(libjpeg.prefix.lib,
@@ -158,7 +165,7 @@ class Opencv(CMakePackage):
 
         if '+tiff' in spec:
             libtiff = spec['libtiff']
-            cmake_options.extend([
+            args.extend([
                 '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
                     'DEBUG' if '+debug' in spec else 'RELEASE'),
                     join_path(libtiff.prefix.lib,
@@ -168,7 +175,7 @@ class Opencv(CMakePackage):
 
         if '+jasper' in spec:
             jasper = spec['jasper']
-            cmake_options.extend([
+            args.extend([
                 '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
                     'DEBUG' if '+debug' in spec else 'RELEASE'),
                     join_path(jasper.prefix.lib,
@@ -222,3 +229,10 @@ class Opencv(CMakePackage):
             ])
 
         return args
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries(
+            "libopencv_*", root=self.prefix, shared=shared, recurse=True
+        )

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,10 +34,10 @@ import os
 import inspect
 import pstats
 import argparse
-import tempfile
+from six import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import *
+from llnl.util.tty.log import log_output
 
 import spack
 import spack.cmd
@@ -93,8 +93,8 @@ def set_working_dir():
     try:
         spack.spack_working_dir = os.getcwd()
     except OSError:
-        os.chdir(spack_prefix)
-        spack.spack_working_dir = spack_prefix
+        os.chdir(spack.spack_prefix)
+        spack.spack_working_dir = spack.spack_prefix
 
 
 def add_all_commands(parser):
@@ -226,7 +226,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # epilog
         formatter.add_text("""\
 {help}:
-  spack help -a          list all available commands
+  spack help --all       list all available commands
   spack help <command>   help on a specific command
   spack help --spec      help on the spec syntax
   spack docs             open http://spack.rtfd.io/ in a browser"""
@@ -367,15 +367,14 @@ class SpackCommand(object):
         install('-v', 'mpich')
 
     Use this to invoke Spack commands directly from Python and check
-    their stdout and stderr.
+    their output.
     """
-    def __init__(self, command, fail_on_error=True):
+    def __init__(self, command):
         """Create a new SpackCommand that invokes ``command`` when called."""
         self.parser = make_argument_parser()
         self.parser.add_command(command)
         self.command_name = command
         self.command = spack.cmd.get_command(command)
-        self.fail_on_error = fail_on_error
 
     def __call__(self, *argv, **kwargs):
         """Invoke this SpackCommand.
@@ -384,49 +383,45 @@ class SpackCommand(object):
             argv (list of str): command line arguments.
 
         Keyword Args:
-            color (optional bool): force-disable or force-enable color
+            fail_on_error (optional bool): Don't raise an exception on error
 
         Returns:
-            (str, str): output and error as a strings
+            (str): combined output and error as a string
 
         On return, if ``fail_on_error`` is False, return value of comman
-        is set in ``returncode`` property.  Otherwise, raise an error.
+        is set in ``returncode`` property, and the error is set in the
+        ``error`` property.  Otherwise, raise an error.
         """
+        # set these before every call to clear them out
+        self.returncode = None
+        self.error = None
+
         args, unknown = self.parser.parse_known_args(
             [self.command_name] + list(argv))
 
-        out, err = sys.stdout, sys.stderr
-        ofd, ofn = tempfile.mkstemp()
-        efd, efn = tempfile.mkstemp()
+        fail_on_error = kwargs.get('fail_on_error', True)
 
+        out = StringIO()
         try:
-            sys.stdout = open(ofn, 'w')
-            sys.stderr = open(efn, 'w')
-            self.returncode = _invoke_spack_command(
-                self.command, self.parser, args, unknown)
+            with log_output(out):
+                self.returncode = _invoke_spack_command(
+                    self.command, self.parser, args, unknown)
 
         except SystemExit as e:
             self.returncode = e.code
 
-        finally:
-            sys.stdout.flush()
-            sys.stdout.close()
-            sys.stderr.flush()
-            sys.stderr.close()
-            sys.stdout, sys.stderr = out, err
+        except BaseException as e:
+            self.error = e
+            if fail_on_error:
+                raise
 
-            return_out = open(ofn).read()
-            return_err = open(efn).read()
-            os.unlink(ofn)
-            os.unlink(efn)
-
-        if self.fail_on_error and self.returncode != 0:
+        if fail_on_error and self.returncode not in (None, 0):
             raise SpackCommandError(
                 "Command exited with code %d: %s(%s)" % (
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
 
-        return return_out, return_err
+        return out.getvalue()
 
 
 def _main(command, parser, args, unknown_args):

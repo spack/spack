@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,14 +36,14 @@ mpi_deps = ['fake']
 
 
 def test_immediate_dependencies(builtin_mock):
-    out, err = dependencies('mpileaks')
+    out = dependencies('mpileaks')
     actual = set(re.split(r'\s+', out.strip()))
     expected = set(['callpath'] + mpis)
     assert expected == actual
 
 
 def test_transitive_dependencies(builtin_mock):
-    out, err = dependencies('--transitive', 'mpileaks')
+    out = dependencies('--transitive', 'mpileaks')
     actual = set(re.split(r'\s+', out.strip()))
     expected = set(
         ['callpath', 'dyninst', 'libdwarf', 'libelf'] + mpis + mpi_deps)
@@ -52,7 +52,7 @@ def test_transitive_dependencies(builtin_mock):
 
 def test_immediate_installed_dependencies(builtin_mock, database):
     with color_when(False):
-        out, err = dependencies('--installed', 'mpileaks^mpich')
+        out = dependencies('--installed', 'mpileaks^mpich')
 
     lines = [l for l in out.strip().split('\n') if not l.startswith('--')]
     hashes = set([re.split(r'\s+', l)[0] for l in lines])
@@ -65,7 +65,7 @@ def test_immediate_installed_dependencies(builtin_mock, database):
 
 def test_transitive_installed_dependencies(builtin_mock, database):
     with color_when(False):
-        out, err = dependencies('--installed', '--transitive', 'mpileaks^zmpi')
+        out = dependencies('--installed', '--transitive', 'mpileaks^zmpi')
 
     lines = [l for l in out.strip().split('\n') if not l.startswith('--')]
     hashes = set([re.split(r'\s+', l)[0] for l in lines])

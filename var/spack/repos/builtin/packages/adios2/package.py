@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,11 +30,12 @@ class Adios2(CMakePackage):
 
     homepage = "https://www.olcf.ornl.gov/center-projects/adios/"
     url      = "https://github.com/ornladios/ADIOS2/archive/v2.0.0.tar.gz"
+    maintainers = ['ax3l']
 
     version('develop', branch='master',
             git='https://github.com/ornladios/ADIOS2.git')
 
-    version('2.0.0', '019115e5c6ac28bd0f4201f590f5d994')
+    version('2.0.0', 'da39655b51745d2c5f3f1e46c5abc4d7')
 
     variant('shared', default=True,
             description='Also build shared libraries')
@@ -77,6 +78,7 @@ class Adios2(CMakePackage):
     # depends_on('pybind11@2.1.1:', when='+python')
 
     depends_on('mpi', when='+mpi')
+    depends_on('zeromq', when='+dataman')
 
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
@@ -95,24 +97,24 @@ class Adios2(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DADIOS2_BUILD_SHARED_LIBS:BOOL={0}'.format((
-                'ON' if '+shared' in spec else 'OFF')),
+            '-DADIOS2_BUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF'),
             '-DADIOS2_BUILD_TESTING=OFF',
-            '-DADIOS2_USE_MPI={0}'.format((
-                'ON' if '+mpi' in spec else 'OFF')),
-            '-DADIOS2_USE_BZip2={0}'.format((
-                'ON' if '+bzip2' in spec else 'OFF')),
-            '-DADIOS2_USE_ZFP={0}'.format((
-                'ON' if '+zfp' in spec else 'OFF')),
-            '-DADIOS2_USE_DataMan={0}'.format((
-                'ON' if '+dataman' in spec else 'OFF')),
-            '-DADIOS2_USE_ZeroMQ={0}'.format((
-                'ON' if '+dataman' in spec else 'OFF')),
-            '-DADIOS2_USE_HDF5={0}'.format((
-                'ON' if '+hdf5' in spec else 'OFF')),
-            '-DADIOS2_USE_ADIOS1={0}'.format((
-                'ON' if '+adios1' in spec else 'OFF')),
-            '-DADIOS2_USE_Python={0}'.format((
-                'ON' if '+python' in spec else 'OFF'))
+            '-DADIOS2_USE_MPI={0}'.format(
+                'ON' if '+mpi' in spec else 'OFF'),
+            '-DADIOS2_USE_BZip2={0}'.format(
+                'ON' if '+bzip2' in spec else 'OFF'),
+            '-DADIOS2_USE_ZFP={0}'.format(
+                'ON' if '+zfp' in spec else 'OFF'),
+            '-DADIOS2_USE_DataMan={0}'.format(
+                'ON' if '+dataman' in spec else 'OFF'),
+            '-DADIOS2_USE_ZeroMQ={0}'.format(
+                'ON' if '+dataman' in spec else 'OFF'),
+            '-DADIOS2_USE_HDF5={0}'.format(
+                'ON' if '+hdf5' in spec else 'OFF'),
+            '-DADIOS2_USE_ADIOS1={0}'.format(
+                'ON' if '+adios1' in spec else 'OFF'),
+            '-DADIOS2_USE_Python={0}'.format(
+                'ON' if '+python' in spec else 'OFF')
         ]
         return args

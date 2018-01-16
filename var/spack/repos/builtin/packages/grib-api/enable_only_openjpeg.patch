@@ -1,0 +1,28 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -106,25 +106,8 @@ set( HAVE_LIBOPENJPEG 0 )
+ 
+ if( ENABLE_JPG )
+ 
+-    # Note: This is a deprecated feature but we need it to find Jasper at ECMWF.
+-    #       ecbuild_add_extra_search_paths modifies CMAKE_PREFIX_PATH
+-    #       which can affect future package discovery if not undone by the caller.
+-    #       The current CMAKE_PREFIX_PATH is backed up as _CMAKE_PREFIX_PATH
+-    #
+-    set(CMAKE_WARN_DEPRECATED OFF) # Suppress deprecation message
+-    ecbuild_add_extra_search_paths( jasper )
+-    find_package( Jasper )
+-    set(CMAKE_PREFIX_PATH ${_CMAKE_PREFIX_PATH})    # Restore CMAKE_PREFIX_PATH
+-    set(CMAKE_WARN_DEPRECATED ON)  # Remove suppression
+-
+     find_package( OpenJPEG )
+ 
+-    if( JASPER_FOUND )
+-        list( APPEND GRIB_API_TPLS Jasper )
+-        set( HAVE_JPEG 1 )
+-        set( HAVE_LIBJASPER 1 )
+-    endif()
+-
+     if( OPENJPEG_FOUND )
+         list( APPEND GRIB_API_TPLS OpenJPEG )
+         set( HAVE_JPEG 1 )

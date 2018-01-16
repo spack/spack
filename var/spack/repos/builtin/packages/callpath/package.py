@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@ class Callpath(CMakePackage):
     homepage = "https://github.com/llnl/callpath"
     url      = "https://github.com/llnl/callpath/archive/v1.0.1.tar.gz"
 
+    version('1.0.4', '39d2e06bfa316dec1085b874092e4b08')
     version('1.0.2', 'b1994d5ee7c7db9d27586fc2dcf8f373')
     version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
 
@@ -46,7 +47,7 @@ class Callpath(CMakePackage):
         # TODO: offer options for the walker used.
         args = ["-DCALLPATH_WALKER=dyninst"]
 
-        if spec.satisfies("^dyninst@9.3.0:"):
+        if self.spec.satisfies("^dyninst@9.3.0:"):
             std_flag = self.compiler.cxx11_flag
             args.append("-DCMAKE_CXX_FLAGS='{0} -fpermissive'".format(
                 std_flag))

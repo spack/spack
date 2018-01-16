@@ -1,12 +1,12 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@ class SuiteSparse(Package):
     homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
     url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.1.tar.gz'
 
+    version('5.1.0', '9c34d7c07ad5ce1624b8187faa132046')
     version('4.5.5', '0a5b38af0016f009409a9606d2f1b555')
     version('4.5.4', 'f6ab689442e64a1624a47aa220072d1b')
     version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
@@ -97,6 +98,12 @@ class SuiteSparse(Package):
                 '-lstdc++' if '@4.5.1' in spec else '')),
             'LAPACK=%s' % spec['lapack'].libs.ld_flags,
         ]
+
+        # 64bit blas in UMFPACK:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            make_args.append('UMFPACK_CONFIG=-DLONGBLAS="long long"')
 
         # SuiteSparse defaults to using '-fno-common -fexceptions' in
         # CFLAGS, but not all compilers use the same flags for these
