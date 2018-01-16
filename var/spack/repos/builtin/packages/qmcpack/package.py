@@ -64,6 +64,8 @@ class Qmcpack(CMakePackage):
             description='Install with support for basic data analysis tools')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
+    variant('qe', default=True,
+            description='Install with patched Quantum Espresso 5.3.0')
 
     # cuda variant implies mixed precision variant by default, but there is
     # no way to express this in variant syntax, need something like
@@ -106,11 +108,11 @@ class Qmcpack(CMakePackage):
     patch_checksum = '0d8d7ba805313ddd4c02ee32c96d2f12e7091e9e82e22671d3ad5a24247860c4'
     depends_on('espresso@5.3.0~elpa',
                patches=patch(patch_url, sha256=patch_checksum),
-               when='+mpi')
+               when='+qe+mpi')
 
     depends_on('espresso@5.3.0~elpa~scalapack~mpi',
                patches=patch(patch_url, sha256=patch_checksum),
-               when='~mpi')
+               when='+qe~mpi')
 
     # Backport several patches from recent versions of QMCPACK
     # The test_numerics unit test is broken prior to QMCPACK 3.3.0
