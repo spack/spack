@@ -114,4 +114,16 @@ class Vtk(CMakePackage):
                 '-DNETCDF_CXX_LIBRARY={0}'.format(netcdf_cxx_lib),
             ])
 
+            # Garbage collection is unsupported in Xcode starting with
+            # version 5.1; if the Apple clang version of the compiler
+            # is 5.1.0 or later, unset the required Objective-C flags
+            # to remove the garbage collection flags.  Versions of VTK
+            # after 6.1.0 set VTK_REQUIRED_OBJCXX_FLAGS to the empty
+            # string. This fix was recommended on the VTK mailing list
+            # in March 2014 (see
+            # https://public.kitware.com/pipermail/vtkusers/2014-March/083368.html)
+            if (self.compiler.is_apple and
+                self.compiler.version >= Version('5.1.0')):
+                cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS=""'])
+
         return cmake_args
