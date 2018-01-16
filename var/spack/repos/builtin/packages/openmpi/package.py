@@ -345,7 +345,6 @@ class Openmpi(AutotoolsPackage):
         config_args.extend(self.with_or_without('pmi'))
 
         if 'libfabric' in self.fabrics:
-            config_args.append('--with-libfabric={0}'.format(spec['libfabric'].prefix))
             config_args.append('--with-libfabric-libdir={0}'.format(join_path(spec['libfabric'].prefix, 'lib')))
 
         # Hwloc support
