@@ -84,9 +84,9 @@ class CMakePackage(PackageBase):
     generator = 'Unix Makefiles'
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
-    variant('build_type', default='',
+    variant('build_type', default=None,
             description='CMake build type',
-            values=('', 'Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+            values=(None, 'Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('cmake', type='build')
 
@@ -130,9 +130,9 @@ class CMakePackage(PackageBase):
             raise InstallError(msg)
 
         try:
-            build_type = pkg.spec.variants['build_type'].value
+            build_type = pkg.spec.variants['build_type'].value or ''
         except KeyError:
-            build_type = 'RelWithDebInfo'
+            build_type = ''
 
         args = [
             '-G', generator,
