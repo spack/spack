@@ -61,6 +61,18 @@ class TestFlagHandlers(object):
         assert 'SPACK_CPPFLAGS' not in os.environ
         assert 'CPPFLAGS' not in os.environ
 
+    def test_unbound_method(self, temp_env):
+        # Other tests test flag_handlers set as bound methods and functions.
+        # This tests an unbound method in python2 (no change in python3).
+        s = spack.spec.Spec('mpileaks cppflags=-g')
+        s.concretize()
+        pkg = spack.repo.get(s)
+        pkg.flag_handler = pkg.__class__.inject_flags
+        spack.build_environment.setup_package(pkg, False)
+
+        assert os.environ['SPACK_CPPFLAGS'] == '-g'
+        assert 'CPPFLAGS' not in os.environ
+
     def test_inject_flags(self, temp_env):
         s = spack.spec.Spec('mpileaks cppflags=-g')
         s.concretize()
