@@ -30,8 +30,9 @@ import shutil
 class Graphviz(AutotoolsPackage):
     """Graph Visualization Software"""
     homepage = "http://www.graphviz.org"
-    url      = "http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz"
+    url      = "http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz.tar.gz"
 
+    version('2.40.0', '4ea6fd64603536406166600bcc296fc8')
     version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
     # By default disable optional Perl language support to prevent build issues
