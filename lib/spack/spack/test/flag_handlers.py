@@ -36,7 +36,7 @@ def temp_env():
     os.environ = old_env
 
 
-def add_O3_to_build_system_cflags(name, flags):
+def add_O3_to_build_system_cflags(pkg, name, flags):
     build_system_flags = []
     if name == 'cflags':
         build_system_flags.append('-O3')

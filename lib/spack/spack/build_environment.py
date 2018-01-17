@@ -57,6 +57,7 @@ import os
 import shutil
 import sys
 import traceback
+import types
 from six import iteritems
 from six import StringIO
 
@@ -165,7 +166,14 @@ def set_compiler_environment_variables(pkg, env):
     env_flags = {}
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
-        injf, envf, bsf = pkg.flag_handler(flag, pkg.spec.compiler_flags[flag])
+        if isinstance(pkg.flag_handler, types.FunctionType):
+            flag_handler = pkg.flag_handler
+        else:
+            if sys.version_info >= (3, 0):
+                flag_handler = pkg.flag_handler.__func__
+            else:
+                flag_handler = pkg.flag_handler.im_func
+        injf, envf, bsf = flag_handler(pkg, flag, pkg.spec.compiler_flags[flag])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
