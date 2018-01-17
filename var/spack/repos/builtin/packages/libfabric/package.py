@@ -55,19 +55,19 @@ class Libfabric(AutotoolsPackage):
        multi=True
     )
 
-
-    variant('spackfabrics', default=False, description="""for any fabric in list of 
-                         enabled fabrics, use spack dependencies instead of system
-                         libraries"""
+    variant('spackfabrics', 
+            default=False,
+            description=("For any fabric in list of "
+                         "enabled fabrics, use spack "
+                         "dependencies instead of "
+                         "system libraries")
     )
 
     depends_on('rdma-core', when='+spackfabrics fabrics=verbs')
     depends_on('opa-psm2', when='+spackfabrics fabrics=psm2')
 
-
     def configure_args(self):
         args = []
-
         args.extend(['--enable-%s=%s' %
                      (f, 'yes' if 'fabrics=%s' % f in self.spec else 'no')
                      for f in self.fabrics])

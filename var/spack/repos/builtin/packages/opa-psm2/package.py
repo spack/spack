@@ -48,5 +48,4 @@ class OpaPsm2(MakefilePackage):
         compatmakefile.filter('/usr/', '/')
 
     def install(self, spec, prefix):
-        make('DESTDIR=%s'%  prefix, 'install')
-
+        make('DESTDIR=%s' % prefix, 'install')

@@ -178,7 +178,7 @@ class Openmpi(AutotoolsPackage):
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
 
     fabrics = ('psm', 'psm2', 'pmi', 'verbs', 'mxm', 'libfabric')
-    
+
     variant(
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
@@ -230,7 +230,7 @@ class Openmpi(AutotoolsPackage):
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
-    conflicts('fabrics=libfabric', when='@:1.8') #libfabric support was added in 1.10.0
+    conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0 
     #It may be worth considering making libfabric an exclusive fabrics choice
 
     def url_for_version(self, version):
