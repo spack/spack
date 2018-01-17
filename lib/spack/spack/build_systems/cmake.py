@@ -84,9 +84,9 @@ class CMakePackage(PackageBase):
     generator = 'Unix Makefiles'
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
-    variant('build_type', default='RelWithDebInfo',
+    variant('build_type', default='',
             description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+            values=('', 'Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('cmake', type='build')
 
