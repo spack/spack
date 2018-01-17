@@ -1,0 +1,21 @@
+--- a/Makefile
++++ b/Makefile
+@@ -336,15 +336,15 @@
+ 
+ $(BDIR)/libclik_f90.$(SO): $(BDIR)/libclik.$(SO) $(addprefix $(ODIR)/,clik_fortran.o clik.f90.o)
+ 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
+-	@$(LD) $(SHARED)  $(LDFLAG) $(LAPACK) -L$(BDIR) -lclik $^ -o $@
++	@$(LD) -o $@ $(addprefix $(ODIR)/,clik_fortran.o clik.f90.o) -L$(BDIR) -lclik $(SHARED) $(LAPACK) $(LDFLAG)
+ 
+ $(BDIR)/clik_example_C: $(ODIR)/clik_example_c.o $(BDIR)/libclik.$(SO)
+ 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
+-	@$(CC) $(LDFLAG) $(LAPACK) -L$(BDIR) -lclik $< -o $@
++	@$(CC) -o $@ $(ODIR)/clik_example_c.o -L$(BDIR) -lclik $(LAPACK) $(LDFLAG)
+ 
+ $(BDIR)/clik_example_f90: $(ODIR)/clik_example_f90.f90.o $(BDIR)/libclik_f90.$(SO)
+ 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
+-	@$(FC) $(LDFLAG) $(LAPACK)  -L$(BDIR) -lclik_f90 -lclik $< -o $@
++	@$(FC) -o $@ $(ODIR)/clik_example_f90.f90.o -L$(BDIR) -lclik_f90 -lclik $(LAPACK) $(LDFLAG)
+ 
+ $(BDIR)/liblapack_clik.$(SO): |$(BDIR)
+ ifndef MKL_LIB_FULLPATH

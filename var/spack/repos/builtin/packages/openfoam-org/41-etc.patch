@@ -1,0 +1,25 @@
+--- OpenFOAM-4.x.orig/etc/bashrc	2016-10-16 16:11:45.000000000 +0200
++++ OpenFOAM-4.x/etc/bashrc	2017-03-24 12:41:25.233267894 +0100
+@@ -43,17 +43,17 @@
+ # Please set to the appropriate path if the default is not correct.
+ #
+ [ $BASH_SOURCE ] && \
+-export FOAM_INST_DIR=$(cd ${BASH_SOURCE%/*/*/*} && pwd -P) || \
+-export FOAM_INST_DIR=$HOME/$WM_PROJECT
+-# export FOAM_INST_DIR=~$WM_PROJECT
+-# export FOAM_INST_DIR=/opt/$WM_PROJECT
+-# export FOAM_INST_DIR=/usr/local/$WM_PROJECT
++FOAM_INST_DIR=$(\cd $(dirname $BASH_SOURCE)/../.. && \pwd -P) || \
++FOAM_INST_DIR=$HOME/$WM_PROJECT
++# FOAM_INST_DIR=/opt/$WM_PROJECT
++# FOAM_INST_DIR=/usr/local/$WM_PROJECT
+ #
+ # Build foamyHexMesh
+ export FOAMY_HEX_MESH=yes
+ #
+ # END OF (NORMAL) USER EDITABLE PART
+ ################################################################################
++export FOAM_INST_DIR
+ 
+ # The default environment variables below can be overridden in a prefs.sh file
+ # located in ~/.OpenFOAM/$WM_PROJECT_VERSION, ~/.OpenFOAM,

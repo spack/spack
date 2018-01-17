@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Ncview(Package):
+class Ncview(AutotoolsPackage):
     """Simple viewer for NetCDF files."""
     homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
     url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
@@ -37,8 +37,12 @@ class Ncview(Package):
     depends_on('libpng')
     depends_on('libxaw')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
+    def configure_args(self):
+        spec = self.spec
 
-        make()
-        make('install')
+        config_args = []
+
+        if spec.satisfies('^netcdf+mpi'):
+            config_args.append('CC={0}'.format(spec['mpi'].mpicc))
+
+        return config_args

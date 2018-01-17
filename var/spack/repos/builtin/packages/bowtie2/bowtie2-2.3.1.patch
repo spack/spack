@@ -1,0 +1,17 @@
+--- Makefile.orig	2017-03-24 20:43:00.304532976 -0700
++++ Makefile	2017-03-24 20:48:59.644532037 -0700
+@@ -26,10 +26,10 @@
+
+ INC =
+-LIBS = -lreadline -ltermcap -lz
++LIBS = -lreadline -lz
+-GCC_PREFIX = $(shell dirname `which gcc`)
++GCC_PREFIX =
+ GCC_SUFFIX =
+-CC ?= $(GCC_PREFIX)/gcc$(GCC_SUFFIX)
+-CPP ?= $(GCC_PREFIX)/g++$(GCC_SUFFIX)
++CC = cc
++CPP = c++
+ CXX ?= $(CPP)
+ HEADERS = $(wildcard *.h)
+ BOWTIE_MM = 1

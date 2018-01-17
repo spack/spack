@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,17 +25,30 @@
 import llnl.util.tty as tty
 
 from spack import *
+import spack.architecture
 
 
 class Openssl(Package):
-    """The OpenSSL Project is a collaborative effort to develop a
-       robust, commercial-grade, full-featured, and Open Source
-       toolkit implementing the Secure Sockets Layer (SSL v2/v3) and
-       Transport Layer Security (TLS v1) protocols as well as a
-       full-strength general purpose cryptography library."""
+    """OpenSSL is an open source project that provides a robust,
+       commercial-grade, and full-featured toolkit for the Transport
+       Layer Security (TLS) and Secure Sockets Layer (SSL) protocols.
+       It is also a general-purpose cryptography library."""
     homepage = "http://www.openssl.org"
-    url = "ftp://openssl.org/source/openssl-1.0.1h.tar.gz"
 
+    # URL must remain http:// so Spack can bootstrap curl
+    url = "http://www.openssl.org/source/openssl-1.0.2m.tar.gz"
+    list_url = "https://www.openssl.org/source/old/"
+    list_depth = 1
+
+    version('1.1.0g', 'ba5f1b8b835b88cadbce9b35ed9531a6')
+    version('1.1.0e', '51c42d152122e474754aea96f66928c6')
+    version('1.1.0d', '711ce3cd5f53a99c0e12a7d5804f0f63')
+    version('1.1.0c', '601e8191f72b18192a937ecf1a800f3f')
+    # Note: Version 1.0.2 is the "long-term support" version that will
+    # remain supported until 2019.
+    version('1.0.2n', '13bdc1b1d1ff39b6fd42a255e74676a4', preferred=True)
+    version('1.0.2m', '10e9e37f492094b9ef296f68f24a7666')
+    version('1.0.2k', 'f965fc0bf01bf882b31314b61391ae65')
     version('1.0.2j', '96322138f0b69e61b7212bc53d5e912b')
     version('1.0.2i', '678374e63f8df456a697d3e5e5a931fb')
     version('1.0.2h', '9392e65072ce4b614c1392eefc1f23d0')
@@ -48,7 +61,13 @@ class Openssl(Package):
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
 
-    depends_on("zlib")
+    depends_on('zlib')
+
+    # TODO: 'make test' requires Perl module Test::More version 0.96
+    # TODO: uncomment when test dependency types are supported.
+    # TODO: This is commented in the meantime to avoid dependnecy bloat.
+    # depends_on('perl@5.14.0:', type='build', when='+tests')
+
     parallel = False
 
     def handle_fetch_error(self, error):
@@ -67,11 +86,19 @@ class Openssl(Package):
             # where it happens automatically?)
             env['KERNEL_BITS'] = '64'
 
-        options = ['zlib', 'no-krb5', 'shared']
+        options = ['zlib', 'shared']
+        if spec.satisfies('@1.0'):
+            options.append('no-krb5')
+        # clang does not support the .arch directive in assembly files.
+        if 'clang' in self.compiler.cc and \
+           'aarch64' in spack.architecture.sys_type():
+            options.append('no-asm')
 
         config = Executable('./config')
         config('--prefix=%s' % prefix,
                '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
+               '-I{0}'.format(self.spec['zlib'].prefix.include),
+               '-L{0}'.format(self.spec['zlib'].prefix.lib),
                *options)
 
         # Remove non-standard compiler options if present. These options are
@@ -80,4 +107,7 @@ class Openssl(Package):
         filter_file(r'-arch x86_64', '', 'Makefile')
 
         make()
+        # TODO: add this back when we have a 'test' dependency type. See above.
+        # if self.run_tests:
+        #     make('test')            # 'VERBOSE=1'
         make('install')

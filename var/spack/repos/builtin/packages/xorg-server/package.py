@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class XorgServer(Package):
+class XorgServer(AutotoolsPackage):
     """X.Org Server is the free and open source implementation of the display
     server for the X Window System stewarded by the X.Org Foundation."""
 
@@ -47,7 +47,7 @@ class XorgServer(Package):
 
     depends_on('flex', type='build')
     depends_on('bison', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
     # TODO: add missing dependencies
@@ -100,9 +100,3 @@ class XorgServer(Package):
     # LIBUDEV="libudev >= 143"
     # LIBSELINUX="libselinux >= 2.0.86"
     # LIBDBUS="dbus-1 >= 1.0"
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

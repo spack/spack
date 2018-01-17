@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,24 +22,24 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
 import llnl.util.tty as tty
+
+from spack.compiler import Compiler, get_compiler_version
 from spack.version import ver
 
 
 class Xl(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['xlc', 'xlc_r']
+    cc_names = ['xlc']
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['xlC', 'xlC_r', 'xlc++', 'xlc++_r']
+    cxx_names = ['xlC', 'xlc++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['xlf', 'xlf_r']
+    f77_names = ['xlf']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['xlf90', 'xlf90_r', 'xlf95', 'xlf95_r',
-                'xlf2003', 'xlf2003_r', 'xlf2008', 'xlf2008_r']
+    fc_names = ['xlf90', 'xlf95', 'xlf2003', 'xlf2008']
 
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc': 'xl/xlc',
@@ -61,6 +61,14 @@ class Xl(Compiler):
     @property
     def pic_flag(self):
         return "-qpic"
+
+    @property
+    def fflags(self):
+        # The -qzerosize flag is effective only for the Fortran 77
+        # compilers and allows the use of zero size objects.
+        # For Fortran 90 and beyond, it is set by default and has not impact.
+        # Its use has no negative side effects.
+        return "-qzerosize"
 
     @classmethod
     def default_version(cls, comp):

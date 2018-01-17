@@ -1,0 +1,182 @@
+diff -rwu mpiblast-1.6.0/ncbi/corelib/ncbienv.c mpiblast-1.6.0-patched/ncbi/corelib/ncbienv.c
+--- mpiblast-1.6.0/ncbi/corelib/ncbienv.c	2009-11-22 01:17:48.000000000 -0500
++++ mpiblast-1.6.0-patched/ncbi/corelib/ncbienv.c	2011-08-06 17:10:08.000000000 -0400
+@@ -1932,7 +1932,7 @@
+ static char **targv = NULL;
+ 
+ 
+-#if defined(WIN_MAC)
++#if defined(WIN_MAC) || defined(OS_UNIX_DARWIN)
+ static FSSpec       apFileSpec;
+ static Str255       apName;
+ static Handle       apParam;
+@@ -2047,7 +2047,7 @@
+   }
+ }
+ #endif /* defined(OS_UNIX_DARWIN) */
+-#endif /* defined(WIN_MAC) */
++#endif /* defined(WIN_MAC) || defined(OS_UNIX_DARWIN) */
+ 
+ 
+ #if defined(OS_MSWIN) || defined(OS_VMS)
+diff -rwu mpiblast-1.6.0/ncbi/make/makedis.csh mpiblast-1.6.0-patched/ncbi/make/makedis.csh
+--- mpiblast-1.6.0/ncbi/make/makedis.csh	2010-06-28 21:04:36.000000000 -0400
++++ mpiblast-1.6.0-patched/ncbi/make/makedis.csh	2011-08-06 17:06:42.000000000 -0400
+@@ -1,6 +1,6 @@
+ #!/bin/csh -f
+ #
+-# $Id: makedis.csh 148594 2008-12-30 15:11:36Z ucko $
++# $Id: makedis.csh 179886 2010-01-04 17:28:02Z ucko $
+ #
+ ##                            PUBLIC DOMAIN NOTICE                          
+ #               National Center for Biotechnology Information
+@@ -54,7 +54,7 @@
+ 	endif
+ 
+ 	ls -l $tar_file
+-	tar xvf $tar_file
++	tar xf $tar_file
+ else
+ 	# make sure that ncbi/build directory exists
+ 	if ( ! -d "ncbi/build" ) then
+@@ -74,6 +74,7 @@
+ set HAVE_MAC=0
+ #we will try to build OpenGL version of vibrant
+ set HAVE_OGL=1
++set MPBL_HAVE_MAC=0
+ 
+ switch ($os)
+ case SunOS:
+@@ -164,7 +165,7 @@
+ 	gcc -v
+ 	switch (`uname -m`)
+ 	case "ia64":
+-		if (-e `which ecc`) then
++		if (-e `which icc`) then
+ 			set platform=linux_ecc
+ 		else
+ 			set platform=linux
+@@ -253,7 +254,11 @@
+ 		endif
+ 	endif
+ 	set HAVE_MOTIF=0
+-	set HAVE_MAC=1
++#MPIBLAST <<<
++#	set HAVE_MAC=1
++        set MPBL_HAVE_MAC=1
++	set HAVE_MAC=0
++#MPIBLAST
+ 	breaksw
+ case NetBSD:
+ 	set platform=netbsd
+@@ -319,6 +324,7 @@
+   goto BADPLATFORM
+ endif
+ 
++
+ set noglob
+ # take the file $NCBI_DOT_MK and convert it to be suitable for csh eval:
+ # (1) remove comments at the beginning of the lines
+@@ -328,6 +334,7 @@
+ eval `sed -e 's/^ *#.*//g' -e 's/\$(\([a-zA-Z_]*\))/\${\1}/g' -e 's/ *= */=/g' -e 's/^\([^=]*\)=\(.*\)$/setenv \1 "\2";/' < $NCBI_DOT_MK`
+ unset noglob
+ 
++
+ # disable assert() unless ENABLE_ASSERT is set
+ if ("$?ENABLE_ASSERT" == 0) then
+     set NCBI_OPTFLAG="-DNDEBUG $NCBI_OPTFLAG"
+@@ -441,13 +448,23 @@
+ 	set NET_VIB=(VIB=\"blastcl3 taxblast idfetch bl2seq asn2gb tbl2asn gene2xml $NONVIBWWWBLAST \") 
+ endif
+ 
++# MPIBLAST <<<<<
++if ("$MPBL_HAVE_MAC" == 1) then
++set CMD='make $MFLG \
++   CFLAGS1=\"-I/Developer/Headers/FlatCarbon $NCBI_OPTFLAG $NCBI_CFLAGS1 $OGL_INCLUDE $PNG_INCLUDE\" \
++   LDFLAGS1=\"$NCBI_LDFLAGS1\" OTHERLIBS=\"$NCBI_OTHERLIBS\" \
++   SHELL=\"$NCBI_MAKE_SHELL\" LCL=\"$NCBI_DEFAULT_LCL\" \
++   RAN=\"$NCBI_RANLIB\" AR=\"$NCBI_AR\" CC=\"$NCBI_CC\" $ALL_VIB all'
++else
+ set CMD='make $MFLG \
+    CFLAGS1=\"$NCBI_OPTFLAG $NCBI_CFLAGS1 $OGL_INCLUDE $PNG_INCLUDE\" \
+    LDFLAGS1=\"$NCBI_LDFLAGS1\" OTHERLIBS=\"$NCBI_OTHERLIBS\" \
+    SHELL=\"$NCBI_MAKE_SHELL\" LCL=\"$NCBI_DEFAULT_LCL\" \
+    RAN=\"$NCBI_RANLIB\" AR=\"$NCBI_AR\" CC=\"$NCBI_CC\" $ALL_VIB all'
++endif
+ eval echo $CMD
+ eval echo $CMD | sh 
++# MPIBLAST >>>>>
+ 
+ set make_stat = $status
+ 
+@@ -463,12 +480,18 @@
+ endif
+ 
+ # MPIBLAST <<<<<
+-
++if ("$MPBL_HAVE_MAC" == 1) then
+ set CMD='make $MFLG -f makempiblast.unx CFLAGS1=\"$NCBI_OPTFLAG $NCBI_CFLAGS1\" \
+    LDFLAGS1=\"$NCBI_LDFLAGS1\" SHELL=\"$NCBI_MAKE_SHELL\" \
+    LCL=\"$NCBI_DEFAULT_LCL\" RAN=\"$NCBI_RANLIB\" AR=\"$NCBI_AR\" CC=\"$NCBI_CC\"'
++else
++set CMD='make $MFLG -f makempiblast.unx CFLAGS1=\"$NCBI_OPTFLAG $NCBI_CFLAGS1\" \
++   LDFLAGS1=\"$NCBI_LDFLAGS1\" SHELL=\"$NCBI_MAKE_SHELL\" \
++   LCL=\"$NCBI_DEFAULT_LCL\" RAN=\"$NCBI_RANLIB\" AR=\"$NCBI_AR\" CC=\"$NCBI_CC\"'
++endif
+ eval echo $CMD
+ eval echo $CMD | sh 
++if ($status != 0) exit $status
+ 
+ if( "$platform" == "bluegenel" || "$platform" == "bluegenep" ) then
+ 	exit 0
+@@ -476,7 +499,7 @@
+ # MPIBLAST >>>>>
+ 
+ set CMD='make $MFLG -f makedemo.unx CFLAGS1=\"$NCBI_OPTFLAG $NCBI_CFLAGS1\" \
+-   LDFLAGS1=\"$NCBI_LDFLAGS1\" SHELL=\"$NCBI_MAKE_SHELL\" \
++   LDFLAGS1=\"$NCBI_LDFLAGS1\" SHELL=\"$NCBI_MAKE_SHELL\" OTHERLIBS=\"$NCBI_OTHERLIBS\" \
+    LCL=\"$NCBI_DEFAULT_LCL\" RAN=\"$NCBI_RANLIB\" AR=\"$NCBI_AR\" CC=\"$NCBI_CC\" $DEMO_VIB'
+ eval echo $CMD
+ eval echo $CMD | sh 
+@@ -495,7 +518,7 @@
+ 
+ 
+ set CMD='make $MFLG -f makedemo.unx CFLAGS1=\"$NCBI_OPTFLAG $NCBI_CFLAGS1\" \
+-   LDFLAGS1=\"$NCBI_LDFLAGS1\" SHELL=\"$NCBI_MAKE_SHELL\" \
++   LDFLAGS1=\"$NCBI_LDFLAGS1\" SHELL=\"$NCBI_MAKE_SHELL\" OTHERLIBS=\"$NCBI_OTHERLIBS\" \
+    LCL=\"$NCBI_DEFAULT_LCL\" RAN=\"$NCBI_RANLIB\" AR=\"$NCBI_AR\" CC=\"$NCBI_CC\"  \
+    THREAD_OBJ=$NCBI_THREAD_OBJ THREAD_OTHERLIBS=\"$NCBI_MT_OTHERLIBS\" \
+    $DEMO_VIB $mtapps'
+diff -rwu mpiblast-1.6.0/src/Makefile.am mpiblast-1.6.0-patched/src/Makefile.am
+--- mpiblast-1.6.0/src/Makefile.am	2009-11-22 01:17:48.000000000 -0500
++++ mpiblast-1.6.0-patched/src/Makefile.am	2011-08-06 17:06:42.000000000 -0400
+@@ -2,7 +2,7 @@
+ 	-D_LARGEFILE64_SOURCE -DMPIBLAST_PIO \
+ 	-I$(top_srcdir)/include/ -I@CONFIG_NCBIDIR@/include/ $(MPE_INCS) \
+ 	-I@CONFIG_NCBIDIR@/corelib/ 
+-AM_CXXFLAGS = -DMPICH_IGNORE_CXX_SEEK -DINSTALL_PREFIX="\"@prefix@\"" \
++AM_CXXFLAGS = -DMPICH_IGNORE_CXX_SEEK -DOMPI_SKIP_MPICXX -DINSTALL_PREFIX="\"@prefix@\"" \
+ 	@COMPILE_FLAGS@ -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE \
+ 	-I$(top_srcdir)/include/ -I@CONFIG_NCBIDIR@/include/ $(MPE_INCS) \
+ 	-I@CONFIG_NCBIDIR@/corelib/ 
+@@ -31,7 +31,7 @@
+ 	@CONFIG_NCBIDIR@/build/blast_hooks.o -lmyncbitool -lblastcompadj -lmyncbiobj \
+ 	-lmyncbi -L. -L@CONFIG_NCBIDIR@/lib/ $(MPE_LIBS) -lm @LINK_FLAGS@
+ mpiblast_DEPENDENCIES = @GETOPT_LONG_SYSTEM@
+-mpiblast_CPPFLAGS = -DUSING_MPI -DMPICH_IGNORE_CXX_SEEK
++mpiblast_CPPFLAGS = -DUSING_MPI -DMPICH_IGNORE_CXX_SEEK -DOMPI_SKIP_MPICXX
+ 
+ mpiformatdb_SOURCES = mpiformatdb.cpp mpiblast_config.cpp mpiblast_config.hpp \
+ 	file_util.cpp file_util.hpp mpiblast_util.cpp mpiblast_util.hpp \
+diff -rwu mpiblast-1.6.0/src/pio_intercept.h mpiblast-1.6.0-patched/src/pio_intercept.h
+--- mpiblast-1.6.0/src/pio_intercept.h	2009-11-22 01:17:48.000000000 -0500
++++ mpiblast-1.6.0-patched/src/pio_intercept.h	2011-08-06 17:06:42.000000000 -0400
+@@ -60,7 +60,7 @@
+ #include <txalign.h>
+ 
+ /* marcros are duplicated in ncbi files to avoid header file conflict */
+-#define CHECK_NULPTR(x) if(x==NULL) fprintf(stderr, "%s, line%d: cannot allocate enough memory\n", __FILE__, __LINE__);
++#define CHECK_NULPTR(x) if(x==NULL) { perror("Cannot allocate enough memory:"); exit(-1); }
+ 
+ #ifndef NO_MPI
+ typedef struct _output_record {

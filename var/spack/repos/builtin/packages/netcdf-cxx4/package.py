@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,8 +34,16 @@ class NetcdfCxx4(AutotoolsPackage):
     version('4.2.1', 'd019853802092cf686254aaba165fc81')
 
     depends_on('netcdf')
-    depends_on('autoconf', type='build')
 
-    def autoreconf(self, spec, prefix):
-        # Rebuild to prevent problems of inconsistency in git repo
-        which('autoreconf')('-ivf')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
+
+    force_autoreconf = True
+
+    @property
+    def libs(self):
+        shared = True
+        return find_libraries(
+            'libnetcdf_c++4', root=self.prefix, shared=shared, recurse=True
+        )

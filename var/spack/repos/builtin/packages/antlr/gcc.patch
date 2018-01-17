@@ -1,0 +1,15 @@
+Description: Adds missing includes to fix FTBFS.
+
+Index: antlr-2.7.7/lib/cpp/antlr/CharScanner.hpp
+===================================================================
+--- antlr-2.7.7.orig/lib/cpp/antlr/CharScanner.hpp	2006-11-01 22:37:17.000000000 +0100
++++ antlr-2.7.7/lib/cpp/antlr/CharScanner.hpp	2009-01-15 20:47:53.000000000 +0100
+@@ -17,6 +17,8 @@
+ #else
+ #include <cctype>
+ #endif
++#include <cstdio>
++#include <cstring>
+ 
+ #if ( _MSC_VER == 1200 )
+ // VC6 seems to need this

@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Liblbxutil(Package):
+class Liblbxutil(AutotoolsPackage):
     """liblbxutil - Low Bandwith X extension (LBX) utility routines."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/liblbxutil"
@@ -35,7 +35,7 @@ class Liblbxutil(Package):
 
     depends_on('xextproto@7.0.99.1:', type='build')
     depends_on('xproto', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
     # There is a bug in the library that causes the following messages:
@@ -43,9 +43,3 @@ class Liblbxutil(Package):
     # undefined symbol: Xalloc
     # See https://bugs.freedesktop.org/show_bug.cgi?id=8421
     # Adding a dependency on libxdmcp and adding LIBS=-lXdmcp did not fix it
-
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        make()
-        make('install')

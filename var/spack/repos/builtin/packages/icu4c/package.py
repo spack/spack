@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,26 +25,25 @@
 from spack import *
 
 
-class Icu4c(Package):
+class Icu4c(AutotoolsPackage):
     """ICU is a mature, widely used set of C/C++ and Java libraries providing
     Unicode and Globalization support for software applications. ICU4C is the
     C/C++ interface."""
 
     homepage = "http://site.icu-project.org/"
     url      = "http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz"
+    list_url = "http://download.icu-project.org/files/icu4c"
+    list_depth = 2
 
+    version('60.1', '3d164a2d1bcebd1464c6160ebb8315ef')
+    version('58.2', 'fac212b32b7ec7ab007a12dff1f3aea1')
     version('57.1', '976734806026a4ef8bdd17937c8898b9')
 
+    configure_directory = 'source'
+
     def url_for_version(self, version):
-        base_url = "http://download.icu-project.org/files/icu4c"
-        return "{0}/{1}/icu4c-{2}-src.tgz".format(
-            base_url, version, version.underscored)
+        url = "http://download.icu-project.org/files/icu4c/{0}/icu4c-{1}-src.tgz"
+        return url.format(version.dotted, version.underscored)
 
-    def install(self, spec, prefix):
-        with working_dir('source'):
-            configure('--prefix={0}'.format(prefix),
-                      '--enable-rpath')
-
-            make()
-            make('check')
-            make('install')
+    def configure_args(self):
+        return ['--enable-rpath']

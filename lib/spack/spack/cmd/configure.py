@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,21 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import argparse
 
 import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.install as inst
 
-from spack import *
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.qmake import QMakePackage
+from spack.build_systems.waf import WafPackage
+from spack.build_systems.perl import PerlPackage
+from spack.build_systems.intel import IntelPackage
 
-description = 'Stops at configuration stage when installing a package, if possible'  # NOQA: ignore=E501
+description = 'stage and configure a package but do not install'
+section = "build"
+level = "long"
 
 
 build_system_to_phase = {
+    AutotoolsPackage: 'configure',
     CMakePackage: 'cmake',
-    AutotoolsPackage: 'configure'
+    QMakePackage: 'qmake',
+    WafPackage: 'configure',
+    PerlPackage: 'configure',
+    IntelPackage: 'configure',
 }
 
 
@@ -49,7 +59,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-v', '--verbose',
         action='store_true',
-        help="Print additional output during builds"
+        help="print additional output during builds"
     )
 
 
@@ -69,7 +79,7 @@ def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
         # Install package dependencies if needed
         parser = argparse.ArgumentParser()
         inst.setup_parser(parser)
-        tty.msg('Checking dependencies for {0}'.format(args.package))
+        tty.msg('Checking dependencies for {0}'.format(args.package[0]))
         cli_args = ['-v'] if args.verbose else []
         install_args = parser.parse_args(cli_args + ['--only=dependencies'])
         install_args.package = args.package
