@@ -42,6 +42,7 @@ class Glib(AutotoolsPackage):
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
     variant('libmount', default=False, description='Build with libmount support')
+    variant('dtrace', default=True, description='Build with dtrace support')
 
     depends_on('pkgconfig', type='build')
     depends_on('libffi')
@@ -63,6 +64,12 @@ class Glib(AutotoolsPackage):
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
 
+    def setup_environment(self, build_env, run_env):
+        if '+dtrace' in self.spec and '^python' in self.spec:
+            # unset PYTHONHOME to let system python script with explict
+            # system python sbangs like dtrace work
+            build_env.unset('PYTHONHOME')
+
     def configure_args(self):
         spec = self.spec
         args = []
@@ -71,6 +78,11 @@ class Glib(AutotoolsPackage):
             args.append('--enable-libmount')
         else:
             args.append('--disable-libmount')
+
+        if '+dtrace' in spec:
+            args.append('--enable-dtrace')
+        else:
+            args.append('--disable-dtrace')
 
         return args
 
