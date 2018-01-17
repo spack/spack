@@ -23,26 +23,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
-class OctaveStruct(Package):
+class OctaveStruct(OctavePackage):
     """Additional structure manipulation functions for Octave."""
 
     homepage = "https://octave.sourceforge.io/struct/"
     url      = "https://downloads.sourceforge.net/octave/struct-1.0.14.tar.gz"
 
     version('1.0.14', '3589d5eb8000f18426e2178587eb82f4')
-
     extends('octave@2.9.7:')
-
-    def install(self, spec, prefix):
-        os.environ.pop('CC', '')
-        os.environ.pop('CXX', '')
-        os.environ.pop('FC', '')
-        octave('--quiet',
-               '--norc',
-               '--built-in-docstrings-file=/dev/null',
-               '--texi-macros-file=/dev/null',
-               '--eval', 'pkg prefix %s; pkg install %s' %
-               (prefix, self.stage.archive_file))

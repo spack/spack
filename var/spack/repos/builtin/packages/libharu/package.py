@@ -40,6 +40,9 @@ class Libharu(AutotoolsPackage):
     version('master', branch='master',
             git='https://github.com/libharu/libharu.git')
 
+    depends_on('libtool', type=('build'))
+    depends_on('autoconf', type=('build'))
+    depends_on('automake', type=('build'))
     depends_on('libpng')
     depends_on('zlib')
 

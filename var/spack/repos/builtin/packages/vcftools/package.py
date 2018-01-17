@@ -55,8 +55,7 @@ class Vcftools(AutotoolsPackage):
 
         with working_dir('src/perl'):
             match = '^#!/usr/bin/env perl'
-            perl = join_path(self.spec['perl'].prefix.bin, 'perl')
-            substitute = "#!{perl}".format(perl=perl)
+            substitute = "#!{perl}".format(perl=self.spec['perl'].command.path)
             # tab-to-vcf added in 0.1.15
             files = ['fill-aa', 'fill-an-ac', 'fill-fs',
                      'fill-ref-md5', 'tab-to-vcf', 'vcf-annotate',

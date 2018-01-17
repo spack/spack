@@ -21,7 +21,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
+import sys
 from spack import *
 
 
@@ -57,7 +57,7 @@ class Mesa(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('flex@2.5.35:', type='build')
     depends_on('bison@2.4.1:', type='build')
-    depends_on('binutils', type='build')
+    depends_on('binutils', type='build', when=(sys.platform != 'darwin'))
     depends_on('python@2.6.4:', type='build')
     depends_on('py-mako@0.3.4:', type='build')
     depends_on('gettext')
