@@ -231,6 +231,7 @@ class Openmpi(AutotoolsPackage):
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8') #libfabric support was added in 1.10.0
+    #It may be worth considering making libfabric an exclusive fabrics choice
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -330,9 +331,6 @@ class Openmpi(AutotoolsPackage):
         config_args.extend(self.with_or_without('schedulers'))
         # PMI
         config_args.extend(self.with_or_without('pmi'))
-
-        if 'libfabric' in self.fabrics:
-            config_args.append('--with-libfabric-libdir={0}'.format(join_path(spec['libfabric'].prefix, 'lib')))
 
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
