@@ -44,6 +44,8 @@ class OpaPsm2(MakefilePackage):
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
         makefile.filter('/usr/', '/')
+        compatmakefile = FileFilter('compat/Makefile')
+        compatmakefile.filter('/usr/', '/')
 
     def install(self, spec, prefix):
         make('DESTDIR=%s'%  prefix, 'install')
