@@ -41,22 +41,10 @@ class OpaPsm2(MakefilePackage):
 
     depends_on('numactl')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('DESTDIR', self.prefix)
-        run_env.prepend_path('CPATH',
-                             join_path(self.prefix, 'usr', 'include'))
-        run_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'usr', 'lib64'))
-        run_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'usr', 'lib64'))
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('CPATH',
-                             join_path(self.prefix, 'usr', 'include'))
-        spack_env.prepend_path('LIBRARY_PATH',
-                             join_path(self.prefix, 'usr', 'lib64'))
-        spack_env.prepend_path('LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'usr', 'lib64'))
+    def edit(self, spec, prefix):
+        makefile = FileFilter('Makefile')
+        makefile.filter('/usr/', '/')
 
     def install(self, spec, prefix):
-        make('--environment-overrides', 'install')
+        make('DESTDIR=%s'%  prefix, 'install')
+

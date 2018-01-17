@@ -84,7 +84,7 @@ class Libfabric(AutotoolsPackage):
 
         if "+spackfabrics" in self.spec:
             if "psm2" in self.fabrics:
-                args.append('--enable-psm2={0}'.format(join_path(self.spec['opa-psm2'].prefix,'usr')))
+                args.append('--enable-psm2={0}'.format(self.spec['opa-psm2'].prefix))
             if "verbs" in self.fabrics:
                 args.append('--enable-verbs={0}'.format(self.spec['rdma-core'].prefix))
 
