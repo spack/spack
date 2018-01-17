@@ -46,7 +46,6 @@ class Meme(AutotoolsPackage):
     depends_on('image-magick', type=('build', 'run'))
     depends_on('perl-xml-parser', type=('build', 'run'))
 
-    # disable mpi support
     def configure_args(self):
         spec = self.spec
         args = ['--enable-build-libxml2', '--enable-build-libxslt']
