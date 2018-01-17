@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,18 +33,16 @@ class Tk(AutotoolsPackage):
        applications that run unchanged across Windows, Mac OS X, Linux
        and more."""
     homepage = "http://www.tcl.tk"
+    url      = "http://prdownloads.sourceforge.net/tcl/tk8.6.5-src.tar.gz"
 
+    version('8.6.6', 'dd7dbb3a6523c42d05f6ab6e86096e99')
     version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
-    variant('X', default=False, description='Enable X11 support')
+    depends_on('tcl')
+    depends_on('libx11')
 
-    depends_on("tcl")
-    depends_on("libx11", when='+X')
-
-    def url_for_version(self, version):
-        base_url = "http://prdownloads.sourceforge.net/tcl"
-        return "{0}/tk{1}-src.tar.gz".format(base_url, version)
+    configure_directory = 'unix'
 
     def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
@@ -52,9 +50,11 @@ class Tk(AutotoolsPackage):
         run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
-    def build_directory(self):
-        return 'unix'
-
     def configure_args(self):
         spec = self.spec
         return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib)]
+
+    @run_after('install')
+    def symlink_wish(self):
+        with working_dir(self.prefix.bin):
+            symlink('wish{0}'.format(self.version.up_to(2)), 'wish')

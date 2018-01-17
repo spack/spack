@@ -1,0 +1,11 @@
+--- ParaView-4.4.0.orig/VTK/IO/Geometry/vtkSTLReader.cxx	2015-09-11 19:59:24.000000000 +0200
++++ ParaView-4.4.0/VTK/IO/Geometry/vtkSTLReader.cxx	2016-06-19 12:59:50.769770143 +0200
+@@ -448,7 +448,7 @@
+           done = done || (fscanf(fp,"%s", line)==EOF);
+           }
+         }
+-      if (!done)
++      else if (!done)
+         {
+         done = (fgets(line, 255, fp) == 0);
+         lineCount++;

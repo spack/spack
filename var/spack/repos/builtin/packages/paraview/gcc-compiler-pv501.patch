@@ -1,0 +1,22 @@
+--- ParaView-5.0.1.orig/VTK/CMake/vtkCompilerExtras.cmake	2016-03-28 17:07:10.000000000 +0200
++++ ParaView-5.0.1/VTK/CMake/vtkCompilerExtras.cmake	2016-12-13 17:21:25.382720945 +0100
+@@ -32,7 +32,7 @@
+     OUTPUT_VARIABLE _gcc_version_info
+     ERROR_VARIABLE _gcc_version_info)
+
+-  string (REGEX MATCH "[345]\\.[0-9]\\.[0-9]*"
++  string (REGEX MATCH "[3-9]\\.[0-9]\\.[0-9]*"
+     _gcc_version "${_gcc_version_info}")
+   if(NOT _gcc_version)
+     string (REGEX REPLACE ".*\\(GCC\\).*([34]\\.[0-9]).*" "\\1.0"
+--- ParaView-5.0.1.orig/VTK/CMake/GenerateExportHeader.cmake	2016-03-28 17:07:10.000000000 +0200
++++ ParaView-5.0.1/VTK/CMake/GenerateExportHeader.cmake	2016-12-13 17:21:25.382720945 +0100
+@@ -166,7 +166,7 @@
+     execute_process(COMMAND ${CMAKE_C_COMPILER} ARGS --version
+       OUTPUT_VARIABLE _gcc_version_info
+       ERROR_VARIABLE _gcc_version_info)
+-    string(REGEX MATCH "[345]\\.[0-9]\\.[0-9]*"
++    string(REGEX MATCH "[3-9]\\.[0-9]\\.[0-9]*"
+       _gcc_version "${_gcc_version_info}")
+     # gcc on mac just reports: "gcc (GCC) 3.3 20030304 ..." without the
+     # patch level, handle this here:

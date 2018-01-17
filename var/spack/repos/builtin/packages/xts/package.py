@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Xts(Package):
+class Xts(AutotoolsPackage):
     """This is a revamped version of X Test Suite (XTS) which removes some of
     the ugliness of building and running the tests."""
 
@@ -50,11 +50,5 @@ class Xts(Package):
     depends_on('xset', type='build')
     depends_on('xdpyinfo', type='build')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
-        # FIXME: Crashes during compilation
-        # error: redeclaration of enumerator 'XawChainTop'
-
-        make()
-        make('install')
+    # FIXME: Crashes during compilation
+    # error: redeclaration of enumerator 'XawChainTop'

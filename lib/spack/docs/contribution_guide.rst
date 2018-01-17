@@ -26,13 +26,13 @@ Spack uses a rough approximation of the `Git Flow <http://nvie.com/posts/a-succe
 branching model. The develop branch contains the latest contributions, and
 master is always tagged and points to the latest stable release. Therefore, when
 you send your request, make ``develop`` the destination branch on the
-`Spack repository <https://github.com/LLNL/spack>`_.
+`Spack repository <https://github.com/spack/spack>`_.
 
 ----------------------
 Continuous Integration
 ----------------------
 
-Spack uses `Travis CI <https://travis-ci.org/LLNL/spack>`_ for Continuous Integration
+Spack uses `Travis CI <https://travis-ci.org/spack/spack>`_ for Continuous Integration
 testing. This means that every time you submit a pull request, a series of tests will
 be run to make sure you didn't accidentally introduce any bugs into Spack. Your PR
 will not be accepted until it passes all of these tests. While you can certainly wait
@@ -40,7 +40,7 @@ for the results of these tests after submitting a PR, we recommend that you run 
 locally to speed up the review process.
 
 If you take a look in ``$SPACK_ROOT/.travis.yml``, you'll notice that we test
-against Python 2.6 and 2.7. We currently perform 3 types of tests:
+against Python 2.6, 2.7, and 3.3-3.6. We currently perform 3 types of tests:
 
 ^^^^^^^^^^
 Unit Tests
@@ -75,7 +75,10 @@ This allows you to develop iteratively: make a change, test that change, make
 another change, test that change, etc. To get a list of all available unit
 tests, run:
 
-.. command-output:: spack test --collect-only
+.. command-output:: spack test --list
+
+A more detailed list of available unit tests can be found by running
+``spack test --long-list``.
 
 Unit tests are crucial to making sure bugs aren't introduced into Spack. If you
 are modifying core Spack libraries or adding new functionality, please consider
@@ -121,7 +124,7 @@ command:
    "extends" in ``package.py`` files.
 
 More approved flake8 exemptions can be found
-`here <https://github.com/LLNL/spack/blob/develop/.flake8>`_.
+`here <https://github.com/spack/spack/blob/develop/.flake8>`_.
 
 If all is well, you'll see something like this:
 
@@ -186,6 +189,7 @@ Building the documentation requires several dependencies, all of which can be
 installed with Spack:
 
 * sphinx
+* sphinxcontrib-programoutput
 * graphviz
 * git
 * mercurial
@@ -193,7 +197,7 @@ installed with Spack:
 
 .. warning::
 
-   Sphinx has `several required dependencies <https://github.com/LLNL/spack/blob/develop/var/spack/repos/builtin/packages/py-sphinx/package.py>`_.
+   Sphinx has `several required dependencies <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-sphinx/package.py>`_.
    If you installed ``py-sphinx`` with Spack, make sure to add all of these
    dependencies to your ``PYTHONPATH``. The easiest way to do this is to run
    ``spack activate py-sphinx`` so that all of the dependencies are symlinked
@@ -224,7 +228,7 @@ your PR is accepted.
    There is also a ``run-doc-tests`` script in the Quality Assurance directory.
    The only difference between running this script and running ``make`` by hand
    is that the script will exit immediately if it encounters an error or warning.
-   This is necessary for Travis CI. If you made a lot of documentation tests, it
+   This is necessary for Travis CI. If you made a lot of documentation changes, it
    is much quicker to run ``make`` by hand so that you can see all of the warnings
    at once.
 

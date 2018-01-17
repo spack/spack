@@ -1,0 +1,31 @@
+Ensure the XATTR_NAME_CAPS is defined when it is used
+
+Upstream-Status: Pending
+
+VFS_CAP_U32 can not ensure that XATTR_NAME_CAPS is defined, and failed to build
+libcap-native in old release, like CentOS release 6.7 (Final), with the blow
+error:
+     cap_file.c: In function ‘cap_get_fd’:
+     cap_file.c:199: error: ‘XATTR_NAME_CAPS’ undeclared (first use in this function)
+     cap_file.c:199: error: (Each undeclared identifier is reported only once
+
+Signed-off-by: Roy Li <rongqing.li@windriver.com>
+---
+ libcap/cap_file.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libcap/cap_file.c b/libcap/cap_file.c
+index 40756ea..e27ca80 100644
+--- a/libcap/cap_file.c
++++ b/libcap/cap_file.c
+@@ -25,7 +25,7 @@ extern int fremovexattr(int, const char *);
+ 
+ #include "libcap.h"
+ 
+-#ifdef VFS_CAP_U32
++#if defined (VFS_CAP_U32) && defined (XATTR_NAME_CAPS)
+ 
+ #if VFS_CAP_U32 != __CAP_BLKS
+ # error VFS representation of capabilities is not the same size as kernel
+-- 
+2.8.1

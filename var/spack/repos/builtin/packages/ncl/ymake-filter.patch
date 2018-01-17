@@ -1,0 +1,33 @@
+--- ncl_ncarg-6.4.0/config/ymake-filter.c.orig	2017-02-23 20:11:55.000000000 +0100
++++ ncl_ncarg-6.4.0/config/ymake-filter.c	2017-09-13 14:52:34.800989229 +0200
+@@ -150,13 +150,29 @@
+ getcppline()
+ {
+ 	int		c;
+-	static char	buf[2048];
++	static int	s = 2048;
++	static char	*buf = NULL;
+ 	char 		*p;
+ 
++	if (buf == NULL)
++	{
++		buf = malloc(s);
++	}
++
+ 	p = buf;
+ 
+ 	do
+ 	{
++		if (p >= buf + s)
++		{
++			char* old = buf;
++
++			/* Need to increase the size of buf. */
++			s += 1024;
++			buf = realloc(buf, s);
++			p = buf + (p - old);
++		}
++
+ 		switch(c = getchar())
+ 		{
+ 			/*

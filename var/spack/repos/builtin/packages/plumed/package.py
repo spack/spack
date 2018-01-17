@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -22,12 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import subprocess
+import collections
 
 from spack import *
 
 
-class Plumed(Package):
+class Plumed(AutotoolsPackage):
     """PLUMED is an open source library for free energy calculations in
     molecular systems which works together with some of the most popular
     molecular dynamics engines.
@@ -43,17 +43,21 @@ class Plumed(Package):
     homepage = 'http://www.plumed.org/'
     url = 'https://github.com/plumed/plumed2/archive/v2.2.3.tar.gz'
 
+    version('2.3.3', '9f5729e406e79a06a16976fcb020e024')
+    version('2.3.0', 'a9b5728f115dca8f0519111f1f5a6fa5')
+    version('2.2.4', 'afb00da25a3fbd47acf377e53342059d')
     version('2.2.3', 'a6e3863e40aac07eb8cf739cbd14ecf8')
 
     # Variants. PLUMED by default builds a number of optional modules.
     # The ones listed here are not built by default for various reasons,
     # such as stability, lack of testing, or lack of demand.
-    variant('crystallization', default=False,
-            description='Build support for optional crystallization module.')
-    variant('imd', default=False,
-            description='Build support for optional imd module.')
-    variant('manyrestraints', default=False,
-            description='Build support for optional manyrestraints module.')
+    # FIXME: This needs to be an optional
+    variant(
+        'optional_modules',
+        default='all',
+        values=lambda x: True,
+        description='String that is used to build optional modules'
+    )
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')
@@ -67,44 +71,58 @@ class Plumed(Package):
     depends_on('gsl', when='+gsl')
 
     depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
-    # Dictionary mapping PLUMED versions to the patches it provides
-    # interactively
-    plumed_patches = {
-        '2.2.3': {
-            'amber-14': '1',
-            'gromacs-4.5.7': '2',
-            'gromacs-4.6.7': '3',
-            'gromacs-5.0.7': '4',
-            'gromacs-5.1.2': '5',
-            'lammps-6Apr13': '6',
-            'namd-2.8': '7',
-            'namd-2.9': '8',
-            'espresso-5.0.2': '9'
-        }
-    }
+    force_autoreconf = True
+
+    parallel = False
 
     def apply_patch(self, other):
-        plumed = subprocess.Popen(
-            [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
-            stdin=subprocess.PIPE
+
+        # The name of MD engines differ slightly from the ones used in Spack
+        format_strings = collections.defaultdict(
+            lambda: '{0.name}-{0.version}'
         )
-        opts = Plumed.plumed_patches[str(self.version)]
-        search = '{0.name}-{0.version}'.format(other)
-        choice = opts[search] + '\n'
-        plumed.stdin.write(choice)
-        plumed.wait()
+        format_strings['espresso'] = 'q{0.name}-{0.version}'
+        format_strings['amber'] = '{0.name}{0.version}'
 
-    def setup_dependent_package(self, module, ext_spec):
+        get_md = lambda x: format_strings[x.name].format(x)
+
+        # Get available patches
+        plumed_patch = Executable(
+            join_path(self.spec.prefix.bin, 'plumed-patch')
+        )
+
+        out = plumed_patch('-q', '-l', output=str)
+        available = out.split(':')[-1].split()
+
+        # Check that `other` is among the patchable applications
+        if get_md(other) not in available:
+            msg = '{0.name}@{0.version} is not among the MD engine'
+            msg += ' that can be patched by {1.name}@{1.version}.\n'
+            msg += 'Supported engines are:\n'
+            for x in available:
+                msg += x + '\n'
+            raise RuntimeError(msg.format(other, self.spec))
+
+        # Call plumed-patch to patch executables
+        target = format_strings[other.name].format(other)
+        plumed_patch('-p', '-e', target)
+
+    def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
-        module.plumed = Executable(join_path(self.spec.prefix.bin, 'plumed'))
+        module.plumed = dependent_spec['plumed'].command
 
-    def install(self, spec, prefix):
+    @run_before('autoreconf')
+    def filter_gslcblas(self):
         # This part is needed to avoid linking with gsl cblas
         # interface which will mask the cblas interface
         # provided by optimized libraries due to linking order
         filter_file('-lgslcblas', '', 'configure.ac')
-        autoreconf('-ivf')
+
+    def configure_args(self):
+        spec = self.spec
 
         # From plumed docs :
         # Also consider that this is different with respect to what some other
@@ -114,7 +132,11 @@ class Plumed(Package):
         # with MPI you should use:
         #
         # > ./configure CXX="$MPICXX"
-        configure_opts = ['--prefix=' + prefix]
+
+        # The configure.ac script may detect the wrong linker for
+        # LD_RO which causes issues at link time. Here we work around
+        # the issue saying we have no LD_RO executable.
+        configure_opts = ['--disable-ld-r']
 
         # If using MPI then ensure the correct compiler wrapper is used.
         if '+mpi' in spec:
@@ -126,10 +148,18 @@ class Plumed(Package):
             # If the MPI dependency is provided by the intel-mpi package then
             # the following additional argument is required to allow it to
             # build.
-            if spec.satisfies('^intel-mpi'):
+            if 'intel-mpi' in spec:
                 configure_opts.extend([
                     'STATIC_LIBS=-mt_mpi'
                 ])
+
+        # Set flags to help find gsl
+        if '+gsl' in self.spec:
+            gsl_libs = self.spec['gsl'].libs
+            blas_libs = self.spec['blas'].libs
+            configure_opts.append('LDFLAGS={0}'.format(
+                (gsl_libs + blas_libs).ld_flags
+            ))
 
         # Additional arguments
         configure_opts.extend([
@@ -138,21 +168,16 @@ class Plumed(Package):
         ])
 
         # Construct list of optional modules
-        module_opts = []
-        module_opts.extend([
-            '+crystallization' if (
-                '+crystallization' in spec) else '-crystallization',
-            '+imd' if '+imd' in spec else '-imd',
-            '+manyrestraints' if (
-                '+manyrestraints' in spec) else '-manyrestraints'
-        ])
 
         # If we have specified any optional modules then add the argument to
         # enable or disable them.
-        if module_opts:
-            configure_opts.extend([
-                '--enable-modules={0}'.format("".join(module_opts))])
+        optional_modules = self.spec.variants['optional_modules'].value
+        if optional_modules:
+            # From 'configure --help' @2.3:
+            # all/none/reset or : separated list such as
+            # +crystallization:-bias default: reset
+            configure_opts.append(
+                '--enable-modules={0}'.format(optional_modules)
+            )
 
-        configure(*configure_opts)
-        make()
-        make('install')
+        return configure_opts
