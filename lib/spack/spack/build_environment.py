@@ -167,13 +167,13 @@ def set_compiler_environment_variables(pkg, env):
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         if isinstance(pkg.flag_handler, types.FunctionType):
-            flag_handler = pkg.flag_handler
+            handler = pkg.flag_handler
         else:
             if sys.version_info >= (3, 0):
-                flag_handler = pkg.flag_handler.__func__
+                handler = pkg.flag_handler.__func__
             else:
-                flag_handler = pkg.flag_handler.im_func
-        injf, envf, bsf = flag_handler(pkg, flag, pkg.spec.compiler_flags[flag])
+                handler = pkg.flag_handler.im_func
+        injf, envf, bsf = handler(pkg, flag, pkg.spec.compiler_flags[flag])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
