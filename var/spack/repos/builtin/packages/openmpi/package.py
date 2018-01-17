@@ -231,7 +231,7 @@ class Openmpi(AutotoolsPackage):
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0 
-    #It may be worth considering making libfabric an exclusive fabrics choice
+    # It may be worth considering making libfabric an exclusive fabrics choice
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
