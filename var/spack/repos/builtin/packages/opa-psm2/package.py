@@ -49,6 +49,14 @@ class OpaPsm2(MakefilePackage):
                              join_path(self.prefix, 'usr', 'lib64'))
         run_env.prepend_path('LD_LIBRARY_PATH',
                              join_path(self.prefix, 'usr', 'lib64'))
+    def setup_dependent_environment(self, spack_env, run_env):
+        spack_env.set('DESTDIR', self.prefix)
+        run_env.prepend_path('CPATH',
+                             join_path(self.prefix, 'usr', 'include'))
+        run_env.prepend_path('LIBRARY_PATH',
+                             join_path(self.prefix, 'usr', 'lib64'))
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'usr', 'lib64'))
 
     def install(self, spec, prefix):
         make('--environment-overrides', 'install')
