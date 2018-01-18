@@ -46,6 +46,7 @@ class Glib(AutotoolsPackage):
     depends_on('libffi')
     depends_on('zlib')
     depends_on('gettext')
+    depends_on('libiconv')
     depends_on('perl', type=('build', 'run'))
     depends_on('pcre+utf', when='@2.48:')
     depends_on('util-linux', when='+libmount')
@@ -64,6 +65,9 @@ class Glib(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = []
+        
+        # GNU libiconv
+        args.append('--with-libiconv=gnu')
 
         if '+libmount' in spec:
             args.append('--enable-libmount')
