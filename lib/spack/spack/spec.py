@@ -3077,7 +3077,7 @@ class Spec(object):
                 escape = True
                 if i == length - 1:
                     raise ValueError("Error: unterminated $ in format: '%s'"
-                    % format_string)
+                            % format_string)
             else:
                 out.write(c)
 
