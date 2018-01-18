@@ -273,3 +273,29 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
     # Absolute path to specfile (regression for #????)
     install('-f', str(specfile), fail_on_error=False)
     assert install.returncode == error_code
+
+
+@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.parametrize('clispecs,filespecs', [
+    [[],                  ['mpi']],
+    [[],                  ['mpi', 'boost']],
+    [['cmake'],           ['mpi']],
+    [['cmake', 'libelf'], []],
+    [['cmake', 'libelf'], ['mpi', 'boost']],
+])
+def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
+
+    args = clispecs
+
+    for spec in filespecs:
+        filepath = tmpdir.join(spec + '.yaml')
+        args = ['-f', str(filepath)] + args
+        with filepath.open('w') as f:
+            s = Spec(spec)
+            s.concretize()
+            s.to_yaml(f)
+
+    print(args)
+
+    install(*args, fail_on_error=False)
+    assert install.returncode == 0

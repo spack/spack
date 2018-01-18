@@ -92,8 +92,8 @@ the dependencies"""
         '--fake', action='store_true',
         help="fake install for debug purposes.")
     subparser.add_argument(
-        '-f', '--file',
-        action='append', dest='specfiles', metavar='SPEC_YAML_FILE', default=[],
+        '-f', '--file', action='append', default=[],
+        dest='specfiles', metavar='SPEC_YAML_FILE',
         help="install from file. Read specs to install from .yaml files")
 
     cd_group = subparser.add_mutually_exclusive_group()
