@@ -27,7 +27,7 @@ from spack import *
 
 class Motif(AutotoolsPackage):
     """"
-    Motif - Graphical user interface (GUI) 
+    Motif - Graphical user interface (GUI)
     specification and the widget toolkit
     """
     homepage = "http://motif.ics.com/"
