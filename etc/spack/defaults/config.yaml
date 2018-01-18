@@ -22,6 +22,9 @@ config:
   template_dirs:
     - $spack/templates
 
+  # default directory layout
+  directory_layout: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+
   # Locations where different types of modules should be installed.
   module_roots:
     tcl:    $spack/share/spack/modules
