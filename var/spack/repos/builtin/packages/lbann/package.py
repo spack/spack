@@ -67,7 +67,7 @@ class Lbann(CMakePackage):
         spec = self.spec
         # Environment variables
         CPPFLAGS = []
-        CPPFLAGS.append('-DLBANN_SET_EL_RNG')
+        CPPFLAGS.append('-DLBANN_SET_EL_RNG -ldl')
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
@@ -113,7 +113,7 @@ class Lbann(CMakePackage):
         spec = self.spec
         # Environment variables
         CPPFLAGS = []
-        CPPFLAGS.append('-DLBANN_SET_EL_RNG')
+        CPPFLAGS.append('-DLBANN_SET_EL_RNG -ldl')
 
         args = [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
