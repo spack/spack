@@ -341,7 +341,7 @@ class IntelParallelStudio(IntelPackage):
 
         # Intel(R) VTune(TM) Amplifier XE
         if '+vtune' in spec:
-            components.append('intel-vtune-amplifier-xe')
+            components.append('intel-vtune-amplifier')
 
         return components
 
@@ -396,6 +396,9 @@ class IntelParallelStudio(IntelPackage):
 
         if '+vtune' in spec:
             vtune_dir = 'vtune_amplifier_xe/licenses'
+
+            if year >= 2018:
+                vtune_dir = 'vtune_amplifier/licenses'
 
             directories.append(vtune_dir)
 
