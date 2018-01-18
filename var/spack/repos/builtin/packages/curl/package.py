@@ -49,10 +49,12 @@ class Curl(AutotoolsPackage):
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
     variant('nghttp2', default=False, description='build nghttp2 library (requires C++11)')
+    variant('libssh2', default=True, description='enable libssh2 support')
 
     depends_on('openssl')
     depends_on('zlib')
     depends_on('nghttp2', when='+nghttp2')
+    depends_on('libssh2', when='+libssh2')
 
     def configure_args(self):
         spec = self.spec
@@ -62,4 +64,5 @@ class Curl(AutotoolsPackage):
             '--with-ssl={0}'.format(spec['openssl'].prefix)
         ]
         args += self.with_or_without('nghttp2')
+        args += self.with_or_without('libssh2')
         return args
