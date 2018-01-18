@@ -26,7 +26,7 @@ from spack import *
 from glob import glob
 
 
-class Libxsmm(Package):
+class Libxsmm(MakefilePackage):
     '''Library targeting Intel Architecture
     for small, dense or sparse matrix multiplications,
     and small convolutions.'''
@@ -71,7 +71,7 @@ class Libxsmm(Package):
                                     shared=False, recurse=True)
         return result
 
-    def patch(self):
+    def edit(self, spec, prefix):
         kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
         makefile = FileFilter('Makefile.inc')
 
@@ -84,7 +84,7 @@ class Libxsmm(Package):
         makefile.filter('FC = ifort',       'FC ?= ifort', **kwargs)
         makefile.filter('FC = gfortran',    'FC ?= gfortran', **kwargs)
 
-    def manual_install(self, prefix):
+    def install(self, spec, prefix):
         spec = self.spec
         install_tree('include', prefix.include)
         if '~header-only' in spec:
@@ -98,7 +98,7 @@ class Libxsmm(Package):
         install('version.txt', doc_path)
         install('LICENSE.md', doc_path)
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         if '+header-only' in spec and '@1.6.2:' not in spec:
             raise InstallError(
                 "The variant +header-only is only available " +
@@ -119,4 +119,3 @@ class Libxsmm(Package):
             make_args += ['TRACE=1']
 
         make(*make_args)
-        self.manual_install(prefix)
