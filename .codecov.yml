@@ -4,28 +4,47 @@ coverage:
   range: 60...90
   status:
     project:
-      default: true
+      default: off
       llnl:
-        threshold: 0.5
+        flags:
+          - unitlinux
+          - buildlinux
+        threshold: 0.1
         paths:
           - lib/spack/llnl
       commands:
-        threshold: 0.5
+        threshold: 0.1
+        flags:
+          - unitlinux
+          - buildlinux
         paths:
           - lib/spack/spack/cmd
       build_systems:
-        threshold: 0.5
+        threshold: 0.1
+        flags:
+          - unitlinux
+          - buildlinux
         paths:
           - lib/spack/spack/build_systems
       modules:
-        threshold: 0.5
+        threshold: 0.1
+        flags:
+          - unitlinux
+          - buildlinux
         paths:
           - lib/spack/spack/modules
       core:
-        threshold: 0.5
+        threshold: 0.1
+        flags:
+          - unitlinux
+          - buildlinux
         paths:
           - "!lib/spack/llnl"
           - "!lib/spack/spack/cmd"
+      osx:
+        threshold: 0.2
+        flags:
+          - unitosx
 
 ignore:
   - lib/spack/spack/test/.*
