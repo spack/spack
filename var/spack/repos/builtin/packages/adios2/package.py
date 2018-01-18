@@ -97,24 +97,24 @@ class Adios2(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DADIOS2_BUILD_SHARED_LIBS:BOOL={0}'.format((
-                'ON' if '+shared' in spec else 'OFF')),
+            '-DADIOS2_BUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF'),
             '-DADIOS2_BUILD_TESTING=OFF',
-            '-DADIOS2_USE_MPI={0}'.format((
-                'ON' if '+mpi' in spec else 'OFF')),
-            '-DADIOS2_USE_BZip2={0}'.format((
-                'ON' if '+bzip2' in spec else 'OFF')),
-            '-DADIOS2_USE_ZFP={0}'.format((
-                'ON' if '+zfp' in spec else 'OFF')),
-            '-DADIOS2_USE_DataMan={0}'.format((
-                'ON' if '+dataman' in spec else 'OFF')),
-            '-DADIOS2_USE_ZeroMQ={0}'.format((
-                'ON' if '+dataman' in spec else 'OFF')),
-            '-DADIOS2_USE_HDF5={0}'.format((
-                'ON' if '+hdf5' in spec else 'OFF')),
-            '-DADIOS2_USE_ADIOS1={0}'.format((
-                'ON' if '+adios1' in spec else 'OFF')),
-            '-DADIOS2_USE_Python={0}'.format((
-                'ON' if '+python' in spec else 'OFF'))
+            '-DADIOS2_USE_MPI={0}'.format(
+                'ON' if '+mpi' in spec else 'OFF'),
+            '-DADIOS2_USE_BZip2={0}'.format(
+                'ON' if '+bzip2' in spec else 'OFF'),
+            '-DADIOS2_USE_ZFP={0}'.format(
+                'ON' if '+zfp' in spec else 'OFF'),
+            '-DADIOS2_USE_DataMan={0}'.format(
+                'ON' if '+dataman' in spec else 'OFF'),
+            '-DADIOS2_USE_ZeroMQ={0}'.format(
+                'ON' if '+dataman' in spec else 'OFF'),
+            '-DADIOS2_USE_HDF5={0}'.format(
+                'ON' if '+hdf5' in spec else 'OFF'),
+            '-DADIOS2_USE_ADIOS1={0}'.format(
+                'ON' if '+adios1' in spec else 'OFF'),
+            '-DADIOS2_USE_Python={0}'.format(
+                'ON' if '+python' in spec else 'OFF')
         ]
         return args
