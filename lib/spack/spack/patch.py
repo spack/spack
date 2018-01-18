@@ -99,10 +99,11 @@ class Patch(object):
             stage: stage for the package that needs to be patched
         """
         patch = which("patch", required=True)
+        args = ['-s', '-p', str(self.level), '-i', self.path, "-d",
+                self.working_dir]
         with working_dir(stage.source_path):
             # Use -N to allow the same patches to be applied multiple times.
-            patch('-s', '-p', str(self.level), '-i', self.path,
-                  "-d", self.working_dir)
+            patch(*args)
 
 
 class FilePatch(Patch):
