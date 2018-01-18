@@ -66,7 +66,7 @@ class Geant4(CMakePackage):
     depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p02~cxx11+cxx14")
     depends_on("clhep@2.3.1.1~cxx11+cxx14", when="@10.02.p01~cxx11+cxx14")
     depends_on("clhep@2.2.0.4~cxx11+cxx14", when="@10.01.p03~cxx11+cxx14")
-    
+
     depends_on("expat")
     depends_on("zlib")
     depends_on("xerces-c")
@@ -111,12 +111,12 @@ class Geant4(CMakePackage):
             options.append(
                 '-DQT_QMAKE_EXECUTABLE=%s' %
                 spec['qt'].prefix + '/bin/qmake'
-            )
-	
-	if '+vecgeom' in spec:
-	    options.append('-DGEANT4_USE_USOLIDS=ON')
-	    options.append('-DUSolids_DIR=%s' % 
-		join_path(spec['vecgeom'].prefix, 'lib/CMake/USolids'))
+                )
+
+        if '+vecgeom' in spec:
+            options.append('-DGEANT4_USE_USOLIDS=ON')
+            options.append('-DUSolids_DIR=%s' % 
+                join_path(spec['vecgeom'].prefix, 'lib/CMake/USolids'))
 
         return options
 
