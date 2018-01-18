@@ -63,13 +63,13 @@ class Gearshifft(CMakePackage):
             '-DGEARSHIFFT_CLFFT:BOOL=OFF'
         ]
         args.extend([
-            '-DGEARSHIFFT_FFTW:BOOL={0}'.format((
-                'ON' if '+fftw' in spec else 'OFF')),
-            '-DGEARSHIFFT_FFTW_OPENMP:BOOL={0}'.format((
-                'ON' if '+openmp' in spec else 'OFF')),
-            '-DGEARSHIFFT_CUFFT:BOOL={0}'.format((
-                'ON' if '+cufft' in spec else 'OFF')),
-            '-DGEARSHIFFT_CLFFT:BOOL={0}'.format((
-                'ON' if '+clfft' in spec else 'OFF'))
+            '-DGEARSHIFFT_FFTW:BOOL={0}'.format(
+                'ON' if '+fftw' in spec else 'OFF'),
+            '-DGEARSHIFFT_FFTW_OPENMP:BOOL={0}'.format(
+                'ON' if '+openmp' in spec else 'OFF'),
+            '-DGEARSHIFFT_CUFFT:BOOL={0}'.format(
+                'ON' if '+cufft' in spec else 'OFF'),
+            '-DGEARSHIFFT_CLFFT:BOOL={0}'.format(
+                'ON' if '+clfft' in spec else 'OFF')
         ])
         return args

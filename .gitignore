@@ -23,3 +23,5 @@
 .#*
 /.cache
 /bin/spackc
+*.in.log
+*.out.log

@@ -14,12 +14,17 @@ branches:
 jobs:
   fast_finish: true
   include:
-    - stage: 'flake8'
+    - stage: 'flake8 + documentation'
       python: '2.7'
       os: linux
       language: python
       env: TEST_SUITE=flake8
-    - stage: 'unit tests + documentation'
+    - stage: 'flake8 + documentation'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
+    - stage: 'unit tests'
       python: '2.6'
       os: linux
       language: python
@@ -44,13 +49,10 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - os: osx
+    - stage: 'unit tests - osx'
+      os: osx
       language: generic
       env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
-    - python: '2.7'
-      os: linux
-      language: python
-      env: TEST_SUITE=doc
 # mpich (AutotoolsPackage)
     - stage: 'build tests'
       python: '2.7'
@@ -92,6 +94,14 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+
+stages:
+  - 'flake8 + documentation'
+  - 'unit tests'
+  - 'build tests'
+  - name: 'unit tests - osx'
+    if: type IN (cron)
+
 
 #=============================================================================
 # Environment
@@ -149,10 +159,9 @@ before_script:
 #=============================================================================
 # Building
 #=============================================================================
-script: share/spack/qa/run-$TEST_SUITE-tests
-
-after_success:
-  - codecov --env PY_VERSION
+script:
+  - share/spack/qa/run-$TEST_SUITE-tests
+  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PYTHON_VERSION --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}"; fi
 
 #=============================================================================
 # Notifications

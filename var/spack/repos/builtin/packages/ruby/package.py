@@ -25,32 +25,47 @@
 from spack import *
 
 
-class Ruby(Package):
+class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
     homepage = "https://www.ruby-lang.org/"
     url      = "http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.0.tar.gz"
 
+    version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
+
+    variant('openssl', default=True, description="Enable OpenSSL support")
+    variant('readline', default=False, description="Enable Readline support")
+
     extendable = True
 
-    version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
     depends_on('libffi')
     depends_on('zlib')
-    variant('openssl', default=False, description="Enable OpenSSL support")
+    depends_on('libx11')
+    depends_on('tcl')
+    depends_on('tk')
     depends_on('openssl', when='+openssl')
-    variant('readline', default=False, description="Enable Readline support")
     depends_on('readline', when='+readline')
 
-    def install(self, spec, prefix):
-        options = ["--prefix=%s" % prefix]
-        if '+openssl' in spec:
-            options.append("--with-openssl-dir=%s" % spec['openssl'].prefix)
-        if '+readline' in spec:
-            options.append("--with-readline-dir=%s" % spec['readline'].prefix)
-        configure(*options)
-        make()
-        make("install")
+    resource(
+        name='rubygems-updated-ssl-cert',
+        url='https://raw.githubusercontent.com/rubygems/rubygems/master/lib/rubygems/ssl_certs/index.rubygems.org/GlobalSignRootCA.pem',
+        sha256='df68841998b7fd098a9517fe971e97890be0fc93bbe1b2a1ef63ebdea3111c80',
+        when='+openssl',
+        destination='',
+        placement='rubygems-updated-ssl-cert',
+        expand=False
+    )
+
+    def configure_args(self):
+        args = []
+        if '+openssl' in self.spec:
+            args.append("--with-openssl-dir=%s" % self.spec['openssl'].prefix)
+        if '+readline' in self.spec:
+            args.append("--with-readline-dir=%s"
+                        % self.spec['readline'].prefix)
+        args.append('--with-tk=%s' % self.spec['tk'].prefix)
+        return args
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # TODO: do this only for actual extensions.
@@ -76,3 +91,21 @@ class Ruby(Package):
         # Ruby extension builds have global ruby and gem functions
         module.ruby = Executable(join_path(self.spec.prefix.bin, 'ruby'))
         module.gem = Executable(join_path(self.spec.prefix.bin, 'gem'))
+
+    @run_after('install')
+    def post_install(self):
+        """ RubyGems updated their SSL certificates at some point, so
+        new certificates must be installed after Ruby is installed
+        in order to download gems; see
+        http://guides.rubygems.org/ssl-certificate-update/
+        for details.
+        """
+        rubygems_updated_cert_path = join_path(self.stage.source_path,
+                                               'rubygems-updated-ssl-cert',
+                                               'GlobalSignRootCA.pem')
+        rubygems_certs_path = join_path(self.spec.prefix.lib,
+                                        'ruby',
+                                        '{0}'.format(self.spec.version.dotted),
+                                        'rubygems',
+                                        'ssl_certs')
+        install(rubygems_updated_cert_path, rubygems_certs_path)

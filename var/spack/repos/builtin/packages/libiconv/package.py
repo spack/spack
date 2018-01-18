@@ -40,6 +40,8 @@ class Libiconv(AutotoolsPackage):
     # of C11 any more and thus might not exist.
     patch('gets.patch', when='@1.14')
 
+    conflicts('@1.14', when='%gcc@5:')
+
     def configure_args(self):
         args = ['--enable-extra-encodings']
 
