@@ -270,7 +270,7 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
         install('-f', specfile.basename, fail_on_error=False)
     assert install.returncode == error_code
 
-    # Absolute path to specfile (regression for #????)
+    # Absolute path to specfile (regression for #6983)
     install('-f', str(specfile), fail_on_error=False)
     assert install.returncode == error_code
 
@@ -294,8 +294,6 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
             s = Spec(spec)
             s.concretize()
             s.to_yaml(f)
-
-    print(args)
 
     install(*args, fail_on_error=False)
     assert install.returncode == 0
