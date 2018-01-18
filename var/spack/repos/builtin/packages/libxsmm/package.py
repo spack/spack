@@ -95,8 +95,12 @@ class Libxsmm(MakefilePackage):
             install(doc_file, doc_path)
         for doc_file in glob(join_path('documentation', '*.pdf')):
             install(doc_file, doc_path)
+        if '@1.8.2:' in spec:
+            install('LICENSE.md', doc_path)
+        else:
+            install('README.md', doc_path)
+            install('LICENSE', doc_path)
         install('version.txt', doc_path)
-        install('LICENSE.md', doc_path)
 
     def build(self, spec, prefix):
         if '+header-only' in spec and '@1.6.2:' not in spec:
