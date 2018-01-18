@@ -166,6 +166,11 @@ def set_compiler_environment_variables(pkg, env):
     env_flags = {}
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
+        # Always convert flag_handler to function type.
+        # This avoids discrepencies in calling conventions between functions
+        # and methods, or between bound and unbound methods in python 2.
+        # We cannot effectively convert everything to a bound method, which
+        # would be the simpler solution.
         if isinstance(pkg.flag_handler, types.FunctionType):
             handler = pkg.flag_handler
         else:
