@@ -37,13 +37,14 @@ class Meme(AutotoolsPackage):
     version('4.11.4', '371f513f82fa0888205748e333003897')
 
     variant('mpi', default=True, description='Enable MPI support')
+    variant('image-magick', default=False, description='Enable image-magick for png output')
 
     depends_on('zlib', type=('link'))
     depends_on('libgcrypt', type=('link'))
     depends_on('perl', type=('build', 'run'))
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('mpi', when='+mpi')
-    depends_on('image-magick', type=('build', 'run'))
+    depends_on('image-magick', type=('build', 'run'), when='+image-magick')
     depends_on('perl-xml-parser', type=('build', 'run'))
 
     def configure_args(self):
