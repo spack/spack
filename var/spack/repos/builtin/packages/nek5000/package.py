@@ -47,7 +47,7 @@ class Nek5000(Package):
             'spectral-elements', 'fluid']
 
     version('17.0',    git='https://github.com/Nek5000/Nek5000.git',
-        commit='469daf94d3f9aa3ba9d258d8eee9ebde6893a702', preferred=True)
+        commit='469daf94d3f9aa3ba9d258d8eee9ebde6893a702')
     version('develop', git='https://github.com/Nek5000/Nek5000.git',
         branch='master')
 
