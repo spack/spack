@@ -1,0 +1,20 @@
+--- a/src/tools/qmap.h	2008-01-16 06:09:13.000000000 +1100
++++ b/src/tools/qmap.h	2018-01-07 11:32:38.720893324 +1100
+@@ -52,6 +52,7 @@
+ #ifndef QT_NO_STL
+ #include <iterator>
+ #include <map>
++#include <stddef.h>
+ #endif
+ 
+ //#define QT_CHECK_MAP_RANGE
+--- a/src/tools/qvaluelist.h	2008-01-16 06:09:13.000000000 +1100
++++ b/src/tools/qvaluelist.h	2018-01-07 11:33:03.393206961 +1100
+@@ -50,6 +50,7 @@
+ #ifndef QT_NO_STL
+ #include <iterator>
+ #include <list>
++#include <stddef.h>
+ #endif
+ 
+ //#define QT_CHECK_VALUELIST_RANGE

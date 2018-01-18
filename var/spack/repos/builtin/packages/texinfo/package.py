@@ -36,6 +36,7 @@ class Texinfo(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/texinfo/"
     url      = "http://ftp.gnu.org/gnu/texinfo/texinfo-6.0.tar.gz"
 
+    version('6.5', '94e8f7149876793030e5518dd8d6e956')
     version('6.3', '9b08daca9bf8eccae9b0f884aba41f9e')
     version('6.0', 'e1a2ef5dce5018b53f0f6eed45b247a7')
     version('5.2', '1b8f98b80a8e6c50422125e07522e8db')

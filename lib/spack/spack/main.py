@@ -388,7 +388,7 @@ class SpackCommand(object):
         Returns:
             (str): combined output and error as a string
 
-        On return, if ``fail_on_error`` is False, return value of comman
+        On return, if ``fail_on_error`` is False, return value of command
         is set in ``returncode`` property, and the error is set in the
         ``error`` property.  Otherwise, raise an error.
         """
