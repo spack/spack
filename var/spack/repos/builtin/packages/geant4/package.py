@@ -110,13 +110,13 @@ class Geant4(CMakePackage):
             options.append('-DGEANT4_USE_QT=ON')
             options.append(
                 '-DQT_QMAKE_EXECUTABLE=%s' %
-                spec['qt'].prefix + '/bin/qmake'
-                )
+                spec['qt'].prefix + '/bin/qmake')
 
         if '+vecgeom' in spec:
             options.append('-DGEANT4_USE_USOLIDS=ON')
-            options.append('-DUSolids_DIR=%s' % 
-                join_path(spec['vecgeom'].prefix, 'lib/CMake/USolids'))
+            options.append('-DUSolids_DIR=%s' % join_path(
+                spec['vecgeom'].prefix,
+                'lib/CMake/USolids'))
 
         return options
 

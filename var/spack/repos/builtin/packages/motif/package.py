@@ -24,8 +24,12 @@
 ##############################################################################
 from spack import *
 
+
 class Motif(AutotoolsPackage):
-    "Motif - Graphical user interface (GUI) specification and the widget toolkit"
+    """"
+    Motif - Graphical user interface (GUI) 
+    specification and the widget toolkit
+    """
     homepage = "http://motif.ics.com/"
     url = ("http://cfhcable.dl.sourceforge.net/project/"
            "motif/Motif 2.3.8 Source Code/motif-2.3.8.tar.gz")
