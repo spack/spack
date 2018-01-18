@@ -290,9 +290,9 @@ def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
     for spec in filespecs:
         filepath = tmpdir.join(spec + '.yaml')
         args = ['-f', str(filepath)] + args
+        s = Spec(spec)
+        s.concretize()
         with filepath.open('w') as f:
-            s = Spec(spec)
-            s.concretize()
             s.to_yaml(f)
 
     install(*args, fail_on_error=False)
