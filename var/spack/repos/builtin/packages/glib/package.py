@@ -65,7 +65,7 @@ class Glib(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = []
-        
+
         # GNU libiconv
         args.append('--with-libiconv=gnu')
 
