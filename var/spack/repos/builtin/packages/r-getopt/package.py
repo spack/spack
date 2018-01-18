@@ -37,4 +37,3 @@ class RGetopt(RPackage):
     list_url = "https://cran.r-project.org/src/contrib/Archive/getopt"
 
     version('1.20.1', '323cf2846e306f49236b8174bc3d4e47')
-
