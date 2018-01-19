@@ -1883,6 +1883,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             for c in conflicts:
                 tty.warn("Could not link: %s" % c)
 
+    def remove_from_view(target):
+        def ignore(filename):
+            return (filename in spack.store.layout.hidden_file_paths or
+                    kwargs.get('ignore', lambda f: False)(filename))
+
+        tree = LinkTree(self.spec.prefix)
+        tree.unmerge(target, ignore=ignore)
+
     def activate(self, extension, **kwargs):
         """Make extension package usable by linking all its files to a target
         provided by the directory layout (depending if the user wants to
@@ -1898,7 +1906,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                        spack.store.extensions)
         target = extensions_layout.extendee_target_directory(self)
 
-        self.add_to_view(target, extensions_layout)
+        extension.add_to_view(target, extensions_layout)
 
     def do_deactivate(self, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method.
@@ -1966,12 +1974,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                        spack.store.extensions)
         target = extensions_layout.extendee_target_directory(self)
 
-        def ignore(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    kwargs.get('ignore', lambda f: False)(filename))
-
-        tree = LinkTree(extension.prefix)
-        tree.unmerge(target, ignore=ignore)
+        extension.remove_from_view(target)
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""
