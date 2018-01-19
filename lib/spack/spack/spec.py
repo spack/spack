@@ -884,6 +884,9 @@ class SpecBuildInterface(ObjectWrapper):
 @key_ordering
 class Spec(object):
 
+    #: Cache for spec's prefix, computed lazily in the corresponding property
+    _prefix = None
+
     @staticmethod
     def from_literal(spec_dict, normal=True):
         """Builds a Spec from a dictionary containing the spec literal.
@@ -1374,12 +1377,13 @@ class Spec(object):
 
     @property
     def prefix(self):
-        if hasattr(self, 'test_prefix'):
-            return Prefix(self.test_prefix)
-        return Prefix(spack.store.layout.path_for_spec(self))
+        if self._prefix is None:
+            self.prefix = spack.store.layout.path_for_spec(self)
+        return self._prefix
 
-    def _set_test_prefix(self, val):
-        self.test_prefix = val
+    @prefix.setter
+    def prefix(self, value):
+        self._prefix = Prefix(value)
 
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
