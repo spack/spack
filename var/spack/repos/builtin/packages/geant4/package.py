@@ -115,7 +115,7 @@ class Geant4(CMakePackage):
         if '+vecgeom' in spec:
             options.append('-DGEANT4_USE_USOLIDS=ON')
             options.append('-DUSolids_DIR=%s' % spec[
-                'vecgeom'].prefix.lib.CMake.USolids) 
+                'vecgeom'].prefix.lib.CMake.USolids)
 
         return options
 
