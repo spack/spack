@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Ipopt(Package):
+class Ipopt(AutotoolsPackage):
     """Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt) is a
        software package for large-scale nonlinear optimization."""
     homepage = "https://projects.coin-or.org/Ipopt"
@@ -55,7 +55,14 @@ class Ipopt(Package):
 
     patch('ipopt_ppc_build.patch', when='arch=ppc64le')
 
-    def install(self, spec, prefix):
+    flag_handler = AutotoolsPackage.build_system_flags
+    build_directory = 'spack-build'
+
+    # IPOPT does not build correctly in parallel on OS X
+    parallel = False
+
+    def configure_args(self):
+        spec = self.spec
         # Dependency directories
         blas_dir = spec['blas'].prefix
         lapack_dir = spec['lapack'].prefix
@@ -69,7 +76,7 @@ class Ipopt(Package):
         blas_lib = spec['blas'].libs.ld_flags
         lapack_lib = spec['lapack'].libs.ld_flags
 
-        configure_args = [
+        args = [
             "--prefix=%s" % prefix,
             "--with-mumps-incdir=%s" % mumps_dir.include,
             "--with-mumps-lib=%s" % mumps_libcmd,
@@ -82,18 +89,13 @@ class Ipopt(Package):
         ]
 
         if 'coinhsl' in spec:
-            configure_args.extend([
+            args.extend([
                 '--with-hsl-lib=%s' % spec['coinhsl'].libs.ld_flags,
                 '--with-hsl-incdir=%s' % spec['coinhsl'].prefix.include])
 
         if 'metis' in spec:
-            configure_args.extend([
+            args.extend([
                 '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
                 '--with-metis-incdir=%s' % spec['metis'].prefix.include])
 
-        configure(*configure_args)
-
-        # IPOPT does not build correctly in parallel on OS X
-        make(parallel=False)
-        make("test", parallel=False)
-        make("install", parallel=False)
+        return args
