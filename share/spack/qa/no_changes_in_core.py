@@ -15,7 +15,11 @@ import spack.spec
 import spack.cmd.flake8
 
 # Get the complete list of files that changed
-files = spack.cmd.flake8.changed_files(True)
+try:
+    files = spack.cmd.flake8.changed_files(base='develop', untracked=True)
+except Exception:
+    print('ERROR: cannot compute the list of files that changed.')
+    sys.exit(1)
 
 # If something changed in the core libraries we need to test it
 core_path = os.path.join('lib', 'spack')

@@ -14,3 +14,7 @@ cd "$SPACK_ROOT"
 
 # Run the spack-python script
 share/spack/qa/no_changes_in_core.py
+
+# Run unit tests that are checking the sanity
+# of Spack packages
+bin/spack test -m "packagetest"
