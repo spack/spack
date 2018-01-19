@@ -36,7 +36,7 @@ class RDorng(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/doRNG/index.html"
     url      = "https://cran.rstudio.com/src/contrib/doRNG_1.6.6.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/doRNG"
 
     version('1.6.6', 'ffb26024c58c8c99229470293fbf35cf')
 
