@@ -36,7 +36,7 @@ def temp_env():
     os.environ = old_env
 
 
-def add_O3_to_build_system_cflags(name, flags):
+def add_O3_to_build_system_cflags(pkg, name, flags):
     build_system_flags = []
     if name == 'cflags':
         build_system_flags.append('-O3')
@@ -59,6 +59,18 @@ class TestFlagHandlers(object):
 
         # Use cppflags as a canary
         assert 'SPACK_CPPFLAGS' not in os.environ
+        assert 'CPPFLAGS' not in os.environ
+
+    def test_unbound_method(self, temp_env):
+        # Other tests test flag_handlers set as bound methods and functions.
+        # This tests an unbound method in python2 (no change in python3).
+        s = spack.spec.Spec('mpileaks cppflags=-g')
+        s.concretize()
+        pkg = spack.repo.get(s)
+        pkg.flag_handler = pkg.__class__.inject_flags
+        spack.build_environment.setup_package(pkg, False)
+
+        assert os.environ['SPACK_CPPFLAGS'] == '-g'
         assert 'CPPFLAGS' not in os.environ
 
     def test_inject_flags(self, temp_env):
