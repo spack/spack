@@ -67,62 +67,61 @@ def failure_args(request):
 # TODO : this requires having a separate directory for test modules
 # TODO : add tests for loads and find to check the prompt format
 
+@pytest.mark.slowtest
+@pytest.mark.usefixtures('database')
+class TestModuleCommand(object):
+    def test_exit_with_failure(self, parser, failure_args):
+        args = parser.parse_args(failure_args)
+        with pytest.raises(SystemExit):
+            module.module(parser, args)
 
-def test_exit_with_failure(database, parser, failure_args):
-    args = parser.parse_args(failure_args)
-    with pytest.raises(SystemExit):
+    def test_remove_and_add_tcl(self, parser):
+        """Tests adding and removing a tcl module file."""
+
+        # Remove existing modules [tcl]
+        args = parser.parse_args(['rm', '-y', '-m', 'tcl', 'mpileaks'])
+        module_files = _get_module_files(args)
+
+        for item in module_files:
+            assert os.path.exists(item)
+
         module.module(parser, args)
 
+        for item in module_files:
+            assert not os.path.exists(item)
 
-def test_remove_and_add_tcl(database, parser):
-    """Tests adding and removing a tcl module file."""
+        # Add them back [tcl]
+        args = parser.parse_args(['refresh', '-y', '-m', 'tcl', 'mpileaks'])
+        module.module(parser, args)
 
-    # Remove existing modules [tcl]
-    args = parser.parse_args(['rm', '-y', '-m', 'tcl', 'mpileaks'])
-    module_files = _get_module_files(args)
+        for item in module_files:
+            assert os.path.exists(item)
 
-    for item in module_files:
-        assert os.path.exists(item)
+    @pytest.mark.parametrize('cli_args', [
+        ['--module-type', 'tcl', 'libelf'],
+        ['--module-type', 'tcl', '--full-path', 'libelf']
+    ])
+    def test_find(self, parser, cli_args):
+        """Tests the 'spack module find' under a few common scenarios."""
 
-    module.module(parser, args)
+        # Try to find it for tcl module files
+        args = parser.parse_args(['find'] + cli_args)
+        module.module(parser, args)
 
-    for item in module_files:
-        assert not os.path.exists(item)
+    def test_remove_and_add_dotkit(self, parser):
+        """Tests adding and removing a dotkit module file."""
 
-    # Add them back [tcl]
-    args = parser.parse_args(['refresh', '-y', '-m', 'tcl', 'mpileaks'])
-    module.module(parser, args)
+        # Remove existing modules [dotkit]
+        args = parser.parse_args(['rm', '-y', '-m', 'dotkit', 'mpileaks'])
+        module_files = _get_module_files(args)
+        for item in module_files:
+            assert os.path.exists(item)
+        module.module(parser, args)
+        for item in module_files:
+            assert not os.path.exists(item)
 
-    for item in module_files:
-        assert os.path.exists(item)
-
-
-@pytest.mark.parametrize('cli_args', [
-    ['--module-type', 'tcl', 'libelf'],
-    ['--module-type', 'tcl', '--full-path', 'libelf']
-])
-def test_find(database, parser, cli_args):
-    """Tests the 'spack module find' under a few common scenarios."""
-
-    # Try to find it for tcl module files
-    args = parser.parse_args(['find'] + cli_args)
-    module.module(parser, args)
-
-
-def test_remove_and_add_dotkit(database, parser):
-    """Tests adding and removing a dotkit module file."""
-
-    # Remove existing modules [dotkit]
-    args = parser.parse_args(['rm', '-y', '-m', 'dotkit', 'mpileaks'])
-    module_files = _get_module_files(args)
-    for item in module_files:
-        assert os.path.exists(item)
-    module.module(parser, args)
-    for item in module_files:
-        assert not os.path.exists(item)
-
-    # Add them back [dotkit]
-    args = parser.parse_args(['refresh', '-y', '-m', 'dotkit', 'mpileaks'])
-    module.module(parser, args)
-    for item in module_files:
-        assert os.path.exists(item)
+        # Add them back [dotkit]
+        args = parser.parse_args(['refresh', '-y', '-m', 'dotkit', 'mpileaks'])
+        module.module(parser, args)
+        for item in module_files:
+            assert os.path.exists(item)
