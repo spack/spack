@@ -97,11 +97,15 @@ def test_remove_and_add_tcl(database, parser):
         assert os.path.exists(item)
 
 
-def test_find(database, parser):
+@pytest.mark.parametrize('cli_args', [
+    ['--module-type', 'tcl', 'libelf'],
+    ['--module-type', 'tcl', '--full-path', 'libelf']
+])
+def test_find(database, parser, cli_args):
     """Tests the 'spack module find' under a few common scenarios."""
 
     # Try to find it for tcl module files
-    args = parser.parse_args(['find', '--module-type', 'tcl', 'libelf'])
+    args = parser.parse_args(['find'] + cli_args)
     module.module(parser, args)
 
 
