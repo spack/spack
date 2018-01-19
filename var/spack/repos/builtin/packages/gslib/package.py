@@ -44,6 +44,8 @@ class Gslib(Package):
     depends_on('mpi', when="+mpiio")
     depends_on('blas', when="+blas")
 
+    conflicts('~mpi', when='+mpiio')
+
     def install(self, spec, prefix):
         srcDir = 'src'
         libDir = 'lib'
