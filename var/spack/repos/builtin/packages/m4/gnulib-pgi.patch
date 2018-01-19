@@ -1,0 +1,195 @@
+Port to PGI 16.10 x86-64
+
+This patch fixes one real bug in gl_anylinked_list2.h, along with some minor
+glitches that are not bugs. It does not silence PGI's thousands of bogus
+warnings when compiling test-intprops.c. Fortunately, the warnings do not
+cause a failure.
+
+* lib/c-ctype.h (_C_CTYPE_LOWER_A_THRU_F_N, _C_CTYPE_LOWER_N): Rename parameter
+  to avoid PGI warning about '#define f(n) 'n''. My goodness, PGI goes back a
+  long ways - this predates C89!
+* lib/gl_anylinked_list2.h (ASYNCSAFE): Fix bug caught by PGI. For example,
+  ASYNCSAFE (const void *) should expand to 'const void *volatile', not to
+  'volatile const void *'.
+* lib/spawn.in.h (POSIX_SPAWN_USEVFORK): Don't define if already defined.
+* lib/verify.h (verify) [!__GNUC__]: Use shorter albeit meaningless string to
+  bypass silly compiler limits.
+* tests/infinity.h (Infinityf, Infinityd, Infinityl) [__PGI]:
+* tests/nan.h (NaNf, NaNd, NaNl): Use static functions to avoid misguided
+  compiler diagnostics. Is there some reason we don’t use static functions
+  on all platforms?
+
+diff --git a/lib/c-ctype.h b/lib/c-ctype.h
+index bdca1f1..ec6a3a0 100644
+--- a/lib/c-ctype.h
++++ b/lib/c-ctype.h
+@@ -115,16 +115,16 @@ extern "C" {
+ 
+ /* Cases for lowercase hex letters, and lowercase letters, all offset by N.  */
+ 
+-#define _C_CTYPE_LOWER_A_THRU_F_N(n) \
+-   case 'a' + (n): case 'b' + (n): case 'c' + (n): case 'd' + (n): \
+-   case 'e' + (n): case 'f' + (n)
+-#define _C_CTYPE_LOWER_N(n) \
+-   _C_CTYPE_LOWER_A_THRU_F_N(n): \
+-   case 'g' + (n): case 'h' + (n): case 'i' + (n): case 'j' + (n): \
+-   case 'k' + (n): case 'l' + (n): case 'm' + (n): case 'n' + (n): \
+-   case 'o' + (n): case 'p' + (n): case 'q' + (n): case 'r' + (n): \
+-   case 's' + (n): case 't' + (n): case 'u' + (n): case 'v' + (n): \
+-   case 'w' + (n): case 'x' + (n): case 'y' + (n): case 'z' + (n)
++#define _C_CTYPE_LOWER_A_THRU_F_N(N) \
++   case 'a' + (N): case 'b' + (N): case 'c' + (N): case 'd' + (N): \
++   case 'e' + (N): case 'f' + (N)
++#define _C_CTYPE_LOWER_N(N) \
++   _C_CTYPE_LOWER_A_THRU_F_N(N): \
++   case 'g' + (N): case 'h' + (N): case 'i' + (N): case 'j' + (N): \
++   case 'k' + (N): case 'l' + (N): case 'm' + (N): case 'n' + (N): \
++   case 'o' + (N): case 'p' + (N): case 'q' + (N): case 'r' + (N): \
++   case 's' + (N): case 't' + (N): case 'u' + (N): case 'v' + (N): \
++   case 'w' + (N): case 'x' + (N): case 'y' + (N): case 'z' + (N)
+ 
+ /* Cases for hex letters, digits, lower, punct, and upper.  */
+ 
+diff --git a/lib/gl_anylinked_list2.h b/lib/gl_anylinked_list2.h
+index c249f31..4545da9 100644
+--- a/lib/gl_anylinked_list2.h
++++ b/lib/gl_anylinked_list2.h
+@@ -29,7 +29,7 @@
+    and we use 'volatile' assignments to prevent the compiler from reordering
+    such assignments.  */
+ #ifdef SIGNAL_SAFE_LIST
+-# define ASYNCSAFE(type) *(volatile type *)&
++# define ASYNCSAFE(type) *(type volatile *)&
+ #else
+ # define ASYNCSAFE(type)
+ #endif
+diff --git a/lib/spawn.in.h b/lib/spawn.in.h
+index e8116f9..b4b9197 100644
+--- a/lib/spawn.in.h
++++ b/lib/spawn.in.h
+@@ -142,7 +142,8 @@ typedef struct
+ # endif
+ #endif
+ /* A GNU extension.  Use the next free bit position.  */
+-#define POSIX_SPAWN_USEVFORK \
++#ifndef POSIX_SPAWN_USEVFORK
++# define POSIX_SPAWN_USEVFORK \
+   ((POSIX_SPAWN_RESETIDS | (POSIX_SPAWN_RESETIDS - 1)                     \
+     | POSIX_SPAWN_SETPGROUP | (POSIX_SPAWN_SETPGROUP - 1)                 \
+     | POSIX_SPAWN_SETSIGDEF | (POSIX_SPAWN_SETSIGDEF - 1)                 \
+@@ -152,6 +153,7 @@ typedef struct
+     | POSIX_SPAWN_SETSCHEDULER                                            \
+     | (POSIX_SPAWN_SETSCHEDULER > 0 ? POSIX_SPAWN_SETSCHEDULER - 1 : 0))  \
+    + 1)
++#endif
+ #if !GNULIB_defined_verify_POSIX_SPAWN_USEVFORK_no_overlap
+ typedef int verify_POSIX_SPAWN_USEVFORK_no_overlap
+             [(((POSIX_SPAWN_RESETIDS | POSIX_SPAWN_SETPGROUP
+diff --git a/lib/verify.h b/lib/verify.h
+index dcaf7ca..dcba9c8 100644
+--- a/lib/verify.h
++++ b/lib/verify.h
+@@ -248,7 +248,12 @@ template <int w>
+ /* Verify requirement R at compile-time, as a declaration without a
+    trailing ';'.  */
+ 
+-#define verify(R) _GL_VERIFY (R, "verify (" #R ")")
++#ifdef __GNUC__
++# define verify(R) _GL_VERIFY (R, "verify (" #R ")")
++#else
++/* PGI barfs if R is long.  Play it safe.  */
++# define verify(R) _GL_VERIFY (R, "verify (...)")
++#endif
+ 
+ #ifndef __has_builtin
+ # define __has_builtin(x) 0
+diff --git a/tests/infinity.h b/tests/infinity.h
+index 431f700..ef5d3bd 100644
+--- a/tests/infinity.h
++++ b/tests/infinity.h
+@@ -18,8 +18,9 @@
+ /* Infinityf () returns a 'float' +Infinity.  */
+ 
+ /* The Microsoft MSVC 9 compiler chokes on the expression 1.0f / 0.0f.
+-   The IBM XL C compiler on z/OS complains.  */
+-#if defined _MSC_VER || (defined __MVS__ && defined __IBMC__)
++   The IBM XL C compiler on z/OS complains.
++   PGI 16.10 complains.  */
++#if defined _MSC_VER || (defined __MVS__ && defined __IBMC__) || defined __PGI
+ static float
+ Infinityf ()
+ {
+@@ -34,8 +35,9 @@ Infinityf ()
+ /* Infinityd () returns a 'double' +Infinity.  */
+ 
+ /* The Microsoft MSVC 9 compiler chokes on the expression 1.0 / 0.0.
+-   The IBM XL C compiler on z/OS complains.  */
+-#if defined _MSC_VER || (defined __MVS__ && defined __IBMC__)
++   The IBM XL C compiler on z/OS complains.
++   PGI 16.10 complains.  */
++#if defined _MSC_VER || (defined __MVS__ && defined __IBMC__) || defined __PGI
+ static double
+ Infinityd ()
+ {
+@@ -50,8 +52,9 @@ Infinityd ()
+ /* Infinityl () returns a 'long double' +Infinity.  */
+ 
+ /* The Microsoft MSVC 9 compiler chokes on the expression 1.0L / 0.0L.
+-   The IBM XL C compiler on z/OS complains.  */
+-#if defined _MSC_VER || (defined __MVS__ && defined __IBMC__)
++   The IBM XL C compiler on z/OS complains.
++   PGI 16.10 complains.  */
++#if defined _MSC_VER || (defined __MVS__ && defined __IBMC__) || defined __PGI
+ static long double
+ Infinityl ()
+ {
+diff --git a/tests/nan.h b/tests/nan.h
+index 48236b5..b5a0f29 100644
+--- a/tests/nan.h
++++ b/tests/nan.h
+@@ -25,8 +25,11 @@
+ /* NaNf () returns a 'float' not-a-number.  */
+ 
+ /* The Compaq (ex-DEC) C 6.4 compiler and the Microsoft MSVC 9 compiler choke
+-   on the expression 0.0 / 0.0.  The IBM XL C compiler on z/OS complains.  */
+-#if defined __DECC || defined _MSC_VER || (defined __MVS__ && defined __IBMC__)
++   on the expression 0.0 / 0.0.  The IBM XL C compiler on z/OS complains.
++   PGI 16.10 complains.  */
++#if (defined __DECC || defined _MSC_VER \
++     || (defined __MVS__ && defined __IBMC__)   \
++     || defined __PGI)
+ static float
+ NaNf ()
+ {
+@@ -41,8 +44,11 @@ NaNf ()
+ /* NaNd () returns a 'double' not-a-number.  */
+ 
+ /* The Compaq (ex-DEC) C 6.4 compiler and the Microsoft MSVC 9 compiler choke
+-   on the expression 0.0 / 0.0.  The IBM XL C compiler on z/OS complains.  */
+-#if defined __DECC || defined _MSC_VER || (defined __MVS__ && defined __IBMC__)
++   on the expression 0.0 / 0.0.  The IBM XL C compiler on z/OS complains.
++   PGI 16.10 complains.  */
++#if (defined __DECC || defined _MSC_VER \
++     || (defined __MVS__ && defined __IBMC__)   \
++     || defined __PGI)
+ static double
+ NaNd ()
+ {
+@@ -59,14 +65,15 @@ NaNd ()
+ /* On Irix 6.5, gcc 3.4.3 can't compute compile-time NaN, and needs the
+    runtime type conversion.
+    The Microsoft MSVC 9 compiler chokes on the expression 0.0L / 0.0L.
+-   The IBM XL C compiler on z/OS complains.  */
++   The IBM XL C compiler on z/OS complains.
++   PGI 16.10 complains.  */
+ #ifdef __sgi
+ static long double NaNl ()
+ {
+   double zero = 0.0;
+   return zero / zero;
+ }
+-#elif defined _MSC_VER || (defined __MVS__ && defined __IBMC__)
++#elif defined _MSC_VER || (defined __MVS__ && defined __IBMC__) || defined __PGI
+ static long double
+ NaNl ()
+ {

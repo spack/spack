@@ -1,0 +1,36 @@
+--- a/chlorop	2006-03-20 06:24:22.000000000 -0600
++++ b/chlorop	2017-07-24 10:51:27.000366706 -0500
+@@ -9,8 +9,6 @@
+ STARTDIR=`pwd`
+ 
+ ### GENERAL SETTINGS, CUSTOMIZE +++++++++++++++++++++++++++++++++++++++++++++++
+-# Substitute your chosen location for ChloroP software:
+-CHLOROP=/usr/cbs/packages/chlorop/currdist/chlorop-1.1
+ 
+ # Substitute paste:
+ PASTE=paste
+@@ -43,7 +41,7 @@
+ # other settings:
+ #CHLOROTMPNAME=res`date '+%y%m%d%H%M%S'`.$$
+ CHLOROTMPNAME=res.$$
+-CHLOROTMP=tmp/$CHLOROTMPNAME
++CHLOROTMP=$CHLOROTMP/$CHLOROTMPNAME
+ SCRIPTS=bin
+ SYN=syn
+ ETC=etc
+@@ -80,12 +78,12 @@
+ ### get the infile ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ INFILE=$*
+ 
+-mkdir $CHLOROP/$CHLOROTMP || { echo Cannot create temporary directory; exit 1; }
++mkdir -p $CHLOROTMP || { echo Cannot create temporary directory; exit 1; }
+ 
+ ### prepare input file in HOW and fasta format ++++++++++++++++++++++++++++++++
+ $AWK -f $CHLOROP/$SCRIPTS/in2how+fasta.awk -v informat=$INFORMAT \
+-	-v howout=$CHLOROP/$CHLOROTMP/infile.how \
+-	-v fastaout=$CHLOROP/$CHLOROTMP/infile.fasta $INFILE
++	-v howout=$CHLOROTMP/infile.how \
++	-v fastaout=$CHLOROTMP/infile.fasta $INFILE
+ INFILE=$CHLOROTMP/infile.how
+ 
+ ### change to working directory +++++++++++++++++++++++++++++++++++++++++++++++

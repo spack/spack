@@ -1,0 +1,12 @@
+--- a/packages/seacas/cmake/FortranSettings.cmake	2017-06-26 15:28:54.660570160 -0400
++++ b/pacakges/seacas/cmake/FortranSettings.cmake	2017-06-26 15:28:05.650565259 -0400
+@@ -7,7 +7,7 @@
+ IF ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
+   SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fcray-pointer -fdefault-real-8 -fdefault-integer-8 -fno-range-check")
+ ELSEIF ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "XL")
+-  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -WF,-D__XLF__ -qintsize=8 -qrealsize=8")
++  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qfixed -WF,-D__XLF__ -qintsize=8 -qrealsize=8")
+ ELSE()
+   SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -r8 -i8")
+ ENDIF()
+

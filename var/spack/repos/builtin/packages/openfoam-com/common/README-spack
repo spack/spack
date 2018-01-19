@@ -1,0 +1,15 @@
+Additional notes for spack
+--------------------------
+
+OpenFOAM largely manages its own PATH and LD_LIBRARY_PATH settings.
+The spack build currently also follows this and only provides
+a minimum modules environment.
+
+The variable FOAM_PROJECT_DIR points to the location of the OpenFOAM project
+and shall contain a $FOAM_PROJECT_DIR/etc/bashrc file for OpenFOAM.
+The variable FOAM_INST_DIR may also be provided for older OpenFOAM versions.
+
+It is the aim for the future to use spack to provide the environment directly,
+but this still needs more work.
+
+2017-04-18
