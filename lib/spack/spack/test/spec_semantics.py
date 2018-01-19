@@ -746,7 +746,7 @@ class TestSpecSematics(object):
                                  ("${OS}", "platform_os"),
                                  ("${TARGET}", "target")]
 
-        for  named_str, prop in package_segments:
+        for named_str, prop in package_segments:
             expected = getattr(spec, prop, "")
             actual = spec.format(named_str)
             assert str(expected) == actual
