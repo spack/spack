@@ -75,7 +75,7 @@ def python_and_extension_dirs(tmpdir):
 
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
-    python_spec.package.spec._set_test_prefix(str(python_prefix))
+    python_spec.package.spec.prefix = str(python_prefix)
 
     ext_dirs = {
         'bin/': {
@@ -115,7 +115,7 @@ def test_python_activation(tmpdir):
     python_prefix = str(tmpdir.join(python_name))
     # Set the prefix on the package's spec reference because that is a copy of
     # the original spec
-    python_spec.package.spec._set_test_prefix(python_prefix)
+    python_spec.package.spec.prefix = python_prefix
 
     ext_name = 'py-extension'
     tmpdir.ensure(ext_name, dir=True)
@@ -130,7 +130,7 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs):
 
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
-    python_spec.package.spec._set_test_prefix(python_prefix)
+    python_spec.package.spec.prefix = python_prefix
 
     ext_pkg = FakeExtensionPackage('py-extension', ext_prefix)
 
@@ -152,7 +152,7 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs):
 
     python_spec = spack.spec.Spec('python@2.7.12')
     python_spec._concrete = True
-    python_spec.package.spec._set_test_prefix(python_prefix)
+    python_spec.package.spec.prefix = python_prefix
 
     ext_pkg = FakeExtensionPackage('py-extension', ext_prefix)
 
@@ -189,7 +189,7 @@ def perl_and_extension_dirs(tmpdir):
 
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
-    perl_spec.package.spec._set_test_prefix(str(perl_prefix))
+    perl_spec.package.spec.prefix = str(perl_prefix)
 
     ext_dirs = {
         'bin/': {
@@ -225,7 +225,7 @@ def test_perl_activation(tmpdir):
     perl_prefix = str(tmpdir.join(perl_name))
     # Set the prefix on the package's spec reference because that is a copy of
     # the original spec
-    perl_spec.package.spec._set_test_prefix(perl_prefix)
+    perl_spec.package.spec.prefix = perl_prefix
 
     ext_name = 'perl-extension'
     tmpdir.ensure(ext_name, dir=True)
@@ -240,7 +240,7 @@ def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs):
 
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
-    perl_spec.package.spec._set_test_prefix(perl_prefix)
+    perl_spec.package.spec.prefix = perl_prefix
 
     ext_pkg = FakeExtensionPackage('perl-extension', ext_prefix)
 
@@ -255,7 +255,7 @@ def test_perl_activation_view(tmpdir, perl_and_extension_dirs):
 
     perl_spec = spack.spec.Spec('perl@5.24.1')
     perl_spec._concrete = True
-    perl_spec.package.spec._set_test_prefix(perl_prefix)
+    perl_spec.package.spec.prefix = perl_prefix
 
     ext_pkg = FakeExtensionPackage('perl-extension', ext_prefix)
 
