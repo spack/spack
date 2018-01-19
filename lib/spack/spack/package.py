@@ -1867,7 +1867,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     ignore_conflicts=False):
         tree = LinkTree(self.spec.prefix)
 
-        ignore = ignore or lambda f: False
+        ignore = ignore or (lambda f: False)
         def ignore_file(filename):
             return (filename in spack.store.layout.hidden_file_paths or
                     ignore(filename))
@@ -1886,7 +1886,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 tty.warn("Could not link: %s" % c)
 
     def remove_from_view(target, ignore=None):
-        ignore = ignore or lambda f: False
+        ignore = ignore or (lambda f: False)
         def ignore_file(filename):
             return (filename in spack.store.layout.hidden_file_paths or
                     ignore(filename))
