@@ -1873,7 +1873,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     ignore(filename))
 
         if not ignore_conflicts:
-            conflict = tree.find_conflict(target, ignore=ignore)
+            conflict = tree.find_conflict(target, ignore=ignore_file)
             if conflict:
                 raise ExtensionConflictError(conflict)
 
