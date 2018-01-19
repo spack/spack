@@ -1863,6 +1863,28 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
                 if spec.package.extends(self.extendee_spec))
 
+    def add_to_view(self, view, ignore_conflicts=False):
+        tree = LinkTree(self.spec.prefix)
+
+        if not ignore_conflicts:
+            conflict = tree.find_conflict(target)
+            if conflict is not None:
+                tty.error("Cannot link package %s, file already exists: %s"
+                          % (spec.name, conflict))
+                return False
+
+        conflicts = tree.merge(view.root, link=view.link,
+                               ignore=ignore_metadata_dir,
+                               ignore_conflicts=ignore_conflicts)
+        view.link_meta_folder(self.spec)
+
+        if ignore_conflicts:
+            for c in conflicts:
+                tty.warn("Could not link: %s" % c)
+
+        if verbose:
+            tty.info('Linked package: %s' % spec)
+
     def activate(self, extension, **kwargs):
         """Make extension package usable by linking all its files to a target
         provided by the directory layout (depending if the user wants to
