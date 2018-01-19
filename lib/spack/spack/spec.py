@@ -3038,7 +3038,7 @@ class Spec(object):
                 elif named_str == 'OPTIONS':
                     if self.variants:
                         write(fmt % token_transform(str(self.variants)), '+')
-                elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET"]:
+                elif named_str in ["ARCHITECTURE", "PLATFORM", "TARGET", "OS"]:
                     if self.architecture and str(self.architecture):
                         if named_str == "ARCHITECTURE":
                             write(
@@ -3046,7 +3046,7 @@ class Spec(object):
                                 '='
                             )
                         elif named_str == "PLATFORM":
-                            platform = str(self.architecture.target)
+                            platform = str(self.architecture.platform)
                             write(fmt % token_transform(platform), '=')
                         elif named_str == "OS":
                             operating_sys = str(self.architecture.platform_os)
