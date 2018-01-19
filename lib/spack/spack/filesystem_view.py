@@ -273,24 +273,9 @@ class YamlFilesystemView(FilesystemView):
                                         long=False)
                 return False
 
-        tree = LinkTree(spec.prefix)
+        spec.package.add_to_view(self.root, self.extensions_layout)
 
-        if not self.ignore_conflicts:
-            conflict = tree.find_conflict(self.root)
-            if conflict is not None:
-                tty.error(self._croot +
-                          "Cannot link package %s, file already exists: %s"
-                          % (spec.name, conflict))
-                return False
-
-        conflicts = tree.merge(self.root, link=self.link,
-                               ignore=ignore_metadata_dir,
-                               ignore_conflicts=self.ignore_conflicts)
         self.link_meta_folder(spec)
-
-        if self.ignore_conflicts:
-            for c in conflicts:
-                tty.warn(self._croot + "Could not link: %s" % c)
 
         if self.verbose:
             tty.info(self._croot + 'Linked package: %s' % colorize_spec(spec))

@@ -1863,27 +1863,25 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
                 if spec.package.extends(self.extendee_spec))
 
-    def add_to_view(self, view, ignore_conflicts=False):
+    def add_to_view(self, target, extensions_layout, ignore_conflicts=False):
         tree = LinkTree(self.spec.prefix)
 
-        if not ignore_conflicts:
-            conflict = tree.find_conflict(target)
-            if conflict is not None:
-                tty.error("Cannot link package %s, file already exists: %s"
-                          % (spec.name, conflict))
-                return False
+        def ignore(filename):
+            return (filename in spack.store.layout.hidden_file_paths or
+                    kwargs.get('ignore', lambda f: False)(filename))
 
-        conflicts = tree.merge(view.root, link=view.link,
-                               ignore=ignore_metadata_dir,
+        if not ignore_conflicts:
+            conflict = tree.find_conflict(target, ignore=ignore)
+            if conflict:
+                raise ExtensionConflictError(conflict)
+
+        conflicts = tree.merge(target, link=extensions_layout.link,
+                               ignore=ignore,
                                ignore_conflicts=ignore_conflicts)
-        view.link_meta_folder(self.spec)
 
         if ignore_conflicts:
             for c in conflicts:
                 tty.warn("Could not link: %s" % c)
-
-        if verbose:
-            tty.info('Linked package: %s' % spec)
 
     def activate(self, extension, **kwargs):
         """Make extension package usable by linking all its files to a target
@@ -1900,16 +1898,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                        spack.store.extensions)
         target = extensions_layout.extendee_target_directory(self)
 
-        def ignore(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    kwargs.get('ignore', lambda f: False)(filename))
-
-        tree = LinkTree(extension.prefix)
-        conflict = tree.find_conflict(target, ignore=ignore)
-        if conflict:
-            raise ExtensionConflictError(conflict)
-
-        tree.merge(target, ignore=ignore, link=extensions_layout.link)
+        self.add_to_view(target, extensions_layout)
 
     def do_deactivate(self, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method.
