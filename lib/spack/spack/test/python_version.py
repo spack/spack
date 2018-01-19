@@ -162,6 +162,7 @@ def test_core_module_compatibility():
     check_python_versions(pyfiles([spack.lib_path], exclude=exclude_paths))
 
 
+@pytest.mark.packagetest
 @pytest.mark.maybeslow
 def test_package_module_compatibility():
     """Test that all spack packages work with supported Python versions."""
