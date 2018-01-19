@@ -86,7 +86,6 @@ class Gettext(AutotoolsPackage):
         if '+libxml2' in spec:
             config_args.append('--with-libxml2-prefix={0}'.format(
                 spec['libxml2'].prefix))
-        else:
             config_args.append('--with-included-libxml')
 
         if '+bzip2' not in spec:
@@ -98,7 +97,6 @@ class Gettext(AutotoolsPackage):
         if '+libunistring' in spec:
             config_args.append('--with-libunistring-prefix={0}'.format(
                 spec['libunistring'].prefix))
-        else:
             config_args.append('--with-included-libunistring')
 
         return config_args
