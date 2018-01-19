@@ -273,7 +273,8 @@ class YamlFilesystemView(FilesystemView):
                                         long=False)
                 return False
 
-        spec.package.add_to_view(self.root, self.extensions_layout)
+        spec.package.add_to_view(self.root, self.extensions_layout,
+                                 ignore_conflicts=self.ignore_conflicts)
 
         self.link_meta_folder(spec)
 

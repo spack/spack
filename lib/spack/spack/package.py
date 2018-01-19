@@ -1863,12 +1863,14 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
                 if spec.package.extends(self.extendee_spec))
 
-    def add_to_view(self, target, extensions_layout, ignore_conflicts=False):
+    def add_to_view(self, target, extensions_layout, ignore=None,
+                    ignore_conflicts=False):
         tree = LinkTree(self.spec.prefix)
 
-        def ignore(filename):
+        ignore = ignore or lambda f: False
+        def ignore_file(filename):
             return (filename in spack.store.layout.hidden_file_paths or
-                    kwargs.get('ignore', lambda f: False)(filename))
+                    ignore(filename))
 
         if not ignore_conflicts:
             conflict = tree.find_conflict(target, ignore=ignore)
@@ -1876,20 +1878,21 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 raise ExtensionConflictError(conflict)
 
         conflicts = tree.merge(target, link=extensions_layout.link,
-                               ignore=ignore,
+                               ignore=ignore_file,
                                ignore_conflicts=ignore_conflicts)
 
         if ignore_conflicts:
             for c in conflicts:
                 tty.warn("Could not link: %s" % c)
 
-    def remove_from_view(target):
-        def ignore(filename):
+    def remove_from_view(target, ignore=None):
+        ignore = ignore or lambda f: False
+        def ignore_file(filename):
             return (filename in spack.store.layout.hidden_file_paths or
-                    kwargs.get('ignore', lambda f: False)(filename))
+                    ignore(filename))
 
         tree = LinkTree(self.spec.prefix)
-        tree.unmerge(target, ignore=ignore)
+        tree.unmerge(target, ignore=ignore_file)
 
     def activate(self, extension, **kwargs):
         """Make extension package usable by linking all its files to a target
@@ -1906,7 +1909,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                        spack.store.extensions)
         target = extensions_layout.extendee_target_directory(self)
 
-        extension.add_to_view(target, extensions_layout)
+        extension.add_to_view(target, extensions_layout,
+                              ignore=kwargs.get('ignore', None))
 
     def do_deactivate(self, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method.
@@ -1974,7 +1978,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                        spack.store.extensions)
         target = extensions_layout.extendee_target_directory(self)
 
-        extension.remove_from_view(target)
+        extension.remove_from_view(target, ignore=kwargs.get('ignore', None))
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""
