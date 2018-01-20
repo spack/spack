@@ -39,4 +39,5 @@ class BamWindow(CMakePackage):
 
     def patch(self):
         filter_file('include(GitHelper)', '', 'CMakeLists.txt', string=True)
-        filter_file('get_git_version_info()', '', 'CMakeLists.txt', string=True)
+        filter_file('get_git_version_info()', '', 'CMakeLists.txt',
+                    string=True)
