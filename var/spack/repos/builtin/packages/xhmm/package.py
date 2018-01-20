@@ -40,13 +40,14 @@ class Xhmm(MakefilePackage):
     depends_on('lapack')
 
     def edit(self, spec, prefix):
-        filter_file('GCC', 'CC', 'sources/hmm++/config_rules.Makefile')
-        filter_file('GCC =gcc', '', 'sources/hmm++/config_defs.Makefile')
+        makefile = FileFilter('sources/hmm++/config_rules.Makefile')
+        makefile.filter('GCC', 'CC')
+        makefile.filter('GCC =gcc', '')
 
     def build(self, spec, prefix):
+        # TODO: Add more BLAS libs
         if '^openblas' in spec:
             lapacklib = 'openblas'
-        #TODO: Add more BLAS libs
         make('LAPACK_LIBS=%s' % lapacklib)
 
     def install(self, spec, prefix):
