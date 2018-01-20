@@ -1885,7 +1885,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             for c in conflicts:
                 tty.warn("Could not link: %s" % c)
 
-    def remove_from_view(target, ignore=None):
+    def remove_from_view(self, target, ignore=None):
         ignore = ignore or (lambda f: False)
         def ignore_file(filename):
             return (filename in spack.store.layout.hidden_file_paths or
