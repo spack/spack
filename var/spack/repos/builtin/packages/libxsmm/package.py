@@ -61,6 +61,8 @@ class Libxsmm(MakefilePackage):
             description='Unoptimized with call-trace (LIBXSMM_TRACE).')
     variant('header-only', default=False,
             description='Produce header-only installation')
+    # variant +header-only is only available since v1.6.2
+    conflicts('+header-only', when='@:1.6.2')
 
     @property
     def libs(self):
@@ -84,30 +86,7 @@ class Libxsmm(MakefilePackage):
         makefile.filter('FC = ifort',       'FC ?= ifort', **kwargs)
         makefile.filter('FC = gfortran',    'FC ?= gfortran', **kwargs)
 
-    def install(self, spec, prefix):
-        spec = self.spec
-        install_tree('include', prefix.include)
-        if '~header-only' in spec:
-            install_tree('lib', prefix.lib)
-        doc_path = join_path(prefix.share, 'libxsmm', 'doc')
-        mkdirp(doc_path)
-        for doc_file in glob(join_path('documentation', '*.md')):
-            install(doc_file, doc_path)
-        for doc_file in glob(join_path('documentation', '*.pdf')):
-            install(doc_file, doc_path)
-        if '@1.8.2:' in spec:
-            install('LICENSE.md', doc_path)
-        else:
-            install('README.md', doc_path)
-            install('LICENSE', doc_path)
-        install('version.txt', doc_path)
-
     def build(self, spec, prefix):
-        if '+header-only' in spec and '@1.6.2:' not in spec:
-            raise InstallError(
-                "The variant +header-only is only available " +
-                "for versions @1.6.2:")
-
         # include symbols by default
         make_args = ['SYM=1']
 
@@ -123,3 +102,21 @@ class Libxsmm(MakefilePackage):
             make_args += ['TRACE=1']
 
         make(*make_args)
+
+    def install(self, spec, prefix):
+        install_tree('include', prefix.include)
+        if '+header-only' in spec:
+            install_tree('src', prefix.src)
+        else:
+            install_tree('lib', prefix.lib)
+        mkdirp(prefix.doc)
+        for doc_file in glob(join_path('documentation', '*.md')):
+            install(doc_file, prefix.doc)
+        for doc_file in glob(join_path('documentation', '*.pdf')):
+            install(doc_file, prefix.doc)
+        if '@1.8.2:' in spec:
+            install('LICENSE.md', prefix.doc)
+        else:
+            install('README.md', prefix.doc)
+            install('LICENSE', prefix.doc)
+        install('version.txt', prefix.doc)
