@@ -22,35 +22,19 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+"""This file dispatches to the correct implementation of OrderedDict."""
 
+# TODO: this file can be removed when support for python 2.6 will be dropped
 
-class PyMccabe(PythonPackage):
-    """Ned's script to check McCabe complexity."""
+# Removing this import will make python 2.6
+# fail on import of ordereddict
+from __future__ import absolute_import
 
-    homepage = "https://github.com/PyCQA/mccabe"
-    url      = "https://github.com/PyCQA/mccabe/archive/0.5.2.tar.gz"
+import sys
 
-    version('0.6.1', '0360af86f0bce7a839bd3cba517edf9c')
-    version('0.6.0', '38f46ff70b5d2c02155f8fd4d96fb791')
-    version('0.5.3', 'a75f57079ce10556fd3c63a5f6b4d706')
-    version('0.5.2', '3cdf2d7faa1464b18905fe9a7063a632')
-    version('0.5.1', '864b364829156701bec797712be8ece0')
-    version('0.5.0', '71c0ce5e5c4676753525154f6c5d3af8')
-    version('0.4.0', '9cf5712e5f1785aaa27273a4328babe4')
-    version('0.3.1', '45c48c0978e6fc1f31fedcb918178abb')
-    version('0.3',   'c583f58ea28be12842c001473d77504d')
-    version('0.2.1', 'fcba311ebd999f48359a8ab28da94b30')
-    version('0.2',   '36d4808c37e187dbb1fe2373a0ac6645')
-    version('0.1',   '3c9e8e72612a9c01d865630cc569150a')
-
-    depends_on('python@2.7:2.8,3.3:')
-
-    depends_on('py-setuptools', type='build')
-
-    # TODO: Add test dependencies
-    # depends_on('py-pytest', type='test')
-
-    def patch(self):
-        """Filter pytest-runner requirement out of setup.py."""
-        filter_file("['pytest-runner']", "[]", 'setup.py', string=True)
+if sys.version_info[:2] == (2, 6):
+    import ordereddict
+    OrderedDict = ordereddict.OrderedDict
+else:
+    import collections
+    OrderedDict = collections.OrderedDict

@@ -42,6 +42,10 @@ class BashCompletion(AutotoolsPackage):
     # Other dependencies
     depends_on('bash@4.1:', type='run')
 
+    @run_before('install')
+    def create_install_directory(self):
+        mkdirp(join_path(self.prefix.share, 'bash-completion', 'completions'))
+
     @run_after('install')
     def show_message_to_user(self):
         prefix = self.prefix

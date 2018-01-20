@@ -1,4 +1,4 @@
-# <img src="https://cdn.rawgit.com/spack/spack/features/svg-logo/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
+# <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
 
 [![Build Status](https://travis-ci.org/spack/spack.svg?branch=develop)](https://travis-ci.org/spack/spack)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)

@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/spack/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,35 +22,34 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+#
 from spack import *
 
 
-class PyMccabe(PythonPackage):
-    """Ned's script to check McCabe complexity."""
+class PyFparser(PythonPackage):
+    """Parser for Fortran 77..2003 code."""
 
-    homepage = "https://github.com/PyCQA/mccabe"
-    url      = "https://github.com/PyCQA/mccabe/archive/0.5.2.tar.gz"
+    homepage = "https://github.com/stfc/fparser"
+    url      = "https://github.com/stfc/fparser/archive/0.0.5.tar.gz"
+    giturl   = "https://github.com/stfc/fparser.git"
 
-    version('0.6.1', '0360af86f0bce7a839bd3cba517edf9c')
-    version('0.6.0', '38f46ff70b5d2c02155f8fd4d96fb791')
-    version('0.5.3', 'a75f57079ce10556fd3c63a5f6b4d706')
-    version('0.5.2', '3cdf2d7faa1464b18905fe9a7063a632')
-    version('0.5.1', '864b364829156701bec797712be8ece0')
-    version('0.5.0', '71c0ce5e5c4676753525154f6c5d3af8')
-    version('0.4.0', '9cf5712e5f1785aaa27273a4328babe4')
-    version('0.3.1', '45c48c0978e6fc1f31fedcb918178abb')
-    version('0.3',   'c583f58ea28be12842c001473d77504d')
-    version('0.2.1', 'fcba311ebd999f48359a8ab28da94b30')
-    version('0.2',   '36d4808c37e187dbb1fe2373a0ac6645')
-    version('0.1',   '3c9e8e72612a9c01d865630cc569150a')
-
-    depends_on('python@2.7:2.8,3.3:')
+    version('0.0.6', '15553fde76b4685fa8edb0a5472b1b53d308c3b8')
+    version('0.0.5', '14630afdb8c8bd025e5504c5ab19d133aa8cf8c7')
+    version('develop', git=giturl, branch='master')
 
     depends_on('py-setuptools', type='build')
 
-    # TODO: Add test dependencies
-    # depends_on('py-pytest', type='test')
+    depends_on('py-numpy', type=('build', 'run'), when='@:0.0.5')
+    depends_on('py-nose', type='build')
+    depends_on('py-six', type='build', when='@0.0.6:')
 
-    def patch(self):
-        """Filter pytest-runner requirement out of setup.py."""
-        filter_file("['pytest-runner']", "[]", 'setup.py', string=True)
+    depends_on('py-pytest', type='test')
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_build(self):
+        # Ensure that pytest.ini exists inside the source tree,
+        # otherwise an external pytest.ini can cause havoc:
+        touch('pytest.ini')
+        with working_dir('src'):
+            Executable('py.test')()

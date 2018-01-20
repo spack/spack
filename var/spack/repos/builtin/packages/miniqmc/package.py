@@ -1,6 +1,6 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright (c) 2018, Los Alamos National Security, LLC
+# Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
@@ -25,31 +25,28 @@
 from spack import *
 
 
-class YamlCpp(CMakePackage):
-    """A YAML parser and emitter in C++"""
+class Miniqmc(CMakePackage):
+    """a simplified real space QMC code for algorithm development,
+       performance portability testing, and computer science experiments
+    """
 
-    homepage = "https://github.com/jbeder/yaml-cpp"
-    url      = "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
+    homepage = "https://github.com/QMCPACK/miniqmc"
+    url      = "https://github.com/QMCPACK/miniqmc/archive/0.2.0.tar.gz"
 
-    version('0.5.3', '2bba14e6a7f12c7272f87d044e4a7211')
-    version('develop', git='https://github.com/jbeder/yaml-cpp', branch='master')
+    version('0.2.0', 'b96bacaf48b8e9c0de05d04a95066bc1')
 
-    variant('shared', default=True,
-            description='Enable build of shared libraries')
-    variant('pic',   default=True,
-            description='Build with position independent code')
+    tags = ['proxy-app']
 
-    depends_on('boost', when='@:0.5.3')
+    depends_on('mpi')
+    depends_on('lapack')
 
     def cmake_args(self):
-        spec = self.spec
-        options = []
+        args = [
+            '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+            '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc
+        ]
+        return args
 
-        options.extend([
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
-                'ON' if '+pic' in spec else 'OFF'),
-        ])
-
-        return options
+    def install(self, spec, prefix):
+        install_tree(join_path('spack-build', 'bin'), prefix.bin)
+        install_tree(join_path('spack-build', 'lib'), prefix.lib)
