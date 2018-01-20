@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2018, Los Alamos National Security, LLC
 # Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
@@ -25,15 +25,28 @@
 from spack import *
 
 
-class Ucx(AutotoolsPackage):
-    """a communication library implementing high-performance messaging for
-    MPI/PGAS frameworks"""
+class Miniqmc(CMakePackage):
+    """a simplified real space QMC code for algorithm development,
+       performance portability testing, and computer science experiments
+    """
 
-    homepage = "http://www.openucx.org"
-    url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
+    homepage = "https://github.com/QMCPACK/miniqmc"
+    url      = "https://github.com/QMCPACK/miniqmc/archive/0.2.0.tar.gz"
 
-    # Current
-    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
+    version('0.2.0', 'b96bacaf48b8e9c0de05d04a95066bc1')
 
-    # Still supported
-    version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
+    tags = ['proxy-app']
+
+    depends_on('mpi')
+    depends_on('lapack')
+
+    def cmake_args(self):
+        args = [
+            '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+            '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc
+        ]
+        return args
+
+    def install(self, spec, prefix):
+        install_tree(join_path('spack-build', 'bin'), prefix.bin)
+        install_tree(join_path('spack-build', 'lib'), prefix.lib)
