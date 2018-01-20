@@ -26,10 +26,13 @@
 import inspect
 import os
 
+import spack
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import working_dir
+from llnl.util.lang import match_predicate
+from llnl.util.link_tree import LinkTree
 
 
 class PythonPackage(PackageBase):
@@ -115,6 +118,8 @@ class PythonPackage(PackageBase):
     extends('python')
 
     depends_on('python', type=('build', 'run'))
+
+    py_namespace = None
 
     def setup_file(self):
         """Returns the name of the setup file to use."""
@@ -397,3 +402,44 @@ class PythonPackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
+
+    def add_to_view(self, target, extensions_layout, ignore=None,
+                    ignore_conflicts=False):
+        tree = LinkTree(self.spec.prefix)
+
+        ignore = ignore or (lambda f: False)
+        def ignore_file(filename):
+            return (filename in spack.store.layout.hidden_file_paths or
+                    ignore(filename))
+
+        if not ignore_conflicts:
+            conflicts = tree.find_conflict(
+                target, ignore=ignore_file, all=True)
+            if conflicts and self.namespace:
+                ext_map = extensions_layout.extension_map(self.extendee_spec)
+                namespaces = set(
+                    x.package.py_namespace for x in ext_map.values())
+                namespace_re = (
+                    r'site-packages/{0}/__init__.py'.format(self.py_namespace))
+                find_namespace = match_predicate(namespace_re)
+                if self.py_namespace in namespaces:
+                    conflicts = list(
+                        x for x in conflicts if not find_namespace(x))
+            if conflicts:
+                raise ExtensionConflictError(conflicts[0])
+
+        tree.merge(target, link=extensions_layout.link,
+                   ignore_conflicts=True)
+
+        if ignore_conflicts:
+            for c in conflicts:
+                tty.warn("Could not link: %s" % c)
+
+    def remove_from_view(self, target, ignore=None):
+        ignore = ignore or (lambda f: False)
+        def ignore_file(filename):
+            return (filename in spack.store.layout.hidden_file_paths or
+                    ignore(filename))
+
+        tree = LinkTree(self.spec.prefix)
+        tree.unmerge(target, ignore=ignore_file)

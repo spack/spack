@@ -56,13 +56,17 @@ class LinkTree(object):
     def find_conflict(self, dest_root, **kwargs):
         """Returns the first file in dest that conflicts with src"""
         kwargs['follow_nonexisting'] = False
+        get_all_conflicts = kwargs.get('all', False)
+        conflicts = []
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
                 if os.path.exists(dest) and not os.path.isdir(dest):
-                    return dest
+                    conflicts.append(dest)
             elif os.path.exists(dest):
-                return dest
-        return None
+                conflicts.append(dest)
+            if conflicts and not get_all_conflicts:
+                return conflicts[0]
+        return conflicts
 
     def merge(self, dest_root, link=os.symlink, **kwargs):
         """Link all files in src into dest, creating directories
