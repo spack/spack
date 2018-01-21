@@ -35,6 +35,7 @@ class Libgit2(CMakePackage):
     homepage = "https://libgit2.github.com/"
     url      = "https://github.com/libgit2/libgit2/archive/v0.24.2.tar.gz"
 
+    version('0.26.0', '6ea75a8a5745a7b2a14d3ed94486e761')
     version('0.24.2', '735661b5b73e3c120d13e2bae21e49b3')
 
     depends_on('cmake@2.8:', type='build')
