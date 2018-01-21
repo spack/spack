@@ -61,8 +61,8 @@ class Libxsmm(MakefilePackage):
             description='Unoptimized with call-trace (LIBXSMM_TRACE).')
     variant('header-only', default=False,
             description='Produce header-only installation')
-    # variant +header-only is only available since v1.6.2
-    conflicts('+header-only', when='@:1.6.2')
+    conflicts('+header-only', when='@:1.6.2',
+              msg='Header-only is available since v1.6.2!')
 
     @property
     def libs(self):
