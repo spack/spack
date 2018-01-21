@@ -34,6 +34,7 @@ class Bazel(Package):
     homepage = "https://www.bazel.io"
     url = "https://github.com/bazelbuild/bazel/releases/download/0.5.0/bazel-0.5.0-dist.zip"
 
+    version('0.9.0', '7fda74c163108f7c180bbc513bc8123b')
     version('0.4.5', '2b737be42678900470ae9e48c975ac5b2296d9ae23c007bf118350dbe7c0552b')
     version('0.4.4', '5e7c52b89071efc41277e2f0057d258f')
     version('0.3.1', '5c959467484a7fc7dd2e5e4a1e8e866b')
@@ -45,9 +46,11 @@ class Bazel(Package):
     depends_on('java@8:')
     depends_on('zip')
 
-    patch('fix_env_handling.patch')
+    patch('fix_env_handling.patch', when='@:0.4.5')
+    patch('fix_env_handling-0.9.0.patch', when='@0.9.0:')
     patch('link.patch')
-    patch('cc_configure.patch')
+    patch('cc_configure.patch', when='@:0.4.5')
+    patch('unix_cc_configure.patch', when='@0.9.0:')
 
     def url_for_version(self, version):
         if version >= Version('0.4.1'):
