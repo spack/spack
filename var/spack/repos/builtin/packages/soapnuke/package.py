@@ -25,12 +25,23 @@
 from spack import *
 
 
-class Log4cplus(CMakePackage):
-    """log4cplus is a simple to use C++ logging API
-    providing thread-safe, flexible, and arbitrarily
-    granular control over log management and configuration."""
+class Soapnuke(CMakePackage):
+    """SOAPnuke is a novel analysis tool developed for
+    ultrafast quality control and preprocessing of
+    high throughput sequencing (HTS) data."""
 
-    homepage = "https://sourceforge.net/projects/log4cplus/"
-    url      = "https://nchc.dl.sourceforge.net/project/log4cplus/log4cplus-stable/1.2.0/log4cplus-1.2.0.tar.gz"
+    homepage = "https://github.com/BGI-flexlab/SOAPnuke"
+    url      = "https://github.com/BGI-flexlab/SOAPnuke/archive/SOAPnuke1.6.2.tar.gz"
 
-    version('1.2.0', 'e250f0f431c0723f8b625323e7b6465d')
+    version('1.6.2', '6ba6833e0d9d25bedf73cd7374a0e785')
+
+    depends_on('zlib')
+    depends_on('boost')
+    depends_on('boost')
+    depends_on('log4cplus')
+
+    root_cmakelists_dir = 'src'
+
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        install('SOAPnuke', prefix.bin)
