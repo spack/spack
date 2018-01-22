@@ -1885,7 +1885,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             for c in conflicts:
                 tty.warn("Could not link: %s" % c)
 
-    def remove_from_view(self, target, ignore=None):
+    def remove_from_view(self, target, extensions_layout, ignore=None):
         ignore = ignore or (lambda f: False)
         def ignore_file(filename):
             return (filename in spack.store.layout.hidden_file_paths or
@@ -1978,7 +1978,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                        spack.store.extensions)
         target = extensions_layout.extendee_target_directory(self)
 
-        extension.remove_from_view(target, ignore=kwargs.get('ignore', None))
+        extension.remove_from_view(
+            target, extensions_layout, ignore=kwargs.get('ignore', None))
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""

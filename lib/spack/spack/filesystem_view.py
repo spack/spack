@@ -365,7 +365,7 @@ class YamlFilesystemView(FilesystemView):
                      'Skipping package not linked in view: %s' % spec.name)
             return
 
-        spec.package.remove_from_view(self.root)
+        spec.package.remove_from_view(self.root, self.extensions_layout)
         self.unlink_meta_folder(spec)
 
         if self.verbose:

@@ -415,7 +415,7 @@ class PythonPackage(PackageBase):
         if not ignore_conflicts:
             conflicts = tree.find_conflict(
                 target, ignore=ignore_file, all=True)
-            if conflicts and self.namespace:
+            if conflicts and self.py_namespace:
                 ext_map = extensions_layout.extension_map(self.extendee_spec)
                 namespaces = set(
                     x.package.py_namespace for x in ext_map.values())
@@ -435,11 +435,21 @@ class PythonPackage(PackageBase):
             for c in conflicts:
                 tty.warn("Could not link: %s" % c)
 
-    def remove_from_view(self, target, ignore=None):
+    def remove_from_view(self, target, extensions_layout, ignore=None):
+        namespace_ignore = []
+        if self.py_namespace:
+            ext_map = extensions_layout.extension_map(self.extendee_spec)
+            remaining_namespaces = set(
+                spec.package.py_namespace for name, spec in ext_map.items()
+                if name != self.name)
+            if self.py_namespace in remaining_namespaces:
+                namespace_re = (
+                    r'site-packages/{0}/__init__.py'.format(self.py_namespace))
+                namespace_ignore = [namespace_re]
+
         ignore = ignore or (lambda f: False)
-        def ignore_file(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    ignore(filename))
+        ignore_file = match_predicate(
+            spack.store.layout.hidden_file_paths, ignore, namespace_ignore)
 
         tree = LinkTree(self.spec.prefix)
         tree.unmerge(target, ignore=ignore_file)
