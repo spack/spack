@@ -26,9 +26,10 @@ from spack import *
 
 
 class PerlExporterTiny(PerlPackage):
-    """FIXME: Put a proper description of your package here."""
+    """An exporter with the features of Sub::Exporter but only core
+    dependencies"""
 
-    homepage = "http://www.example.com"
+    homepage = "http://search.cpan.org/~tobyink/Exporter-Tiny/lib/Exporter/Tiny.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.000000.tar.gz"
 
     version('1.000000', '0d413747bdcf880f9ec62de8801ccf5e')
