@@ -97,8 +97,6 @@ class Conduit(Package):
     # causes duplicate state issues when running compiled python modules.
     depends_on("python+shared")
     extends("python", when="+python")
-    # TODO: blas and lapack are disabled due to build
-    # issues Cyrus experienced on OSX 10.11.6
     depends_on("py-numpy", when="+python", type=('build', 'run'))
 
     #######################
