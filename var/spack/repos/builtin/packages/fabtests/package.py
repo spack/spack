@@ -39,4 +39,3 @@ class Fabtests(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('libfabric')
-

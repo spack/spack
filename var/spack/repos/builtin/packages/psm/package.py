@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Psm(MakefilePackage):
     """Intel Performance scaled messaging library"""
 
@@ -42,4 +43,4 @@ class Psm(MakefilePackage):
         makefile.filter('{DESTDIR}/usr/', '{LOCAL_PREFIX}/')
 
     def install(self, spec, prefix):
-        make ('LOCAL_PREFIX=%s' %  prefix, 'install')
+        make('LOCAL_PREFIX=%s' % prefix, 'install')
