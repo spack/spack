@@ -36,6 +36,7 @@ class NetlibLapack(Package):
     homepage = "http://www.netlib.org/lapack/"
     url = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
+    version('3.7.1', 'dcdeeed73de152c4643ccc5b1aeb453c')
     version('3.7.0', '697bb8d67c7d336a0f339cc9dd0fa72f')
     version('3.6.1', '421b2cb72e15f237e144428f9c460ee0')
     version('3.6.0', 'f2f6c67134e851fe189bb3ca1fbb5101')
