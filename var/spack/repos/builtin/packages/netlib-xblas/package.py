@@ -57,7 +57,18 @@ class NetlibXblas(AutotoolsPackage):
 
     version('1.0.248', '990c680fb5e446bb86c10936e4cd7f88')
 
+    variant('fortran', default=True,
+            description='Build Fortran interfaces')
+
     provides('blas')
+
+    def configure_args(self):
+       args = []
+
+       if self.spec.satisfies('~fortran'):
+           args += ['--disable-fortran']
+
+       return args
 
     def install(self, spec, prefix):
         mkdirp(prefix.lib)
