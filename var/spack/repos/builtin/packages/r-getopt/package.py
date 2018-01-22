@@ -25,25 +25,15 @@
 from spack import *
 
 
-class Libssh2(CMakePackage):
-    """libssh2 is a client-side C library implementing the SSH2 protocol"""
+class RGetopt(RPackage):
+    """Package designed to be used with Rscript to write "#!" shebang scripts
+       that accept short and long flags/options. Many users will prefer using
+       instead the packages optparse or argparse which add extra features like
+       automatically generated help option and usage, support for default
+       values, positional argument support, etc."""
 
-    homepage = "https://www.libssh2.org/"
-    url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
+    homepage = "https://github.com/trevorld/getopt"
+    url      = "https://cran.r-project.org/src/contrib/getopt_1.20.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/getopt"
 
-    version('1.8.0', '3d1147cae66e2959ea5441b183de1b1c')
-    version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
-    version('1.4.3', '071004c60c5d6f90354ad1b701013a0b')  # CentOS7
-
-    variant('shared', default=True,
-            description="Build shared libraries")
-
-    depends_on('cmake@2.8.11:', type='build')
-    depends_on('openssl')
-    depends_on('zlib')
-    depends_on('xz')
-
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
+    version('1.20.1', '323cf2846e306f49236b8174bc3d4e47')

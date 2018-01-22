@@ -125,9 +125,9 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('hdf5+mpi+hl',      when='+hdf5+mpi')
     depends_on('cuda@8:',          when='+cuda')
     depends_on('cmake@3.9:',       when='+cuda')
-    # currently deal.II does not build with Cmake 3.10, see
+    # older version of deal.II do not build with Cmake 3.10, see
     # https://github.com/dealii/dealii/issues/5510
-    depends_on('cmake@:3.9.99')
+    depends_on('cmake@:3.9.99',    when='@:8.99')
     # FIXME: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on('metis@5:+int64+real64',   when='+metis+int64')

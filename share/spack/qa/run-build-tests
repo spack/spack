@@ -26,4 +26,3 @@ spack config get compilers
 
 # Run some build smoke tests, potentially with code coverage
 ${coverage_run} bin/spack install ${SPEC}
-${coverage_combine}
