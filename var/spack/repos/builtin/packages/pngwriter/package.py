@@ -43,9 +43,19 @@ class Pngwriter(CMakePackage):
             git='https://github.com/pngwriter/pngwriter.git')
     version('master', branch='master',
             git='https://github.com/pngwriter/pngwriter.git')
+    version('0.7.0', 'a68aa0889f120f5bb07848afce278a95')
     version('0.6.0', '0a19bc55c5f6379fea7343752fd3ffae')
     version('0.5.6', 'c13bd1fdc0e331a246e6127b5f262136')
 
     depends_on('libpng')
     depends_on('zlib')
     depends_on('freetype')
+
+    def cmake_args(self):
+        spec = self.spec
+        args = []
+
+        if spec.satisfies('@0.7.0:'):
+            args += ['-DPNGwriter_USE_FREETYPE:BOOL=ON']
+
+        return args
