@@ -66,6 +66,21 @@ class Fftw(AutotoolsPackage):
         'pfft_patches', default=False,
         description='Add extra transpose functions for PFFT compatibility')
 
+    variant(
+        'simd',
+        default='sse2,avx,avx2',
+        values=(
+            'sse', 'sse2', 'avx', 'avx2', 'avx512',  # Intel
+            'avx-128-fma', 'kcvi',  # Intel
+            'altivec', 'vsx',  # IBM
+            'neon',  # ARM
+            'generic-simd128', 'generic-simd256'  # Generic
+        ),
+        description='Optimizations that are enabled in this build',
+        multi=True
+    )
+    variant('fma', default=False, description='Activate support for fma')
+
     depends_on('mpi', when='+mpi')
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
@@ -109,12 +124,11 @@ class Fftw(AutotoolsPackage):
             options.append('--enable-mpi')
 
         # SIMD support
-        # TODO: add support for more architectures
-        float_options = []
-        double_options = []
-        if 'x86_64' in spec.architecture and spec.satisfies('@3:'):
-            float_options.append('--enable-sse2')
-            double_options.append('--enable-sse2')
+        float_options, double_options = [], []
+        if spec.satisfies('@3:', strict=True):
+            for opts in (float_options, double_options):
+                opts += self.enable_or_disable('simd')
+                opts += self.enable_or_disable('fma')
 
         configure = Executable('../configure')
 
