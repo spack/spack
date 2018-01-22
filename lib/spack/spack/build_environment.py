@@ -57,6 +57,7 @@ import os
 import shutil
 import sys
 import traceback
+import types
 from six import iteritems
 from six import StringIO
 
@@ -165,7 +166,19 @@ def set_compiler_environment_variables(pkg, env):
     env_flags = {}
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
-        injf, envf, bsf = pkg.flag_handler(flag, pkg.spec.compiler_flags[flag])
+        # Always convert flag_handler to function type.
+        # This avoids discrepencies in calling conventions between functions
+        # and methods, or between bound and unbound methods in python 2.
+        # We cannot effectively convert everything to a bound method, which
+        # would be the simpler solution.
+        if isinstance(pkg.flag_handler, types.FunctionType):
+            handler = pkg.flag_handler
+        else:
+            if sys.version_info >= (3, 0):
+                handler = pkg.flag_handler.__func__
+            else:
+                handler = pkg.flag_handler.im_func
+        injf, envf, bsf = handler(pkg, flag, pkg.spec.compiler_flags[flag])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
@@ -581,7 +594,8 @@ def setup_package(pkg, dirty):
 
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post', root=False, deptype='build'):
+    for dspec in pkg.spec.traverse(order='post', root=False,
+                                   deptype=('build', 'test')):
         # If a user makes their own package repo, e.g.
         # spack.repos.mystuff.libelf.Libelf, and they inherit from
         # an existing class like spack.repos.original.libelf.Libelf,

@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 
+import sys
+
 
 class Emacs(AutotoolsPackage):
     """The Emacs programmable text editor."""
@@ -71,5 +73,10 @@ class Emacs(AutotoolsPackage):
             ]
         else:
             args = ['--without-x']
+
+        # On OS X/macOS, do not build "nextstep/Emacs.app", because
+        # doing so throws an error at build-time
+        if sys.platform == 'darwin':
+            args.append('--without-ns')
 
         return args

@@ -64,8 +64,7 @@ class Vtk(CMakePackage):
         qt_ver = spec['qt'].version.up_to(1)
         qt_bin = spec['qt'].prefix.bin
 
-        cmake_args = std_cmake_args[:]
-        cmake_args.extend([
+        cmake_args = [
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
             '-DVTK_USE_SYSTEM_HDF5=ON',
@@ -86,7 +85,7 @@ class Vtk(CMakePackage):
             '-DVTK_QT_VERSION:STRING={0}'.format(qt_ver),
             '-DQT_QMAKE_EXECUTABLE:PATH={0}/qmake'.format(qt_bin),
             '-DVTK_Group_Qt:BOOL=ON',
-        ])
+        ]
 
         # NOTE: The following definitions are required in order to allow
         # VTK to build with qt~webkit versions (see the documentation for
@@ -99,7 +98,32 @@ class Vtk(CMakePackage):
             ])
 
         if spec.satisfies('@:6.1.0'):
-            cmake_args.append('-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY')
-            cmake_args.append('-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY')
+            cmake_args.extend([
+                '-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY',
+                '-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY'
+            ])
+
+            # VTK 6.1.0 (and possibly earlier) does not use
+            # NETCDF_CXX_ROOT to detect NetCDF C++ bindings, so
+            # NETCDF_CXX_INCLUDE_DIR and NETCDF_CXX_LIBRARY must be
+            # used instead to detect these bindings
+            netcdf_cxx_lib = spec['netcdf-cxx'].libs.joined()
+            cmake_args.extend([
+                '-DNETCDF_CXX_INCLUDE_DIR={0}'.format(
+                    spec['netcdf-cxx'].prefix.include),
+                '-DNETCDF_CXX_LIBRARY={0}'.format(netcdf_cxx_lib),
+            ])
+
+            # Garbage collection is unsupported in Xcode starting with
+            # version 5.1; if the Apple clang version of the compiler
+            # is 5.1.0 or later, unset the required Objective-C flags
+            # to remove the garbage collection flags.  Versions of VTK
+            # after 6.1.0 set VTK_REQUIRED_OBJCXX_FLAGS to the empty
+            # string. This fix was recommended on the VTK mailing list
+            # in March 2014 (see
+            # https://public.kitware.com/pipermail/vtkusers/2014-March/083368.html)
+            if (self.compiler.is_apple and
+                self.compiler.version >= Version('5.1.0')):
+                cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS=""'])
 
         return cmake_args

@@ -417,11 +417,20 @@ def install(parser, args, **kwargs):
     if args.file:
         for file in args.package:
             with open(file, 'r') as f:
-                specs.append(spack.spec.Spec.from_yaml(f))
+                s = spack.spec.Spec.from_yaml(f)
+
+            if s.concretized().dag_hash() != s.dag_hash():
+                msg = 'skipped invalid file "{0}". '
+                msg += 'The file does not contain a concrete spec.'
+                tty.warn(msg.format(file))
+                continue
+
+            specs.append(s.concretized())
+
     else:
         specs = spack.cmd.parse_specs(args.package, concretize=True)
     if len(specs) == 0:
-        tty.error('The `spack install` command requires a spec to install.')
+        tty.die('The `spack install` command requires a spec to install.')
 
     if args.overwrite:
         # If we asked to overwrite an existing spec we must ensure that:

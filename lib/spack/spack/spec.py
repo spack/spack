@@ -884,6 +884,9 @@ class SpecBuildInterface(ObjectWrapper):
 @key_ordering
 class Spec(object):
 
+    #: Cache for spec's prefix, computed lazily in the corresponding property
+    _prefix = None
+
     @staticmethod
     def from_literal(spec_dict, normal=True):
         """Builds a Spec from a dictionary containing the spec literal.
@@ -1374,12 +1377,13 @@ class Spec(object):
 
     @property
     def prefix(self):
-        if hasattr(self, 'test_prefix'):
-            return Prefix(self.test_prefix)
-        return Prefix(spack.store.layout.path_for_spec(self))
+        if self._prefix is None:
+            self.prefix = spack.store.layout.path_for_spec(self)
+        return self._prefix
 
-    def _set_test_prefix(self, val):
-        self.test_prefix = val
+    @prefix.setter
+    def prefix(self, value):
+        self._prefix = Prefix(value)
 
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
@@ -1869,9 +1873,9 @@ class Spec(object):
         matches = []
         for x in self.traverse():
             for conflict_spec, when_list in x.package.conflicts.items():
-                if x.satisfies(conflict_spec):
+                if x.satisfies(conflict_spec, strict=True):
                     for when_spec, msg in when_list:
-                        if x.satisfies(when_spec):
+                        if x.satisfies(when_spec, strict=True):
                             matches.append((x, conflict_spec, when_spec, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
@@ -1897,7 +1901,7 @@ class Spec(object):
         """This is a non-destructive version of concretize().  First clones,
            then returns a concrete version of this package without modifying
            this package. """
-        clone = self.copy()
+        clone = self.copy(caches=False)
         clone.concretize()
         return clone
 

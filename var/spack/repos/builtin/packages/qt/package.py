@@ -71,7 +71,9 @@ class Qt(Package):
     # see https://github.com/Homebrew/homebrew-core/pull/5951
     patch('restore-pc-files.patch', when='@5.9: platform=darwin')
 
+    patch('qt3accept.patch', when='@3.3.8b')
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
+    patch('qt3ptrdiff.patch', when='@3.3.8b')
 
     # see https://bugreports.qt.io/browse/QTBUG-57656
     patch('QTBUG-57656.patch', when='@5.8.0')
@@ -125,8 +127,12 @@ class Qt(Package):
 
     # OpenGL hardware acceleration
     depends_on("mesa", when='@4:+opengl')
+
     depends_on("libxcb", when=sys.platform != 'darwin')
     depends_on("libx11", when=sys.platform != 'darwin')
+
+    if sys.platform != 'darwin':
+        depends_on("libxext", when='@3:4.99')
 
     # Webkit
     depends_on("flex", when='+webkit', type='build')
@@ -366,6 +372,11 @@ class Qt(Package):
         if '~webkit' in self.spec:
             config_args.extend([
                 '-skip', 'webengine',
+            ])
+
+        if '~opengl' in self.spec and self.spec.satisfies('@5.10:'):
+            config_args.extend([
+                '-skip', 'webglplugin',
             ])
 
         configure('-no-eglfs',

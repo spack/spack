@@ -31,6 +31,7 @@ class Binutils(AutotoolsPackage):
     homepage = "http://www.gnu.org/software/binutils/"
     url      = "https://ftp.gnu.org/gnu/binutils/binutils-2.28.tar.bz2"
 
+    version('2.29.1', '9af59a2ca3488823e453bb356fe0f113')
     version('2.28', '9e8340c96626b469a603c15c9d843727')
     version('2.27', '2869c9bf3e60ee97c74ac2a6bf4e9d68')
     version('2.26', '64146a0faa3b411ba774f47d41de239f')
