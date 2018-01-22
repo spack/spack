@@ -52,7 +52,7 @@ class HoomdBlue(CMakePackage):
     # https://bitbucket.org/glotzer/hoomd-blue/issues/238
     version('2.1.6', git=git, tag='v2.1.6', submodules=True)
     version('2.2.2', git=git, tag='v2.2.2', submodules=True)
-    
+
     variant('mpi',  default=True,  description='Compile with MPI enabled')
     variant('cuda', default=True,  description='Compile with CUDA Toolkit')
     variant('doc',  default=False, description='Generate documentation')
@@ -62,12 +62,12 @@ class HoomdBlue(CMakePackage):
     # https://gcc.gnu.org/projects/cxx-status.html
     conflicts('%gcc@:4.6')
 
-    # HOOMD-blue 2.1.6 uses hexadecimal floats, which are not technically part of
-    # the C++11 standard. GCC 6.0+ produces an error when this happens.
+    # HOOMD-blue 2.1.6 uses hexadecimal floats, which are not technically
+    # part of the C++11 standard. GCC 6.0+ produces an error when this happens.
     # https://bitbucket.org/glotzer/hoomd-blue/issues/239
     # https://bugzilla.redhat.com/show_bug.cgi?id=1321986
     conflicts('%gcc@6.0:', when='@2.1.6')
-    
+
     # HOOMD-blue GCC 7+ is not yet supported
     conflicts('%gcc@7.0:')
 
