@@ -28,6 +28,7 @@ import functools
 import itertools
 import os.path
 import time
+import traceback
 
 import llnl.util.lang
 import spack.build_environment
@@ -47,12 +48,14 @@ __all__ = [
 ]
 
 
-def fetch_text(path):
-    if not os.path.exists(path):
-        return 'No such file or directory: {0}'.format(path)
-
-    with open(path, 'r') as f:
-        return ''.join(f.readlines())
+def fetch_package_log(pkg):
+    try:
+        with open(pkg.build_log_path, 'r') as f:
+            return ''.join(f.readlines())
+    except Exception:
+        return 'Cannot open build log for {0}'.format(
+            pkg.spec.cshort_spec
+        )
 
 
 class InfoCollector(object):
@@ -152,29 +155,19 @@ class InfoCollector(object):
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
                     test_case['result'] = 'failure'
-                    test_case['stdout'] = fetch_text(pkg.build_log_path)
-                    test_case['message'] = 'Installation failure'
-                    test_case['exception'] = str(e)
+                    test_case['stdout'] = fetch_package_log(pkg)
+                    test_case['message'] = e.message or 'Installation failure'
+                    test_case['exception'] = e.traceback
 
-                except (spack.fetch_strategy.FetchError,
-                        Exception,
-                        BaseException) as e:
-                    # A FetchError is considered an error as
-                    # we didn't even start building
+                except (Exception, BaseException) as e:
+                    # Everything else is an error (the installation
+                    # failed outside of the child process)
                     test_case['result'] = 'error'
-                    test_case['stdout'] = fetch_text(pkg.build_log_path)
-                    test_case['exception'] = str(e)
-
-                    if isinstance(e, spack.fetch_strategy.FetchError):
-                        test_case['message'] = 'Unable to fetch package'
-                    elif isinstance(e, Exception):
-                        msg = 'Unexpected exception thrown during install'
-                        test_case['message'] = msg
-                    else:
-                        test_case['message'] = 'Unknown error'
+                    test_case['stdout'] = fetch_package_log(pkg)
+                    test_case['message'] = str(e) or 'Unknown error'
+                    test_case['exception'] = traceback.format_exc()
 
                 finally:
-                    # Any installation needs
                     test_case['elapsed_time'] = time.time() - start_time
 
                 # Append the case to the correct test suites. In some
