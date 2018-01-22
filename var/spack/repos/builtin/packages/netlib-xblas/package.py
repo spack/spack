@@ -44,10 +44,10 @@ class NetlibXblas(AutotoolsPackage):
 
     variant('fortran', default=True,
             description='Build Fortran interfaces')
-    variant('build-plain-blas', default=True,
+    variant('plain-blas', default=True,
             description='As part of XBLAS, build plain BLAS routines')
 
-    provides('blas', when='+build-plain-blas')
+    provides('blas', when='+plain-blas')
 
     @property
     def libs(self):
@@ -60,7 +60,7 @@ class NetlibXblas(AutotoolsPackage):
         if self.spec.satisfies('~fortran'):
             args += ['--disable-fortran']
 
-        if self.spec.satisfies('~build-plain-blas'):
+        if self.spec.satisfies('~plain-blas'):
             args += ['--disable-plain-blas']
 
         return args
@@ -69,7 +69,7 @@ class NetlibXblas(AutotoolsPackage):
         mkdirp(prefix.lib)
         install('libxblas.a', prefix.lib)
 
-        if self.spec.satisfies('+build-plain-blas'):
+        if self.spec.satisfies('+plain-blas'):
             # XBLAS should be a drop-in BLAS replacement
             install('libxblas.a', join_path(prefix.lib, 'libblas.a'))
 
