@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install netlib-xblas
-#
-# You can edit this file again by typing:
-#
-#     spack edit netlib-xblas
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
@@ -59,22 +44,29 @@ class NetlibXblas(AutotoolsPackage):
 
     variant('fortran', default=True,
             description='Build Fortran interfaces')
+    variant('build-plain-blas', default=True,
+            description='As part of XBLAS, build plain BLAS routines')
 
     provides('blas')
 
     def configure_args(self):
-       args = []
+        args = []
 
-       if self.spec.satisfies('~fortran'):
-           args += ['--disable-fortran']
+        if self.spec.satisfies('~fortran'):
+            args += ['--disable-fortran']
 
-       return args
+        if self.spec.satisfies('~build-plain-blas'):
+            args += ['--disable-plain-blas']
+
+        return args
 
     def install(self, spec, prefix):
         mkdirp(prefix.lib)
         install('libxblas.a', prefix.lib)
-        # XBLAS should be a drop-in BLAS replacement
-        install('libxblas.a', join_path(prefix.lib, 'libblas.a'))
+
+        if self.spec.satisfies('+build-plain-blas'):
+            # XBLAS should be a drop-in BLAS replacement
+            install('libxblas.a', join_path(prefix.lib, 'libblas.a'))
 
         headers = ['f2c-bridge.h',
                    'blas_dense_proto.h',
