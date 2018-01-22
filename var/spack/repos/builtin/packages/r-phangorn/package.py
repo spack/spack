@@ -40,7 +40,7 @@ class RPhangorn(RPackage):
 
     depends_on('r-ape@5.0:', type=('build', 'run'))
     depends_on('r-quadprog', type=('build', 'run'))
-    depends_on('r-igraph@1.0:%gcc@4.8.5', type=('build', 'run'))
+    depends_on('r-igraph@1.0:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-fastmatch', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
