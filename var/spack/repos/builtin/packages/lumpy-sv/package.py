@@ -25,25 +25,19 @@
 from spack import *
 
 
-class Libssh2(CMakePackage):
-    """libssh2 is a client-side C library implementing the SSH2 protocol"""
+class LumpySv(MakefilePackage):
+    """A probabilistic framework for structural variant discovery."""
 
-    homepage = "https://www.libssh2.org/"
-    url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
+    homepage = "https://github.com/arq5x/lumpy-sv"
+    url      = "https://github.com/arq5x/lumpy-sv/archive/0.2.13.tar.gz"
 
-    version('1.8.0', '3d1147cae66e2959ea5441b183de1b1c')
-    version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
-    version('1.4.3', '071004c60c5d6f90354ad1b701013a0b')  # CentOS7
+    version('0.2.13', '36929d29fc3a171d3abbe1d93f9f3b50')
 
-    variant('shared', default=True,
-            description="Build shared libraries")
+    depends_on('htslib')
 
-    depends_on('cmake@2.8.11:', type='build')
-    depends_on('openssl')
-    depends_on('zlib')
-    depends_on('xz')
+    def edit(self, spec, prefix):
+        makefile = FileFilter('Makefile')
+        makefile.filter('export CXX .*', '')
 
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
+    def install(self, spec, prefix):
+        install_tree('bin', prefix.bin)

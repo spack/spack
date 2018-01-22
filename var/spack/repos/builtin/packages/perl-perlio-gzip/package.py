@@ -25,25 +25,11 @@
 from spack import *
 
 
-class Libssh2(CMakePackage):
-    """libssh2 is a client-side C library implementing the SSH2 protocol"""
+class PerlPerlioGzip(PerlPackage):
+    """Perl extension to provide a PerlIO layer to gzip/gunzip"""
 
-    homepage = "https://www.libssh2.org/"
-    url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
+    homepage = "http://search.cpan.org/~nwclark/PerlIO-gzip/gzip.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/N/NW/NWCLARK/PerlIO-gzip-0.19.tar.gz"
 
-    version('1.8.0', '3d1147cae66e2959ea5441b183de1b1c')
-    version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
-    version('1.4.3', '071004c60c5d6f90354ad1b701013a0b')  # CentOS7
-
-    variant('shared', default=True,
-            description="Build shared libraries")
-
-    depends_on('cmake@2.8.11:', type='build')
-    depends_on('openssl')
-    depends_on('zlib')
-    depends_on('xz')
-
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
+    version('0.20', '0393eae5d0b23df6cf40ed44af7d711c')
+    version('0.19', 'dbcfc1450f6b593b65048b8ced061c98')

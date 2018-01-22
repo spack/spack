@@ -25,25 +25,12 @@
 from spack import *
 
 
-class Libssh2(CMakePackage):
-    """libssh2 is a client-side C library implementing the SSH2 protocol"""
+class PerlGraph(PerlPackage):
+    """Graph data structures and algorithms"""
 
-    homepage = "https://www.libssh2.org/"
-    url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
+    homepage = "http://search.cpan.org/~jhi/Graph/lib/Graph.pod"
+    url      = "http://search.cpan.org/CPAN/authors/id/J/JH/JHI/Graph-0.9704.tar.gz"
 
-    version('1.8.0', '3d1147cae66e2959ea5441b183de1b1c')
-    version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
-    version('1.4.3', '071004c60c5d6f90354ad1b701013a0b')  # CentOS7
+    version('0.9704', '1ab4e49420e56eeb1bc81d842aa8f3af')
 
-    variant('shared', default=True,
-            description="Build shared libraries")
-
-    depends_on('cmake@2.8.11:', type='build')
-    depends_on('openssl')
-    depends_on('zlib')
-    depends_on('xz')
-
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
+    depends_on('perl@5.6.0:')

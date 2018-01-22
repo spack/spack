@@ -25,25 +25,34 @@
 from spack import *
 
 
-class Libssh2(CMakePackage):
-    """libssh2 is a client-side C library implementing the SSH2 protocol"""
+class Opengl(Package):
+    """Placeholder for external OpenGL libraries from hardware vendors"""
 
-    homepage = "https://www.libssh2.org/"
-    url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
+    homepage = "https://www.opengl.org/"
+    url      = "https://www.opengl.org/"
 
-    version('1.8.0', '3d1147cae66e2959ea5441b183de1b1c')
-    version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
-    version('1.4.3', '071004c60c5d6f90354ad1b701013a0b')  # CentOS7
+    version('3.2', 'N/A')
 
-    variant('shared', default=True,
-            description="Build shared libraries")
+    provides('gl@:4.5', when='@4.5:')
+    provides('gl@:4.4', when='@4.4:')
+    provides('gl@:4.3', when='@4.3:')
 
-    depends_on('cmake@2.8.11:', type='build')
-    depends_on('openssl')
-    depends_on('zlib')
-    depends_on('xz')
+    def install(self, spec, prefix):
+        msg = """This package is intended to be a placeholder for
+        system-provided OpenGL libraries from hardware vendors.  Please
+        download and install OpenGL drivers/libraries for your graphics
+        hardware separately, and then set that up as an external package.
+        An example of a working packages.yaml:
 
-    def cmake_args(self):
-        spec = self.spec
-        return [
-            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
+        packages:
+          opengl:
+            paths:
+              opengl@4.5.0: /opt/opengl
+            buildable: False
+
+        In that case, /opt/opengl/ should contain these two folders:
+
+        include/GL/       (opengl headers, including "gl.h")
+        lib               (opengl libraries, including "libGL.so")"""
+
+        raise InstallError(msg)
