@@ -47,7 +47,7 @@ class NetlibXblas(AutotoolsPackage):
     variant('build-plain-blas', default=True,
             description='As part of XBLAS, build plain BLAS routines')
 
-    provides('blas')
+    provides('blas', when='+build-plain-blas')
 
     @property
     def libs(self):
