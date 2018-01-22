@@ -26,11 +26,10 @@ from spack import *
 
 
 class RPhangorn(RPackage):
-    """FIXME: Put a proper description of your package here.ckage contains
-       methods for estimation of phylogenetic trees and networks using Maximum
-       Likelihood, Maximum Parsimony, distance methods and Hadamard
-       conjugation. Allows to compare trees, models selection and offers
-       visualizations for trees and split networks."""
+    """Package contains methods for estimation of phylogenetic trees and
+       networks using Maximum Likelihood, Maximum Parsimony, distance methods
+       and Hadamard conjugation. Allows to compare trees, models selection and
+       offers visualizations for trees and split networks."""
 
     homepage = "http://www.example.co://github.com/KlausVigo/phangorn"
     url      = "https://cran.r-project.org/src/contrib/phangorn_2.3.1.tar.gz"
