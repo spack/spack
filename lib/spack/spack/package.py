@@ -64,7 +64,7 @@ import spack.binary_distribution as binary_distribution
 
 from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
 from llnl.util.filesystem import working_dir, install_tree, install
-from llnl.util.lang import memoized
+from llnl.util.lang import memoized, match_predicate
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
@@ -1868,13 +1868,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         tree = LinkTree(self.spec.prefix)
 
         ignore = ignore or (lambda f: False)
-        def ignore_file(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    ignore(filename))
+        ignore_file = match_predicate(
+            extensions_layout.layout.hidden_file_paths, ignore)
 
         if not ignore_conflicts:
             conflict = tree.find_conflict(target, ignore=ignore_file)
             if conflict:
+                # TODO: raise more-general error like "MergeConflict"
                 raise ExtensionConflictError(conflict)
 
         conflicts = tree.merge(target, link=extensions_layout.link,
@@ -1887,9 +1887,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
     def remove_from_view(self, target, extensions_layout, ignore=None):
         ignore = ignore or (lambda f: False)
-        def ignore_file(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    ignore(filename))
+        ignore_file = match_predicate(
+            extensions_layout.layout.hidden_file_paths, ignore)
 
         tree = LinkTree(self.spec.prefix)
         tree.unmerge(target, ignore=ignore_file)

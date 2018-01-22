@@ -408,9 +408,8 @@ class PythonPackage(PackageBase):
         tree = LinkTree(self.spec.prefix)
 
         ignore = ignore or (lambda f: False)
-        def ignore_file(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    ignore(filename))
+        ignore_file = match_predicate(
+            extensions_layout.layout.hidden_file_paths, ignore)
 
         if not ignore_conflicts:
             conflicts = tree.find_conflict(
@@ -449,7 +448,8 @@ class PythonPackage(PackageBase):
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
-            spack.store.layout.hidden_file_paths, ignore, namespace_ignore)
+            extensions_layout.layout.hidden_file_paths, ignore,
+            namespace_ignore)
 
         tree = LinkTree(self.spec.prefix)
         tree.unmerge(target, ignore=ignore_file)

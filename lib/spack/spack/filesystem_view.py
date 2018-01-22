@@ -526,7 +526,3 @@ def get_dependencies(specs):
     retval = set()
     set(map(retval.update, (set(s.traverse()) for s in specs)))
     return retval
-
-
-def ignore_metadata_dir(f):
-    return f in spack.store.layout.hidden_file_paths
