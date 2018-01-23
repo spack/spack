@@ -39,29 +39,23 @@ class Ceed(Package):
     # removed when metapackage is available
     url      = 'https://bitbucket.org/saws/saws/get/master.tar.gz'
 
-    # Spack can not handle both the support and 0.0.0 so
-    # comment out the 0.0.0 version
-    # this is for testing with the master of each package
-    version('develop', '941a541bdf625856be18c9752249146d')
-    # this is for next planned release
-    # version('0.0.0', '941a541bdf625856be18c9752249146d')
+    version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
 
-    # need to include this line or Spack gets confused whether hypre
-    # should be built with or without internal-superlu
-    depends_on('hypre~internal-superlu')
+    variant('cuda', default=False, description='Enable CUDA dependent packages')
 
-    # TODO: determine what variants of each package we want
-    depends_on('occa@develop')
+    depends_on('hpgmg@develop', when='@develop')
+    depends_on('hypre@2.13.0~internal-superlu', when='@develop')
+    depends_on('laghos@1.0', when='@develop')
+    depends_on('libceed@0.1+occa', when='@develop')
+    depends_on('magma@2.2.0', when='@develop +cuda')
+    depends_on('mfem@laghos-v1.0+mpi+hypre+superlu-dist+petsc+examples+miniapps')    
+    depends_on('nek5000@develop', when='@develop')
+    depends_on('nekbone@develop', when='@develop')
+    depends_on('nekcem@develop', when='@develop')
+    depends_on('petsc@3.8:+mpi+hypre+superlu-dist+metis+hdf5~mumps+boost+double~int64', when='@develop')
+    depends_on('pumi@0.0.1', when='@develop')
+    depends_on('occa@develop', when='@develop')
 
-    depends_on('magma@2.2.0')
-
-    depends_on('petsc@develop+mpi+hypre+superlu-dist+metis+hdf5~mumps')
-
-    depends_on('nek5000@develop')
-
-    depends_on('mfem@develop+mpi+superlu-dist+netcdf')
-
-    # How do we propagate debug flag to all depends on packages ?
 
     # Dummy install for now,  will be removed when metapackage is available
     def install(self, spec, prefix):

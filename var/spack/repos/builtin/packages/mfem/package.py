@@ -106,12 +106,12 @@ class Mfem(Package):
 
     conflicts('+mpi', when='~hypre')
     conflicts('+suite-sparse', when='~lapack')
-    conflicts('+superlu-dist', when='@:3.1')
-    conflicts('+netcdf', when='@:3.1')
+    conflicts('+superlu-dist', when='@3.1')
+    conflicts('+netcdf', when='@3.1')
 
     depends_on('metis', when='+metis')
     depends_on('lapack', when='+hypre')
-    depends_on('hypre', when='+hypre')
+    depends_on('hypre~internal-superlu', when='+hypre')
 
     depends_on('blas', when='+lapack')
     depends_on('blas', when='+suite-sparse')
@@ -119,14 +119,14 @@ class Mfem(Package):
     depends_on('lapack', when='+suite-sparse')
 
     depends_on('mpi', when='+mpi')
-    depends_on('metis')
+    depends_on('metis+real64')
     depends_on('parmetis', when='+superlu-dist')
-    depends_on('metis@5:', when='+superlu-dist')
-    depends_on('metis@5:', when='+suite-sparse ^suite-sparse@4.5:')
+    depends_on('metis@5:+real64', when='+superlu-dist')
+    depends_on('metis@5:+real64', when='+suite-sparse ^suite-sparse@4.5:')
 
     depends_on('sundials@2.7:+hypre', when='+sundials')
     depends_on('suite-sparse', when='+suite-sparse')
-    depends_on('superlu-dist', when='@3.2: +superlu-dist')
+    depends_on('superlu-dist', when='+superlu-dist')
     depends_on('petsc@3.8:', when='+petsc')
 
     depends_on('mpfr', when='+mpfr')

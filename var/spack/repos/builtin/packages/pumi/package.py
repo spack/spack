@@ -44,8 +44,8 @@ class Pumi(CMakePackage):
     version('develop', git='https://github.com/SCOREC/core.git',
         branch='master')
 
-    if sys.platform == 'darwin':
-        patch('phiotimer.cc.darwin.patch', level=0)  # !clock_gettime
+    #if sys.platform == 'darwin':
+    patch('phiotimer.cc.darwin.patch', level=0)  # !clock_gettime
 
     variant('zoltan', default=False, description='Enable Zoltan Features')
 
