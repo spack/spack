@@ -62,16 +62,26 @@ class Lbann(CMakePackage):
     depends_on('cnpy')
     depends_on('nccl', when='+gpu +nccl')
 
-    @when('@0.94:')
-    def cmake_args(self):
+    @property
+    def common_config_args(self):
         spec = self.spec
         # Environment variables
         CPPFLAGS = []
         CPPFLAGS.append('-DLBANN_SET_EL_RNG -ldl')
 
-        args = [
+        return [
             '-DCMAKE_INSTALL_MESSAGE=LAZY',
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
+            '-DLBANN_VERSION=spack',
+            '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
+        ]
+
+    # Get any recent versions (including develop) or non-numeric version except develop
+    @when('@:0.91' or '@0.94:')
+    def cmake_args(self):
+        spec = self.spec
+        args = self.common_config_args
+        args.extend([
             '-DLBANN_WITH_TOPO_AWARE:BOOL=%s' % ('+gpu +nccl' in spec),
             '-DLBANN_SEQUENTIAL_INITIALIZATION:BOOL=%s' %
             ('+seq_init' in spec),
@@ -79,10 +89,8 @@ class Lbann(CMakePackage):
             '-DLBANN_WITH_VTUNE=OFF',
             '-DElemental_DIR={0}/CMake/elemental'.format(
                 spec['elemental'].prefix),
-            '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
-            '-DLBANN_VERBOSE=0',
-            '-DLBANN_VERSION=spack']
+            '-DLBANN_VERBOSE=0'])
 
         if '+opencv' in spec:
             args.extend(['-DOpenCV_DIR:STRING={0}'.format(
@@ -108,16 +116,11 @@ class Lbann(CMakePackage):
 
         return args
 
-    @when('@:0.93')
+    @when('@0.91:0.93')
     def cmake_args(self):
         spec = self.spec
-        # Environment variables
-        CPPFLAGS = []
-        CPPFLAGS.append('-DLBANN_SET_EL_RNG -ldl')
-
-        args = [
-            '-DCMAKE_INSTALL_MESSAGE=LAZY',
-            '-DCMAKE_CXX_FLAGS=%s' % ' '.join(CPPFLAGS),
+        args = self.common_config_args
+        args.extend([
             '-DWITH_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DWITH_CUDNN:BOOL=%s' % ('+gpu' in spec),
             '-DELEMENTAL_USE_CUBLAS:BOOL=%s' % (
@@ -125,13 +128,11 @@ class Lbann(CMakePackage):
             '-DWITH_TBINF=OFF',
             '-DWITH_VTUNE=OFF',
             '-DElemental_DIR={0}'.format(spec['elemental'].prefix),
-            '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
             '-DELEMENTAL_MATH_LIBS={0}'.format(
                 spec['elemental'].libs),
             '-DSEQ_INIT:BOOL=%s' % ('+seq_init' in spec),
             '-DVERBOSE=0',
-            '-DLBANN_HOME=.',
-            '-DLBANN_VER=spack']
+            '-DLBANN_HOME=.'])
 
         if spec.variants['dtype'].value == 'float':
             args.extend(['-DDATATYPE=4'])
