@@ -651,7 +651,7 @@ def get_repository(args, name):
         repo = Repo(repo_path)
         if spec.namespace and spec.namespace != repo.namespace:
             tty.die("Can't create package with namespace {0} in repo with "
-                    "namespace {0}".format(spec.namespace, repo.namespace))
+                    "namespace {1}".format(spec.namespace, repo.namespace))
     else:
         if spec.namespace:
             repo = spack.repo.get_repo(spec.namespace, None)
