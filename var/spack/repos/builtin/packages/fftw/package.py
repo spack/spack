@@ -43,7 +43,7 @@ class Fftw(AutotoolsPackage):
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
     version('2.1.5', '8d16a84f3ca02a785ef9eb36249ba433')
 
-    patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
+    patch('pfft-3.3.5.patch', when="@3.3.5+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
     patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
 
@@ -116,6 +116,11 @@ class Fftw(AutotoolsPackage):
             float_options.append('--enable-sse2')
             double_options.append('--enable-sse2')
 
+        if 'ppc64' in spec.architecture:
+            options.append('--enable-fma')
+            float_options.append('--enable-vsx')
+            double_options.append('--enable-vsx')
+
         configure = Executable('../configure')
 
         # Build double/float/long double/quad variants
@@ -174,3 +179,4 @@ class Fftw(AutotoolsPackage):
         if '+quad' in spec:
             with working_dir('quad'):
                 make("install")
+
