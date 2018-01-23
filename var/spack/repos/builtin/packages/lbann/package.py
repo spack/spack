@@ -76,7 +76,8 @@ class Lbann(CMakePackage):
             '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
         ]
 
-    # Get any recent versions (including develop) or non-numeric version except develop
+    # Get any recent versions or non-numeric version
+    # Note that develop > numeric and non-develop < numeric
     @when('@:0.91' or '@0.94:')
     def cmake_args(self):
         spec = self.spec
