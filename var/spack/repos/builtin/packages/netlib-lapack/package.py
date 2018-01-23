@@ -67,7 +67,7 @@ class NetlibLapack(Package):
 
     depends_on('cmake', type='build')
     depends_on('blas', when='+external-blas')
-    depends_on('netlib-xblas+fortran+plain-blas', when='+xblas')
+    depends_on('netlib-xblas+fortran+plain_blas', when='+xblas')
 
     def patch(self):
         # Fix cblas CMakeLists.txt -- has wrong case for subdirectory name.
