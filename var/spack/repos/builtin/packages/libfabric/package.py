@@ -67,6 +67,7 @@ class Libfabric(AutotoolsPackage):
     depends_on('rdma-core', when='+spackfabrics fabrics=verbs')
     depends_on('opa-psm2', when='+spackfabrics fabrics=psm2')
     depends_on('psm', when='+spackfabrics fabrics=psm')
+    depends_on('ucx', when='+spackfabrics fabrics=mlx')
 
     def configure_args(self):
         args = []
