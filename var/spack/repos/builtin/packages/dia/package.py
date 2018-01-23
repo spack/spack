@@ -33,7 +33,7 @@ class Dia(Package):
     version('0.97.3',    '0e744a0f6a6c4cb6a089e4d955392c3c')
 
     depends_on('intltool', type='build')
-    depends_on('gtkplus@2.6.0:+X')
+    depends_on('gtkplus@2.6.0:')
     depends_on('libxslt')
     depends_on('python')
     depends_on('swig')

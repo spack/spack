@@ -68,7 +68,7 @@ class Slurm(AutotoolsPackage):
     depends_on('readline', when='+readline')
     depends_on('zlib')
 
-    depends_on('gtkplus+X', when='+gtk')
+    depends_on('gtkplus', when='+gtk')
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc', when='+hwloc')
     depends_on('mariadb', when='+mariadb')
