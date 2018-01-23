@@ -25,18 +25,21 @@
 from spack import *
 
 
-class Libxcomposite(AutotoolsPackage):
-    """libXcomposite - client library for the Composite extension to the
-    X11 protocol."""
+class Motif(AutotoolsPackage):
+    """"
+    Motif - Graphical user interface (GUI)
+    specification and the widget toolkit
+    """
+    homepage = "http://motif.ics.com/"
+    url = "http://cfhcable.dl.sourceforge.net/project/motif/Motif 2.3.8 Source Code/motif-2.3.8.tar.gz"
 
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libXcomposite"
-    url      = "https://www.x.org/archive/individual/lib/libXcomposite-0.4.4.tar.gz"
+    version('2.3.8', '7572140bb52ba21ec2f0c85b2605e2b1')
 
-    version('0.4.4', 'af860b1554a423735d831e6f29ac1ef5')
-
-    depends_on('libx11')
-    depends_on('libxfixes')
-    depends_on('fixesproto@0.4:', type='build')
-    depends_on('compositeproto@0.4:', type='build')
-    depends_on('pkgconfig', type='build')
-    depends_on('util-macros', type='build')
+    depends_on("flex")
+    depends_on("libx11")
+    depends_on("libxt")
+    depends_on("libxext")
+    depends_on("libxft")
+    depends_on("libxcomposite")
+    depends_on("libxfixes")
+    depends_on("xbitmaps")
