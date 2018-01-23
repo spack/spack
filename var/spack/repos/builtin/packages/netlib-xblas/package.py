@@ -26,7 +26,9 @@ from spack import *
 
 
 class NetlibXblas(AutotoolsPackage):
-    """XBLAS is a reference implementation for the dense and banded BLAS
+    """XBLAS is a reference implementation for extra precision BLAS.
+
+       XBLAS is a reference implementation for the dense and banded BLAS
        routines, along with extended and mixed precision version. Extended
        precision is only used internally; input and output arguments remain
        the same as in the existing BLAS. Extra precisions is implemented as
