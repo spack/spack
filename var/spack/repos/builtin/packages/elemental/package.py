@@ -189,8 +189,8 @@ class Elemental(CMakePackage):
             '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
             '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
-            '-DHydrogen_ENABLE_OPENMP:BOOL=%s'              % ('+hybrid' in spec),
-            '-DHydrogen_ENABLE_QUADMATH:BOOL=%s'        % ('+quad' in spec),
+            '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+hybrid' in spec),
+            '-DHydrogen_ENABLE_QUADMATH:BOOL=%s'     % ('+quad' in spec),
             '-DHydrogen_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
             '-DHydrogen_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
             '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
@@ -201,7 +201,7 @@ class Elemental(CMakePackage):
             args.extend([
                 '-DHydrogen_USE_OpenBLAS:BOOL=%s' % ('blas=openblas' in spec),
                 '-DOpenBLAS_DIR:STRING={0}'.format(
-                spec['elemental'].prefix)])
+                    spec['elemental'].prefix)])
         elif 'blas=mkl' in spec:
             args.extend([
                 '-DHydrogen_USE_MKL:BOOL=%s' % ('blas=mkl' in spec)])
