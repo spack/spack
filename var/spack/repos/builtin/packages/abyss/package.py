@@ -44,6 +44,7 @@ class Abyss(AutotoolsPackage):
     depends_on('boost@:1.50.0,1.53.0:1.59.0', when='@:1.5.2')
     depends_on('sparsehash')
     depends_on('sqlite')
+    depends_on('libtool')
 
     conflicts('^intel-mpi')
     conflicts('^intel-parallel-studio+mpi')
