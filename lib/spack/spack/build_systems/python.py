@@ -403,19 +403,19 @@ class PythonPackage(PackageBase):
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
 
-    def add_to_view(self, target, extensions_layout, ignore=None,
-                    ignore_conflicts=False):
+    def add_to_view(self, view, ignore=None, ignore_conflicts=False):
         tree = LinkTree(self.spec.prefix)
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
-            extensions_layout.layout.hidden_file_paths, ignore)
+            view.layout.hidden_file_paths, ignore)
 
         if not ignore_conflicts:
             conflicts = tree.find_conflict(
-                target, ignore=ignore_file, all=True)
+                view.root, ignore=ignore_file, all=True)
             if conflicts and self.py_namespace:
-                ext_map = extensions_layout.extension_map(self.extendee_spec)
+                ext_map = view.extensions_layout.extension_map(
+                    self.extendee_spec)
                 namespaces = set(
                     x.package.py_namespace for x in ext_map.values())
                 namespace_re = (
@@ -427,17 +427,16 @@ class PythonPackage(PackageBase):
             if conflicts:
                 raise ExtensionConflictError(conflicts[0])
 
-        tree.merge(target, link=extensions_layout.link,
-                   ignore_conflicts=True)
+        tree.merge(view.root, link=view.link, ignore_conflicts=True)
 
         if ignore_conflicts:
             for c in conflicts:
                 tty.warn("Could not link: %s" % c)
 
-    def remove_from_view(self, target, extensions_layout, ignore=None):
+    def remove_from_view(self, view, ignore=None):
         namespace_ignore = []
         if self.py_namespace:
-            ext_map = extensions_layout.extension_map(self.extendee_spec)
+            ext_map = view.extensions_layout.extension_map(self.extendee_spec)
             remaining_namespaces = set(
                 spec.package.py_namespace for name, spec in ext_map.items()
                 if name != self.name)
@@ -448,8 +447,7 @@ class PythonPackage(PackageBase):
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
-            extensions_layout.layout.hidden_file_paths, ignore,
-            namespace_ignore)
+            view.layout.hidden_file_paths, ignore, namespace_ignore)
 
         tree = LinkTree(self.spec.prefix)
-        tree.unmerge(target, ignore=ignore_file)
+        tree.unmerge(view.root, ignore=ignore_file)
