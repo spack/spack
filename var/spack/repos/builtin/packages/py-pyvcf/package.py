@@ -33,3 +33,9 @@ class PyPyvcf(PythonPackage):
 
     version('0.6.7', '51b57ce99e0c2f7be2a18d08d8f87734')
     version('0.6.0', '5e38a610b1bf837e5e74a748e281cec7')
+
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-cython', type=('build', 'run'))
+    depends_on('py-pysam', type=('build', 'run'))
+    depends_on('py-argparse', type=('build', 'run'), when='^python@2.6')
+    depends_on('py-ordereddict', type=('build', 'run'), when='^python@2.6')
