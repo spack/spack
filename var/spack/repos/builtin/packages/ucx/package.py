@@ -39,3 +39,4 @@ class Ucx(AutotoolsPackage):
     version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')
 
     depends_on('numactl')
+    depends_on('rdma-core')
