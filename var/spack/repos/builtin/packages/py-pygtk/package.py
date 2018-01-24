@@ -38,7 +38,7 @@ class PyPygtk(AutotoolsPackage):
     depends_on('cairo')
     depends_on('glib')
     # for GTK 3.X use pygobject 3.X instead of pygtk
-    depends_on('gtkplus+X@2.24:2.99')
+    depends_on('gtkplus@2.24:2.99')
     depends_on('py-pygobject@2.28:2.99', type=('build', 'run'))
     depends_on('py-py2cairo', type=('build', 'run'))
 

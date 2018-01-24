@@ -55,6 +55,8 @@ class NetlibLapack(Package):
 
     variant('lapacke', default=True,
             description='Activates the build of the LAPACKE C interface')
+    variant('xblas', default=False,
+            description='Builds extended precision routines using XBLAS')
 
     patch('ibm-xl.patch', when='@3:6%xl')
     patch('ibm-xl.patch', when='@3:6%xl_r')
@@ -65,6 +67,7 @@ class NetlibLapack(Package):
 
     depends_on('cmake', type='build')
     depends_on('blas', when='+external-blas')
+    depends_on('netlib-xblas+fortran+plain_blas', when='+xblas')
 
     def patch(self):
         # Fix cblas CMakeLists.txt -- has wrong case for subdirectory name.
@@ -154,6 +157,13 @@ class NetlibLapack(Package):
                 '-DUSE_OPTIMIZED_BLAS:BOOL=ON',
                 '-DBLAS_LIBRARIES:PATH=%s' % spec['blas'].libs.joined(';')
             ])
+
+        if spec.satisfies('+xblas'):
+            xblas_include_dir = spec['netlib-xblas'].prefix.include
+            xblas_library = spec['netlib-xblas'].libs.joined(';')
+            cmake_args.extend([
+                '-DXBLAS_INCLUDE_DIR={0}'.format(xblas_include_dir),
+                '-DXBLAS_LIBRARY={0}'.format(xblas_library)])
 
         cmake_args.extend(std_cmake_args)
 

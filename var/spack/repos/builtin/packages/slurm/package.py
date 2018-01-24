@@ -65,10 +65,10 @@ class Slurm(AutotoolsPackage):
     depends_on('munge')
     depends_on('openssl')
     depends_on('pkgconfig', type='build')
-    depends_on('readline')
+    depends_on('readline', when='+readline')
     depends_on('zlib')
 
-    depends_on('gtkplus+X', when='+gtk')
+    depends_on('gtkplus', when='+gtk')
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc', when='+hwloc')
     depends_on('mariadb', when='+mariadb')
@@ -89,9 +89,7 @@ class Slurm(AutotoolsPackage):
         if '~gtk' in spec:
             args.append('--disable-gtktest')
 
-        if '+readline' in spec:
-            args.append('--with-readline={0}'.format(spec['readline'].prefix))
-        else:
+        if '~readline' in spec:
             args.append('--without-readline')
 
         if '+hdf5' in spec:
