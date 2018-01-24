@@ -43,7 +43,6 @@ class Libfabric(AutotoolsPackage):
                'usnic',
                'mlx',
                'gni',
-               'xpmem',
                'udp',
                'rxm',
                'rxd')
