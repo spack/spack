@@ -451,8 +451,9 @@ class Trilinos(CMakePackage):
                 '-DParMETIS_LIBRARY_DIRS=%s;%s' % (
                     spec['parmetis'].prefix.lib, spec['metis'].prefix.lib),
                 '-DParMETIS_LIBRARY_NAMES=parmetis;metis',
-                '-DTPL_ParMETIS_INCLUDE_DIRS=%s' % (
-                    spec['parmetis'].prefix.include)
+                '-DTPL_ParMETIS_INCLUDE_DIRS=%s;%s' % (
+                    spec['parmetis'].prefix.include,
+                    spec['metis'].prefix.include)
             ])
         else:
             options.extend([
