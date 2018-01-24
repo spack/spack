@@ -35,8 +35,9 @@ class Glfmultiples(MakefilePackage):
 
     depends_on('zlib')
 
-    #def edit(self, spec, prefix):
-        # FIXME: Edit the Makefile if necessary
-        # FIXME: If not needed delete this function
-        # makefile = FileFilter('Makefile')
-        # makefile.filter('CC = .*', 'CC = cc')
+    def edit(self, spec, prefix):
+        makefile = FileFilter('Makefile')
+        makefile.filter('CC = .*', 'CC = cc')
+
+    def install(self, spec, prefix):
+        make('INSTALLDIR=%s' % prefix, 'install')
