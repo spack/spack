@@ -37,7 +37,10 @@ class Glfmultiples(MakefilePackage):
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
-        makefile.filter('CC = .*', 'CC = cc')
+        makefile.filter('CXX=.*', 'CXX = ' + env['CXX'])
+        makefile.filter('CFLAGS=.*',
+                        'CFLAGS=-O2 -I./libsrc -I./pdf ' +
+                        '-D_FILE_OFFSET_BITS=64 -D__USE_LONG_INT')
 
     def install(self, spec, prefix):
         make('INSTALLDIR=%s' % prefix, 'install')
