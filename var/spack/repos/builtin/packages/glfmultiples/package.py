@@ -26,7 +26,10 @@ from spack import *
 
 
 class Glfmultiples(MakefilePackage):
-    """FIXME: Put a proper description of your package here."""
+    """glfMultiples is a GLF-based variant caller for next-generation
+       sequencing data. It takes a set of GLF format genotype likelihood
+       files as input and generates a VCF-format set of variant calls
+       as output. """
 
     homepage = "https://genome.sph.umich.edu/wiki/GlfMultiples"
     url      = "http://www.sph.umich.edu/csg/abecasis/downloads/generic-glfMultiples-2010-06-16.tar.gz"
