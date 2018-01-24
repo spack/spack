@@ -85,4 +85,5 @@ class IbmEssl(Package):
         return essl_libs
 
     def install(self, spec, prefix):
-        raise InstallError('IBM ESSL is not installable; it is vendor supplied')
+        raise InstallError('IBM ESSL is not installable;'
+                           ' it is vendor supplied')
