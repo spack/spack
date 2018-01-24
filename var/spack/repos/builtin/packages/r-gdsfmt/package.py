@@ -25,22 +25,23 @@
 from spack import *
 
 
-class PyPygtk(AutotoolsPackage):
-    """bindings for the Gtk2 in Python.
-       use pygobject for Gtk3."""
-    homepage = "http://www.pygtk.org/"
-    url      = "http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-2.24.0.tar.gz"
+class RGdsfmt(RPackage):
+    """This package provides a high-level R interface to CoreArray Genomic
+       Data Structure (GDS) data files, which are portable across platforms
+       with hierarchical structure to store multiple scalable array-oriented
+       data sets with metadata information. It is suited for large-scale
+       datasets, especially for data which are much larger than the available
+       random-access memory. The gdsfmt package offers the efficient
+       operations specifically designed for integers of less than 8 bits,
+       since a diploid genotype, like single-nucleotide polymorphism (SNP),
+       usually occupies fewer bits than a byte. Data compression and
+       decompression are available with relatively efficient random access.
+       It is also allowed to read a GDS file in parallel with multiple R
+       processes supported by the package parallel."""
 
-    version('2.24.0', 'd27c7f245a9e027f6b6cd9acb7468e36')
+    homepage = "http://bioconductor.org/packages/gdsfmt/"
+    url      = "https://git.bioconductor.org/packages/gdsfmt"
 
-    extends('python')
-    depends_on("libffi")
-    depends_on('cairo')
-    depends_on('glib')
-    # for GTK 3.X use pygobject 3.X instead of pygtk
-    depends_on('gtkplus@2.24:2.99')
-    depends_on('py-pygobject@2.28:2.99', type=('build', 'run'))
-    depends_on('py-py2cairo', type=('build', 'run'))
+    version('1.14.1', git='https://git.bioconductor.org/packages/gdsfmt', commit='15743647b7eea5b82d3284858b4591fb6e59959d')
 
-    def install(self, spec, prefix):
-        make('install', parallel=False)
+    depends_on('r@3.4.0:3.4.9', when='@1.14.1')

@@ -25,22 +25,12 @@
 from spack import *
 
 
-class PyPygtk(AutotoolsPackage):
-    """bindings for the Gtk2 in Python.
-       use pygobject for Gtk3."""
-    homepage = "http://www.pygtk.org/"
-    url      = "http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-2.24.0.tar.gz"
+class Log4cplus(CMakePackage):
+    """log4cplus is a simple to use C++ logging API
+    providing thread-safe, flexible, and arbitrarily
+    granular control over log management and configuration."""
 
-    version('2.24.0', 'd27c7f245a9e027f6b6cd9acb7468e36')
+    homepage = "https://sourceforge.net/projects/log4cplus/"
+    url      = "https://nchc.dl.sourceforge.net/project/log4cplus/log4cplus-stable/1.2.0/log4cplus-1.2.0.tar.gz"
 
-    extends('python')
-    depends_on("libffi")
-    depends_on('cairo')
-    depends_on('glib')
-    # for GTK 3.X use pygobject 3.X instead of pygtk
-    depends_on('gtkplus@2.24:2.99')
-    depends_on('py-pygobject@2.28:2.99', type=('build', 'run'))
-    depends_on('py-py2cairo', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        make('install', parallel=False)
+    version('1.2.0', 'e250f0f431c0723f8b625323e7b6465d')

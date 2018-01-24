@@ -25,22 +25,21 @@
 from spack import *
 
 
-class PyPygtk(AutotoolsPackage):
-    """bindings for the Gtk2 in Python.
-       use pygobject for Gtk3."""
-    homepage = "http://www.pygtk.org/"
-    url      = "http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-2.24.0.tar.gz"
+class Motif(AutotoolsPackage):
+    """"
+    Motif - Graphical user interface (GUI)
+    specification and the widget toolkit
+    """
+    homepage = "http://motif.ics.com/"
+    url = "http://cfhcable.dl.sourceforge.net/project/motif/Motif 2.3.8 Source Code/motif-2.3.8.tar.gz"
 
-    version('2.24.0', 'd27c7f245a9e027f6b6cd9acb7468e36')
+    version('2.3.8', '7572140bb52ba21ec2f0c85b2605e2b1')
 
-    extends('python')
-    depends_on("libffi")
-    depends_on('cairo')
-    depends_on('glib')
-    # for GTK 3.X use pygobject 3.X instead of pygtk
-    depends_on('gtkplus@2.24:2.99')
-    depends_on('py-pygobject@2.28:2.99', type=('build', 'run'))
-    depends_on('py-py2cairo', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        make('install', parallel=False)
+    depends_on("flex")
+    depends_on("libx11")
+    depends_on("libxt")
+    depends_on("libxext")
+    depends_on("libxft")
+    depends_on("libxcomposite")
+    depends_on("libxfixes")
+    depends_on("xbitmaps")
