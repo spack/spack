@@ -161,7 +161,7 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs):
     view = YamlFilesystemView(view_dir, layout)
 
     python_pkg = python_spec.package
-    python_pkg.activate(ext_pkg, extensions_layout=view.extensions_layout)
+    python_pkg.activate(ext_pkg, view)
 
     assert not os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
 
@@ -264,7 +264,7 @@ def test_perl_activation_view(tmpdir, perl_and_extension_dirs):
     view = YamlFilesystemView(view_dir, layout)
 
     perl_pkg = perl_spec.package
-    perl_pkg.activate(ext_pkg, extensions_layout=view.extensions_layout)
+    perl_pkg.activate(ext_pkg, view)
 
     assert not os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
 

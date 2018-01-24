@@ -361,7 +361,6 @@ def refresh_db_on_exit(database):
 def install_mockery(tmpdir, config, builtin_mock):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     layout = spack.store.layout
-    extensions = spack.store.extensions
     db = spack.store.db
     new_opt = str(tmpdir.join('opt'))
 
@@ -379,7 +378,6 @@ def install_mockery(tmpdir, config, builtin_mock):
     spack.do_checksum = True
     # Restore Spack's layout.
     spack.store.layout = layout
-    spack.store.extensions = extensions
     spack.store.db = db
 
 

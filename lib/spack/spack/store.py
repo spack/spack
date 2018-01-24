@@ -76,5 +76,3 @@ db = Database(root)
 layout = YamlDirectoryLayout(root,
                              hash_len=config.get('install_hash_length'),
                              path_scheme=config.get('install_path_scheme'))
-
-extensions = YamlExtensionsLayout(root, layout)

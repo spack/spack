@@ -26,7 +26,7 @@ import argparse
 import llnl.util.tty as tty
 import spack
 import spack.cmd
-from spack.directory_layout import YamlViewExtensionsLayout
+from spack.filesystem_view import YamlFilesystemView
 
 description = "activate a package extension"
 section = "extensions"

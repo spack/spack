@@ -28,7 +28,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.store
-from spack.directory_layout import YamlViewExtensionsLayout
+from spack.filesystem_view import YamlFilesystemView
 from spack.graph import topological_sort
 
 description = "deactivate a package extension"
@@ -71,12 +71,12 @@ def deactivate(parser, args):
         if pkg.extendable:
             tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
             ext_pkgs = spack.store.db.activated_extensions_for(
-                spec, extensions_layout=layout)
+                spec, view.extensions_layout)
 
             for ext_pkg in ext_pkgs:
                 ext_pkg.spec.normalize()
                 if ext_pkg.is_activated():
-                    ext_pkg.do_deactivate(force=True, extensions_layout=layout)
+                    ext_pkg.do_deactivate(view, force=True)
 
         elif pkg.is_extension:
             if not args.force and \

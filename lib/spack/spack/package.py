@@ -69,6 +69,7 @@ from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize
 from spack import directory_layout
+from spack.filesystem_view import YamlFilesystemView
 from spack.util.executable import which
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
@@ -1824,13 +1825,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ActivationError("%s does not extend %s!" %
                                   (self.name, self.extendee.name))
 
-    def do_activate(self, view, force=False, verbose=True):
+    def do_activate(self, view=None, force=False, verbose=True):
         """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
         activate() directly.
         """
         self._sanity_check_extension()
+        if not view:
+            view = YamlFilesystemView(
+                self.extendee_spec.prefix, spack.store.layout)
 
         extensions_layout = view.extensions_layout
 
@@ -1886,9 +1890,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             view.layout.hidden_file_paths, ignore)
 
         tree = LinkTree(self.spec.prefix)
-        tree.unmerge(target, ignore=ignore_file)
+        tree.unmerge(view.root, ignore=ignore_file)
 
-    def activate(self, extension, view, **kwargs):
+    def activate(self, extension, view=None, **kwargs):
         """Make extension package usable by linking all its files to a target
         provided by the directory layout (depending if the user wants to
         activate globally or in a specified file system view).
@@ -1899,9 +1903,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
+        if not view:
+            view = YamlFilesystemView(
+                self.prefix, spack.store.layout)
         extension.add_to_view(view, ignore=kwargs.get('ignore', None))
 
-    def do_deactivate(self, view, **kwargs):
+    def do_deactivate(self, view=None, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method.
 
         `remove_dependents=True` deactivates extensions depending on this
@@ -1911,6 +1918,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         force = kwargs.get('force', False)
         verbose = kwargs.get("verbose", True)
         remove_dependents = kwargs.get("remove_dependents", False)
+
+        if not view:
+            view = YamlFilesystemView(
+                self.extendee_spec.prefix, spack.store.layout)
         extensions_layout = view.extensions_layout
 
         # Allow a force deactivate to happen.  This can unlink
@@ -1940,7 +1951,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
-        if self.is_activated(extensions_layout):
+        if self.is_activated(view):
             extensions_layout.remove_extension(
                 self.extendee_spec, self.spec)
 
@@ -1950,7 +1961,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 (self.spec.short_spec,
                  self.extendee_spec.cformat("$_$@$+$%@")))
 
-    def deactivate(self, extension, view, **kwargs):
+    def deactivate(self, extension, view=None, **kwargs):
         """Unlinks all files from extension out of this package's install dir
         or the corresponding filesystem view.
 
@@ -1960,6 +1971,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
+        if not view:
+            view = YamlFilesystemView(
+                self.prefix, spack.store.layout)
+
         extension.remove_from_view(view, ignore=kwargs.get('ignore', None))
 
     def do_restage(self):

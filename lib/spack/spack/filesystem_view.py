@@ -346,11 +346,11 @@ class YamlFilesystemView(FilesystemView):
 
         # The spec might have been deactivated as depdency of another package
         # already
-        if spec.package.is_activated(self.extensions_layout):
+        if spec.package.is_activated(self):
             spec.package.do_deactivate(
+                self,
                 verbose=self.verbose,
-                remove_dependents=with_dependents,
-                extensions_layout=self.extensions_layout)
+                remove_dependents=with_dependents)
         self.unlink_meta_folder(spec)
 
     def remove_standalone(self, spec):
@@ -362,7 +362,7 @@ class YamlFilesystemView(FilesystemView):
                      'Skipping package not linked in view: %s' % spec.name)
             return
 
-        spec.package.remove_from_view(self.root, self.extensions_layout)
+        spec.package.remove_from_view(self)
         self.unlink_meta_folder(spec)
 
         if self.verbose:

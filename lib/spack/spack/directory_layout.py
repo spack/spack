@@ -418,6 +418,10 @@ class YamlExtensionsLayout(ExtensionsLayout):
 
         # Create a temp file in the same directory as the actual file.
         dirname, basename = os.path.split(path)
+
+        # TODO: see note at YamlViewExtensionsLayout.extension_file_path
+        mkdirp(dirname)
+
         tmp = tempfile.NamedTemporaryFile(
             prefix=basename, dir=dirname, delete=False)
 
@@ -439,11 +443,15 @@ class YamlViewExtensionsLayout(YamlExtensionsLayout):
     """Governs the directory layout present when creating filesystem views in a
     certain root folder.
 
-    Meant to replace YamlDirectoryLayout when working with filesystem views.
+    Meant to replace YamlExtensionsLayout when working with filesystem views.
     """
 
     def extension_file_path(self, spec):
         """Gets the full path to an installed package's extension file."""
+        # TODO: now that global activations treat the spec prefix as the view
+        # root, when doing global activations this adds an unnecessary directory
+        # layer. Views require "spec.name" because otherwise the extensions
+        # for different extendees would override one another.
         _check_concrete(spec)
         return join_path(self.root, self.layout.metadata_dir, spec.name,
                          self.extension_file_name)
