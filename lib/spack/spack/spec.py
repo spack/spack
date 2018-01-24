@@ -2116,8 +2116,10 @@ class Spec(object):
         if dep.name not in self._dependencies:
             self._add_dependency(spec_dependency, dependency.type)
 
+        visited_dependency = set()
         changed |= spec_dependency._normalize_helper(
-            visited, spec_deps, provider_index)
+            visited_dependency, spec_deps, provider_index)
+        visited.update(visited_dependency)
         return changed
 
     def _normalize_helper(self, visited, spec_deps, provider_index):
