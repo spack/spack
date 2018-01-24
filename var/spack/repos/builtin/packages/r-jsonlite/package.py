@@ -39,7 +39,7 @@ class RJsonlite(RPackage):
 
     homepage = "https://github.com/jeroenooms/jsonlite"
     url      = "https://cran.rstudio.com/src/contrib/jsonlite_1.5.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/jsonlite"
 
     version('1.5', '2a81c261a702fccbbd5d2b32df108f76')
     version('1.2', '80cd2678ae77254be470f5931db71c51')

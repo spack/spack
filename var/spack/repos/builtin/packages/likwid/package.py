@@ -36,7 +36,7 @@ class Likwid(Package):
 
     maintainers = ['davydden']
 
-    version('4.3.0', 'f6bdf12513af95bd6eefa9c68644e724')
+    version('4.3.0', '7f8f6981d7d341fce2621554323f8c8b')
     version('4.2.1', 'c408ddcf0317cdd894af4c580cd74294')
     version('4.2.0', 'e41ff334b8f032a323d941ce32907a75')
     version('4.1.2', 'a857ce5bd23e31d96e2963fe81cb38f0')
@@ -64,10 +64,11 @@ class Likwid(Package):
     @run_before('install')
     def filter_sbang(self):
         # Filter sbang before install so Spack's sbang hook can fix it up
-        perl = join_path(self.spec['perl'].prefix.bin, 'perl')
         files = ['perl/feedGnuplot'] + glob.glob('filters/*')
 
-        filter_file('^#!/usr/bin/perl', '#!{0}'.format(perl), *files)
+        filter_file('^#!/usr/bin/perl',
+                    '#!{0}'.format(self.spec['perl'].command.path),
+                    *files)
 
     def install(self, spec, prefix):
         if self.compiler.name not in self.supported_compilers:

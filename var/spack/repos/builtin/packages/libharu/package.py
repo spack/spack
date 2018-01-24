@@ -40,11 +40,27 @@ class Libharu(AutotoolsPackage):
     version('master', branch='master',
             git='https://github.com/libharu/libharu.git')
 
+    depends_on('libtool', type=('build'))
+    depends_on('autoconf', type=('build'))
+    depends_on('automake', type=('build'))
+    depends_on('libpng')
+    depends_on('zlib')
+
     def autoreconf(self, spec, prefix):
         """execute their autotools wrapper script"""
         if os.path.exists('./buildconf.sh'):
             bash = which('bash')
             bash('./buildconf.sh', '--force')
+
+    def configure_args(self):
+        """Point to spack-installed zlib and libpng"""
+        spec = self.spec
+        args = []
+
+        args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
+        args.append('--with-png={0}'.format(spec['libpng'].prefix))
+
+        return args
 
     def url_for_version(self, version):
         url = 'https://github.com/libharu/libharu/archive/RELEASE_{0}.tar.gz'

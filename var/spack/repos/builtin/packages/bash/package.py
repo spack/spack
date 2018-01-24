@@ -31,6 +31,7 @@ class Bash(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/bash/"
     url      = "https://ftp.gnu.org/gnu/bash/bash-4.4.tar.gz"
 
+    version('4.4.12', '7c112970cbdcadfc331e10eeb5f6aa41')
     version('4.4', '148888a7c95ac23705559b6f477dfe25')
     version('4.3', '81348932d5da294953e15d4814c74dd1')
 
@@ -49,3 +50,12 @@ class Bash(AutotoolsPackage):
 
     def check(self):
         make('tests')
+
+    @property
+    def install_targets(self):
+        args = ['install']
+
+        if self.spec.satisfies('@4.4:'):
+            args.append('install-headers')
+
+        return args

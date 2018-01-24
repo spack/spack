@@ -33,7 +33,7 @@ import llnl.util.filesystem as fs
 import spack
 import spack.cmd.install
 from spack.spec import Spec
-from spack.main import SpackCommand
+from spack.main import SpackCommand, SpackCommandError
 
 install = SpackCommand('install')
 
@@ -234,3 +234,35 @@ def test_install_overwrite(
     assert os.path.exists(spec.prefix)
     assert fs.hash_directory(spec.prefix) == expected_md5
     assert fs.hash_directory(spec.prefix) != bad_md5
+
+
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery',
+)
+def test_install_conflicts(conflict_spec):
+    # Make sure that spec with conflicts exit with 1
+    with pytest.raises(SpackCommandError):
+        install(conflict_spec)
+
+    assert install.returncode == 1
+
+
+@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.parametrize('spec,concretize,error_code', [
+    (Spec('mpi'), False, 1),
+    (Spec('mpi'), True, 0),
+    (Spec('boost'), False, 1),
+    (Spec('boost'), True, 0)
+])
+def test_install_from_file(spec, concretize, error_code, tmpdir):
+
+    if concretize:
+        spec.concretize()
+
+    with fs.working_dir(str(tmpdir)):
+        # A non-concrete spec will fail to be installed
+        with open('spec.yaml', 'w') as f:
+            spec.to_yaml(f)
+        install('-f', 'spec.yaml', fail_on_error=False)
+
+    assert install.returncode == error_code

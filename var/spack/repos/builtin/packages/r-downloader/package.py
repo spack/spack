@@ -35,7 +35,7 @@ class RDownloader(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/downloader/index.html"
     url      = "https://cran.rstudio.com/src/contrib/downloader_0.4.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/downloader"
 
     version('0.4', 'f26daf8fbeb29a1882bf102f62008594')
 

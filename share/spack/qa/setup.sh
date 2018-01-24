@@ -14,11 +14,9 @@ SPACK_ROOT="$QA_DIR/../../.."
 if [[ "$COVERAGE" == true ]]; then
     coverage=coverage
     coverage_run="coverage run"
-    coverage_combine="coverage combine"
 else
     coverage=""
     coverage_run=""
-    coverage_combine=""
 fi
 
 #

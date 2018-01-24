@@ -32,7 +32,9 @@ class PyPysam(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pysam"
     url      = "https://pypi.io/packages/source/p/pysam/pysam-0.11.2.2.tar.gz"
 
+    version('0.13', 'a9b502dd1a7e6403e35e6972211688a2')
     version('0.11.2.2', '56230cd5f55b503845915b76c22d620a')
+    version('0.7.7', 'eaf9f37cbccc5e2708754d045909c1a0')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.21:', type='build')

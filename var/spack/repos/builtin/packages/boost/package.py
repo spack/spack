@@ -46,6 +46,8 @@ class Boost(Package):
             branch='develop',
             submodules=True)
 
+    version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459',
+            url='https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.bz2')
     version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d',
             url='https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2')
     version('1.65.0', '5512d3809801b0a1b9dd58447b70915d',
@@ -91,6 +93,7 @@ class Boost(Package):
     default_install_libs = set(['atomic',
                                 'chrono',
                                 'date_time',
+                                'exception',
                                 'filesystem',
                                 'graph',
                                 'iostreams',
@@ -158,7 +161,7 @@ class Boost(Package):
     patch('xl_1_62_0_le.patch', when='@1.62.0%xl')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/10125
-    patch('call_once_variadic.patch', when='@1.55.0:1.55.9999%gcc@5.0:5.9')
+    patch('call_once_variadic.patch', when='@1.54.0:1.55.9999%gcc@5.0:5.9')
 
     # Patch fix for PGI compiler
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
@@ -339,6 +342,8 @@ class Boost(Package):
             withLibs.remove('chrono')
         if not spec.satisfies('@1.43.0:'):
             withLibs.remove('random')
+        if not spec.satisfies('@1.39.0:'):
+            withLibs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
             withLibs.append('graph_parallel')
 
