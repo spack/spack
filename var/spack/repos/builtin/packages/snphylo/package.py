@@ -44,13 +44,14 @@ class Snphylo(Package):
     depends_on('phylip')
 
     def install(self, spec, prefix):
-        install_answer=['y','y','y','y']
-        install_answer_input='spack-config.in'
+        install_answer = ['y', 'y', 'y', 'y']
+        install_answer_input = 'spack-config.in'
         with open(install_answer_input, 'w') as f:
             f.writelines(install_answer)
         with open(install_answer_input, 'r') as f:
-            bash=which('bash')
+            bash = which('bash')
             bash('./setup.sh', input=f)
             distutils.dir_util.copy_tree(".", prefix)
+
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.spec.prefix)
