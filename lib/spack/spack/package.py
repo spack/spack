@@ -903,13 +903,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         s = self.extendee_spec
         return s and spec.satisfies(s)
 
-    def is_activated(self, extensions_layout=None):
+    def is_activated(self, view):
         """Return True if package is activated."""
         if not self.is_extension:
             raise ValueError(
-                "is_extension called on package that is not an extension.")
-        if extensions_layout is None:
-            extensions_layout = spack.store.extensions
+                "is_activated called on package that is not an extension.")
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
@@ -1825,7 +1824,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ActivationError("%s does not extend %s!" %
                                   (self.name, self.extendee.name))
 
-    def do_activate(self, force=False, verbose=True, extensions_layout=None):
+    def do_activate(self, view, force=False, verbose=True):
         """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
@@ -1833,8 +1832,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         self._sanity_check_extension()
 
-        if extensions_layout is None:
-            extensions_layout = spack.store.extensions
+        extensions_layout = view.extensions_layout
 
         extensions_layout.check_extension_conflict(
             self.extendee_spec, self.spec)
@@ -1842,14 +1840,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         # Activate any package dependencies that are also extensions.
         if not force:
             for spec in self.dependency_activations():
-                if not spec.package.is_activated(
-                        extensions_layout=extensions_layout):
+                if not spec.package.is_activated(view):
                     spec.package.do_activate(
-                        force=force, verbose=verbose,
-                        extensions_layout=extensions_layout)
+                        view, force=force, verbose=verbose)
 
         self.extendee_spec.package.activate(
-            self, extensions_layout=extensions_layout, **self.extendee_args)
+            self, view, **self.extendee_args)
 
         extensions_layout.add_extension(self.extendee_spec, self.spec)
 
@@ -1863,21 +1859,20 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
                 if spec.package.extends(self.extendee_spec))
 
-    def add_to_view(self, target, extensions_layout, ignore=None,
-                    ignore_conflicts=False):
+    def add_to_view(self, view, ignore=None, ignore_conflicts=False):
         tree = LinkTree(self.spec.prefix)
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
-            extensions_layout.layout.hidden_file_paths, ignore)
+            view.layout.hidden_file_paths, ignore)
 
         if not ignore_conflicts:
-            conflict = tree.find_conflict(target, ignore=ignore_file)
+            conflict = tree.find_conflict(view.root, ignore=ignore_file)
             if conflict:
                 # TODO: raise more-general error like "MergeConflict"
                 raise ExtensionConflictError(conflict)
 
-        conflicts = tree.merge(target, link=extensions_layout.link,
+        conflicts = tree.merge(view.root, link=view.link,
                                ignore=ignore_file,
                                ignore_conflicts=ignore_conflicts)
 
@@ -1885,15 +1880,15 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             for c in conflicts:
                 tty.warn("Could not link: %s" % c)
 
-    def remove_from_view(self, target, extensions_layout, ignore=None):
+    def remove_from_view(self, view, ignore=None):
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
-            extensions_layout.layout.hidden_file_paths, ignore)
+            view.layout.hidden_file_paths, ignore)
 
         tree = LinkTree(self.spec.prefix)
         tree.unmerge(target, ignore=ignore_file)
 
-    def activate(self, extension, **kwargs):
+    def activate(self, extension, view, **kwargs):
         """Make extension package usable by linking all its files to a target
         provided by the directory layout (depending if the user wants to
         activate globally or in a specified file system view).
@@ -1904,14 +1899,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
-        extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.extensions)
-        target = extensions_layout.extendee_target_directory(self)
+        extension.add_to_view(view, ignore=kwargs.get('ignore', None))
 
-        extension.add_to_view(target, extensions_layout,
-                              ignore=kwargs.get('ignore', None))
-
-    def do_deactivate(self, **kwargs):
+    def do_deactivate(self, view, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method.
 
         `remove_dependents=True` deactivates extensions depending on this
@@ -1921,8 +1911,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         force = kwargs.get('force', False)
         verbose = kwargs.get("verbose", True)
         remove_dependents = kwargs.get("remove_dependents", False)
-        extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.extensions)
+        extensions_layout = view.extensions_layout
 
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
@@ -1947,9 +1936,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                                        aspec.cshort_spec))
 
         self.extendee_spec.package.deactivate(
-            self,
-            extensions_layout=extensions_layout,
-            **self.extendee_args)
+            self, view, **self.extendee_args)
 
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
@@ -1963,7 +1950,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 (self.spec.short_spec,
                  self.extendee_spec.cformat("$_$@$+$%@")))
 
-    def deactivate(self, extension, **kwargs):
+    def deactivate(self, extension, view, **kwargs):
         """Unlinks all files from extension out of this package's install dir
         or the corresponding filesystem view.
 
@@ -1973,12 +1960,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
-        extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.extensions)
-        target = extensions_layout.extendee_target_directory(self)
-
-        extension.remove_from_view(
-            target, extensions_layout, ignore=kwargs.get('ignore', None))
+        extension.remove_from_view(view, ignore=kwargs.get('ignore', None))
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""

@@ -226,10 +226,8 @@ class YamlFilesystemView(FilesystemView):
             return True
 
         try:
-            if not spec.package.is_activated(self.extensions_layout):
-                spec.package.do_activate(
-                    verbose=self.verbose,
-                    extensions_layout=self.extensions_layout)
+            if not spec.package.is_activated(self):
+                spec.package.do_activate(self, verbose=self.verbose)
 
         except ExtensionAlreadyInstalledError:
             # As we use sets in add_specs(), the order in which packages get
@@ -273,8 +271,7 @@ class YamlFilesystemView(FilesystemView):
                                         long=False)
                 return False
 
-        spec.package.add_to_view(self.root, self.extensions_layout,
-                                 ignore_conflicts=self.ignore_conflicts)
+        spec.package.add_to_view(self, ignore_conflicts=self.ignore_conflicts)
 
         self.link_meta_folder(spec)
 

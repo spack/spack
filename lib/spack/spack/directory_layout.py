@@ -128,7 +128,6 @@ class ExtensionsLayout(object):
     """
     def __init__(self, root, **kwargs):
         self.root = root
-        self.link = kwargs.get("link", os.symlink)
 
     def add_extension(self, spec, ext_spec):
         """Add to the list of currently installed extensions."""

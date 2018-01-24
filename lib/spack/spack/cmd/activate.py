@@ -54,11 +54,14 @@ def activate(parser, args):
     if not spec.package.is_extension:
         tty.die("%s is not an extension." % spec.name)
 
-    layout = spack.store.extensions
-    if args.view is not None:
-        layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
+    if args.view:
+        target = args.view
+    else:
+        target = spec.package.extendee_spec.prefix
+    
+    view = YamlFilesystemView(target, spack.store.layout)
 
-    if spec.package.is_activated(extensions_layout=layout):
+    if spec.package.is_activated(view):
         tty.die("Package %s is already activated." % specs[0].short_spec)
 
-    spec.package.do_activate(extensions_layout=layout)
+    spec.package.do_activate(view)

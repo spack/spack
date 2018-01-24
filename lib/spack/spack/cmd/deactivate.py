@@ -60,9 +60,12 @@ def deactivate(parser, args):
     spec = spack.cmd.disambiguate_spec(specs[0])
     pkg = spec.package
 
-    layout = spack.store.extensions
-    if args.view is not None:
-        layout = YamlViewExtensionsLayout(args.view, spack.store.layout)
+    if args.view:
+        target = args.view
+    else:
+        target = spec.package.extendee_spec.prefix
+    
+    view = YamlFilesystemView(target, spack.store.layout)
 
     if args.all:
         if pkg.extendable:
@@ -77,7 +80,7 @@ def deactivate(parser, args):
 
         elif pkg.is_extension:
             if not args.force and \
-               not spec.package.is_activated(extensions_layout=layout):
+               not spec.package.is_activated(view):
                 tty.die("%s is not activated." % pkg.spec.short_spec)
 
             tty.msg("Deactivating %s and all dependencies." %
@@ -90,11 +93,10 @@ def deactivate(parser, args):
                 espec = index[name]
                 epkg = espec.package
                 if epkg.extends(pkg.extendee_spec):
-                    if epkg.is_activated(extensions_layout=layout) or \
+                    if epkg.is_activated(view) or \
                        args.force:
 
-                        epkg.do_deactivate(
-                            force=args.force, extensions_layout=layout)
+                        epkg.do_deactivate(view force=args.force)
 
         else:
             tty.die(
@@ -107,7 +109,7 @@ def deactivate(parser, args):
                     "Did you mean 'spack deactivate --all'?")
 
         if not args.force and \
-           not spec.package.is_activated(extensions_layout=layout):
+           not spec.package.is_activated(view):
             tty.die("Package %s is not activated." % specs[0].short_spec)
 
-        spec.package.do_deactivate(force=args.force, extensions_layout=layout)
+        spec.package.do_deactivate(view, force=args.force)
