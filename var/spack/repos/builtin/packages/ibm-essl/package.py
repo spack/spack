@@ -61,7 +61,7 @@ class IbmEssl(Package):
         if '+ilp64' in spec:
             essl_lib = ['libessl6464']
         else:
-            essl_lib = ['libesslasdfasd']
+            essl_lib = ['libessl']
 
         if spec.satisfies('threads=openmp'):
             # ESSL SMP support requires XL or Clang OpenMP library
@@ -75,7 +75,6 @@ class IbmEssl(Package):
                         essl_lib = ['libesslsmp']
 
         essl_root = prefix.lib64
-
         essl_libs = find_libraries(
             essl_lib,
             root=essl_root,
