@@ -84,8 +84,8 @@ class Elemental(CMakePackage):
     depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas ~int64_blas')
     depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
 
-    depends_on('ibm-essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
-    depends_on('ibm-essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
+    depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
+    depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
