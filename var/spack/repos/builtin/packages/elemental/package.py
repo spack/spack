@@ -220,9 +220,5 @@ class Elemental(CMakePackage):
         elif 'blas=essl' in spec:
             args.extend([
                 '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
-        elif 'blas=accelerate' in spec:
-            args.extend([
-                '-DHydrogen_USE_ACCELERATE:BOOL=%s' % (
-                    'blas=accelerate' in spec)])
 
         return args

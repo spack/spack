@@ -148,7 +148,7 @@ class Lbann(CMakePackage):
             args.extend(['-DcuDNN_DIR={0}'.format(
                 spec['cudnn'].prefix)])
 
-        if '+cub' in spec:
+        if '+cudnn' in spec:
             args.extend(['-DCUB_DIR={0}'.format(
                 spec['cub'].prefix)])
 

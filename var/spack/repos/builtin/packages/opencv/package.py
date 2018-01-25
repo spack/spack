@@ -43,7 +43,6 @@ class Opencv(CMakePackage):
     url = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
 
     version('master', git="https://github.com/opencv/opencv.git", branch="master")
-    version('3.3.1',    'b1ed9aea030bb5bd9df28524d97de84c')
     version('3.3.0',    '98a4e4c6f23ec725e808a891dc11eec4')
     version('3.2.0',    'a43b65488124ba33dde195fea9041b70')
     version('3.1.0',    '70e1dd07f0aa06606f1bc0e3fa15abd3')
