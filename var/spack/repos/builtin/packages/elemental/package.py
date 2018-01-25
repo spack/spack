@@ -77,6 +77,7 @@ class Elemental(CMakePackage):
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('blas', when='~openmp_blas ~int64_blas')
     # Hack to forward variant to openblas package
+    depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
     # Allow Elemental to build internally when using 8-byte ints
     depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas ~int64_blas')
 
@@ -147,7 +148,7 @@ class Elemental(CMakePackage):
             libfortran = LibraryList(mpif77('--print-file-name',
                                             'libgfortran.%s' % dso_suffix,
                                             output=str))
-        if libfortran:
+        if 'libfortran' in locals():
             args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
 
         # If using 64bit int BLAS libraries, elemental has to build
