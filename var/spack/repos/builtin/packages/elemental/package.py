@@ -209,8 +209,6 @@ class Elemental(CMakePackage):
             args.extend([
                 '-DHydrogen_USE_MKL:BOOL=%s' % ('blas=mkl' in spec)])
         elif 'blas=accelerate' in spec:
-            args.extend([
-                '-DHydrogen_USE_ACCELERATE:BOOL=%s' % (
-                    'blas=accelerate' in spec)])
+            args.extend(['-DHydrogen_USE_ACCELERATE:BOOL=TRUE'])
 
         return args
