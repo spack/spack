@@ -75,7 +75,7 @@ class PythonPackage(PackageBase):
 
     .. code-block:: console
 
-       $ python setup.py --no-user-cfg <phase>
+       $ python -s setup.py --no-user-cfg <phase>
 
     Each phase also has a <phase_args> function that can pass arguments to
     this call. All of these functions are empty except for the ``install_args``
@@ -132,7 +132,7 @@ class PythonPackage(PackageBase):
         setup = self.setup_file()
 
         with working_dir(self.build_directory):
-            self.python(setup, '--no-user-cfg', *args, **kwargs)
+            self.python('-s', setup, '--no-user-cfg', *args, **kwargs)
 
     def _setup_command_available(self, command):
         """Determines whether or not a setup.py command exists.
@@ -152,7 +152,7 @@ class PythonPackage(PackageBase):
         python = inspect.getmodule(self).python
         setup = self.setup_file()
 
-        python(setup, '--no-user-cfg', command, '--help', **kwargs)
+        python('-s', setup, '--no-user-cfg', command, '--help', **kwargs)
         return python.returncode == 0
 
     # The following phases and their descriptions come from:
