@@ -156,7 +156,8 @@ class Elemental(CMakePackage):
             xl_root = os.path.dirname(xl_bin)
             libfortran = LibraryList('{0}/lib/libxlf90_r.{1}.1'
                                      .format(xl_root, dso_suffix))
-        else: libfortran = None
+        else:
+            libfortran = None
 
         if 'libfortran' in locals():
             args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
