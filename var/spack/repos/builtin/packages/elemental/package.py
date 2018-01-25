@@ -68,8 +68,8 @@ class Elemental(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('blas', default='openblas', values=('openblas', 'mkl'),
-            description='Enable the use of OpenBlas/MKL')
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate'),
+            description='Enable the use of OpenBlas/MKL/Accelerate')
     variant('mpfr', default=False,
             description='Support GNU MPFR\'s'
             'arbitrary-precision floating-point arithmetic')
@@ -83,6 +83,8 @@ class Elemental(CMakePackage):
     depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
     depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas ~int64_blas')
     depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
+
+    depends_on('veclibfort', when='blas=accelerate')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
@@ -205,5 +207,9 @@ class Elemental(CMakePackage):
         elif 'blas=mkl' in spec:
             args.extend([
                 '-DHydrogen_USE_MKL:BOOL=%s' % ('blas=mkl' in spec)])
+        elif 'blas=accelerate' in spec:
+            args.extend([
+                '-DHydrogen_USE_ACCELERATE:BOOL=%s' % (
+                    'blas=accelerate' in spec)])
 
         return args
