@@ -26,16 +26,17 @@ from spack import *
 from glob import glob
 
 
-class Libxsmm(Package):
+class Libxsmm(MakefilePackage):
     '''Library targeting Intel Architecture
     for small, dense or sparse matrix multiplications,
     and small convolutions.'''
 
     homepage = 'https://github.com/hfp/libxsmm'
-    url      = 'https://github.com/hfp/libxsmm/archive/1.8.1.tar.gz'
+    url      = 'https://github.com/hfp/libxsmm/archive/1.8.2.tar.gz'
 
     version('develop', git='https://github.com/hfp/libxsmm.git')
 
+    version('1.8.2', '8f11ece699244c28dcb6742969a2ccd4')
     version('1.8.1', 'ece51ec767580f4542f509655daa5ec0')
     version('1.8',   '2d513afbdad99e5d04c6c4ab4c9bb25b')
     version('1.7.1', 'a938335b1c2c90616dc72c2c1a5824ab')
@@ -60,6 +61,8 @@ class Libxsmm(Package):
             description='Unoptimized with call-trace (LIBXSMM_TRACE).')
     variant('header-only', default=False,
             description='Produce header-only installation')
+    conflicts('+header-only', when='@:1.6.2',
+              msg='Header-only is available since v1.6.2!')
 
     @property
     def libs(self):
@@ -70,7 +73,7 @@ class Libxsmm(Package):
                                     shared=False, recurse=True)
         return result
 
-    def patch(self):
+    def edit(self, spec, prefix):
         kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
         makefile = FileFilter('Makefile.inc')
 
@@ -83,26 +86,7 @@ class Libxsmm(Package):
         makefile.filter('FC = ifort',       'FC ?= ifort', **kwargs)
         makefile.filter('FC = gfortran',    'FC ?= gfortran', **kwargs)
 
-    def manual_install(self, prefix):
-        spec = self.spec
-        install_tree('include', prefix.include)
-        if '~header-only' in spec:
-            install_tree('lib', prefix.lib)
-        doc_path = prefix.share + '/libxsmm/doc'
-        mkdirp(doc_path)
-        for doc_file in glob('documentation/*.md'):
-            install(doc_file, doc_path)
-        for doc_file in glob('documentation/*.pdf'):
-            install(doc_file, doc_path)
-        install('README.md', doc_path)
-        install('LICENSE', doc_path)
-
-    def install(self, spec, prefix):
-        if '+header-only' in spec and '@1.6.2:' not in spec:
-            raise InstallError(
-                "The variant +header-only is only available " +
-                "for versions @1.6.2:")
-
+    def build(self, spec, prefix):
         # include symbols by default
         make_args = ['SYM=1']
 
@@ -118,4 +102,21 @@ class Libxsmm(Package):
             make_args += ['TRACE=1']
 
         make(*make_args)
-        self.manual_install(prefix)
+
+    def install(self, spec, prefix):
+        install_tree('include', prefix.include)
+        if '+header-only' in spec:
+            install_tree('src', prefix.src)
+        else:
+            install_tree('lib', prefix.lib)
+        mkdirp(prefix.doc)
+        for doc_file in glob(join_path('documentation', '*.md')):
+            install(doc_file, prefix.doc)
+        for doc_file in glob(join_path('documentation', '*.pdf')):
+            install(doc_file, prefix.doc)
+        if '@1.8.2:' in spec:
+            install('LICENSE.md', prefix.doc)
+        else:
+            install('README.md', prefix.doc)
+            install('LICENSE', prefix.doc)
+        install('version.txt', prefix.doc)
