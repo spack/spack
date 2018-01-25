@@ -25,8 +25,8 @@
 from spack import *
 
 
-class IbmEssl(Package):
-    """Engineering and Scientific Subroutine Library (ESSL)."""
+class Essl(Package):
+    """IBM's Engineering and Scientific Subroutine Library (ESSL)."""
 
     homepage = "https://www.ibm.com/systems/power/software/essl/"
     url      = "ibm-essl"
@@ -43,7 +43,6 @@ class IbmEssl(Package):
     variant('cuda', default=False, description='CUDA acceleration')
 
     provides('blas')
-    provides('essl')
 
     conflicts('+cuda', when='+ilp64',
               msg='ESSL+cuda+ilp64 cannot combine CUDA acceleration'
