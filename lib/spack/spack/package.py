@@ -1864,7 +1864,11 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 if spec.package.extends(self.extendee_spec))
 
     def add_to_view(self, view, ignore=None, ignore_conflicts=False):
-        tree = LinkTree(self.spec.prefix)
+        Package.add_pkg_to_view(self, view, ignore, ignore_conflicts)
+
+    @staticmethod
+    def add_pkg_to_view(pkg, view, ignore=None, ignore_conflicts=False):
+        tree = LinkTree(pkg.spec.prefix)
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(

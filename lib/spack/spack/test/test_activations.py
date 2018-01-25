@@ -38,6 +38,8 @@ class FakeExtensionPackage(object):
         self.prefix = prefix
         self.spec = FakeSpec(self)
 
+    def add_to_view(self, view, ignore=None, ignore_conflicts=False):
+        spack.Package.add_pkg_to_view(self, view, ignore, ignore_conflicts)
 
 class FakeSpec(object):
     def __init__(self, package):

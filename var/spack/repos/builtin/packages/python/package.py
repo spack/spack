@@ -34,6 +34,7 @@ from llnl.util.filesystem import force_remove
 
 import spack
 from spack import *
+from spack.filesystem_view import YamlFilesystemView
 from spack.util.prefix import Prefix
 import spack.util.spack_json as sjson
 
@@ -629,15 +630,17 @@ class Python(AutotoolsPackage):
                         "sys.path[p:p]=new; "
                         "sys.__egginsert = p+len(new)\n")
 
-    def activate(self, ext_pkg, **args):
+    def activate(self, ext_pkg, view=None, **args):
         ignore = self.python_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+        if not view:
+            view = YamlFilesystemView(
+                self.prefix, spack.store.layout)
 
-        super(Python, self).activate(ext_pkg, **args)
+        super(Python, self).activate(ext_pkg, view, **args)
 
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
@@ -645,13 +648,16 @@ class Python(AutotoolsPackage):
             exts,
             prefix=extensions_layout.extendee_target_directory(self))
 
-    def deactivate(self, ext_pkg, **args):
+    def deactivate(self, ext_pkg, view=None, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
-        super(Python, self).deactivate(ext_pkg, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
+        if not view:
+            view = YamlFilesystemView(
+                self.prefix, spack.store.layout)
 
+        super(Python, self).deactivate(ext_pkg, view, **args)
+
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
