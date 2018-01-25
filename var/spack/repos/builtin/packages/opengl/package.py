@@ -31,7 +31,10 @@ class Opengl(Package):
     homepage = "https://www.opengl.org/"
     url      = "https://www.opengl.org/"
 
-    version('3.2', 'N/A')
+    # URL here is arbitrary, just so that spack's fetcher does not throw
+    # an error
+    version('3.2', '6cf936fbcaadd98924298a7009e8265d',
+            url='https://mesa.freedesktop.org/archive/mesa-17.1.5.tar.xz')
 
     provides('gl@:4.5', when='@4.5:')
     provides('gl@:4.4', when='@4.4:')
