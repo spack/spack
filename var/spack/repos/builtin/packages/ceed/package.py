@@ -39,22 +39,23 @@ class Ceed(Package):
     # removed when metapackage is available
     url      = 'https://bitbucket.org/saws/saws/get/master.tar.gz'
 
-    version('develop', 'a52dc710c744afa0b71429b8ec9425bc')
+    version('1.0.0', 'a52dc710c744afa0b71429b8ec9425bc')
 
     variant('cuda', default=False, description='Enable CUDA dependent packages')
 
-    depends_on('hpgmg@develop', when='@develop')
-    depends_on('hypre@2.13.0~internal-superlu', when='@develop')
-    depends_on('laghos@1.0', when='@develop')
-    depends_on('libceed@0.1+occa', when='@develop')
-    depends_on('magma@2.2.0', when='@develop +cuda')
-    depends_on('mfem@laghos-v1.0+mpi+hypre+superlu-dist+petsc+examples+miniapps')    
-    depends_on('nek5000@develop', when='@develop')
-    depends_on('nekbone@develop', when='@develop')
-    depends_on('nekcem@develop', when='@develop')
-    depends_on('petsc@3.8:+mpi+hypre+superlu-dist+metis+hdf5~mumps+boost+double~int64', when='@develop')
-    depends_on('pumi@0.0.1', when='@develop')
-    depends_on('occa@develop', when='@develop')
+    depends_on('gslib@1.0.1', when='@1.0.0')
+    depends_on('hpgmg@develop', when='@1.0.0')
+    depends_on('hypre@2.13.0~internal-superlu', when='@1.0.0')
+    depends_on('laghos@1.0', when='@1.0.0')
+    depends_on('libceed@0.1+occa', when='@1.0.0')
+    depends_on('magma@2.2.0', when='@1.0.0 +cuda')
+    depends_on('mfem@laghos-v1.0+mpi+hypre+superlu-dist+petsc+examples+miniapps', when='@1.0.0')    
+    depends_on('nek5000@17.0.0-beta2', when='@1.0.0')
+    depends_on('nekbone@17.0', when='@1.0.0')
+    depends_on('nekcem@develop', when='@1.0.0')
+    depends_on('petsc@3.8:+mpi+hypre+superlu-dist+metis+hdf5~mumps+boost+double~int64', when='@1.0.0')
+    depends_on('pumi@0.0.1', when='@1.0.0')
+    depends_on('occa@develop', when='@1.0.0')
 
 
     # Dummy install for now,  will be removed when metapackage is available

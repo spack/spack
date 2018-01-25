@@ -33,12 +33,13 @@ class Libceed(Package):
 
     version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
 
-    variant('occa', default=True,
-        description='Enable MPI parallelism')
+    variant('occa', default=True,description='Enable MPI parallelism')
 
     depends_on('occa', when='+occa')
 
     def install(self, spec, prefix):
-        make()
+        make('DESTDIR=%s' % prefix)
         mkdirp(prefix.lib)
         install('libceed.so', prefix.lib)
+        mkdirp(prefix.inc)
+        install('ceed.h', prefix.inc)        
