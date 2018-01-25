@@ -53,7 +53,7 @@ class Catalyst(CMakePackage):
     variant('extras', default=False, description='Enable Extras support')
     variant('rendering', default=False, description='Enable Vtk Rendering support')
 
-    depends_on('git')
+    #depends_on('git')
     depends_on('mpi')
     depends_on('python@2:2.8', when='+python')
     depends_on('mesa', when='+rendering')
@@ -112,8 +112,11 @@ class Catalyst(CMakePackage):
 
         if not os.path.isdir(catalyst_source_dir):
             os.mkdir(catalyst_source_dir)
+            filter_file(r"\[\'git\',\s*\'describe\'\]",
+                        "['echo', '%s']" % str(self.version), catalyst_script)
             subprocess.check_call(command)
             tty.msg("Generated catalyst source in %s" % self.stage.path)
+
         else:
             tty.msg("Already generated %s in %s" % (self.name,
                                                     self.stage.path))
@@ -128,6 +131,13 @@ class Catalyst(CMakePackage):
                              paraview_version))
         run_env.prepend_path('LD_LIBRARY_PATH', join_path(lib_dir,
                              paraview_version))
+        if '+python' in self.spec:
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 paraview_version))
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 paraview_version, 'site-packages'))
+            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                                 paraview_version, 'site-packages', 'vtk'))
 
     @property
     def root_cmakelists_dir(self):
@@ -152,7 +162,8 @@ class Catalyst(CMakePackage):
     def cmake_args(self):
         """Populate cmake arguments for Catalyst."""
         cmake_args = [
-            '-DPARAVIEW_GIT_DESCRIBE=v%s' % str(self.version)
+            '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=ON'
+#not needed as already patched            '-DPARAVIEW_GIT_DESCRIBE=v%s' % str(self.version)
         ]
         return cmake_args
 
