@@ -30,7 +30,7 @@ import pytest
 graph = SpackCommand('graph')
 
 
-@pytest.mark.slowtest
+@pytest.mark.db
 @pytest.mark.usefixtures('builtin_mock', 'database')
 class TestGraphCommand(object):
     def test_graph_ascii(self):

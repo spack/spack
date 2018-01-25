@@ -149,7 +149,7 @@ def _mock_remove(spec):
     spec.package.do_uninstall(spec)
 
 
-@pytest.mark.slowtest
+@pytest.mark.db
 class TestDatabase(object):
     def test_default_queries(self, database):
         install_db = database.mock.db

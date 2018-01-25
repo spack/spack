@@ -84,7 +84,7 @@ def test_query_arguments():
     assert q_args['explicit'] is False
 
 
-@pytest.mark.slowtest
+@pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 class TestFindWithTags(object):
 

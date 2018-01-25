@@ -38,7 +38,7 @@ def check_db():
         spack.repo.get(name)
 
 
-@pytest.mark.slowtest
+@pytest.mark.maybeslow
 def test_get_all_packages():
     """Get all packages once and make sure that works."""
     check_db()

@@ -67,7 +67,7 @@ def failure_args(request):
 # TODO : this requires having a separate directory for test modules
 # TODO : add tests for loads and find to check the prompt format
 
-@pytest.mark.slowtest
+@pytest.mark.db
 @pytest.mark.usefixtures('database')
 class TestModuleCommand(object):
     def test_exit_with_failure(self, parser, failure_args):

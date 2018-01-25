@@ -156,13 +156,13 @@ def check_python_versions(files):
     assert not all_issues
 
 
-@pytest.mark.slowtest
+@pytest.mark.maybeslow
 def test_core_module_compatibility():
     """Test that all core spack modules work with supported Python versions."""
     check_python_versions(pyfiles([spack.lib_path], exclude=exclude_paths))
 
 
-@pytest.mark.slowtest
+@pytest.mark.maybeslow
 def test_package_module_compatibility():
     """Test that all spack packages work with supported Python versions."""
     check_python_versions(pyfiles([spack.packages_path]))

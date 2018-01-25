@@ -39,7 +39,7 @@ class MockArgs(object):
         self.yes_to_all = True
 
 
-@pytest.mark.slowtest
+@pytest.mark.db
 @pytest.mark.usefixtures('database')
 class TestUninstallCommand(object):
     def test_multiple_matches(self):

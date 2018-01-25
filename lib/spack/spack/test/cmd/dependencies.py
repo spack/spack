@@ -52,7 +52,7 @@ def test_transitive_dependencies(builtin_mock):
     assert expected == actual
 
 
-@pytest.mark.slowtest
+@pytest.mark.db
 def test_immediate_installed_dependencies(builtin_mock, database):
     with color_when(False):
         out = dependencies('--installed', 'mpileaks^mpich')
@@ -66,7 +66,7 @@ def test_immediate_installed_dependencies(builtin_mock, database):
     assert expected == hashes
 
 
-@pytest.mark.slowtest
+@pytest.mark.db
 def test_transitive_installed_dependencies(builtin_mock, database):
     with color_when(False):
         out = dependencies('--installed', '--transitive', 'mpileaks^zmpi')
