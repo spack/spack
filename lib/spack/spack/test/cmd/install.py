@@ -259,10 +259,41 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
     if concretize:
         spec.concretize()
 
-    with fs.working_dir(str(tmpdir)):
-        # A non-concrete spec will fail to be installed
-        with open('spec.yaml', 'w') as f:
-            spec.to_yaml(f)
-        install('-f', 'spec.yaml', fail_on_error=False)
+    specfile = tmpdir.join('spec.yaml')
 
+    with specfile.open('w') as f:
+        spec.to_yaml(f)
+
+    # Relative path to specfile (regression for #6906)
+    with fs.working_dir(specfile.dirname):
+        # A non-concrete spec will fail to be installed
+        install('-f', specfile.basename, fail_on_error=False)
     assert install.returncode == error_code
+
+    # Absolute path to specfile (regression for #6983)
+    install('-f', str(specfile), fail_on_error=False)
+    assert install.returncode == error_code
+
+
+@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.parametrize('clispecs,filespecs', [
+    [[],                  ['mpi']],
+    [[],                  ['mpi', 'boost']],
+    [['cmake'],           ['mpi']],
+    [['cmake', 'libelf'], []],
+    [['cmake', 'libelf'], ['mpi', 'boost']],
+])
+def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
+
+    args = clispecs
+
+    for spec in filespecs:
+        filepath = tmpdir.join(spec + '.yaml')
+        args = ['-f', str(filepath)] + args
+        s = Spec(spec)
+        s.concretize()
+        with filepath.open('w') as f:
+            s.to_yaml(f)
+
+    install(*args, fail_on_error=False)
+    assert install.returncode == 0

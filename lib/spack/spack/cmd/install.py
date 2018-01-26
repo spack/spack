@@ -92,7 +92,8 @@ the dependencies"""
         '--fake', action='store_true',
         help="fake install for debug purposes.")
     subparser.add_argument(
-        '-f', '--file', action='store_true',
+        '-f', '--file', action='append', default=[],
+        dest='specfiles', metavar='SPEC_YAML_FILE',
         help="install from file. Read specs to install from .yaml files")
 
     cd_group = subparser.add_mutually_exclusive_group()
@@ -377,8 +378,8 @@ def install_spec(cli_args, kwargs, spec):
 
 
 def install(parser, args, **kwargs):
-    if not args.package:
-        tty.die("install requires at least one package argument")
+    if not args.package and not args.specfiles:
+        tty.die("install requires at least one package argument or yaml file")
 
     if args.jobs is not None:
         if args.jobs <= 0:
@@ -405,6 +406,7 @@ def install(parser, args, **kwargs):
     if args.run_tests:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
+    # 1. Abstract specs from cli
     specs = spack.cmd.parse_specs(args.package)
     if args.test == 'all' or args.run_tests:
         spack.package_testing.test_all()
@@ -412,23 +414,21 @@ def install(parser, args, **kwargs):
         for spec in specs:
             spack.package_testing.test(spec.name)
 
-    # Spec from cli
-    specs = []
-    if args.file:
-        for file in args.package:
-            with open(file, 'r') as f:
-                s = spack.spec.Spec.from_yaml(f)
+    specs = spack.cmd.parse_specs(args.package, concretize=True)
 
-            if s.concretized().dag_hash() != s.dag_hash():
-                msg = 'skipped invalid file "{0}". '
-                msg += 'The file does not contain a concrete spec.'
-                tty.warn(msg.format(file))
-                continue
+    # 2. Concrete specs from yaml files
+    for file in args.specfiles:
+        with open(file, 'r') as f:
+            s = spack.spec.Spec.from_yaml(f)
 
-            specs.append(s.concretized())
+        if s.concretized().dag_hash() != s.dag_hash():
+            msg = 'skipped invalid file "{0}". '
+            msg += 'The file does not contain a concrete spec.'
+            tty.warn(msg.format(file))
+            continue
 
-    else:
-        specs = spack.cmd.parse_specs(args.package, concretize=True)
+        specs.append(s.concretized())
+
     if len(specs) == 0:
         tty.die('The `spack install` command requires a spec to install.')
 
