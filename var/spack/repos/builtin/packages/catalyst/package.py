@@ -53,7 +53,6 @@ class Catalyst(CMakePackage):
     variant('extras', default=False, description='Enable Extras support')
     variant('rendering', default=False, description='Enable Vtk Rendering support')
 
-    #depends_on('git')
     depends_on('mpi')
     depends_on('python@2:2.8', when='+python')
     depends_on('mesa', when='+rendering')
@@ -163,7 +162,6 @@ class Catalyst(CMakePackage):
         """Populate cmake arguments for Catalyst."""
         cmake_args = [
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=ON'
-#not needed as already patched            '-DPARAVIEW_GIT_DESCRIBE=v%s' % str(self.version)
         ]
         return cmake_args
 
