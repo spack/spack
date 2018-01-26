@@ -644,9 +644,7 @@ class Python(AutotoolsPackage):
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
-        self.write_easy_install_pth(
-            exts,
-            prefix=extensions_layout.extendee_target_directory(self))
+        self.write_easy_install_pth(exts, prefix=view.root)
 
     def deactivate(self, ext_pkg, view=None, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
@@ -662,6 +660,4 @@ class Python(AutotoolsPackage):
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
-            self.write_easy_install_pth(
-                exts,
-                prefix=extensions_layout.extendee_target_directory(self))
+            self.write_easy_install_pth(exts, prefix=view.root)

@@ -363,9 +363,6 @@ class YamlExtensionsLayout(ExtensionsLayout):
         _check_concrete(spec)
         return self._extension_map(spec).copy()
 
-    def extendee_target_directory(self, extendee):
-        return extendee.prefix
-
     def remove_extension(self, spec, ext_spec):
         _check_concrete(spec)
         _check_concrete(ext_spec)
@@ -455,9 +452,6 @@ class YamlViewExtensionsLayout(YamlExtensionsLayout):
         _check_concrete(spec)
         return join_path(self.root, self.layout.metadata_dir, spec.name,
                          self.extension_file_name)
-
-    def extendee_target_directory(self, extendee):
-        return self.root
 
 
 class DirectoryLayoutError(SpackError):
