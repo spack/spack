@@ -32,7 +32,7 @@ class Mrnet(AutotoolsPackage):
     list_url = "http://ftp.cs.wisc.edu/paradyn/mrnet"
 
     version('5.0.1-3', git='https://github.com/dyninst/mrnet.git',
-            commit='4fbcc2435d5f7f1c6e3589a05d07e5e1325a4f31'
+            commit='4fbcc2435d5f7f1c6e3589a05d07e5e1325a4f31')
     version('5.0.1-2', git='https://github.com/dyninst/mrnet.git',
             commit='20b1eacfc6d680d9f6472146d2dfaa0f900cc2e9')
     version('5.0.1', '17f65738cf1b9f9b95647ff85f69ecdd')

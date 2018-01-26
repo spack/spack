@@ -26,7 +26,7 @@ from spack import *
 
 
 class Cti(Package):
-    """Placeholder for external CTI libraries from the 
+    """Placeholder for external CTI libraries from the
        Cray hardware vendor"""
 
     homepage = "https://www.cray.com/"
@@ -36,8 +36,8 @@ class Cti(Package):
 
     def install(self, spec, prefix):
         msg = """This package is intended to be a placeholder for
-        system-provided Cray Tool Interface (CTI) libraries from hardware 
-        vendors.  Please use the installed CTI libraries and set that up 
+        system-provided Cray Tool Interface (CTI) libraries from hardware
+        vendors.  Please use the installed CTI libraries and set that up
         as an external package.  An example of a working packages.yaml:
 
         packages:
@@ -46,7 +46,7 @@ class Cti(Package):
               cti@1.0.6%gcc@7.2.0 arch=cray-CNL-haswell: /opt/cray/pe/cti/1.0.6
             buildable: False
 
-        In that case, /opt/cray/pe/cti/1.0.6 should contain, at a minimum, 
+        In that case, /opt/cray/pe/cti/1.0.6 should contain, at a minimum,
         these two folders:
 
         include           (cti headers)
