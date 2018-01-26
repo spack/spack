@@ -367,8 +367,6 @@ def install_mockery(tmpdir, config, builtin_mock):
     # Use a fake install directory to avoid conflicts bt/w
     # installed pkgs and mock packages.
     spack.store.layout = spack.directory_layout.YamlDirectoryLayout(new_opt)
-    spack.store.extensions = spack.directory_layout.YamlExtensionsLayout(
-        new_opt, spack.store.layout)
     spack.store.db = spack.database.Database(new_opt)
 
     # We use a fake package, so skip the checksum.
