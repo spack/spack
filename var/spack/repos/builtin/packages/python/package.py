@@ -630,13 +630,9 @@ class Python(AutotoolsPackage):
                         "sys.path[p:p]=new; "
                         "sys.__egginsert = p+len(new)\n")
 
-    def activate(self, ext_pkg, view=None, **args):
+    def activate(self, ext_pkg, view, **args):
         ignore = self.python_ignore(ext_pkg, args)
         args.update(ignore=ignore)
-
-        if not view:
-            view = YamlFilesystemView(
-                self.prefix, spack.store.layout)
 
         super(Python, self).activate(ext_pkg, view, **args)
 
@@ -646,12 +642,8 @@ class Python(AutotoolsPackage):
 
         self.write_easy_install_pth(exts, prefix=view.root)
 
-    def deactivate(self, ext_pkg, view=None, **args):
+    def deactivate(self, ext_pkg, view, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
-
-        if not view:
-            view = YamlFilesystemView(
-                self.prefix, spack.store.layout)
 
         super(Python, self).deactivate(ext_pkg, view, **args)
 

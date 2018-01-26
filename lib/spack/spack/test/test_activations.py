@@ -124,7 +124,7 @@ def test_python_activation(tmpdir):
     ext_pkg = FakeExtensionPackage(ext_name, str(tmpdir.join(ext_name)))
 
     python_pkg = python_spec.package
-    python_pkg.activate(ext_pkg)
+    python_pkg.activate(ext_pkg, python_pkg.view())
 
 
 def test_python_activation_with_files(tmpdir, python_and_extension_dirs):
@@ -137,7 +137,7 @@ def test_python_activation_with_files(tmpdir, python_and_extension_dirs):
     ext_pkg = FakeExtensionPackage('py-extension', ext_prefix)
 
     python_pkg = python_spec.package
-    python_pkg.activate(ext_pkg)
+    python_pkg.activate(ext_pkg, python_pkg.view())
 
     assert os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
 
@@ -234,7 +234,7 @@ def test_perl_activation(tmpdir):
     ext_pkg = FakeExtensionPackage(ext_name, str(tmpdir.join(ext_name)))
 
     perl_pkg = perl_spec.package
-    perl_pkg.activate(ext_pkg)
+    perl_pkg.activate(ext_pkg, perl_pkg.view())
 
 
 def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs):
@@ -247,7 +247,7 @@ def test_perl_activation_with_files(tmpdir, perl_and_extension_dirs):
     ext_pkg = FakeExtensionPackage('perl-extension', ext_prefix)
 
     perl_pkg = perl_spec.package
-    perl_pkg.activate(ext_pkg)
+    perl_pkg.activate(ext_pkg, perl_pkg.view())
 
     assert os.path.exists(join_path(perl_prefix, 'bin/perl-ext-tool'))
 

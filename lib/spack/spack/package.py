@@ -1896,7 +1896,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         tree = LinkTree(self.spec.prefix)
         tree.unmerge(view.root, ignore=ignore_file)
 
-    def activate(self, extension, view=None, **kwargs):
+    def activate(self, extension, view, **kwargs):
         """Make extension package usable by linking all its files to a target
         provided by the directory layout (depending if the user wants to
         activate globally or in a specified file system view).
@@ -1907,9 +1907,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
-        if not view:
-            view = YamlFilesystemView(
-                self.prefix, spack.store.layout)
         extension.add_to_view(view, ignore=kwargs.get('ignore', None))
 
     def do_deactivate(self, view=None, **kwargs):
@@ -1965,7 +1962,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 (self.spec.short_spec,
                  self.extendee_spec.cformat("$_$@$+$%@")))
 
-    def deactivate(self, extension, view=None, **kwargs):
+    def deactivate(self, extension, view, **kwargs):
         """Unlinks all files from extension out of this package's install dir
         or the corresponding filesystem view.
 
@@ -1975,11 +1972,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
-        if not view:
-            view = YamlFilesystemView(
-                self.prefix, spack.store.layout)
-
         extension.remove_from_view(view, ignore=kwargs.get('ignore', None))
+
+    def view(self):
+        return YamlFilesystemView(self.prefix, spack.store.layout)
 
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""
