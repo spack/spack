@@ -90,6 +90,53 @@ def test_query_arguments():
 
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
+def test_find_iterator_long(parser, specs, capfd):
+
+    args = parser.parse_args(['-i', '-L', 'mpich', 'mpich2'])
+    spack.cmd.find.find(parser, args)
+
+    # Args Parsed
+    assert args.mode is "iterator"
+    assert args.very_long is True
+
+    # Build hash List
+    hashes = [s.dag_hash() for s in specs]
+
+    # Hash list from output
+    output, _ = capfd.readouterr()
+    output_hashes = [x.replace("/", "") for x in output.split("\n") if x != ""]
+
+    # Make sure hashes were seen in output (partially for -L)
+    for oh in output_hashes:
+        ta = [k.startswith(oh) for k in hashes]
+        assert True in ta
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('database', 'mock_display')
+def test_find_iterator(parser, specs, capfd):
+
+    args = parser.parse_args(['-i', 'mpich', 'mpich2'])
+    spack.cmd.find.find(parser, args)
+
+    # Args Parsed
+    assert args.mode is "iterator"
+
+    # Build hash List
+    hashes = [s.dag_hash() for s in specs]
+
+    # Hash list from output
+    output, _ = capfd.readouterr()
+    output_hashes = [x.replace("/", "") for x in output.split("\n") if x != ""]
+
+    # Make sure hashes were seen in output (partially for -L)
+    for oh in output_hashes:
+        ta = [k.startswith(oh) for k in hashes]
+        assert True in ta
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('database', 'mock_display')
 def test_tag1(parser, specs):
 
     args = parser.parse_args(['--tags', 'tag1'])

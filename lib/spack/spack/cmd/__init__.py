@@ -294,7 +294,8 @@ def display_specs(specs, args=None, **kwargs):
         # If they don't have a compiler / architecture attached to them,
         # then skip the header
         if architecture is not None or compiler is not None:
-            tty.hline(colorize(header), char='-')
+            if mode is not "iterator":
+                tty.hline(colorize(header), char='-')
 
         specs = index[(architecture, compiler)]
         specs.sort()
@@ -337,10 +338,14 @@ def display_specs(specs, args=None, **kwargs):
                     hsh = gray_hash(spec, hlen) + ' ' if hashes else ''
                     print(hsh + spec.cformat(format_string) + '\n')
 
+        elif mode == 'iterator':
+                for spec in specs:
+                    hsh = spec.dag_hash(hlen)
+                    print("/" + hsh)
         else:
             raise ValueError(
                 "Invalid mode for display_specs: %s. Must be one of (paths,"
-                "deps, short)." % mode)
+                "deps, short, iterator)." % mode)
 
 
 def spack_is_git_repo():

@@ -44,6 +44,11 @@ def setup_parser(subparser):
                               const='short',
                               default='short',
                               help='show only specs (default)')
+    format_group.add_argument('-i', '--iterator',
+                              action='store_const',
+                              dest='mode',
+                              const='iterator',
+                              help='show only hashes for matching packages')
     format_group.add_argument('-p', '--paths',
                               action='store_const',
                               dest='mode',
@@ -151,7 +156,7 @@ def find(parser, args):
         query_specs = [x for x in query_specs if x.name in packages_with_tags]
 
     # Display the result
-    if sys.stdout.isatty():
+    if sys.stdout.isatty() and (args.mode != "iterator"):
         tty.msg("%d installed packages." % len(query_specs))
 
     display_specs(query_specs, args)
