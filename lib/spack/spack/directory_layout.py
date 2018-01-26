@@ -312,14 +312,14 @@ class YamlDirectoryLayout(DirectoryLayout):
         return by_hash
 
 
-class YamlExtensionsLayout(ExtensionsLayout):
-    """Implements globally activated extensions within a YamlDirectoryLayout.
+class YamlViewExtensionsLayout(ExtensionsLayout):
+    """Maintain extensions within a view.
     """
     def __init__(self, root, layout):
         """layout is the corresponding YamlDirectoryLayout object for which
            we implement extensions.
         """
-        super(YamlExtensionsLayout, self).__init__(root)
+        super(YamlViewExtensionsLayout, self).__init__(root)
         self.layout = layout
         self.extension_file_name = 'extensions.yaml'
 
@@ -355,8 +355,16 @@ class YamlExtensionsLayout(ExtensionsLayout):
     def extension_file_path(self, spec):
         """Gets full path to an installed package's extension file"""
         _check_concrete(spec)
-        return join_path(self.layout.metadata_path(spec),
-                         self.extension_file_name)
+        if os.path.abspath(self.root) in os.path.abspath(spec.prefix):
+            # For backwards compatibility, when the root is in the extended
+            # package's installation directory, do not include the spec name
+            # as a subdirectory.
+            components = [self.root, self.layout.metadata_dir,
+                          self.extension_file_name]
+        else:
+            components = [self.root, self.layout.metadata_dir, spec.name,
+                          self.extension_file_name]
+        return join_path(*components)
 
     def extension_map(self, spec):
         """Defensive copying version of _extension_map() for external API."""
@@ -416,9 +424,6 @@ class YamlExtensionsLayout(ExtensionsLayout):
         # Create a temp file in the same directory as the actual file.
         dirname, basename = os.path.split(path)
 
-        # TODO: see note at YamlViewExtensionsLayout.extension_file_path
-        mkdirp(dirname)
-
         tmp = tempfile.NamedTemporaryFile(
             prefix=basename, dir=dirname, delete=False)
 
@@ -434,24 +439,6 @@ class YamlExtensionsLayout(ExtensionsLayout):
 
         # Atomic update by moving tmpfile on top of old one.
         os.rename(tmp.name, path)
-
-
-class YamlViewExtensionsLayout(YamlExtensionsLayout):
-    """Governs the directory layout present when creating filesystem views in a
-    certain root folder.
-
-    Meant to replace YamlExtensionsLayout when working with filesystem views.
-    """
-
-    def extension_file_path(self, spec):
-        """Gets the full path to an installed package's extension file."""
-        # TODO: now that global activations treat the spec prefix as the view
-        # root, when doing global activations this adds an unnecessary directory
-        # layer. Views require "spec.name" because otherwise the extensions
-        # for different extendees would override one another.
-        _check_concrete(spec)
-        return join_path(self.root, self.layout.metadata_dir, spec.name,
-                         self.extension_file_name)
 
 
 class DirectoryLayoutError(SpackError):
