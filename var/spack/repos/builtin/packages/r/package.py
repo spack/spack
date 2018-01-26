@@ -100,7 +100,9 @@ class R(AutotoolsPackage):
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
             '--enable-R-shlib',
             '--enable-BLAS-shlib',
-            '--enable-R-framework=no'
+            '--enable-R-framework=no',
+            '--with-tcl-config={0}'.format(join_path(spec['tcl'].prefix.lib, 'tclConfig.sh')),
+            '--with-tk-config={0}'.format(join_path(spec['tk'].prefix.lib, 'tkConfig.sh')),
         ]
 
         if '+external-lapack' in spec:
