@@ -42,6 +42,8 @@ class Subversion(Package):
     depends_on('zlib')
     depends_on('sqlite')
     depends_on('serf')
+    depends_on('autoconf', type=('build'))
+    depends_on('libtool', type=('build'))
 
     extends('perl', when='+perl')
     depends_on('swig@1.3.24:3.0.0', when='+perl')
