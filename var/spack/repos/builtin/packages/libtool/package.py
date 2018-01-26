@@ -63,7 +63,7 @@ class Libtool(AutotoolsPackage):
         # platforms, build systems sometimes expect to use the assumed
         # GNU commands glibtool and glibtoolize instead of the BSD
         # variant; this happens frequently, for instance, on Darwin
-        symlink(join_path(self.prefix.bin, 'libtoolize'),
-                join_path(self.prefix.bin, 'glibtoolize'))
-        symlink(join_path(self.prefix.bin, 'libtoolize'),
-                join_path(self.prefix.bin, 'glibtoolize'))
+        symlink(join_path(self.spec.prefix.bin, 'libtoolize'),
+                join_path(self.spec.prefix.bin, 'glibtoolize'))
+        symlink(join_path(self.spec.prefix.bin, 'libtoolize'),
+                join_path(self.spec.prefix.bin, 'glibtoolize'))
