@@ -69,6 +69,15 @@ class Subversion(Package):
         options.append('--with-sqlite=%s' % spec['sqlite'].prefix)
         options.append('--with-serf=%s' % spec['serf'].prefix)
 
+        # Add options from Homebrew/Linuxbrew to reduce the number of
+        # system libraries Subversion links to. See
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/subversion.rb
+        options.append('--with-apxs=no')
+        options.append('--disable-mod-activation')
+        options.append('--disable-nls')
+        options.append('--without-apache-libexecdir')
+        options.append('--without-berkeley-db')
+
         if 'swig' in spec:
             options.append('--with-swig=%s' % spec['swig'].prefix)
         if 'perl' in spec:
