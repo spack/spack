@@ -116,6 +116,10 @@ def edit(parser, args):
     if args.path:
         path = args.path
         if name:
+            # convert command names to python module name
+            if path == spack.cmd.command_path:
+                name = spack.cmd.python_name(name)
+
             path = os.path.join(path, name)
             if not os.path.exists(path):
                 files = glob.glob(path + '*')
