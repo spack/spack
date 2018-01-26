@@ -159,7 +159,7 @@ class Elemental(CMakePackage):
         else:
             libfortran = None
 
-        if 'libfortran' in locals():
+        if libfortran:
             args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
 
         # If using 64bit int BLAS libraries, elemental has to build
