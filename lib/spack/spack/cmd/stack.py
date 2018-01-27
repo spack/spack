@@ -37,7 +37,6 @@ from __future__ import print_function
 
 __author__ = "Oliver Breitwieser (UHEI)"
 
-import glob
 import os
 import os.path as osp
 import spack
@@ -50,8 +49,9 @@ import llnl.util.tty as tty
 import llnl.util.filesystem as fs
 
 description = "integrate packages of remote spack repositories into this one"
-section = "environment"
-level = "short" # TODO: re-check what 'level' is supposed to mean
+section = "admin"
+level = "long"  # TODO: re-check what 'level' is supposed to mean
+
 
 def setup_parser(sp):
     setup_parser.parser = sp
@@ -107,14 +107,14 @@ def add_remote_packages(remote, exclude=[], verbose=False):
 
 def stack(parser, args):
 
-    num_packages = sum((add_remote_packages(
+    num_packages = sum((
+        add_remote_packages(
             remote,
-            exclude=args.exclude, verbose=args.verbose)
+            exclude=args.exclude,
+            verbose=args.verbose)
         for remote in args.remotes))
 
     spack.store.db.reindex(spack.store.layout)
 
     if args.verbose:
         tty.info("Added {} packages.".format(num_packages))
-
-
