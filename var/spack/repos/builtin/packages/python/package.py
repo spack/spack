@@ -27,10 +27,12 @@ import os
 import platform
 import re
 import sys
+import shutil
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
-from llnl.util.filesystem import force_remove
+from llnl.util.filesystem import force_remove, get_filetype
+from llnl.util.link_tree import LinkTree
 
 import spack
 from spack import *
@@ -653,3 +655,50 @@ class Python(AutotoolsPackage):
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
             self.write_easy_install_pth(exts, prefix=view.root)
+
+    def add_to_view(self, view, ignore=None, ignore_conflicts=False):
+        bin_dir = self.spec.prefix.bin
+        def merge_file(src, dst, merge_map, link_fn):
+            if bin_dir not in src:
+                view.link(src, dst)
+            elif not os.path.islink(src):
+                shutil.copy2(src, dst)
+                if 'script' in get_filetype(src):
+                    filter_file(
+                        self.spec.prefix, os.path.abspath(view.root), dst)
+            else:
+                orig_link_target = os.path.realpath(src)
+                new_link_target = os.path.abspath(merge_map[orig_link_target])
+                link_fn(new_link_target, dst)
+
+        # TODO: this is redundant with Package.add_to_view except for the init
+        # of the LinkTree
+        tree = LinkTree(self.spec.prefix, merge_file=merge_file)
+
+        ignore = ignore or (lambda f: False)
+        ignore_file = match_predicate(
+            view.layout.hidden_file_paths, ignore)
+
+        if not ignore_conflicts:
+            conflict = tree.find_conflict(view.root, ignore=ignore_file)
+            if conflict:
+                # TODO: raise more-general error like "MergeConflict"
+                raise ExtensionConflictError(conflict)
+
+        tree.merge(view.root, link=view.link,
+                   ignore=ignore_file,
+                   ignore_conflicts=ignore_conflicts)
+
+    def remove_from_view(self, view, ignore=None):
+        bin_dir = self.spec.prefix.bin
+        def remove_file(src, dst):
+            if bin_dir not in src:
+                link_tree.remove_file(src, dst)
+            else:
+                os.remove(dst)
+                
+        ignore = ignore or (lambda f: False)
+        ignore_file = match_predicate(
+            view.layout.hidden_file_paths, ignore)
+        tree = LinkTree(self.spec.prefix, remove_file=remove_file)
+        tree.unmerge(view.root, ignore=ignore_file)

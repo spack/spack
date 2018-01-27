@@ -31,6 +31,7 @@ import shutil
 import platform
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import get_filetype
 from spack.util.gpg import Gpg
 from llnl.util.filesystem import mkdirp, join_path, install_tree
 from spack.util.web import spider
@@ -115,7 +116,7 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  This cuts down on the number of files added to the list
             #  of files potentially needing relocation
             if relocate.strings_contains_installroot(path_name):
-                filetype = relocate.get_filetype(path_name)
+                filetype = get_filetype(path_name)
                 if relocate.needs_binary_relocation(filetype, os_id):
                     rel_path_name = os.path.relpath(path_name, prefix)
                     binary_to_relocate.append(rel_path_name)

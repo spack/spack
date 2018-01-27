@@ -29,6 +29,7 @@ import shutil
 import filecmp
 
 from llnl.util.filesystem import traverse_tree, mkdirp, touch
+import llnl.util.tty as tty
 
 __all__ = ['LinkTree']
 
@@ -47,11 +48,15 @@ class LinkTree(object):
 
     """
 
-    def __init__(self, source_root):
+    def __init__(self, source_root, merge_file=None, check_conflict=None,
+                 remove_file=None):
         if not os.path.exists(source_root):
             raise IOError("No such file or directory: '%s'", source_root)
 
         self._root = source_root
+        self.merge_file = merge_file or merge_link
+        self.check_conflict = check_conflict or (lambda x: os.path.exists(x))
+        self.remove_file = remove_file or remove_link
 
     def find_conflict(self, dest_root, **kwargs):
         """Returns the first file in dest that conflicts with src"""
@@ -62,7 +67,7 @@ class LinkTree(object):
             if os.path.isdir(src):
                 if os.path.exists(dest) and not os.path.isdir(dest):
                     conflicts.append(dest)
-            elif os.path.exists(dest):
+            elif self.check_conflict(dest):
                 conflicts.append(dest)
             if conflicts and not get_all_conflicts:
                 return conflicts[0]
@@ -78,6 +83,7 @@ class LinkTree(object):
         kwargs['order'] = 'pre'
         ignore_conflicts = kwargs.get("ignore_conflicts", False)
         existing = []
+        merge_map = dict(traverse_tree(self._root, dest_root, **kwargs))
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
                 if not os.path.exists(dest):
@@ -93,15 +99,15 @@ class LinkTree(object):
                     touch(marker)
 
             else:
-                if os.path.exists(dest):
+                if self.check_conflict(dest):
                     if ignore_conflicts:
                         existing.append(src)
                     else:
                         raise AssertionError("File already exists: %s" % dest)
                 else:
-                    link(src, dest)
-        if ignore_conflicts:
-            return existing
+                    self.merge_file(src, dest, merge_map, link)
+        for c in existing:
+            tty.warn("Could not merge: %s" % c)
 
     def unmerge(self, dest_root, **kwargs):
         """Unlink all files in dest that exist in src.
@@ -129,10 +135,18 @@ class LinkTree(object):
                     os.remove(marker)
 
             elif os.path.exists(dest):
-                if not os.path.islink(dest):
-                    raise ValueError("%s is not a link tree!" % dest)
-                # remove if dest is a hardlink/symlink to src; this will only
-                # be false if two packages are merged into a prefix and have a
-                # conflicting file
-                if filecmp.cmp(src, dest, shallow=True):
-                    os.remove(dest)
+                self.remove_file(src, dest)
+
+
+def merge_link(src, dest, merge_map, link_fn):
+    link_fn(src, dest)
+
+
+def remove_link(src, dest):
+    if not os.path.islink(dest):
+        raise ValueError("%s is not a link tree!" % dest)
+    # remove if dest is a hardlink/symlink to src; this will only
+    # be false if two packages are merged into a prefix and have a
+    # conflicting file
+    if filecmp.cmp(src, dest, shallow=True):
+        os.remove(dest)

@@ -429,10 +429,6 @@ class PythonPackage(PackageBase):
 
         tree.merge(view.root, link=view.link, ignore_conflicts=True)
 
-        if ignore_conflicts:
-            for c in conflicts:
-                tty.warn("Could not link: %s" % c)
-
     def remove_from_view(self, view, ignore=None):
         namespace_ignore = []
         if self.py_namespace:

@@ -1880,13 +1880,9 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 # TODO: raise more-general error like "MergeConflict"
                 raise ExtensionConflictError(conflict)
 
-        conflicts = tree.merge(view.root, link=view.link,
-                               ignore=ignore_file,
-                               ignore_conflicts=ignore_conflicts)
-
-        if ignore_conflicts:
-            for c in conflicts:
-                tty.warn("Could not link: %s" % c)
+        tree.merge(view.root, link=view.link,
+                   ignore=ignore_file,
+                   ignore_conflicts=ignore_conflicts)
 
     def remove_from_view(self, view, ignore=None):
         ignore = ignore or (lambda f: False)

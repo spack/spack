@@ -41,6 +41,7 @@ from contextlib import contextmanager
 import six
 from llnl.util import tty
 from llnl.util.lang import dedupe
+from spack.util.executable import Executable
 
 __all__ = [
     'FileFilter',
@@ -257,6 +258,17 @@ def install_tree(src, dest, **kwargs):
 def is_exe(path):
     """True if path is an executable file."""
     return os.path.isfile(path) and os.access(path, os.X_OK)
+
+
+def get_filetype(path_name):
+    """
+    Return the output of file path_name as a string to identify file type.
+    """
+    file = Executable('file')
+    file.add_default_env('LC_ALL', 'C')
+    output = file('-b', '-h', '%s' % path_name,
+                  output=str, error=str)
+    return output.strip()
 
 
 def mkdirp(*paths):
