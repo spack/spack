@@ -22,10 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from __future__ import print_function
+"""Contains all the functions that are common to the implementation of
+each module file command.
+"""
 
 import collections
-import os
+import os.path
 import shutil
 
 from llnl.util import filesystem, tty
@@ -55,12 +57,12 @@ def subcommand(subparser_name):
         callbacks[subparser_name] = callback
         return callback
     return decorator
+from . import arguments
 
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subparser_name')
 
-    # spack module refresh
     refresh_parser = sp.add_parser('refresh', help='regenerate module files')
     refresh_parser.add_argument(
         '--delete-tree',
@@ -68,25 +70,22 @@ def setup_parser(subparser):
         action='store_true'
     )
     arguments.add_common_arguments(
-        refresh_parser, ['constraint', 'module_type', 'yes_to_all']
+        refresh_parser, ['constraint', 'yes_to_all']
     )
 
-    # spack module find
     find_parser = sp.add_parser('find', help='find module files for packages')
     find_parser.add_argument(
         '--full-path',
         help='display full path to module file',
         action='store_true'
     )
-    arguments.add_common_arguments(find_parser, ['constraint', 'module_type'])
+    arguments.add_common_arguments(find_parser, ['constraint'])
 
-    # spack module rm
     rm_parser = sp.add_parser('rm', help='remove module files')
     arguments.add_common_arguments(
-        rm_parser, ['constraint', 'module_type', 'yes_to_all']
+        rm_parser, ['constraint', 'yes_to_all']
     )
 
-    # spack module loads
     loads_parser = sp.add_parser(
         'loads',
         help='prompt the list of modules associated with a constraint'
@@ -104,7 +103,7 @@ def setup_parser(subparser):
         help="exclude package from output; may be specified multiple times"
     )
     arguments.add_common_arguments(
-        loads_parser, ['constraint', 'module_type', 'recurse_dependencies']
+        loads_parser, ['constraint', 'recurse_dependencies']
     )
 
 
@@ -118,22 +117,6 @@ class NoSpecMatches(Exception):
     """Raised when no spec matches a constraint, in a context where
     this is not allowed.
     """
-
-
-class MultipleModuleTypes(Exception):
-    """Raised when multiple module types match a cli request, in a context
-    where this is not allowed.
-    """
-
-
-def one_module_or_raise(module_types):
-    """Ensures exactly one module type has been selected, or raises the
-    appropriate exception.
-    """
-    # Ensure a single module type has been selected
-    if len(module_types) > 1:
-        raise MultipleModuleTypes()
-    return module_types[0]
 
 
 def one_spec_or_raise(specs):
@@ -150,11 +133,8 @@ def one_spec_or_raise(specs):
     return specs[0]
 
 
-@subcommand('loads')
-def loads(module_types, specs, args):
+def loads(module_type, specs, args):
     """Prompt the list of modules associated with a list of specs"""
-
-    module_type = one_module_or_raise(module_types)
 
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
@@ -181,7 +161,7 @@ def loads(module_types, specs, args):
     module_commands = {
         'tcl': 'module load ',
         'lmod': 'module load ',
-        'dotkit': 'dotkit use '
+        'dotkit': 'use '
     }
 
     d = {
@@ -199,14 +179,12 @@ def loads(module_types, specs, args):
         print(prompt_template.format(**d))
 
 
-@subcommand('find')
-def find(module_types, specs, args):
+def find(module_type, specs, args):
     """Returns the module file "use" name if there's a single match. Raises
     error messages otherwise.
     """
 
     spec = one_spec_or_raise(specs)
-    module_type = one_module_or_raise(module_types)
 
     # Check if the module file is present
     writer = spack.modules.module_types[module_type](spec)
@@ -222,40 +200,37 @@ def find(module_types, specs, args):
         print(writer.layout.use_name)
 
 
-@subcommand('rm')
-def rm(module_types, specs, args):
+def rm(module_type, specs, args):
     """Deletes the module files associated with every spec in specs, for every
     module type in module types.
     """
-    for module_type in module_types:
 
-        module_cls = spack.modules.module_types[module_type]
-        module_exist = lambda x: os.path.exists(module_cls(x).layout.filename)
+    module_cls = spack.modules.module_types[module_type]
+    module_exist = lambda x: os.path.exists(module_cls(x).layout.filename)
 
-        specs_with_modules = [spec for spec in specs if module_exist(spec)]
+    specs_with_modules = [spec for spec in specs if module_exist(spec)]
 
-        modules = [module_cls(spec) for spec in specs_with_modules]
+    modules = [module_cls(spec) for spec in specs_with_modules]
 
-        if not modules:
-            tty.die('No module file matches your query')
+    if not modules:
+        tty.die('No module file matches your query')
 
-        # Ask for confirmation
-        if not args.yes_to_all:
-            msg = 'You are about to remove {0} module files for:\n'
-            tty.msg(msg.format(module_type))
-            spack.cmd.display_specs(specs_with_modules, long=True)
-            print('')
-            answer = tty.get_yes_or_no('Do you want to proceed?')
-            if not answer:
-                tty.die('Will not remove any module files')
+    # Ask for confirmation
+    if not args.yes_to_all:
+        msg = 'You are about to remove {0} module files for:\n'
+        tty.msg(msg.format(module_type))
+        spack.cmd.display_specs(specs_with_modules, long=True)
+        print('')
+        answer = tty.get_yes_or_no('Do you want to proceed?')
+        if not answer:
+            tty.die('Will not remove any module files')
 
-        # Remove the module files
-        for s in modules:
-            s.remove()
+    # Remove the module files
+    for s in modules:
+        s.remove()
 
 
-@subcommand('refresh')
-def refresh(module_types, specs, args):
+def refresh(module_type, specs, args):
     """Regenerates the module files for every spec in specs and every module
     type in module types.
     """
@@ -267,8 +242,7 @@ def refresh(module_types, specs, args):
 
     if not args.yes_to_all:
         msg = 'You are about to regenerate {types} module files for:\n'
-        types = ', '.join(module_types)
-        tty.msg(msg.format(types=types))
+        tty.msg(msg.format(types=module_type))
         spack.cmd.display_specs(specs, long=True)
         print('')
         answer = tty.get_yes_or_no('Do you want to proceed?')
@@ -276,56 +250,69 @@ def refresh(module_types, specs, args):
             tty.die('Module file regeneration aborted.')
 
     # Cycle over the module types and regenerate module files
-    for module_type in module_types:
 
-        cls = spack.modules.module_types[module_type]
+    cls = spack.modules.module_types[module_type]
 
-        # skip unknown packages.
-        writers = [
-            cls(spec) for spec in specs
-            if spack.repo.path.exists(spec.name)]
+    # Skip unknown packages.
+    writers = [
+        cls(spec) for spec in specs
+        if spack.repo.path.exists(spec.name)]
 
-        # Filter blacklisted packages early
-        writers = [x for x in writers if not x.conf.blacklisted]
+    # Filter blacklisted packages early
+    writers = [x for x in writers if not x.conf.blacklisted]
 
-        # Detect name clashes in module files
-        file2writer = collections.defaultdict(list)
-        for item in writers:
-            file2writer[item.layout.filename].append(item)
+    # Detect name clashes in module files
+    file2writer = collections.defaultdict(list)
+    for item in writers:
+        file2writer[item.layout.filename].append(item)
 
-        if len(file2writer) != len(writers):
-            message = 'Name clashes detected in module files:\n'
-            for filename, writer_list in file2writer.items():
-                if len(writer_list) > 1:
-                    message += '\nfile: {0}\n'.format(filename)
-                    for x in writer_list:
-                        message += 'spec: {0}\n'.format(x.spec.format())
-            tty.error(message)
-            tty.error('Operation aborted')
-            raise SystemExit(1)
+    if len(file2writer) != len(writers):
+        message = 'Name clashes detected in module files:\n'
+        for filename, writer_list in file2writer.items():
+            if len(writer_list) > 1:
+                message += '\nfile: {0}\n'.format(filename)
+                for x in writer_list:
+                    message += 'spec: {0}\n'.format(x.spec.format())
+        tty.error(message)
+        tty.error('Operation aborted')
+        raise SystemExit(1)
 
-        if len(writers) == 0:
-            msg = 'Nothing to be done for {0} module files.'
-            tty.msg(msg.format(module_type))
-            continue
+    if len(writers) == 0:
+        msg = 'Nothing to be done for {0} module files.'
+        tty.msg(msg.format(module_type))
+        return
 
-        # If we arrived here we have at least one writer
-        module_type_root = writers[0].layout.dirname()
-        # Proceed regenerating module files
-        tty.msg('Regenerating {name} module files'.format(name=module_type))
-        if os.path.isdir(module_type_root) and args.delete_tree:
-            shutil.rmtree(module_type_root, ignore_errors=False)
-        filesystem.mkdirp(module_type_root)
-        for x in writers:
-            try:
-                x.write(overwrite=True)
-            except Exception as e:
-                msg = 'Could not write module file [{0}]'
-                tty.warn(msg.format(x.layout.filename))
-                tty.warn('\t--> {0} <--'.format(str(e)))
+    # If we arrived here we have at least one writer
+    module_type_root = writers[0].layout.dirname()
+    # Proceed regenerating module files
+    tty.msg('Regenerating {name} module files'.format(name=module_type))
+    if os.path.isdir(module_type_root) and args.delete_tree:
+        shutil.rmtree(module_type_root, ignore_errors=False)
+    filesystem.mkdirp(module_type_root)
+    for x in writers:
+        try:
+            x.write(overwrite=True)
+        except Exception as e:
+            msg = 'Could not write module file [{0}]'
+            tty.warn(msg.format(x.layout.filename))
+            tty.warn('\t--> {0} <--'.format(str(e)))
 
 
-def module(parser, args):
+#: Dictionary populated with the list of sub-commands.
+#: Each sub-command must be callable and accept 3 arguments:
+#:
+#:   - module_type: the type of module it refers to
+#:   - specs : the list of specs to be processed
+#:   - args : namespace containing the parsed command line arguments
+callbacks = {
+    'refresh': refresh,
+    'rm': rm,
+    'find': find,
+    'loads': loads
+}
+
+
+def modules_cmd(parser, args, module_type, callbacks=callbacks):
 
     # Qualifiers to be used when querying the db for specs
     constraint_qualifiers = {
@@ -339,17 +326,9 @@ def module(parser, args):
     # Get the specs that match the query from the DB
     specs = args.specs(**query_args)
 
-    # Set the module types that have been selected
-    module_types = args.module_type
-    if module_types is None:
-        # If no selection has been made select all of them
-        module_types = ['tcl']
-
-    module_types = list(set(module_types))
-
     try:
 
-        callbacks[args.subparser_name](module_types, specs, args)
+        callbacks[args.subparser_name](module_type, specs, args)
 
     except MultipleSpecsMatch:
         msg = "the constraint '{query}' matches multiple packages:\n"
@@ -362,7 +341,3 @@ def module(parser, args):
         msg = "the constraint '{query}' matches no package."
         tty.error(msg.format(query=args.constraint))
         tty.die('In this context exactly **one** match is needed: please specify your constraints better.')  # NOQA: ignore=E501
-
-    except MultipleModuleTypes:
-        msg = "this command needs exactly **one** module type active."
-        tty.die(msg)

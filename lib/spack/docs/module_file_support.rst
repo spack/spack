@@ -636,7 +636,7 @@ and in the customization of both their layout and content, but also ships with
 a tool to ease the burden of their maintenance in production environments.
 This tool is the ``spack module`` command:
 
-.. command-output:: spack module --help
+.. command-output:: spack tcl --help
 
 .. _cmd-spack-module-refresh:
 
@@ -647,7 +647,7 @@ This tool is the ``spack module`` command:
 The command that regenerates module files to update their content or
 their layout is ``module refresh``:
 
-.. command-output:: spack module refresh --help
+.. command-output:: spack tcl refresh --help
 
 A set of packages can be selected using anonymous specs for the optional
 ``constraint`` positional argument. The argument ``--module-type`` identifies
@@ -663,7 +663,7 @@ before regeneration if the change in layout is radical.
 If instead what you need is just to delete a few module files, then the right
 command is ``module rm``:
 
-.. command-output:: spack module rm --help
+.. command-output:: spack tcl rm --help
 
 .. note::
   We care about your module files!
