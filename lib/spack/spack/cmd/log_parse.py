@@ -25,8 +25,6 @@
 import sys
 
 import llnl.util.tty as tty
-from ctest_log_parser import CTestLogParser
-
 from spack.util.log_parse import parse_log_events, make_log_context
 
 description = "filter errors and warnings from build logs"
@@ -49,6 +47,10 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-w', '--width', action='store', type=int, default=None,
         help="wrap width: auto-size to terminal by default; 0 for no wrap")
+    subparser.add_argument(
+        '-j', '--jobs', action='store', type=int, default=None,
+        help="number of jobs to parse log file; default is 1 for short logs, "
+        "ncpus for long logs")
 
     subparser.add_argument(
         'file', help="a log file containing build output, or - for stdin")
@@ -59,13 +61,10 @@ def log_parse(parser, args):
     if args.file == '-':
         input = sys.stdin
 
+    errors, warnings = parse_log_events(
+        input, args.context, args.jobs, args.profile)
     if args.profile:
-        parser = CTestLogParser(profile=True)
-        parser.parse(input, args.context)
-        parser.print_timings()
-        sys.exit(0)
-
-    errors, warnings = parse_log_events(input, args.context)
+        return
 
     types = [s.strip() for s in args.show.split(',')]
     for e in types:

@@ -32,13 +32,17 @@ from ctest_log_parser import CTestLogParser, BuildError, BuildWarning
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
+__all__ = ['parse_log_events', 'make_log_context']
 
-def parse_log_events(stream, context=6):
+
+def parse_log_events(stream, context=6, jobs=None, profile=False):
     """Extract interesting events from a log file as a list of LogEvent.
 
     Args:
         stream (str or fileobject): build log name or file object
         context (int): lines of context to extract around each log event
+        jobs (int): number of jobs to parse with; default ncpus
+        profile (bool): print out profile information for parsing
 
     Returns:
         (tuple): two lists containig ``BuildError`` and
@@ -49,9 +53,12 @@ def parse_log_events(stream, context=6):
     that all the regex compilation is only done once.
     """
     if parse_log_events.ctest_parser is None:
-        parse_log_events.ctest_parser = CTestLogParser()
+        parse_log_events.ctest_parser = CTestLogParser(profile=profile)
 
-    return parse_log_events.ctest_parser.parse(stream, context)
+    result = parse_log_events.ctest_parser.parse(stream, context, jobs)
+    if profile:
+        parse_log_events.ctest_parser.print_timings()
+    return result
 
 
 #: lazily constructed CTest log parser

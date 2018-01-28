@@ -71,7 +71,7 @@ from __future__ import division
 import re
 import math
 import multiprocessing
-from datetime import datetime
+import time
 from contextlib import contextmanager
 
 from six import StringIO
@@ -110,7 +110,7 @@ class prefilter(object):
         return self.pre(text) and any(p.match(text) for p in self.patterns)
 
 
-error_matches = [
+_error_matches = [
     prefilter(
         lambda x: any(s in x for s in (
             'Error:', 'error', 'undefined reference', 'multiply defined')),
@@ -173,7 +173,7 @@ error_matches = [
     "^Command .* failed with exit code",
 ]
 
-error_exceptions = [
+_error_exceptions = [
     "instantiated from ",
     "candidates are:",
     ": warning",
@@ -188,7 +188,7 @@ error_exceptions = [
 ]
 
 #: Regexes to match file/line numbers in error/warning messages
-warning_matches = [
+_warning_matches = [
     prefilter(
         lambda x: 'warning' in x,
         "([^ :]+):([0-9]+): warning:",
@@ -219,7 +219,7 @@ warning_matches = [
 ]
 
 #: Regexes to match file/line numbers in error/warning messages
-warning_exceptions = [
+_warning_exceptions = [
     "/usr/.*/X11/Xlib\\.h:[0-9]+: war.*: ANSI C\\+\\+ forbids declaration",
     "/usr/.*/X11/Xutil\\.h:[0-9]+: war.*: ANSI C\\+\\+ forbids declaration",
     "/usr/.*/X11/XResource\\.h:[0-9]+: war.*: ANSI C\\+\\+ forbids declaration",
@@ -239,7 +239,7 @@ warning_exceptions = [
 ]
 
 #: Regexes to match file/line numbers in error/warning messages
-file_line_matches = [
+_file_line_matches = [
     "^Warning W[0-9]+ ([a-zA-Z.\\:/0-9_+ ~-]+) ([0-9]+):",
     "^([a-zA-Z./0-9_+ ~-]+):([0-9]+):",
     "^([a-zA-Z.\\:/0-9_+ ~-]+)\\(([0-9]+)\\)",
@@ -307,80 +307,114 @@ def chunks(l, n):
     return [l[i:i + chunksize] for i in range(0, len(l), chunksize)]
 
 
+@contextmanager
+def _time(times, i):
+    start = time.time()
+    yield
+    end = time.time()
+    times[i] += end - start
+
+
+def _match(matches, exceptions, line):
+    """True if line matches a regex in matches and none in exceptions."""
+    return (any(m.search(line) for m in matches) and
+            not any(e.search(line) for e in exceptions))
+
+
+def _profile_match(matches, exceptions, line, match_times, exc_times):
+    """Profiled version of match().
+
+    Timing is expensive so we have two whole functions.  This is much
+    longer because we have to break up the ``any()`` calls.
+
+    """
+    for i, m in enumerate(matches):
+        with _time(match_times, i):
+            if m.search(line):
+                break
+    else:
+        return False
+
+    for i, m in enumerate(exceptions):
+        with _time(exc_times, i):
+            if m.search(line):
+                return False
+    else:
+        return True
+
+
+def _parse(lines, offset, profile):
+    def compile(regex_array):
+        return [regex if isinstance(regex, prefilter) else re.compile(regex)
+                for regex in regex_array]
+
+    error_matches      = compile(_error_matches)
+    error_exceptions   = compile(_error_exceptions)
+    warning_matches    = compile(_warning_matches)
+    warning_exceptions = compile(_warning_exceptions)
+    file_line_matches  = compile(_file_line_matches)
+
+    matcher, args = _match, []
+    timings = []
+    if profile:
+        matcher = _profile_match
+        timings = [
+            [0.0] * len(error_matches), [0.0] * len(error_exceptions),
+            [0.0] * len(warning_matches), [0.0] * len(warning_exceptions)]
+
+    errors = []
+    warnings = []
+    for i, line in enumerate(lines):
+        # use CTest's regular expressions to scrape the log for events
+        if matcher(error_matches, error_exceptions, line, *timings[:2]):
+            event = BuildError(line.strip(), offset + i + 1)
+            errors.append(event)
+        elif matcher(warning_matches, warning_exceptions, line, *timings[2:]):
+            event = BuildWarning(line.strip(), offset + i + 1)
+            warnings.append(event)
+        else:
+            continue
+
+        # get file/line number for each event, if possible
+        for flm in file_line_matches:
+            match = flm.search(line)
+            if match:
+                event.source_file, source_line_no = match.groups()
+
+    return errors, warnings, timings
+
+
+def _parse_unpack(args):
+    return _parse(*args)
+
+
 class CTestLogParser(object):
     """Log file parser that extracts errors and warnings."""
     def __init__(self, profile=False):
-        def compile(regex_array):
-            return [regex if isinstance(regex, prefilter) else re.compile(regex)
-                    for regex in regex_array]
-
-        self.error_matches      = compile(error_matches)
-        self.error_exceptions   = compile(error_exceptions)
-        self.warning_matches    = compile(warning_matches)
-        self.warning_exceptions = compile(warning_exceptions)
-        self.file_line_matches  = compile(file_line_matches)
-
         # whether to record timing information
-        if profile:
-            self._match = self._profile_match
-        self.timings = {}
-
-    @contextmanager
-    def _time(self, arr, i):
-        if id(arr) not in self.timings:
-            self.timings[id(arr)] = [0.0] * len(arr)
-
-        start = datetime.now()
-        yield
-        end = datetime.now()
-        self.timings[id(arr)][i] += (end - start).total_seconds()
-
-
-    def _match(self, matches, exceptions, line):
-        """True if line matches a regex in matches and none in exceptions."""
-        return (any(m.search(line) for m in matches) and
-                not any(e.search(line) for e in exceptions))
-
-
-    def _profile_match(self, matches, exceptions, line):
-        """Profiled version of match().
-
-        Timing is expensive so we have two whole functions.  This is much
-        longer because we have to break up the ``any()`` calls.
-
-        """
-        for i, m in enumerate(matches):
-            with self._time(matches, i):
-                if m.search(line):
-                    break
-        else:
-            return False
-
-        for i, m in enumerate(exceptions):
-            with self._time(exceptions, i):
-                if m.search(line):
-                    return False
-        else:
-            return True
-
+        self.timings = []
+        self.profile = profile
 
     def print_timings(self):
         """Print out profile of time spent in different regular expressions."""
-        for name, arr in [
-                ('error_matches',      self.error_matches),
-                ('error_exceptions',   self.error_exceptions),
-                ('warning_matches',    self.warning_matches),
-                ('warning_exceptions', self.warning_exceptions)]:
+        def stringify(elt):
+            return elt if isinstance(elt, str) else elt.pattern
+
+        index = 0
+        for name, arr in [('error_matches', _error_matches),
+                          ('error_exceptions', _error_exceptions),
+                          ('warning_matches', _warning_matches),
+                          ('warning_exceptions', _warning_exceptions)]:
+
             print()
             print(name)
             for i, elt in enumerate(arr):
-                if id(arr) not in self.timings:
-                    continue
-                t = self.timings[id(arr)]
-                print("%16.2f        %s" % (t[i] * 1e6, elt.pattern))
+                print("%16.2f        %s" % (
+                    self.timings[index][i] * 1e6, stringify(elt)))
+            index += 1
 
 
-    def parse(self, stream, context=6):
+    def parse(self, stream, context=6, jobs=None):
         """Parse a log file by searching each line for errors and warnings.
 
         Args:
@@ -393,31 +427,45 @@ class CTestLogParser(object):
         """
         if isinstance(stream, string_types):
             with open(stream) as f:
-                return self.parse(f, context)
+                return self.parse(f, context, jobs)
 
         lines = [line for line in stream]
 
-        errors = []
-        warnings = []
-        for i, line in enumerate(lines):
-            # use CTest's regular expressions to scrape the log for events
-            if self._match(self.error_matches, self.error_exceptions, line):
-                event = BuildError(line.strip(), i + 1)
-                errors.append(event)
-            elif self._match(
-                    self.warning_matches, self.warning_exceptions, line):
-                event = BuildWarning(line.strip(), i + 1)
-                warnings.append(event)
-            else:
-                continue
+        if jobs is None:
+            jobs = multiprocessing.cpu_count()
 
-            # get file/line number for each event, if possible
-            for flm in self.file_line_matches:
-                match = flm.search(line)
-                if match:
-                    event.source_file, source_line_no = match.groups()
+        # single-thread small logs
+        if len(lines) < 10 * jobs:
+            errors, warnings, self.timings = _parse(lines, 0, self.profile)
 
-            # add log context, as well
+        else:
+            # Build arguments for parallel jobs
+            args = []
+            offset = 0
+            for chunk in chunks(lines, jobs):
+                args.append((chunk, offset, self.profile))
+                offset += len(chunk)
+
+            # create a pool and farm out the matching job
+            pool = multiprocessing.Pool(jobs)
+            try:
+                # this is a workaround for a Python bug in Pool with ctrl-C
+                results = pool.map_async(_parse_unpack, args, 1).get(9999999)
+                errors, warnings, timings = zip(*results)
+            finally:
+                pool.terminate()
+
+            # merge results
+            errors = sum(errors, [])
+            warnings = sum(warnings, [])
+
+            if self.profile:
+                self.timings = [
+                    [sum(i) for i in zip(*t)] for t in zip(*timings)]
+
+        # add log context to all events
+        for event in (errors + warnings):
+            i = event.line_no - 1
             event.pre_context = [
                 l.rstrip() for l in lines[i - context:i]]
             event.post_context = [
