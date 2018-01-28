@@ -50,20 +50,19 @@ class Libtool(AutotoolsPackage):
         # the tools it provides to the dependent module. Some build
         # systems differentiate between BSD libtool (e.g., Darwin) and
         # GNU libtool, so also add 'glibtool' and 'glibtoolize' to the
-        # list of executables.
+        # list of executables. See Homebrew:
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/libtool.rb
         executables = ['libtoolize', 'libtool', 'glibtoolize', 'glibtool']
         for name in executables:
             setattr(module, name, self._make_executable(name))
 
-    @run_after('install')
-    def post_install(self):
+    @when('platform=darwin')
+    def configure_args(self):
         # Some platforms name GNU libtool and GNU libtoolize
         # 'glibtool' and 'glibtoolize', respectively, to differentiate
         # them from BSD libtool and BSD libtoolize. On these BSD
         # platforms, build systems sometimes expect to use the assumed
         # GNU commands glibtool and glibtoolize instead of the BSD
         # variant; this happens frequently, for instance, on Darwin
-        symlink(join_path(self.prefix.bin, 'libtoolize'),
-                join_path(self.prefix.bin, 'glibtoolize'))
-        symlink(join_path(self.prefix.bin, 'libtoolize'),
-                join_path(self.prefix.bin, 'glibtoolize'))
+        args = ['--program-prefix=g']
+        return args
