@@ -65,18 +65,66 @@ algorithms that duplicate the way CTest scrapes log files.  To keep this
 up to date with CTest, just make sure the ``*_matches`` and
 ``*_exceptions`` lists are kept up to date with CTest's build handler.
 """
+from __future__ import print_function
+from __future__ import division
+
 import re
+import math
+import multiprocessing
+from datetime import datetime
+from contextlib import contextmanager
+
 from six import StringIO
 from six import string_types
 
+class prefilter(object):
+    """Make regular expressions faster with a simple prefiltering predicate.
+
+    Some regular expressions seem to be much more costly than others.  In
+    most cases, we can evaluate a simple precondition, e.g.::
+
+        lambda x: "error" in x
+
+    to avoid evaluating expensive regexes on all lines in a file. This
+    can reduce parse time for large files by orders of magnitude when
+    evaluating lots of expressions.
+
+    A ``prefilter`` object is designed to act like a regex,, but
+    ``search`` and ``match`` check the precondition before bothering to
+    evaluate the regular expression.
+
+    Note that ``match`` and ``search`` just return ``True`` and ``False``
+    at the moment. Make them return a ``MatchObject`` or ``None`` if it
+    becomes necessary.
+    """
+    def __init__(self, precondition, *patterns):
+        self.patterns = [re.compile(p) for p in patterns]
+        self.pre = precondition
+        self.pattern = "\n                            ".join(
+            ('MERGED:',) + patterns)
+
+    def search(self, text):
+        return self.pre(text) and any(p.search(text) for p in self.patterns)
+
+    def match(self, text):
+        return self.pre(text) and any(p.match(text) for p in self.patterns)
+
 
 error_matches = [
+    prefilter(
+        lambda x: any(s in x for s in (
+            'Error:', 'error', 'undefined reference', 'multiply defined')),
+        "([^:]+): error[ \\t]*[0-9]+[ \\t]*:",
+        "([^:]+): (Error:|error|undefined reference|multiply defined)",
+        "([^ :]+) : (error|fatal error|catastrophic error)",
+        "([^:]+)\\(([^\\)]+)\\) ?: (error|fatal error|catastrophic error)"),
+    prefilter(
+        lambda s: s.count(':') >= 2,
+        "[^ :]+:[0-9]+: [^ \\t]"),
     "^[Bb]us [Ee]rror",
     "^[Ss]egmentation [Vv]iolation",
     "^[Ss]egmentation [Ff]ault",
     ":.*[Pp]ermission [Dd]enied",
-    "([^ :]+):([0-9]+): ([^ \\t])",
-    "([^:]+): error[ \\t]*[0-9]+[ \\t]*:",
     "^Error ([0-9]+):",
     "^Fatal",
     "^Error: ",
@@ -86,9 +134,6 @@ error_matches = [
     "^cc[^C]*CC: ERROR File = ([^,]+), Line = ([0-9]+)",
     "^ld([^:])*:([ \\t])*ERROR([^:])*:",
     "^ild:([ \\t])*\\(undefined symbol\\)",
-    "([^ :]+) : (error|fatal error|catastrophic error)",
-    "([^:]+): (Error:|error|undefined reference|multiply defined)",
-    "([^:]+)\\(([^\\)]+)\\) ?: (error|fatal error|catastrophic error)",
     "^fatal error C[0-9]+:",
     ": syntax error ",
     "^collect2: ld returned 1 exit status",
@@ -144,26 +189,32 @@ error_exceptions = [
 
 #: Regexes to match file/line numbers in error/warning messages
 warning_matches = [
-    "([^ :]+):([0-9]+): warning:",
-    "([^ :]+):([0-9]+): note:",
+    prefilter(
+        lambda x: 'warning' in x,
+        "([^ :]+):([0-9]+): warning:",
+        "([^:]+): warning ([0-9]+):",
+        "([^:]+): warning[ \\t]*[0-9]+[ \\t]*:",
+        "([^ :]+) : warning",
+        "([^:]+): warning"),
+    prefilter(
+        lambda x: 'note:' in x,
+        "^([^ :]+):([0-9]+): note:"),
+    prefilter(
+        lambda x: any(s in x for s in ('Warning', 'Warnung')),
+        "^(Warning|Warnung) ([0-9]+):",
+        "^(Warning|Warnung)[ :]",
+        "^cxx: Warning:",
+        "([^ :]+):([0-9]+): (Warning|Warnung)",
+        "^CMake Warning.*:"),
+    "file: .* has no symbols",
     "^cc[^C]*CC: WARNING File = ([^,]+), Line = ([0-9]+)",
     "^ld([^:])*:([ \\t])*WARNING([^:])*:",
-    "([^:]+): warning ([0-9]+):",
     "^\"[^\"]+\", line [0-9]+: [Ww](arning|arnung)",
-    "([^:]+): warning[ \\t]*[0-9]+[ \\t]*:",
-    "^(Warning|Warnung) ([0-9]+):",
-    "^(Warning|Warnung)[ :]",
     "WARNING: ",
-    "([^ :]+) : warning",
-    "([^:]+): warning",
     "\", line [0-9]+\\.[0-9]+: [0-9]+-[0-9]+ \\([WI]\\)",
-    "^cxx: Warning:",
-    ".*file: .* has no symbols",
-    "([^ :]+):([0-9]+): (Warning|Warnung)",
     "\\([0-9]*\\): remark #[0-9]*",
     "\".*\", line [0-9]+: remark\\([0-9]*\\):",
     "cc-[0-9]* CC: REMARK File = .*, Line = [0-9]*",
-    "^CMake Warning.*:",
     "^\\[WARNING\\]",
 ]
 
@@ -250,23 +301,84 @@ class BuildWarning(LogEvent):
     """LogEvent subclass for build warnings."""
 
 
-def _match(matches, exceptions, line):
-    """True if line matches a regex in matches and none in exceptions."""
-    return (any(m.search(line) for m in matches) and
-            not any(e.search(line) for e in exceptions))
+def chunks(l, n):
+    """Divide l into n approximately-even chunks."""
+    chunksize = int(math.ceil(len(l) / n))
+    return [l[i:i + chunksize] for i in range(0, len(l), chunksize)]
 
 
 class CTestLogParser(object):
     """Log file parser that extracts errors and warnings."""
-    def __init__(self):
+    def __init__(self, profile=False):
         def compile(regex_array):
-            return [re.compile(regex) for regex in regex_array]
+            return [regex if isinstance(regex, prefilter) else re.compile(regex)
+                    for regex in regex_array]
 
         self.error_matches      = compile(error_matches)
         self.error_exceptions   = compile(error_exceptions)
         self.warning_matches    = compile(warning_matches)
         self.warning_exceptions = compile(warning_exceptions)
         self.file_line_matches  = compile(file_line_matches)
+
+        # whether to record timing information
+        if profile:
+            self._match = self._profile_match
+        self.timings = {}
+
+    @contextmanager
+    def _time(self, arr, i):
+        if id(arr) not in self.timings:
+            self.timings[id(arr)] = [0.0] * len(arr)
+
+        start = datetime.now()
+        yield
+        end = datetime.now()
+        self.timings[id(arr)][i] += (end - start).total_seconds()
+
+
+    def _match(self, matches, exceptions, line):
+        """True if line matches a regex in matches and none in exceptions."""
+        return (any(m.search(line) for m in matches) and
+                not any(e.search(line) for e in exceptions))
+
+
+    def _profile_match(self, matches, exceptions, line):
+        """Profiled version of match().
+
+        Timing is expensive so we have two whole functions.  This is much
+        longer because we have to break up the ``any()`` calls.
+
+        """
+        for i, m in enumerate(matches):
+            with self._time(matches, i):
+                if m.search(line):
+                    break
+        else:
+            return False
+
+        for i, m in enumerate(exceptions):
+            with self._time(exceptions, i):
+                if m.search(line):
+                    return False
+        else:
+            return True
+
+
+    def print_timings(self):
+        """Print out profile of time spent in different regular expressions."""
+        for name, arr in [
+                ('error_matches',      self.error_matches),
+                ('error_exceptions',   self.error_exceptions),
+                ('warning_matches',    self.warning_matches),
+                ('warning_exceptions', self.warning_exceptions)]:
+            print()
+            print(name)
+            for i, elt in enumerate(arr):
+                if id(arr) not in self.timings:
+                    continue
+                t = self.timings[id(arr)]
+                print("%16.2f        %s" % (t[i] * 1e6, elt.pattern))
+
 
     def parse(self, stream, context=6):
         """Parse a log file by searching each line for errors and warnings.
@@ -281,7 +393,7 @@ class CTestLogParser(object):
         """
         if isinstance(stream, string_types):
             with open(stream) as f:
-                return self.parse(f)
+                return self.parse(f, context)
 
         lines = [line for line in stream]
 
@@ -289,10 +401,11 @@ class CTestLogParser(object):
         warnings = []
         for i, line in enumerate(lines):
             # use CTest's regular expressions to scrape the log for events
-            if _match(self.error_matches, self.error_exceptions, line):
+            if self._match(self.error_matches, self.error_exceptions, line):
                 event = BuildError(line.strip(), i + 1)
                 errors.append(event)
-            elif _match(self.warning_matches, self.warning_exceptions, line):
+            elif self._match(
+                    self.warning_matches, self.warning_exceptions, line):
                 event = BuildWarning(line.strip(), i + 1)
                 warnings.append(event)
             else:
