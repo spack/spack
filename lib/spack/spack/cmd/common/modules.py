@@ -35,7 +35,8 @@ from llnl.util import filesystem, tty
 import spack.cmd
 import spack.modules
 import spack.repo
-from spack.cmd.common import arguments
+
+import spack.cmd.common.arguments as arguments
 
 description = "manipulate module files"
 section = "environment"
@@ -49,15 +50,6 @@ level = "short"
 #:   - specs : the list of specs to be processed
 #:   - args : namespace containing the parsed command line arguments
 callbacks = {}
-
-
-def subcommand(subparser_name):
-    """Registers a function in the callbacks dictionary"""
-    def decorator(callback):
-        callbacks[subparser_name] = callback
-        return callback
-    return decorator
-from . import arguments
 
 
 def setup_parser(subparser):
@@ -105,6 +97,7 @@ def setup_parser(subparser):
     arguments.add_common_arguments(
         loads_parser, ['constraint', 'recurse_dependencies']
     )
+    return sp
 
 
 class MultipleSpecsMatch(Exception):
