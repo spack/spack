@@ -68,17 +68,27 @@ def setup_parser(subparser):
              "repository")
 
     subparser.add_argument(
+        '--hardlinks',
+        action='store_true', default=False,
+        help="use hardlinks to stack repositories. This is NOT recommended as "
+             "hard links cannot be differentiated from regular files. This "
+             "means that unstacking external repositories has to be done "
+             "manually and is very tedious... Be aware!")
+
+    subparser.add_argument(
         "remotes", nargs="+",
         metavar='remote', action='store',
         help="one or more remote spack repositories which "
              "contain packages to be added as external packages")
 
 
-def add_remote_packages(remote, exclude=[], nostack=False):
+def add_remote_packages(remote, exclude=[], nostack=False, hardlinks=False):
     """
         Add all installed packages in `remote` to the packages dictionary.
 
         If nostack == True, packages will not be re-linked if they exist.
+
+        If hardlinks == True, packages will be hard-linked. Not recommended!
     """
     config = spack.config.get_config("config")
 
@@ -94,7 +104,7 @@ def add_remote_packages(remote, exclude=[], nostack=False):
         src = layout.path_for_spec(spec)
         tgt = spack.store.layout.path_for_spec(spec)
         if osp.exists(tgt):
-            if not nostack:
+            if not (nostack or hardlinks):
                 if osp.islink(tgt):
                     os.remove(tgt)
                 else:
@@ -106,7 +116,10 @@ def add_remote_packages(remote, exclude=[], nostack=False):
                     src))
         fs.mkdirp(osp.dirname(tgt))
         tty.debug("Linking {0} -> {1}".format(src, tgt))
-        os.symlink(src, tgt)
+        if not hardlinks:
+            os.symlink(src, tgt)
+        else:
+            os.link(src, tgt)
         num_packages += 1
 
     tty.info("Added {0} packages from {1}".format(num_packages, remote))
@@ -120,7 +133,8 @@ def stack(parser, args):
         add_remote_packages(
             remote,
             exclude=args.exclude,
-            nostack=args.nostack)
+            nostack=args.nostack,
+            hardlinks=args.hardlinks)
         for remote in args.remotes))
 
     # include the newly linked specs in the database
