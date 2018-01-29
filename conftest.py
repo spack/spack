@@ -35,12 +35,10 @@ def pytest_addoption(parser):
     group = parser.getgroup("Spack specific command line options")
     group.addoption(
         '--fast', action='store_true', default=False,
-        help='runs only "fast" unit tests, instead of the whole suite'
-    )
+        help='runs only "fast" unit tests, instead of the whole suite')
 
 
 def pytest_collection_modifyitems(config, items):
-
     if not config.getoption('--fast'):
         # --fast not given, run all the tests
         return
