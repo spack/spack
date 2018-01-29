@@ -56,7 +56,6 @@ class Hiop(CMakePackage):
         spec = self.spec
 
         if '+mpi' in spec:
-            args.append("-DCMAKE_CXX_COMPILER=%s" % spec['mpi'].mpicxx)
             args.append("-DWITH_MPI=ON")
         else:
             args.append("-DWITH_MPI=OFF")
