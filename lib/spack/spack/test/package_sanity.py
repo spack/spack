@@ -26,6 +26,8 @@
 
 import re
 
+import pytest
+
 import spack
 from spack.repository import RepoPath
 
@@ -36,6 +38,7 @@ def check_db():
         spack.repo.get(name)
 
 
+@pytest.mark.maybeslow
 def test_get_all_packages():
     """Get all packages once and make sure that works."""
     check_db()
