@@ -68,8 +68,8 @@ class Elemental(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate'),
-            description='Enable the use of OpenBlas/MKL/Accelerate')
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl'),
+            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL')
     variant('mpfr', default=False,
             description='Support GNU MPFR\'s'
             'arbitrary-precision floating-point arithmetic')
@@ -87,8 +87,13 @@ class Elemental(CMakePackage):
 
     depends_on('veclibfort', when='blas=accelerate')
 
+    depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
+    depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
+
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
+    depends_on('netlib-lapack +external-blas', when='blas=essl')
+
     depends_on('metis')
     depends_on('metis +int64', when='+int64')
     depends_on('mpi')
@@ -148,7 +153,16 @@ class Elemental(CMakePackage):
             libfortran = LibraryList(mpif77('--print-file-name',
                                             'libgfortran.%s' % dso_suffix,
                                             output=str))
-        if 'libfortran' in locals():
+        elif self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
+            xl_fort = env['SPACK_F77']
+            xl_bin = os.path.dirname(xl_fort)
+            xl_root = os.path.dirname(xl_bin)
+            libfortran = LibraryList('{0}/lib/libxlf90_r.{1}.1'
+                                     .format(xl_root, dso_suffix))
+        else:
+            libfortran = None
+
+        if libfortran:
             args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
 
         # If using 64bit int BLAS libraries, elemental has to build
@@ -210,5 +224,8 @@ class Elemental(CMakePackage):
                 '-DHydrogen_USE_MKL:BOOL=%s' % ('blas=mkl' in spec)])
         elif 'blas=accelerate' in spec:
             args.extend(['-DHydrogen_USE_ACCELERATE:BOOL=TRUE'])
+        elif 'blas=essl' in spec:
+            args.extend([
+                '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
 
         return args

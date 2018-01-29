@@ -22,29 +22,31 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 import pytest
 
-from spack.main import SpackCommand
 
-versions = SpackCommand('versions')
-
-
-@pytest.mark.network
-def test_remote_versions():
-    """Test a package for which remote versions should be available."""
-
-    versions('zlib')
-
-
-@pytest.mark.network
-def test_no_versions():
-    """Test a package for which no remote versions are available."""
-
-    versions('converge')
+# Hooks to add command line options or set other custom behaviors.
+# They must be placed here to be found by pytest. See:
+#
+# https://docs.pytest.org/en/latest/writing_plugins.html
+#
+def pytest_addoption(parser):
+    group = parser.getgroup("Spack specific command line options")
+    group.addoption(
+        '--fast', action='store_true', default=False,
+        help='runs only "fast" unit tests, instead of the whole suite')
 
 
-@pytest.mark.network
-def test_no_unchecksummed_versions():
-    """Test a package for which no unchecksummed versions are available."""
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption('--fast'):
+        # --fast not given, run all the tests
+        return
 
-    versions('bzip2')
+    slow_tests = ['db', 'network', 'maybeslow']
+    skip_as_slow = pytest.mark.skip(
+        reason='skipped slow test [--fast command line option given]'
+    )
+    for item in items:
+        if any(x in item.keywords for x in slow_tests):
+            item.add_marker(skip_as_slow)

@@ -575,19 +575,6 @@ def setup_package(pkg, dirty):
     spack_env = EnvironmentModifications()
     run_env = EnvironmentModifications()
 
-    # Before proceeding, ensure that specs and packages are consistent
-    #
-    # This is a confusing behavior due to how packages are
-    # constructed.  `setup_dependent_package` may set attributes on
-    # specs in the DAG for use by other packages' install
-    # method. However, spec.package will look up a package via
-    # spack.repo, which defensively copies specs into packages.  This
-    # code ensures that all packages in the DAG have pieces of the
-    # same spec object at build time.
-    #
-    for s in pkg.spec.traverse():
-        assert s.package.spec is s
-
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
     pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
