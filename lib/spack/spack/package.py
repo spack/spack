@@ -1873,14 +1873,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
             view.layout.hidden_file_paths, ignore)
-
-        if not ignore_conflicts:
-            conflict = tree.find_conflict(view.root, ignore=ignore_file)
-            if conflict:
-                # TODO: raise more-general error like "MergeConflict"
-                raise ExtensionConflictError(conflict)
-
-        tree.merge(view.root, link=view.link,
+        tree.merge(view.root,
+                   merge_file=lambda x, y, z: view.link(x, y),
                    ignore=ignore_file,
                    ignore_conflicts=ignore_conflicts)
 
@@ -2249,13 +2243,6 @@ class NoURLError(PackageError):
 class ExtensionError(PackageError):
 
     pass
-
-
-class ExtensionConflictError(ExtensionError):
-
-    def __init__(self, path):
-        super(ExtensionConflictError, self).__init__(
-            "Extension blocked by file: %s" % path)
 
 
 class ActivationError(ExtensionError):
