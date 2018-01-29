@@ -22,29 +22,41 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import pytest
+from six.moves import builtins
 
-from spack.main import SpackCommand
-
-versions = SpackCommand('versions')
+from spack import *
 
 
-@pytest.mark.network
-def test_remote_versions():
-    """Test a package for which remote versions should be available."""
+class Raiser(Package):
+    """A package that can raise a built-in exception
+    of any kind with any message
+    """
 
-    versions('zlib')
+    homepage = "http://www.example.com"
+    url = "http://www.example.com/a-1.0.tar.gz"
 
+    version('1.0', '0123456789abcdef0123456789abcdef')
+    version('2.0', '2.0_a_hash')
 
-@pytest.mark.network
-def test_no_versions():
-    """Test a package for which no remote versions are available."""
+    variant(
+        'exc_type',
+        values=lambda x: isinstance(x, str),
+        default='RuntimeError',
+        description='type of the exception to be raised',
+        multi=False
+    )
 
-    versions('converge')
+    variant(
+        'msg',
+        values=lambda x: isinstance(x, str),
+        default='Unknown Exception',
+        description='message that will be tied to the exception',
+        multi=False
+    )
 
-
-@pytest.mark.network
-def test_no_unchecksummed_versions():
-    """Test a package for which no unchecksummed versions are available."""
-
-    versions('bzip2')
+    def install(self, spec, prefix):
+        print('Raiser will raise ')
+        exc_typename = self.spec.variants['exc_type'].value
+        exc_type = getattr(builtins, exc_typename)
+        msg = self.spec.variants['msg'].value
+        raise exc_type(msg)
