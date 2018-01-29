@@ -17,13 +17,15 @@ import spack.cmd.flake8
 # Get the complete list of files that changed
 try:
     files = spack.cmd.flake8.changed_files(base='develop', untracked=True)
+    # Make the path name absolute
+    files = [os.path.abspath(x) for x in files]
 except Exception:
     print('ERROR: cannot compute the list of files that changed.')
     sys.exit(1)
 
 # If something changed in the core libraries we need to test it
-core_path = os.path.join('lib', 'spack')
-changes_in_core = any(core_path in x for x in files)
+core_path = os.path.abspath(os.path.join('lib', 'spack'))
+changes_in_core = any(x.startswith(core_path) for x in files)
 
 # Exit early because polling the repo may be slow
 if changes_in_core:
