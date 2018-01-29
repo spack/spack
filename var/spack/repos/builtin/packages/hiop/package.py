@@ -65,4 +65,11 @@ class Hiop(CMakePackage):
         else:
             args.append("-DDEEP_CHECKING=OFF")
 
+        lapack_blas_libs = (
+            spec['lapack'].libs + spec['blas'].libs).joined(';')
+        args.extend([
+            '-DLAPACK_FOUND=TRUE',
+            '-DLAPACK_LIBRARIES={0}'.format(lapack_blas_libs)
+        ])
+
         return args
