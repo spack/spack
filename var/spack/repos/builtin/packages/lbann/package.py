@@ -105,8 +105,7 @@ class Lbann(CMakePackage):
                     '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
                     '-DOpenMP_CXX_LIB_NAMES=libomp',
                     '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
-                        clang_root),
-                    ])
+                        clang_root)])
 
         if '+opencv' in spec:
             args.extend(['-DOpenCV_DIR:STRING={0}'.format(
