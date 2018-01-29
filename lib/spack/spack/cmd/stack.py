@@ -53,25 +53,32 @@ section = "admin"
 level = "long"  # TODO: re-check what 'level' is supposed to mean
 
 
-def setup_parser(sp):
-    setup_parser.parser = sp
+def setup_parser(subparser):
+    setup_parser.parser = subparser
 
-    sp.add_argument(
-        '-v', '--verbose', action='store_true', default=False,
-        help="If not verbose only warnings/errors will be printed.")
-    sp.add_argument(
+    subparser.add_argument(
         '-e', '--exclude', action='append', default=[],
         help="exclude packages with names matching the given regex pattern")
 
-    sp.add_argument("remotes", nargs="+",
-                    metavar='remote', action='store',
-                    help="one or more remote spack repositories which "
-                         "contain packages to be added as external packages")
+    subparser.add_argument(
+        '-n', '--no-stack-if-exists',
+        action='store_true', default=False, dest="nostack",
+        help="do not stack packages that are already stacked; the default is "
+             "to overwrite all stacked packages with versions from the remote "
+             "repository")
+
+    subparser.add_argument(
+        "remotes", nargs="+",
+        metavar='remote', action='store',
+        help="one or more remote spack repositories which "
+             "contain packages to be added as external packages")
 
 
-def add_remote_packages(remote, exclude=[], verbose=False):
+def add_remote_packages(remote, exclude=[], nostack=False):
     """
         Add all installed packages in `remote` to the packages dictionary.
+
+        If nostack == True, packages will not be re-linked if they exist.
     """
     config = spack.config.get_config("config")
 
@@ -87,20 +94,22 @@ def add_remote_packages(remote, exclude=[], verbose=False):
         src = layout.path_for_spec(spec)
         tgt = spack.store.layout.path_for_spec(spec)
         if osp.exists(tgt):
-            if osp.islink(tgt):
-                os.remove(tgt)
+            if not nostack:
+                if osp.islink(tgt):
+                    os.remove(tgt)
+                else:
+                    tty.warn("Cannot not stack {0} because {1} exists.".format(
+                        src, tgt))
+                    continue
             else:
-                tty.warn("Cannot not stack {} because {} exists.".format(
-                    src, tgt))
-                continue
+                tty.info("Not stacking {0} because already present.".format(
+                    src))
         fs.mkdirp(osp.dirname(tgt))
-        if verbose:
-            tty.debug("Linking {} -> {}".format(src, tgt))
+        tty.debug("Linking {0} -> {1}".format(src, tgt))
         os.symlink(src, tgt)
         num_packages += 1
 
-    if verbose:
-        tty.info("Added {} packages from {}".format(num_packages, remote))
+    tty.info("Added {0} packages from {1}".format(num_packages, remote))
 
     return num_packages
 
@@ -111,10 +120,14 @@ def stack(parser, args):
         add_remote_packages(
             remote,
             exclude=args.exclude,
-            verbose=args.verbose)
+            nostack=args.nostack)
         for remote in args.remotes))
 
+    # include the newly linked specs in the database
     spack.store.db.reindex(spack.store.layout)
 
-    if args.verbose:
-        tty.info("Added {} packages.".format(num_packages))
+    if num_packages == 0:
+        tty.error("Did not link any packages, make sure the remote spack "
+                  "repository does not differ in hash length or path scheme!")
+    else:
+        tty.info("Added {0} packages in total.".format(num_packages))
