@@ -26,7 +26,7 @@ from spack import *
 
 
 class PyCrossmap(PythonPackage):
-    """CrossMap is a program for convenient conversion of genome 
+    """CrossMap is a program for convenient conversion of genome
        coordinates (or annotation files) between different assemblies"""
 
     homepage = "http://crossmap.sourceforge.net"
