@@ -32,39 +32,48 @@ graph = SpackCommand('graph')
 
 @pytest.mark.db
 @pytest.mark.usefixtures('builtin_mock', 'database')
-class TestGraphCommand(object):
-    def test_graph_ascii(self):
-        """Tests spack graph --ascii"""
+def test_graph_ascii():
+    """Tests spack graph --ascii"""
+    graph('--ascii', 'dt-diamond')
 
-        graph('--ascii', 'dt-diamond')
 
-    def test_graph_dot(self):
-        """Tests spack graph --dot"""
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_dot():
+    """Tests spack graph --dot"""
+    graph('--dot', 'dt-diamond')
 
-        graph('--dot', 'dt-diamond')
 
-    def test_graph_normalize(self):
-        """Tests spack graph --normalize"""
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_normalize():
+    """Tests spack graph --normalize"""
+    graph('--normalize', 'dt-diamond')
 
-        graph('--normalize', 'dt-diamond')
 
-    def test_graph_static(self):
-        """Tests spack graph --static"""
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_static():
+    """Tests spack graph --static"""
+    graph('--static', 'dt-diamond')
 
-        graph('--static', 'dt-diamond')
 
-    def test_graph_installed(self):
-        """Tests spack graph --installed"""
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_installed():
+    """Tests spack graph --installed"""
 
-        graph('--installed')
+    graph('--installed')
 
-        with pytest.raises(SpackCommandError):
-            graph('--installed', 'dt-diamond')
+    with pytest.raises(SpackCommandError):
+        graph('--installed', 'dt-diamond')
 
-    def test_graph_deptype(self):
-        """Tests spack graph --deptype"""
 
-        graph('--deptype', 'all', 'dt-diamond')
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_deptype():
+    """Tests spack graph --deptype"""
+    graph('--deptype', 'all', 'dt-diamond')
 
 
 def test_graph_no_specs():

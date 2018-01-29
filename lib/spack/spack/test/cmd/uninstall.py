@@ -41,28 +41,33 @@ class MockArgs(object):
 
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
-class TestUninstallCommand(object):
-    def test_multiple_matches(self):
-        """Test unable to uninstall when multiple matches."""
-        with pytest.raises(SpackCommandError):
-            uninstall('-y', 'mpileaks')
+def test_multiple_matches():
+    """Test unable to uninstall when multiple matches."""
+    with pytest.raises(SpackCommandError):
+        uninstall('-y', 'mpileaks')
 
-    def test_installed_dependents(self):
-        """Test can't uninstall when ther are installed dependents."""
-        with pytest.raises(SpackCommandError):
-            uninstall('-y', 'libelf')
 
-    def test_recursive_uninstall(self):
-        """Test recursive uninstall."""
-        uninstall('-y', '-a', '--dependents', 'callpath')
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+def test_installed_dependents():
+    """Test can't uninstall when ther are installed dependents."""
+    with pytest.raises(SpackCommandError):
+        uninstall('-y', 'libelf')
 
-        all_specs = spack.store.layout.all_specs()
-        assert len(all_specs) == 8
-        # query specs with multiple configurations
-        mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
-        callpath_specs = [s for s in all_specs if s.satisfies('callpath')]
-        mpi_specs = [s for s in all_specs if s.satisfies('mpi')]
 
-        assert len(mpileaks_specs) == 0
-        assert len(callpath_specs) == 0
-        assert len(mpi_specs) == 3
+@pytest.mark.db
+@pytest.mark.usefixtures('database')
+def test_recursive_uninstall():
+    """Test recursive uninstall."""
+    uninstall('-y', '-a', '--dependents', 'callpath')
+
+    all_specs = spack.store.layout.all_specs()
+    assert len(all_specs) == 8
+    # query specs with multiple configurations
+    mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
+    callpath_specs = [s for s in all_specs if s.satisfies('callpath')]
+    mpi_specs = [s for s in all_specs if s.satisfies('mpi')]
+
+    assert len(mpileaks_specs) == 0
+    assert len(callpath_specs) == 0
+    assert len(mpi_specs) == 3
