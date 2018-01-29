@@ -72,9 +72,6 @@ def test_install_package_and_dependency(
     assert 'failures="0"' in content
     assert 'errors="0"' in content
 
-    s = Spec('libdwarf').concretized()
-    assert not spack.repo.get(s).stage.created
-
 
 @pytest.mark.usefixtures('noop_install', 'builtin_mock', 'config')
 def test_install_runtests():
