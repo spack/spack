@@ -25,14 +25,13 @@
 from spack import *
 
 
-class PyXattr(PythonPackage):
-    """A python interface to access extended file attributes,
-        sans libattr dependency"""
+class PyBitarray(PythonPackage):
+    """Efficient array of booleans - C extension"""
 
-    url = "https://pypi.io/packages/source/x/xattr/xattr-0.9.2.tar.gz"
-    version('0.9.2', '308b6fc77183d3c01048250d1df60165')
+    homepage = "https://pypi.python.org/pypi/bitarray"
+    url      = "https://pypi.io/packages/source/b/bitarray/bitarray-0.8.1.tar.gz"
 
+    version('0.8.1', '3825184f54f4d93508a28031b4c65d3b')
 
-    depends_on('python@2.7:')
+    depends_on('python')
     depends_on('py-setuptools', type='build')
-    depends_on('py-cffi', type='build')
