@@ -42,8 +42,16 @@ class FrHit(Package):
     def install(self, spec, prefix):
         make()
 
-        filter_file(r'#!/bin/env perl', '#!/usr/bin/env perl', 'frhit2pairend.pl')
-        filter_file(r'#!/bin/env perl', '#!/usr/bin/env perl', 'psl2sam.pl')
+        filter_file(
+            r'#!/bin/env perl',
+            '#!/usr/bin/env perl',
+            'frhit2pairend.pl'
+            )
+        filter_file(
+            r'#!/bin/env perl',
+            '#!/usr/bin/env perl',
+            'psl2sam.pl'
+            )
 
         install('fr-hit', prefix)
         install('frhit2pairend.pl', prefix)
