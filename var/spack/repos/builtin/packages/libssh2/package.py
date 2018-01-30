@@ -31,6 +31,7 @@ class Libssh2(CMakePackage):
     homepage = "https://www.libssh2.org/"
     url      = "https://www.libssh2.org/download/libssh2-1.7.0.tar.gz"
 
+    version('1.8.0', '3d1147cae66e2959ea5441b183de1b1c')
     version('1.7.0', 'b01662a210e94cccf2f76094db7dac5c')
     version('1.4.3', '071004c60c5d6f90354ad1b701013a0b')  # CentOS7
 

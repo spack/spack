@@ -34,6 +34,8 @@ class Elemental(CMakePackage):
     homepage = "http://libelemental.org"
     url      = "https://github.com/elemental/Elemental/archive/v0.87.6.tar.gz"
 
+    version('hydrogen-develop', git='https://github.com/LLNL/Elemental.git', branch='hydrogen')
+
     version('develop', git='https://github.com/elemental/Elemental.git', branch='master')
     version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
     version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
@@ -66,8 +68,8 @@ class Elemental(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('blas', default='openblas', values=('openblas', 'mkl'),
-            description='Enable the use of OpenBlas/MKL')
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'essl'),
+            description='Enable the use of OpenBlas/MKL/ESSL')
     variant('mpfr', default=False,
             description='Support GNU MPFR\'s'
             'arbitrary-precision floating-point arithmetic')
@@ -82,8 +84,13 @@ class Elemental(CMakePackage):
     depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas ~int64_blas')
     depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
 
+    depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
+    depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
+
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
+    depends_on('netlib-lapack +external-blas', when='blas=essl')
+
     depends_on('metis')
     depends_on('metis +int64', when='+int64')
     depends_on('mpi')
@@ -105,6 +112,7 @@ class Elemental(CMakePackage):
             'libEl', root=self.prefix, shared=shared, recurse=True
         )
 
+    @when('@0.87.6:')
     def cmake_args(self):
         spec = self.spec
 
@@ -142,6 +150,15 @@ class Elemental(CMakePackage):
             libfortran = LibraryList(mpif77('--print-file-name',
                                             'libgfortran.%s' % dso_suffix,
                                             output=str))
+        elif self.spec.satisfies('%xl') or self.spec.satisfies('%xl_r'):
+            xl_fort = env['SPACK_F77']
+            xl_bin = os.path.dirname(xl_fort)
+            xl_root = os.path.dirname(xl_bin)
+            libfortran = LibraryList('{0}/lib/libxlf90_r.{1}.1'
+                                     .format(xl_root, dso_suffix))
+        else:
+            libfortran = None
+
         if libfortran:
             args.append('-DGFORTRAN_LIB=%s' % libfortran.libraries[0])
 
@@ -168,5 +185,42 @@ class Elemental(CMakePackage):
         if '+python' in spec:
             args.extend([
                 '-DPYTHON_SITE_PACKAGES:STRING={0}'.format(site_packages_dir)])
+
+        return args
+
+    @when('@:0.87.6')
+    def cmake_args(self):
+        spec = self.spec
+
+        if '@:0.87.7' in spec and '%intel@:17.0.2' in spec:
+            raise UnsupportedCompilerError(
+                "Elemental {0} has a known bug with compiler: {1} {2}".format(
+                    spec.version, spec.compiler.name, spec.compiler.version))
+
+        args = [
+            '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
+            '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
+            '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+hybrid' in spec),
+            '-DHydrogen_ENABLE_QUADMATH:BOOL=%s'     % ('+quad' in spec),
+            '-DHydrogen_USE_64BIT_INTS:BOOL=%s'      % ('+int64' in spec),
+            '-DHydrogen_USE_64BIT_BLAS_INTS:BOOL=%s' % ('+int64_blas' in spec),
+            '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
+            '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
+        ]
+
+        if 'blas=openblas' in spec:
+            args.extend([
+                '-DHydrogen_USE_OpenBLAS:BOOL=%s' % ('blas=openblas' in spec),
+                '-DOpenBLAS_DIR:STRING={0}'.format(
+                    spec['elemental'].prefix)])
+        elif 'blas=mkl' in spec:
+            args.extend([
+                '-DHydrogen_USE_MKL:BOOL=%s' % ('blas=mkl' in spec)])
+        elif 'blas=essl' in spec:
+            args.extend([
+                '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
 
         return args

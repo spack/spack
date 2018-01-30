@@ -25,12 +25,14 @@
 from spack import *
 
 
-class Ipopt(Package):
+class Ipopt(AutotoolsPackage):
     """Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt) is a
        software package for large-scale nonlinear optimization."""
     homepage = "https://projects.coin-or.org/Ipopt"
     url      = "http://www.coin-or.org/download/source/Ipopt/Ipopt-3.12.4.tgz"
 
+    version('3.12.9', '8ff3fe1a8560896fc5559839a87c2530cac4ed231b0806e487bfd3cf2d294ab8')
+    version('3.12.8', '62c6de314220851b8f4d6898b9ae8cf0a8f1e96b68429be1161f8550bb7ddb03')
     version('3.12.7', '2a36e4a04717a8ed7012ac7d1253ae4ffbc1a8fd')
     version('3.12.6', 'ed4072427fab786fcf6082fe7e6f6c2ed9b5e6f8')
     version('3.12.5', '3f63ddfff517235ead17af6cceb426ca858dda37')
@@ -50,11 +52,18 @@ class Ipopt(Package):
     depends_on("pkgconfig", type='build')
     depends_on("mumps+double~mpi")
     depends_on('coinhsl', when='+coinhsl')
-    depends_on('metis@4.0:4.999', when='+metis')
+    depends_on('metis@4.0:', when='+metis')
 
     patch('ipopt_ppc_build.patch', when='arch=ppc64le')
 
-    def install(self, spec, prefix):
+    flag_handler = AutotoolsPackage.build_system_flags
+    build_directory = 'spack-build'
+
+    # IPOPT does not build correctly in parallel on OS X
+    parallel = False
+
+    def configure_args(self):
+        spec = self.spec
         # Dependency directories
         blas_dir = spec['blas'].prefix
         lapack_dir = spec['lapack'].prefix
@@ -68,7 +77,7 @@ class Ipopt(Package):
         blas_lib = spec['blas'].libs.ld_flags
         lapack_lib = spec['lapack'].libs.ld_flags
 
-        configure_args = [
+        args = [
             "--prefix=%s" % prefix,
             "--with-mumps-incdir=%s" % mumps_dir.include,
             "--with-mumps-lib=%s" % mumps_libcmd,
@@ -81,18 +90,13 @@ class Ipopt(Package):
         ]
 
         if 'coinhsl' in spec:
-            configure_args.extend([
+            args.extend([
                 '--with-hsl-lib=%s' % spec['coinhsl'].libs.ld_flags,
                 '--with-hsl-incdir=%s' % spec['coinhsl'].prefix.include])
 
         if 'metis' in spec:
-            configure_args.extend([
+            args.extend([
                 '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
                 '--with-metis-incdir=%s' % spec['metis'].prefix.include])
 
-        configure(*configure_args)
-
-        # IPOPT does not build correctly in parallel on OS X
-        make(parallel=False)
-        make("test", parallel=False)
-        make("install", parallel=False)
+        return args

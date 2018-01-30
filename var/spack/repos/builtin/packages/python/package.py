@@ -509,7 +509,7 @@ class Python(AutotoolsPackage):
 
         python_paths = []
         for d in dependent_spec.traverse(
-                deptype=('build', 'run'), deptype_query='run'):
+                deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
                                               self.site_packages_dir))
