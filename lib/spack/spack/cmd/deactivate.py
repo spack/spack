@@ -62,8 +62,10 @@ def deactivate(parser, args):
 
     if args.view:
         target = args.view
-    else:
-        target = spec.package.extendee_spec.prefix
+    elif pkg.is_extension:
+        target = pkg.extendee_spec.prefix
+    elif pkg.extendable:
+        target = spec.prefix
     
     view = YamlFilesystemView(target, spack.store.layout)
 
@@ -75,7 +77,7 @@ def deactivate(parser, args):
 
             for ext_pkg in ext_pkgs:
                 ext_pkg.spec.normalize()
-                if ext_pkg.is_activated():
+                if ext_pkg.is_activated(view):
                     ext_pkg.do_deactivate(view, force=True)
 
         elif pkg.is_extension:
@@ -96,7 +98,7 @@ def deactivate(parser, args):
                     if epkg.is_activated(view) or \
                        args.force:
 
-                        epkg.do_deactivate(view force=args.force)
+                        epkg.do_deactivate(view, force=args.force)
 
         else:
             tty.die(
