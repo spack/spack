@@ -656,9 +656,9 @@ class Python(AutotoolsPackage):
             del exts[ext_pkg.name]
             self.write_easy_install_pth(exts, prefix=view.root)
 
-    def add_to_view(self, view, ignore=None, ignore_conflicts=False):
+    def add_files_to_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin
-        def merge_file(src, dst, merge_map):
+        for src, dst in merge_map.items():
             if bin_dir not in src:
                 view.link(src, dst)
             elif not os.path.islink(src):
@@ -671,27 +671,10 @@ class Python(AutotoolsPackage):
                 new_link_target = os.path.abspath(merge_map[orig_link_target])
                 view.link(new_link_target, dst)
 
-        # TODO: this is redundant with Package.add_to_view except for
-        # tree.merge
-        tree = LinkTree(self.spec.prefix)
-
-        ignore = ignore or (lambda f: False)
-        ignore_file = match_predicate(
-            view.layout.hidden_file_paths, ignore)
-        tree.merge(view.root, merge_file=merge_file,
-                   ignore=ignore_file,
-                   ignore_conflicts=ignore_conflicts)
-
-    def remove_from_view(self, view, ignore=None):
+    def remove_files_from_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin
-        def remove_file(src, dst):
+        for src, dst in merge_map.items():
             if bin_dir not in src:
-                link_tree.remove_file(src, dst)
+                view.remove_file(src, dst)
             else:
                 os.remove(dst)
-                
-        ignore = ignore or (lambda f: False)
-        ignore_file = match_predicate(
-            view.layout.hidden_file_paths, ignore)
-        tree = LinkTree(self.spec.prefix)
-        tree.unmerge(view.root, remove_file=remove_file, ignore=ignore_file)

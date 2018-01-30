@@ -403,47 +403,40 @@ class PythonPackage(PackageBase):
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
 
-    def add_to_view(self, view, ignore=None, ignore_conflicts=False):
-        tree = LinkTree(self.spec.prefix)
+    def view_file_conflicts(self, view, merge_map):
+        conflicts = list(dst for src, dst in merge_map.items()
+                         if os.path.exists(dst))
 
-        ignore = ignore or (lambda f: False)
-        ignore_file = match_predicate(
-            view.layout.hidden_file_paths, ignore)
+        if conflicts and self.py_namespace:
+            ext_map = view.extensions_layout.extension_map(self.extendee_spec)
+            namespaces = set(
+                x.package.py_namespace for x in ext_map.values())
+            namespace_re = (
+                r'site-packages/{0}/__init__.py'.format(self.py_namespace))
+            find_namespace = match_predicate(namespace_re)
+            if self.py_namespace in namespaces:
+                conflicts = list(
+                    x for x in conflicts if not find_namespace(x))
 
-        if not ignore_conflicts:
-            conflicts = tree.find_conflict(
-                view.root, ignore=ignore_file, all=True)
-            if conflicts and self.py_namespace:
-                ext_map = view.extensions_layout.extension_map(
-                    self.extendee_spec)
-                namespaces = set(
-                    x.package.py_namespace for x in ext_map.values())
-                namespace_re = (
-                    r'site-packages/{0}/__init__.py'.format(self.py_namespace))
-                find_namespace = match_predicate(namespace_re)
-                if self.py_namespace in namespaces:
-                    conflicts = list(
-                        x for x in conflicts if not find_namespace(x))
-            if conflicts:
-                raise ExtensionConflictError(conflicts[0])
+        return conflicts
 
-        tree.merge(view.root, link=view.link, ignore_conflicts=True)
-
-    def remove_from_view(self, view, ignore=None):
-        namespace_ignore = []
+    def remove_files_from_view(self, view, merge_map):
+        ignore_namespace = False
         if self.py_namespace:
             ext_map = view.extensions_layout.extension_map(self.extendee_spec)
             remaining_namespaces = set(
                 spec.package.py_namespace for name, spec in ext_map.items()
                 if name != self.name)
             if self.py_namespace in remaining_namespaces:
-                namespace_re = (
+                namespace_init = match_predicate(
                     r'site-packages/{0}/__init__.py'.format(self.py_namespace))
-                namespace_ignore = [namespace_re]
+                ignore_namespace = True
 
-        ignore = ignore or (lambda f: False)
-        ignore_file = match_predicate(
-            view.layout.hidden_file_paths, ignore, namespace_ignore)
+        for src, dst in merge_map.items():
+            if ignore_namespace and namespace_init(dst):
+                continue
 
-        tree = LinkTree(self.spec.prefix)
-        tree.unmerge(view.root, ignore=ignore_file)
+            if bin_dir not in src:
+                view.remove_file(src, dst)
+            else:
+                os.remove(dst)

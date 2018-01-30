@@ -38,14 +38,13 @@ class FakeExtensionPackage(object):
         self.prefix = prefix
         self.spec = FakeSpec(self)
 
-    def add_to_view(self, view, ignore=None, ignore_conflicts=False):
-        spack.Package.add_pkg_to_view(self, view, ignore, ignore_conflicts)
 
 class FakeSpec(object):
     def __init__(self, package):
         self.name = package.name
         self.prefix = package.prefix
         self.hash = self.name
+        self.package = package
 
     def dag_hash(self):
         return self.hash

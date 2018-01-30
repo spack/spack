@@ -1863,29 +1863,6 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
                 if spec.package.extends(self.extendee_spec))
 
-    def add_to_view(self, view, ignore=None, ignore_conflicts=False):
-        Package.add_pkg_to_view(self, view, ignore, ignore_conflicts)
-
-    @staticmethod
-    def add_pkg_to_view(pkg, view, ignore=None, ignore_conflicts=False):
-        tree = LinkTree(pkg.spec.prefix)
-
-        ignore = ignore or (lambda f: False)
-        ignore_file = match_predicate(
-            view.layout.hidden_file_paths, ignore)
-        tree.merge(view.root,
-                   merge_file=lambda x, y, z: view.link(x, y),
-                   ignore=ignore_file,
-                   ignore_conflicts=ignore_conflicts)
-
-    def remove_from_view(self, view, ignore=None):
-        ignore = ignore or (lambda f: False)
-        ignore_file = match_predicate(
-            view.layout.hidden_file_paths, ignore)
-
-        tree = LinkTree(self.spec.prefix)
-        tree.unmerge(view.root, ignore=ignore_file)
-
     def activate(self, extension, view, **kwargs):
         """Make extension package usable by linking all its files to a target
         provided by the directory layout (depending if the user wants to
@@ -1897,7 +1874,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
-        extension.add_to_view(view, ignore=kwargs.get('ignore', None))
+        view.merge(extension.spec, ignore=kwargs.get('ignore', None))
 
     def do_deactivate(self, view=None, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method.
@@ -1962,7 +1939,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         always executed.
 
         """
-        extension.remove_from_view(view, ignore=kwargs.get('ignore', None))
+        view.unmerge(extension.spec, ignore=kwargs.get('ignore', None))
 
     def view(self):
         return YamlFilesystemView(self.prefix, spack.store.layout)
