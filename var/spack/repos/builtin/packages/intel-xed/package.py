@@ -47,6 +47,9 @@ class IntelXed(Package):
 
     depends_on('python@2.7.0:', type='build')
 
+    opt_map = {'-O0': '0', '-O': '1', '-O1': '1', '-O2': '2', '-O3': '3'}
+    default_opt = '2'
+
     mycflags = []
 
     # Save CFLAGS for use in install.
@@ -59,18 +62,11 @@ class IntelXed(Package):
         mfile = Executable('./mfile.py')
 
         # Translate CFLAGS '-O2' to mbuild syntax.
-        if '-O0' in self.mycflags:
-            opt = '0'
-        elif '-O' in self.mycflags:
-            opt = '1'
-        elif '-O1' in self.mycflags:
-            opt = '1'
-        elif '-O2' in self.mycflags:
-            opt = '2'
-        elif '-O3' in self.mycflags:
-            opt = '3'
-        else:
-            opt = '2'
+        opt = self.default_opt
+        for flag in self.mycflags:
+            if flag in self.opt_map:
+                opt = self.opt_map[flag]
+                break
 
         args = ['-j', str(make_jobs),
                 '--cc=%s' % spack_cc,
