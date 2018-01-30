@@ -46,12 +46,12 @@ class FrHit(Package):
             r'#!/bin/env perl',
             '#!/usr/bin/env perl',
             'frhit2pairend.pl'
-            )
+        )
         filter_file(
             r'#!/bin/env perl',
             '#!/usr/bin/env perl',
             'psl2sam.pl'
-            )
+        )
 
         install('fr-hit', prefix)
         install('frhit2pairend.pl', prefix)
