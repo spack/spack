@@ -1,0 +1,28 @@
+--- ar/write.c	2012-04-24 04:33:40.000000000 +0200
++++ ar/write.c	2012-09-25 11:27:38.000000000 +0200
+@@ -43,6 +43,11 @@
+ 
+ ELFTC_VCSID("$Id: write.c 2496 2012-04-24 02:33:40Z jkoshy $");
+ 
++#ifdef __APPLE__
++#include <libkern/OSByteOrder.h>
++#define htobe32(x) OSSwapHostToBigInt32(x)
++#endif
++
+ #define _ARMAG_LEN 8		/* length of the magic string */
+ #define _ARHDR_LEN 60		/* length of the archive header */
+ #define _INIT_AS_CAP 128	/* initial archive string table size */
+--- elfcopy/archive.c	2012-02-25 01:00:13.000000000 +0100
++++ elfcopy/archive.c	2012-02-25 01:00:27.000000000 +0100
+@@ -42,6 +42,11 @@
+ 
+ ELFTC_VCSID("$Id: archive.c 2370 2011-12-29 12:48:12Z jkoshy $");
+ 
++#ifdef __APPLE__
++#include <libkern/OSByteOrder.h>
++#define htobe32(x) OSSwapHostToBigInt32(x)
++#endif
++
+ #define _ARMAG_LEN 8		/* length of ar magic string */
+ #define _ARHDR_LEN 60		/* length of ar header */
+ #define _INIT_AS_CAP 128	/* initial archive string table size */

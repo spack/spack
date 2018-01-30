@@ -1,0 +1,26 @@
+--- mk/elftoolchain.prog.mk.orig	2017-06-11 16:21:28.000000000 +0200
++++ mk/elftoolchain.prog.mk	2017-06-11 16:21:47.000000000 +0200
+@@ -50,6 +50,11 @@
+ LDFLAGS+=	-L/usr/pkg/lib
+ .endif
+ 
++.if ${OS_HOST} == "Darwin"
++CFLAGS+=       -I${LIBARCHIVE_PREFIX}/include
++LDFLAGS+=      -L${LIBARCHIVE_PREFIX}/lib
++.endif
++
+ #
+ # Handle lex(1) and yacc(1) in a portable fashion.
+ #
+--- mk/os.Darwin.mk	(revision 3546)
++++ mk/os.Darwin.mk	(working copy)
+@@ -3,6 +3,6 @@
+ # Build definitions for Darwin
+ 
+ # Apple ships libarchive, but for some reason does not provide the headers.
+-# Build against a homebrew-provided libarchive library and headers.
+-LDFLAGS+=	-L/usr/local/opt/libarchive/lib
+-CFLAGS+=	-I/usr/local/opt/libarchive/include
++# Build against a MacPorts-provided libarchive library and headers.
++# LDFLAGS/CFLAGS for libarchive have to be added in mk/elftoolchain.prog.mk to
++# respect the library search order.

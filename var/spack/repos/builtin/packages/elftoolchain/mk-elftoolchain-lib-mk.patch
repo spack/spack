@@ -1,0 +1,11 @@
+--- mk/elftoolchain.lib.mk	2014-04-18 09:20:30.000000000 -0700
++++ mk/elftoolchain.lib.mk	2018-01-30 02:24:03.000000000 -0800
+@@ -55,7 +55,7 @@
+ .PRECIOUS:	${DESTDIR}${INCSDIR}/${inc}
+ ${DESTDIR}${INCSDIR}/${inc}: ${inc}
+ 	cmp -s $> $@ > /dev/null 2>&1 || \
+-		${INSTALL} -c -o ${BINOWN} -g ${BINGRP} -m ${NOBINMODE} $> $@
++		${INSTALL} -c -m ${NOBINMODE} $> $@
+ .endfor
+ 
+ .endif	# OpenBSD
