@@ -99,6 +99,12 @@ class SuiteSparse(Package):
             'LAPACK=%s' % spec['lapack'].libs.ld_flags,
         ]
 
+        # 64bit blas in UMFPACK:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            make_args.append('UMFPACK_CONFIG=-DLONGBLAS="long long"')
+
         # SuiteSparse defaults to using '-fno-common -fexceptions' in
         # CFLAGS, but not all compilers use the same flags for these
         # optimizations

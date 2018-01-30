@@ -41,7 +41,6 @@ correspond to sections in the slides above.
   4. :ref:`build-systems-tutorial`
   5. :ref:`advanced-packaging-tutorial`
   6. :ref:`modules-tutorial`
-  7. :ref:`modules-tutorial`
 
 Full contents:
 

@@ -30,6 +30,7 @@ class BashCompletion(AutotoolsPackage):
     homepage = "https://github.com/scop/bash-completion"
     url = "https://github.com/scop/bash-completion/archive/2.3.tar.gz"
 
+    version('2.7', 'f72c9e2e877d188c3159956a3496a450e7279b76')
     version('2.3', '67e50f5f3c804350b43f2b664c33dde811d24292')
     version('develop',  git='https://github.com/scop/bash-completion.git')
 
@@ -40,6 +41,10 @@ class BashCompletion(AutotoolsPackage):
 
     # Other dependencies
     depends_on('bash@4.1:', type='run')
+
+    @run_before('install')
+    def create_install_directory(self):
+        mkdirp(join_path(self.prefix.share, 'bash-completion', 'completions'))
 
     @run_after('install')
     def show_message_to_user(self):

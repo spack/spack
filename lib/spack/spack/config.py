@@ -60,7 +60,7 @@ import yaml
 import jsonschema
 from yaml.error import MarkedYAMLError
 from jsonschema import Draft4Validator, validators
-from ordereddict_backport import OrderedDict
+from spack.util.ordereddict import OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -236,7 +236,7 @@ ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 
 def highest_precedence_scope():
     """Get the scope with highest precedence (prefs will override others)."""
-    return config_scopes.values()[-1]
+    return list(config_scopes.values())[-1]
 
 
 def validate_scope(scope):

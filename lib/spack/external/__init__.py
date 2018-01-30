@@ -22,30 +22,113 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-This module contains external, potentially separately licensed,
-packages that are included in spack.
+"""This module contains the following external, potentially separately
+licensed, packages that are included in Spack:
 
-So far:
-    argparse:    We include our own version to be Python 2.6 compatible.
+argparse
+--------
 
-    distro:      Provides a more stable linux distribution detection.
+* Homepage: https://pypi.python.org/pypi/argparse
+* Usage: We include our own version to be Python 2.6 compatible.
+* Version: 1.4.0
+* Note: This package has been slightly modified to improve
+  error message formatting. See the following commit if the
+  vendored copy ever needs to be updated again:
+  https://github.com/spack/spack/pull/6786/commits/dfcef577b77249106ea4e4c69a6cd9e64fa6c418
 
-    functools:   Used for implementation of total_ordering.
+ctest_log_parser
+----------------
 
-    jinja2:      A modern and designer-friendly templating language for Python
+* Homepage: https://github.com/Kitware/CMake/blob/master/Source/CTest/cmCTestBuildHandler.cxx
+* Usage: Functions to parse build logs and extract error messages.
+* Version: Unversioned
+* Note: This is a homemade port of Kitware's CTest build handler.
 
-    jsonschema:  An implementation of JSON Schema for Python.
+distro
+------
 
-    ordereddict: We include our own version to be Python 2.6 compatible.
+* Homepage: https://pypi.python.org/pypi/distro
+* Usage: Provides a more stable linux distribution detection.
+* Version: 1.0.4 (last version supporting Python 2.6)
 
-    py:          Needed by pytest.  Library with cross-python path,
-                 ini-parsing, io, code, and log facilities.
+functools
+---------
 
-    pyqver2:     External script to query required python version of
-                 python source code. Used for ensuring 2.6 compatibility.
+* Homepage: https://github.com/python/cpython/blob/2.7/Lib/functools.py
+* Usage: Used for implementation of total_ordering.
+* Version: Unversioned
+* Note: This is the functools.total_ordering implementation
+  from Python 2.7 backported so we can run on Python 2.6.
 
-    pytest:      Testing framework used by Spack.
+jinja2
+------
 
-    yaml:        Used for config files.
+* Homepage: https://pypi.python.org/pypi/Jinja2
+* Usage: A modern and designer-friendly templating language for Python.
+* Version: 2.10
+
+jsonschema
+----------
+
+* Homepage: https://pypi.python.org/pypi/jsonschema
+* Usage: An implementation of JSON Schema for Python.
+* Version: 2.4.0 (last version before functools32 dependency was added)
+* Note: functools32 doesn't support Python 2.6 or 3.0, so jsonschema
+  cannot be upgraded any further
+
+markupsafe
+----------
+
+* Homepage: https://pypi.python.org/pypi/MarkupSafe
+* Usage: Implements a XML/HTML/XHTML Markup safe string for Python.
+* Version: 1.0
+
+orderddict
+----------
+
+* Homepage: https://pypi.org/project/ordereddict/
+* Usage: A drop-in substitute for Py2.7's new collections.OrderedDict
+  that works in Python 2.4-2.6.
+* Version: 1.1
+
+py
+--
+
+* Homepage: https://pypi.python.org/pypi/py
+* Usage: Needed by pytest. Library with cross-python path,
+  ini-parsing, io, code, and log facilities.
+* Version: 1.4.34 (last version supporting Python 2.6)
+
+pyqver
+------
+
+* Homepage: https://github.com/ghewgill/pyqver
+* Usage: External script to query required python version of
+  python source code. Used for ensuring 2.6 compatibility.
+* Version: Unversioned
+
+pytest
+------
+
+* Homepage: https://pypi.python.org/pypi/pytest
+* Usage: Testing framework used by Spack.
+* Version: 3.2.5 (last version supporting Python 2.6)
+* Note: This package has been slightly modified to improve
+  Python 2.6 compatibility. See the following commit if the
+  vendored copy ever needs to be updated again:
+  https://github.com/spack/spack/pull/6801/commits/ff513c39f2c67ff615de5cbc581dd69a8ec96526
+
+pyyaml
+------
+
+* Homepage: https://pypi.python.org/pypi/PyYAML
+* Usage: Used for config files.
+* Version: 3.12
+
+six
+---
+
+* Homepage: https://pypi.python.org/pypi/six
+* Usage: Python 2 and 3 compatibility utilities.
+* Version: 1.11.0
 """

@@ -93,7 +93,7 @@ echo $PATH"""
     spec = Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
-    pkg = spack.repo.get(spec)
+    pkg = spec.package
     fake_fetchify(mock_archive.url, pkg)
     pkg.do_install()
     pkghash = '/' + spec.dag_hash(7)
@@ -107,9 +107,8 @@ echo $PATH"""
     # put it directly into the mirror
 
     mirror_path = os.path.join(str(tmpdir), 'test-mirror')
-    specs = [spec]
     spack.mirror.create(
-        mirror_path, specs, no_checksum=True
+        mirror_path, specs=[], no_checksum=True
     )
 
     # register mirror with spack config

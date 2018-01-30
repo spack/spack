@@ -38,6 +38,9 @@ from spack.test.conftest import MockPackageMultiRepo
 from spack.util.executable import Executable
 
 
+pytestmark = pytest.mark.db
+
+
 def _print_ref_counts():
     """Print out all ref counts for the graph used here, for debugging"""
     recs = []
@@ -105,6 +108,36 @@ def _check_db_sanity(install_db):
     _check_merkleiness()
 
 
+def _check_remove_and_add_package(install_db, spec):
+    """Remove a spec from the DB, then add it and make sure everything's
+    still ok once it is added.  This checks that it was
+    removed, that it's back when added again, and that ref
+    counts are consistent.
+    """
+    original = install_db.query()
+    install_db._check_ref_counts()
+
+    # Remove spec
+    concrete_spec = install_db.remove(spec)
+    install_db._check_ref_counts()
+    remaining = install_db.query()
+
+    # ensure spec we removed is gone
+    assert len(original) - 1 == len(remaining)
+    assert all(s in original for s in remaining)
+    assert concrete_spec not in remaining
+
+    # add it back and make sure everything is ok.
+    install_db.add(concrete_spec, spack.store.layout)
+    installed = install_db.query()
+    assert concrete_spec in installed
+    assert installed == original
+
+    # sanity check against direcory layout and check ref counts.
+    _check_db_sanity(install_db)
+    install_db._check_ref_counts()
+
+
 def _mock_install(spec):
     s = spack.spec.Spec(spec)
     s.concretize()
@@ -170,9 +203,15 @@ def test_010_all_install_sanity(database):
     assert len(libelf_specs) == 1
 
     # Query by dependency
-    assert len([s for s in all_specs if s.satisfies('mpileaks ^mpich')]) == 1
-    assert len([s for s in all_specs if s.satisfies('mpileaks ^mpich2')]) == 1
-    assert len([s for s in all_specs if s.satisfies('mpileaks ^zmpi')]) == 1
+    assert len(
+        [s for s in all_specs if s.satisfies('mpileaks ^mpich')]
+    ) == 1
+    assert len(
+        [s for s in all_specs if s.satisfies('mpileaks ^mpich2')]
+    ) == 1
+    assert len(
+        [s for s in all_specs if s.satisfies('mpileaks ^zmpi')]
+    ) == 1
 
 
 def test_015_write_and_read(database):
@@ -253,36 +292,6 @@ def test_050_basic_query(database):
     assert len(install_db.query('mpileaks ^mpich')) == 1
     assert len(install_db.query('mpileaks ^mpich2')) == 1
     assert len(install_db.query('mpileaks ^zmpi')) == 1
-
-
-def _check_remove_and_add_package(install_db, spec):
-    """Remove a spec from the DB, then add it and make sure everything's
-    still ok once it is added.  This checks that it was
-    removed, that it's back when added again, and that ref
-    counts are consistent.
-    """
-    original = install_db.query()
-    install_db._check_ref_counts()
-
-    # Remove spec
-    concrete_spec = install_db.remove(spec)
-    install_db._check_ref_counts()
-    remaining = install_db.query()
-
-    # ensure spec we removed is gone
-    assert len(original) - 1 == len(remaining)
-    assert all(s in original for s in remaining)
-    assert concrete_spec not in remaining
-
-    # add it back and make sure everything is ok.
-    install_db.add(concrete_spec, spack.store.layout)
-    installed = install_db.query()
-    assert concrete_spec in installed
-    assert installed == original
-
-    # sanity check against direcory layout and check ref counts.
-    _check_db_sanity(install_db)
-    install_db._check_ref_counts()
 
 
 def test_060_remove_and_add_root_package(database):
@@ -394,8 +403,8 @@ def test_115_reindex_with_packages_not_in_repo(database, refresh_db_on_exit):
 
     saved_repo = spack.repo
     # Dont add any package definitions to this repository, the idea is that
-    # packages should not have to be defined in the repository once they are
-    # installed
+    # packages should not have to be defined in the repository once they
+    # are installed
     mock_repo = MockPackageMultiRepo([])
     try:
         spack.repo = mock_repo

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2017 Mark Olesen, OpenCFD Ltd.
+# Copyright (c) 2017-2018 Mark Olesen, OpenCFD Ltd.
 #
 # This file was authored by Mark Olesen <mark.olesen@esi-group.com>
 # and is released as part of spack under the LGPL license.
@@ -276,25 +276,28 @@ class OpenfoamCom(Package):
 
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
-    baseurl  = "https://sourceforge.net/projects/openfoamplus/files/"
     gitrepo  = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
+    url      = "https://sourceforge.net/projects/openfoamplus/files/v1706/OpenFOAM-v1706.tgz"
+    list_url = "https://sourceforge.net/projects/openfoamplus/files/"
+    list_depth = 2
 
-    version('1706', '630d30770f7b54d6809efbf94b7d7c8f',
-            url=baseurl + 'v1706/OpenFOAM-v1706.tgz')
-    version('1612', 'ca02c491369150ab127cbb88ec60fbdf',
-            url=baseurl + 'v1612+/OpenFOAM-v1612+.tgz')
+    version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
+    version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
+    version('1612', 'ca02c491369150ab127cbb88ec60fbdf')
     version('develop', branch='develop', git=gitrepo)  # Needs credentials
 
-    variant('int64', default=False,
-            description='Compile with 64-bit label')
     variant('float32', default=False,
-            description='Compile with 32-bit scalar (single-precision)')
+            description='Use single-precision')
+    variant('int64', default=False,
+            description='With 64-bit labels')
     variant('knl', default=False,
             description='Use KNL compiler settings')
-    variant('scotch', default=True,
-            description='With scotch/ptscotch for decomposition')
+    variant('kahip', default=True,
+            description='With kahip decomposition')
     variant('metis', default=False,
-            description='With metis for decomposition')
+            description='With metis decomposition')
+    variant('scotch', default=True,
+            description='With scotch/ptscotch decomposition')
     variant('zoltan', default=False,
             description='With zoltan renumbering')
     # TODO?# variant('scalasca', default=False,
@@ -322,6 +325,7 @@ class OpenfoamCom(Package):
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
     depends_on('scotch~metis+mpi~int64', when='+scotch~int64')
     depends_on('scotch~metis+mpi+int64', when='+scotch+int64')
+    depends_on('kahip',        when='+kahip')
     depends_on('metis@5:',     when='+metis')
     depends_on('metis+int64',  when='+metis+int64')
     # mgridgen is statically linked
@@ -344,15 +348,7 @@ class OpenfoamCom(Package):
     assets = []
 
     # Version-specific patches
-    patch('1612-bin.patch', when='@1612')
-    patch('1612-build.patch', when='@1612')
-    patch('1612-etc.patch', when='@1612')
-    patch('1612-site.patch', when='@1612')
-    patch('1612-mpi.patch', when='@1612')
-    patch('1612-mgridgen-lib.patch', when='@1612')
-    patch('1612-scotch-metis-lib.patch', when='@1612')
-    patch('1612-zoltan-lib.patch', when='@1612')
-    patch('1706-site.patch', when='@1706')
+    patch('1612-spack-patches.patch', when='@1612')
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
@@ -377,6 +373,15 @@ class OpenfoamCom(Package):
     #
     # - End of definitions / setup -
     #
+
+    def url_for_version(self, version):
+        # Prior to 'v1706' and additional '+' in the naming
+        fmt = self.list_url
+        if version <= Version('1612'):
+            fmt += 'v{0}+/OpenFOAM-v{0}+.tgz'
+        else:
+            fmt += 'v{0}/OpenFOAM-v{0}.tgz'
+        return fmt.format(version, version)
 
     def setup_environment(self, spack_env, run_env):
         """Add environment variables to the generated module file.
@@ -478,7 +483,6 @@ class OpenfoamCom(Package):
         add_extra_files(self, self.common, self.assets)
 
         # Avoid WM_PROJECT_INST_DIR for ThirdParty, site or jobControl.
-        # Use openfoam-site.patch to handle jobControl, site.
         #
         # Filtering: bashrc,cshrc (using a patch is less flexible)
         edits = {
@@ -498,6 +502,18 @@ class OpenfoamCom(Package):
             edits,
             posix=join_path('etc', 'config.sh', 'settings'),
             cshell=join_path('etc', 'config.csh', 'settings'))
+
+        # The following filtering is non-vital. It simply prevents 'site' dirs
+        # from the the wrong level (likely non-existent anyhow) from being
+        # added to PATH, LD_LIBRARY_PATH.
+        for rcdir in ['config.sh', 'config.csh']:
+            rcfile = join_path('etc', rcdir, 'settings')
+            if os.path.isfile(rcfile):
+                filter_file(
+                    'WM_PROJECT_INST_DIR/',
+                    'WM_PROJECT_DIR/',
+                    rcfile,
+                    backup=False)
 
     def configure(self, spec, prefix):
         """Make adjustments to the OpenFOAM configuration files in their various
@@ -547,6 +563,7 @@ class OpenfoamCom(Package):
                 ('PATH', foamAddPath(user_mpi['bindir'])),
             ],
             'scotch': {},
+            'kahip': {},
             'metis': {},
             'ensight': {},     # Disable settings
             'paraview': [],
@@ -558,6 +575,11 @@ class OpenfoamCom(Package):
                 'SCOTCH_ARCH_PATH': spec['scotch'].prefix,
                 # For src/parallel/decompose/Allwmake
                 'SCOTCH_VERSION': 'scotch-{0}'.format(spec['scotch'].version),
+            }
+
+        if '+kahip' in spec:
+            self.etc_config['kahip'] = {
+                'KAHIP_ARCH_PATH': spec['kahip'].prefix,
             }
 
         if '+metis' in spec:
@@ -748,6 +770,8 @@ class OpenfoamArch(object):
                 platform += 'ia64'
             elif target == 'armv7l':
                 platform += 'ARM7'
+            elif target == 'aarch64':
+                platform += 'ARM64'
             elif target == 'ppc64':
                 platform += 'PPC64'
             elif target == 'ppc64le':

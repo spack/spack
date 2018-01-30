@@ -31,7 +31,7 @@ class YamlCpp(CMakePackage):
     homepage = "https://github.com/jbeder/yaml-cpp"
     url      = "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.5.3.tar.gz"
 
-    version('0.5.3', '4e47733d98266e46a1a73ae0a72954eb')
+    version('0.5.3', '2bba14e6a7f12c7272f87d044e4a7211')
     version('develop', git='https://github.com/jbeder/yaml-cpp', branch='master')
 
     variant('shared', default=True,
