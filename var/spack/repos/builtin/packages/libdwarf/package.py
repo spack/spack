@@ -90,8 +90,9 @@ class Libdwarf(Package):
                             'Makefile')
                 make()
 
+                libdwarf_name = 'libdwarf.{0}'.format(dso_suffix)
                 install('libdwarf.a',  prefix.lib)
-                install('libdwarf.so', prefix.lib)
+                install('libdwarf.so', join_path(prefix.lib, libdwarf_name))
                 install('libdwarf.h',  prefix.include)
                 install('dwarf.h',     prefix.include)
 
