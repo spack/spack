@@ -77,8 +77,8 @@ class Libdwarf(Package):
                 if spec.satisfies('^libelf'):
                     libelf_inc_dir = join_path(spec['libelf'].prefix,
                                                'include/libelf')
-                    extra_config_args.append('CFLAGS=-I{0}'.format(
-                                             libelf_inc_dir))
+                    extra_config_args.append('CFLAGS=-I{0} -Wl,-L{1} -Wl,-lelf'.format(
+                                             libelf_inc_dir, spec['libelf'].prefix.lib))
                 configure("--prefix=" + prefix, "--enable-shared",
                           *extra_config_args)
                 make()
