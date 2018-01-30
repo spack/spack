@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
@@ -88,6 +89,15 @@ class Libdwarf(Package):
                 install('libdwarf.h',  prefix.include)
                 install('dwarf.h',     prefix.include)
 
+                # It seems like fix_darwin_install_name can't be used
+                # here directly; the install name of the library must
+                # be fixed in order for dyld to locate it on Darwin
+                if sys.platform == 'darwin':
+                    install_name_tool = which('install_name_tool')
+                    install_name_tool('-id',
+                                      join_path('..','libdwarf','libdwarf.so'),
+                                      'libdwarf.so')
+
             if spec.satisfies('@20130126:20130729'):
                 dwarfdump_dir = 'dwarfdump2'
             else:
@@ -102,3 +112,8 @@ class Libdwarf(Package):
                 install('dwarfdump',      prefix.bin)
                 install('dwarfdump.conf', prefix.lib)
                 install('dwarfdump.1',    prefix.man.man1)
+
+    @run_after('install')
+    def darwin_fix(self):
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)
