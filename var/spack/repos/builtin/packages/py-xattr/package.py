@@ -29,10 +29,10 @@ class PyXattr(PythonPackage):
     """A python interface to access extended file attributes,
         sans libattr dependency"""
 
-    homepage = "http://pyxattr.k1024.org/"
+    url = "https://pypi.io/packages/source/x/xattr/xattr-0.9.2.tar.gz"
+    version('0.9.2', '308b6fc77183d3c01048250d1df60165')
 
-    version('develop', git='https://github.com/fwang2/pyxattr.git',
-            branch='dev')
 
     depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')
+    depends_on('py-cffi', type='build')
