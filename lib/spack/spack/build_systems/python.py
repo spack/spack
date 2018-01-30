@@ -25,12 +25,13 @@
 
 import inspect
 import os
+import shutil
 
 import spack
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
-from llnl.util.filesystem import working_dir
+from llnl.util.filesystem import working_dir, get_filetype, filter_file
 from llnl.util.lang import match_predicate
 from llnl.util.link_tree import LinkTree
 
@@ -419,6 +420,22 @@ class PythonPackage(PackageBase):
                     x for x in conflicts if not find_namespace(x))
 
         return conflicts
+
+    def add_files_to_view(self, view, merge_map):
+        bin_dir = self.spec.prefix.bin
+        python_prefix = self.extendee_spec.prefix
+        for src, dst in merge_map.items():
+            if bin_dir not in src:
+                view.link(src, dst)
+            elif not os.path.islink(src):
+                shutil.copy2(src, dst)
+                if 'script' in get_filetype(src):
+                    filter_file(
+                        python_prefix, os.path.abspath(view.root), dst)
+            else:
+                orig_link_target = os.path.realpath(src)
+                new_link_target = os.path.abspath(merge_map[orig_link_target])
+                view.link(new_link_target, dst)
 
     def remove_files_from_view(self, view, merge_map):
         ignore_namespace = False
