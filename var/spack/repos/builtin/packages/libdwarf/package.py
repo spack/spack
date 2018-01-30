@@ -50,6 +50,7 @@ class Libdwarf(Package):
     version('20130207', '64b42692e947d5180e162e46c689dfbf')
     version('20130126', 'ded74a5e90edb5a12aac3c29d260c5db')
     depends_on("elf", type='link')
+    depends_on('zlib', type='link')
 
     parallel = False
 
@@ -78,10 +79,15 @@ class Libdwarf(Package):
                 if spec.satisfies('^libelf'):
                     libelf_inc_dir = join_path(spec['libelf'].prefix,
                                                'include/libelf')
-                    extra_config_args.append('CFLAGS=-I{0} -Wl,-L{1} -Wl,-lelf'.format(
-                                             libelf_inc_dir, spec['libelf'].prefix.lib))
+                    extra_config_args.append(
+                        'CFLAGS=-I{0} -Wl,-L{1} -Wl,-lelf'.format(
+                            libelf_inc_dir, spec['libelf'].prefix.lib))
                 configure("--prefix=" + prefix, "--enable-shared",
                           *extra_config_args)
+                filter_file(r'^dwfzlib\s*=\s*-lz',
+                            'dwfzlib=-L{0} -lz'.format(
+                                self.spec['zlib'].prefix.lib),
+                            'Makefile')
                 make()
 
                 install('libdwarf.a',  prefix.lib)
@@ -90,12 +96,14 @@ class Libdwarf(Package):
                 install('dwarf.h',     prefix.include)
 
                 # It seems like fix_darwin_install_name can't be used
-                # here directly; the install name of the library must
-                # be fixed in order for dyld to locate it on Darwin
+                # here directly; the install name of the library in
+                # the stage directory must be fixed in order for dyld
+                # to locate it on Darwin when spack builds dwarfdump
                 if sys.platform == 'darwin':
                     install_name_tool = which('install_name_tool')
                     install_name_tool('-id',
-                                      join_path('..','libdwarf','libdwarf.so'),
+                                      join_path('..', 'libdwarf',
+                                                'libdwarf.so'),
                                       'libdwarf.so')
 
             if spec.satisfies('@20130126:20130729'):
@@ -104,6 +112,10 @@ class Libdwarf(Package):
                 dwarfdump_dir = 'dwarfdump'
             with working_dir(dwarfdump_dir):
                 configure("--prefix=" + prefix)
+                filter_file(r'^dwfzlib\s*=\s*-lz',
+                            'dwfzlib=-L{0} -lz'.format(
+                                self.spec['zlib'].prefix.lib),
+                            'Makefile')
 
                 # This makefile has strings of copy commands that
                 # cause a race in parallel
