@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 
 class Lz4(Package):
@@ -52,3 +53,8 @@ class Lz4(Package):
         if self.run_tests:
             make('test')  # requires valgrind to be installed
         make('install', 'PREFIX={0}'.format(prefix))
+
+    @run_after('install')
+    def darwin_fix(self):
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)
