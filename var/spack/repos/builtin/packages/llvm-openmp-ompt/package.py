@@ -81,7 +81,7 @@ class LlvmOpenmpOmpt(CMakePackage):
 
         # Build llvm-openmp-ompt using the toward_tr4 branch
         # This requires the version to be 5.0 (50)
-        if '@towards_tr4' in self.spec:
+        if '@tr6_forwards' in self.spec:
                 cmake_args.extend(
                     ['-DLIBOMP_OMP_VERSION=50'])
 
