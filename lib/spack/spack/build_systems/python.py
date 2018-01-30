@@ -424,8 +424,11 @@ class PythonPackage(PackageBase):
     def add_files_to_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin
         python_prefix = self.extendee_spec.prefix
+        global_view = python_prefix == view.root
         for src, dst in merge_map.items():
-            if bin_dir not in src:
+            if os.path.exists(dst):
+                continue
+            elif global_view or bin_dir not in src:
                 view.link(src, dst)
             elif not os.path.islink(src):
                 shutil.copy2(src, dst)
@@ -449,11 +452,12 @@ class PythonPackage(PackageBase):
                     r'site-packages/{0}/__init__.py'.format(self.py_namespace))
                 ignore_namespace = True
 
+        global_view = self.extendee_spec.prefix == view.root
         for src, dst in merge_map.items():
             if ignore_namespace and namespace_init(dst):
                 continue
 
-            if bin_dir not in src:
+            if global_view or bin_dir not in src:
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
