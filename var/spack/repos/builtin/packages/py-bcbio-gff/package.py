@@ -29,7 +29,6 @@ class PyBcbioGff(PythonPackage):
     """Read and write Generic Feature Format (GFF) with Biopython
     integration."""
 
-
     homepage = "https://pypi.python.org/pypi/bcbio-gff/0.6.2"
     url      = "https://pypi.io/packages/source/b/bcbio-gff/bcbio-gff-0.6.2.tar.gz"
 
