@@ -32,6 +32,6 @@ class PyXattr(PythonPackage):
     url = "https://pypi.io/packages/source/x/xattr/xattr-0.9.2.tar.gz"
     version("0.9.2", "308b6fc77183d3c01048250d1df60165")
 
-    depends_on('python@2.7:')
+    depends_on('python@2.7')
     depends_on('py-setuptools', type='build')
     depends_on('py-cffi', type='build')
