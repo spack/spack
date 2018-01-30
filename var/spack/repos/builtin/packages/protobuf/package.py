@@ -41,12 +41,17 @@ class Protobuf(CMakePackage):
     # does not build with CMake:
     # version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
 
+    variant('shared', default=True,
+            description='Enables the build of shared libraries')
+
     depends_on('zlib')
 
     conflicts('%gcc@:4.6')  # Requires c++11
 
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@:3.3.2')
+
+    patch('intel_inline.patch', when='@3.2.0: %intel')
 
     def fetch_remote_versions(self):
         """Ignore additional source artifacts uploaded with releases,
@@ -60,6 +65,7 @@ class Protobuf(CMakePackage):
 
     def cmake_args(self):
         args = [
+            '-DBUILD_SHARED_LIBS=%s' % int('+shared' in self.spec),
             '-Dprotobuf_BUILD_TESTS:BOOL=OFF',
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON'
         ]

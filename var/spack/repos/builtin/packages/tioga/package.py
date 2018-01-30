@@ -48,7 +48,10 @@ class Tioga(CMakePackage):
 
         options = [
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF')
+                'ON' if '+shared' in spec else 'OFF'),
+            '-DMPI_CXX_COMPILER:PATH=%s' % spec['mpi'].mpicxx,
+            '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
+            '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc
         ]
 
         return options

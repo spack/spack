@@ -96,7 +96,7 @@ from spack.package_prefs import PackageTesting
 # Initialize various data structures & objects at the core of Spack.
 #-----------------------------------------------------------------------------
 # Version information
-spack_version = Version("0.10.0")
+spack_version = Version("0.11.0")
 
 
 # Set up the default packages database.
@@ -184,9 +184,11 @@ from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.cuda import CudaPackage
 from spack.build_systems.qmake import QMakePackage
 from spack.build_systems.scons import SConsPackage
 from spack.build_systems.waf import WafPackage
+from spack.build_systems.octave import OctavePackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
 from spack.build_systems.perl import PerlPackage
@@ -201,9 +203,11 @@ __all__ += [
     'AspellDictPackage',
     'AutotoolsPackage',
     'CMakePackage',
+    'CudaPackage',
     'QMakePackage',
     'SConsPackage',
     'WafPackage',
+    'OctavePackage',
     'PythonPackage',
     'RPackage',
     'PerlPackage',

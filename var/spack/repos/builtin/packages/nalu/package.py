@@ -41,15 +41,18 @@ class Nalu(CMakePackage):
             description='Compile with OpenFAST support')
     variant('tioga', default=False,
             description='Compile with Tioga support')
+    variant('hypre', default=False,
+            description='Compile with Hypre support')
 
     version('master',
             git='https://github.com/NaluCFD/Nalu.git', branch='master')
 
-    # Currently Nalu only builds static libraries; To be fixed soon
+    # Currently Nalu only builds with certain libraries statically
     depends_on('yaml-cpp+pic~shared@0.5.3:')
     depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards@master,12.12.1:')
     depends_on('openfast+cxx', when='+openfast')
     depends_on('tioga', when='+tioga')
+    depends_on('hypre+mpi+int64~shared', when='+hypre')
 
     def cmake_args(self):
         spec = self.spec
@@ -71,6 +74,12 @@ class Nalu(CMakePackage):
             options.extend([
                 '-DENABLE_TIOGA:BOOL=ON',
                 '-DTIOGA_DIR:PATH=%s' % spec['tioga'].prefix
+            ])
+
+        if '+hypre' in spec:
+            options.extend([
+                '-DENABLE_HYPRE:BOOL=ON',
+                '-DHYPRE_DIR:PATH=%s' % spec['hypre'].prefix
             ])
 
         return options

@@ -182,15 +182,6 @@ class AutotoolsPackage(PackageBase):
         """Override to provide another place to build the package"""
         return self.configure_directory
 
-    def default_flag_handler(self, spack_env, flag_val):
-        # Relies on being the first thing that can affect the spack_env
-        # EnvironmentModification after it is instantiated or no other
-        # method trying to affect these variables. Currently both are true
-        # flag_val is a tuple (flag, value_list).
-        spack_env.set(flag_val[0].upper(),
-                      ' '.join(flag_val[1]))
-        return []
-
     @run_before('autoreconf')
     def delete_configure_to_force_update(self):
         if self.force_autoreconf:
@@ -256,12 +247,24 @@ class AutotoolsPackage(PackageBase):
         """
         return []
 
+    def flags_to_build_system_args(self, flags):
+        """Produces a list of all command line arguments to pass specified
+        compiler flags to configure."""
+        # Has to be dynamic attribute due to caching.
+        setattr(self, 'configure_flag_args', [])
+        for flag, values in flags.items():
+            if values:
+                values_str = '{0}={1}'.format(flag.upper(), ' '.join(values))
+                self.configure_flag_args.append(values_str)
+
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
         :py:meth:`~.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
-        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+        options = getattr(self, 'configure_flag_args', [])
+        options += ['--prefix={0}'.format(prefix)]
+        options += self.configure_args()
 
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)

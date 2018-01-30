@@ -1343,6 +1343,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 msg = '{0.name} is already installed in {0.prefix}'
                 tty.msg(msg.format(self))
                 rec = spack.store.db.get_record(self.spec)
+                # In case the stage directory has already been created,
+                # this ensures it's removed after we checked that the spec
+                # is installed
+                if keep_stage is False:
+                    self.stage.destroy()
+
                 return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
@@ -1706,6 +1712,47 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 package's spec is available as ``self.spec``.
         """
         pass
+
+    def inject_flags(self, name, flags):
+        """
+        flag_handler that injects all flags through the compiler wrapper.
+        """
+        return (flags, None, None)
+
+    def env_flags(self, name, flags):
+        """
+        flag_handler that adds all flags to canonical environment variables.
+        """
+        return (None, flags, None)
+
+    def build_system_flags(self, name, flags):
+        """
+        flag_handler that passes flags to the build system arguments.  Any
+        package using `build_system_flags` must also implement
+        `flags_to_build_system_args`, or derive from a class that
+        implements it.  Currently, AutotoolsPackage and CMakePackage
+        implement it.
+        """
+        return (None, None, flags)
+
+    flag_handler = inject_flags
+    # The flag handler method is called for each of the allowed compiler flags.
+    # It returns a triple of inject_flags, env_flags, build_system_flags.
+    # The flags returned as inject_flags are injected through the spack
+    #  compiler wrappers.
+    # The flags returned as env_flags are passed to the build system through
+    #  the environment variables of the same name.
+    # The flags returned as build_system_flags are passed to the build system
+    #  package subclass to be turned into the appropriate part of the standard
+    #  arguments. This is implemented for build system classes where
+    #  appropriate and will otherwise raise a NotImplementedError.
+
+    def flags_to_build_system_args(self, flags):
+        # Takes flags as a dict name: list of values
+        if any(v for v in flags.values()):
+            msg = 'The {0} build system'.format(self.__class__.__name__)
+            msg += ' cannot take command line arguments for compiler flags'
+            raise NotImplementedError(msg)
 
     @staticmethod
     def uninstall_by_spec(spec, force=False):

@@ -196,7 +196,7 @@ def _spider(url, visited, root, depth, max_depth, raise_on_error):
     except URLError as e:
         tty.debug(e)
 
-        if isinstance(e.reason, ssl.SSLError):
+        if hasattr(e, 'reason') and isinstance(e.reason, ssl.SSLError):
             tty.warn("Spack was unable to fetch url list due to a certificate "
                      "verification problem. You can try running spack -k, "
                      "which will not check SSL certificates. Use this at your "

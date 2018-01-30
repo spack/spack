@@ -51,9 +51,11 @@ def mock_calls_for_clean(monkeypatch):
 )
 @pytest.mark.parametrize('command_line,counters', [
     ('mpileaks', [1, 0, 0, 0]),
-    ('-s', [0, 1, 0, 0]),
-    ('-sd', [0, 1, 1, 0]),
-    ('-a', [0, 1, 1, 1]),
+    ('-s',       [0, 1, 0, 0]),
+    ('-sd',      [0, 1, 1, 0]),
+    ('-m',       [0, 0, 0, 1]),
+    ('-a',       [0, 1, 1, 1]),
+    ('',         [0, 0, 0, 0]),
 ])
 def test_function_calls(command_line, counters):
 
