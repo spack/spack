@@ -42,7 +42,7 @@ _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
-                        'extra_rpaths']
+                        'extra_rpaths', 'implicit_link_paths']
 _cache_config_file = []
 
 #: cache of compilers constructed from config data, keyed by config entry id.
@@ -72,6 +72,8 @@ def _to_dict(compiler):
     d['modules'] = compiler.modules if compiler.modules else []
     d['environment'] = compiler.environment if compiler.environment else {}
     d['extra_rpaths'] = compiler.extra_rpaths if compiler.extra_rpaths else []
+    d['implicit_link_paths'] = compiler.implicit_link_paths \
+        if compiler.implicit_link_paths else []
 
     if compiler.alias:
         d['alias'] = compiler.alias
@@ -284,9 +286,11 @@ def compiler_from_config_entry(items):
         compiler_flags = items.get('flags', {})
         environment = items.get('environment', {})
         extra_rpaths = items.get('extra_rpaths', [])
+        implicit_link_paths = items.get('implicit_link_paths')
 
         compiler = cls(cspec, os, target, compiler_paths, mods, alias,
-                       environment, extra_rpaths, **compiler_flags)
+                       environment, extra_rpaths, implicit_link_paths,
+                       **compiler_flags)
         _compiler_cache[id(items)] = compiler
 
     return compiler

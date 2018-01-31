@@ -80,6 +80,10 @@ schema = {
                         'modules': {'anyOf': [{'type': 'string'},
                                               {'type': 'null'},
                                               {'type': 'array'}]},
+                        'implicit_link_paths': {
+                            'type': 'array',
+                            'items': {'type': 'string'}
+                        },
                         'environment': {
                             'type': 'object',
                             'default': {},

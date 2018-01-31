@@ -25,6 +25,8 @@
 import os
 import re
 import itertools
+import shutil
+import tempfile
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
@@ -86,6 +88,81 @@ def tokenize_flags(flags_str):
     return flags
 
 
+#: regex for parsing linker lines
+_LINKER_LINE = re.compile(
+    r'^( *|.*[/\\])'
+    r'(link|ld|([^/\\]+-)?ld|collect2)'
+    r'[^/\\]*( |$)')
+
+#: components of linker lines to ignore
+_LINKER_LINE_IGNORE = re.compile(r'(collect2 version|^[A-Za-z0-9_]+=|/ldfe )')
+
+#: regex to match linker search paths
+_LINK_DIR_ARG = re.compile(r'^-L(.:)?(?P<dir>[/\\].*)')
+
+#: regex to match linker library path arguments
+_LIBPATH_ARG = re.compile(r'^[-/](LIBPATH|libpath):(?P<dir>.*)')
+
+
+def _parse_implicit_link_paths(string):
+    """Parse implicit link paths from compiler debug output.
+
+    This gives the compiler runtime library paths that we need to add to
+    the RPATH of generated binaries and libraries.  It allows us to
+    ensure, e.g., that codes load the right libstdc++ for their compiler.
+    """
+    lib_search_paths = False
+    raw_link_dirs = []
+    tty.debug('parsing implicit link info')
+    for line in string.splitlines():
+        if lib_search_paths:
+            if line.startswith('\t'):
+                raw_link_dirs.append(line[1:])
+                continue
+            else:
+                lib_search_paths = False
+        elif line.startswith('Library search paths:'):
+            lib_search_paths = True
+
+        if not _LINKER_LINE.match(line):
+            continue
+        if _LINKER_LINE_IGNORE.match(line):
+            continue
+        tty.debug('linker line: %s' % line)
+
+        next_arg = False
+        for arg in line.split():
+            if arg in ('-L', '-Y'):
+                next_arg = True
+                continue
+
+            if next_arg:
+                raw_link_dirs.append(arg)
+                next_arg = False
+                continue
+
+            link_dir_arg = _LINK_DIR_ARG.match(arg)
+            if link_dir_arg:
+                link_dir = link_dir_arg.group('dir')
+                tty.debug('linkdir: %s' % link_dir)
+                raw_link_dirs.append(link_dir)
+
+            link_dir_arg = _LIBPATH_ARG.match(arg)
+            if link_dir_arg:
+                link_dir = link_dir_arg.group('dir')
+                tty.debug('libpath: %s', link_dir)
+                raw_link_dirs.append(link_dir)
+    tty.debug('found raw link dirs: %s' % ', '.join(raw_link_dirs))
+
+    implicit_link_dirs = set()
+    for link_dir in raw_link_dirs:
+        implicit_link_dirs.add(os.path.abspath(link_dir))
+    implicit_link_dirs = list(implicit_link_dirs)
+
+    tty.debug('found link dirs: %s' % ', '.join(implicit_link_dirs))
+    return implicit_link_dirs
+
+
 class Compiler(object):
     """This class encapsulates a Spack "compiler", which includes C,
        C++, and Fortran compilers.  Subclasses should implement
@@ -136,12 +213,15 @@ class Compiler(object):
 
     def __init__(self, cspec, operating_system, target,
                  paths, modules=[], alias=None, environment=None,
-                 extra_rpaths=None, **kwargs):
+                 extra_rpaths=None, implicit_link_paths=None,
+                 **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
         self.target = target
         self.modules = modules
         self.alias = alias
+        if implicit_link_paths is not None:
+            self.__implicit_link_paths = implicit_link_paths
 
         def check(exe):
             if exe is None:
@@ -173,6 +253,66 @@ class Compiler(object):
     @property
     def version(self):
         return self.spec.version
+
+    @property
+    def verbose_flag(self):
+        """
+        This property should be overridden in the compiler subclass if a
+        verbose flag is available.
+
+        If it is not overridden, it is assumed to not be supported.
+        """
+        pass
+
+    def parse_implicit_link_paths(self, string):
+        """Parses link paths out of compiler debug output.
+
+        Args:
+            string (str): compiler debug output as a string
+
+        Returns:
+            (list of str): implicit link paths parsed from the compiler output
+
+        Subclasses can override this to customize.
+        """
+        return _parse_implicit_link_paths(string)
+
+    def _determine_implicit_link_paths(self):
+        compilers = [self.cc, self.cxx, self.f77, self.fc]
+        first_compiler = next((c for c in compilers if c), None)
+        if not first_compiler:
+            return []
+
+        try:
+            tmpdir = tempfile.mkdtemp(prefix='spack-implicit-link-info')
+            fout = os.path.join(tmpdir, 'output')
+            fin = os.path.join(tmpdir, 'main.c')
+
+            with open(fin, 'w+') as csource:
+                csource.write(
+                    'int main(int argc, char* argv[]) { '
+                    '(void)argc; (void)argv; return 0; }\n')
+            compiler_exe = Executable(first_compiler)
+            output = compiler_exe(self.verbose_flag, fin, '-o', fout,
+                                  output=str, error=str)
+
+            return self.parse_implicit_link_paths(output)
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    __implicit_link_paths = None
+
+    @property
+    def implicit_link_paths(self):
+        if self.__implicit_link_paths is not None:
+            return self.__implicit_link_paths
+
+        if self.verbose_flag is None:
+            self.__implicit_link_paths = []
+        else:
+            self.__implicit_link_paths = self._determine_implicit_link_paths()
+
+        return self.__implicit_link_paths
 
     # This property should be overridden in the compiler subclass if
     # OpenMP is supported by that compiler
