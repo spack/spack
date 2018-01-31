@@ -51,6 +51,10 @@ class Intel(Compiler):
     PrgEnv_compiler = 'intel'
 
     @property
+    def verbose_flag(self):
+        return "-v"
+
+    @property
     def openmp_flag(self):
         if self.version < ver('16.0'):
             return "-openmp"

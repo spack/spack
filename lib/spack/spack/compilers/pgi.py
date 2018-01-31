@@ -48,6 +48,10 @@ class Pgi(Compiler):
     PrgEnv_compiler = 'pgi'
 
     @property
+    def verbose_flag(self):
+        return "-v"
+
+    @property
     def openmp_flag(self):
         return "-mp"
 

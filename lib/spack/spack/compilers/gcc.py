@@ -57,6 +57,10 @@ class Gcc(Compiler):
     PrgEnv_compiler = 'gcc'
 
     @property
+    def verbose_flag(self):
+        return "-v"
+
+    @property
     def openmp_flag(self):
         return "-fopenmp"
 

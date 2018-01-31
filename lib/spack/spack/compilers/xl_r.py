@@ -49,6 +49,10 @@ class XlR(Compiler):
                   'fc': 'xl_r/xlf90_r'}
 
     @property
+    def verbose_flag(self):
+        return "-V"
+
+    @property
     def openmp_flag(self):
         return "-qsmp=omp"
 

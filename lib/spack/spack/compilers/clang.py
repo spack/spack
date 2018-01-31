@@ -67,6 +67,10 @@ class Clang(Compiler):
         return ver_string.endswith('-apple')
 
     @property
+    def verbose_flag(self):
+        return "-v"
+
+    @property
     def openmp_flag(self):
         if self.is_apple:
             tty.die("Clang from Apple does not support Openmp yet.")

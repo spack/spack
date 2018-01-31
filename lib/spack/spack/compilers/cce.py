@@ -55,6 +55,10 @@ class Cce(Compiler):
         return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
 
     @property
+    def verbose_flag(self):
+        return "-v"
+
+    @property
     def openmp_flag(self):
         return "-h omp"
 
