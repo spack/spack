@@ -120,6 +120,7 @@ def add_remote_packages(remote, exclude=[], nostack=False, hardlinks=False):
             else:
                 tty.info("Not stacking {0} because already present.".format(
                     src))
+                continue
         fs.mkdirp(osp.dirname(tgt))
         tty.debug("Linking {0} -> {1}".format(src, tgt))
         if not hardlinks:

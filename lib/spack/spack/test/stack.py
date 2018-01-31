@@ -46,5 +46,11 @@ def test_stack(database, refresh_db_on_exit, install_mockery):
     # have at least one package stacked (i.e. linked)
     assert spack.cmd.stack.stack(None, args) > 0
 
+    # ignore already present symlinks
+    args = arg_t([remote], [], True, False)
+
+    # assert that another addition does not stack packages
+    assert spack.cmd.stack.stack(None, args) == 0
+
     # packages present now in our db
     assert len(spack.store.db.query()) > 0
