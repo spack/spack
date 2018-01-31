@@ -225,63 +225,6 @@ Now we can finally install ``armadillo ^netlib-lapack``:
     Fetch: 0.01s.  Build: 3.75s.  Total: 3.76s.
   [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/armadillo-8.100.1-sxmpu5an4dshnhickh6ykchyfda7jpyn
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-What happens at subscript time?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The example above leaves us with a few questions. How could it be that the
-attribute:
-
-.. code-block:: python
-
-  spec['lapack'].libs
-
-stems from a property of the ``netlib-lapack`` package that has a different name?
-How is it even computed for ``openblas``, given that in its package there's no code
-that deals with finding libraries?
-The answer is that ``libs`` is one of the few properties of specs that follow the
-*build-interface protocol*. The others are currently ``command`` and ``headers``.
-These properties exist only on concrete specs that have been retrieved via the
-subscript notation.
-
-What happens is that, whenever you retrieve a spec using subscripts:
-
-.. code-block:: python
-
-  lapack = spec['lapack']
-
-the key that appears in the query (in this case ``'lapack'``) is attached to the
-returned item. When, later on, you access any of the build-interface attributes, this
-key is used to compute the result according to the following algorithm:
-
-.. code-block:: none
-
-  Given any pair of <query-key> and <build-attribute>:
-
-    1. If <query-key> is the name of a virtual spec and the package
-       providing it has an attribute named '<query-key>_<build-attribute>'
-       return it
-
-    2. Otherwise if the package has an attribute named '<build-attribute>'
-       return that
-
-    3. Otherwise use the default handler for <build-attribute>
-
-Going back to our concrete case this means that, if the spec providing LAPACK
-is ``netlib-lapack``, we are returning the value computed in the ``lapack_libs``
-property. If it is ``openblas``, we are instead resorting to the default handler
-for ``libs`` (which searches for the presence of ``libopenblas`` in the
-installation prefix).
-
-.. note::
-
-  Types commonly returned by build-interface attributes
-    Even though there's no enforcement on it, the type of the objects returned most often when
-    asking for the ``libs`` attributes is :py:class:`LibraryList <llnl.util.filesystem.LibraryList>`.
-    Similarly the usual type returned for ``headers`` is :py:class:`HeaderList <llnl.util.filesystem.HeaderList>`,
-    while for ``command`` is :py:class:`Executable <spack.util.executable.Executable>`. You can refer to
-    these objects' API documentation to discover more about them.
-
 ^^^^^^^^^^^^^^^^^^^^^^^
 Extra query parameters
 ^^^^^^^^^^^^^^^^^^^^^^^
