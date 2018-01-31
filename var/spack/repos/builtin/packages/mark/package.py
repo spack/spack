@@ -32,9 +32,11 @@ class Mark(Package):
     available for parameter estimation using data from marked individuals.
 
     You will need to download the package yourself, unzip, rename it
-    following the guide in 'http://www.phidot.org/software/mark/rmark/linux/'
-    Step(1), Spack will search your current directory for the download file.
-    """
+    following the guide in http://www.phidot.org/software/mark/rmark/linux/
+    Step(1).Spack will search your current directory for the download file.
+    Alternatively, add this file to a mirror so that Spack can find it.
+    For instructions on how to set up amirror, see
+    http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.phidot.org/software/mark/index.html"
 
