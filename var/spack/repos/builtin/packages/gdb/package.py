@@ -56,7 +56,7 @@ class Gdb(Package):
         options = ['--prefix=%s' % prefix]
         if '+python' in spec:
             options.extend(['--with-python'])
-        options.append('LDFLAGS=-L{0}'.format(spec['python'].prefix.lib))
+        options.append('LDFLAGS=-L{0}'.format(spec['python'].libs.ldflags))
         configure(*options)
         make()
         make("install")
