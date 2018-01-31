@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 
+import sys
+
 
 class Cnpy(CMakePackage):
     """cnpy: library to read/write .npy and .npz files in C/C++."""
@@ -32,3 +34,10 @@ class Cnpy(CMakePackage):
     url      = "https://github.com/rogersce/cnpy"
 
     version('master', git='https://github.com/rogersce/cnpy.git', branch="master")
+
+    def cmake_args(self):
+        args = []
+        if sys.platform == 'darwin':
+            args.extend(['-DCMAKE_MACOSX_RPATH=ON'])
+
+        return args

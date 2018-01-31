@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 from spack import *
 from spack.spec import UnsupportedCompilerError
 
@@ -210,6 +211,15 @@ class Elemental(CMakePackage):
             '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
             '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
         ]
+
+        # Add support for OS X to find OpenMP
+        if (self.spec.satisfies('%clang')):
+            if (sys.platform == 'darwin'):
+                clang = self.compiler.cc
+                clang_bin = os.path.dirname(clang)
+                clang_root = os.path.dirname(clang_bin)
+                args.extend([
+                    '-DOpenMP_DIR={0}'.format(clang_root)])
 
         if 'blas=openblas' in spec:
             args.extend([
