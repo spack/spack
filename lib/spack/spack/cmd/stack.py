@@ -92,9 +92,15 @@ def add_remote_packages(remote, exclude=[], nostack=False, hardlinks=False):
     """
     config = spack.config.get_config("config")
 
+    # try to be intelligent and support both paths with and without
+    # ./opt/spack-suffix
+    remote_path = canonicalize_path(osp.join(remote, 'opt', 'spack'))
+    if not osp.exists(remote_path):
+        remote_path = canonicalize_path(remote)
+
     # NOTE: This has to be kept in sync with spack/store.py!
     layout = spack.directory_layout.YamlDirectoryLayout(
-        canonicalize_path(osp.join(remote, 'opt', 'spack')),
+        remote_path,
         hash_len=config.get('install_hash_length'),
         path_scheme=config.get('install_path_scheme'))
 
@@ -128,6 +134,7 @@ def add_remote_packages(remote, exclude=[], nostack=False, hardlinks=False):
 
 
 def stack(parser, args):
+    "Returns number of packages stacked."
 
     num_packages = sum((
         add_remote_packages(
@@ -145,3 +152,5 @@ def stack(parser, args):
                   "repository does not differ in hash length or path scheme!")
     else:
         tty.info("Added {0} packages in total.".format(num_packages))
+
+    return num_packages
