@@ -107,7 +107,8 @@ class LinkTree(object):
                     touch(marker)
 
     def unmerge_directories(self, dest_root, ignore):
-        for src, dest in traverse_tree(self._root, dest_root, ignore=ignore, order='post'):
+        for src, dest in traverse_tree(
+                self._root, dest_root, ignore=ignore, order='post'):
             if os.path.isdir(src):
                 if not os.path.exists(dest):
                     continue

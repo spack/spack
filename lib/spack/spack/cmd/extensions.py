@@ -117,7 +117,7 @@ def extensions(parser, args):
         target = args.view
     else:
         target = spec.prefix
-    
+
     view = YamlFilesystemView(target, spack.store.layout)
 
     if show_installed:

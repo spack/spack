@@ -66,7 +66,7 @@ def deactivate(parser, args):
         target = pkg.extendee_spec.prefix
     elif pkg.extendable:
         target = spec.prefix
-    
+
     view = YamlFilesystemView(target, spack.store.layout)
 
     if args.all:

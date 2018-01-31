@@ -50,7 +50,7 @@ from spack.database import Database
 from spack.directory_layout import YamlDirectoryLayout
 
 __author__ = "Benedikt Hegner (CERN)"
-__all__ = ['db', 'extensions', 'layout', 'root']
+__all__ = ['db', 'layout', 'root']
 
 #
 # Read in the config

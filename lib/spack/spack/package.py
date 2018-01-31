@@ -64,7 +64,7 @@ import spack.binary_distribution as binary_distribution
 
 from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
 from llnl.util.filesystem import working_dir, install_tree, install
-from llnl.util.lang import memoized, match_predicate
+from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
 from llnl.util.tty.color import colorize

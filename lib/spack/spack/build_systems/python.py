@@ -27,13 +27,11 @@ import inspect
 import os
 import shutil
 
-import spack
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import working_dir, get_filetype, filter_file
 from llnl.util.lang import match_predicate
-from llnl.util.link_tree import LinkTree
 
 
 class PythonPackage(PackageBase):
@@ -452,6 +450,7 @@ class PythonPackage(PackageBase):
                     r'site-packages/{0}/__init__.py'.format(self.py_namespace))
                 ignore_namespace = True
 
+        bin_dir = self.spec.prefix.bin
         global_view = self.extendee_spec.prefix == view.root
         for src, dst in merge_map.items():
             if ignore_namespace and namespace_init(dst):

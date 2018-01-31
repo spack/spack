@@ -315,10 +315,10 @@ class YamlFilesystemView(FilesystemView):
         else:
             for src, dst in merge_map.items():
                 self.link(src, dst)
-        
+
     def unmerge(self, spec, ignore=None):
         tree = LinkTree(spec.prefix)
-        
+
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
             self.layout.hidden_file_paths, ignore)
@@ -332,7 +332,7 @@ class YamlFilesystemView(FilesystemView):
         else:
             for src, dst in merge_map.items():
                 self.remove_file(src, dst)
-        
+
         # now unmerge the directory tree
         tree.unmerge_directories(self.root, ignore_file)
 

@@ -250,7 +250,7 @@ def test_python_activation_view_add_files(tmpdir, namespace_extensions):
 
     python_pkg = python_spec.package
     python_pkg.activate(ext1_pkg, view)
-    # Normally handled by Package.do_activate, but 
+    # Normally handled by Package.do_activate, but here we activate directly
     view.extensions_layout.add_extension(python_spec, ext1_pkg.spec)
     python_pkg.activate(ext2_pkg, view)
 

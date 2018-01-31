@@ -58,7 +58,7 @@ def activate(parser, args):
         target = args.view
     else:
         target = spec.package.extendee_spec.prefix
-    
+
     view = YamlFilesystemView(target, spack.store.layout)
 
     if spec.package.is_activated(view):
