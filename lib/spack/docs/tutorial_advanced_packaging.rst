@@ -225,82 +225,6 @@ Now we can finally install ``armadillo ^netlib-lapack``:
     Fetch: 0.01s.  Build: 3.75s.  Total: 3.76s.
   [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/armadillo-8.100.1-sxmpu5an4dshnhickh6ykchyfda7jpyn
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Extra query parameters
-^^^^^^^^^^^^^^^^^^^^^^^
-
-An advanced feature of the Spec's build-interface protocol is the support
-for extra parameters after the subscript key. In fact, any of the keys used in the query
-can be followed by a comma separated list of extra parameters which can be
-inspected by the package receiving the request to fine-tune a response.
-
-Let's look at an example and try to install ``netcdf``:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack install netcdf
-  ==> libsigsegv is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/libsigsegv-2.11-fypapcprssrj3nstp6njprskeyynsgaz
-  ==> m4 is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/m4-1.4.18-r5envx3kqctwwflhd4qax4ahqtt6x43a
-  ...
-  ==> Error: AttributeError: 'list' object has no attribute 'search_flags'
-  AttributeError: AttributeError: 'list' object has no attribute 'search_flags'
-
-  /usr/local/var/spack/repos/builtin/packages/netcdf/package.py:207, in configure_args:
-       50            # used instead.
-       51            hdf5_hl = self.spec['hdf5:hl']
-       52            CPPFLAGS.append(hdf5_hl.headers.cpp_flags)
-    >> 53            LDFLAGS.append(hdf5_hl.libs.search_flags)
-       54
-       55            if '+parallel-netcdf' in self.spec:
-       56                config_args.append('--enable-pnetcdf')
-
-  See build log for details:
-    /usr/local/var/spack/stage/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj/netcdf-4.4.1.1/spack-build.out
-
-We can see from the error that ``netcdf`` needs to know how to link the *high-level interface*
-of ``hdf5``, and thus passes the extra parameter ``hl`` after the request to retrieve it.
-Clearly the implementation in the ``hdf5`` package is not complete, and we need to fix it:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack edit hdf5
-
-If you followed the instructions correctly, the code added to the
-``lib`` property should be similar to:
-
-.. code-block:: python
-  :emphasize-lines: 1
-
-  query_parameters = self.spec.last_query.extra_parameters
-  key = tuple(sorted(query_parameters))
-  libraries = query2libraries[key]
-  shared = '+shared' in self.spec
-  return find_libraries(
-      libraries, root=self.prefix, shared=shared, recurse=True
-  )
-
-where we highlighted the line retrieving  the extra parameters. Now we can successfully
-complete the installation of ``netcdf``:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack install netcdf
-  ==> libsigsegv is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/libsigsegv-2.11-fypapcprssrj3nstp6njprskeyynsgaz
-  ==> m4 is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/m4-1.4.18-r5envx3kqctwwflhd4qax4ahqtt6x43a
-  ...
-  ==> Installing netcdf
-  ==> Using cached archive: /usr/local/var/spack/cache/netcdf/netcdf-4.4.1.1.tar.gz
-  ==> Already staged netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj in /usr/local/var/spack/stage/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj
-  ==> Already patched netcdf
-  ==> Building netcdf [AutotoolsPackage]
-  ==> Executing phase: 'autoreconf'
-  ==> Executing phase: 'configure'
-  ==> Executing phase: 'build'
-  ==> Executing phase: 'install'
-  ==> Successfully installed netcdf
-    Fetch: 0.01s.  Build: 24.61s.  Total: 24.62s.
-  [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj
-
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Single package providing multiple virtual specs
@@ -476,6 +400,10 @@ and double check the environment logs to verify that every variable was
 set to the correct value. More complicated examples of the use of this function
 may be found in the ``r`` and ``python`` package.
 
+----------------------
+Other Packaging Topics
+----------------------
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Attach attributes to other packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -504,3 +432,79 @@ and ``automake`` with the usual function call syntax of :py:class:`Executable <s
 .. code-block:: python
 
   aclocal('--force')
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Extra query parameters
+^^^^^^^^^^^^^^^^^^^^^^^
+
+An advanced feature of the Spec's build-interface protocol is the support
+for extra parameters after the subscript key. In fact, any of the keys used in the query
+can be followed by a comma separated list of extra parameters which can be
+inspected by the package receiving the request to fine-tune a response.
+
+Let's look at an example and try to install ``netcdf``:
+
+.. code-block:: console
+
+  root@advanced-packaging-tutorial:/# spack install netcdf
+  ==> libsigsegv is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/libsigsegv-2.11-fypapcprssrj3nstp6njprskeyynsgaz
+  ==> m4 is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/m4-1.4.18-r5envx3kqctwwflhd4qax4ahqtt6x43a
+  ...
+  ==> Error: AttributeError: 'list' object has no attribute 'search_flags'
+  AttributeError: AttributeError: 'list' object has no attribute 'search_flags'
+
+  /usr/local/var/spack/repos/builtin/packages/netcdf/package.py:207, in configure_args:
+       50            # used instead.
+       51            hdf5_hl = self.spec['hdf5:hl']
+       52            CPPFLAGS.append(hdf5_hl.headers.cpp_flags)
+    >> 53            LDFLAGS.append(hdf5_hl.libs.search_flags)
+       54
+       55            if '+parallel-netcdf' in self.spec:
+       56                config_args.append('--enable-pnetcdf')
+
+  See build log for details:
+    /usr/local/var/spack/stage/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj/netcdf-4.4.1.1/spack-build.out
+
+We can see from the error that ``netcdf`` needs to know how to link the *high-level interface*
+of ``hdf5``, and thus passes the extra parameter ``hl`` after the request to retrieve it.
+Clearly the implementation in the ``hdf5`` package is not complete, and we need to fix it:
+
+.. code-block:: console
+
+  root@advanced-packaging-tutorial:/# spack edit hdf5
+
+If you followed the instructions correctly, the code added to the
+``lib`` property should be similar to:
+
+.. code-block:: python
+  :emphasize-lines: 1
+
+  query_parameters = self.spec.last_query.extra_parameters
+  key = tuple(sorted(query_parameters))
+  libraries = query2libraries[key]
+  shared = '+shared' in self.spec
+  return find_libraries(
+      libraries, root=self.prefix, shared=shared, recurse=True
+  )
+
+where we highlighted the line retrieving  the extra parameters. Now we can successfully
+complete the installation of ``netcdf``:
+
+.. code-block:: console
+
+  root@advanced-packaging-tutorial:/# spack install netcdf
+  ==> libsigsegv is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/libsigsegv-2.11-fypapcprssrj3nstp6njprskeyynsgaz
+  ==> m4 is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/m4-1.4.18-r5envx3kqctwwflhd4qax4ahqtt6x43a
+  ...
+  ==> Installing netcdf
+  ==> Using cached archive: /usr/local/var/spack/cache/netcdf/netcdf-4.4.1.1.tar.gz
+  ==> Already staged netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj in /usr/local/var/spack/stage/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj
+  ==> Already patched netcdf
+  ==> Building netcdf [AutotoolsPackage]
+  ==> Executing phase: 'autoreconf'
+  ==> Executing phase: 'configure'
+  ==> Executing phase: 'build'
+  ==> Executing phase: 'install'
+  ==> Successfully installed netcdf
+    Fetch: 0.01s.  Build: 24.61s.  Total: 24.62s.
+  [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/netcdf-4.4.1.1-gk2xxhbqijnrdwicawawcll4t3c7dvoj
