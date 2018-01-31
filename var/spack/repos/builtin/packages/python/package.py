@@ -32,11 +32,9 @@ import shutil
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 from llnl.util.filesystem import force_remove, get_filetype
-from llnl.util.link_tree import LinkTree
 
 import spack
 from spack import *
-from spack.filesystem_view import YamlFilesystemView
 from spack.util.prefix import Prefix
 import spack.util.spack_json as sjson
 

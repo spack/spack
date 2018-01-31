@@ -31,10 +31,8 @@
 # Date: September 6, 2015
 #
 from spack import *
-from spack.filesystem_view import YamlFilesystemView
 import os
 from contextlib import contextmanager
-import spack
 from llnl.util.lang import match_predicate
 
 
