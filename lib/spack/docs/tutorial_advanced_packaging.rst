@@ -358,6 +358,28 @@ Set variables at build-time for yourself
 Spack provides a way to manipulate a package's build time and
 run time environments using the
 :py:func:`setup_environment <spack.package.PackageBase.setup_environment>` function.
+For ``qt`` this looks like:
+
+.. code-block:: python
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
+        run_env.set('QTDIR', self.prefix)
+
+The two arguments, ``spack_env`` and ``run_env``, are both instances of
+:py:class:`EnvironmentModifications <spack.environment.EnvironmentModifications>` and
+permit you to register modifications to either the build-time or the run-time
+environment of the package, respectively. Modifications to ``run_env`` will
+appear in the module files generated for the package.
+
+To contrast with ``qt``'s :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
+function:
+
+.. code-block:: python
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('QTDIR', self.prefix)
+
 Let's try to see how it works by completing the ``elpa`` package:
 
 .. code-block:: console
@@ -379,26 +401,7 @@ In the end your method should look like:
       spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
       spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
 
-The two arguments, ``spack_env`` and ``run_env``, are both instances of
-:py:class:`EnvironmentModifications <spack.environment.EnvironmentModifications>` and
-permit you to register modifications to either the build-time or the run-time
-environment of the package, respectively.
-At this point it's possible to proceed with the installation of ``elpa``:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack install elpa
-  ==> pkg-config is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/pkg-config-0.29.2-ae2hwm7q57byfbxtymts55xppqwk7ecj
-  ==> ncurses is already installed in /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/ncurses-6.0-ukq4tccptm2rxd56d2bumqthnpcjzlez
-  ...
-  ==> Executing phase: 'build'
-  ==> Executing phase: 'install'
-  ==> Successfully installed elpa
-    Fetch: 3.94s.  Build: 41.93s.  Total: 45.87s.
-  [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/elpa-2016.05.004-sdbfhwcexg7s2zqf52vssb762ocvklbu
-
-If you had modifications to ``run_env``, those would have appeared e.g. in the module files
-generated for the package.
+At this point it's possible to proceed with the installation of ``elpa``.
 
 ----------------------
 Other Packaging Topics
