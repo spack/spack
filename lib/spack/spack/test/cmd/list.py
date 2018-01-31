@@ -79,6 +79,7 @@ class TestListCommand(object):
         assert 'py-numpy' in pkg_names
         assert 'perl-file-copy-recursive' in pkg_names
 
+    @pytest.mark.maybeslow
     def test_list_search_description(self, parser, pkg_names):
         args = parser.parse_args(['--search-description', 'xml'])
         spack.cmd.list.list(parser, args)
@@ -94,6 +95,7 @@ class TestListCommand(object):
         assert 'cloverleaf3d' in pkg_names
         assert 'hdf5' not in pkg_names
 
+    @pytest.mark.maybeslow
     def test_list_formatter(self, parser, pkg_names):
         # TODO: Test the output of the commands
         args = parser.parse_args(['--format', 'name_only'])

@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install log4cplus
-#
-# You can edit this file again by typing:
-#
-#     spack edit log4cplus
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
@@ -45,17 +30,7 @@ class Log4cplus(CMakePackage):
     providing thread-safe, flexible, and arbitrarily
     granular control over log management and configuration."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://sourceforge.net/projects/log4cplus/"
     url      = "https://nchc.dl.sourceforge.net/project/log4cplus/log4cplus-stable/1.2.0/log4cplus-1.2.0.tar.gz"
 
     version('1.2.0', 'e250f0f431c0723f8b625323e7b6465d')
-
-    # depends_on('foo')
-
-    # def cmake_args(self):
-    #     # FIXME: Add arguments other than
-    #     # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-    #     # FIXME: If not needed delete this function
-    #     args = []
-    #     return args

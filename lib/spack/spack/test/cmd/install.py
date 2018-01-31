@@ -32,6 +32,7 @@ import llnl.util.filesystem as fs
 
 import spack
 import spack.cmd.install
+import spack.package
 from spack.spec import Spec
 from spack.main import SpackCommand, SpackCommandError
 
@@ -70,9 +71,6 @@ def test_install_package_and_dependency(
     assert 'tests="2"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content
-
-    s = Spec('libdwarf').concretized()
-    assert not spack.repo.get(s).stage.created
 
 
 @pytest.mark.usefixtures('noop_install', 'builtin_mock', 'config')
@@ -259,10 +257,114 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
     if concretize:
         spec.concretize()
 
-    with fs.working_dir(str(tmpdir)):
-        # A non-concrete spec will fail to be installed
-        with open('spec.yaml', 'w') as f:
-            spec.to_yaml(f)
-        install('-f', 'spec.yaml', fail_on_error=False)
+    specfile = tmpdir.join('spec.yaml')
 
+    with specfile.open('w') as f:
+        spec.to_yaml(f)
+
+    # Relative path to specfile (regression for #6906)
+    with fs.working_dir(specfile.dirname):
+        # A non-concrete spec will fail to be installed
+        install('-f', specfile.basename, fail_on_error=False)
     assert install.returncode == error_code
+
+    # Absolute path to specfile (regression for #6983)
+    install('-f', str(specfile), fail_on_error=False)
+    assert install.returncode == error_code
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
+)
+@pytest.mark.parametrize('exc_typename,msg', [
+    ('RuntimeError', 'something weird happened'),
+    ('ValueError', 'spec is not concrete')
+])
+def test_junit_output_with_failures(tmpdir, exc_typename, msg):
+    with tmpdir.as_cwd():
+        install(
+            '--log-format=junit', '--log-file=test.xml',
+            'raiser',
+            'exc_type={0}'.format(exc_typename),
+            'msg="{0}"'.format(msg)
+        )
+
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
+
+    content = filename.open().read()
+
+    # Count failures and errors correctly
+    assert 'tests="1"' in content
+    assert 'failures="1"' in content
+    assert 'errors="0"' in content
+
+    # We want to have both stdout and stderr
+    assert '<system-out>' in content
+    assert msg in content
+
+
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.usefixtures(
+    'builtin_mock', 'mock_archive', 'mock_fetch', 'config', 'install_mockery'
+)
+@pytest.mark.parametrize('exc_typename,msg', [
+    ('RuntimeError', 'something weird happened'),
+    ('KeyboardInterrupt', 'Ctrl-C strikes again')
+])
+def test_junit_output_with_errors(tmpdir, monkeypatch, exc_typename, msg):
+
+    def just_throw(*args, **kwargs):
+        from six.moves import builtins
+        exc_type = getattr(builtins, exc_typename)
+        raise exc_type(msg)
+
+    monkeypatch.setattr(spack.package.PackageBase, 'do_install', just_throw)
+
+    with tmpdir.as_cwd():
+        install(
+            '--log-format=junit', '--log-file=test.xml',
+            'libdwarf',
+            fail_on_error=False
+        )
+
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
+
+    content = filename.open().read()
+
+    # Count failures and errors correctly
+    assert 'tests="1"' in content
+    assert 'failures="0"' in content
+    assert 'errors="1"' in content
+
+    # We want to have both stdout and stderr
+    assert '<system-out>' in content
+    assert msg in content
+
+
+@pytest.mark.usefixtures('noop_install', 'config')
+@pytest.mark.parametrize('clispecs,filespecs', [
+    [[],                  ['mpi']],
+    [[],                  ['mpi', 'boost']],
+    [['cmake'],           ['mpi']],
+    [['cmake', 'libelf'], []],
+    [['cmake', 'libelf'], ['mpi', 'boost']],
+])
+def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
+
+    args = clispecs
+
+    for spec in filespecs:
+        filepath = tmpdir.join(spec + '.yaml')
+        args = ['-f', str(filepath)] + args
+        s = Spec(spec)
+        s.concretize()
+        with filepath.open('w') as f:
+            s.to_yaml(f)
+
+    install(*args, fail_on_error=False)
+    assert install.returncode == 0
