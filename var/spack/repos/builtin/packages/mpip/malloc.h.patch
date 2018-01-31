@@ -1,0 +1,15 @@
+--- mpiP-3.4.1/mpiPi.h.in	2014-03-13 12:46:07.000000000 -0700
++++ mpiP-3.4.1/mpiPi.h.in	2018-01-30 23:23:20.000000000 -0800
+@@ -16,7 +16,11 @@
+ #define _MPIPI_H
+ 
+ #include <assert.h>
++#ifdef __APPLE__
++// OS X does not have malloc.h
++#else
+ #include <malloc.h>
++#endif
+ #include <math.h>
+ #include <setjmp.h>
+ #include <stdio.h>
+

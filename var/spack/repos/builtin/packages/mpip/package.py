@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import os
+import sys
 
 
 class Mpip(AutotoolsPackage):
@@ -35,8 +36,14 @@ class Mpip(AutotoolsPackage):
 
     depends_on("libelf")
     depends_on("libdwarf")
-    depends_on('libunwind', when=os.uname()[4] == "x86_64")
+    # darwin has libunwind installed, and building GNU libunwind
+    # doesn't work on darwin right now
+    depends_on('libunwind',
+               when=(os.uname()[4] == "x86_64" and sys.platform != 'darwin'))
     depends_on("mpi")
+
+    parallel = False
+    patch('malloc.h.patch')
 
     def configure_args(self):
         config_args = ['--without-f77']
