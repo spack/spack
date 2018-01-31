@@ -50,4 +50,4 @@ class Mark(Package):
         install('mark', prefix.bin)
 
         chmod = which('chmod')
-        chmod('+x', join_path(prefix.bin, 'mark'))
+        chmod('+x', prefix.bin.mark)
