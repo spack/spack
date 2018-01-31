@@ -39,14 +39,15 @@ class Igvtools(Package):
     depends_on('java@8:')
 
     def install(self, spec, prefix):
+        mkdirp(prefix.bin)
         jar_file = 'igvtools.jar'
-        install(jar_file, prefix)
+        install(jar_file, prefix.bin)
         install_tree('genomes', prefix.genomes)
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
         script_sh = join_path(os.path.dirname(__file__), "igvtools.sh")
-        script = join_path(prefix, "igvtools")
+        script = join_path(prefix.bin, "igvtools")
         copyfile(script_sh, script)
         set_executable(script)
 
@@ -55,8 +56,5 @@ class Igvtools(Package):
         java = join_path(self.spec['jdk'].prefix, 'bin', 'java')
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
-        filter_file(jar_file, join_path(prefix, jar_file),
+        filter_file(jar_file, join_path(prefix.bin, jar_file),
                     script, **kwargs)
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', prefix)
