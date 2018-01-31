@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,29 +25,18 @@
 from spack import *
 
 
-class Libarchive(AutotoolsPackage):
-    """libarchive: C library and command-line tools for reading and
-       writing tar, cpio, zip, ISO, and other archive formats."""
+class PyOpenpmdValidator(PythonPackage):
+    """Validator and Example Scripts for the openPMD markup.
 
-    homepage = "http://www.libarchive.org"
-    url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
+    openPMD is an open standard for particle-mesh data files."""
 
-    version('3.3.2', '4583bd6b2ebf7e0e8963d90879eb1b27')
-    version('3.2.1', 'afa257047d1941a565216edbf0171e72')
-    version('3.1.2', 'efad5a503f66329bb9d2f4308b5de98a')
-    version('3.1.1', '1f3d883daf7161a0065e42a15bbf168f')
-    version('3.1.0', '095a287bb1fd687ab50c85955692bf3a')
+    homepage = "http://www.openPMD.org"
+    url      = "https://github.com/openPMD/openPMD-validator/archive/1.0.0.2.tar.gz"
+    maintainers = ['ax3l']
 
-    depends_on('zlib')
-    depends_on('bzip2')
-    depends_on('lzma')
-    depends_on('lz4')
-    depends_on('xz')
-    depends_on('lzo')
-    depends_on('nettle')
-    depends_on('openssl')
-    depends_on('libxml2')
-    depends_on('expat')
+    version('1.0.0.2', '2b71b786288c1e7a2134bd6818ad1999')
 
-    # NOTE: `make check` is known to fail with the Intel compilers
-    # The build test suite cannot be built with Intel
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy@1.6.1:', type=('build', 'run'))
+    depends_on('py-dateutil@2.3.0:', type=('build', 'run'))
+    depends_on('py-h5py@2.0.0:', type=('build', 'run'))
