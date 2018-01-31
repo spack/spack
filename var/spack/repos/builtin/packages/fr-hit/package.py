@@ -57,12 +57,10 @@ class FrHit(Package):
             'psl2sam.pl'
         )
 
-        install('fr-hit', prefix)
-        install('frhit2pairend.pl', prefix)
-        install('psl2sam.pl', prefix)
-        install('binning-1.1.1/bacteria_gitax.pkl', prefix)
-        install('binning-1.1.1/binning.py', prefix)
-        install('binning-1.1.1/tax.pkl', prefix)
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix)
+        mkdirp(prefix.bin)
+        install('fr-hit', prefix.bin)
+        install('frhit2pairend.pl', prefix.bin)
+        install('psl2sam.pl', prefix.bin)
+        install('binning-1.1.1/bacteria_gitax.pkl', prefix.bin)
+        install('binning-1.1.1/binning.py', prefix.bin)
+        install('binning-1.1.1/tax.pkl', prefix.bin)
