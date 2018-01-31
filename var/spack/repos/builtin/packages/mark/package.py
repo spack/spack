@@ -51,6 +51,3 @@ class Mark(Package):
 
         chmod = which('chmod')
         chmod('+x', join_path(prefix.bin, 'mark'))
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix)
