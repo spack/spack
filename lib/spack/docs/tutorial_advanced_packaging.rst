@@ -298,7 +298,7 @@ attach attributes to your dependents. We'll see them next with the help
 of a few real use cases.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Set environment variables in dependents at build-time
+Set environment variables in dependent packages at build-time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Another common occurrence, particularly for packages like ``r`` and ``python``
@@ -352,7 +352,7 @@ set to the correct value. More complicated examples of the use of this function
 may be found in the ``r`` and ``python`` package.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Set variables at build-time for yourself
+Set environment variables in your own package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Spack provides a way to manipulate a package's build time and
