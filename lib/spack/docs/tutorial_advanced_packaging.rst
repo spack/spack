@@ -301,14 +301,31 @@ of a few real use cases.
 Set environment variables in dependent packages at build-time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Another common occurrence, particularly for packages like ``r`` and ``python``
-that support extensions and for packages that provide build tools,
-is to require *their dependents* to have some environment variables set.
+Dependencies can set environment variables that are required when their
+dependents build. For example, when a package depends on a python extension
+like py-numpy, Spack's ``python`` package will add it to ``PYTHONPATH``
+so it is available at build time; this is required because the default setup
+that spack does is not sufficient for python to import modules.
 
-The mechanism is similar to what we just saw, except that we override the
+To provide environment setup for a dependent, a package can implement the
 :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
-function, which takes one additional argument, i.e. the dependent spec that needs the modified
-environment. Let's practice completing the ``mpich`` package:
+function. This function takes as a parameter a :py:class:`EnvironmentModifications <spack.environment.EnvironmentModifications>`
+object which includes convenience methods to update the environment. For
+example an MPI implementation can set ``MPICC`` for packages that depend on it:
+
+.. code-block:: python
+
+  def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+      spack_env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
+
+In this case packages which depend on ``mpi`` will have ``MPICC`` defined in
+their environment when they build. This section is focused on modifying the
+build-time environment represented by ``spack_env``, but it's worth noting that
+modifications to ``run_env`` are included in Spack's automatically-generated
+module files.
+
+We can practice by editing the ``mpich`` package to set the ``MPICC``
+environment variable in the build-time environment of dependent packages.
 
 .. code-block:: console
 
@@ -348,15 +365,13 @@ At this point we can, for instance, install ``netlib-scalapack``:
 
 
 and double check the environment logs to verify that every variable was
-set to the correct value. More complicated examples of the use of this function
-may be found in the ``r`` and ``python`` package.
+set to the correct value.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Set environment variables in your own package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack provides a way to manipulate a package's build time and
-run time environments using the
+Packages can modify their own build-time environment by implementing the
 :py:func:`setup_environment <spack.package.PackageBase.setup_environment>` function.
 For ``qt`` this looks like:
 
@@ -366,11 +381,7 @@ For ``qt`` this looks like:
         spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
         run_env.set('QTDIR', self.prefix)
 
-The two arguments, ``spack_env`` and ``run_env``, are both instances of
-:py:class:`EnvironmentModifications <spack.environment.EnvironmentModifications>` and
-permit you to register modifications to either the build-time or the run-time
-environment of the package, respectively. Modifications to ``run_env`` will
-appear in the module files generated for the package.
+When ``qt`` builds, ``MAKEFLAGS`` will be defined in the environment.
 
 To contrast with ``qt``'s :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
 function:
@@ -380,7 +391,7 @@ function:
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('QTDIR', self.prefix)
 
-Let's try to see how it works by completing the ``elpa`` package:
+Let's see how it works by completing the ``elpa`` package:
 
 .. code-block:: console
 
