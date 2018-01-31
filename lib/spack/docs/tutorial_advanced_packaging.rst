@@ -423,7 +423,7 @@ If you had modifications to ``run_env``, those would have appeared e.g. in the m
 generated for the package.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Set variables in dependencies at build-time
+Set environment variables in dependents at build-time
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Another common occurrence, particularly for packages like ``r`` and ``python``
