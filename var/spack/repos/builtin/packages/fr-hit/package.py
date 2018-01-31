@@ -37,6 +37,10 @@ class FrHit(Package):
     depends_on('perl')
     depends_on('python@2.7:')
 
+
+    # The patch adds the python interpreter to the beginning of the script
+    # allowing it to be run directly without passing the entire path to the
+    # script to python.
     patch('binning.patch')
 
     def install(self, spec, prefix):
