@@ -23,9 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from llnl.util.link_tree import LinkTree
+from llnl.util.link_tree import LinkTree, MergeConflictError
 import spack.store
-from spack.package import ExtensionError, ExtensionConflictError
+from spack.package import ExtensionError
 
 
 # See also: AspellDictPackage
@@ -46,10 +46,8 @@ class Aspell(AutotoolsPackage):
     # for using:
     #   - extension.prefix.lib instead of extension.prefix in LinkTree()
     #   - dest_dir instead of self.prefix in tree.(find_conflict|merge)()
-    def activate(self, extension, **kwargs):
-        extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.extensions)
-        if extensions_layout is not spack.store.extensions:
+    def activate(self, extension, view, **kwargs):
+        if view.root != self.spec.prefix:
             raise ExtensionError(
                 'aspell does not support non-global extensions')
 
@@ -63,17 +61,11 @@ class Aspell(AutotoolsPackage):
 
         conflict = tree.find_conflict(dest_dir, ignore=ignore)
         if conflict:
-            raise ExtensionConflictError(conflict)
+            raise MergeConflictError(conflict)
 
         tree.merge(dest_dir, ignore=ignore)
 
-    def deactivate(self, extension, **kwargs):
-        extensions_layout = kwargs.get("extensions_layout",
-                                       spack.store.extensions)
-        if extensions_layout is not spack.store.extensions:
-            raise ExtensionError(
-                'aspell does not support non-global extensions')
-
+    def deactivate(self, extension, view, **kwargs):
         aspell = which(self.prefix.bin.aspell)
         dest_dir = aspell('dump', 'config', 'dict-dir', output=str).strip()
 
