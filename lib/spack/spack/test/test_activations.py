@@ -25,8 +25,10 @@
 
 import spack
 from llnl.util.filesystem import join_path
+from spack.build_systems.python import PythonPackage
 from spack.directory_layout import YamlDirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
+from spack.util.prefix import Prefix
 
 import os
 import pytest
@@ -35,7 +37,7 @@ import pytest
 class FakeExtensionPackage(object):
     def __init__(self, name, prefix):
         self.name = name
-        self.prefix = prefix
+        self.prefix = Prefix(prefix)
         self.spec = FakeSpec(self)
 
 
@@ -45,9 +47,24 @@ class FakeSpec(object):
         self.prefix = package.prefix
         self.hash = self.name
         self.package = package
+        self.concrete = True
 
     def dag_hash(self):
         return self.hash
+
+
+class FakePythonExtensionPackage(FakeExtensionPackage):
+    def __init__(self, name, prefix, py_namespace, python_spec):
+        self.py_namespace = py_namespace
+        self.extendee_spec = python_spec
+        super(FakePythonExtensionPackage, self).__init__(name, prefix)
+
+    def add_files_to_view(self, view, merge_map):
+        # TODO: this will fail for python >= 3
+        return PythonPackage.add_files_to_view.im_func(self, view, merge_map)
+
+    def view_file_conflicts(self, view, merge_map):
+        return PythonPackage.view_file_conflicts.im_func(self, view, merge_map)
 
 
 def create_dir_structure(tmpdir, dir_structure):
@@ -103,6 +120,51 @@ def python_and_extension_dirs(tmpdir):
 path/to/setuptools.egg""")
 
     return str(python_prefix), str(ext_prefix)
+
+
+@pytest.fixture()
+def namespace_extensions(tmpdir):
+    ext1_dirs = {
+        'bin/': {
+            'py-ext-tool1': None
+        },
+        'lib/': {
+            'python2.7/': {
+                'site-packages/': {
+                    'examplenamespace/': {
+                        '__init__.py': None,
+                        'ext1_sample.py': None
+                    }
+                }
+            }
+        }
+    }
+
+    ext2_dirs = {
+        'bin/': {
+            'py-ext-tool2': None
+        },
+        'lib/': {
+            'python2.7/': {
+                'site-packages/': {
+                    'examplenamespace/': {
+                        '__init__.py': None,
+                        'ext2_sample.py': None
+                    }
+                }
+            }
+        }
+    }
+
+    ext1_name = 'py-extension1'
+    ext1_prefix = tmpdir.join(ext1_name)
+    create_dir_structure(ext1_prefix, ext1_dirs)
+
+    ext2_name = 'py-extension2'
+    ext2_prefix = tmpdir.join(ext2_name)
+    create_dir_structure(ext2_prefix, ext2_dirs)
+
+    return str(ext1_prefix), str(ext2_prefix), 'examplenamespace'
 
 
 def test_python_activation(tmpdir):
@@ -167,6 +229,30 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs):
     assert not os.path.exists(join_path(python_prefix, 'bin/py-ext-tool'))
 
     assert os.path.exists(join_path(view_dir, 'bin/py-ext-tool'))
+
+
+def test_python_activation_view_add_files(tmpdir, namespace_extensions):
+    """Test the view update logic in PythonPackage
+    """
+    ext1_prefix, ext2_prefix, py_namespace = namespace_extensions
+
+    python_spec = spack.spec.Spec('python@2.7.12')
+    python_spec._concrete = True
+
+    ext1_pkg = FakePythonExtensionPackage(
+        'py-extension1', ext1_prefix, py_namespace, python_spec)
+    ext2_pkg = FakePythonExtensionPackage(
+        'py-extension2', ext2_prefix, py_namespace, python_spec)
+
+    view_dir = str(tmpdir.join('view'))
+    layout = YamlDirectoryLayout(view_dir)
+    view = YamlFilesystemView(view_dir, layout)
+
+    python_pkg = python_spec.package
+    python_pkg.activate(ext1_pkg, view)
+    # Normally handled by Package.do_activate, but 
+    view.extensions_layout.add_extension(python_spec, ext1_pkg.spec)
+    python_pkg.activate(ext2_pkg, view)
 
 
 @pytest.fixture()

@@ -423,6 +423,7 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
 
         # Create a temp file in the same directory as the actual file.
         dirname, basename = os.path.split(path)
+        mkdirp(dirname)
 
         tmp = tempfile.NamedTemporaryFile(
             prefix=basename, dir=dirname, delete=False)
