@@ -34,3 +34,4 @@ class PySetuptoolsGit(PythonPackage):
     version('1.2', '40b2ef7687a384ea144503c2e5bc67e2')
 
     depends_on('py-setuptools', type='build')
+    depends_on('git')
