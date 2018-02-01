@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 import os
 
 class Gdal(AutotoolsPackage):
@@ -92,8 +93,8 @@ class Gdal(AutotoolsPackage):
          return args
 
 
-    def install(self, spec, prefix):
-        super(Gdal, self).install(spec, prefix)
-        dylib = os.path.join(prefix, 'lib', 'libgdal.dylib')
-        install_name_tool = which('install_name_tool')
-        install_name_tool('-id', dylib, dylib)
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)
