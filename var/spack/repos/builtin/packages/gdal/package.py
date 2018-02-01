@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import sys
-import os
 
 
 class Gdal(AutotoolsPackage):
@@ -92,7 +91,6 @@ class Gdal(AutotoolsPackage):
             args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
 
         return args
-
 
     @run_after('install')
     def darwin_fix(self):
