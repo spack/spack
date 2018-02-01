@@ -7,7 +7,7 @@ Advanced Topics in Packaging
 Spack tries to automatically configure packages with information from
 dependencies such that all you need to do is to list the dependencies
 (i.e. with the ``depends_on`` directive) and the build system (for example
-by deriving from :code:``CmakePackage``).
+by deriving from :code:`CmakePackage`).
 
 However, there are many special cases. Often you need to retrieve details
 about dependencies to set package-specific configuration options, this tutorial
@@ -89,9 +89,24 @@ Spack packages know how to automatically locate their libraries. This section
 covers how to retrieve library information from dependencies and how to locate
 libraries when the default logic doesn't work.
 
-^^^^^^^^^^^^^^^^^^^^
-A motivating example
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Accessing dependency libraries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you need to access the libraries of a dependency, you can do so
+via the ``libs`` property of the spec, for example in the ``arpack-ng``
+package:
+
+.. code-block:: python
+
+    def install(self, spec, prefix):
+        lapack_libs = spec['lapack'].libs.joined(';')
+        blas_libs = spec['blas'].libs.joined(';')
+
+        cmake(*[
+            '-DLAPACK_LIBRARIES={0}'.format(lapack_libs),
+            '-DBLAS_LIBRARIES={0}'.format(blas_libs)
+        ], '.')
 
 We've started work on a package for ``armadillo``. You should open it,
 read through the comment that starts with ``# TUTORIAL:`` and complete
@@ -153,8 +168,32 @@ Hopefully the installation went fine and the code we added expanded to the right
 of semicolon separated libraries (you are encouraged to open ``armadillo``'s
 build logs to double check).
 
-If we try to build another version tied to ``netlib-lapack`` we'll
-notice that this time the installation won't complete:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Providing libraries to dependents
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack provides a default implementation for ``libs`` which often works
+out of the box. A user can write a package definition without having to
+implement a ``libs`` property and dependents can retrieve the libraries
+as shown in the above section. However, the default implementation assumes that
+libraries follow the naming scheme ``lib<package name>.so`` (or e.g.
+``lib<package name>.a`` for static libraries). Packages which don't
+follow this naming scheme must implement this function themselves, e.g.
+``opencv``:
+
+.. code-block:: python
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries(
+            "libopencv_*", root=self.prefix, shared=shared, recurse=True
+        )
+
+This issue is common for packages which implement an interface (i.e.
+virtual package providers in Spack). If we try to build another version of
+``armadillo`` tied to ``netlib-lapack`` we'll notice that this time the
+installation won't complete:
 
 .. code-block:: console
 
@@ -183,8 +222,9 @@ notice that this time the installation won't complete:
   See build log for details:
     /usr/local/var/spack/stage/arpack-ng-3.5.0-bloz7cqirpdxj33pg7uj32zs5likz2un/arpack-ng-3.5.0/spack-build.out
 
-This is because ``netlib-lapack`` requires extra work, compared to ``openblas``,
-to expose its build information to other packages. Let's edit it:
+Unlike ``openblas`` which provides a library named ``libopenblas.so``,
+``netlib-lapack`` provides ``liblapack.so``, so it needs to implement
+customized library search logic. Let's edit it:
 
 .. code-block:: console
 
@@ -203,7 +243,13 @@ What we need to implement is:
       )
 
 i.e. a property that returns the correct list of libraries for the LAPACK interface.
-Now we can finally install ``armadillo ^netlib-lapack``:
+
+We use the name ``lapack_libs`` rather than ``libs`` because
+``netlib-lapack`` can also provide ``blas``, and when it does it is provided
+as a separate library file. Using this name ensures that when
+dependents ask for ``lapack`` libraries, ``netlib-lapack`` will retrieve only
+the libraries associated with the ``lapack`` interface. Now we can finally
+install ``armadillo ^netlib-lapack``:
 
 .. code-block:: console
 
@@ -218,68 +264,10 @@ Now we can finally install ``armadillo ^netlib-lapack``:
     Fetch: 0.01s.  Build: 3.75s.  Total: 3.76s.
   [+] /usr/local/opt/spack/linux-ubuntu16.04-x86_64/gcc-5.4.0/armadillo-8.100.1-sxmpu5an4dshnhickh6ykchyfda7jpyn
 
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Single package providing multiple virtual specs
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-At the close of this tutorial's subsection, it may be useful to see where the
-build-interface protocol shines the most i.e. when it comes to manage packages
-that provide more than one virtual spec. An example of a package of this kind is
-``intel-parallel-studio``, and due to its complexity we'll limit our discussion
-here to just a few considerations (without any hands-on). You can open
-the related ``package.py`` in the usual way:
-
-.. code-block:: console
-
-  root@advanced-packaging-tutorial:/# spack edit intel-parallel-studio
-
-As you can see this package provides a lot of virtual specs, and thus it has
-more than one function that enters into the build-interface protocol. These
-functions will be invoked for *exactly the same spec* according to the key used
-by its dependents in the subscript query.
-
-So, for instance, the ``blas_libs`` property will be returned when
-``intel-parallel-studio`` is the BLAS provider in the current DAG and
-is retrieved by a dependent with:
-
-.. code-block:: python
-
-  blas = self.spec['blas']
-  blas_libs = blas.libs
-
-Within the property we inspect various aspects of the current spec:
-
-.. code-block:: python
-
-  @property
-  def blas_libs(self):
-     spec = self.spec
-     prefix = self.prefix
-     shared = '+shared' in spec
-
-     if '+ilp64' in spec:
-         mkl_integer = ['libmkl_intel_ilp64']
-     else:
-         mkl_integer = ['libmkl_intel_lp64']
-     ...
-
-and construct the list of library we need to return accordingly.
-
-What we achieved is that the complexity of dealing with ``intel-parallel-studio``
-is now gathered in the package itself, instead of being spread
-all over its possible dependents.
-Thus, a package that uses MPI or LAPACK doesn't care which implementation it uses,
-as each virtual dependency has
-*a uniform interface* to ask for libraries or headers and manipulate them.
-The packages that provide this virtual spec, on the other hand, have a clear
-way to differentiate their answer to the query [#uniforminterface]_.
-
-.. [#uniforminterface] Before this interface was added, each package that
-   depended on MPI or LAPACK had dozens of lines of code copied from other
-   packages telling it where to find the libraries and what they are called.
-   With the addition of this interface, the virtual dependency itself tells
-   other packages that depend on it where it can find its libraries.
+Since each implementation of a virtual package is responsible for locating the
+libraries associated with the interfaces it provides, dependents do not need
+to include special-case logic for different implementations and for example
+need only ask for :code:`spec['blas'].libs`.
 
 ---------------------------------------
 Modifying a package's build environment
