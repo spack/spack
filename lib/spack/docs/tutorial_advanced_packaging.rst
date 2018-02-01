@@ -78,23 +78,19 @@ the rest of the tutorial.
 
 .. _specs_build_interface_tutorial:
 
-----------------------
-Spec's build interface
-----------------------
+------------------------------
+Retrieving library information
+------------------------------
 
-Spack is designed with an emphasis on assigning responsibilities
-to the appropriate entities, as this results in a clearer and more intuitive interface
-for the users.
-When it comes to packaging, one of the most fundamental guideline that
-emerged from this tenet is that:
-
-  *It is a package's responsibility to know
-  every software it directly depends on and to expose to others how to
-  use the services it provides*.
-
-Spec's build interface is a protocol-like implementation of this guideline
-that allows packages to easily query their dependencies,
-and prescribes how they should expose their own build information.
+Although Spack attempts to help packages locate their dependency libraries
+automatically (e.g. by setting PKG_CONFIG_PATH and CMAKE_PREFIX_PATH), a
+package may have unique configuration options that are required to locate
+libraries. When a package needs information about dependency libraries, the
+general approach in Spack is to query the dependencies for the locations of
+their libraries and set configuration options accordingly. By default most
+Spack packages know how to automatically locate their libraries. This section
+covers how to retrieve library information from dependencies and how to locate
+libraries when the default logic doesn't work.
 
 ^^^^^^^^^^^^^^^^^^^^
 A motivating example
