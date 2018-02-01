@@ -288,14 +288,15 @@ way to differentiate their answer to the query [#uniforminterface]_.
    With the addition of this interface, the virtual dependency itself tells
    other packages that depend on it where it can find its libraries.
 
----------------------------
-Package's build environment
----------------------------
+---------------------------------------
+Modifying a package's build environment
+---------------------------------------
 
-Besides Spec's build interface, Spack provides means to set environment
-variables, either for yourself or for your dependent packages, and to
-attach attributes to your dependents. We'll see them next with the help
-of a few real use cases.
+Spack sets up several environment variables like PATH by default to aid in
+building a package, but many packages make use of environment variables which
+convey specific information about their dependencies, for example MPICC. This
+section covers how update your Spack packages so that package-specific
+environment variables are defined at build-time.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Set environment variables in dependent packages at build-time
