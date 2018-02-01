@@ -1,0 +1,58 @@
+--- mpiP-3.4.1/mpiPi.h.in	2018-02-01 01:09:29.000000000 -0800
++++ mpiP-3.4.1/mpiPi.h.in	2018-02-01 01:22:19.000000000 -0800
+@@ -33,7 +33,25 @@
+ #include "mpiPconfig.h"
+ 
+ #ifdef ENABLE_BFD
+-#include "bfd.h"
++  #ifndef PACKAGE
++    #define PACKAGE
++    #ifndef PACKAGE_VERSION
++      #define PACKAGE_VERSION
++      #include "bfd.h"
++      #undef PACKAGE_VERSION
++    #else
++      #include "bfd.h"
++    #endif
++      #undef PACKAGE
++  #else
++    #ifndef PACKAGE_VERSION
++      #define PACKAGE_VERSION
++      #include "bfd.h"
++      #undef PACKAGE_VERSION
++    #else
++      #include "bfd.h"
++    #endif
++  #endif
+ #endif
+ 
+ #if !defined(CEXTRACT) && !defined(ENABLE_API_ONLY)
+--- mpiP-3.4.1/pc_lookup.c	2014-03-13 12:46:07.000000000 -0700
++++ mpiP-3.4.1/pc_lookup.c.new	2018-02-01 01:43:02.000000000 -0800
+@@ -31,7 +31,25 @@
+ 
+ #ifdef ENABLE_BFD
+ #ifndef CEXTRACT
+-#include "bfd.h"
++  #ifndef PACKAGE
++    #define PACKAGE
++    #ifndef PACKAGE_VERSION
++      #define PACKAGE_VERSION
++      #include "bfd.h"
++      #undef PACKAGE_VERSION
++    #else
++      #include "bfd.h"
++    #endif
++      #undef PACKAGE
++  #else
++    #ifndef PACKAGE_VERSION
++      #define PACKAGE_VERSION
++      #include "bfd.h"
++      #undef PACKAGE_VERSION
++    #else
++      #include "bfd.h"
++    #endif
++  #endif
+ #ifdef SO_LOOKUP
+ #include <search.h>
+ #endif

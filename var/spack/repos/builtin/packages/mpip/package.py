@@ -41,12 +41,21 @@ class Mpip(AutotoolsPackage):
     depends_on('libunwind',
                when=(os.uname()[4] == "x86_64" and sys.platform != 'darwin'))
     depends_on("mpi")
+    depends_on('binutils')
 
     parallel = False
+
+    # malloc.h doesn't need to be included; stdlib.h suffices
     patch('malloc.h.patch')
+
+    # bfd.h requires some macros to be defined in advance
+    # see https://github.com/mlpack/mlpack/pull/575
+    patch('bfd.patch')
 
     def configure_args(self):
         config_args = ['--without-f77']
+        config_args.append('--enable-libunwind')
+        config_args.append('--enable-bfd')
         config_args.append("--with-cc=%s" % self.spec['mpi'].mpicc)
         config_args.append("--with-cxx=%s" % self.spec['mpi'].mpicxx)
 
