@@ -4,18 +4,15 @@
 Advanced Topics in Packaging
 ============================
 
-While you can quickly accomplish most common tasks with what
-was covered in :ref:`packaging-tutorial`, there are times when such
-knowledge won't suffice. Usually this happens for libraries that provide
-more than one API and need to let dependents decide which one to use
-or for packages that provide tools that are invoked at build-time,
-or in other similar situations.
+Spack tries to automatically configure packages with information from
+dependencies such that all you need to do is to list the dependencies
+(i.e. with the ``depends_on`` directive) and the build system (for example
+by deriving from :code:``CmakePackage``).
 
-In the following we'll dig into some of the details of package
-implementation that help us deal with these rare, but important,
-occurrences. You can rest assured that in every case Spack remains faithful to
-its philosophy: keep simple things simple, but be flexible enough when
-complex requests arise!
+However, there are many special cases. Often you need to retrieve details
+about dependencies to set package-specific configuration options, this tutorial
+covers how to retrieve build information from dependencies, and how you
+can automatically provide important information to dependents in your package.
 
 ----------------------
 Setup for the tutorial
@@ -37,7 +34,7 @@ which comes with Spack and various packages pre-installed:
 
 If you already started the image, you can set the ``EDITOR`` environment
 variable to your preferred editor (``vi``, ``emacs``, and ``nano`` are included in the image)
-and move directly to :ref:`specs_build_interface_tutorial`.
+and move directly to :ref:`adv_pkg_tutorial_start`.
 
 If you choose not to use the Docker image, you can clone the Spack repository
 and build the necessary bits yourself:
@@ -76,7 +73,7 @@ Now, you are ready to set your preferred ``EDITOR`` and continue with
 the rest of the tutorial.
 
 
-.. _specs_build_interface_tutorial:
+.. _adv_pkg_tutorial_start:
 
 ------------------------------
 Retrieving library information
