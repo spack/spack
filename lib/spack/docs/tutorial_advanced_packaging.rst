@@ -10,9 +10,11 @@ dependencies such that all you need to do is to list the dependencies
 by deriving from :code:`CmakePackage`).
 
 However, there are many special cases. Often you need to retrieve details
-about dependencies to set package-specific configuration options, this tutorial
-covers how to retrieve build information from dependencies, and how you
-can automatically provide important information to dependents in your package.
+about dependencies to set package-specific configuration options, or to
+define package-specific environment variables used by the package's build
+system. This tutorial covers how to retrieve build information from
+dependencies, and how you can automatically provide important information to
+dependents in your package.
 
 ----------------------
 Setup for the tutorial
