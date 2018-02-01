@@ -26,6 +26,7 @@ from spack import *
 import sys
 import os
 
+
 class Gdal(AutotoolsPackage):
     """GDAL is a translator library for raster and vector geospatial
     data formats that is released under an X/MIT style Open Source
