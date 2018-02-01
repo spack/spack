@@ -108,6 +108,10 @@ package:
             '-DBLAS_LIBRARIES={0}'.format(blas_libs)
         ], '.')
 
+Note that ``arpack-ng`` is querying virtual dependencies, which Spack
+automatically resolves to the installed implementation (e.g. ``openblas``
+for ``blas``).
+
 We've started work on a package for ``armadillo``. You should open it,
 read through the comment that starts with ``# TUTORIAL:`` and complete
 the ``cmake_args`` section:
@@ -174,7 +178,7 @@ Providing libraries to dependents
 
 Spack provides a default implementation for ``libs`` which often works
 out of the box. A user can write a package definition without having to
-implement a ``libs`` property and dependents can retrieve the libraries
+implement a ``libs`` property and dependents can retrieve its libraries
 as shown in the above section. However, the default implementation assumes that
 libraries follow the naming scheme ``lib<package name>.so`` (or e.g.
 ``lib<package name>.a`` for static libraries). Packages which don't
