@@ -35,4 +35,4 @@ class PyCligj(PythonPackage):
     version('0.4.0', 'fe5376068b84c5ed01e2d3adf553e226')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-click', type==('build', 'run'))
+    depends_on('py-click', type=('build', 'run'))

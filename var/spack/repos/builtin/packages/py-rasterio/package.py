@@ -37,14 +37,14 @@ class PyRasterio(PythonPackage):
 
     version('1.0a12', 'e078ca02b3513b65a9be5bb3f528b4da')
 
-    variant('aws', default=False, description=
-        'Enable testing with Amazon Web Services')
+    variant('aws', default=False,
+        description='Enable testing with Amazon Web Services')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
 
     # Only use py-enum34 with Python2
-    #depends_on('py-enum34', type='run', when='^python@:2.7')
+    # depends_on('py-enum34', type='run', when='^python@:2.7')
 
     depends_on('py-attrs', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
