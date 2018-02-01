@@ -90,7 +90,7 @@ class Gdal(AutotoolsPackage):
         if '+netcdf' in spec:
             args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
 
-         return args
+        return args
 
 
     @run_after('install')
