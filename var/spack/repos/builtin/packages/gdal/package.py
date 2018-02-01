@@ -23,9 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
-
-class Gdal(Package):
+class Gdal(AutotoolsPackage):
     """GDAL is a translator library for raster and vector geospatial
     data formats that is released under an X/MIT style Open Source
     license by the Open Source Geospatial Foundation. As a library,
@@ -67,9 +67,10 @@ class Gdal(Package):
 
     parallel = False
 
-    def install(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
+
         args = []
-        args.append("--prefix=%s" % prefix)
         args.append("--with-liblzma=yes")
         args.append("--with-zlib=%s" % spec['zlib'].prefix)
         args.append("--with-python=%s" % spec['python'].command.path)
@@ -88,7 +89,11 @@ class Gdal(Package):
         if '+netcdf' in spec:
             args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
 
-        configure(*args)
+         return args
 
-        make()
-        make("install")
+
+    def install(self, spec, prefix):
+        super(Gdal, self).install(spec, prefix)
+        dylib = os.path.join(prefix, 'lib', 'libgdal.dylib')
+        install_name_tool = which('install_name_tool')
+        install_name_tool('-id', dylib, dylib)
