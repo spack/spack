@@ -610,7 +610,8 @@ def substitute_abstract_variants(spec):
     for name, v in spec.variants.items():
         if name in spack.directives.reserved_names:
             continue
-        pkg_variant = spec.package_class.variants[name]
+        pkg_variant = spec.package_class.variants.get(name,None)
+        if not pkg_variant : raise UnknownVariantError(spec.package_class.name, name)
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
