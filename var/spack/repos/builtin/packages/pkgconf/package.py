@@ -40,6 +40,15 @@ class Pkgconf(AutotoolsPackage):
 
     provides('pkgconfig')
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        #  Is this required for other systems?
+        #  spack_env.append_path("ACLOCAL_PATH",
+                              #  join_path(self.prefix.share, "aclocal"))
+        if 'platform=cray' in self.spec:
+            spack_env.append_path('PKG_CONFIG_PATH', '/usr/lib64/pkgconfig')
+            spack_env.append_path('PKG_CONFIG_PATH',
+                                  '/usr/local/lib64/pkgconfig')
+
     @run_after('install')
     def link_pkg_config(self):
         symlink('pkgconf', '{0}/pkg-config'.format(self.prefix.bin))
