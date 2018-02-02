@@ -25,29 +25,41 @@
 from spack import *
 
 
-class Libarchive(AutotoolsPackage):
-    """libarchive: C library and command-line tools for reading and
-       writing tar, cpio, zip, ISO, and other archive formats."""
+class FrHit(Package):
+    """An efficient algorithm for fragment recruitment for next generation
+    sequences against microbial reference genomes."""
 
-    homepage = "http://www.libarchive.org"
-    url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
+    homepage = "http://weizhong-lab.ucsd.edu/frhit"
+    url      = "http://weizhong-lab.ucsd.edu/frhit/fr-hit-v0.7.1-2013-02-20.tar.gz"
 
-    version('3.3.2', '4583bd6b2ebf7e0e8963d90879eb1b27')
-    version('3.2.1', 'afa257047d1941a565216edbf0171e72')
-    version('3.1.2', 'efad5a503f66329bb9d2f4308b5de98a')
-    version('3.1.1', '1f3d883daf7161a0065e42a15bbf168f')
-    version('3.1.0', '095a287bb1fd687ab50c85955692bf3a')
+    version('0.7.1-2013-02-20', '3e8ea41ba09ab0c13e9973fe6f493f96')
 
-    depends_on('zlib')
-    depends_on('bzip2')
-    depends_on('lzma')
-    depends_on('lz4')
-    depends_on('xz')
-    depends_on('lzo')
-    depends_on('nettle')
-    depends_on('openssl')
-    depends_on('libxml2')
-    depends_on('expat')
+    depends_on('perl')
+    depends_on('python@2.7:')
 
-    # NOTE: `make check` is known to fail with the Intel compilers
-    # The build test suite cannot be built with Intel
+    # The patch adds the python interpreter to the beginning of the script
+    # allowing it to be run directly without passing the entire path to the
+    # script to python.
+    patch('binning.patch')
+
+    def install(self, spec, prefix):
+        make()
+
+        filter_file(
+            r'#!/bin/env perl',
+            '#!/usr/bin/env perl',
+            'frhit2pairend.pl'
+        )
+        filter_file(
+            r'#!/bin/env perl',
+            '#!/usr/bin/env perl',
+            'psl2sam.pl'
+        )
+
+        mkdirp(prefix.bin)
+        install('fr-hit', prefix.bin)
+        install('frhit2pairend.pl', prefix.bin)
+        install('psl2sam.pl', prefix.bin)
+        install('binning-1.1.1/bacteria_gitax.pkl', prefix.bin)
+        install('binning-1.1.1/binning.py', prefix.bin)
+        install('binning-1.1.1/tax.pkl', prefix.bin)

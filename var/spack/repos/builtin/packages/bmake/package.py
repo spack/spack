@@ -23,31 +23,29 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import re
 
 
-class Libarchive(AutotoolsPackage):
-    """libarchive: C library and command-line tools for reading and
-       writing tar, cpio, zip, ISO, and other archive formats."""
+class Bmake(Package):
+    """bmake: portable BSD make
 
-    homepage = "http://www.libarchive.org"
-    url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
+       bmake is the BSD make(1) utility ported to several non-BSD
+       systems. It supports GNU's autoconf."""
 
-    version('3.3.2', '4583bd6b2ebf7e0e8963d90879eb1b27')
-    version('3.2.1', 'afa257047d1941a565216edbf0171e72')
-    version('3.1.2', 'efad5a503f66329bb9d2f4308b5de98a')
-    version('3.1.1', '1f3d883daf7161a0065e42a15bbf168f')
-    version('3.1.0', '095a287bb1fd687ab50c85955692bf3a')
+    homepage = "http://www.crufty.net/FreeWare/"
+    url      = "ftp://ftp.netbsd.org/pub/NetBSD/misc/sjg/bmake-20171207.tar.gz"
 
-    depends_on('zlib')
-    depends_on('bzip2')
-    depends_on('lzma')
-    depends_on('lz4')
-    depends_on('xz')
-    depends_on('lzo')
-    depends_on('nettle')
-    depends_on('openssl')
-    depends_on('libxml2')
-    depends_on('expat')
+    version('20171207', '5d7f2f85f16c4a6ba34ceea68957447f')
 
-    # NOTE: `make check` is known to fail with the Intel compilers
-    # The build test suite cannot be built with Intel
+    def install(self, spec, prefix):
+        # Do not pre-roff cat pages
+        mk_file = FileFilter('mk/man.mk')
+        mk_file.filter(re.escape(r'MANTARGET?'), 'MANTARGET')
+
+        # -DWITHOUT_PROG_LINK does not symlink bmake as
+        # -"bmake-VERSION"
+        sh = which('sh')
+        sh('boot-strap', '--prefix={0}'.format(prefix),
+           '-DWITHOUT_PROG_LINK', '--install')
+        mkdirp(prefix.man1)
+        install('bmake.1', join_path(prefix.man1, 'bmake.1'))

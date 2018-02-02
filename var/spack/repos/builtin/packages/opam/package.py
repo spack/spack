@@ -25,29 +25,29 @@
 from spack import *
 
 
-class Libarchive(AutotoolsPackage):
-    """libarchive: C library and command-line tools for reading and
-       writing tar, cpio, zip, ISO, and other archive formats."""
+class Opam(AutotoolsPackage):
+    """OPAM: OCaml Package Manager
 
-    homepage = "http://www.libarchive.org"
-    url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
+       OPAM is a source-based package manager for OCaml. It supports
+       multiple simultaneous compiler installations, flexible package
+       constraints, and a Git-friendly development workflow."""
 
-    version('3.3.2', '4583bd6b2ebf7e0e8963d90879eb1b27')
-    version('3.2.1', 'afa257047d1941a565216edbf0171e72')
-    version('3.1.2', 'efad5a503f66329bb9d2f4308b5de98a')
-    version('3.1.1', '1f3d883daf7161a0065e42a15bbf168f')
-    version('3.1.0', '095a287bb1fd687ab50c85955692bf3a')
+    homepage = "https://opam.ocaml.org/"
+    url      = "https://github.com/ocaml/opam/releases/download/1.2.2/opam-full-1.2.2.tar.gz"
 
-    depends_on('zlib')
-    depends_on('bzip2')
-    depends_on('lzma')
-    depends_on('lz4')
-    depends_on('xz')
-    depends_on('lzo')
-    depends_on('nettle')
-    depends_on('openssl')
-    depends_on('libxml2')
-    depends_on('expat')
+    version('1.2.2', '7d348c2898795e9f325fb80eaaf5eae8')
+    version('1.2.1', '04e8823a099ab631943952e4c2ab18fc')
 
-    # NOTE: `make check` is known to fail with the Intel compilers
-    # The build test suite cannot be built with Intel
+    depends_on('ocaml')  # Not a strict dependency, but recommended
+
+    parallel = False
+
+    def setup_environment(self, spack_env, run_env):
+        # Environment variable setting taken from
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/opam.rb
+        spack_env.set('OCAMLPARAM', 'safe-string=0,_')  # OCaml 4.06.0 compat
+
+    def build(self, spec, prefix):
+        make('lib-ext')
+        make()
+        make('man')
