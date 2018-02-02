@@ -56,6 +56,26 @@ class Opengl(Package):
         In that case, /opt/opengl/ should contain these two folders:
 
         include/GL/       (opengl headers, including "gl.h")
-        lib               (opengl libraries, including "libGL.so")"""
+        lib               (opengl libraries, including "libGL.so")
+
+        On Apple Darwin (e.g., OS X, macOS) systems, this package is
+        normally installed as part of the XCode Command Line Tools in
+        /usr/X11R6, so a working packages.yaml would be
+
+        packages:
+          opengl:
+            paths:
+              opengl@4.1: /usr/X11R6
+            buildable: False
+
+        In that case, /usr/X11R6 should contain
+
+        include/GL/      (OpenGL headers, including "gl.h")
+        lib              (OpenGL libraries, including "libGL.dylib")
+
+        On OS X/macOS, note that the version of OpenGL provided
+        depends on your hardware. Look at
+        https://support.apple.com/en-us/HT202823 to see what version
+        of OpenGL your Mac uses."""
 
         raise InstallError(msg)
