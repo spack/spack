@@ -1864,15 +1864,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 if spec.package.extends(self.extendee_spec))
 
     def activate(self, extension, view, **kwargs):
-        """Make extension package usable by linking all its files to a target
-        provided by the directory layout (depending if the user wants to
-        activate globally or in a specified file system view).
+        """
+        Add the extension to the specified view.
 
         Package authors can override this method to support other
         extension mechanisms.  Spack internals (commands, hooks, etc.)
         should call do_activate() method so that proper checks are
         always executed.
-
         """
         view.merge(extension.spec, ignore=kwargs.get('ignore', None))
 
@@ -1930,14 +1928,13 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                  self.extendee_spec.cformat("$_$@$+$%@")))
 
     def deactivate(self, extension, view, **kwargs):
-        """Unlinks all files from extension out of this package's install dir
-        or the corresponding filesystem view.
+        """
+        Remove all extension files from the specified view.
 
         Package authors can override this method to support other
         extension mechanisms.  Spack internals (commands, hooks, etc.)
         should call do_deactivate() method so that proper checks are
         always executed.
-
         """
         view.unmerge(extension.spec, ignore=kwargs.get('ignore', None))
 
