@@ -64,4 +64,4 @@ def activate(parser, args):
     if spec.package.is_activated(view):
         tty.die("Package %s is already activated." % specs[0].short_spec)
 
-    spec.package.do_activate(view)
+    spec.package.do_activate(view, with_dependencies=not args.force)

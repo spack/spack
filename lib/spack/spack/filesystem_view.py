@@ -96,7 +96,7 @@ class FilesystemView(object):
 
     def add_extension(self, spec):
         """
-            Add (link) an extension in this view.
+            Add (link) an extension in this view. Does not add dependencies.
         """
         raise NotImplementedError
 
@@ -227,15 +227,9 @@ class YamlFilesystemView(FilesystemView):
                      % colorize_spec(spec))
             return True
 
-        try:
-            if not spec.package.is_activated(self):
-                spec.package.do_activate(self, verbose=self.verbose)
-
-        except ExtensionAlreadyInstalledError:
-            # As we use sets in add_specs(), the order in which packages get
-            # activated is essentially random. So this spec might have already
-            # been activated as dependency of another package -> fail silently
-            pass
+        if not spec.package.is_activated(self):
+            spec.package.do_activate(
+                self, verbose=self.verbose, with_dependencies=False)
 
         # make sure the meta folder is linked as well (this is not done by the
         # extension-activation mechnism)

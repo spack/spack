@@ -22,24 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.main import SpackCommand
+import pytest
 
+from spack.main import SpackCommand
 
 versions = SpackCommand('versions')
 
 
+@pytest.mark.network
 def test_remote_versions():
     """Test a package for which remote versions should be available."""
 
     versions('zlib')
 
 
+@pytest.mark.network
 def test_no_versions():
     """Test a package for which no remote versions are available."""
 
     versions('converge')
 
 
+@pytest.mark.network
 def test_no_unchecksummed_versions():
     """Test a package for which no unchecksummed versions are available."""
 

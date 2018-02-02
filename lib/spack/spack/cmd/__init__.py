@@ -59,11 +59,24 @@ DESCRIPTION = "description"
 
 command_path = os.path.join(spack.lib_path, "spack", "cmd")
 
+#: Names of all commands
 commands = []
+
+
+def python_name(cmd_name):
+    """Convert ``-`` to ``_`` in command name, to make a valid identifier."""
+    return cmd_name.replace("-", "_")
+
+
+def cmd_name(python_name):
+    """Convert module name (with ``_``) to command name (with ``-``)."""
+    return python_name.replace('_', '-')
+
+
 for file in os.listdir(command_path):
     if file.endswith(".py") and not re.search(ignore_files, file):
         cmd = re.sub(r'.py$', '', file)
-        commands.append(cmd)
+        commands.append(cmd_name(cmd))
 commands.sort()
 
 
@@ -76,33 +89,38 @@ def remove_options(parser, *options):
                 break
 
 
-def get_python_name(name):
-    """Commands can have '-' in their names, unlike Python identifiers."""
-    return name.replace("-", "_")
+def get_module(cmd_name):
+    """Imports the module for a particular command name and returns it.
 
-
-def get_module(name):
-    """Imports the module for a particular command name and returns it."""
-    module_name = "%s.%s" % (__name__, name)
+    Args:
+        cmd_name (str): name of the command for which to get a module
+            (contains ``-``, not ``_``).
+    """
+    pname = python_name(cmd_name)
+    module_name = "%s.%s" % (__name__, pname)
     module = __import__(module_name,
-                        fromlist=[name, SETUP_PARSER, DESCRIPTION],
+                        fromlist=[pname, SETUP_PARSER, DESCRIPTION],
                         level=0)
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
 
-    fn_name = get_python_name(name)
-    if not hasattr(module, fn_name):
+    if not hasattr(module, pname):
         tty.die("Command module %s (%s) must define function '%s'." %
-                (module.__name__, module.__file__, fn_name))
+                (module.__name__, module.__file__, pname))
 
     return module
 
 
-def get_command(name):
-    """Imports the command's function from a module and returns it."""
-    python_name = get_python_name(name)
-    return getattr(get_module(python_name), python_name)
+def get_command(cmd_name):
+    """Imports the command's function from a module and returns it.
+
+    Args:
+        cmd_name (str): name of the command for which to get a module
+            (contains ``-``, not ``_``).
+    """
+    pname = python_name(cmd_name)
+    return getattr(get_module(pname), pname)
 
 
 def parse_specs(args, **kwargs):

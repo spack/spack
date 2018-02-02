@@ -1825,12 +1825,16 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ActivationError("%s does not extend %s!" %
                                   (self.name, self.extendee.name))
 
-    def do_activate(self, view=None, force=False, verbose=True):
+    def do_activate(self, view=None, with_dependencies=True, verbose=True):
         """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
         activate() directly.
         """
+        if verbose:
+            tty.msg("Activating extension %s for %s" %
+                    (self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+
         self._sanity_check_extension()
         if not view:
             view = YamlFilesystemView(
@@ -1842,11 +1846,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             self.extendee_spec, self.spec)
 
         # Activate any package dependencies that are also extensions.
-        if not force:
+        if with_dependencies:
             for spec in self.dependency_activations():
                 if not spec.package.is_activated(view):
                     spec.package.do_activate(
-                        view, force=force, verbose=verbose)
+                        view, with_dependencies=with_dependencies,
+                        verbose=verbose)
 
         self.extendee_spec.package.activate(
             self, view, **self.extendee_args)

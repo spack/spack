@@ -30,31 +30,37 @@ import pytest
 graph = SpackCommand('graph')
 
 
-def test_graph_ascii(builtin_mock, database):
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_ascii():
     """Tests spack graph --ascii"""
-
     graph('--ascii', 'dt-diamond')
 
 
-def test_graph_dot(builtin_mock, database):
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_dot():
     """Tests spack graph --dot"""
-
     graph('--dot', 'dt-diamond')
 
 
-def test_graph_normalize(builtin_mock, database):
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_normalize():
     """Tests spack graph --normalize"""
-
     graph('--normalize', 'dt-diamond')
 
 
-def test_graph_static(builtin_mock, database):
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_static():
     """Tests spack graph --static"""
-
     graph('--static', 'dt-diamond')
 
 
-def test_graph_installed(builtin_mock, database):
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_installed():
     """Tests spack graph --installed"""
 
     graph('--installed')
@@ -63,9 +69,10 @@ def test_graph_installed(builtin_mock, database):
         graph('--installed', 'dt-diamond')
 
 
-def test_graph_deptype(builtin_mock, database):
+@pytest.mark.db
+@pytest.mark.usefixtures('builtin_mock', 'database')
+def test_graph_deptype():
     """Tests spack graph --deptype"""
-
     graph('--deptype', 'all', 'dt-diamond')
 
 
