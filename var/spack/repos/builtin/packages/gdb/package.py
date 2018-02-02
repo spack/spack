@@ -34,6 +34,7 @@ class Gdb(Package):
     homepage = "https://www.gnu.org/software/gdb"
     url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
 
+    version('8.0.1', 'bb45869f8126a84ea2ba13a8c0e7c90e')
     version('8.0', '9bb49d134916e73b2c01d01bf20363df')
     version('7.12.1', '06c8f40521ed65fe36ebc2be29b56942')
     version('7.11', 'f585059252836a981ea5db9a5f8ce97f')

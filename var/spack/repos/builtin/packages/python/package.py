@@ -203,6 +203,12 @@ class Python(AutotoolsPackage):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
 
+        if spec.satisfies('@3:'):
+            os.symlink(os.path.join(prefix.bin, 'python3'),
+                       os.path.join(prefix.bin, 'python'))
+            os.symlink(os.path.join(prefix.bin, 'python3-config'),
+                       os.path.join(prefix.bin, 'python-config'))
+
     # TODO: Once better testing support is integrated, add the following tests
     # https://wiki.python.org/moin/TkInter
     #
@@ -509,7 +515,7 @@ class Python(AutotoolsPackage):
 
         python_paths = []
         for d in dependent_spec.traverse(
-                deptype=('build', 'run'), deptype_query='run'):
+                deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
                                               self.site_packages_dir))

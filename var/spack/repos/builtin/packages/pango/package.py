@@ -51,6 +51,10 @@ class Pango(AutotoolsPackage):
     depends_on("glib")
     depends_on('gobject-introspection')
 
+    def url_for_version(self, version):
+        url = "http://ftp.gnome.org/pub/GNOME/sources/pango/{0}/pango-{1}.tar.xz"
+        return url.format(version.up_to(2), version)
+
     def configure_args(self):
         args = []
         if self.spec.satisfies('+X'):

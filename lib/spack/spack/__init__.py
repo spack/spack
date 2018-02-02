@@ -96,7 +96,7 @@ from spack.package_prefs import PackageTesting
 # Initialize various data structures & objects at the core of Spack.
 #-----------------------------------------------------------------------------
 # Version information
-spack_version = Version("0.10.0")
+spack_version = Version("0.11.0")
 
 
 # Set up the default packages database.

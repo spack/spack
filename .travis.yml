@@ -6,100 +6,99 @@ branches:
 jobs:
   fast_finish: true
   include:
-  - stage: flake8
-    python: '2.7'
-    os: linux
-    language: python
-    env: TEST_SUITE=flake8
-  - stage: unit tests + documentation
-    python: '2.6'
-    os: linux
-    language: python
-    env: TEST_SUITE=unit
-  - python: '2.7'
-    os: linux
-    language: python
-    env:
-    - TEST_SUITE=unit
-    - COVERAGE=true
-  - python: '3.3'
-    os: linux
-    language: python
-    env: TEST_SUITE=unit
-  - python: '3.4'
-    os: linux
-    language: python
-    env: TEST_SUITE=unit
-  - python: '3.5'
-    os: linux
-    language: python
-    env: TEST_SUITE=unit
-  - python: '3.6'
-    os: linux
-    language: python
-    env:
-    - TEST_SUITE=unit
-    - COVERAGE=true
-  - os: osx
-    language: generic
-    env:
-    - TEST_SUITE=unit
-    - PYTHON_VERSION=2.7
-    - COVERAGE=true
-  - python: '2.7'
-    os: linux
-    language: python
-    env: TEST_SUITE=doc
-  - stage: build tests
-    python: '2.7'
-    os: linux
-    language: python
-    env:
-    - TEST_SUITE=build
-    - COVERAGE=true
-    - SPEC=mpich
-  - python: '2.7'
-    os: linux
-    language: python
-    env:
-    - TEST_SUITE=build
-    - COVERAGE=true
-    - SPEC=astyle
-  - python: '2.7'
-    os: linux
-    language: python
-    env:
-    - TEST_SUITE=build
-    - COVERAGE=true
-    - SPEC=tut
-  - python: '2.7'
-    os: linux
-    language: python
-    env:
-    - TEST_SUITE=build
-    - COVERAGE=true
-    - SPEC=py-setuptools
-  - python: '2.7'
-    os: linux
-    language: python
-    env:
-    - TEST_SUITE=build
-    - COVERAGE=true
-    - SPEC=openjpeg
-  - python: '2.7'
-    os: linux
-    language: python
-    env:
-    - TEST_SUITE=build
-    - COVERAGE=true
-    - SPEC=r-rcpp
-  - python: '3.6'
-    os: linux
-    language: python
-    env:
-    - TEST_SUITE=build
-    - COVERAGE=true
-    - SPEC=mpich
+    - stage: 'flake8 + documentation'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=flake8
+    - stage: 'flake8 + documentation'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=doc
+    - stage: 'unit tests'
+      python: '2.6'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
+    - python: '3.3'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.4'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.5'
+      os: linux
+      language: python
+      env: TEST_SUITE=unit
+    - python: '3.6'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=unit, COVERAGE=true ]
+    - stage: 'unit tests - osx'
+      os: osx
+      language: generic
+      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
+# mpich (AutotoolsPackage)
+    - stage: 'build tests'
+      python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+# astyle (MakefilePackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=astyle' ]
+# tut (WafPackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=tut' ]
+# py-setuptools (PythonPackage)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=py-setuptools' ]
+# perl-dbi (PerlPackage)
+#    - python: '2.7'
+#      os: linux
+#      language: python
+#      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=perl-dbi' ]
+# openjpeg (CMakePackage + external cmake)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=openjpeg' ]
+# r-rcpp (RPackage + external R)
+    - python: '2.7'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=r-rcpp' ]
+# mpich (AutotoolsPackage)
+    - python: '3.6'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=build, COVERAGE=true, 'SPEC=mpich' ]
+
+stages:
+  - 'flake8 + documentation'
+  - 'unit tests'
+  - 'build tests'
+  - name: 'unit tests - osx'
+    if: type IN (cron)
+
+
+#=============================================================================
+# Environment
+#=============================================================================
+# Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
 addons:
   apt:
@@ -149,7 +148,7 @@ before_script:
 #=============================================================================
 script:
   - share/spack/qa/run-$TEST_SUITE-tests
-  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PY_VERSION --required ; fi
+  - if [[ "$COVERAGE" == "true" ]]; then codecov --env PYTHON_VERSION --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}"; fi
 
 #=============================================================================
 # Notifications
