@@ -38,7 +38,8 @@ class AppleCctools(MakefilePackage):
 
     version('895', '6bf19547c93c6f0f921de04eabde2ae0')
 
-    variant('lto', default=False, desc='Enable LTO support (requires llvm@3.4:)')
+    variant('lto', default=False,
+            description='Enable LTO support (requires llvm@3.4:)')
 
     # Patches from MacPorts. See source at
     # https://github.com/macports/macports-ports/tree/master/devel/cctools/files
@@ -73,8 +74,8 @@ class AppleCctools(MakefilePackage):
     # "ld64: For information on command line options please use 'man ld'";
     # of course, without building and installing via source, `man ld` returns
     # "No manual entry for ld".
-    resource(name='ld64', url='http://opensource.apple.com/source/ld64/ld64-274.1.tar.gz',
-             sha256='6cbe886717de833789fa562ec4889ebf9136ae5f7573d17d39836d3f5755b7ab',
+    resource(name='ld64', url='http://opensource.apple.com/tarballs/ld64/ld64-274.2.tar.gz',
+             md5='cde416fd1d96fa41a0bf0ea034428e36',
              placement='ld64')
 
     def setup_environment(self, spack_env, run_env):

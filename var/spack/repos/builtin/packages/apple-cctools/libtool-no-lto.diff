@@ -1,1 +1,20 @@
-404: Not Found
+diff --git a/misc/libtool.c b/misc/libtool.c
+index 18f0d49..6cace2d 100644
+--- a/misc/libtool.c
++++ b/misc/libtool.c
+@@ -1369,6 +1369,7 @@ void)
+ 			    }
+ 			}
+ 		    }
++#ifdef LTO_SUPPORT
+ 		    else if(ofiles[i].arch_type == OFILE_Mach_O ||
+ 		            ofiles[i].arch_type == OFILE_LLVM_BITCODE){
+ 			if(cmd_flags.ranlib == TRUE){
+@@ -1380,6 +1381,7 @@ void)
+ 			else
+ 			    add_member(ofiles + i);
+ 		    }
++#endif /* LTO_SUPPORT */
+ 		    else if(ofiles[i].arch_type == OFILE_UNKNOWN){
+ 			if(cmd_flags.ranlib == TRUE){
+ 			    error("for architecture: %s file: %s is not an "
