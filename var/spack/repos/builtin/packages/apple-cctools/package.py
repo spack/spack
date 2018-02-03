@@ -109,8 +109,11 @@ class AppleCctools(MakefilePackage):
     def edit(self, spec, prefix):
         # Add MacPorts post-patch edits from their cctools package here;
         # MacPorts' `reinplace` command calls `sed -e`, so Python
-        # equivalents must be reverse-engineered
+        # equivalents must be reverse-engineered.
         makefile = FileFilter('Makefile')
+        # Do not build 32-bit ld, because it is not used on modern OS
+        # X versions and will shadow the working, useful 64-bit ld
+        # (which is really ld64), causing breakage if built.
         makefile.filter(r'^SUBDIRS_32\s=\sld', 'SUBDIRS_32 = ')
 
         # The substitutions in this block should obviate the need to
