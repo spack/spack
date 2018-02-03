@@ -42,26 +42,21 @@ class AppleCctools(MakefilePackage):
     # https://github.com/macports/macports-ports/tree/master/devel/cctools/files
     # See Homebrew package at
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/cctools.rb
-    patch('cctools-829-lto.patch')
-    patch('PR-37520.patch')
-    patch('cctools-839-static-dis_info.patch')
-    patch('PR-12400897.patch')
-    patch('cctools-862-prunetrie.patch')
-    patch('cctools-895-big_endian.patch')
-    patch('cctools-895-OFILE_LLVM_BITCODE.patch')
-    patch('not-clang.patch')
+    patch('cctools-829-lto.patch', level=0)
+    patch('PR-37520.patch', level=0)
+    patch('cctools-839-static-dis_info.patch', level=0)
+    patch('PR-12400897.patch', level=0)
+    patch('cctools-862-prunetrie.patch', level=0)
+    patch('cctools-895-big_endian.patch', level=0)
+    patch('cctools-895-OFILE_LLVM_BITCODE.patch', level=0)
+    patch('not-clang.patch', level=0)
 
     # Patch to apply if OS X 10.11 or earlier; if users need support
     # for OS X 10.11
-    # patch('snowleopard-strnlen.patch')
+    # patch('snowleopard-strnlen.patch', level=0)
 
     # Homebrew does not build apple-cctools in parallel
     parallel = False
-
-    def setup_environment(self, spack_env, run_env):
-        # spack_env.set('CC={0}'.format(self.compiler.cc))
-        # spack_env.set('CXX={0}'.format(self.compiler.cxx))
-        spack_env.set('RC_CFLAGS', spack_env['CFLAGS'])
 
     # Need this method for lto variant, if implemented
     # def edit(self, spec, prefix):
@@ -71,9 +66,11 @@ class AppleCctools(MakefilePackage):
                      'USE_DEPENDENCY_FILE=NO',
                      'CC={0}'.format(self.compiler.cc),
                      'CXX={0}'.format(self.compiler.cxx),
+                     'LTO=',
                      'TRIE=',
                      'RC_OS="macos"',
-                     'DSTROOT={0}'.format(prefix)]
+                     'DSTROOT={0}'.format(prefix),
+                     'RC_CFLAGS={0}'.format(self.build_system_flags('cflags','')[2])]
 
         # From Homebrew: fixes build with gcc-4.2: https://trac.macports.org/ticket/43745
         make_args.append('SDK=-std=gnu99')
