@@ -26,19 +26,96 @@ from spack import *
 
 
 class AppleCctools(MakefilePackage):
-    """FIXME: Put a proper description of your package here."""
+    """apple-cctools: Binary and cross-compilation tools for Apple
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    cctools contains the source to Apple's build toolchain, and is the
+    Apple analogue to binutils, libtool"""
+
+    homepage = "https://opensource.apple.com/source/cctools/"
     url      = "https://opensource.apple.com/tarballs/cctools/cctools-895.tar.gz"
 
     version('895', '6bf19547c93c6f0f921de04eabde2ae0')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    # Patches from MacPorts. See source at
+    # https://github.com/macports/macports-ports/tree/master/devel/cctools/files
+    # See MacPorts package at
+    # https://github.com/macports/macports-ports/tree/master/devel/cctools/files
+    # See Homebrew package at
+    # https://github.com/Homebrew/homebrew-core/blob/master/Formula/cctools.rb
+    patch('cctools-829-lto.patch')
+    patch('PR-37520.patch')
+    patch('cctools-839-static-dis_info.patch')
+    patch('PR-12400897.patch')
+    patch('cctools-862-prunetrie.patch')
+    patch('cctools-895-big_endian.patch')
+    patch('cctools-895-OFILE-LLVM_BITCODE.patch')
+    patch('not-clang.patch')
 
-    def edit(self, spec, prefix):
-        # FIXME: Edit the Makefile if necessary
-        # FIXME: If not needed delete this function
-        # makefile = FileFilter('Makefile')
-        # makefile.filter('CC = .*', 'CC = cc')
+    # Patch to apply if OS X 10.11 or earlier; if users need support
+    # for OS X 10.11
+    # patch('snowleopard-strnlen.patch')
+
+    # Homebrew does not build apple-cctools in parallel
+    parallel = False
+
+    def setup_environment(self, spack_env, run_env):
+        # spack_env.set('CC={0}'.format(self.compiler.cc))
+        # spack_env.set('CXX={0}'.format(self.compiler.cxx))
+        spack_env.set('RC_CFLAGS={0}'.format(spack_env.get('CFLAGS')))
+
+    # Need this method for lto variant, if implemented
+    # def edit(self, spec, prefix):
+
+    def install(self, spec, prefix):
+        make_args = ['RC_ProjectSourceVersion={0}'.format(spec.version),
+                     'USE_DEPENDENCY_FILE=NO',
+                     'CC={0}'.format(self.compiler.cc),
+                     'CXX={0}'.format(self.compiler.cxx),
+                     'TRIE=',
+                     'RC_OS="macos"',
+                     'DSTROOT={0}'.format(prefix)]
+
+        # From Homebrew: fixes build with gcc-4.2: https://trac.macports.org/ticket/43745
+        make_args.append('SDK=-std=gnu99')
+
+        # Assume CPU is Intel; if CPU not Intel, must add ppc arch; see commented line below
+        make_args.append('RC_ARCHS="i386 x86_64"')
+        # make_args.append('RC_ARCHS="ppc i386 x86_64"')  # if CPU not Intel
+
+        make('install_tools', *make_args)
+
+        # From Homebrew: cctools installs into a /-style prefix in the
+        # supplied DSTROOT, so need to move the files into the
+        # standard paths.  Also merge the /usr and /usr/local trees.
+        include_mach_o = join_path(prefix.include, 'mach-o')
+        usr_include_mach_o = join_path(prefix.usr.include, 'mach-o')
+
+        mkdirp(prefix)
+        mkdirp(prefix.man)
+        mkdirp(prefix.bin)
+        mkdirp(prefix.man1)
+        mkdirp(include_mach_o)
+        mkdirp(prefix.man1)
+        mkdirp(prefix.man3)
+        mkdirp(prefix.man5)
+        install_tree(prefix.usr.local, prefix)
+        install_tree(prefix.usr.local.man, prefix.man)
+        install_tree(prefix.usr.bin, prefix.bin)
+        install_tree(usr_include_mach_o,include_mach_o)
+        install_tree(prefix.usr.share.man.man1, prefix.man.man1)
+        install_tree(prefix.usr.share.man.man3, prefix.man.man3)
+        install_tree(prefix.usr.share.man.man5, prefix.man.man5)
+
+        # Applies to OS X version >= Snow Leopard (10.6?);
+        # need to use join_path because "as" is a Python keyword
+        libexec_as = join_path(prefix.libexec, 'as')
+        usr_libexec_as = join_path(prefix.usr.libexec, 'as')
+        mkdirp(libexec_as)
+        install_tree(usr_libexec_as, libexec_as)
+
+        # If OS X version < Snow Leopard, would execute:
+        # libexec_gcc_darwin = prefix.libexec.gcc.darwin
+        # usr_libexec_gcc_darwin = prefix.usr.libexec.gcc.darwin
+        # mkdirp(prefix.libexec.gcc.darwin)
+        # install_tree(usr_libexec_gcc_darwin, libexec_gcc_darwin)
+        # install_tree(prefix.share, join_path(prefix.usr.share, 'gprof.*'))
