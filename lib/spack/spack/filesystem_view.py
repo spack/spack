@@ -308,7 +308,8 @@ class YamlFilesystemView(FilesystemView):
             pkg.add_files_to_view(self, merge_map)
         else:
             for src, dst in merge_map.items():
-                self.link(src, dst)
+                if not os.path.exists(dst):
+                    self.link(src, dst)
 
     def unmerge(self, spec, ignore=None):
         tree = LinkTree(spec.prefix)
