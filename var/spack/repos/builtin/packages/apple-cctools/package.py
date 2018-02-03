@@ -78,19 +78,6 @@ class AppleCctools(MakefilePackage):
              md5='cde416fd1d96fa41a0bf0ea034428e36',
              placement='ld64')
 
-#     def setup_environment(self, spack_env, run_env):
-#         # Add MacPorts configure.cflags-append and cppflags-append
-#         # directives here
-#         abspath = self.stage.source_path
-#         spack_env.append_flags('CPPFLAGS',
-#                                '-I{0} -I{1} -I{2}'.format(
-#                                    join_path(abspath, 'ld64', 'src', 'abstraction'),
-#                                    join_path(abspath, 'ld64', 'src', 'other'),
-#                                    join_path(abspath, 'include')))
-#         spack_env.append_flags('CFLAGS', '-std=gnu99')
-#         spack_env.append_flags('CXXFLAGS', '-O2 -g')
-# #        spack_env.append_flags('CFLAGS', '-std=gnu99')
-
     def edit(self, spec, prefix):
         # Add MacPorts post-patch edits from their cctools package here;
         # MacPorts' `reinplace` command calls `sed -e`, so Python
@@ -125,11 +112,8 @@ class AppleCctools(MakefilePackage):
             ff.filter(r'/usr/local/include', r'/include')
             ff.filter(r'/usr/local', r'/share')
 
-            # Don't strip installed binaries; the first regex should
-            # catch all of the strip commands, but doesn't; the second might
-            # catch more, but still doesn't catch everything
+            # Don't strip installed binaries
             ff.filter(r'(install.*)\-s ', r'\1')
-#            ff.filter(r'install \-c \-s', r'install \-c')
 
         if spec.satisfies('+lto'):
             lto_c = FileFilter(join_path('libstuff', 'lto.c'))
@@ -188,8 +172,10 @@ class AppleCctools(MakefilePackage):
         make('install_tools', *make_args)
 #        make('-e', 'install_tools', *make_args)  # want env vars passed into sub-makes
 
+    # Clean up paths that are superfluous after all of the path hacking above
     def install(self, spec, prefix):
-        pass
+        remove_linked_tree(self.spec.prefix.usr)
+        remove_linked_tree(self.spec.prefix.libexec)
         # install_tree(prefix.usr.local, prefix)
         # install_tree(prefix.usr.local.man, prefix.man)
         # install_tree(prefix.usr.bin, prefix.bin)
