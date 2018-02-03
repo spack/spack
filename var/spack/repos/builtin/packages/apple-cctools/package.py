@@ -113,7 +113,7 @@ class AppleCctools(MakefilePackage):
             lto_c = FileFilter(join_path('libstuff', 'lto.c'))
             lto_c.filter('@@LLVM_LIBDIR', spec['llvm'].prefix.lib)
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         #  Do Macports 'post-extract' steps from their cctools package
         #  here to get past prune_trie error
         cp = which('cp')
@@ -141,6 +141,7 @@ class AppleCctools(MakefilePackage):
         # make_args.append('RC_ARCHS="ppc i386 x86_64"')  # if CPU not Intel
         make(*make_args)
 
+    def install(self, spec, prefix):
         mkdirp(prefix)
         mkdirp(prefix.man)
         mkdirp(prefix.bin)
