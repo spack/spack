@@ -93,13 +93,15 @@ class AppleCctools(MakefilePackage):
 
     def edit(self, spec, prefix):
         # Add MacPorts post-patch edits from their cctools package here;
-        # MacPorts' `reinplace` command calls `sed -e`
+        # MacPorts' `reinplace` command calls `sed -e`, so Python
+        # equivalents must be reverse-engineered
         makefile = FileFilter('Makefile')
         makefile.filter(r'^SUBDIRS_32\s=\sld', 'SUBDIRS_32 = ')
         #makefile.filter(r'^COMMON_SUBDIRS\s/ ld ', ' ')
 
         # The substitutions in this block should obviate the need to
-        # move too many files (which is what Homebrew does)
+        # move too many files (which is what Homebrew does). Many of these
+        # were detemined by looking at Makefiles, followed by trial and error
         makefile_list = glob.glob('{*/,}Makefile')
         for f in makefile_list:
             ff = FileFilter(f)
@@ -115,10 +117,17 @@ class AppleCctools(MakefilePackage):
             ff.filter('^EFIBINDIR\s=\s.*', 'EFIBINDIR = /bin')
             ff.filter('/Local/Developer/System', self.spec.prefix + '/lib')
             ff.filter('/usr/local/lib/system', self.spec.prefix + '/lib')
-            ff.filter('/usr/libexec/DeveloperTools', '/libexec')
+            ff.filter('/usr/libexec/DeveloperTools', self.spec.prefix + '/libexec')
+            ff.filter('/usr/include', '/include')
+            ff.filter('/usr/libexec', '/libexec')
+            ff.filter('/usr/local/include', '/include')
+            ff.filter('/usr/local', '/share')
 
-            # Don't strip installed binaries
-            ff.filter(r'(install .*)-s ',r'\1')
+            # Don't strip installed binaries; the first regex should
+            # catch all of the strip commands, but doesn't; the second might
+            # catch more, but still doesn't catch everything
+            ff.filter(r'(install.*)\-s ', r'\1')
+            ff.filter(r'install \-c \-s', r'install \-c')
 
         if spec.satisfies('+lto'):
             lto_c = FileFilter(join_path('libstuff', 'lto.c'))
