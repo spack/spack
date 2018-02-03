@@ -116,17 +116,9 @@ class AppleCctools(MakefilePackage):
             ff.filter('/Local/Developer/System', self.spec.prefix + '/lib')
             ff.filter('/usr/local/lib/system', self.spec.prefix + '/lib')
             ff.filter('/usr/libexec/DeveloperTools', '/libexec')
-            # ff.filter(re.escape(join_path('/usr', 'local')), '@PREFIX@')
-            # ff.filter(re.escape(r'/usr'), '@PREFIX@')
-            # ff.filter(re.escape(r'@PREFIX@'), prefix)
-            # ff.filter(re.escape(join_path('{0}'.format(prefix), 'efi')), prefix)
-            # ff.filter(re.escape(r'/DeveloperTools'),'')
-            # ff.fitler(re.escape(join_path('/usr','libexec','DeveloperTools')),
-            #           prefix.libexec)
-            # ff.filter(re.escape(join_path('share', 'man')), 'man')
 
             # Don't strip installed binaries
-            ff.filter(r'\\(install .*\\)-s ','\\1')
+            ff.filter(r'(install .*)-s ',r'\1')
 
         if spec.satisfies('+lto'):
             lto_c = FileFilter(join_path('libstuff', 'lto.c'))
