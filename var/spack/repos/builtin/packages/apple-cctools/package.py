@@ -61,7 +61,7 @@ class AppleCctools(MakefilePackage):
     def setup_environment(self, spack_env, run_env):
         # spack_env.set('CC={0}'.format(self.compiler.cc))
         # spack_env.set('CXX={0}'.format(self.compiler.cxx))
-        spack_env.set('RC_CFLAGS={0}'.format(spack_env.get('CFLAGS')))
+        spack_env.set('RC_CFLAGS', spack_env.get('CFLAGS'))
 
     # Need this method for lto variant, if implemented
     # def edit(self, spec, prefix):
