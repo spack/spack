@@ -40,6 +40,8 @@ class Aspell(AutotoolsPackage):
 
     version('0.60.6.1', 'e66a9c9af6a60dc46134fdacf6ce97d7')
 
+    # Note: aspell doesn't support non-global extensions so this skips
+    # calling view.merge
     def activate(self, extension, view, **kwargs):
         if view.root != self.spec.prefix:
             raise ExtensionError(
