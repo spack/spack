@@ -137,19 +137,20 @@ class AppleCctools(MakefilePackage):
         make_args.append('SDK=-std=gnu99')
 
         # Assume CPU is Intel; if CPU not Intel, must add ppc arch; see commented line below
-        make_args.append('RC_ARCHS="i386 x86_64"')
+        make_args.append('RC_ARCHS="i386"')
         # make_args.append('RC_ARCHS="ppc i386 x86_64"')  # if CPU not Intel
-        make(*make_args)
+        make('install_tools', *make_args)
 
     def install(self, spec, prefix):
-        mkdirp(prefix)
-        mkdirp(prefix.man)
-        mkdirp(prefix.bin)
-        mkdirp(prefix.lib)
-        mkdirp(prefix.libexec)
-        mkdirp(prefix.man1)
-        mkdirp(include_mach_o)
-        mkdirp(prefix.man1)
-        mkdirp(prefix.man3)
-        mkdirp(prefix.man5)
-        make('install_tools', *make_args)
+        pass
+        # mkdirp(prefix)
+        # mkdirp(prefix.man)
+        # mkdirp(prefix.bin)
+        # mkdirp(prefix.lib)
+        # mkdirp(prefix.libexec)
+        # mkdirp(prefix.man1)
+        # mkdirp(include_mach_o)
+        # mkdirp(prefix.man1)
+        # mkdirp(prefix.man3)
+        # mkdirp(prefix.man5)
+        # make('install_tools', *make_args)
