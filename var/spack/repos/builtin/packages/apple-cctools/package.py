@@ -66,12 +66,16 @@ class AppleCctools(MakefilePackage):
     parallel = False
 
     def setup_environment(self, spack_env, run_env):
+        # TODO: add cflags-append stuff re: ld64 here
         spack_env.append_flags('')
 
-    @when('+lto')
+
     def edit(self, spec, prefix):
-        lto_c = FileFilter(join_path('libstuff', 'lto.c'))
-        lto_c.filter('@@LLVM_LIBDIR', spec['llvm'].prefix.lib)
+        # TODO: add MacPorts post-patch edits here
+
+        if spec.satisfies('+lto'):
+            lto_c = FileFilter(join_path('libstuff', 'lto.c'))
+            lto_c.filter('@@LLVM_LIBDIR', spec['llvm'].prefix.lib)
 
     def install(self, spec, prefix):
 
