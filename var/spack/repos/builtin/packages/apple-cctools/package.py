@@ -48,7 +48,7 @@ class AppleCctools(MakefilePackage):
     patch('PR-12400897.patch')
     patch('cctools-862-prunetrie.patch')
     patch('cctools-895-big_endian.patch')
-    patch('cctools-895-OFILE-LLVM_BITCODE.patch')
+    patch('cctools-895-OFILE_LLVM_BITCODE.patch')
     patch('not-clang.patch')
 
     # Patch to apply if OS X 10.11 or earlier; if users need support
