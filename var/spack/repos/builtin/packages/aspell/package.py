@@ -40,18 +40,14 @@ class Aspell(AutotoolsPackage):
 
     version('0.60.6.1', 'e66a9c9af6a60dc46134fdacf6ce97d7')
 
-    # The dictionaries install all their bits into their prefix.lib dir,
-    # we want to link them into aspell's dict-dir.
-    # These are identical to what's in spack/package.py except
-    # for using:
-    #   - extension.prefix.lib instead of extension.prefix in LinkTree()
-    #   - dest_dir instead of self.prefix in tree.(find_conflict|merge)()
     def activate(self, extension, view, **kwargs):
         if view.root != self.spec.prefix:
             raise ExtensionError(
                 'aspell does not support non-global extensions')
 
         aspell = which(self.prefix.bin.aspell)
+        # The dictionaries install all their bits into their prefix.lib dir,
+        # we want to link them into aspell's dict-dir.
         dest_dir = aspell('dump', 'config', 'dict-dir', output=str).strip()
         tree = LinkTree(extension.prefix.lib)
 
