@@ -24,7 +24,6 @@
 ##############################################################################
 from spack import *
 import glob
-import re
 
 
 class AppleCctools(MakefilePackage):
@@ -41,6 +40,13 @@ class AppleCctools(MakefilePackage):
     variant('lto', default=False,
             description='Enable LTO support (requires llvm@3.4:)')
 
+    # NOTE: This package was tested on Mac OS X Sierra (10.12); it
+    # will probably work for 10.13, but may not for earlier versions
+    # of OS X. However, the MacPorts and Homebrew versions of this
+    # package include additional code to handle these cases, so it's
+    # possible an interested developer with access to earlier versions
+    # of OS X could get this additional code up and running.
+
     # Patches from MacPorts. See source at
     # https://github.com/macports/macports-ports/tree/master/devel/cctools/files
     # See MacPorts package at
@@ -56,11 +62,8 @@ class AppleCctools(MakefilePackage):
     patch('cctools-895-OFILE_LLVM_BITCODE.patch', level=0)
     patch('not-clang.patch', level=0)
 
-    # Patch from Homebrew
-#    patch('libtool-no-lto.diff', level=1, when='~lto')
-
-    # Patch to apply if OS X 10.11 or earlier; if users need support
-    # for OS X 10.11
+    # Patch to uncomment and apply if OS X 10.11 or earlier; if users
+    # need support for OS X 10.11 (untested)
     # patch('snowleopard-strnlen.patch', level=0)
 
     depends_on('llvm@3.4:', when='+lto')
@@ -84,17 +87,15 @@ class AppleCctools(MakefilePackage):
         # equivalents must be reverse-engineered
         makefile = FileFilter('Makefile')
         makefile.filter(r'^SUBDIRS_32\s=\sld', 'SUBDIRS_32 = ')
-        #makefile.filter(r'^COMMON_SUBDIRS\s/ ld ', ' ')
 
         # The substitutions in this block should obviate the need to
         # move too many files (which is what Homebrew does). Many of these
         # were detemined by looking at Makefiles, followed by trial and error
-        abspath = self.stage.source_path
         makefile_list = glob.glob('*/Makefile') + ['Makefile']
         for f in makefile_list:
-            print('Filtering {0}\n'.format(f))
             ff = FileFilter(f)
-            ff.filter('^DSTROOT\s=\s.*', 'DSTROOT = {0}'.format(self.spec.prefix))
+            ff.filter('^DSTROOT\s=\s.*',
+                      'DSTROOT = {0}'.format(self.spec.prefix))
             ff.filter('^BINDIR\s=\s.*', 'BINDIR = /bin')
             ff.filter('^MANDIR\s=\s.*', 'MANDIR = /man')
             ff.filter('^LOCMANDIR\s=\s.*', 'LOCMANDIR = /man')
@@ -123,7 +124,8 @@ class AppleCctools(MakefilePackage):
         #  Do Macports 'post-extract' steps from their cctools package
         #  here to get past prune_trie error
         cp = which('cp')
-        cp(join_path('ld64', 'src', 'other', 'PruneTrie.cpp'), join_path('misc', 'PruneTrie.cpp'))
+        cp(join_path('ld64', 'src', 'other', 'PruneTrie.cpp'),
+           join_path('misc', 'PruneTrie.cpp'))
         touch = which('touch')
         touch(join_path('ld64', 'src', 'abstraction', 'configure.h'))
 
@@ -141,72 +143,29 @@ class AppleCctools(MakefilePackage):
                      'LTO={0}'.format(lto_flag),
                      'TRIE=',
                      'RC_OS=macos',
-                     'DSTROOT={0}'.format(self.spec.prefix),
                      'RAW_DSTROOT={0}'.format(self.spec.prefix),
-#                     'CXXFLAGS=-Os -g -Wall',
-#                     'CFLAGS=-Os -g -Wall',
                      'CPPFLAGS=-I{0} -I{1} -I{2} -I. -I..'.format(
-                                   join_path(abspath, 'ld64', 'src', 'abstraction'),
-                                   join_path(abspath, 'ld64', 'src', 'other'),
-                                   join_path(abspath, 'include')),
+                         join_path(abspath, 'ld64', 'src', 'abstraction'),
+                         join_path(abspath, 'ld64', 'src', 'other'),
+                         join_path(abspath, 'include')),
                      'RC_CFLAGS={0}'.format(my_cflags),
-                     'BINDIR=/bin',
-                     'MANDIR=/man',
-                     'LOCMANDIR=/man',
-                     'EFIMANDIR=/man',
-                     'USRBINDIR=/bin',
-                     'LOCBINDIR=/bin',
-                     'LOCLIBDIR=/lib',
-                     'LIBDIR=/lib',
-                     'EFIBINDIR=/bin',
-                     'SYSTEMDIR=/libexec'
-        ]
+                     'SYSTEMDIR=/libexec']
 
-        # From Homebrew: fixes build with gcc-4.2: https://trac.macports.org/ticket/43745
-#        make_args.append('SDK=-std=gnu99')
+        # From Homebrew: fixes build with gcc-4.2:
+        # https://trac.macports.org/ticket/43745
+        # make_args.append('SDK=-std=gnu99') is supposed to fix build
+        # issues with gcc-4.2, but passing this flag also passes
+        # `-std=gnu99` to the C++ compiler, which is an error, at
+        # least for LLVM.
         make_args.append('SDK=')
 
-        # Assume CPU is Intel; if CPU not Intel, must add ppc arch; see commented line below
+        # Assume CPU is Intel; if CPU not Intel, must add ppc arch;
+        # see commented line below
         make_args.append('RC_ARCHS=i386 x86_64')
         # make_args.append('RC_ARCHS="ppc i386 x86_64"')  # if CPU not Intel
         make('install_tools', *make_args)
-#        make('-e', 'install_tools', *make_args)  # want env vars passed into sub-makes
 
     # Clean up paths that are superfluous after all of the path hacking above
     def install(self, spec, prefix):
         remove_linked_tree(self.spec.prefix.usr)
         remove_linked_tree(self.spec.prefix.libexec)
-        # install_tree(prefix.usr.local, prefix)
-        # install_tree(prefix.usr.local.man, prefix.man)
-        # install_tree(prefix.usr.bin, prefix.bin)
-        # install_tree(usr_include_mach_o,include_mach_o)
-        # install_tree(prefix.usr.share.man.man1, prefix.man.man1)
-        # install_tree(prefix.usr.share.man.man3, prefix.man.man3)
-        # install_tree(prefix.usr.share.man.man5, prefix.man.man5)
-
-        # Applies to OS X version >= Snow Leopard (10.6?);
-        # need to use join_path because "as" is a Python keyword
-        #libexec_as = join_path(prefix.libexec, 'as')
-        #usr_libexec_as = join_path(prefix.usr.libexec, 'as')
-        #mkdirp(libexec_as)
-        #install_tree(usr_libexec_as, libexec_as)
-
-        # If OS X version < Snow Leopard, would execute:
-        # libexec_gcc_darwin = prefix.libexec.gcc.darwin
-        # usr_libexec_gcc_darwin = prefix.usr.libexec.gcc.darwin
-        # mkdirp(prefix.libexec.gcc.darwin)
-        # install_tree(usr_libexec_gcc_darwin, libexec_gcc_darwin)
-        # install_tree(prefix.share, join_path(prefix.usr.share, 'gprof.*'))
-
-        #pass
-        # mkdirp(prefix)
-        # mkdirp(prefix.man)
-        # mkdirp(prefix.bin)
-        # mkdirp(prefix.lib)
-        # mkdirp(prefix.libexec)
-        # mkdirp(prefix.man1)
-        # mkdirp(include_mach_o)
-        # mkdirp(prefix.man1)
-        # mkdirp(prefix.man3)
-        # mkdirp(prefix.man5)
-        # make('install_tools', *make_args)
