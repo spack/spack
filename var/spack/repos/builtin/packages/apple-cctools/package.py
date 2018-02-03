@@ -81,12 +81,15 @@ class AppleCctools(MakefilePackage):
     def setup_environment(self, spack_env, run_env):
         # Add MacPorts configure.cflags-append and cppflags-append
         # directives here
+        abspath = self.stage.source_path
         spack_env.append_flags('CPPFLAGS',
                                '-I{0} -I{1} -I{2}'.format(
-                                   join_path('ld64', 'src', 'abstraction'),
-                                   join_path('ld64', 'src', 'other'),
-                                   'include'))
+                                   join_path(abspath, 'ld64', 'src', 'abstraction'),
+                                   join_path(abspath, 'ld64', 'src', 'other'),
+                                   join_path(abspath, 'include')))
         spack_env.append_flags('CFLAGS', '-std=gnu99')
+        spack_env.append_flags('CXXFLAGS', '-O2 -g')
+#        spack_env.append_flags('CFLAGS', '-std=gnu99')
 
     def edit(self, spec, prefix):
         # Add MacPorts post-patch edits from their cctools package here
@@ -134,10 +137,11 @@ class AppleCctools(MakefilePackage):
                      'RC_CFLAGS={0}'.format(self.build_system_flags('cflags','')[2])]
 
         # From Homebrew: fixes build with gcc-4.2: https://trac.macports.org/ticket/43745
-        make_args.append('SDK=-std=gnu99')
+#        make_args.append('SDK=-std=gnu99')
+        make_args.append('SDK=')
 
         # Assume CPU is Intel; if CPU not Intel, must add ppc arch; see commented line below
-        make_args.append('RC_ARCHS="i386"')
+        make_args.append('RC_ARCHS=i386 x86_64')
         # make_args.append('RC_ARCHS="ppc i386 x86_64"')  # if CPU not Intel
         make('install_tools', *make_args)
 
