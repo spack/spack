@@ -102,8 +102,10 @@ class AppleCctools(MakefilePackage):
         # The substitutions in this block should obviate the need to
         # move too many files (which is what Homebrew does). Many of these
         # were detemined by looking at Makefiles, followed by trial and error
-        makefile_list = glob.glob('{*/,}Makefile')
+        abspath = self.stage.source_path
+        makefile_list = glob.glob('*/Makefile') + ['Makefile']
         for f in makefile_list:
+            print('Filtering {0}\n'.format(f))
             ff = FileFilter(f)
             ff.filter('^DSTROOT\s=\s.*', 'DSTROOT = {0}'.format(self.spec.prefix))
             ff.filter('^BINDIR\s=\s.*', 'BINDIR = /bin')
@@ -115,19 +117,19 @@ class AppleCctools(MakefilePackage):
             ff.filter('^LOCLIBDIR\s=\s.*', 'LOCLIBDIR = /lib')
             ff.filter('^LIBDIR\s=\s.*', 'LIBDIR = /lib')
             ff.filter('^EFIBINDIR\s=\s.*', 'EFIBINDIR = /bin')
-            ff.filter('/Local/Developer/System', self.spec.prefix + '/lib')
-            ff.filter('/usr/local/lib/system', self.spec.prefix + '/lib')
-            ff.filter('/usr/libexec/DeveloperTools', self.spec.prefix + '/libexec')
-            ff.filter('/usr/include', '/include')
-            ff.filter('/usr/libexec', '/libexec')
-            ff.filter('/usr/local/include', '/include')
-            ff.filter('/usr/local', '/share')
+            ff.filter(r'/Local/Developer/System', self.spec.prefix + r'/lib')
+            ff.filter(r'/usr/local/lib/system', self.spec.prefix + r'/lib')
+            ff.filter(r'/usr/libexec/DeveloperTools', r'/libexec')
+            ff.filter(r'/usr/include', r'/include')
+            ff.filter(r'/usr/libexec', r'/libexec')
+            ff.filter(r'/usr/local/include', r'/include')
+            ff.filter(r'/usr/local', r'/share')
 
             # Don't strip installed binaries; the first regex should
             # catch all of the strip commands, but doesn't; the second might
             # catch more, but still doesn't catch everything
             ff.filter(r'(install.*)\-s ', r'\1')
-            ff.filter(r'install \-c \-s', r'install \-c')
+#            ff.filter(r'install \-c \-s', r'install \-c')
 
         if spec.satisfies('+lto'):
             lto_c = FileFilter(join_path('libstuff', 'lto.c'))
