@@ -36,6 +36,8 @@ class AppleCctools(MakefilePackage):
 
     version('895', '6bf19547c93c6f0f921de04eabde2ae0')
 
+    variant('lto', default=False, desc='Enable LTO support (requires llvm@3.4:)')
+
     # Patches from MacPorts. See source at
     # https://github.com/macports/macports-ports/tree/master/devel/cctools/files
     # See MacPorts package at
@@ -51,22 +53,38 @@ class AppleCctools(MakefilePackage):
     patch('cctools-895-OFILE_LLVM_BITCODE.patch', level=0)
     patch('not-clang.patch', level=0)
 
+    # Patch from Homebrew
+    patch('libtool-no-lto.diff', level=0, when='~lto')
+
     # Patch to apply if OS X 10.11 or earlier; if users need support
     # for OS X 10.11
     # patch('snowleopard-strnlen.patch', level=0)
 
+    depends_on('llvm@3.4:', when='+lto')
+
     # Homebrew does not build apple-cctools in parallel
     parallel = False
 
-    # Need this method for lto variant, if implemented
-    # def edit(self, spec, prefix):
+    def setup_environment(self, spack_env, run_env):
+        spack_env.append_flags('')
+
+    @when('+lto')
+    def edit(self, spec, prefix):
+        lto_c = FileFilter(join_path('libstuff', 'lto.c'))
+        lto_c.filter('@@LLVM_LIBDIR', spec['llvm'].prefix.lib)
 
     def install(self, spec, prefix):
+
+        # TODO: Do Macports 'post-extract' steps here to get past prune_trie error
+
+
+        lto_flag = '-DLTO_SUPPORT' if spec.satisfies('+lto') else ''
+
         make_args = ['RC_ProjectSourceVersion={0}'.format(spec.version),
                      'USE_DEPENDENCY_FILE=NO',
                      'CC={0}'.format(self.compiler.cc),
                      'CXX={0}'.format(self.compiler.cxx),
-                     'LTO=',
+                     'LTO={0}'.format(lto_flag),
                      'TRIE=',
                      'RC_OS="macos"',
                      'DSTROOT={0}'.format(prefix),
