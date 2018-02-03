@@ -30,7 +30,32 @@ class AppleCctools(MakefilePackage):
     """apple-cctools: Binary and cross-compilation tools for Apple
 
     cctools contains the source to Apple's build toolchain, and is the
-    Apple analogue to binutils, libtool"""
+    Apple analogue to binutils, libtool. Specifically, this package
+    includes binaries for:
+
+    * ar
+    * as (for multiple architectures as part of cross-compiling toolchains)
+    * otool (multiple versions)
+    * ranlib
+    * libtool (but not libtoolize)
+    * lipo
+    * install_name_tool
+    * strip
+    * nm
+    * nmedit
+    * and other tools
+
+    Header files and missing man pages are also included.
+
+    This package does NOT include binaries for:
+
+    * ld64 (Apple linker for 64-bit systems), aliased to ld on recent
+      OS X versions; this software is a separate package
+    * dyld (but headers are included for dyld)
+    * 32-bit ld (the source is in this package, but is not compiled
+      because it is not used in recent OS X versions)
+
+    """
 
     homepage = "https://opensource.apple.com/source/cctools/"
     url      = "https://opensource.apple.com/tarballs/cctools/cctools-895.tar.gz"
@@ -96,6 +121,10 @@ class AppleCctools(MakefilePackage):
             ff = FileFilter(f)
             ff.filter('^DSTROOT\s=\s.*',
                       'DSTROOT = {0}'.format(self.spec.prefix))
+
+            # Leading slashes are required, due to the BSD-like
+            # construction of paths in the Makefiles, e.g.,
+            # ${DSTROOT}${BINDIR}
             ff.filter('^BINDIR\s=\s.*', 'BINDIR = /bin')
             ff.filter('^MANDIR\s=\s.*', 'MANDIR = /man')
             ff.filter('^LOCMANDIR\s=\s.*', 'LOCMANDIR = /man')
@@ -105,13 +134,20 @@ class AppleCctools(MakefilePackage):
             ff.filter('^LOCLIBDIR\s=\s.*', 'LOCLIBDIR = /lib')
             ff.filter('^LIBDIR\s=\s.*', 'LIBDIR = /lib')
             ff.filter('^EFIBINDIR\s=\s.*', 'EFIBINDIR = /bin')
-            ff.filter(r'/Local/Developer/System', self.spec.prefix + r'/lib')
-            ff.filter(r'/usr/local/lib/system', self.spec.prefix + r'/lib')
-            ff.filter(r'/usr/libexec/DeveloperTools', r'/libexec')
-            ff.filter(r'/usr/include', r'/include')
-            ff.filter(r'/usr/libexec', r'/libexec')
-            ff.filter(r'/usr/local/include', r'/include')
-            ff.filter(r'/usr/local', r'/share')
+
+            # Leading slashes are required, again due to BSD-like
+            # construction of paths in the Makefiles; these regexes
+            # replace the trailing few directories in various paths
+            ff.filter(join_path(r'/Local', 'Developer', 'System'),
+                      self.spec.prefix.lib)
+            ff.filter(join_path(r'/usr', 'local', 'lib', 'system'),
+                      self.spec.prefix.lib)
+            ff.filter(join_path('/usr', 'libexec', 'DeveloperTools'),
+                      '/libexec')
+            ff.filter(join_path(r'/usr', 'include'), r'/include')
+            ff.filter(join_path(r'/usr', 'libexec'), r'/libexec')
+            ff.filter(join_path(r'/usr', 'local', 'include'), r'/include')
+            ff.filter(join_path(r'/usr', 'local'), r'/share')
 
             # Don't strip installed binaries
             ff.filter(r'(install.*)\-s ', r'\1')
