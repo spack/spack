@@ -78,35 +78,38 @@ class AppleCctools(MakefilePackage):
              md5='cde416fd1d96fa41a0bf0ea034428e36',
              placement='ld64')
 
-    def setup_environment(self, spack_env, run_env):
-        # Add MacPorts configure.cflags-append and cppflags-append
-        # directives here
-        abspath = self.stage.source_path
-        spack_env.append_flags('CPPFLAGS',
-                               '-I{0} -I{1} -I{2}'.format(
-                                   join_path(abspath, 'ld64', 'src', 'abstraction'),
-                                   join_path(abspath, 'ld64', 'src', 'other'),
-                                   join_path(abspath, 'include')))
-        spack_env.append_flags('CFLAGS', '-std=gnu99')
-        spack_env.append_flags('CXXFLAGS', '-O2 -g')
-#        spack_env.append_flags('CFLAGS', '-std=gnu99')
+#     def setup_environment(self, spack_env, run_env):
+#         # Add MacPorts configure.cflags-append and cppflags-append
+#         # directives here
+#         abspath = self.stage.source_path
+#         spack_env.append_flags('CPPFLAGS',
+#                                '-I{0} -I{1} -I{2}'.format(
+#                                    join_path(abspath, 'ld64', 'src', 'abstraction'),
+#                                    join_path(abspath, 'ld64', 'src', 'other'),
+#                                    join_path(abspath, 'include')))
+#         spack_env.append_flags('CFLAGS', '-std=gnu99')
+#         spack_env.append_flags('CXXFLAGS', '-O2 -g')
+# #        spack_env.append_flags('CFLAGS', '-std=gnu99')
 
     def edit(self, spec, prefix):
-        # Add MacPorts post-patch edits from their cctools package here
+        # Add MacPorts post-patch edits from their cctools package here;
+        # MacPorts' `reinplace` command calls `sed -e`
         makefile = FileFilter('Makefile')
-        makefile.filter(r'^SUBDIRS_32/s/ld', '')
-        makefile.filter(r'^COMMON_SUBDIRS/s/ ld ', ' ')
+        makefile.filter(r'^SUBDIRS_32\s=\sld', 'SUBDIRS_32 = ')
+        #makefile.filter(r'^COMMON_SUBDIRS\s/ ld ', ' ')
 
         # The substitutions in this block should obviate the need to
         # move too many files (which is what Homebrew does)
         makefile_list = glob.glob('{*/,}Makefile')
         for f in makefile_list:
             ff = FileFilter(f)
-            ff.filter(re.escape(join_path('usr', 'local')), '@PREFIX@')
+            ff.filter(re.escape(join_path('/usr', 'local')), '@PREFIX@')
             ff.filter(re.escape(r'/usr'), '@PREFIX@')
             ff.filter(re.escape(r'@PREFIX@'), prefix)
             ff.filter(re.escape(join_path('{0}'.format(prefix), 'efi')), prefix)
-            ff.filter(re.escape(r'/Developer{0}'.format(prefix)), prefix)
+            ff.filter(re.escape(r'/DeveloperTools'),'')
+            ff.fitler(re.escape(join_path('/usr','libexec','DeveloperTools')),
+                      prefix.libexec)
             ff.filter(re.escape(join_path('share', 'man')), 'man')
 
             # Don't strip installed binaries
@@ -125,6 +128,11 @@ class AppleCctools(MakefilePackage):
         touch(join_path('ld64', 'src', 'abstraction', 'configure.h'))
 
         lto_flag = '-DLTO_SUPPORT' if spec.satisfies('+lto') else ''
+        abspath = self.stage.source_path
+        my_cflags = '-I{0} -I{1} -I{2} -I. -I..'.format(
+            join_path(abspath, 'ld64', 'src', 'abstraction'),
+            join_path(abspath, 'ld64', 'src', 'other'),
+            join_path(abspath, 'include')) + ' -Os -g -Wall'
 
         make_args = ['RC_ProjectSourceVersion={0}'.format(spec.version),
                      'USE_DEPENDENCY_FILE=NO',
@@ -132,9 +140,27 @@ class AppleCctools(MakefilePackage):
                      'CXX={0}'.format(self.compiler.cxx),
                      'LTO={0}'.format(lto_flag),
                      'TRIE=',
-                     'RC_OS="macos"',
-                     'DSTROOT={0}'.format(prefix),
-                     'RC_CFLAGS={0}'.format(self.build_system_flags('cflags','')[2])]
+                     'RC_OS=macos',
+                     'DSTROOT={0}'.format(self.spec.prefix),
+                     'RAWDSTROOT={0}'.format(self.spec.prefix),
+#                     'CXXFLAGS=-Os -g -Wall',
+#                     'CFLAGS=-Os -g -Wall',
+                     'CPPFLAGS=-I{0} -I{1} -I{2} -I. -I..'.format(
+                                   join_path(abspath, 'ld64', 'src', 'abstraction'),
+                                   join_path(abspath, 'ld64', 'src', 'other'),
+                                   join_path(abspath, 'include')),
+                     'RC_CFLAGS={0}'.format(my_cflags),
+                     'BINDIR=/bin',
+                     'MANDIR=/man',
+                     'LOCMANDIR=/man',
+                     'EFIMANDIR=/man',
+                     'USRBINDIR=/bin',
+                     'LOCBINDIR=/bin',
+                     'LOCLIBDIR=/lib',
+                     'LIBDIR=/lib',
+                     'EFIBINDIR=/bin',
+                     'SYSTEMDIR=/libexec'
+        ]
 
         # From Homebrew: fixes build with gcc-4.2: https://trac.macports.org/ticket/43745
 #        make_args.append('SDK=-std=gnu99')
@@ -147,6 +173,29 @@ class AppleCctools(MakefilePackage):
 
     def install(self, spec, prefix):
         pass
+        # install_tree(prefix.usr.local, prefix)
+        # install_tree(prefix.usr.local.man, prefix.man)
+        # install_tree(prefix.usr.bin, prefix.bin)
+        # install_tree(usr_include_mach_o,include_mach_o)
+        # install_tree(prefix.usr.share.man.man1, prefix.man.man1)
+        # install_tree(prefix.usr.share.man.man3, prefix.man.man3)
+        # install_tree(prefix.usr.share.man.man5, prefix.man.man5)
+
+        # Applies to OS X version >= Snow Leopard (10.6?);
+        # need to use join_path because "as" is a Python keyword
+        #libexec_as = join_path(prefix.libexec, 'as')
+        #usr_libexec_as = join_path(prefix.usr.libexec, 'as')
+        #mkdirp(libexec_as)
+        #install_tree(usr_libexec_as, libexec_as)
+
+        # If OS X version < Snow Leopard, would execute:
+        # libexec_gcc_darwin = prefix.libexec.gcc.darwin
+        # usr_libexec_gcc_darwin = prefix.usr.libexec.gcc.darwin
+        # mkdirp(prefix.libexec.gcc.darwin)
+        # install_tree(usr_libexec_gcc_darwin, libexec_gcc_darwin)
+        # install_tree(prefix.share, join_path(prefix.usr.share, 'gprof.*'))
+
+        #pass
         # mkdirp(prefix)
         # mkdirp(prefix.man)
         # mkdirp(prefix.bin)
