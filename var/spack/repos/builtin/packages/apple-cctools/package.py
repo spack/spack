@@ -103,14 +103,27 @@ class AppleCctools(MakefilePackage):
         makefile_list = glob.glob('{*/,}Makefile')
         for f in makefile_list:
             ff = FileFilter(f)
-            ff.filter(re.escape(join_path('/usr', 'local')), '@PREFIX@')
-            ff.filter(re.escape(r'/usr'), '@PREFIX@')
-            ff.filter(re.escape(r'@PREFIX@'), prefix)
-            ff.filter(re.escape(join_path('{0}'.format(prefix), 'efi')), prefix)
-            ff.filter(re.escape(r'/DeveloperTools'),'')
-            ff.fitler(re.escape(join_path('/usr','libexec','DeveloperTools')),
-                      prefix.libexec)
-            ff.filter(re.escape(join_path('share', 'man')), 'man')
+            ff.filter('^DSTROOT\s=\s.*', 'DSTROOT = {0}'.format(self.spec.prefix))
+            ff.filter('^BINDIR\s=\s.*', 'BINDIR = /bin')
+            ff.filter('^MANDIR\s=\s.*', 'MANDIR = /man')
+            ff.filter('^LOCMANDIR\s=\s.*', 'LOCMANDIR = /man')
+            ff.filter('^EFIMANDIR\s=\s.*', 'EFIMANDIR = /man')
+            ff.filter('^USRBINDIR\s=\s.*', 'USRBINDIR = /bin')
+            ff.filter('^LOCBINDIR\s=\s.*', 'LOCBINDIR = /bin')
+            ff.filter('^LOCLIBDIR\s=\s.*', 'LOCLIBDIR = /lib')
+            ff.filter('^LIBDIR\s=\s.*', 'LIBDIR = /lib')
+            ff.filter('^EFIBINDIR\s=\s.*', 'EFIBINDIR = /bin')
+            ff.filter('/Local/Developer/System', self.spec.prefix + '/lib')
+            ff.filter('/usr/local/lib/system', self.spec.prefix + '/lib')
+            ff.filter('/usr/libexec/DeveloperTools', '/libexec')
+            # ff.filter(re.escape(join_path('/usr', 'local')), '@PREFIX@')
+            # ff.filter(re.escape(r'/usr'), '@PREFIX@')
+            # ff.filter(re.escape(r'@PREFIX@'), prefix)
+            # ff.filter(re.escape(join_path('{0}'.format(prefix), 'efi')), prefix)
+            # ff.filter(re.escape(r'/DeveloperTools'),'')
+            # ff.fitler(re.escape(join_path('/usr','libexec','DeveloperTools')),
+            #           prefix.libexec)
+            # ff.filter(re.escape(join_path('share', 'man')), 'man')
 
             # Don't strip installed binaries
             ff.filter(r'\\(install .*\\)-s ','\\1')
@@ -142,7 +155,7 @@ class AppleCctools(MakefilePackage):
                      'TRIE=',
                      'RC_OS=macos',
                      'DSTROOT={0}'.format(self.spec.prefix),
-                     'RAWDSTROOT={0}'.format(self.spec.prefix),
+                     'RAW_DSTROOT={0}'.format(self.spec.prefix),
 #                     'CXXFLAGS=-Os -g -Wall',
 #                     'CFLAGS=-Os -g -Wall',
                      'CPPFLAGS=-I{0} -I{1} -I{2} -I. -I..'.format(
@@ -170,6 +183,7 @@ class AppleCctools(MakefilePackage):
         make_args.append('RC_ARCHS=i386 x86_64')
         # make_args.append('RC_ARCHS="ppc i386 x86_64"')  # if CPU not Intel
         make('install_tools', *make_args)
+#        make('-e', 'install_tools', *make_args)  # want env vars passed into sub-makes
 
     def install(self, spec, prefix):
         pass
