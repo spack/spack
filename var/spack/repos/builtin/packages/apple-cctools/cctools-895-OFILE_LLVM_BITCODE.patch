@@ -1,0 +1,18 @@
+--- misc/strings.c-orig	2016-12-09 19:03:02.000000000 +0100
++++ misc/strings.c	2016-12-23 10:35:34.000000000 +0100
+@@ -335,8 +335,13 @@
+ 	 * If the ofile is not an object file then process it without reguard
+ 	 * to sections.
+ 	 */
+-	if(ofile->object_addr == NULL || ofile->member_type == OFILE_LLVM_BITCODE){
+-	    if(ofile->file_type == OFILE_FAT && ofile->arch_flag.cputype != 0){
++	if(ofile->object_addr == NULL
++#ifdef LTO_SUPPORT
++	   || ofile->member_type == OFILE_LLVM_BITCODE){
++#else
++	  ){
++#endif /* LTO_SUPPORT */
++	  if(ofile->file_type == OFILE_FAT && ofile->arch_flag.cputype != 0){
+ 		if(ofile->fat_header->magic == FAT_MAGIC_64){
+ 		    addr = ofile->file_addr +
+ 			   ofile->fat_archs64[ofile->narch].offset;
