@@ -57,7 +57,7 @@ class AppleCctools(MakefilePackage):
     patch('not-clang.patch', level=0)
 
     # Patch from Homebrew
-    patch('libtool-no-lto.diff', level=0, when='~lto')
+#    patch('libtool-no-lto.diff', level=1, when='~lto')
 
     # Patch to apply if OS X 10.11 or earlier; if users need support
     # for OS X 10.11
@@ -139,6 +139,7 @@ class AppleCctools(MakefilePackage):
         # Assume CPU is Intel; if CPU not Intel, must add ppc arch; see commented line below
         make_args.append('RC_ARCHS="i386 x86_64"')
         # make_args.append('RC_ARCHS="ppc i386 x86_64"')  # if CPU not Intel
+        make(*make_args)
 
         mkdirp(prefix)
         mkdirp(prefix.man)
