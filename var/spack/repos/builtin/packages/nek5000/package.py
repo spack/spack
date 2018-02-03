@@ -46,9 +46,9 @@ class Nek5000(Package):
     tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
             'spectral-elements', 'fluid']
 
-    version('17.0.0-beta2', git='https://github.com/Nek5000/Nek5000.git',
-        commit='b95f46c59f017fff2fc19b66aa65a881085a7572')
-    version('develop',      git='https://github.com/Nek5000/Nek5000.git',
+    version('17.0',    git='https://github.com/Nek5000/Nek5000.git',
+        commit='469daf94d3f9aa3ba9d258d8eee9ebde6893a702')
+    version('develop', git='https://github.com/Nek5000/Nek5000.git',
         branch='master')
 
     # MPI, Profiling and Visit variants
@@ -88,18 +88,15 @@ class Nek5000(Package):
         toolsDir   = 'tools'
         binDir     = 'bin'
 
-        F77 = self.compiler.fc
+        FC  = self.compiler.fc
         CC  = self.compiler.cc
 
         # Build the tools, maketools copy them to Nek5000/bin by default.
         # We will then install Nek5000/bin under prefix after that.
         with working_dir(toolsDir):
             # Update the maketools script to use correct compilers
-            if self.version == Version('17.0.0-beta2'):  # Old release
-                filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"', 'maketools')
-            else:
-                filter_file(r'^FC\s*=.*', 'FC=\"' + F77 + '\"', 'maketools')
-            filter_file(r'^CC\s*=.*', 'CC=\"' + CC  + '\"',   'maketools')
+            filter_file(r'^FC\s*=.*', 'FC="{0}"'.format(FC), 'maketools')
+            filter_file(r'^CC\s*=.*', 'CC="{0}"'.format(CC), 'maketools')
 
             maxnel = self.spec.variants['MAXNEL'].value
             filter_file(r'^#MAXNEL\s*=.*', 'MAXNEL=' + maxnel, 'maketools')
@@ -126,7 +123,7 @@ class Nek5000(Package):
 
         with working_dir(binDir):
             if '+mpi' in spec:
-                F77 = spec['mpi'].mpif77
+                FC  = spec['mpi'].mpif77
                 CC  = spec['mpi'].mpicc
             else:
                 filter_file(r'^#MPI=0', 'MPI=0', 'makenek')
@@ -141,10 +138,11 @@ class Nek5000(Package):
 
             # Update the makenek to use correct compilers and
             # Nek5000 source.
-            filter_file(r'^F77\s*=.*', 'F77=\"' + F77 + '\"', 'makenek')
-            filter_file(r'^CC\s*=.*', 'CC=\"'  + CC  + '\"',  'makenek')
-            filter_file(r'SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
-                        prefix.bin.Nek5000 + '\"',  'makenek')
+            if self.version >= Version('17.0'):
+                filter_file(r'^#FC\s*=.*', 'FC="{0}"'.format(FC), 'makenek')
+                filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(CC), 'makenek')
+                filter_file(r'^#SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
+                            prefix.bin.Nek5000 + '\"',  'makenek')
 
         # Install Nek5000/bin in prefix/bin
         install_tree(binDir, prefix.bin)
