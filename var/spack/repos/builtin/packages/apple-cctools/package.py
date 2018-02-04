@@ -37,7 +37,7 @@ class AppleCctools(MakefilePackage):
     * as (for multiple architectures as part of cross-compiling toolchains)
     * otool (multiple versions)
     * ranlib
-    * libtool (but not libtoolize)
+    * libtool (but *not* libtoolize)
     * lipo
     * install_name_tool
     * strip
@@ -64,6 +64,8 @@ class AppleCctools(MakefilePackage):
 
     variant('lto', default=False,
             description='Enable LTO support (requires llvm@3.4:)')
+
+    provides('binutils')
 
     # NOTE: This package was tested on Mac OS X Sierra (10.12); it
     # will probably work for 10.13, but may not for earlier versions
