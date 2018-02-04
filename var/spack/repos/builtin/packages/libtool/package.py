@@ -46,8 +46,23 @@ class Libtool(AutotoolsPackage):
                               join_path(self.prefix.share, 'aclocal'))
 
     def setup_dependent_package(self, module, dependent_spec):
-        # Automake is very likely to be a build dependency,
-        # so we add the tools it provides to the dependent module
-        executables = ['libtoolize', 'libtool']
+        # Automake is very likely to be a build dependency, so we add
+        # the tools it provides to the dependent module. Some build
+        # systems differentiate between BSD libtool (e.g., Darwin) and
+        # GNU libtool, so also add 'glibtool' and 'glibtoolize' to the
+        # list of executables. See Homebrew:
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/libtool.rb
+        executables = ['libtoolize', 'libtool', 'glibtoolize', 'glibtool']
         for name in executables:
             setattr(module, name, self._make_executable(name))
+
+    @when('platform=darwin')
+    def configure_args(self):
+        # Some platforms name GNU libtool and GNU libtoolize
+        # 'glibtool' and 'glibtoolize', respectively, to differentiate
+        # them from BSD libtool and BSD libtoolize. On these BSD
+        # platforms, build systems sometimes expect to use the assumed
+        # GNU commands glibtool and glibtoolize instead of the BSD
+        # variant; this happens frequently, for instance, on Darwin
+        args = ['--program-prefix=g']
+        return args
