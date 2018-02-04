@@ -32,15 +32,18 @@ class Opengl(Package):
     url      = "https://www.opengl.org/"
 
     # URL here is arbitrary, just so that spack's fetcher does not throw
-    # an error
-    version('3.2', '6cf936fbcaadd98924298a7009e8265d',
-            url='https://mesa.freedesktop.org/archive/mesa-17.1.5.tar.xz')
+    # an error; fixes GitHub issue (#7061)
+    version('3.2', 'n/a')
 
     provides('gl@:4.5', when='@4.5:')
     provides('gl@:4.4', when='@4.4:')
     provides('gl@:4.3', when='@4.3:')
+    provides('gl@:4.2', when='@4.2:')
+    provides('gl@:4.1', when='@4.1:')
+    provides('gl@:3.3', when='@3.3:')
 
-    def install(self, spec, prefix):
+    @property
+    def fetcher(self):
         msg = """This package is intended to be a placeholder for
         system-provided OpenGL libraries from hardware vendors.  Please
         download and install OpenGL drivers/libraries for your graphics
@@ -77,5 +80,7 @@ class Opengl(Package):
         depends on your hardware. Look at
         https://support.apple.com/en-us/HT202823 to see what version
         of OpenGL your Mac uses."""
-
         raise InstallError(msg)
+
+    def install(self, spec, prefix):
+        pass
