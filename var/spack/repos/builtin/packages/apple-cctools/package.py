@@ -129,9 +129,9 @@ class AppleCctools(MakefilePackage):
             # construction of paths in the Makefiles, e.g.,
             # ${DSTROOT}${BINDIR}
             ff.filter('^BINDIR\s=\s.*', 'BINDIR = /bin')
-            ff.filter('^MANDIR\s=\s.*', 'MANDIR = /man')
-            ff.filter('^LOCMANDIR\s=\s.*', 'LOCMANDIR = /man')
-            ff.filter('^EFIMANDIR\s=\s.*', 'EFIMANDIR = /man')
+            ff.filter('^MANDIR\s=\s.*', 'MANDIR = /share/man')
+            ff.filter('^LOCMANDIR\s=\s.*', 'LOCMANDIR = /share/man')
+            ff.filter('^EFIMANDIR\s=\s.*', 'EFIMANDIR = /share/man')
             ff.filter('^USRBINDIR\s=\s.*', 'USRBINDIR = /bin')
             ff.filter('^LOCBINDIR\s=\s.*', 'LOCBINDIR = /bin')
             ff.filter('^LOCLIBDIR\s=\s.*', 'LOCLIBDIR = /lib')
