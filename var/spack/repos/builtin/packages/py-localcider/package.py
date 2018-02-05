@@ -37,4 +37,3 @@ class PyLocalcider(PythonPackage):
     depends_on('py-numpy',        type=('build', 'run'))
     depends_on('py-matplotlib',   type=('build', 'run'))
     depends_on('py-scipy',        type=('build', 'run'))
-
