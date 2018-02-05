@@ -22,32 +22,33 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Highfive(CMakePackage):
-    """HighFive - Header only C++ HDF5 interface"""
+class Clingo(CMakePackage):
+    """Clingo: A grounder and solver for logic programs
 
-    homepage = "https://github.com/BlueBrain/HighFive"
-    url      = "https://github.com/BlueBrain/HighFive/archive/v1.2.tar.gz"
+       Clingo is part of the Potassco project for Answer Set
+       Programming (ASP). ASP offers a simple and powerful modeling
+       language to describe combinatorial problems as logic
+       programs. The clingo system then takes such a logic program and
+       computes answer sets representing solutions to the given
+       problem."""
 
-    version('1.5', '5e631c91d2ea7f3677e99d6bb6db8167')
-    version('1.2', '030728d53519c7e13b5a522d34240301')
-    version('1.1', '986f0bd18c5264709688a536c02d2b2a')
-    version('1.0', 'e44e548560ea92afdb244c223b7655b6')
+    homepage = "https://potassco.org/clingo/"
+    url      = "https://github.com/potassco/clingo/archive/v5.2.2.tar.gz"
 
-    variant('boost', default=False, description='Support Boost')
-    variant('mpi', default=True, description='Support MPI')
+    version('5.2.2', 'd46a1567f772eebad85c6300d55d2cc3')
 
-    depends_on('boost @1.41:', when='+boost')
-    depends_on('hdf5')
-    depends_on('hdf5 +mpi', when='+mpi')
+    depends_on('doxygen', type=('build'))
+    depends_on('python')
 
     def cmake_args(self):
-        args = [
-            '-DUSE_BOOST:Bool={0}'.format('+boost' in self.spec),
-            '-DHIGHFIVE_PARALLEL_HDF5:Bool={0}'.format('+mpi' in self.spec),
-            '-DUNIT_TESTS:Bool=false',
-            '-DHIGHFIVE_EXAMPLES:Bool=false']
+        if not self.compiler.cxx14_flag:
+            InstallError('clingo requires a C++14-compliant C++ compiler')
+
+        args = ['-DCLINGO_BUILD_WITH_PYTHON=ON',
+                '-DCLING_BUILD_PY_SHARED=ON',
+                '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
+                '-DCLINGO_BUILD_WITH_LUA=OFF']
         return args

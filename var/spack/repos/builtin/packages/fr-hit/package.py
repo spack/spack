@@ -22,32 +22,44 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
-class Highfive(CMakePackage):
-    """HighFive - Header only C++ HDF5 interface"""
+class FrHit(Package):
+    """An efficient algorithm for fragment recruitment for next generation
+    sequences against microbial reference genomes."""
 
-    homepage = "https://github.com/BlueBrain/HighFive"
-    url      = "https://github.com/BlueBrain/HighFive/archive/v1.2.tar.gz"
+    homepage = "http://weizhong-lab.ucsd.edu/frhit"
+    url      = "http://weizhong-lab.ucsd.edu/frhit/fr-hit-v0.7.1-2013-02-20.tar.gz"
 
-    version('1.5', '5e631c91d2ea7f3677e99d6bb6db8167')
-    version('1.2', '030728d53519c7e13b5a522d34240301')
-    version('1.1', '986f0bd18c5264709688a536c02d2b2a')
-    version('1.0', 'e44e548560ea92afdb244c223b7655b6')
+    version('0.7.1-2013-02-20', '3e8ea41ba09ab0c13e9973fe6f493f96')
 
-    variant('boost', default=False, description='Support Boost')
-    variant('mpi', default=True, description='Support MPI')
+    depends_on('perl')
+    depends_on('python@2.7:')
 
-    depends_on('boost @1.41:', when='+boost')
-    depends_on('hdf5')
-    depends_on('hdf5 +mpi', when='+mpi')
+    # The patch adds the python interpreter to the beginning of the script
+    # allowing it to be run directly without passing the entire path to the
+    # script to python.
+    patch('binning.patch')
 
-    def cmake_args(self):
-        args = [
-            '-DUSE_BOOST:Bool={0}'.format('+boost' in self.spec),
-            '-DHIGHFIVE_PARALLEL_HDF5:Bool={0}'.format('+mpi' in self.spec),
-            '-DUNIT_TESTS:Bool=false',
-            '-DHIGHFIVE_EXAMPLES:Bool=false']
-        return args
+    def install(self, spec, prefix):
+        make()
+
+        filter_file(
+            r'#!/bin/env perl',
+            '#!/usr/bin/env perl',
+            'frhit2pairend.pl'
+        )
+        filter_file(
+            r'#!/bin/env perl',
+            '#!/usr/bin/env perl',
+            'psl2sam.pl'
+        )
+
+        mkdirp(prefix.bin)
+        install('fr-hit', prefix.bin)
+        install('frhit2pairend.pl', prefix.bin)
+        install('psl2sam.pl', prefix.bin)
+        install('binning-1.1.1/bacteria_gitax.pkl', prefix.bin)
+        install('binning-1.1.1/binning.py', prefix.bin)
+        install('binning-1.1.1/tax.pkl', prefix.bin)
