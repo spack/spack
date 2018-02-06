@@ -38,6 +38,17 @@ class Ninja(Package):
     version('1.7.2', '7b482218757acbaeac4d4d54a3cd94e1')
     version('1.6.0', '254133059f2da79d8727f654d7198f43')
 
+    ##########
+    # Kitware has a fork of ninja that resolves issues supporting
+    # Fortran. There are PRs for these changes to Google's repo, but
+    # they haven't been merged.
+    #
+    # For more details see:
+    #   https://github.com/Kitware/ninja/tree/features-for-fortran#readme
+    version('kitware',
+            git='https://github.com/Kitware/ninja/',
+            branch="features-for-fortran")
+
     depends_on('python', type=('build', 'run'))
 
     phases = ['configure', 'install']
