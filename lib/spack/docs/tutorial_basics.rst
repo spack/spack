@@ -112,7 +112,7 @@ the binary cache was prepared with.
 
 .. code-block:: console
 
-  $ spack gpg trust ~/public.key
+  $ spack gpg trust /opt/public.key
   gpg: keybox '/home/ubuntu/test/spack/opt/spack/gpg/pubring.kbx' created
   gpg: /home/ubuntu/test/spack/opt/spack/gpg/trustdb.gpg: trustdb created
   gpg: key 3B7C69B2: public key "sc-tutorial (GPG created for Spack) <becker33@llnl.gov>" imported
