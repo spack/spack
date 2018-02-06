@@ -37,6 +37,11 @@ class RdmaCore(CMakePackage):
 
     depends_on('libnl')
 
+    def cmake_args(self):
+        cmake_args = ["-DCMAKE_INSTALL_SYSCONFDIR=" +
+                      join_path(self.spec.prefix, 'etc')]
+        return cmake_args
+
     @run_before('cmake')
     def check_platform(self):
         if not (sys.platform.startswith('freebsd') or
