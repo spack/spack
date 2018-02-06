@@ -37,6 +37,7 @@ import contextlib
 import copy
 import functools
 import inspect
+import itertools
 import os
 import re
 import shutil
@@ -1107,7 +1108,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         # Apply all the patches for specs that match this one
         patched = False
-        for patch in patches:
+        for patch in self.patches_to_apply():
             try:
                 with working_dir(self.stage.source_path):
                     patch.apply(self.stage)
@@ -1150,6 +1151,15 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             touch(good_file)
         else:
             touch(no_patches_file)
+
+    def patches_to_apply(self):
+        """If the patch set does not change between two invocations of spack,
+           then all patches in the set will be applied in the same order"""
+        patchesToApply = itertools.chain.from_iterable(
+            patch_list
+            for spec, patch_list in self.patches.items()
+            if self.spec.satisfies(spec))
+        return sorted(patchesToApply, key=lambda p: p.path_or_url)
 
     @property
     def namespace(self):
