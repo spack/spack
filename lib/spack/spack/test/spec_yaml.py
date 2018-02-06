@@ -195,6 +195,16 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
         assert spec.dag_hash() == round_trip_json_spec.dag_hash()
         assert spec.dag_hash() == round_trip_reversed_yaml_spec.dag_hash()
         assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
+        # full_hashes are equal
+        spec.concretize()
+        round_trip_yaml_spec.concretize()
+        round_trip_json_spec.concretize()
+        round_trip_reversed_yaml_spec.concretize()
+        round_trip_reversed_json_spec.concretize()
+        assert spec.full_hash() == round_trip_yaml_spec.full_hash()
+        assert spec.full_hash() == round_trip_json_spec.full_hash()
+        assert spec.full_hash() == round_trip_reversed_yaml_spec.full_hash()
+        assert spec.full_hash() == round_trip_reversed_json_spec.full_hash()
 
 
 def reverse_all_dicts(data):
