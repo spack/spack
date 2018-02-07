@@ -23,7 +23,7 @@ Installing Spack
 ----------------
 
 Spack works out of the box. Simply clone spack and get going. We will
-clone Spack and immediately checkout the most recent release, v0.11.0.
+clone Spack and immediately checkout the most recent release, v0.11.2.
 
 .. code-block:: console
 
@@ -36,9 +36,9 @@ clone Spack and immediately checkout the most recent release, v0.11.0.
   Resolving deltas: 100% (44914/44914), done.
   Checking connectivity... done.
   $ cd spack
-  $ git checkout releases/v0.11.0
-  Branch releases/v0.11.0 set up to track remote branch releases/v0.11.0 from origin.
-  Switched to a new branch 'releases/v0.11.0'
+  $ git checkout releases/v0.11.2
+  Branch releases/v0.11.2 set up to track remote branch releases/v0.11.2 from origin.
+  Switched to a new branch 'releases/v0.11.2'
 
 Next add Spack to your path. Spack has some nice command line
 integration tools, so instead of simply appending to your ``PATH``
@@ -112,7 +112,7 @@ the binary cache was prepared with.
 
 .. code-block:: console
 
-  $ spack gpg trust ~/public.key
+  $ spack gpg trust /opt/public.key
   gpg: keybox '/home/ubuntu/test/spack/opt/spack/gpg/pubring.kbx' created
   gpg: /home/ubuntu/test/spack/opt/spack/gpg/trustdb.gpg: trustdb created
   gpg: key 3B7C69B2: public key "sc-tutorial (GPG created for Spack) <becker33@llnl.gov>" imported

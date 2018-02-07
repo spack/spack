@@ -25,28 +25,16 @@
 from spack import *
 
 
-class Angsd(MakefilePackage):
-    """Angsd is a program for analysing NGS data. The software can handle a
-       number of different input types from mapped reads to imputed genotype
-       probabilities. Most methods take genotype uncertainty into account
-       instead of basing the analysis on called genotypes. This is especially
-       useful for low and medium depth data."""
+class Samblaster(MakefilePackage):
+    """A tool to mark duplicates and extract discordant and split reads from
+    sam files."""
 
-    homepage = "https://github.com/ANGSD/angsd"
-    url      = "https://github.com/ANGSD/angsd/archive/0.919.tar.gz"
+    homepage = "https://github.com/GregoryFaust/samblaster"
+    url      = "https://github.com/GregoryFaust/samblaster/archive/v.0.1.24.tar.gz"
 
-    version('0.921', '3702db035396db602c7f74728b1a5a1f')
-    version('0.919', '79d342f49c24ac00d35934f2617048d4')
-
-    depends_on('htslib')
-    conflicts('^htslib@1.6:', when='@0.919')
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('R_LIBS', prefix.R)
+    version('0.1.24', '885d5782cc277865dfb086fc0a20243e')
+    version('0.1.23', '95d33b6fcceaa38a9bd79014446b4545')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        install('angsd', join_path(prefix.bin))
-        install_tree('R', prefix.R)
-        install_tree('RES', prefix.RES)
-        install_tree('scripts', prefix.scripts)
+        install('samblaster', prefix.bin)

@@ -25,28 +25,30 @@
 from spack import *
 
 
-class Angsd(MakefilePackage):
-    """Angsd is a program for analysing NGS data. The software can handle a
-       number of different input types from mapped reads to imputed genotype
-       probabilities. Most methods take genotype uncertainty into account
-       instead of basing the analysis on called genotypes. This is especially
-       useful for low and medium depth data."""
+class Clingo(CMakePackage):
+    """Clingo: A grounder and solver for logic programs
 
-    homepage = "https://github.com/ANGSD/angsd"
-    url      = "https://github.com/ANGSD/angsd/archive/0.919.tar.gz"
+       Clingo is part of the Potassco project for Answer Set
+       Programming (ASP). ASP offers a simple and powerful modeling
+       language to describe combinatorial problems as logic
+       programs. The clingo system then takes such a logic program and
+       computes answer sets representing solutions to the given
+       problem."""
 
-    version('0.921', '3702db035396db602c7f74728b1a5a1f')
-    version('0.919', '79d342f49c24ac00d35934f2617048d4')
+    homepage = "https://potassco.org/clingo/"
+    url      = "https://github.com/potassco/clingo/archive/v5.2.2.tar.gz"
 
-    depends_on('htslib')
-    conflicts('^htslib@1.6:', when='@0.919')
+    version('5.2.2', 'd46a1567f772eebad85c6300d55d2cc3')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('R_LIBS', prefix.R)
+    depends_on('doxygen', type=('build'))
+    depends_on('python')
 
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install('angsd', join_path(prefix.bin))
-        install_tree('R', prefix.R)
-        install_tree('RES', prefix.RES)
-        install_tree('scripts', prefix.scripts)
+    def cmake_args(self):
+        if not self.compiler.cxx14_flag:
+            InstallError('clingo requires a C++14-compliant C++ compiler')
+
+        args = ['-DCLINGO_BUILD_WITH_PYTHON=ON',
+                '-DCLING_BUILD_PY_SHARED=ON',
+                '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
+                '-DCLINGO_BUILD_WITH_LUA=OFF']
+        return args
