@@ -82,7 +82,7 @@ class Intel(Compiler):
 
     @classmethod
     def default_version(cls, comp):
-        """The '--version' option seems to be the most consistent one
+        """The ``--version`` option seems to be the most consistent one
         for intel compilers.  Output looks like this::
 
             icpc (ICC) 12.1.5 20120612
