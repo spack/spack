@@ -25,29 +25,30 @@
 from spack import *
 
 
-class Libarchive(AutotoolsPackage):
-    """libarchive: C library and command-line tools for reading and
-       writing tar, cpio, zip, ISO, and other archive formats."""
+class Clingo(CMakePackage):
+    """Clingo: A grounder and solver for logic programs
 
-    homepage = "http://www.libarchive.org"
-    url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
+       Clingo is part of the Potassco project for Answer Set
+       Programming (ASP). ASP offers a simple and powerful modeling
+       language to describe combinatorial problems as logic
+       programs. The clingo system then takes such a logic program and
+       computes answer sets representing solutions to the given
+       problem."""
 
-    version('3.3.2', '4583bd6b2ebf7e0e8963d90879eb1b27')
-    version('3.2.1', 'afa257047d1941a565216edbf0171e72')
-    version('3.1.2', 'efad5a503f66329bb9d2f4308b5de98a')
-    version('3.1.1', '1f3d883daf7161a0065e42a15bbf168f')
-    version('3.1.0', '095a287bb1fd687ab50c85955692bf3a')
+    homepage = "https://potassco.org/clingo/"
+    url      = "https://github.com/potassco/clingo/archive/v5.2.2.tar.gz"
 
-    depends_on('zlib')
-    depends_on('bzip2')
-    depends_on('lzma')
-    depends_on('lz4')
-    depends_on('xz')
-    depends_on('lzo')
-    depends_on('nettle')
-    depends_on('openssl')
-    depends_on('libxml2')
-    depends_on('expat')
+    version('5.2.2', 'd46a1567f772eebad85c6300d55d2cc3')
 
-    # NOTE: `make check` is known to fail with the Intel compilers
-    # The build test suite cannot be built with Intel
+    depends_on('doxygen', type=('build'))
+    depends_on('python')
+
+    def cmake_args(self):
+        if not self.compiler.cxx14_flag:
+            InstallError('clingo requires a C++14-compliant C++ compiler')
+
+        args = ['-DCLINGO_BUILD_WITH_PYTHON=ON',
+                '-DCLING_BUILD_PY_SHARED=ON',
+                '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
+                '-DCLINGO_BUILD_WITH_LUA=OFF']
+        return args

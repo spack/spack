@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+import sys
 from spack import *
 
 
@@ -50,7 +52,7 @@ class Lbann(CMakePackage):
             values=('Debug', 'Release'))
 
     depends_on('elemental +openmp_blas +shared +int64')
-    depends_on('elemental +openmp_blas +shared +int64 build_type=Debug', 
+    depends_on('elemental +openmp_blas +shared +int64 build_type=Debug',
                when=('build_type=Debug'))
     depends_on('cuda', when='+gpu')
     depends_on('cudnn', when='+gpu')
@@ -92,6 +94,18 @@ class Lbann(CMakePackage):
                 spec['elemental'].prefix),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0'])
+
+        # Add support for OpenMP
+        if (self.spec.satisfies('%clang')):
+            if (sys.platform == 'darwin'):
+                clang = self.compiler.cc
+                clang_bin = os.path.dirname(clang)
+                clang_root = os.path.dirname(clang_bin)
+                args.extend([
+                    '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
+                    '-DOpenMP_CXX_LIB_NAMES=libomp',
+                    '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
+                        clang_root)])
 
         if '+opencv' in spec:
             args.extend(['-DOpenCV_DIR:STRING={0}'.format(
