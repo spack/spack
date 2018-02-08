@@ -56,8 +56,7 @@ class Raja(CMakePackage):
 
         if '+cuda' in spec:
             options.extend([
-            '-DENABLE_CUDA=On',
-            '-DCUDA_TOOLKIT_ROOT_DIR=%s' % ( spec['cuda'].prefix )])
+                '-DENABLE_CUDA=On',
+                '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
 
         return options
-
