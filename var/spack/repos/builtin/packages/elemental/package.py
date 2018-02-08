@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 from spack import *
 from spack.spec import UnsupportedCompilerError
 
@@ -68,8 +69,8 @@ class Elemental(CMakePackage):
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'essl'),
-            description='Enable the use of OpenBlas/MKL/ESSL')
+    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate', 'essl'),
+            description='Enable the use of OpenBlas/MKL/Accelerate/ESSL')
     variant('mpfr', default=False,
             description='Support GNU MPFR\'s'
             'arbitrary-precision floating-point arithmetic')
@@ -77,12 +78,15 @@ class Elemental(CMakePackage):
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('blas', when='~openmp_blas ~int64_blas')
     # Hack to forward variant to openblas package
+    depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
     # Allow Elemental to build internally when using 8-byte ints
     depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas ~int64_blas')
 
     depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
     depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas ~int64_blas')
     depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
+
+    depends_on('veclibfort', when='blas=accelerate')
 
     depends_on('essl -cuda', when='blas=essl -openmp_blas ~int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
@@ -211,6 +215,15 @@ class Elemental(CMakePackage):
             '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
         ]
 
+        # Add support for OS X to find OpenMP
+        if (self.spec.satisfies('%clang')):
+            if (sys.platform == 'darwin'):
+                clang = self.compiler.cc
+                clang_bin = os.path.dirname(clang)
+                clang_root = os.path.dirname(clang_bin)
+                args.extend([
+                    '-DOpenMP_DIR={0}'.format(clang_root)])
+
         if 'blas=openblas' in spec:
             args.extend([
                 '-DHydrogen_USE_OpenBLAS:BOOL=%s' % ('blas=openblas' in spec),
@@ -219,6 +232,8 @@ class Elemental(CMakePackage):
         elif 'blas=mkl' in spec:
             args.extend([
                 '-DHydrogen_USE_MKL:BOOL=%s' % ('blas=mkl' in spec)])
+        elif 'blas=accelerate' in spec:
+            args.extend(['-DHydrogen_USE_ACCELERATE:BOOL=TRUE'])
         elif 'blas=essl' in spec:
             args.extend([
                 '-DHydrogen_USE_ESSL:BOOL=%s' % ('blas=essl' in spec)])
