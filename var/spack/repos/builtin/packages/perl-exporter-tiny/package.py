@@ -25,28 +25,11 @@
 from spack import *
 
 
-class Angsd(MakefilePackage):
-    """Angsd is a program for analysing NGS data. The software can handle a
-       number of different input types from mapped reads to imputed genotype
-       probabilities. Most methods take genotype uncertainty into account
-       instead of basing the analysis on called genotypes. This is especially
-       useful for low and medium depth data."""
+class PerlExporterTiny(PerlPackage):
+    """An exporter with the features of Sub::Exporter but only core
+    dependencies"""
 
-    homepage = "https://github.com/ANGSD/angsd"
-    url      = "https://github.com/ANGSD/angsd/archive/0.919.tar.gz"
+    homepage = "http://search.cpan.org/~tobyink/Exporter-Tiny/lib/Exporter/Tiny.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/T/TO/TOBYINK/Exporter-Tiny-1.000000.tar.gz"
 
-    version('0.921', '3702db035396db602c7f74728b1a5a1f')
-    version('0.919', '79d342f49c24ac00d35934f2617048d4')
-
-    depends_on('htslib')
-    conflicts('^htslib@1.6:', when='@0.919')
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('R_LIBS', prefix.R)
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install('angsd', join_path(prefix.bin))
-        install_tree('R', prefix.R)
-        install_tree('RES', prefix.RES)
-        install_tree('scripts', prefix.scripts)
+    version('1.000000', '0d413747bdcf880f9ec62de8801ccf5e')

@@ -25,28 +25,15 @@
 from spack import *
 
 
-class Angsd(MakefilePackage):
-    """Angsd is a program for analysing NGS data. The software can handle a
-       number of different input types from mapped reads to imputed genotype
-       probabilities. Most methods take genotype uncertainty into account
-       instead of basing the analysis on called genotypes. This is especially
-       useful for low and medium depth data."""
+class PyLocalcider(PythonPackage):
+    """Tools for calculating sequence properties of disordered proteins"""
 
-    homepage = "https://github.com/ANGSD/angsd"
-    url      = "https://github.com/ANGSD/angsd/archive/0.919.tar.gz"
+    homepage = "http://pappulab.github.io/localCIDER"
+    url      = "https://pypi.io/packages/source/l/localcider/localcider-0.1.14.tar.gz"
 
-    version('0.921', '3702db035396db602c7f74728b1a5a1f')
-    version('0.919', '79d342f49c24ac00d35934f2617048d4')
+    version('0.1.14', 'cd3c992595c5cb280374de3750663cfa')
 
-    depends_on('htslib')
-    conflicts('^htslib@1.6:', when='@0.919')
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('R_LIBS', prefix.R)
-
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install('angsd', join_path(prefix.bin))
-        install_tree('R', prefix.R)
-        install_tree('RES', prefix.RES)
-        install_tree('scripts', prefix.scripts)
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy',        type=('build', 'run'))
+    depends_on('py-matplotlib',   type=('build', 'run'))
+    depends_on('py-scipy',        type=('build', 'run'))
