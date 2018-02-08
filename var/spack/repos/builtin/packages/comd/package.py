@@ -48,7 +48,7 @@ class Comd(MakefilePackage):
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('precision', default=True, description='Toggle Precesion Options')
-    variant('graphs', default=True, description='Enable graph visuals')
+    variant('graphs', default=False, description='Enable graph visuals')
 
     depends_on('mpi', when='+mpi')
     depends_on('graphviz', when='+graphs')
