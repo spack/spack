@@ -36,7 +36,7 @@
 # See the Spack documentation for more information on packaging.
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
-#
+
 from spack import *
 
 
@@ -44,7 +44,6 @@ class Jchronoss(CMakePackage):
     """ JCHRONOSS aims to help HPC application testing process
      to scale as much as the application does. """
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://jchronoss.hpcframework.com"
     url      = "http://fs.paratools.com/mpc/contrib/apps/jchronoss/JCHRONOSS-1.2.tar.gz"
 
@@ -61,6 +60,7 @@ class Jchronoss(CMakePackage):
     depends_on("libxml2")
     depends_on("libwebsockets", when="+realtime")
     depends_on("libev", when="+realtime")
+    depends_on("ncurses", when="+ncurses")
 
     def cmake_args(self):
         args = ["-DSPACK_DRIVEN=ON"]
