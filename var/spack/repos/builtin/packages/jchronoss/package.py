@@ -41,7 +41,8 @@ from spack import *
 
 
 class Jchronoss(CMakePackage):
-    """ JCHRONOSS aims to help HPC application testing process to scale as much as the application does. """
+    """ JCHRONOSS aims to help HPC application testing process
+     to scale as much as the application does. """
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://jchronoss.hpcframework.com"
@@ -63,7 +64,7 @@ class Jchronoss(CMakePackage):
 
     def cmake_args(self):
         args = ["-DSPACK_DRIVEN=ON"]
-        
+
         if '+color' in self.spec:
             args.append("-DENABLE_COLOR=yes")
         if '+openmp' in self.spec:
