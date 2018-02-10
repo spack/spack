@@ -37,10 +37,11 @@ class Hpgmg(Package):
     the second coarsening 6 times, etc."""
 
     homepage = "https://bitbucket.org/hpgmg/hpgmg"
-    url      = "https://bitbucket.org/hpgmg/hpgmg/get/master.tar.gz"
+    url      = "https://hpgmg.org/static/hpgmg-0.tar.gz"
     tags     = ['proxy-app']
 
-    version('master', '4a2b139e1764c84ed7fe06334d3f8d8a')
+    version('a0a5510df23b', 'b9c50f25e541428d4735fb07344d1d0ed9fc821bdde918d8e0defa78c0d9b4f9')
+    version('develop', git='https://bitbucket.org/hpgmg/hpgmg.git', branch='master')
 
     variant(
         'fe', default=True, description='Build finite element solver')
@@ -48,6 +49,7 @@ class Hpgmg(Package):
         'fv', default='mpi', values=('serial', 'mpi', 'none'),
         description='Build finite volume solver with or without MPI support')
     variant('cuda', default=False, description='Build with CUDA')
+    variant('debug', default=False, description='Build in debug mode')
 
     depends_on('petsc', when='+fe')
     depends_on('mpi', when='+fe')
@@ -68,10 +70,18 @@ class Hpgmg(Package):
         if 'mpi' in self.spec:
             args.append('--CC={0}'.format(self.spec['mpi'].mpicc))
 
+        cflags = []
         if 'fv=none' in self.spec:
             args.append('--no-fv')
         else:
-            args.append('--CFLAGS=' + self.compiler.openmp_flag)
+            cflags.append(self.compiler.openmp_flag)
+
+        if '+debug' in self.spec:
+            cflags.append('-g')
+        elif any(map(self.spec.satisfies, ['%gcc', '%clang', '%intel'])):
+            cflags += ['-O3', '-march=native']
+
+        args.append('--CFLAGS=' + ' '.join(cflags))
 
         return args
 

@@ -251,7 +251,7 @@ class Petsc(Package):
                 '--with-superlu_dist=0'
             )
 
-        configure('--prefix=%s' % prefix, *options)
+        python('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
         make('MAKE_NP=%s' % make_jobs, parallel=False)
