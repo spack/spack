@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 
+import llnl.util.lang
+
 
 class Fftw(AutotoolsPackage):
     """FFTW is a C subroutine library for computing the discrete Fourier
@@ -88,8 +90,35 @@ class Fftw(AutotoolsPackage):
 
     @property
     def libs(self):
-        result = find_libraries(['libfftw3'], root=self.prefix, recurse=True)
-        return result
+
+        # Reduce repetitions of entries
+        query_parameters = list(llnl.util.lang.dedupe(
+            self.spec.last_query.extra_parameters
+        ))
+
+        # List of all the suffixes associated with float precisions
+        precisions = [
+            ('float', 'f'),
+            ('double', ''),
+            ('long_double', 'l'),
+            ('quad', 'q')
+        ]
+
+        # Retrieve the correct suffixes, or use double as a default
+        suffixes = [v for k, v in precisions if k in query_parameters] or ['']
+
+        # Construct the list of libraries that needs to be found
+        libraries = []
+        for sfx in suffixes:
+            if 'mpi' in query_parameters and '+mpi' in self.spec:
+                libraries.append('libfftw3' + sfx + '_mpi')
+
+            if 'openmp' in query_parameters and '+openmp' in self.spec:
+                libraries.append('libfftw3' + sfx + '_omp')
+
+            libraries.append('libfftw3' + sfx)
+
+        return find_libraries(libraries, root=self.prefix, recurse=True)
 
     def autoreconf(self, spec, prefix):
         if '+pfft_patches' in spec:
