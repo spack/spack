@@ -278,7 +278,7 @@ def make_argument_parser():
                         help="show this help message and exit")
     parser.add_argument('--color', action='store', default='auto',
                         choices=('always', 'never', 'auto'),
-                        help="when to colorize output; default is auto")
+                        help="when to colorize output (default: auto)")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="write out debug logs during compile")
     parser.add_argument('-D', '--pdb', action='store_true',
@@ -294,7 +294,7 @@ def make_argument_parser():
                         help="profile and sort by one or more of:\n[%s]" %
                         ',\n '.join([', '.join(line) for line in stat_lines]))
     parser.add_argument('--lines', default=20, action='store',
-                        help="lines of profile output; default 20; or 'all'")
+                        help="lines of profile output or 'all' (default: 20)")
     parser.add_argument('-v', '--verbose', action='store_true',
                         help="print additional output during builds")
     parser.add_argument('-s', '--stacktrace', action='store_true',
