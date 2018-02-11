@@ -80,7 +80,8 @@ section_descriptions = {
 section_order = {
     'basic': ['list', 'info', 'find'],
     'build': ['fetch', 'stage', 'patch', 'configure', 'build', 'restage',
-              'install', 'uninstall', 'clean']
+              'install', 'uninstall', 'clean'],
+    'packaging': ['create', 'edit']
 }
 
 # Properties that commands are required to set.
