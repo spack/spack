@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Accfft(CMakePackage):
+class Accfft(CMakePackage, CudaPackage):
     """AccFFT extends existing FFT libraries for CUDA-enabled
     Graphics Processing Units (GPUs) to distributed memory clusters
     """
@@ -35,14 +35,12 @@ class Accfft(CMakePackage):
 
     version('develop', git='https://github.com/amirgholami/accfft.git', branch='master')
 
-    variant('cuda', default=False, description='Add support for GPUs')
     variant('pnetcdf', default=True, description='Add support for parallel NetCDF')
     variant('shared', default=True, description='Enables the build of shared libraries')
 
     # See: http://accfft.org/articles/install/#installing-dependencies
     depends_on('fftw+float+double~mpi+openmp')
 
-    depends_on('cuda', when='+cuda')
     depends_on('parallel-netcdf', when='+pnetcdf')
 
     build_targets = [
@@ -58,7 +56,7 @@ class Accfft(CMakePackage):
         spec = self.spec
         return [
             '-DFFTW_ROOT={0}'.format(spec['fftw'].prefix),
-            '-DFFTW_USE_STATIC_LIBS=false ',
+            '-DFFTW_USE_STATIC_LIBS=false',
             '-DBUILD_GPU={0}'.format('true' if '+cuda' in spec else 'false'),
             '-DBUILD_SHARED={0}'.format(
                 'true' if '+shared' in spec else 'false'
