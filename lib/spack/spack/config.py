@@ -88,6 +88,10 @@ section_schemas = {
 #: Later scopes will override earlier scopes.
 config_scopes = OrderedDict()
 
+#: metavar to use for commands that accept scopes
+#: this is shorter and more readable than listing all choices
+scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
+
 
 def validate_section_name(section):
     """Exit if the section is not a valid section."""
