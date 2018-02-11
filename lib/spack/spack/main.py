@@ -30,6 +30,7 @@ after the system path is set up.
 from __future__ import print_function
 
 import sys
+import re
 import os
 import inspect
 import pstats
@@ -127,6 +128,22 @@ def index_commands():
     return index
 
 
+class SpackHelpFormatter(argparse.RawTextHelpFormatter):
+    def _format_actions_usage(self, actions, groups):
+        """Formatter with more concise usage strings."""
+        usage = super(
+            SpackHelpFormatter, self)._format_actions_usage(actions, groups)
+
+        # compress single-character flags that are not mutually exclusive
+        # at the beginning of the usage string
+        chars = ''.join(re.findall(r'\[-(.)\]', usage))
+        usage = re.sub(r'\[-.\] ?', '', usage)
+        if chars:
+            return '[-%s] %s' % (chars, usage)
+        else:
+            return usage
+
+
 class SpackArgumentParser(argparse.ArgumentParser):
     def format_help_sections(self, level):
         """Format help on sections for a particular verbosity level.
@@ -182,14 +199,11 @@ class SpackArgumentParser(argparse.ArgumentParser):
             new_actions = [opts[letter] for letter in show_options]
             self._optionals._group_actions = new_actions
 
-        options = ''.join(opt.option_strings[0].strip('-')
-                          for opt in self._optionals._group_actions)
-
-        index = index_commands()
-
-        # usage
-        formatter.add_text(
-            "usage: %s [-%s] <command> [...]" % (self.prog, options))
+        # custom, more concise usage for top level
+        help_options = self._optionals._group_actions
+        help_options = help_options + [self._positionals._group_actions[-1]]
+        formatter.add_usage(
+            self.usage, help_options, self._mutually_exclusive_groups)
 
         # description
         formatter.add_text(self.description)
@@ -198,7 +212,9 @@ class SpackArgumentParser(argparse.ArgumentParser):
         formatter.add_text(intro_by_level[level])
 
         # add argument groups based on metadata in commands
+        index = index_commands()
         sections = index[level]
+
         for section in sorted(sections):
             if section == 'help':
                 continue   # Cover help in the epilog.
@@ -235,6 +251,18 @@ class SpackArgumentParser(argparse.ArgumentParser):
         # determine help from format above
         return formatter.format_help()
 
+    def add_subparsers(self, **kwargs):
+        """Ensure that sensible defaults are propagated to subparsers"""
+        kwargs.setdefault('metavar', 'SUBCOMMAND')
+        sp = super(SpackArgumentParser, self).add_subparsers(**kwargs)
+        old_add_parser = sp.add_parser
+
+        def add_parser(name, **kwargs):
+            kwargs.setdefault('formatter_class', SpackHelpFormatter)
+            return old_add_parser(name, **kwargs)
+        sp.add_parser = add_parser
+        return sp
+
     def add_command(self, cmd_name):
         """Add one subcommand to this parser."""
         # lazily initialize any subparsers
@@ -263,13 +291,14 @@ class SpackArgumentParser(argparse.ArgumentParser):
             return super(SpackArgumentParser, self).format_help()
 
 
-def make_argument_parser():
+def make_argument_parser(**kwargs):
     """Create an basic argument parser without any subcommands added."""
     parser = SpackArgumentParser(
-        formatter_class=argparse.RawTextHelpFormatter, add_help=False,
+        formatter_class=SpackHelpFormatter, add_help=False,
         description=(
             "A flexible package manager that supports multiple versions,\n"
-            "configurations, platforms, and compilers."))
+            "configurations, platforms, and compilers."),
+        **kwargs)
 
     # stat names in groups of 7, for nice wrapping.
     stat_lines = list(zip(*(iter(stat_names),) * 7))
