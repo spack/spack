@@ -57,7 +57,7 @@ intro_by_level = {
 
 # control top-level spack options shown in basic vs. advanced help
 options_by_level = {
-    'short': ['h', 'k', 'V', 'color'],
+    'short': ['h', 'C', 'k', 'V', 'color'],
     'long': 'all'
 }
 
@@ -278,6 +278,8 @@ def make_argument_parser():
     parser.add_argument('--color', action='store', default='auto',
                         choices=('always', 'never', 'auto'),
                         help="when to colorize output; default is auto")
+    parser.add_argument('-C', '--config', action='store', metavar="DIR",
+                        help="additional directory for config files")
     parser.add_argument('-d', '--debug', action='store_true',
                         help="write out debug logs during compile")
     parser.add_argument('-D', '--pdb', action='store_true',

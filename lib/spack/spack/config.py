@@ -33,6 +33,7 @@ configuration system behaves.  The scopes are:
   #. ``system``
   #. ``site``
   #. ``user``
+  #. ``command-line``  (optional)
 
 And corresponding :ref:`per-platform scopes <platform-scopes>`. Important
 functions in this module are:
@@ -232,6 +233,13 @@ ConfigScope('site/%s' % _platform, os.path.join(_site_path, _platform))
 _user_path = spack.user_config_path
 ConfigScope('user', _user_path)
 ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
+
+# Optional configuration from the command-line (-C/--config).
+_cmd_path = spack.cmd_line_config_path
+if _cmd_path:
+    ConfigScope('command-line', _cmd_path)
+    ConfigScope('command-line/%s' % _platform,
+                os.path.join(_cmd_path, _platform))
 
 
 def highest_precedence_scope():
