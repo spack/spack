@@ -41,7 +41,7 @@
 ##########################################################################
 
 from spack import *
-
+import os
 
 class CbtfArgonavis(CMakePackage):
     """CBTF Argo Navis project contains the CUDA collector and supporting
@@ -50,18 +50,33 @@ class CbtfArgonavis(CMakePackage):
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    version('1.8', branch='master',
+    version('1.9.1', '3051bc5444a31a3f60aac44b9c7815ba')
+    url = "file:/global/homes/j/jgalaro/cbtf-argonavis-1.9.tar.gz"
+    version('1.9', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
 
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
+    variant('crayfe', default=False,
+            description="build only the FE tool using the runtime_dir \
+                         to point to target build.")
+    variant('runtime', default=False,
+            description="build only the runtime libraries and collectors.")
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
 
     depends_on("cmake@3.0.2:", type='build')
-    depends_on("boost@1.50.0:1.59.0")
-    depends_on("papi")
-    depends_on("mrnet@5.0.1:+lwthreads")
-    depends_on("cbtf")
+    #depends_on("boost@1.50.0:1.59.0")
+    #depends_on("papi")
+    #depends_on("libmonitor")
+    #depends_on("mrnet@5.0.1:+lwthreads")
+    #depends_on("mrnet@5.0.1:+cti", when='+cti')
+    #depends_on("cbtf")
+    #depends_on("cbtf+cti", when='+cti')
+    #depends_on("cbtf+runtime", when='+runtime')
     depends_on("cbtf-krell")
+    depends_on("cbtf-krell+cti", when="+cti")
+    depends_on("cbtf-krell+runtime", when="+runtime")
     depends_on("cuda")
 
     parallel = False
@@ -87,6 +102,20 @@ class CbtfArgonavis(CMakePackage):
             '-DBoost_DIR=%s' % spec['boost'].prefix,
             '-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib,
             '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
+            '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
             '-DBoost_NO_SYSTEM_PATHS=ON']
 
         return cmake_args
+
+    def setup_environment(self, spack_env, run_env):
+        """Set up the compile and runtime environments for a package."""
+
+        if os.environ.get('LD_LIBRARY_PATH'):
+            os.environ['LD_LIBRARY_PATH'] += self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
+        else:
+            os.environ['LD_LIBRARY_PATH'] = self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
+
+        run_env.prepend_path(
+            'LD_LIBRARY_PATH', self.spec['cuda'].prefix + '/extras/CUPTI/lib64')
+        spack_env.prepend_path(
+            'LD_LIBRARY_PATH', self.spec['cuda'].prefix + '/extras/CUPTI/lib64')

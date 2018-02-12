@@ -53,9 +53,11 @@ class Cbtf(CMakePackage):
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
 
     # Use when the git repository is available
-    version('1.8', branch='master',
+    version('1.9', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf.git')
 
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
     variant('build_type', default='None', values=('None'),
@@ -64,6 +66,7 @@ class Cbtf(CMakePackage):
     depends_on("cmake@3.0.2:", type='build')
     depends_on("boost@1.50.0:1.59.0")
     depends_on("mrnet@5.0.1:+lwthreads")
+    depends_on("mrnet@5.0.1:+cti", when='+cti')
     depends_on("xerces-c@3.1.1:")
     # Work around for spack libxml2 package bug, take off python when fixed
     depends_on("libxml2+python")
@@ -83,7 +86,8 @@ class Cbtf(CMakePackage):
 
         compile_flags = "-O2 -g"
 
-        if '+runtime' in spec:
+        if spec.satisfies('+runtime'):
+
             # Install message tag include file for use in Intel MIC
             # cbtf-krell build
             # FIXME

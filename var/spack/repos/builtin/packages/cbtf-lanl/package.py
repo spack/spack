@@ -48,18 +48,26 @@ class CbtfLanl(CMakePackage):
        command monitoring tool."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    version('1.8', branch='master',
+    version('1.9', branch='master',
             git='http://git.code.sf.net/p/cbtf-lanl/cbtf-lanl')
 
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
+    variant('runtime', default=False,
+            description="build only the runtime libraries and collectors.")
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
 
     depends_on("cmake@3.0.2:", type='build')
     # Dependencies for cbtf-krell
-    depends_on("mrnet@5.0.1:+lwthreads")
-    depends_on("xerces-c@3.1.1:")
-    depends_on("cbtf")
+    #depends_on("mrnet@5.0.1:+lwthreads")
+    #depends_on("xerces-c@3.1.1:")
+    #depends_on("cbtf")
+    #depends_on("cbtf+cti", when='+cti')
+    #depends_on("cbtf+runtime", when='+runtime')
     depends_on("cbtf-krell")
+    depends_on("cbtf-krell+cti", when='+cti')
+    depends_on("cbtf-krell+runtime", when='+runtime')
 
     parallel = False
 
