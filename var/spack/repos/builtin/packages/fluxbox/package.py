@@ -28,8 +28,8 @@ from spack import *
 
 class Fluxbox(AutotoolsPackage):
     """Fluxbox is a windowmanager for X that was based on the Blackbox 0.61.1 code.
- It is very light on resources and easy to handle but yet full of features to make an easy, 
- and extremely fast, desktop experience.
+ It is very light on resources and easy to handle but yet full of features
+ to make an easy, and extremely fast, desktop experience.
  """
 
     homepage = "http://fluxbox.org/"
@@ -47,4 +47,3 @@ class Fluxbox(AutotoolsPackage):
     depends_on('libxext')
     depends_on('expat')
     depends_on('libx11')
-
