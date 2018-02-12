@@ -156,8 +156,8 @@ class Openspeedshop(CMakePackage):
     depends_on('cbtf-krell+mvapich2', when='+cbtf+mvapich2')
     depends_on('cbtf-krell+openmpi', when='+cbtf+openmpi')
     depends_on("cbtf-argonavis", when='+cbtf+cuda')
-    #depends_on("mrnet@5.0.1:+lwthreads", when='+cbtf')
-    #depends_on("mrnet@5.0.1:+cti", when='+cti+cbtf')
+    depends_on("mrnet@5.0.1:+lwthreads", when='+cbtf')
+    depends_on("mrnet@5.0.1:+cti", when='+cti+cbtf')
 
     parallel = False
 
