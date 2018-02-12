@@ -27,11 +27,13 @@ from spack import *
 
 class RRcppblaze(RPackage):
     """'Blaze' is an open-source, high-performance C++ math library for dense
-       and sparse arithmetic. With its state-of-the-art Smart Expression
-       Template implementation 'Blaze' combines the elegance and ease of use
-       of a domain-specific language with 'HPC'-grade performance, making it
-       one of the most intuitive and fastest C++ math libraries available. The
-       'Blaze' library offers: - high performance through the integration of
+       and sparse arithmetic.
+
+       With its state-of-the-art Smart Expression Template implementation
+       'Blaze' combines the elegance and ease of use of a domain-specific
+       language with 'HPC'-grade performance, making it one of the most
+       intuitive and fastest C++ math libraries available. The 'Blaze'
+       library offers: - high performance through the integration of
        'BLAS' libraries and manually tuned 'HPC' math kernels - vectorization
        by 'SSE', 'SSE2', 'SSE3', 'SSSE3', 'SSE4', 'AVX', 'AVX2', 'AVX-512',
        'FMA', and 'SVML' - parallel execution by 'OpenMP', C++11 threads and
