@@ -63,7 +63,7 @@ class R(AutotoolsPackage):
     depends_on('blas', when='+external-lapack')
     depends_on('lapack', when='+external-lapack')
 
-    # Concrete dependencies
+    # Concrete dependencies.
     depends_on('readline')
     depends_on('ncurses')
     depends_on('icu4c')
