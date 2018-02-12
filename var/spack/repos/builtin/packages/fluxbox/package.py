@@ -37,10 +37,6 @@ class Fluxbox(AutotoolsPackage):
 
     version('1.3.7', 'd99d7710f9daf793e0246dae5304b595')
 
-    # depends_on('m4', type='build')
-    # depends_on('autoconf', type='build')
-    # depends_on('automake', type='build')
-    # depends_on('libtool', type='build')
     depends_on('pkg-config', type='build')
     depends_on('freetype')
     depends_on('libxrender')
