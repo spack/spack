@@ -20,7 +20,7 @@ jobs:
       language: python
       env: TEST_SUITE=flake8
     - stage: 'flake8 + documentation'
-      python: '2.7'
+      python: '3.6'
       os: linux
       language: python
       env: TEST_SUITE=doc
