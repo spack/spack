@@ -31,7 +31,7 @@ class Tcoffee(MakefilePackage):
     homepage = "http://www.tcoffee.org/"
     url      = "https://github.com/cbcrg/tcoffee"
 
-    version('2017-08-17', 'a9dd7e5cf3bf71128cbe44daf71dd283', git='https://github.com/cbcrg/tcoffee.git', commit='f389b558e91d0f82e7db934d9a79ce285f853a71')
+    version('2017-08-17', '571cdc4920d9f3e07954193d2ca7a579', git='https://github.com/cbcrg/tcoffee.git', commit='f389b558e91d0f82e7db934d9a79ce285f853a71')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('blast-plus')
