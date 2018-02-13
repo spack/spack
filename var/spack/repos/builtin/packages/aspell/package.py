@@ -23,9 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from llnl.util.link_tree import LinkTree, MergeConflictError
-import spack.store
-from spack.package import ExtensionError
 
 
 # See also: AspellDictPackage
