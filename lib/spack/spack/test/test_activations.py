@@ -33,6 +33,7 @@ from spack.util.prefix import Prefix
 
 import os
 import pytest
+import sys
 
 
 class FakeExtensionPackage(object):
@@ -61,8 +62,11 @@ class FakePythonExtensionPackage(FakeExtensionPackage):
         super(FakePythonExtensionPackage, self).__init__(name, prefix)
 
     def add_files_to_view(self, view, merge_map):
-        # TODO: this will fail for python >= 3
-        return PythonPackage.add_files_to_view.im_func(self, view, merge_map)
+        if sys.version_info >= (3, 0):
+            add_fn = pkg.flag_handler.__func__
+        else:
+            add_fn = PythonPackage.add_files_to_view.im_func
+        return add_fn(self, view, merge_map)
 
     def view_file_conflicts(self, view, merge_map):
         return PythonPackage.view_file_conflicts.im_func(self, view, merge_map)
