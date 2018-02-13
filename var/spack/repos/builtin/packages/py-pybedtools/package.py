@@ -39,6 +39,6 @@ class PyPybedtools(PythonPackage):
     depends_on('bedtools2',     type=('build', 'run'))
     depends_on('py-numpy',      type=('build', 'run'))
     depends_on('py-pandas',     type=('build', 'run'))
-    depends_on('py-pysam@0.8.1:', type=('build', 'run'), when='@0.7:')
+    depends_on('py-pysam@0.8.1:', type=('build', 'run'), when='@0.7.0:')
     depends_on('py-pysam@0.7.7',  type=('build', 'run'), when='@0.6.9')
     depends_on('py-six',        type=('build', 'run'))
