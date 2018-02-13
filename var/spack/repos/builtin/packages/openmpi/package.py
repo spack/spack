@@ -178,7 +178,7 @@ class Openmpi(AutotoolsPackage):
         'fabrics',
         default=None if _verbs_dir() is None else 'verbs',
         description='List of fabrics that are enabled',
-        values=('psm', 'psm2', 'pmi', 'verbs', 'mxm'),
+        values=('psm', 'psm2', 'verbs', 'mxm'),
         multi=True
     )
 
@@ -278,6 +278,26 @@ class Openmpi(AutotoolsPackage):
         if (path is not None):
             line += '={0}'.format(path)
         return line
+
+    def with_or_without_schedulers(self, activated):
+        spec  = self.spec
+        opts = []
+
+        for x in ['alps', 'lsf', 'tm', 'sge', 'loadleveler']:
+            if 'schedulers={0}'.format(x) in spec:
+                opts.append('--with-{0}'.format(x))
+
+        if 'schedulers=slurm' in spec:
+            if self.spec.satisfies('@1.5.4:'): # PMI support was added in 1.5.5
+                # See how SLURM and OpenMPI work together
+                # https://www.open-mpi.org/faq/?category=slurm
+                # https://slurm.schedmd.com/mpi_guide.html#open_mpi
+                # TODO: Add PMIx support since OpenMPI 2.0
+                opts.append('--with-slurm')
+                opts.append('--with-pmi')
+            else:
+                opts.append('--with-slurm')
+        return opts
 
     @run_before('autoreconf')
     def die_without_fortran(self):
