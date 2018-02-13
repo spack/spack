@@ -25,6 +25,7 @@
 
 import spack
 from llnl.util.filesystem import join_path
+from llnl.util.link_tree import MergeConflictError
 from spack.build_systems.python import PythonPackage
 from spack.directory_layout import YamlDirectoryLayout
 from spack.filesystem_view import YamlFilesystemView
@@ -253,6 +254,33 @@ def test_python_activation_view_add_files(tmpdir, namespace_extensions):
     # Normally handled by Package.do_activate, but here we activate directly
     view.extensions_layout.add_extension(python_spec, ext1_pkg.spec)
     python_pkg.activate(ext2_pkg, view)
+
+
+# TODO: is this redundant? it makes sure that under circumstances where the
+# namespace doesnt match that a conflict is recorded
+def test_python_namespace_conflict(tmpdir, namespace_extensions):
+    """Test the view update logic in PythonPackage
+    """
+    ext1_prefix, ext2_prefix, py_namespace = namespace_extensions
+    other_namespace = py_namespace + 'other'
+
+    python_spec = spack.spec.Spec('python@2.7.12')
+    python_spec._concrete = True
+
+    ext1_pkg = FakePythonExtensionPackage(
+        'py-extension1', ext1_prefix, py_namespace, python_spec)
+    ext2_pkg = FakePythonExtensionPackage(
+        'py-extension2', ext2_prefix, other_namespace, python_spec)
+
+    view_dir = str(tmpdir.join('view'))
+    layout = YamlDirectoryLayout(view_dir)
+    view = YamlFilesystemView(view_dir, layout)
+
+    python_pkg = python_spec.package
+    python_pkg.activate(ext1_pkg, view)
+    view.extensions_layout.add_extension(python_spec, ext1_pkg.spec)
+    with pytest.raises(MergeConflictError):
+        python_pkg.activate(ext2_pkg, view)
 
 
 @pytest.fixture()
