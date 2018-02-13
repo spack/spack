@@ -48,6 +48,7 @@ class R(AutotoolsPackage):
     version('3.3.2', '2437014ef40641cdc9673e89c040b7a8')
     version('3.3.1', 'f50a659738b73036e2f5635adbd229c5')
     version('3.3.0', '5a7506c8813432d1621c9725e86baf7a')
+    version('3.2.5', '7b23ee70cfb383be3bd4360e3c71d8c3')
     version('3.2.3', '1ba3dac113efab69e706902810cc2970')
     version('3.2.2', '57cef5c2e210a5454da1979562a10e5b')
     version('3.2.1', 'c2aac8b40f84e08e7f8c9068de9239a3')
@@ -64,7 +65,7 @@ class R(AutotoolsPackage):
     depends_on('blas', when='+external-lapack')
     depends_on('lapack', when='+external-lapack')
 
-    # Concrete dependencies
+    # Concrete dependencies.
     depends_on('readline')
     depends_on('ncurses')
     depends_on('icu4c')
