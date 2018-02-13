@@ -63,7 +63,7 @@ class FakePythonExtensionPackage(FakeExtensionPackage):
 
     def add_files_to_view(self, view, merge_map):
         if sys.version_info >= (3, 0):
-            add_fn = pkg.flag_handler.__func__
+            add_fn = PythonPackage.add_files_to_view.__func__
         else:
             add_fn = PythonPackage.add_files_to_view.im_func
         return add_fn(self, view, merge_map)
