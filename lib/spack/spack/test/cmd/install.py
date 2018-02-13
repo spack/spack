@@ -286,7 +286,8 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
             '--log-format=junit', '--log-file=test.xml',
             'raiser',
             'exc_type={0}'.format(exc_typename),
-            'msg="{0}"'.format(msg)
+            'msg="{0}"'.format(msg),
+            fail_on_error=False
         )
 
     files = tmpdir.listdir()

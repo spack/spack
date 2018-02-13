@@ -33,9 +33,17 @@ class Canfail(Package):
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
-    succeed = False
+    _succeed = False
+
+    @property
+    def succeed(self):
+        return Canfail._succeed
+
+    @succeed.setter
+    def succeed(self, value):
+        Canfail._succeed = value
 
     def install(self, spec, prefix):
-        if not self.succeed:
+        if not self._succeed:
             raise InstallError("'succeed' was false")
         touch(join_path(prefix, 'an_installation_file'))

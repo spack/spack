@@ -144,6 +144,11 @@ class InfoCollector(object):
 
                 start_time = time.time()
                 value = None
+
+                # If we raise here, we should behave the same out of the
+                # context manager, so check if we need to re-raise at the end
+                exc_val = None
+
                 try:
 
                     value = do_install(pkg, *args, **kwargs)
@@ -158,6 +163,7 @@ class InfoCollector(object):
                     test_case['stdout'] = fetch_package_log(pkg)
                     test_case['message'] = e.message or 'Installation failure'
                     test_case['exception'] = e.traceback
+                    exc_val = e
 
                 except (Exception, BaseException) as e:
                     # Everything else is an error (the installation
@@ -166,6 +172,7 @@ class InfoCollector(object):
                     test_case['stdout'] = fetch_package_log(pkg)
                     test_case['message'] = str(e) or 'Unknown error'
                     test_case['exception'] = traceback.format_exc()
+                    exc_val = e
 
                 finally:
                     test_case['elapsed_time'] = time.time() - start_time
@@ -185,6 +192,9 @@ class InfoCollector(object):
                         item['testcases'].append(test_case)
                     except StopIteration:
                         pass
+
+                if exc_val:
+                    raise exc_val
 
                 return value
 

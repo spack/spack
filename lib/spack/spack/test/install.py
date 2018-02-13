@@ -145,7 +145,7 @@ def test_installed_dependency_request_conflicts(
 @pytest.mark.disable_clean_stage_check
 def test_partial_install_keep_prefix(install_mockery, mock_fetch):
     spec = Spec('canfail').concretized()
-    pkg = spack.repo.get(spec)
+    pkg = spec.package
 
     # Normally the stage should start unset, but other tests set it
     pkg._stage = None

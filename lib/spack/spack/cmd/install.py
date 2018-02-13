@@ -141,8 +141,6 @@ def default_log_file(spec):
 def install_spec(cli_args, kwargs, spec):
     # Do the actual installation
     try:
-        # decorate the install if necessary
-        PackageBase.do_install = decorator(PackageBase.do_install)
         what = cli_args.things_to_install.split(',')
         spack.package.install(spec, what=what, **kwargs)
     except spack.build_environment.InstallError as e:
