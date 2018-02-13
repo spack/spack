@@ -39,37 +39,3 @@ class Aspell(AutotoolsPackage):
     extendable = True           # support activating dictionaries
 
     version('0.60.6.1', 'e66a9c9af6a60dc46134fdacf6ce97d7')
-
-    # Note: aspell doesn't support non-global extensions so this skips
-    # calling view.merge
-    def activate(self, extension, view, **kwargs):
-        if view.root != self.spec.prefix:
-            raise ExtensionError(
-                'aspell does not support non-global extensions')
-
-        aspell = which(self.prefix.bin.aspell)
-        # The dictionaries install all their bits into their prefix.lib dir,
-        # we want to link them into aspell's dict-dir.
-        dest_dir = aspell('dump', 'config', 'dict-dir', output=str).strip()
-        tree = LinkTree(extension.prefix.lib)
-
-        def ignore(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    kwargs.get('ignore', lambda f: False)(filename))
-
-        conflict = tree.find_conflict(dest_dir, ignore=ignore)
-        if conflict:
-            raise MergeConflictError(conflict)
-
-        tree.merge(dest_dir, ignore=ignore)
-
-    def deactivate(self, extension, view, **kwargs):
-        aspell = which(self.prefix.bin.aspell)
-        dest_dir = aspell('dump', 'config', 'dict-dir', output=str).strip()
-
-        def ignore(filename):
-            return (filename in spack.store.layout.hidden_file_paths or
-                    kwargs.get('ignore', lambda f: False)(filename))
-
-        tree = LinkTree(extension.prefix.lib)
-        tree.unmerge(dest_dir, ignore=ignore)

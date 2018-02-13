@@ -276,20 +276,29 @@ class YamlFilesystemView(FilesystemView):
         return True
 
     def merge(self, spec, ignore=None):
-        tree = LinkTree(spec.prefix)
+        pkg = spec.package
+        if hasattr(pkg, 'view_source'):
+            view_source = pkg.view_source()
+        else:
+            view_source = spec.prefix
+        if hasattr(pkg, 'view_destination'):
+            view_dst = pkg.view_destination(self)
+        else:
+            view_dst = self.root
+
+        tree = LinkTree(view_source)
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
             self.layout.hidden_file_paths, ignore)
 
         # check for dir conflicts
-        conflicts = tree.find_dir_conflicts(self.root, ignore_file)
+        conflicts = tree.find_dir_conflicts(view_dst, ignore_file)
 
         # check for file conflicts (if the package reports 'get_file_conflicts'
         # then use that, otherwise just check if any of the dst files exist)
-        merge_map = tree.get_file_map(self.root, ignore_file)
+        merge_map = tree.get_file_map(view_dst, ignore_file)
         if not self.ignore_conflicts:
-            pkg = spec.package
             if hasattr(pkg, 'view_file_conflicts'):
                 conflicts.extend(pkg.view_file_conflicts(self, merge_map))
             else:
@@ -300,7 +309,7 @@ class YamlFilesystemView(FilesystemView):
             raise MergeConflictError(conflicts[0])
 
         # merge directories with the tree
-        tree.merge_directories(self.root, ignore_file)
+        tree.merge_directories(view_dst, ignore_file)
 
         # if the pkg supports merge_files_to_view, use that, otherwise go
         # through everything and view.link
@@ -312,7 +321,16 @@ class YamlFilesystemView(FilesystemView):
                     self.link(src, dst)
 
     def unmerge(self, spec, ignore=None):
-        tree = LinkTree(spec.prefix)
+        pkg = spec.package
+        if hasattr(pkg, 'view_source'):
+            view_source = pkg.view_source()
+        else:
+            view_source = spec.prefix
+        if hasattr(pkg, 'view_destination'):
+            view_dst = pkg.view_destination(self)
+        else:
+            view_dst = self.root
+        tree = LinkTree(view_source)
 
         ignore = ignore or (lambda f: False)
         ignore_file = match_predicate(
@@ -320,8 +338,7 @@ class YamlFilesystemView(FilesystemView):
 
         # if pkg supports remove_files_from_view, use that, otherwise just
         # use view.remove_link
-        merge_map = tree.get_file_map(self.root, ignore_file)
-        pkg = spec.package
+        merge_map = tree.get_file_map(view_dst, ignore_file)
         if hasattr(pkg, 'remove_files_from_view'):
             pkg.remove_files_from_view(self, merge_map)
         else:
@@ -329,7 +346,7 @@ class YamlFilesystemView(FilesystemView):
                 self.remove_file(src, dst)
 
         # now unmerge the directory tree
-        tree.unmerge_directories(self.root, ignore_file)
+        tree.unmerge_directories(view_dst, ignore_file)
 
     def remove_file(self, src, dest):
         if not os.path.islink(dest):
