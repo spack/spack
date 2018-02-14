@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -36,9 +36,6 @@ class Cube(AutotoolsPackage):
     homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
     url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz"
 
-    # Some versions fail with parallel builds/installs
-    parallel = False
-
     version('4.3.5', 'e5dce986e3c6381ea3a5fcb66c553adc')
     version('4.3.4', '50f73060f55311cb12c5b3cb354d59fa')
     version('4.3.3', '07e109248ed8ffc7bdcce614264a2909')
@@ -64,3 +61,6 @@ class Cube(AutotoolsPackage):
             configure_args.append('--without-gui')
 
         return configure_args
+
+    def install(self, spec, prefix):
+        make('install', parallel=False)

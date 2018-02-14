@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,11 +26,13 @@
 This test verifies that the Spack directory layout works properly.
 """
 import os
-
 import pytest
+
+from llnl.util.filesystem import join_path
+
 import spack
-from spack.directory_layout import (YamlDirectoryLayout,
-                                    InvalidDirectoryLayoutParametersError)
+from spack.directory_layout import YamlDirectoryLayout
+from spack.directory_layout import InvalidDirectoryLayoutParametersError
 from spack.repository import RepoPath
 from spack.spec import Spec
 
@@ -55,8 +57,10 @@ def test_yaml_directory_layout_parameters(
     # Ensure default layout matches expected spec format
     layout_default = YamlDirectoryLayout(str(tmpdir))
     path_default = layout_default.relative_path_for_spec(spec)
-    assert(path_default ==
-           spec.format("${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"))   # NOQA: ignore=E501
+    assert(path_default == spec.format(
+        "${ARCHITECTURE}/"
+        "${COMPILERNAME}-${COMPILERVER}/"
+        "${PACKAGE}-${VERSION}-${HASH}"))
 
     # Test hash_length parameter works correctly
     layout_10 = YamlDirectoryLayout(str(tmpdir), hash_len=10)
@@ -133,6 +137,8 @@ def test_read_and_write_spec(
         # TODO: increase reuse of build dependencies.
         stored_deptypes = ('link', 'run')
         expected = spec.copy(deps=stored_deptypes)
+        expected._mark_concrete()
+
         assert expected.concrete
         assert expected == spec_from_file
         assert expected.eq_dag(spec_from_file)

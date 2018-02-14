@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -40,6 +40,9 @@ class Nco(AutotoolsPackage):
     version('4.6.2', 'b7471acf0cc100343392f4171fb56113')
     version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
     version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
+
+    # https://github.com/nco/nco/issues/43
+    patch('NUL-0-NULL.patch')
 
     variant('doc', default=False, description='Build/install NCO TexInfo-based documentation')
 

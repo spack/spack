@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -75,7 +75,7 @@ class PythonPackage(PackageBase):
 
     .. code-block:: console
 
-       $ python setup.py --no-user-cfg <phase>
+       $ python -s setup.py --no-user-cfg <phase>
 
     Each phase also has a <phase_args> function that can pass arguments to
     this call. All of these functions are empty except for the ``install_args``
@@ -132,7 +132,7 @@ class PythonPackage(PackageBase):
         setup = self.setup_file()
 
         with working_dir(self.build_directory):
-            self.python(setup, '--no-user-cfg', *args, **kwargs)
+            self.python('-s', setup, '--no-user-cfg', *args, **kwargs)
 
     def _setup_command_available(self, command):
         """Determines whether or not a setup.py command exists.
@@ -152,7 +152,7 @@ class PythonPackage(PackageBase):
         python = inspect.getmodule(self).python
         setup = self.setup_file()
 
-        python(setup, '--no-user-cfg', command, '--help', **kwargs)
+        python('-s', setup, '--no-user-cfg', command, '--help', **kwargs)
         return python.returncode == 0
 
     # The following phases and their descriptions come from:

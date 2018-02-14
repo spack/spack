@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -23,8 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-import sys
 import os
+import sys
 from spack import *
 
 
@@ -37,9 +37,16 @@ class Petsc(Package):
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
+    maintainers = ['balay', 'barrysmith']
+
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.8.3', '322cbcf2a0f7b7bad562643b05d66f11')
+    version('3.8.2', '00666e1c4cbfa8dd6eebf91ff8180f79')
+    version('3.8.1', '3ed75c1147800fc156fe1f1e515a68a7')
+    version('3.8.0', '02680f1f78a0d4c5a9de80a366793eb8')
+    version('3.7.7', 'c2cfb76677d32839810c4cf51a2f9cf5')
     version('3.7.6', '977aa84b85aa3146c695592cd0a11057')
     version('3.7.5', 'f00f6e6a3bac39052350dd47194b58a3')
     version('3.7.4', 'aaf94fa54ef83022c14091f10866eedf')
@@ -77,6 +84,12 @@ class Petsc(Package):
             description='Activates support for Trilinos (only parallel)')
     variant('int64', default=False,
             description='Compile with 64bit indices')
+    variant('clanguage', default='C', values=('C', 'C++'),
+            description='Specify C (recommended) or C++ to compile PETSc',
+            multi=False)
+
+    # 3.8.0 has a build issue with MKL - so list this conflict explicitly
+    conflicts('^intel-mkl', when='@3.8.0')
 
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
@@ -100,10 +113,13 @@ class Petsc(Package):
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')
-    depends_on('metis@5:~int64', when='+metis~int64')
-    depends_on('metis@5:+int64', when='+metis+int64')
+    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
+    depends_on('metis@5:+int64', when='+metis+int64~double')
+    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
+    depends_on('metis@5:+int64', when='+metis+int64~double')
 
-    depends_on('hdf5+mpi', when='+hdf5+mpi')
+    depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
+    depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
@@ -117,8 +133,10 @@ class Petsc(Package):
     depends_on('hypre~internal-superlu+int64', when='+hypre+mpi~complex+int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.0.0:~int64', when='@3.7:+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.0.0:+int64', when='@3.7:+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.0.0:~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.0.0:+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.8.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.8.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
@@ -185,6 +203,11 @@ class Petsc(Package):
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
 
+        if self.spec.satisfies('clanguage=C++'):
+            options.append('--with-clanguage=C++')
+        else:
+            options.append('--with-clanguage=C')
+
         # Help PETSc pick up Scalapack from MKL:
         if 'scalapack' in spec:
             scalapack = spec['scalapack'].libs
@@ -199,7 +222,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'trilinos'):
+                        'mumps', 'trilinos', 'zlib'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))

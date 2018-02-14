@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,6 +33,7 @@ class Curl(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://curl.haxx.se/download/curl-7.54.0.tar.bz2"
 
+    version('7.56.0', 'e0caf257103e0c77cee5be7e9ac66ca4')
     version('7.54.0', '89bb7ba87384dfbf4f1a3f953da42458')
     version('7.53.1', 'fb1f03a142236840c1a77c035fa4c542')
     version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')
@@ -47,13 +48,18 @@ class Curl(AutotoolsPackage):
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
+    variant('nghttp2', default=False, description='build nghttp2 library (requires C++11)')
+
     depends_on('openssl')
     depends_on('zlib')
+    depends_on('nghttp2', when='+nghttp2')
 
     def configure_args(self):
         spec = self.spec
 
-        return [
+        args = [
             '--with-zlib={0}'.format(spec['zlib'].prefix),
-            '--with-ssl={0}'.format(spec['openssl'].prefix),
+            '--with-ssl={0}'.format(spec['openssl'].prefix)
         ]
+        args += self.with_or_without('nghttp2')
+        return args

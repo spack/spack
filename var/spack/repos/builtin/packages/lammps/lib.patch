@@ -1,0 +1,13 @@
+diff --git a/cmake/CMakeLists.txt b/cmake/CMakeLists.txt
+index 6d35db75a..5987869b8 100644
+--- a/cmake/CMakeLists.txt
++++ b/cmake/CMakeLists.txt
+@@ -530,7 +530,7 @@ target_link_libraries(lammps ${LAMMPS_LINK_LIBS})
+ set_target_properties(lammps PROPERTIES SOVERSION ${SOVERSION})
+ if(INSTALL_LIB)
+   install(TARGETS lammps LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+-  install(FILES ${LAMMPS_SOURCE_DIR}/lammps.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
++  install(FILES ${LAMMPS_SOURCE_DIR}/library.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/lammps)
+ elseif(BUILD_SHARED_LIBS)
+   message(FATAL_ERROR "Shared library has to be installed, use -DINSTALL_LIB=ON to install lammps with a library")
+ endif()

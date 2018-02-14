@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -24,11 +24,13 @@
 ##############################################################################
 import re
 
-from spack.architecture import OperatingSystem
-from spack.util.executable import *
+import llnl.util.tty as tty
+
 import spack.spec
-from spack.util.multiproc import parmap
 import spack.compilers
+from spack.architecture import OperatingSystem
+from spack.util.multiproc import parmap
+from spack.util.module_cmd import get_module_cmd
 
 
 class Cnl(OperatingSystem):
@@ -63,8 +65,7 @@ class Cnl(OperatingSystem):
             if not cmp_cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-            modulecmd = which('modulecmd')
-            modulecmd.add_default_arg('python')
+            modulecmd = get_module_cmd()
 
             output = modulecmd(
                 'avail', cmp_cls.PrgEnv_compiler, output=str, error=str)

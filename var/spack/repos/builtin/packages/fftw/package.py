@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -37,6 +37,7 @@ class Fftw(AutotoolsPackage):
     url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "http://www.fftw.org/download.html"
 
+    version('3.3.7', '0d5915d7d39b3253c1cc05030d79ac47')
     version('3.3.6-pl2', '927e481edbb32575397eb3d62535a856')
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
@@ -44,6 +45,7 @@ class Fftw(AutotoolsPackage):
 
     patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
+    patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
 
     variant(
         'float', default=True,
@@ -68,6 +70,11 @@ class Fftw(AutotoolsPackage):
     depends_on('automake', type='build', when='+pfft_patches')
     depends_on('autoconf', type='build', when='+pfft_patches')
     depends_on('libtool', type='build', when='+pfft_patches')
+
+    @property
+    def libs(self):
+        result = find_libraries(['libfftw3'], root=self.prefix, recurse=True)
+        return result
 
     def autoreconf(self, spec, prefix):
         if '+pfft_patches' in spec:

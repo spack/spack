@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -155,7 +155,7 @@ def _read_specs_from_file(filename):
                 s.package
                 specs.append(s)
             except SpackError as e:
-                tty.die("Parse error in %s, line %d:" % (args.file, i + 1),
+                tty.die("Parse error in %s, line %d:" % (filename, i + 1),
                         ">>> " + string, str(e))
     return specs
 
@@ -182,7 +182,7 @@ def mirror_create(args):
         new_specs = set()
         for spec in specs:
             spec.concretize()
-            for s in spec.traverse(deptype_query=spack.alldeps):
+            for s in spec.traverse():
                 new_specs.add(s)
         specs = list(new_specs)
 
@@ -213,7 +213,7 @@ def mirror_create(args):
         "  %-4d failed to fetch." % e)
     if error:
         tty.error("Failed downloads:")
-        colify(s.format("$_$@") for s in error)
+        colify(s.cformat("$_$@") for s in error)
 
 
 def mirror(parser, args):

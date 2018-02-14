@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,12 +32,17 @@ class Ocaml(Package):
     homepage = "http://ocaml.org/"
     url      = "http://caml.inria.fr/pub/distrib/ocaml-4.03/ocaml-4.03.0.tar.gz"
 
+    version('4.06.0', '66e5439eb63dbb8b8224cba5d1b20947')
     version('4.03.0', '43812739ea1b4641cf480f57f977c149')
 
     depends_on('ncurses')
 
+    def url_for_version(self, version):
+        url = "http://caml.inria.fr/pub/distrib/ocaml-{0}/ocaml-{1}.tar.gz"
+        return url.format(version.up_to(2), version)
+
     def install(self, spec, prefix):
         configure('-prefix', '{0}'.format(prefix))
-        
+
         make('world.opt')
-        make('install')
+        make('install', 'PREFIX={0}'.format(prefix))

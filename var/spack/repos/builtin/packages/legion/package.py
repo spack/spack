@@ -6,8 +6,8 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -44,23 +44,17 @@ class Legion(CMakePackage):
     url      = "https://github.com/StanfordLegion/legion/tarball/legion-17.02.0"
 
     version('develop', git='https://github.com/StanfordLegion/legion', branch='master')
+    version('17.10.0', 'ebfc974dc82a9d7f3ba53242ecae62e1')
+    version('17.08.0', 'acc1ea8c564c4a382a015e0c9cf94574')
     version('17.02.0', '31ac3004e2fb0996764362d2b6f6844a')
 
-    variant('debug', default=False, description='Build debug version')
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on("cmake@3.1:", type='build')
-    depends_on("gasnet", when='~mpi')
-    depends_on("gasnet+mpi", when='+mpi')
-
-    def build_type(self):
-        spec = self.spec
-        if '+debug' in spec:
-            return 'Debug'
-        else:
-            return 'Release'
+    depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB'", when='~mpi')
+    depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +mpi", when='+mpi')
 
     def cmake_args(self):
         options = [

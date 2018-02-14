@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -33,6 +33,7 @@ class Meme(AutotoolsPackage):
     homepage = "http://meme-suite.org"
     url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
 
+    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
     version('4.11.4', '371f513f82fa0888205748e333003897')
 
     variant('mpi', default=True, description='Enable MPI support')

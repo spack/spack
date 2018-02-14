@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -30,8 +30,10 @@ class RDplyr(RPackage):
     in memory and out of memory."""
 
     homepage = "https://github.com/hadley/dplyr"
-    url      = "https://cran.r-project.org/src/contrib/dplyr_0.5.0.tar.gz"
+    url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
 
+    version('0.7.3', 'f9760b796917747e9dcd927ebb531c7d')
     version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
 
     depends_on('r-assertthat', type=('build', 'run'))
@@ -41,4 +43,8 @@ class RDplyr(RPackage):
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-lazyeval', type=('build', 'run'))
     depends_on('r-dbi', type=('build', 'run'))
+    depends_on('r-bindrcpp', type=('build', 'run'))
+    depends_on('r-glue', type=('build', 'run'))
+    depends_on('r-pkgconfig', type=('build', 'run'))
+    depends_on('r-plogr', type=('build', 'run'))
     depends_on('r-bh', type=('build', 'run'))

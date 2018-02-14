@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,7 @@ class Cppcheck(Package):
     homepage = "http://cppcheck.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/cppcheck/cppcheck/1.78/cppcheck-1.78.tar.bz2"
 
+    version('1.81', '0c60a1d00652044ef511bdd017689938')
     version('1.78', 'f02d0ee0a4e71023703c6c5efff6cf9d')
     version('1.72', '2bd36f91ae0191ef5273bb7f6dc0d72e')
     version('1.68', 'c015195f5d61a542f350269030150708')

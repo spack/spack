@@ -27,11 +27,11 @@ Installation
 ------------
 
 Getting Spack is easy.  You can clone it from the `github repository
-<https://github.com/llnl/spack>`_ using this command:
+<https://github.com/spack/spack>`_ using this command:
 
 .. code-block:: console
 
-   $ git clone https://github.com/llnl/spack.git
+   $ git clone https://github.com/spack/spack.git
 
 This will create a directory called ``spack``.
 
@@ -52,7 +52,7 @@ For a richer experience, use Spack's shell support:
 
 .. code-block:: console
 
-   # For bash users
+   # For bash/zsh users
    $ export SPACK_ROOT=/path/to/spack
    $ . $SPACK_ROOT/share/spack/setup-env.sh
 
@@ -60,9 +60,14 @@ For a richer experience, use Spack's shell support:
    $ setenv SPACK_ROOT /path/to/spack
    $ source $SPACK_ROOT/share/spack/setup-env.csh
 
+
 This automatically adds Spack to your ``PATH`` and allows the ``spack``
-command to :ref:`load environment modules <shell-support>` and execute
+command to be used to execute spack :ref:`commands <shell-support>` and
 :ref:`useful packaging commands <packaging-shell-support>`.
+
+If :ref:`environment-modules or dotkit <InstallEnvironmentModules>` is
+installed and available, the ``spack`` command can also load and unload
+:ref:`modules <modules>`.
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment
@@ -94,12 +99,12 @@ Optional: Alternate Prefix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You may want to run Spack out of a prefix other than the git repository
-you cloned.  The ``spack bootstrap`` command provides this
+you cloned.  The ``spack clone`` command provides this
 functionality.  To install spack in a new directory, simply type:
 
 .. code-block:: console
 
-   $ spack bootstrap /my/favorite/prefix
+   $ spack clone /my/favorite/prefix
 
 This will install a new spack script in ``/my/favorite/prefix/bin``,
 which you can use just like you would the regular spack script.  Each
@@ -316,19 +321,6 @@ by adding the following to your ``packages.yaml`` file:
        compiler: [gcc@4.9.3]
 
 
-.. tip::
-
-    If you are building your own compiler, some users prefer to have a
-    Spack instance just for that.  For example, create a new Spack in
-    ``~/spack-tools`` and then run ``~/spack-tools/bin/spack install
-    gcc@4.9.3``.  Once the compiler is built, don't build anything
-    more in that Spack instance; instead, create a new "real" Spack
-    instance, configure Spack to use the compiler you've just built,
-    and then build your application software in the new Spack
-    instance.  Following this tip makes it easy to delete all your
-    Spack packages *except* the compiler.
-
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Compilers Requiring Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -406,14 +398,62 @@ provides no Fortran compilers.  The user is therefore forced to use a
 mixed toolchain: XCode-provided Clang for C/C++ and GNU ``gfortran`` for
 Fortran.
 
-#. You need to make sure that command-line tools are installed. To that
-   end run ``$ xcode-select --install``.
+#. You need to make sure that Xcode is installed. Run the following command:
 
-#. Run ``$ spack compiler find`` to locate Clang.
+   .. code-block:: console
+
+      $ xcode-select --install
+
+
+   If the Xcode command-line tools are already installed, you will see an
+   error message:
+
+   .. code-block:: none
+
+      xcode-select: error: command line tools are already installed, use "Software Update" to install updates
+
+
+#. For most packages, the Xcode command-line tools are sufficient. However,
+   some packages like ``qt`` require the full Xcode suite. You can check
+   to see which you have installed by running:
+
+   .. code-block:: console
+
+      $ xcode-select -p
+
+
+   If the output is:
+
+   .. code-block:: none
+
+      /Applications/Xcode.app/Contents/Developer
+
+
+   you already have the full Xcode suite installed. If the output is:
+
+   .. code-block:: none
+
+      /Library/Developer/CommandLineTools
+
+
+   you only have the command-line tools installed. The full Xcode suite can
+   be installed through the App Store. Make sure you launch the Xcode
+   application and accept the license agreement before using Spack.
+   It may ask you to install additional components. Alternatively, the license
+   can be accepted through the command line:
+
+   .. code-block:: console
+
+      $ sudo xcodebuild -license accept
+
+
+   Note: the flag is ``-license``, not ``--license``.
+
+#. Run ``spack compiler find`` to locate Clang.
 
 #. There are different ways to get ``gfortran`` on macOS. For example, you can
-   install GCC with Spack (``$ spack install gcc``) or with Homebrew
-   (``$ brew install gcc``).
+   install GCC with Spack (``spack install gcc``) or with Homebrew
+   (``brew install gcc``).
 
 #. The only thing left to do is to edit ``~/.spack/compilers.yaml`` to provide
    the path to ``gfortran``:
@@ -429,7 +469,7 @@ Fortran.
             fc: /path/to/bin/gfortran
 
    If you used Spack to install GCC, you can get the installation prefix by
-   ``$ spack location -i gcc`` (this will only work if you have a single version
+   ``spack location -i gcc`` (this will only work if you have a single version
    of GCC installed). Whereas for Homebrew, GCC is installed in
    ``/usr/local/Cellar/gcc/x.y.z``.
 
@@ -849,6 +889,10 @@ well.  They can generally be activated as in the ``curl`` example above;
 or some systems might already have an appropriate hand-built
 environment module that may be loaded.  Either way works.
 
+If you find that you are missing some of these programs, ``spack`` can
+build some of them for you with ``spack bootstrap``. Currently supported
+programs are ``environment-modules``.
+
 A few notes on specific programs in this list:
 
 """"""""""""""""""""""""""
@@ -882,54 +926,37 @@ Once ``curl`` has been installed, you can similarly install the others.
 Environment Modules
 """""""""""""""""""
 
-In order to use Spack's generated environment modules, you must have
-installed one of *Environment Modules* or *Lmod*.  On many Linux
-distributions, this can be installed from the vendor's repository.  For
-example: ``yum install environment-modules`` (Fedora/RHEL/CentOS).  If
-your Linux distribution does not have Environment Modules, you can get it
-with Spack:
-
-#. Consider using system tcl (as long as your system has Tcl version 8.0 or later):
-
-   #) Identify its location using ``which tclsh``
-   #) Identify its version using ``echo 'puts $tcl_version;exit 0' | tclsh``
-   #) Add to ``~/.spack/packages.yaml`` and modify as appropriate:
-
-      .. code-block:: yaml
-
-         packages:
-             tcl:
-                 paths:
-                     tcl@8.5: /usr
-                 buildable: False
-
-#. Install with:
-
-   .. code-block:: console
-
-      $ spack install environment-modules
-
-#. Activate with the following script (or apply the updates to your
-   ``.bashrc`` file manually):
-
-   .. code-block:: sh
-
-      TMP=`tempfile`
-      echo >$TMP
-      MODULE_HOME=`spack location --install-dir environment-modules`
-      MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
-      ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
-      cp .bashrc $TMP
-      echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
-      cat $TMP >>.bashrc
-
-This adds to your ``.bashrc`` (or similar) files, enabling Environment
-Modules when you log in.  Re-load your .bashrc (or log out and in
-again), and then test that the ``module`` command is found with:
+In order to use Spack's generated module files, you must have
+installed ``environment-modules`` or ``lmod``. The simplest way
+to get the latest version of either of these tools is installing
+it as part of Spack's bootstrap procedure:
 
 .. code-block:: console
 
-   $ module avail
+   $ spack bootstrap
+
+.. warning::
+   At the moment ``spack bootstrap`` is only able to install ``environment-modules``.
+   Extending its capabilities to prefer ``lmod`` where possible is in the roadmap,
+   and likely to happen before the next release.
+
+Alternatively, on many Linux distributions, you can install a pre-built binary
+from the vendor's repository. On Fedora/RHEL/CentOS, for example, this can be
+done with the command:
+
+.. code-block:: console
+
+   $ yum install environment-modules
+
+Once you have the tool installed and available in your path, you can source
+Spack's setup file:
+
+.. code-block:: console
+
+   $ source share/spack/setup-env.sh
+
+This activates :ref:`shell support <shell-support>` and makes commands like
+``spack load`` available for use.
 
 
 ^^^^^^^^^^^^^^^^^
@@ -1031,6 +1058,22 @@ public half of the key can also be exported for sharing with others so that
 they may use packages you have signed using the ``--export <keyfile>`` flag.
 Secret keys may also be later exported using the
 ``spack gpg export <location> [<key>...]`` command.
+
+.. note::
+
+   Key creation speed
+      The creation of a new GPG key requires generating a lot of random numbers.
+      Depending on the entropy produced on your system, the entire process may
+      take a long time (even a few minutes). To speed it up you may install
+      tools like ``rngd``, which is usually available as a package in the host OS.
+      On e.g. an Ubuntu machine you need to give the following commands:
+
+      .. code-block:: console
+
+         $ sudo apt-get install rng-tools
+         $ sudo rngd -r /dev/urandom
+
+      before generating the keys.
 
 ^^^^^^^^^^^^
 Listing keys
@@ -1149,10 +1192,13 @@ Here's an example of an external configuration for cray modules:
 .. code-block:: yaml
 
    packages:
-     mpi:
+     mpich:
        modules:
          mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10: cray-mpich
          mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10: cray-mpich
+     all:
+       providers:
+         mpi: [mpich]
 
 This tells Spack that for whatever package that depends on mpi, load the
 cray-mpich module into the environment. You can then be able to use whatever
@@ -1169,7 +1215,7 @@ Here is an example of a full packages.yaml used at NERSC
 .. code-block:: yaml
 
    packages:
-     mpi:
+     mpich:
        modules:
          mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-mpich
          mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge: cray-mpich
@@ -1186,6 +1232,8 @@ Here is an example of a full packages.yaml used at NERSC
        buildable: False
      all:
        compiler: [gcc@5.2.0, intel@16.0.0.109]
+       providers:
+         mpi: [mpich]
 
 Here we tell spack that whenever we want to build with gcc use version 5.2.0 or
 if we want to build with intel compilers, use version 16.0.0.109. We add a spec

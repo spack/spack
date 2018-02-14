@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -44,6 +44,9 @@ _flags_instance_vars = ['cflags', 'cppflags', 'cxxflags', 'fflags']
 _other_instance_vars = ['modules', 'operating_system', 'environment',
                         'extra_rpaths']
 _cache_config_file = []
+
+#: cache of compilers constructed from config data, keyed by config entry id.
+_compiler_cache = {}
 
 
 def _auto_compiler_spec(function):
@@ -100,7 +103,8 @@ def get_compiler_config(scope=None, init_config=True):
             # Check the site config and update the user config if
             # nothing is configured at the site level.
             site_config = spack.config.get_config('compilers', scope='site')
-            if not site_config:
+            sys_config = spack.config.get_config('compilers', scope='system')
+            if not site_config and not sys_config:
                 init_compiler_config()
                 config = spack.config.get_config('compilers', scope=scope)
         return config
@@ -181,7 +185,7 @@ def all_compiler_specs(scope=None, init_config=True):
 
 
 def find_compilers(*paths):
-    """Return a list of compilers found in the suppied paths.
+    """Return a list of compilers found in the supplied paths.
        This invokes the find_compilers() method for each operating
        system associated with the host platform, and appends
        the compilers detected to a list.
@@ -250,35 +254,42 @@ def compilers_for_arch(arch_spec, scope=None):
 
 
 def compiler_from_config_entry(items):
-    cspec = spack.spec.CompilerSpec(items['spec'])
-    os = items.get('operating_system', None)
-    target = items.get('target', None)
+    config_id = id(items)
+    compiler = _compiler_cache.get(config_id, None)
 
-    if not ('paths' in items and
-            all(n in items['paths'] for n in _path_instance_vars)):
-        raise InvalidCompilerConfigurationError(cspec)
+    if compiler is None:
+        cspec = spack.spec.CompilerSpec(items['spec'])
+        os = items.get('operating_system', None)
+        target = items.get('target', None)
 
-    cls  = class_for_compiler_name(cspec.name)
+        if not ('paths' in items and
+                all(n in items['paths'] for n in _path_instance_vars)):
+            raise InvalidCompilerConfigurationError(cspec)
 
-    compiler_paths = []
-    for c in _path_instance_vars:
-        compiler_path = items['paths'][c]
-        if compiler_path != 'None':
-            compiler_paths.append(compiler_path)
-        else:
-            compiler_paths.append(None)
+        cls  = class_for_compiler_name(cspec.name)
 
-    mods = items.get('modules')
-    if mods == 'None':
-        mods = []
+        compiler_paths = []
+        for c in _path_instance_vars:
+            compiler_path = items['paths'][c]
+            if compiler_path != 'None':
+                compiler_paths.append(compiler_path)
+            else:
+                compiler_paths.append(None)
 
-    alias = items.get('alias', None)
-    compiler_flags = items.get('flags', {})
-    environment = items.get('environment', {})
-    extra_rpaths = items.get('extra_rpaths', [])
+        mods = items.get('modules')
+        if mods == 'None':
+            mods = []
 
-    return cls(cspec, os, target, compiler_paths, mods, alias,
-               environment, extra_rpaths, **compiler_flags)
+        alias = items.get('alias', None)
+        compiler_flags = items.get('flags', {})
+        environment = items.get('environment', {})
+        extra_rpaths = items.get('extra_rpaths', [])
+
+        compiler = cls(cspec, os, target, compiler_paths, mods, alias,
+                       environment, extra_rpaths, **compiler_flags)
+        _compiler_cache[id(items)] = compiler
+
+    return compiler
 
 
 def get_compilers(config, cspec=None, arch_spec=None):

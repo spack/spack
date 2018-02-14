@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,6 +32,7 @@ class RRminer(RPackage):
 
     homepage = "http://www3.dsi.uminho.pt/pcortez/rminer.html"
     url      = "https://cran.r-project.org/src/contrib/rminer_1.4.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rminer"
 
     version('1.4.2', '7d5d90f4ae030cf647d67aa962412c05')
 

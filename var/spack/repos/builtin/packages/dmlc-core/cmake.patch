@@ -1,0 +1,21 @@
+From 82f2bde92e1f1bf35bdf7b93cacb0aa72d9f096b Mon Sep 17 00:00:00 2001
+From: Jianwen WEI <weijianwen@gmail.com>
+Date: Fri, 18 Aug 2017 23:16:05 +0800
+Subject: [PATCH] Patch CMakeLists.txt to install make/ dir into destination.
+
+---
+ CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f038dcb..ed01b82 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -134,6 +134,7 @@ endif()
+ install(TARGETS dmlc ARCHIVE DESTINATION lib LIBRARY DESTINATION lib) 
+ install(DIRECTORY include DESTINATION .)
+ install(DIRECTORY doc DESTINATION .)
++install(DIRECTORY make DESTINATION .)
+ 
+ # ---[ Linter target
+ if(MSVC)

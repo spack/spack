@@ -29,4 +29,3 @@ ${coverage_run} bin/spack -p --lines 20 spec mpileaks
 
 # Run unit tests with code coverage
 ${coverage_run} bin/spack test "$@"
-${coverage_combine}

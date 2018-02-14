@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -31,9 +31,12 @@ class RQuantmod(RPackage):
 
     homepage = "http://www.quantmod.com/"
     url      = "https://cran.r-project.org/src/contrib/quantmod_0.4-5.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/quantmod"
 
+    version('0.4-10', 'e4119c673567801eee16dcbbd0265de8')
     version('0.4-5', 'cab3c409e4de3df98a20f1ded60f3631')
 
     depends_on('r-xts', type=('build', 'run'))
     depends_on('r-zoo', type=('build', 'run'))
     depends_on('r-ttr', type=('build', 'run'))
+    depends_on('r-curl', type=('build', 'run'))

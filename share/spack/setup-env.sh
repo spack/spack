@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,7 +27,9 @@
 #
 # This file is part of Spack and sets up the spack environment for
 # bash and zsh.  This includes dotkit support, module support, and
-# it also puts spack in your path.  Source it like this:
+# it also puts spack in your path.  The script also checks that
+# at least module support exists, and provides suggestions if it
+# doesn't. Source it like this:
 #
 #    . /path/to/spack/share/spack/setup-env.sh
 #
@@ -92,6 +94,8 @@ function spack {
                 LOC="$(spack location $_sp_arg "$@")"
                 if [[ -d "$LOC" ]] ; then
                     cd "$LOC"
+                else
+                    return 1
                 fi
             fi
             return
@@ -187,19 +191,64 @@ if [ -z "$_sp_source_file" ]; then
 fi
 
 #
-# Set up modules and dotkit search paths in the user environment
+# Find root directory and add bin to path.
 #
 _sp_share_dir=$(cd "$(dirname $_sp_source_file)" && pwd)
 _sp_prefix=$(cd "$(dirname $(dirname $_sp_share_dir))" && pwd)
 _spack_pathadd PATH       "${_sp_prefix%/}/bin"
+export SPACK_ROOT=${_sp_prefix}
 
-_sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
-_sp_dotkit_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('dotkit')))")
-_sp_tcl_root=$(spack-python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots', {}).get('tcl')))")
+#
+# Determine which shell is being used
+#
+function _spack_determine_shell() {
+	ps -p $$ | tail -n 1 | awk '{print $4}' | sed 's/^-//' | xargs basename
+}
+export SPACK_SHELL=$(_spack_determine_shell)
+
+#
+# Check whether a function of the given name is defined
+#
+function _spack_fn_exists() {
+	LANG= type $1 2>&1 | grep -q 'function'
+}
+
+need_module="no"
+if ! _spack_fn_exists use && ! _spack_fn_exists module; then
+	need_module="yes"
+fi;
+
+#
+# build and make available environment-modules
+#
+if [ "${need_module}" = "yes" ]; then
+    #check if environment-modules is installed
+    module_prefix="$(spack location -i "environment-modules" 2>&1 || echo "not_installed")"
+    module_prefix=$(echo "${module_prefix}" | tail -n 1)
+    if [ "${module_prefix}" != "not_installed" ]; then
+        #activate it!
+        export MODULE_PREFIX=${module_prefix}
+        _spack_pathadd PATH "${MODULE_PREFIX}/Modules/bin"
+        module() { eval `${MODULE_PREFIX}/Modules/bin/modulecmd ${SPACK_SHELL} $*`; }
+    fi;
+fi;
+
+#
+# Set up modules and dotkit search paths in the user environment
+#
+
+_python_command=$(printf  "%s\\\n%s\\\n%s" \
+"print(\'_sp_sys_type={0}\'.format(spack.architecture.sys_type()))" \
+"print(\'_sp_dotkit_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'dotkit\'))))" \
+"print(\'_sp_tcl_root={0}\'.format(spack.util.path.canonicalize_path(spack.config.get_config(\'config\').get(\'module_roots\', {}).get(\'tcl\'))))"
+)
+
+_assignment_command=$(spack-python -c "exec('${_python_command}')")
+eval ${_assignment_command}
+
 _spack_pathadd DK_NODE    "${_sp_dotkit_root%/}/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_tcl_root%/}/$_sp_sys_type"
 
-#
 # Add programmable tab completion for Bash
 #
 if [ -n "${BASH_VERSION:-}" ]; then

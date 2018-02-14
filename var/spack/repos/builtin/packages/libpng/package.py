@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -51,3 +51,13 @@ class Libpng(AutotoolsPackage):
     version('1.2.57', 'dfcda3603e29dcc11870c48f838ef75b')
 
     depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended
+
+    def configure_args(self):
+        args = [
+            # not honored, see
+            #   https://sourceforge.net/p/libpng/bugs/210/#33f1
+            # '--with-zlib=' + self.spec['zlib'].prefix,
+            'CPPFLAGS={0}'.format(self.spec['zlib'].headers.include_flags),
+            'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
+        ]
+        return args

@@ -1,0 +1,5 @@
+enable:
+  - tcl
+tcl:
+  # ${OPTIONS} is not allowed in the naming scheme, see #2884
+  naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${OPTIONS}'

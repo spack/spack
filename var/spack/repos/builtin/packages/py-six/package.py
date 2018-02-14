@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -35,6 +35,7 @@ class PySix(PythonPackage):
 
     version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
     version('1.9.0',  '476881ef4012262dfc8adc645ee786c4')
+    version('1.8.0',  '1626eb24cc889110c38f7e786ec69885')
 
     extends('python', ignore=r'bin/pytest')
 

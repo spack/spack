@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -50,7 +50,7 @@ from six import StringIO
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import *
+from llnl.util.tty.color import colorize
 
 import spack.error
 import spack.util.compression as comp
@@ -177,12 +177,14 @@ def strip_version_suffixes(path):
         '[Uu]niversal',
         'jar',
         'complete',
+        'dynamic',
         'oss',
         'gem',
         'tar',
         'sh',
 
         # Download version
+        'release',
         'stable',
         '[Ff]inal',
         'rel',
@@ -288,6 +290,7 @@ def strip_name_suffixes(path, version):
         'install',
         'src',
         '(open)?[Ss]ources?',
+        '[._-]archive',
         '[._-]std',
 
         # Download version

@@ -1,5 +1,9 @@
 config:
   install_tree: $spack/opt/spack
+  template_dirs:
+  - $spack/templates
+  - $spack/lib/spack/spack/test/data/templates
+  - $spack/lib/spack/spack/test/data/templates_again
   build_stage:
   - $tempdir
   - /nfs/tmp2/$user

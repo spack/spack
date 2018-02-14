@@ -1,0 +1,7 @@
+--- a/foo.txt	2017-09-25 21:24:33.000000000 -0700
++++ b/foo.txt	2017-09-25 14:31:17.000000000 -0700
+@@ -1,2 +1,3 @@
++zeroth line
+ first line
+-second line
++third line

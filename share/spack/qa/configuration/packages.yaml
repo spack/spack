@@ -1,0 +1,13 @@
+packages:
+  cmake:
+    buildable: False
+    paths:
+      cmake@2.8.12.2: /usr
+  r:
+    buildable: False
+    paths:
+      r@3.0.2: /usr
+  perl:
+    buildable: False
+    paths:
+      perl@5.18.2: /usr

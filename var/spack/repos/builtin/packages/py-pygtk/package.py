@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -38,7 +38,7 @@ class PyPygtk(AutotoolsPackage):
     depends_on('cairo')
     depends_on('glib')
     # for GTK 3.X use pygobject 3.X instead of pygtk
-    depends_on('gtkplus+X@2.24:2.99')
+    depends_on('gtkplus@2.24:2.99')
     depends_on('py-pygobject@2.28:2.99', type=('build', 'run'))
     depends_on('py-py2cairo', type=('build', 'run'))
 

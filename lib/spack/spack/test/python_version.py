@@ -6,8 +6,8 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -37,6 +37,8 @@ import os
 import sys
 import re
 
+import pytest
+
 import llnl.util.tty as tty
 import spack
 
@@ -51,6 +53,10 @@ if sys.version_info[0] < 3:
 
     # Exclude Python 3 versions of dual-source modules when using Python 2
     exclude_paths = [
+        # Jinja 2 has some 'async def' functions that are not treated correctly
+        # by pyqver.py
+        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncfilters.py'),
+        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncsupport.py'),
         os.path.join(spack.lib_path, 'external', 'yaml', 'lib3'),
         os.path.join(spack.lib_path, 'external', 'pyqver3.py')]
 
@@ -60,6 +66,10 @@ else:
 
     # Exclude Python 2 versions of dual-source modules when using Python 3
     exclude_paths = [
+        # Jinja 2 has some 'async def' functions that are not treated correctly
+        # by pyqver.py
+        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncfilters.py'),
+        os.path.join(spack.lib_path, 'external', 'jinja2', 'asyncsupport.py'),
         os.path.join(spack.lib_path, 'external', 'yaml', 'lib'),
         os.path.join(spack.lib_path, 'external', 'pyqver2.py')]
 
@@ -146,11 +156,13 @@ def check_python_versions(files):
     assert not all_issues
 
 
+@pytest.mark.maybeslow
 def test_core_module_compatibility():
     """Test that all core spack modules work with supported Python versions."""
     check_python_versions(pyfiles([spack.lib_path], exclude=exclude_paths))
 
 
+@pytest.mark.maybeslow
 def test_package_module_compatibility():
     """Test that all spack packages work with supported Python versions."""
     check_python_versions(pyfiles([spack.packages_path]))

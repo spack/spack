@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -27,9 +27,13 @@ based on its URL.
 """
 
 import os
-
 import pytest
-from spack.url import *
+
+from spack.url import parse_name_offset, parse_version_offset
+from spack.url import parse_name_and_version, substitute_version
+from spack.url import strip_name_suffixes, strip_version_suffixes
+from spack.url import UndetectableVersionError
+from spack.version import Version
 
 
 @pytest.mark.parametrize('url,expected', [
@@ -57,6 +61,8 @@ from spack.url import *
     ('gromacs-4.6.1-tar', 'gromacs-4.6.1'),
     # Download type - sh
     ('Miniconda2-4.3.11-Linux-x86_64.sh', 'Miniconda2-4.3.11'),
+    # Download version - release
+    ('v1.0.4-release', 'v1.0.4'),
     # Download version - stable
     ('libevent-2.0.21-stable', 'libevent-2.0.21'),
     # Download version - final
@@ -105,7 +111,9 @@ from spack.url import *
     # Combinations of multiple patterns - public
     ('dakota-6.3-public.src', 'dakota-6.3'),
     # Combinations of multiple patterns - universal
-    ('synergy-1.3.6p2-MacOSX-Universal', 'synergy-1.3.6p2')
+    ('synergy-1.3.6p2-MacOSX-Universal', 'synergy-1.3.6p2'),
+    # Combinations of multiple patterns - dynamic
+    ('snptest_v2.5.2_linux_x86_64_dynamic', 'snptest_v2.5.2'),
 ])
 def test_url_strip_version_suffixes(url, expected):
     stripped = strip_version_suffixes(url)
@@ -120,6 +128,8 @@ def test_url_strip_version_suffixes(url, expected):
     ('converge_install_2.3.16', '2.3.16', 'converge'),
     # Download type - src
     ('jpegsrc.v9b', '9b', 'jpeg'),
+    # Download type - archive
+    ('coinhsl-archive-2014.01.17', '2014.01.17', 'coinhsl'),
     # Download type - std
     ('ghostscript-fonts-std-8.11', '8.11', 'ghostscript-fonts'),
     # Download version - release

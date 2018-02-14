@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -32,19 +32,33 @@ class Relion(CMakePackage):
     electron cryo-microscopy (cryo-EM)."""
 
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
-    url      = "https://github.com/3dem/relion/archive/2.0.3.tar.gz"
+    url      = "https://github.com/3dem/relion"
 
-    version('2.0.3', 'c61be5ef00848806278b341f43893f5d')
+    version('2.1', git='https://github.com/3dem/relion.git', tag='2.1')
+    version('2.0.3', git='https://github.com/3dem/relion.git', tag='2.0.3')
+    version('develop', git='https://github.com/3dem/relion.git')
 
     variant('gui', default=True, description="build the gui")
-    variant('cuda', default=False, description="enable compute on gpu")
-    variant('double', default=False, description="double precision (cpu) code")
+    variant('cuda', default=True, description="enable compute on gpu")
+    variant('cuda_arch', default=None, description='CUDA architecture',
+           values=('20', '30', '32', '35', '50', '52', '53', '60', '61', '62'
+               '70'),
+           multi=True)
+    variant('double', default=True, description="double precision (cpu) code")
     variant('double-gpu', default=False, description="double precision (gpu) code")
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo',
+                    'Profiling', 'Benchmarking'))
 
     depends_on('mpi')
     depends_on('fftw+float+double')
     depends_on('fltk', when='+gui')
-    depends_on('cuda', when='+cuda')
+    # cuda 9 not yet supported
+    #  https://github.com/3dem/relion/issues/296
+    depends_on('cuda@8.0:8.99', when='+cuda')
+    # use gcc < 5 when compiled with cuda 8
+    conflicts('%gcc@5:', when='+cuda')
 
     def cmake_args(self):
         args = [
@@ -57,6 +71,12 @@ class Relion(CMakePackage):
         if '+cuda' in self.spec:
             args += [
                 '-DCUDA=on',
-                '-DCUFFT=on',
+            ]
+
+        carch = self.spec.variants['cuda_arch'].value
+
+        if carch is not None:
+            args += [
+                '-DCUDA_ARCH=%s' % (carch),
             ]
         return args

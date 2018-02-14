@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -86,21 +86,27 @@ class PyMatplotlib(PythonPackage):
     depends_on('image-magick', when='+animation')
 
     # --------- Optional dependencies
-    depends_on('pkg-config', type='build')    # why not...
+    depends_on('pkgconfig', type='build')    # why not...
     depends_on('pil', when='+image', type=('build', 'run'))
     depends_on('py-ipython', when='+ipython', type=('build', 'run'))
     depends_on('ghostscript', when='+latex', type='run')
     depends_on('texlive', when='+latex', type='run')
 
     # Testing dependencies
-    depends_on('py-nose')  # type='test'
-    depends_on('py-mock')  # type='test'
+    # TODO: Add a 'test' deptype
+    # depends_on('py-nose', type='test')
+    # depends_on('py-mock', type='test')
 
     # Required libraries that ship with matplotlib
     # depends_on('agg@2.4:')
     depends_on('qhull@2012.1:')
     # depends_on('ttconv')
     depends_on('py-six@1.9.0:', type=('build', 'run'))
+
+    @run_before('build')
+    def set_cc(self):
+        if self.spec.satisfies('%intel'):
+            env['CC'] = spack_cxx
 
     @run_after('install')
     def set_backend(self):

@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -43,6 +43,16 @@ class Git(AutotoolsPackage):
     #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.xz
 
     releases = [
+        {
+            'version': '2.15.1',
+            'md5': 'da59fc6baa55ab44684011e369af397d',
+            'md5_manpages': '2cb428071c08c7df513cfc103610536e',
+        },
+        {
+            'version': '2.14.1',
+            'md5': 'e965a37b3d277f2e7e78f5b04de28e2a',
+            'md5_manpages': 'da2e75ea3972b9e93fb47023e3bf1401',
+        },
         {
             'version': '2.13.0',
             'md5': 'd0f14da0ef1d22f1ce7f7876fadcb39f',
@@ -145,7 +155,8 @@ class Git(AutotoolsPackage):
     depends_on('gettext')
     depends_on('libiconv')
     depends_on('openssl')
-    depends_on('pcre')
+    depends_on('pcre', when='@:2.13')
+    depends_on('pcre+jit', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
 
@@ -154,9 +165,29 @@ class Git(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    # See the comment in setup_environment re EXTLIBS.
+    def patch(self):
+        filter_file(r'^EXTLIBS =$',
+                    '#EXTLIBS =',
+                    'Makefile')
+
     def setup_environment(self, spack_env, run_env):
-        spack_env.set('LDFLAGS', '-L{0} -lintl'.format(
-            self.spec['gettext'].prefix.lib))
+        # We use EXTLIBS rather than LDFLAGS so that git's Makefile
+        # inserts the information into the proper place in the link commands
+        # (alongside the # other libraries/paths that configure discovers).
+        # LDFLAGS is inserted *before* libgit.a, which requires libintl.
+        # EXTFLAGS is inserted *after* libgit.a.
+        # This depends on the patch method above, which keeps the Makefile
+        # from stepping on the value that we pass in via the environment.
+        #
+        # The test avoids failures when git is an external package.
+        # In that case the node in the DAG gets truncated and git DOES NOT
+        # have a gettext dependency.
+        if 'gettext' in self.spec:
+            spack_env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
+                self.spec['gettext'].prefix.lib))
+            spack_env.append_flags('CFLAGS', '-I{0}'.format(
+                self.spec['gettext'].prefix.include))
 
     def configure_args(self):
         spec = self.spec
@@ -177,6 +208,9 @@ class Git(AutotoolsPackage):
             # Don't link with -lrt; the system has no (and needs no) librt
             filter_file(r' -lrt$', '', 'Makefile')
 
+    def check(self):
+        make('test')
+
     @run_after('install')
     def install_completions(self):
         copy_tree('contrib/completion', self.prefix.share)
@@ -186,6 +220,6 @@ class Git(AutotoolsPackage):
         prefix = self.prefix
 
         with working_dir('git-manpages'):
-            install_tree('man1', prefix.share_man1)
-            install_tree('man5', prefix.share_man5)
-            install_tree('man7', prefix.share_man7)
+            install_tree('man1', prefix.share.man.man1)
+            install_tree('man5', prefix.share.man.man5)
+            install_tree('man7', prefix.share.man.man7)

@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -61,9 +61,24 @@ class Esmf(MakefilePackage):
     # Testing dependencies
     # depends_on('perl', type='test')  # TODO: Add a test deptype
 
-    # NOTE: ESMF cannot be installed with GCC 6. It uses constructs that
-    # are no longer valid in GCC 6. GCC 4 is recommended for installation.
-    conflicts('%gcc@6:')
+    # Make esmf build with newer gcc versions
+    # https://sourceforge.net/p/esmf/esmf/ci/3706bf758012daebadef83d6575c477aeff9c89b/
+    patch('gcc.patch', when='@:7.0.99 %gcc@6:')
+
+    # Fix undefined reference errors with mvapich2
+    # https://sourceforge.net/p/esmf/esmf/ci/34de0ccf556ba75d35c9687dae5d9f666a1b2a18/
+    patch('mvapich2.patch', when='@:7.0.99')
+
+    # Allow different directories for creation and
+    # installation of dynamic libraries on OSX:
+    patch('darwin_dylib_install_name.patch', when='platform=darwin')
+
+    # Make script from mvapich2.patch executable
+    @run_before('build')
+    @when('@:7.0.99')
+    def chmod_scripts(self):
+        chmod = which('chmod')
+        chmod('+x', 'scripts/libs.mvapich2f90')
 
     def url_for_version(self, version):
         return "http://www.earthsystemmodeling.org/esmf_releases/non_public/ESMF_{0}/esmf_{0}_src.tar.gz".format(version.underscored)
@@ -93,7 +108,7 @@ class Esmf(MakefilePackage):
         # bin/binO/Linux.gfortran.64.default.default
         os.environ['ESMF_INSTALL_BINDIR'] = 'bin'
         os.environ['ESMF_INSTALL_LIBDIR'] = 'lib'
-        os.environ['ESMF_INSTALL_MODDIR'] = 'mod'
+        os.environ['ESMF_INSTALL_MODDIR'] = 'include'
 
         ############
         # Compiler #
@@ -138,11 +153,17 @@ class Esmf(MakefilePackage):
         # ESMF_COMM must be set to indicate which MPI implementation
         # is used to build the ESMF library.
         if '+mpi' in spec:
-            if '^mvapich2' in spec:
+            if 'platform=cray' in self.spec:
+                os.environ['ESMF_COMM'] = 'mpi'
+            elif '^mvapich2' in spec:
                 os.environ['ESMF_COMM'] = 'mvapich2'
             elif '^mpich' in spec:
-                # FIXME: mpich or mpich2?
+                # esmf@7.0.1 does not include configs for mpich3,
+                # so we start with the configs for mpich2:
                 os.environ['ESMF_COMM'] = 'mpich2'
+                # The mpich 3 series split apart the Fortran and C bindings,
+                # so we link the Fortran libraries when building C programs:
+                os.environ['ESMF_CXXLINKLIBS'] = '-lmpifort'
             elif '^openmpi' in spec:
                 os.environ['ESMF_COMM'] = 'openmpi'
             elif '^intel-parallel-studio+mpi' in spec:
@@ -167,7 +188,7 @@ class Esmf(MakefilePackage):
 
             # Specifies the linker directive needed to link the LAPACK library
             # to the application.
-            os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].lapack_libs.link_flags  # noqa
+            os.environ['ESMF_LAPACK_LIBS'] = spec['lapack'].libs.link_flags  # noqa
         else:
             # Disables LAPACK-dependent code.
             os.environ['ESMF_LAPACK'] = 'OFF'

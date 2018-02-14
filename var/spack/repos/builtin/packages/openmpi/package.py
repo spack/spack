@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -52,6 +52,18 @@ def _verbs_dir():
         return None
 
 
+def _mxm_dir():
+    """Look for default directory where the Mellanox package is
+    installed. Return None if not found.
+    """
+    # Only using default directory; make this more flexible in the future
+    path = "/opt/mellanox/mxm"
+    if os.path.isdir(path):
+        return path
+    else:
+        return None
+
+
 class Openmpi(AutotoolsPackage):
     """The Open MPI Project is an open source Message Passing Interface
        implementation that is developed and maintained by a consortium
@@ -64,14 +76,17 @@ class Openmpi(AutotoolsPackage):
     """
 
     homepage = "http://www.open-mpi.org"
-    url = "https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2"
+    url = "https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
 
     # Current
-    version('2.1.1', 'ae542f5cf013943ffbbeb93df883731b')  # libmpi.so.20.10.1
-    version('2.1.0', '4838a5973115c44e14442c01d3f21d52')  # libmpi.so.20.10.0
+    version('3.0.0', '757d51719efec08f9f1a7f32d58b3305')  # libmpi.so.40.00.0
 
     # Still supported
+    version('2.1.2', 'ff2e55cc529802e7b0738cf87acd3ee4')  # libmpi.so.20.10.2
+    version('2.1.1', 'ae542f5cf013943ffbbeb93df883731b')  # libmpi.so.20.10.1
+    version('2.1.0', '4838a5973115c44e14442c01d3f21d52')  # libmpi.so.20.10.0
+    version('2.0.4', '7e3c71563787a67dce9acc4d639ef3f8')  # libmpi.so.20.0.4
     version('2.0.3', '6c09e56ac2230c4f9abd8ba029f03edd')  # libmpi.so.20.0.3
     version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')  # libmpi.so.20.0.2
     version('2.0.1', '6f78155bd7203039d2448390f3b51c96')  # libmpi.so.20.0.1
@@ -181,15 +196,18 @@ class Openmpi(AutotoolsPackage):
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('ucx', default=False, description='Enable UCX support')
 
+    provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
     provides('mpi@:3.1', when='@2.0.0:')
 
     depends_on('hwloc')
     depends_on('hwloc +cuda', when='+cuda')
-    depends_on('jdk', when='+java')
+    depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
+    depends_on('ucx', when='+ucx')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
@@ -197,8 +215,8 @@ class Openmpi(AutotoolsPackage):
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
 
     def url_for_version(self, version):
-        return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (
-            version.up_to(2), version)
+        url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
+        return url.format(version.up_to(2), version)
 
     @property
     def libs(self):
@@ -250,6 +268,17 @@ class Openmpi(AutotoolsPackage):
             line += '={0}'.format(path)
         return line
 
+    def with_or_without_mxm(self, activated):
+        opt = 'mxm'
+        # If the option has not been activated return --without-mxm
+        if not activated:
+            return '--without-{0}'.format(opt)
+        line = '--with-{0}'.format(opt)
+        path = _mxm_dir()
+        if (path is not None):
+            line += '={0}'.format(path)
+        return line
+
     @run_before('autoreconf')
     def die_without_fortran(self):
         # Until we can pass variants such as +fortran through virtual
@@ -284,7 +313,7 @@ class Openmpi(AutotoolsPackage):
                 config_args.extend([
                     '--enable-java',
                     '--enable-mpi-java',
-                    '--with-jdk-dir={0}'.format(spec['jdk'].prefix)
+                    '--with-jdk-dir={0}'.format(spec['java'].prefix)
                 ])
             else:
                 config_args.extend([
@@ -337,6 +366,12 @@ class Openmpi(AutotoolsPackage):
                         config_args.append('CFLAGS=-D__LP64__')
             else:
                 config_args.append('--without-cuda')
+
+        # UCX support
+        if '+ucx' in spec:
+            config_args.append('--with-ucx={0}'.format(spec['ucx'].prefix))
+        else:
+            config_args.append('--without-ucx')
 
         return config_args
 

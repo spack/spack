@@ -1,0 +1,11 @@
+--- sambamba/Makefile.orig	2017-09-07 14:31:28.563896131 -0700
++++ sambamba/Makefile	2017-09-07 14:31:35.337912872 -0700
+@@ -20,7 +20,7 @@
+ 
+ else
+ 
+-LINK_CMD=gcc -Wl,--gc-sections -o build/sambamba build/sambamba.o $(STATIC_LIB_SUBCMD) -l:libphobos2-ldc.a -l:libdruntime-ldc.a  -lrt -lpthread -lm
++LINK_CMD=gcc -Wl,--gc-sections -o build/sambamba build/sambamba.o $(STATIC_LIB_SUBCMD) -l:libphobos2-ldc.a -l:libdruntime-ldc.a  -lrt -lpthread -lm -ldl
+ DMD_STATIC_LIBS=-L-Lhtslib -L-l:libhts.a -L-l:libphobos2.a -L-Llz4/lib -L-l:liblz4.a
+ 
+ define split-debug

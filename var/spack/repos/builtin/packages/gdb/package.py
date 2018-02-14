@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -34,6 +34,8 @@ class Gdb(Package):
     homepage = "https://www.gnu.org/software/gdb"
     url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
 
+    version('8.0.1', 'bb45869f8126a84ea2ba13a8c0e7c90e')
+    version('8.0', '9bb49d134916e73b2c01d01bf20363df')
     version('7.12.1', '06c8f40521ed65fe36ebc2be29b56942')
     version('7.11', 'f585059252836a981ea5db9a5f8ce97f')
     version('7.10.1', 'b93a2721393e5fa226375b42d567d90b')

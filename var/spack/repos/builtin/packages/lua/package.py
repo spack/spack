@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -64,6 +64,8 @@ class Lua(Package):
         else:
             target = 'linux'
         make('INSTALL_TOP=%s' % prefix,
+             'MYCFLAGS=%s' % (
+                 self.compiler.pic_flag),
              'MYLDFLAGS=-L%s -L%s' % (
                  spec['readline'].prefix.lib,
                  spec['ncurses'].prefix.lib),
@@ -71,12 +73,18 @@ class Lua(Package):
              'CC=%s -std=gnu99' % spack_cc,
              target)
         make('INSTALL_TOP=%s' % prefix,
+             'MYCFLAGS=%s' % (
+                 self.compiler.pic_flag),
              'MYLDFLAGS=-L%s -L%s' % (
                  spec['readline'].prefix.lib,
                  spec['ncurses'].prefix.lib),
              'MYLIBS=-lncursesw',
              'CC=%s -std=gnu99' % spack_cc,
              'install')
+
+        static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
+                                 arguments=['-lm'], version=self.version,
+                                 compat_version=self.version.up_to(2))
 
         with working_dir(os.path.join('luarocks', 'luarocks')):
             configure('--prefix=' + prefix, '--with-lua=' + prefix)
@@ -145,11 +153,11 @@ class Lua(Package):
 
     @property
     def lua_lib_dir(self):
-        return os.path.join('lib', 'lua', self.version.up_to(2))
+        return os.path.join('lib', 'lua', str(self.version.up_to(2)))
 
     @property
     def lua_share_dir(self):
-        return os.path.join('share', 'lua', self.version.up_to(2))
+        return os.path.join('share', 'lua', str(self.version.up_to(2)))
 
     def setup_dependent_package(self, module, dependent_spec):
         """

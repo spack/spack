@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -54,7 +54,7 @@ function _bash_completion_spack {
     # and `spack compiler add []` will call _spack_compiler_add
     local subfunction=$(IFS='_'; echo "_${COMP_WORDS_NO_FLAGS[*]}")
     # Translate dashes to underscores, as dashes are not permitted in
-    # compatibility mode. See https://github.com/LLNL/spack/pull/4079
+    # compatibility mode. See https://github.com/spack/spack/pull/4079
     subfunction=${subfunction//-/_}
 
     # However, the word containing the current cursor position needs to be
@@ -115,7 +115,8 @@ function _spack {
     if $list_options
     then
         compgen -W "-h --help -d --debug -D --pdb -k --insecure -m --mock -p
-                    --profile -v --verbose -s --stacktrace -V --version" -- "$cur"
+                    --profile -v --verbose -s --stacktrace -V --version
+                    --color --color=always --color=auto --color=never" -- "$cur"
     else
         compgen -W "$(_subcommands)" -- "$cur"
     fi
@@ -151,6 +152,50 @@ function _spack_build {
     fi
 }
 
+function _spack_buildcache {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "create install keys list" -- "$cur"
+    fi
+}
+
+function _spack_buildcache_create {
+    if $list_options
+    then
+        compgen -W "-h --help -r --rel -f --force -y --yes-to-all -k --key
+                    -d --directory" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
+function _spack_buildcache_install {
+    if $list_options
+    then
+        compgen -W "-h --help -f --force -y --yes-to-all" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
+function _spack_buildcache_keys {
+    if $list_options
+    then
+        compgen -W "-h --help -i --install -y --yes-to-all" -- "$cur"
+    fi
+}
+
+function _spack_buildcache_list {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
 function _spack_cd {
     if $list_options
     then
@@ -174,7 +219,8 @@ function _spack_checksum {
 function _spack_clean {
     if $list_options
     then
-        compgen -W "-h --help" -- "$cur"
+        compgen -W "-h --help -s --stage -d --downloads
+                   -m --misc-cache -a --all" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -361,9 +407,9 @@ function _spack_find {
     if $list_options
     then
         compgen -W "-h --help -s --short -p --paths -d --deps -l --long
-                    -L --very-long -f --show-flags -e --explicit
-                    -E --implicit -u --unknown -m --missing -v --variants
-                    -M --only-missing -N --namespace" -- "$cur"
+                    -L --very-long -f --show-flags --show-full-compiler
+                    -e --explicit -E --implicit -u --unknown -m --missing
+                    -v --variants -M --only-missing -N --namespace" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
@@ -408,9 +454,11 @@ function _spack_info {
 function _spack_install {
     if $list_options
     then
-        compgen -W "-h --help --only -j --jobs --keep-prefix --keep-stage
-                    -n --no-checksum -v --verbose --fake --clean --dirty
-                    --run-tests --log-format --log-file" -- "$cur"
+        compgen -W "-h --help --only -j --jobs --overwrite --keep-prefix
+                    --keep-stage --dont-restage --use-cache --show-log-on-error
+                    --source -n --no-checksum -v --verbose --fake -f --file
+                    --clean --dirty --test --log-format --log-file -y
+                    --yes-to-all" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -595,11 +643,6 @@ function _spack_providers {
         compgen -W "awk blas daal elf golang ipp lapack mkl
                     mpe mpi opencl openfoam pil scalapack" -- "$cur"
     fi
-}
-
-function _spack_purge {
-    compgen -W "-h --help -s --stage -d --downloads
-                -m --misc-cache -a --all" -- "$cur"
 }
 
 function _spack_python {

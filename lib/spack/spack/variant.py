@@ -1,13 +1,13 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# For details, see https://github.com/spack/spack
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -26,10 +26,12 @@
 variants both in packages and in specs.
 """
 
+import functools
 import inspect
 import re
 
 import llnl.util.lang as lang
+import spack
 import spack.error as error
 from six import StringIO
 
@@ -46,8 +48,7 @@ class Variant(object):
             description,
             values=(True, False),
             multi=False,
-            validator=None
-    ):
+            validator=None):
         """Initialize a package variant.
 
         Args:
@@ -66,11 +67,26 @@ class Variant(object):
         self.default = default
         self.description = str(description)
 
+        self.values = None
+        if values is any:
+            # 'any' is a special case to make it easy to say any value is ok
+            self.single_value_validator = lambda x: True
+
+        elif isinstance(values, type):
+            # supplying a type means any value *of that type*
+            def isa_type(v):
+                try:
+                    values(v)
+                    return True
+                except ValueError:
+                    return False
+            self.single_value_validator = isa_type
+
         if callable(values):
             # If 'values' is a callable, assume it is a single value
             # validator and reset the values to be explicit during debug
             self.single_value_validator = values
-            self.values = None
+
         else:
             # Otherwise assume values is the set of allowed explicit values
             self.values = tuple(values)
@@ -113,7 +129,7 @@ class Variant(object):
 
         # Check and record the values that are not allowed
         not_allowed_values = [
-            x for x in value if not self.single_value_validator(x)
+            x for x in value if self.single_value_validator(x) is False
         ]
         if not_allowed_values:
             raise InvalidVariantValueError(self, not_allowed_values, pkg)
@@ -172,19 +188,37 @@ class Variant(object):
         return SingleValuedVariant
 
 
-@lang.key_ordering
-class MultiValuedVariant(object):
-    """A variant that can hold multiple values at once."""
+def implicit_variant_conversion(method):
+    """Converts other to type(self) and calls method(self, other)
 
-    @staticmethod
-    def from_node_dict(name, value):
-        """Reconstruct a variant from a node dict."""
-        if isinstance(value, list):
-            value = ','.join(value)
-            return MultiValuedVariant(name, value)
-        elif str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
-            return BoolValuedVariant(name, value)
-        return SingleValuedVariant(name, value)
+    Args:
+        method: any predicate method that takes another variant as an argument
+
+    Returns: decorated method
+    """
+    @functools.wraps(method)
+    def convert(self, other):
+        # We don't care if types are different as long as I can convert
+        # other to type(self)
+        try:
+            other = type(self)(other.name, other._original_value)
+        except (error.SpecError, ValueError):
+            return False
+        return method(self, other)
+    return convert
+
+
+@lang.key_ordering
+class AbstractVariant(object):
+    """A variant that has not yet decided who it wants to be. It behaves like
+    a multi valued variant which **could** do things.
+
+    This kind of variant is generated during parsing of expressions like
+    ``foo=bar`` and differs from multi valued variants because it will
+    satisfy any other variant with the same name. This is because it **could**
+    do it if it grows up to be a multi valued variant with the right set of
+    values.
+    """
 
     def __init__(self, name, value):
         self.name = name
@@ -196,6 +230,29 @@ class MultiValuedVariant(object):
 
         # Invokes property setter
         self.value = value
+
+    @staticmethod
+    def from_node_dict(name, value):
+        """Reconstruct a variant from a node dict."""
+        if isinstance(value, list):
+            # read multi-value variants in and be faithful to the YAML
+            mvar = MultiValuedVariant(name, ())
+            mvar._value = tuple(value)
+            mvar._original_value = mvar._value
+            return mvar
+
+        elif str(value).upper() == 'TRUE' or str(value).upper() == 'FALSE':
+            return BoolValuedVariant(name, value)
+
+        return SingleValuedVariant(name, value)
+
+    def yaml_entry(self):
+        """Returns a key, value tuple suitable to be an entry in a yaml dict.
+
+        Returns:
+            tuple: (name, value_representation)
+        """
+        return self.name, list(self.value)
 
     @property
     def value(self):
@@ -215,15 +272,16 @@ class MultiValuedVariant(object):
         # Store the original value
         self._original_value = value
 
-        # Store a tuple of CSV string representations
-        # Tuple is necessary here instead of list because the
-        # values need to be hashed
-        t = re.split(r'\s*,\s*', str(value))
+        if not isinstance(value, (tuple, list)):
+            # Store a tuple of CSV string representations
+            # Tuple is necessary here instead of list because the
+            # values need to be hashed
+            value = re.split(r'\s*,\s*', str(value))
 
         # With multi-value variants it is necessary
         # to remove duplicates and give an order
         # to a set
-        self._value = tuple(sorted(set(t)))
+        self._value = tuple(sorted(set(value)))
 
     def _cmp_key(self):
         return self.name, self.value
@@ -241,9 +299,10 @@ class MultiValuedVariant(object):
         """
         return type(self)(self.name, self._original_value)
 
+    @implicit_variant_conversion
     def satisfies(self, other):
-        """Returns true if ``other.name == self.name`` and ``other.value`` is
-        a strict subset of self. Does not try to validate.
+        """Returns true if ``other.name == self.name``, because any value that
+        other holds and is not in self yet **could** be added.
 
         Args:
             other: constraint to be met for the method to return True
@@ -251,18 +310,11 @@ class MultiValuedVariant(object):
         Returns:
             bool: True or False
         """
-        # If types are different the constraint is not satisfied
-        if type(other) != type(self):
-            return False
-
         # If names are different then `self` does not satisfy `other`
-        # (`foo=bar` does not satisfy `baz=bar`)
-        if other.name != self.name:
-            return False
+        # (`foo=bar` will never satisfy `baz=bar`)
+        return other.name == self.name
 
-        # Otherwise we want all the values in `other` to be also in `self`
-        return all(v in self.value for v in other.value)
-
+    @implicit_variant_conversion
     def compatible(self, other):
         """Returns True if self and other are compatible, False otherwise.
 
@@ -275,13 +327,10 @@ class MultiValuedVariant(object):
         Returns:
             bool: True or False
         """
-        # If types are different they are not compatible
-        if type(other) != type(self):
-            return False
-
         # If names are different then they are not compatible
         return other.name == self.name
 
+    @implicit_variant_conversion
     def constrain(self, other):
         """Modify self to match all the constraints for other if both
         instances are multi-valued. Returns True if self changed,
@@ -293,24 +342,12 @@ class MultiValuedVariant(object):
         Returns:
             bool: True or False
         """
-        # If types are different they are not compatible
-        if type(other) != type(self):
-            msg = 'other must be of type \'{0.__name__}\''
-            raise TypeError(msg.format(type(self)))
-
         if self.name != other.name:
             raise ValueError('variants must have the same name')
+
         old_value = self.value
         self.value = ','.join(sorted(set(self.value + other.value)))
         return old_value != self.value
-
-    def yaml_entry(self):
-        """Returns a key, value tuple suitable to be an entry in a yaml dict.
-
-        Returns:
-            tuple: (name, value_representation)
-        """
-        return self.name, list(self.value)
 
     def __contains__(self, item):
         return item in self._value
@@ -325,6 +362,28 @@ class MultiValuedVariant(object):
         return '{0}={1}'.format(
             self.name, ','.join(str(x) for x in self.value)
         )
+
+
+class MultiValuedVariant(AbstractVariant):
+    """A variant that can hold multiple values at once."""
+    @implicit_variant_conversion
+    def satisfies(self, other):
+        """Returns true if ``other.name == self.name`` and ``other.value`` is
+        a strict subset of self. Does not try to validate.
+
+        Args:
+            other: constraint to be met for the method to return True
+
+        Returns:
+            bool: True or False
+        """
+        # If names are different then `self` does not satisfy `other`
+        # (`foo=bar` does not satisfy `baz=bar`)
+        if other.name != self.name:
+            return False
+
+        # Otherwise we want all the values in `other` to be also in `self`
+        return all(v in self.value for v in other.value)
 
 
 class SingleValuedVariant(MultiValuedVariant):
@@ -342,11 +401,8 @@ class SingleValuedVariant(MultiValuedVariant):
     def __str__(self):
         return '{0}={1}'.format(self.name, self.value)
 
+    @implicit_variant_conversion
     def satisfies(self, other):
-        # If types are different the constraint is not satisfied
-        if type(other) != type(self):
-            return False
-
         # If names are different then `self` does not satisfy `other`
         # (`foo=bar` does not satisfy `baz=bar`)
         if other.name != self.name:
@@ -357,11 +413,8 @@ class SingleValuedVariant(MultiValuedVariant):
     def compatible(self, other):
         return self.satisfies(other)
 
+    @implicit_variant_conversion
     def constrain(self, other):
-        if type(other) != type(self):
-            msg = 'other must be of type \'{0.__name__}\''
-            raise TypeError(msg.format(type(self)))
-
         if self.name != other.name:
             raise ValueError('variants must have the same name')
 
@@ -411,8 +464,9 @@ class VariantMap(lang.HashableMap):
 
     def __setitem__(self, name, vspec):
         # Raise a TypeError if vspec is not of the right type
-        if not isinstance(vspec, MultiValuedVariant):
-            msg = 'VariantMap accepts only values of type VariantSpec'
+        if not isinstance(vspec, AbstractVariant):
+            msg = 'VariantMap accepts only values of variant types'
+            msg += ' [got {0} instead]'.format(type(vspec).__name__)
             raise TypeError(msg)
 
         # Raise an error if the variant was already in this map
@@ -546,7 +600,7 @@ class VariantMap(lang.HashableMap):
         return string.getvalue()
 
 
-def substitute_single_valued_variants(spec):
+def substitute_abstract_variants(spec):
     """Uses the information in `spec.package` to turn any variant that needs
     it into a SingleValuedVariant.
 
@@ -554,12 +608,12 @@ def substitute_single_valued_variants(spec):
         spec: spec on which to operate the substitution
     """
     for name, v in spec.variants.items():
-        pkg_cls = type(spec.package)
-        pkg_variant = spec.package.variants[name]
-        pkg_variant.validate_or_raise(v, pkg_cls)
-        spec.variants.substitute(
-            pkg_variant.make_variant(v._original_value)
-        )
+        if name in spack.directives.reserved_names:
+            continue
+        pkg_variant = spec.package_class.variants[name]
+        new_variant = pkg_variant.make_variant(v._original_value)
+        pkg_variant.validate_or_raise(new_variant, spec.package_class)
+        spec.variants.substitute(new_variant)
 
 
 class DuplicateVariantError(error.SpecError):
