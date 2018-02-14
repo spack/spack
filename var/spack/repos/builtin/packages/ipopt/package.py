@@ -78,7 +78,7 @@ class Ipopt(AutotoolsPackage):
         lapack_lib = spec['lapack'].libs.ld_flags
 
         args = [
-            "--prefix=%s" % prefix,
+            "--prefix=%s" % self.prefix,
             "--with-mumps-incdir=%s" % mumps_dir.include,
             "--with-mumps-lib=%s" % mumps_libcmd,
             "--enable-shared",
