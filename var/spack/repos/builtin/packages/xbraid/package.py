@@ -66,3 +66,8 @@ class Xbraid(MakefilePackage):
         install_tree('test', prefix.share.test)
         install_tree('user_utils', prefix.share.user_utils)
         install_tree('docs', prefix.share.docs)
+
+    @property
+    def libs(self):
+        return find_libraries('libbraid', root=self.prefix,
+                              shared=False, recursive=True)
