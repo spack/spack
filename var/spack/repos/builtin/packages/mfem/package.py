@@ -51,7 +51,7 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('3.3.2', 
+    version('3.3.2',
             '01a762a5d0a2bc59ce4e2f59009045a4',
             url='https://goo.gl/Kd7Jk8', extension='.tar.gz',
             preferred=True)
@@ -59,7 +59,7 @@ class Mfem(Package):
     version('laghos-v1.0', git='https://github.com/mfem/mfem',
             tag='laghos-v1.0')
 
-    version('3.3',
+    version('3.3.0',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
             url='http://goo.gl/Vrpsns', extension='.tar.gz')
 
