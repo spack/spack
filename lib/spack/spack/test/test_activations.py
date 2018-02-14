@@ -54,6 +54,9 @@ class FakeSpec(object):
     def dag_hash(self):
         return self.hash
 
+    def __lt__(self, other):
+        return self.name < other.name
+
 
 class FakePythonExtensionPackage(FakeExtensionPackage):
     def __init__(self, name, prefix, py_namespace, python_spec):
@@ -63,13 +66,17 @@ class FakePythonExtensionPackage(FakeExtensionPackage):
 
     def add_files_to_view(self, view, merge_map):
         if sys.version_info >= (3, 0):
-            add_fn = PythonPackage.add_files_to_view.__func__
+            add_fn = PythonPackage.add_files_to_view
         else:
             add_fn = PythonPackage.add_files_to_view.im_func
         return add_fn(self, view, merge_map)
 
     def view_file_conflicts(self, view, merge_map):
-        return PythonPackage.view_file_conflicts.im_func(self, view, merge_map)
+        if sys.version_info >= (3, 0):
+            conflicts_fn = PythonPackage.view_file_conflicts
+        else:
+            conflicts_fn = PythonPackage.view_file_conflicts.im_func
+        return conflicts_fn(self, view, merge_map)
 
 
 def create_dir_structure(tmpdir, dir_structure):
