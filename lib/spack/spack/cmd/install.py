@@ -56,7 +56,7 @@ the dependencies"""
     )
     subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
-        help="explicitly set number of make jobs. default is #cpus")
+        help="explicitly set number of make jobs (default: #cpus)")
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")

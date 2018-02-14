@@ -108,6 +108,10 @@ class Mvapich2(AutotoolsPackage):
     # cuda 9 not yet supported
     depends_on('cuda@8.0:8.99', when='+cuda')
 
+    filter_compiler_wrappers(
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
+    )
+
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"
         if version < Version('2.0'):
@@ -232,33 +236,3 @@ class Mvapich2(AutotoolsPackage):
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
         return args
-
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to make the MPI compilers use the
-           compilers that Spack built the package with.
-
-           If this isn't done, they'll have CC, CXX, F77, and FC set
-           to Spack's generic cc, c++, f77, and f90.  We want them to
-           be bound to whatever compiler they were built with.
-        """
-        bin = self.prefix.bin
-        mpicc = join_path(bin, 'mpicc')
-        mpicxx = join_path(bin, 'mpicxx')
-        mpif77 = join_path(bin, 'mpif77')
-        mpif90 = join_path(bin, 'mpif90')
-        mpifort = join_path(bin, 'mpifort')
-
-        # Substitute Spack compile wrappers for the real
-        # underlying compiler
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
-        filter_file(env['CC'], self.compiler.cc, mpicc, **kwargs)
-        filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
-        filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
-        filter_file(env['FC'], self.compiler.fc, mpif90, **kwargs)
-        filter_file(env['FC'], self.compiler.fc, mpifort, **kwargs)
-
-        # Remove this linking flag if present
-        # (it turns RPATH into RUNPATH)
-        for wrapper in (mpicc, mpicxx, mpif77, mpif90, mpifort):
-            filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)

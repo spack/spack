@@ -69,7 +69,7 @@ packages from the internet and checksumming them.
 The other three commands are for managing mirror configuration.  They
 control the URL(s) from which Spack downloads its packages.
 
-.. _spack-mirror-create:
+.. _cmd-spack-mirror-create:
 
 -----------------------
 ``spack mirror create``
@@ -154,7 +154,7 @@ can supply a file with specs in it, one per line:
 This is useful if there is a specific suite of software managed by
 your site.
 
-.. _spack-mirror-add:
+.. _cmd-spack-mirror-add:
 
 --------------------
 ``spack mirror add``
@@ -182,7 +182,7 @@ You can tell your Spack installation to use that mirror like this:
 
 Each mirror has a name so that you can refer to it again later.
 
-.. _spack-mirror-list:
+.. _cmd-spack-mirror-list:
 
 ---------------------
 ``spack mirror list``
@@ -195,7 +195,7 @@ To see all the mirrors Spack knows about, run ``spack mirror list``:
    $ spack mirror list
    local_filesystem    file://~/spack-mirror-2014-06-24
 
-.. _spack-mirror-remove:
+.. _cmd-spack-mirror-remove:
 
 -----------------------
 ``spack mirror remove``
