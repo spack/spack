@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -50,9 +50,7 @@ class CbtfArgonavis(CMakePackage):
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    version('1.9.1', '3051bc5444a31a3f60aac44b9c7815ba')
-    url = "file:/global/homes/j/jgalaro/cbtf-argonavis-1.9.tar.gz"
-    version('1.9', branch='master',
+    version('1.9.1', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
 
     variant('cti', default=False,

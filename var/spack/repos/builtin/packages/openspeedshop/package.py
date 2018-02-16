@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##############################################################################
-# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -66,9 +66,6 @@ class Openspeedshop(CMakePackage):
 
     homepage = "http://www.openspeedshop.org"
     url = "https://github.com/OpenSpeedShop"
-
-    version('2.3.1', '7b945b50b535398d87b33e7ae315ff1f')
-    url = "file:/project/projectdirs/m888/jgalaro/openspeedshop-externals/SOURCES/openspeedshop-2.3.1.tar.gz"
 
     # Use when the git repository is available
     version('2.3', branch='master',

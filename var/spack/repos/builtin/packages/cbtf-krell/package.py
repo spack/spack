@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -56,10 +56,7 @@ class CbtfKrell(CMakePackage):
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    version('1.9.1', '3b8a37dfb95b1829c93ae48a5da0860c')
-    url = "file:/project/projectdirs/m888/jgalaro/openspeedshop-externals/SOURCES/cbtf-krell-1.9.1.tar.gz"
-
-    version('1.9', branch='master',
+    version('1.9.1', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-krell.git')
 
     # MPI variants
