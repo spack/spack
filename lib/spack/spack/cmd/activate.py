@@ -64,4 +64,6 @@ def activate(parser, args):
     if spec.package.is_activated(view):
         tty.die("Package %s is already activated." % specs[0].short_spec)
 
+    # TODO: refactor FilesystemView.add_extension and use that here (so there
+    # aren't two ways of activating extensions)
     spec.package.do_activate(view, with_dependencies=not args.force)
