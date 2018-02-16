@@ -310,7 +310,6 @@ def test_python_keep_namespace_init(tmpdir, namespace_extensions):
     view.extensions_layout.add_extension(python_spec, ext2_pkg.spec)
 
     f1 = 'lib/python2.7/site-packages/examplenamespace/ext1_sample.py'
-    f2 = 'lib/python2.7/site-packages/examplenamespace/ext2_sample.py'
     init_file = 'lib/python2.7/site-packages/examplenamespace/__init__.py'
 
     python_pkg.deactivate(ext1_pkg, view)
