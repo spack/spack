@@ -32,6 +32,10 @@ class PyPycodestyle(PythonPackage):
     homepage = "https://github.com/PyCQA/pycodestyle"
     url      = "https://github.com/PyCQA/pycodestyle/archive/2.0.0.tar.gz"
 
+    version('2.3.1', '4185319f6137833eec9057dbf3293629')
+    version('2.3.0', '1b2019b3c39c20becadbb7fdec6dcb5a')
+    version('2.2.0', '6e21aab2e038c3dd38dca585011a6f38')
+    version('2.1.0', '1e606c687a6cf01d51305417d0e97824')
     version('2.0.0', '5c3e90001f538bf3b7896d60e92eb6f6')
     version('1.7.0', '31070a3a6391928893cbf5fa523eb8d9')
     version('1.6.2', '8df18246d82ddd3d19ffe7518f983955')

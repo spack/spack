@@ -28,7 +28,7 @@ import os
 import shutil
 import re
 
-import ordereddict_backport
+import spack.util.ordereddict
 
 import py
 import pytest
@@ -240,7 +240,7 @@ def config(configuration_dir):
     spack.package_prefs.PackagePrefs.clear_caches()
     spack.config.clear_config_caches()
     real_scope = spack.config.config_scopes
-    spack.config.config_scopes = ordereddict_backport.OrderedDict()
+    spack.config.config_scopes = spack.util.ordereddict.OrderedDict()
     spack.config.ConfigScope('site', str(configuration_dir.join('site')))
     spack.config.ConfigScope('system', str(configuration_dir.join('system')))
     spack.config.ConfigScope('user', str(configuration_dir.join('user')))
@@ -644,7 +644,7 @@ class MockPackage(object):
                  versions=None):
         self.name = name
         self.spec = None
-        self.dependencies = ordereddict_backport.OrderedDict()
+        self.dependencies = spack.util.ordereddict.OrderedDict()
 
         assert len(dependencies) == len(dependency_types)
         for dep, dtype in zip(dependencies, dependency_types):

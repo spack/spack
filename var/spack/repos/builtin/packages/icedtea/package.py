@@ -58,7 +58,7 @@ class Icedtea(AutotoolsPackage):
     depends_on('libxcomposite', when='~X', type='build')
     depends_on('libxau', when='~X', type='build')
     depends_on('libxdmcp', when='~X', type='build')
-    depends_on('gtkplus+X', when='~X', type='build')
+    depends_on('gtkplus', when='~X', type='build')
 
     depends_on('libx11', when='+X')
     depends_on('xproto', when='+X')
@@ -71,7 +71,7 @@ class Icedtea(AutotoolsPackage):
     depends_on('libxcomposite', when='+X')
     depends_on('libxau', when='+X')
     depends_on('libxdmcp', when='+X')
-    depends_on('gtkplus+X', when='+X')
+    depends_on('gtkplus', when='+X')
 
     depends_on('freetype@2:')
     depends_on('wget', type='build')

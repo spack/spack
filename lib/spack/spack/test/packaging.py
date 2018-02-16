@@ -42,6 +42,7 @@ from spack.spec import Spec
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
+from spack.relocate import strings_contains_installroot
 from spack.relocate import get_patchelf, relocate_text
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
@@ -92,7 +93,7 @@ echo $PATH"""
     spec = Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
-    pkg = spack.repo.get(spec)
+    pkg = spec.package
     fake_fetchify(mock_archive.url, pkg)
     pkg.do_install()
     pkghash = '/' + spec.dag_hash(7)
@@ -106,9 +107,8 @@ echo $PATH"""
     # put it directly into the mirror
 
     mirror_path = os.path.join(str(tmpdir), 'test-mirror')
-    specs = [spec]
     spack.mirror.create(
-        mirror_path, specs, no_checksum=True
+        mirror_path, specs=[], no_checksum=True
     )
 
     # register mirror with spack config
@@ -217,10 +217,10 @@ echo $PATH"""
     stage.destroy()
 
 
-def test_relocate_text():
+def test_relocate_text(tmpdir):
     # Validate the text path replacement
     old_dir = '/home/spack/opt/spack'
-    filename = 'dummy.txt'
+    filename = str(tmpdir) + '/dummy.txt'
     with open(filename, "w") as script:
         script.write(old_dir)
         script.close()
@@ -229,7 +229,9 @@ def test_relocate_text():
     new_dir = '/opt/rh/devtoolset/'
     relocate_text(filenames, old_dir, new_dir)
 
-    with open(filename, "r")as script:
+    assert(strings_contains_installroot(filename) is False)
+
+    with open(filename, "r") as script:
         for line in script:
             assert(new_dir in line)
 

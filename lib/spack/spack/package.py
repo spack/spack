@@ -56,6 +56,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
+import spack.mixins
 import spack.repository
 import spack.url
 import spack.util.web
@@ -141,7 +142,10 @@ class InstallPhase(object):
             return other
 
 
-class PackageMeta(spack.directives.DirectiveMetaMixin):
+class PackageMeta(
+    spack.directives.DirectiveMeta,
+    spack.mixins.PackageMixinsMeta
+):
     """Conveniently transforms attributes to permit extensible phases
 
     Iterates over the attribute 'phases' and creates / updates private
@@ -182,6 +186,9 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
                                 PackageMeta.phase_fmt.format(phase_name),
                                 None
                             )
+                            if phase is not None:
+                                break
+
                         attr_dict[PackageMeta.phase_fmt.format(
                             phase_name)] = phase.copy()
                         phase = attr_dict[
@@ -617,6 +624,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
         self.extra_args = {}
+
+        super(PackageBase, self).__init__()
 
     def possible_dependencies(self, transitive=True, visited=None):
         """Return set of possible transitive dependencies of this package.
@@ -1343,6 +1352,12 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                 msg = '{0.name} is already installed in {0.prefix}'
                 tty.msg(msg.format(self))
                 rec = spack.store.db.get_record(self.spec)
+                # In case the stage directory has already been created,
+                # this ensures it's removed after we checked that the spec
+                # is installed
+                if keep_stage is False:
+                    self.stage.destroy()
+
                 return self._update_explicit_entry_in_db(rec, explicit)
 
         self._do_install_pop_kwargs(kwargs)
@@ -1707,6 +1722,47 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         """
         pass
 
+    def inject_flags(self, name, flags):
+        """
+        flag_handler that injects all flags through the compiler wrapper.
+        """
+        return (flags, None, None)
+
+    def env_flags(self, name, flags):
+        """
+        flag_handler that adds all flags to canonical environment variables.
+        """
+        return (None, flags, None)
+
+    def build_system_flags(self, name, flags):
+        """
+        flag_handler that passes flags to the build system arguments.  Any
+        package using `build_system_flags` must also implement
+        `flags_to_build_system_args`, or derive from a class that
+        implements it.  Currently, AutotoolsPackage and CMakePackage
+        implement it.
+        """
+        return (None, None, flags)
+
+    flag_handler = inject_flags
+    # The flag handler method is called for each of the allowed compiler flags.
+    # It returns a triple of inject_flags, env_flags, build_system_flags.
+    # The flags returned as inject_flags are injected through the spack
+    #  compiler wrappers.
+    # The flags returned as env_flags are passed to the build system through
+    #  the environment variables of the same name.
+    # The flags returned as build_system_flags are passed to the build system
+    #  package subclass to be turned into the appropriate part of the standard
+    #  arguments. This is implemented for build system classes where
+    #  appropriate and will otherwise raise a NotImplementedError.
+
+    def flags_to_build_system_args(self, flags):
+        # Takes flags as a dict name: list of values
+        if any(v for v in flags.values()):
+            msg = 'The {0} build system'.format(self.__class__.__name__)
+            msg += ' cannot take command line arguments for compiler flags'
+            raise NotImplementedError(msg)
+
     @staticmethod
     def uninstall_by_spec(spec, force=False):
         if not os.path.isdir(spec.prefix):
@@ -1778,12 +1834,17 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             raise ActivationError("%s does not extend %s!" %
                                   (self.name, self.extendee.name))
 
-    def do_activate(self, force=False, verbose=True, extensions_layout=None):
+    def do_activate(self, with_dependencies=True, ignore_conflicts=False,
+                    verbose=True, extensions_layout=None):
         """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
         activate() directly.
         """
+        if verbose:
+            tty.msg("Activating extension %s for %s" %
+                    (self.spec.cshort_spec, self.extendee_spec.cshort_spec))
+
         self._sanity_check_extension()
 
         if extensions_layout is None:
@@ -1793,16 +1854,19 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             self.extendee_spec, self.spec)
 
         # Activate any package dependencies that are also extensions.
-        if not force:
+        if with_dependencies:
             for spec in self.dependency_activations():
                 if not spec.package.is_activated(
                         extensions_layout=extensions_layout):
                     spec.package.do_activate(
-                        force=force, verbose=verbose,
+                        with_dependencies=with_dependencies,
+                        ignore_conflicts=ignore_conflicts,
+                        verbose=verbose,
                         extensions_layout=extensions_layout)
 
         self.extendee_spec.package.activate(
-            self, extensions_layout=extensions_layout, **self.extendee_args)
+            self, extensions_layout=extensions_layout,
+            ignore_conflicts=ignore_conflicts, **self.extendee_args)
 
         extensions_layout.add_extension(self.extendee_spec, self.spec)
 
@@ -1816,7 +1880,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         return (spec for spec in self.spec.traverse(root=False, deptype='run')
                 if spec.package.extends(self.extendee_spec))
 
-    def activate(self, extension, **kwargs):
+    def activate(self, extension, ignore_conflicts=False, **kwargs):
         """Make extension package usable by linking all its files to a target
         provided by the directory layout (depending if the user wants to
         activate globally or in a specified file system view).
@@ -1836,11 +1900,18 @@ class PackageBase(with_metaclass(PackageMeta, object)):
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
+
         conflict = tree.find_conflict(target, ignore=ignore)
-        if conflict:
+        if not conflict:
+            pass
+        elif ignore_conflicts:
+            tty.warn("While activating %s, found conflict %s" %
+                     (self.spec.cshort_spec, conflict))
+        else:
             raise ExtensionConflictError(conflict)
 
-        tree.merge(target, ignore=ignore, link=extensions_layout.link)
+        tree.merge(target, ignore=ignore, link=extensions_layout.link,
+                   ignore_conflicts=ignore_conflicts)
 
     def do_deactivate(self, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method.

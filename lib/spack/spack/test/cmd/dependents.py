@@ -24,6 +24,8 @@
 ##############################################################################
 import re
 
+import pytest
+
 from llnl.util.tty.color import color_when
 
 import spack
@@ -48,6 +50,7 @@ def test_transitive_dependents(builtin_mock):
          'patch-a-dependency', 'patch-several-dependencies'])
 
 
+@pytest.mark.db
 def test_immediate_installed_dependents(builtin_mock, database):
     with color_when(False):
         out = dependents('--installed', 'libelf')
@@ -64,6 +67,7 @@ def test_immediate_installed_dependents(builtin_mock, database):
     assert expected == hashes
 
 
+@pytest.mark.db
 def test_transitive_installed_dependents(builtin_mock, database):
     with color_when(False):
         out = dependents('--installed', '--transitive', 'fake')

@@ -42,6 +42,7 @@ class Petsc(Package):
     version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
     version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
 
+    version('3.8.3', '322cbcf2a0f7b7bad562643b05d66f11')
     version('3.8.2', '00666e1c4cbfa8dd6eebf91ff8180f79')
     version('3.8.1', '3ed75c1147800fc156fe1f1e515a68a7')
     version('3.8.0', '02680f1f78a0d4c5a9de80a366793eb8')
@@ -83,6 +84,9 @@ class Petsc(Package):
             description='Activates support for Trilinos (only parallel)')
     variant('int64', default=False,
             description='Compile with 64bit indices')
+    variant('clanguage', default='C', values=('C', 'C++'),
+            description='Specify C (recommended) or C++ to compile PETSc',
+            multi=False)
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -109,10 +113,13 @@ class Petsc(Package):
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')
-    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
-    depends_on('metis@5:+int64', when='+metis+int64~double')
-    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
-    depends_on('metis@5:+int64', when='+metis+int64~double')
+    depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
+    depends_on('metis@5:~int64', when='@:3.7.99+metis~int64~double')
+    depends_on('metis@5:+int64+real64', when='@:3.7.99+metis+int64+double')
+    depends_on('metis@5:+int64', when='@:3.7.99+metis+int64~double')
+    # petsc-3.8+ uses default (float) metis with any (petsc) precision
+    depends_on('metis@5:~int64', when='@3.8:+metis~int64')
+    depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
     depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
@@ -199,6 +206,11 @@ class Petsc(Package):
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
 
+        if self.spec.satisfies('clanguage=C++'):
+            options.append('--with-clanguage=C++')
+        else:
+            options.append('--with-clanguage=C')
+
         # Help PETSc pick up Scalapack from MKL:
         if 'scalapack' in spec:
             scalapack = spec['scalapack'].libs
@@ -239,7 +251,7 @@ class Petsc(Package):
                 '--with-superlu_dist=0'
             )
 
-        configure('--prefix=%s' % prefix, *options)
+        python('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
         make('MAKE_NP=%s' % make_jobs, parallel=False)

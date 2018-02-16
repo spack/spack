@@ -36,7 +36,7 @@ class Libxcomposite(AutotoolsPackage):
 
     depends_on('libx11')
     depends_on('libxfixes')
-
+    depends_on('fixesproto@0.4:', type='build')
     depends_on('compositeproto@0.4:', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

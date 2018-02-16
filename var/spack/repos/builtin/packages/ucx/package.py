@@ -32,4 +32,8 @@ class Ucx(AutotoolsPackage):
     homepage = "http://www.openucx.org"
     url      = "https://github.com/openucx/ucx/releases/download/v1.2.1/ucx-1.2.1.tar.gz"
 
+    # Current
+    version('1.2.2', 'ff3fe65e4ebe78408fc3151a9ce5d286')
+
+    # Still supported
     version('1.2.1', '697c2fd7912614fb5a1dadff3bfa485c')

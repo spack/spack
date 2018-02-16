@@ -31,6 +31,7 @@ class Cairo(AutotoolsPackage):
     homepage = "http://cairographics.org"
     url      = "http://cairographics.org/releases/cairo-1.14.8.tar.xz"
 
+    version('1.14.12', '490025a0ba0622a853010f49fb6343f29fb70b9b')
     version('1.14.8', 'c6f7b99986f93c9df78653c3e6a3b5043f65145e')
     version('1.14.0', '53cf589b983412ea7f78feee2e1ba9cea6e3ebae')
 

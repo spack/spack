@@ -296,7 +296,7 @@ class Openspeedshop(CMakePackage):
         # performance information
         dyninst_libdir = find_libraries('libdyninstAPI_RT',
                                         root=self.spec['dyninst'].prefix,
-                                        shared=True, recurse=True)
+                                        shared=True, recursive=True)
 
         # Set Dyninst RT library path to support OSS loop resolution code
         run_env.set('DYNINSTAPI_RT_LIB', dyninst_libdir)
@@ -304,7 +304,7 @@ class Openspeedshop(CMakePackage):
         # Find openspeedshop library path
         oss_libdir = find_libraries('libopenss-framework',
                                     root=self.spec['openspeedshop'].prefix,
-                                    shared=True, recurse=True)
+                                    shared=True, recursive=True)
         run_env.prepend_path('LD_LIBRARY_PATH',
                              os.path.dirname(oss_libdir.joined()))
 

@@ -454,9 +454,11 @@ function _spack_info {
 function _spack_install {
     if $list_options
     then
-        compgen -W "-h --help --only -j --jobs --keep-prefix --keep-stage
-                    -n --no-checksum -v --verbose --fake --clean --dirty
-                    --run-tests --log-format --log-file --source" -- "$cur"
+        compgen -W "-h --help --only -j --jobs --overwrite --keep-prefix
+                    --keep-stage --dont-restage --use-cache --show-log-on-error
+                    --source -n --no-checksum -v --verbose --fake -f --file
+                    --clean --dirty --test --log-format --log-file -y
+                    --yes-to-all" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi

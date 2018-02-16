@@ -51,8 +51,10 @@ class Bzip2(Package):
     def patch(self):
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
-        filter_file(r'^CC=gcc', 'CC=cc', 'Makefile')
-        filter_file(r'^CC=gcc', 'CC=cc', 'Makefile-libbz2_so')
+        filter_file(r'^CC=gcc', 'CC={0}'.format(spack_cc), 'Makefile')
+        filter_file(
+            r'^CC=gcc', 'CC={0}'.format(spack_cc), 'Makefile-libbz2_so'
+        )
 
         # The Makefiles use GCC flags that are incompatible with PGI
         if self.compiler.name == 'pgi':

@@ -53,6 +53,7 @@ class Laghos(MakefilePackage):
                        'share/mfem/config.mk'))
         targets.append('TEST_MK=%s' % join_path(spec['mfem'].prefix,
                        'share/mfem/test.mk'))
+        targets.append('CXX=%s' % spec['mpi'].mpicxx)
 
         return targets
 

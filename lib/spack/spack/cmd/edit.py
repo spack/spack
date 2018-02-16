@@ -23,9 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import glob
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
 
 import spack
 import spack.cmd
@@ -81,6 +81,10 @@ def setup_parser(subparser):
         const=spack.cmd.command_path,
         help="edit the command with the supplied name")
     excl_args.add_argument(
+        '-d', '--docs', dest='path', action='store_const',
+        const=os.path.join(spack.lib_path, 'docs'),
+        help="edit the docs with the supplied name")
+    excl_args.add_argument(
         '-t', '--test', dest='path', action='store_const',
         const=spack.test_path,
         help="edit the test with the supplied name")
@@ -112,9 +116,27 @@ def edit(parser, args):
     if args.path:
         path = args.path
         if name:
-            path = join_path(path, name + ".py")
+            # convert command names to python module name
+            if path == spack.cmd.command_path:
+                name = spack.cmd.python_name(name)
+
+            path = os.path.join(path, name)
             if not os.path.exists(path):
-                tty.die("No command for '{0}' was found.".format(name))
+                files = glob.glob(path + '*')
+                blacklist = ['.pyc', '~']  # blacklist binaries and backups
+                files = list(filter(
+                    lambda x: all(s not in x for s in blacklist), files))
+                if len(files) > 1:
+                    m = 'Multiple files exist with the name {0}.'.format(name)
+                    m += ' Please specify a suffix. Files are:\n\n'
+                    for f in files:
+                        m += '        ' + os.path.basename(f) + '\n'
+                    tty.die(m)
+                if not files:
+                    tty.die("No file for '{0}' was found in {1}".format(name,
+                                                                        path))
+                path = files[0]  # already confirmed only one entry in files
+
         spack.editor(path)
     elif name:
         edit_package(name, args.repo, args.namespace)

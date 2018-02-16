@@ -35,6 +35,7 @@ class Adios2(CMakePackage):
     version('develop', branch='master',
             git='https://github.com/ornladios/ADIOS2.git')
 
+    version('2.1.0', '431fa5b015349f1838b96b8f5a1cc8f8')
     version('2.0.0', 'da39655b51745d2c5f3f1e46c5abc4d7')
 
     variant('shared', default=True,
@@ -97,24 +98,27 @@ class Adios2(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DADIOS2_BUILD_SHARED_LIBS:BOOL={0}'.format((
-                'ON' if '+shared' in spec else 'OFF')),
+            '-DADIOS2_BUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF'),
             '-DADIOS2_BUILD_TESTING=OFF',
-            '-DADIOS2_USE_MPI={0}'.format((
-                'ON' if '+mpi' in spec else 'OFF')),
-            '-DADIOS2_USE_BZip2={0}'.format((
-                'ON' if '+bzip2' in spec else 'OFF')),
-            '-DADIOS2_USE_ZFP={0}'.format((
-                'ON' if '+zfp' in spec else 'OFF')),
-            '-DADIOS2_USE_DataMan={0}'.format((
-                'ON' if '+dataman' in spec else 'OFF')),
-            '-DADIOS2_USE_ZeroMQ={0}'.format((
-                'ON' if '+dataman' in spec else 'OFF')),
-            '-DADIOS2_USE_HDF5={0}'.format((
-                'ON' if '+hdf5' in spec else 'OFF')),
-            '-DADIOS2_USE_ADIOS1={0}'.format((
-                'ON' if '+adios1' in spec else 'OFF')),
-            '-DADIOS2_USE_Python={0}'.format((
-                'ON' if '+python' in spec else 'OFF'))
+            '-DADIOS2_USE_MPI={0}'.format(
+                'ON' if '+mpi' in spec else 'OFF'),
+            '-DADIOS2_USE_BZip2={0}'.format(
+                'ON' if '+bzip2' in spec else 'OFF'),
+            '-DADIOS2_USE_ZFP={0}'.format(
+                'ON' if '+zfp' in spec else 'OFF'),
+            '-DADIOS2_USE_DataMan={0}'.format(
+                'ON' if '+dataman' in spec else 'OFF'),
+            '-DADIOS2_USE_ZeroMQ={0}'.format(
+                'ON' if '+dataman' in spec else 'OFF'),
+            '-DADIOS2_USE_HDF5={0}'.format(
+                'ON' if '+hdf5' in spec else 'OFF'),
+            '-DADIOS2_USE_ADIOS1={0}'.format(
+                'ON' if '+adios1' in spec else 'OFF'),
+            '-DADIOS2_USE_Python={0}'.format(
+                'ON' if '+python' in spec else 'OFF')
         ]
+        if spec.satisfies('+python'):
+            args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
+                        % self.spec['python'].command.path)
         return args

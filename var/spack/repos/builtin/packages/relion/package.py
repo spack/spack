@@ -34,10 +34,16 @@ class Relion(CMakePackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     url      = "https://github.com/3dem/relion"
 
+    version('2.1', git='https://github.com/3dem/relion.git', tag='2.1')
+    version('2.0.3', git='https://github.com/3dem/relion.git', tag='2.0.3')
     version('develop', git='https://github.com/3dem/relion.git')
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
+    variant('cuda_arch', default=None, description='CUDA architecture',
+           values=('20', '30', '32', '35', '50', '52', '53', '60', '61', '62'
+               '70'),
+           multi=True)
     variant('double', default=True, description="double precision (cpu) code")
     variant('double-gpu', default=False, description="double precision (gpu) code")
     variant('build_type', default='RelWithDebInfo',
@@ -48,7 +54,11 @@ class Relion(CMakePackage):
     depends_on('mpi')
     depends_on('fftw+float+double')
     depends_on('fltk', when='+gui')
+    # cuda 9 not yet supported
+    #  https://github.com/3dem/relion/issues/296
     depends_on('cuda@8.0:8.99', when='+cuda')
+    # use gcc < 5 when compiled with cuda 8
+    conflicts('%gcc@5:', when='+cuda')
 
     def cmake_args(self):
         args = [
@@ -61,6 +71,12 @@ class Relion(CMakePackage):
         if '+cuda' in self.spec:
             args += [
                 '-DCUDA=on',
-                '-DCUFFT=on',
+            ]
+
+        carch = self.spec.variants['cuda_arch'].value
+
+        if carch is not None:
+            args += [
+                '-DCUDA_ARCH=%s' % (carch),
             ]
         return args
