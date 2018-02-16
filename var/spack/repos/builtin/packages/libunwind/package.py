@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
+import os
 
 
 class Libunwind(AutotoolsPackage):
@@ -32,3 +34,22 @@ class Libunwind(AutotoolsPackage):
     url      = "http://download.savannah.gnu.org/releases/libunwind/libunwind-1.1.tar.gz"
 
     version('1.1', 'fb4ea2f6fbbe45bf032cd36e586883ce')
+
+    # On Darwin, libunwind is available without any additional include paths and
+    # libraries. In order to support that, we allow configuring libunwind as an
+    # extrnal library with a prefix that does not exist.
+
+    @property
+    def headers(self):
+        if sys.platform == 'darwin' and not os.access(self.prefix, os.F_OK):
+            return HeaderList([])
+        return HeaderList(find(self.prefix.include, 'libunwind.h',
+                               recursive=False)) or None
+
+    @property
+    def libs(self):
+        if sys.platform == 'darwin' and not os.access(self.prefix, os.F_OK):
+            return LibraryList([])
+        return find_libraries('libunwind', root=self.prefix.lib,
+                              shared=('+shared' in self.spec), recursive=False)\
+               or None

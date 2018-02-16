@@ -111,7 +111,19 @@ class Hypre(Package):
             make("install")
 
     @property
+    def headers(self):
+        """Export the main hypre header, HYPRE.h; all other headers can be found
+        in the same directory.
+        Sample usage: spec['hypre'].headers.cpp_flags
+        """
+        hdrs = HeaderList(find(self.prefix.include, 'HYPRE.h', recursive=False))
+        return hdrs or None
+
+    @property
     def libs(self):
-        is_shared = self.spec.satisfies('+shared')
-        return find_libraries('libHYPRE', root=self.prefix,
-                              shared=is_shared, recursive=True)
+        """Export the hypre library.
+        Sample usage: spec['hypre'].libs.ld_flags
+        """
+        libs = find_libraries('libHYPRE', root=self.prefix.lib,
+                              shared=('+shared' in self.spec), recursive=False)
+        return libs or None
