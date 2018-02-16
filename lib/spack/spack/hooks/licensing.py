@@ -157,6 +157,7 @@ def symlink_license(pkg):
     target = pkg.global_license_file
     for filename in pkg.license_files:
         link_name = join_path(pkg.prefix, filename)
+        link_name = os.path.abspath(link_name)
         license_dir = os.path.dirname(link_name)
         if not os.path.exists(license_dir):
             mkdirp(license_dir)
