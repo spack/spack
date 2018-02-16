@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import glob
+import os
 
 
 class IntelXed(Package):
@@ -34,9 +35,9 @@ class IntelXed(Package):
     homepage = "https://intelxed.github.io/"
     url = "https://github.com/intelxed/xed"
 
-    version('2018.01.12',
+    version('2018.02.14',
             git='https://github.com/intelxed/xed',
-            commit='5c538047876feecf080d9441110f81d0e67b5de8')
+            commit='44d06033b69aef2c20ab01bfb518c52cd71bb537')
 
     resource(name='mbuild',
              git='https://github.com/intelxed/mbuild',
@@ -45,10 +46,7 @@ class IntelXed(Package):
 
     variant('debug', default=False, description='enable debug symbols')
 
-    depends_on('python@2.7.0:', type='build')
-
-    opt_map = {'-O0': '0', '-O': '1', '-O1': '1', '-O2': '2', '-O3': '3'}
-    default_opt = '2'
+    depends_on('python@2.7:', type='build')
 
     mycflags = []
 
@@ -59,22 +57,27 @@ class IntelXed(Package):
         return (flags, None, None)
 
     def install(self, spec, prefix):
-        mfile = Executable('./mfile.py')
+        # XED needs PYTHONPATH to find the mbuild directory.
+        mbuild_dir = join_path(self.stage.source_path, 'mbuild')
+        python_path = os.getenv('PYTHONPATH', '')
+        os.environ['PYTHONPATH'] = mbuild_dir + ':' + python_path
 
-        # Translate CFLAGS '-O2' to mbuild syntax.
-        opt = self.default_opt
-        for flag in self.mycflags:
-            if flag in self.opt_map:
-                opt = self.opt_map[flag]
-                break
+        mfile = Executable('./mfile.py')
 
         args = ['-j', str(make_jobs),
                 '--cc=%s' % spack_cc,
-                '--opt=%s' % opt,
                 '--no-werror']
 
         if '+debug' in spec:
             args.append('--debug')
+
+        # If an optimization flag (-O...) is specified in CFLAGS, use
+        # that, else set default opt level.
+        for flag in self.mycflags:
+            if len(flag) >= 2 and flag[0:2] == '-O':
+                break
+        else:
+            args.append('--opt=2')
 
         # Build and install static libxed.a.
         mfile('--clean')
