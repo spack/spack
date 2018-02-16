@@ -78,6 +78,13 @@ class FakePythonExtensionPackage(FakeExtensionPackage):
             conflicts_fn = PythonPackage.view_file_conflicts.im_func
         return conflicts_fn(self, view, merge_map)
 
+    def remove_files_from_view(self, view, merge_map):
+        if sys.version_info >= (3, 0):
+            remove_fn = PythonPackage.remove_files_from_view
+        else:
+            remove_fn = PythonPackage.remove_files_from_view.im_func
+        return remove_fn(self, view, merge_map)
+
 
 def create_dir_structure(tmpdir, dir_structure):
     for fname, children in dir_structure.items():
@@ -243,8 +250,9 @@ def test_python_activation_view(tmpdir, python_and_extension_dirs):
     assert os.path.exists(join_path(view_dir, 'bin/py-ext-tool'))
 
 
-def test_python_activation_view_add_files(tmpdir, namespace_extensions):
-    """Test the view update logic in PythonPackage
+def test_python_ignore_namespace_init_conflict(tmpdir, namespace_extensions):
+    """Test the view update logic in PythonPackage ignores conflicting
+       instances of __init__ for packages which are in the same namespace.
     """
     ext1_prefix, ext2_prefix, py_namespace = namespace_extensions
 
@@ -265,6 +273,56 @@ def test_python_activation_view_add_files(tmpdir, namespace_extensions):
     # Normally handled by Package.do_activate, but here we activate directly
     view.extensions_layout.add_extension(python_spec, ext1_pkg.spec)
     python_pkg.activate(ext2_pkg, view)
+
+    f1 = 'lib/python2.7/site-packages/examplenamespace/ext1_sample.py'
+    f2 = 'lib/python2.7/site-packages/examplenamespace/ext2_sample.py'
+    init_file = 'lib/python2.7/site-packages/examplenamespace/__init__.py'
+
+    assert os.path.exists(join_path(view_dir, f1))
+    assert os.path.exists(join_path(view_dir, f2))
+    assert os.path.exists(join_path(view_dir, init_file))
+
+
+def test_python_keep_namespace_init(tmpdir, namespace_extensions):
+    """Test the view update logic in PythonPackage keeps the namespace
+       __init__ file as long as one package in the namespace still
+       exists.
+    """
+    ext1_prefix, ext2_prefix, py_namespace = namespace_extensions
+
+    python_spec = spack.spec.Spec('python@2.7.12')
+    python_spec._concrete = True
+
+    ext1_pkg = FakePythonExtensionPackage(
+        'py-extension1', ext1_prefix, py_namespace, python_spec)
+    ext2_pkg = FakePythonExtensionPackage(
+        'py-extension2', ext2_prefix, py_namespace, python_spec)
+
+    view_dir = str(tmpdir.join('view'))
+    layout = YamlDirectoryLayout(view_dir)
+    view = YamlFilesystemView(view_dir, layout)
+
+    python_pkg = python_spec.package
+    python_pkg.activate(ext1_pkg, view)
+    # Normally handled by Package.do_activate, but here we activate directly
+    view.extensions_layout.add_extension(python_spec, ext1_pkg.spec)
+    python_pkg.activate(ext2_pkg, view)
+    view.extensions_layout.add_extension(python_spec, ext2_pkg.spec)
+
+    f1 = 'lib/python2.7/site-packages/examplenamespace/ext1_sample.py'
+    f2 = 'lib/python2.7/site-packages/examplenamespace/ext2_sample.py'
+    init_file = 'lib/python2.7/site-packages/examplenamespace/__init__.py'
+
+    python_pkg.deactivate(ext1_pkg, view)
+    view.extensions_layout.remove_extension(python_spec, ext1_pkg.spec)
+
+    assert not os.path.exists(join_path(view_dir, f1))
+    assert os.path.exists(join_path(view_dir, init_file))
+
+    python_pkg.deactivate(ext2_pkg, view)
+    view.extensions_layout.remove_extension(python_spec, ext2_pkg.spec)
+
+    assert not os.path.exists(join_path(view_dir, init_file))
 
 
 # TODO: is this redundant? it makes sure that under circumstances where the
