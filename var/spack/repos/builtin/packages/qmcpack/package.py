@@ -126,6 +126,11 @@ class Qmcpack(CMakePackage):
     patch_checksum = '3eb9dec05fd1a544318ff84cd8b5926cfc6b46b375c7f3b012ccf0b50cf617b7'
     patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
+    # git-rev files for not git builds issues prior to QMCPACK 3.3.0
+    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/643.patch'
+    patch_checksum = 'c066c79901a612cf8848135e0d544efb114534cca70b90bfccc8ed989d3d9dde'
+    patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
+
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
         # for libxml2, so we fix that.
