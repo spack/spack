@@ -64,6 +64,11 @@ class Silo(Package):
                 'CXXFLAGS={0}'.format(self.compiler.pic_flag),
                 'FCFLAGS={0}'.format(self.compiler.pic_flag)]
 
+        # H5public.h includes mpi.h directly
+        if 'hdf5+mpi' in spec:
+            config_args.append(
+                'CPPFLAGS=-I{0}'.format(self.spec['mpi'].prefix.include))
+
         configure(
             '--prefix=%s' % prefix,
             '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
