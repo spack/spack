@@ -221,6 +221,11 @@ class Openmpi(AutotoolsPackage):
         return url.format(version.up_to(2), version)
 
     @property
+    def headers(self):
+        hdrs = HeaderList(find(self.prefix.include, 'mpi.h', recursive=False))
+        return hdrs or None
+
+    @property
     def libs(self):
         query_parameters = self.spec.last_query.extra_parameters
         libraries = ['libmpi']
