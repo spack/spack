@@ -525,9 +525,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return self._installed_upstream
 
+    @classmethod
     def possible_dependencies(
-            self, transitive=True, expand_virtuals=True, visited=None):
-        """Return set of possible dependencies of this package.
+            cls, transitive=True, expand_virtuals=True, visited=None):
+        """Return set of possible transitive dependencies of this package.
 
         Note: the set returned *includes* the package itself.
 
@@ -539,9 +540,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             visited (set): set of names of dependencies visited so far.
         """
         if visited is None:
-            visited = set([self.name])
+            visited = set([cls.name])
 
-        for i, name in enumerate(self.dependencies):
+        for i, name in enumerate(cls.dependencies):
             if spack.repo.path.is_virtual(name):
                 if expand_virtuals:
                     providers = spack.repo.path.providers_for(name)
