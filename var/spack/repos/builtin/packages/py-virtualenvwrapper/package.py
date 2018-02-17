@@ -32,12 +32,14 @@ class PyVirtualenvwrapper(PythonPackage):
     workflow, making it easier to work on more than one project at a time
     without introducing conflicts in their dependencies."""
 
-    homepage = "http://virtualenvwrapper.readthedocs.io/"
-    url      = "https://bitbucket.org/virtualenvwrapper/virtualenvwrapper.git"
+    homepage = "https://bitbucket.org/virtualenvwrapper/virtualenvwrapper.git"
+    url      = "https://pypi.io/packages/source/v/virtualenvwrapper/virtualenvwrapper-4.8.2.tar.gz"
 
-    version('4.8.2', '8e3af0e0d42733f15c5e36df484a952e', url='https://bitbucket.org/virtualenvwrapper/virtualenvwrapper/get/4.8.2.tar.gz')
+    version('4.8.2', '8e3af0e0d42733f15c5e36df484a952e')
 
     depends_on('python@2.6:')
     depends_on('py-virtualenv', type=('build', 'run'))
     depends_on('py-virtualenv-clone', type=('build', 'run'))
     depends_on('py-stevedore', type=('build', 'run'))
+    # not just build-time, requires pkg_resources
+    depends_on('py-setuptools', type=('build', 'run'))
