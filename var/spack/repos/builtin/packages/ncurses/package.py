@@ -113,4 +113,4 @@ class Ncurses(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries(
-            ['libncurses', 'libncursesw'], root=self.prefix, recurse=True)
+            ['libncurses', 'libncursesw'], root=self.prefix, recursive=True)

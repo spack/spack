@@ -45,6 +45,7 @@ import spack.store
 # Commands that modify configuration by default modify the *highest*
 # priority scope.
 default_modify_scope = spack.config.highest_precedence_scope().name
+
 # Commands that list configuration list *all* scopes by default.
 default_list_scope = None
 
@@ -60,7 +61,7 @@ DESCRIPTION = "description"
 command_path = os.path.join(spack.lib_path, "spack", "cmd")
 
 #: Names of all commands
-commands = []
+all_commands = []
 
 
 def python_name(cmd_name):
@@ -76,8 +77,8 @@ def cmd_name(python_name):
 for file in os.listdir(command_path):
     if file.endswith(".py") and not re.search(ignore_files, file):
         cmd = re.sub(r'.py$', '', file)
-        commands.append(cmd_name(cmd))
-commands.sort()
+        all_commands.append(cmd_name(cmd))
+all_commands.sort()
 
 
 def remove_options(parser, *options):
