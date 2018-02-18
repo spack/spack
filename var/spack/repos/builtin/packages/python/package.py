@@ -511,7 +511,12 @@ class Python(AutotoolsPackage):
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on."""
 
+        # If we set PYTHONHOME, we must also ensure that the corresponding
+        # python is found in the build environment. This to prevent cases
+        # where a system provided python is run against the standard libraries
+        # of a Spack built python. See issue #7128
         spack_env.set('PYTHONHOME', self.home)
+        spack_env.prepend_path('PATH', os.path.dirname(self.command.path))
 
         python_paths = []
         for d in dependent_spec.traverse(

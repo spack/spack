@@ -59,12 +59,12 @@ class NetlibScalapack(CMakePackage):
     depends_on('cmake', when='@2.0.0:', type='build')
 
     @property
-    def scalapack_libs(self):
+    def libs(self):
         # Note that the default will be to search
         # for 'libnetlib-scalapack.<suffix>'
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            'libscalapack', root=self.prefix, shared=shared, recurse=True
+            'libscalapack', root=self.prefix, shared=shared, recursive=True
         )
 
     def cmake_args(self):

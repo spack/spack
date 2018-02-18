@@ -42,6 +42,8 @@ class Grackle(Package):
     version('2.2', 'ec49ed1db5a42db21f478285150c2ba3')
     version('2.0.1', 'a9624ad13a60c592c1a0a4ea8e1ae86d')
 
+    variant('float', default=False, description='Build with float')
+
     depends_on('libtool', when='@2.2')
 
     depends_on('mpi')
@@ -84,6 +86,8 @@ class Grackle(Package):
             make('clean')
             make('machine-{0}'.format(grackle_architecture))
             make('opt-high')
+            if spec.satisfies("+float"):
+                make('precision-32')
             make('show-config')
             make()
             mkdirp(prefix.lib)
