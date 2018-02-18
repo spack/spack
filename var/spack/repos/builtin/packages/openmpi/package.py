@@ -223,6 +223,8 @@ class Openmpi(AutotoolsPackage):
     @property
     def headers(self):
         hdrs = HeaderList(find(self.prefix.include, 'mpi.h', recursive=False))
+        if not hdrs:
+            hdrs = HeaderList(find(self.prefix, 'mpi.h', recursive=True))
         return hdrs or None
 
     @property
