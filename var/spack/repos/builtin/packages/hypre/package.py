@@ -124,6 +124,12 @@ class Hypre(Package):
         """Export the hypre library.
         Sample usage: spec['hypre'].libs.ld_flags
         """
-        libs = find_libraries('libHYPRE', root=self.prefix.lib,
-                              shared=('+shared' in self.spec), recursive=False)
-        return libs or None
+        search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
+                        [self.prefix, True]]
+        is_shared = '+shared' in self.spec
+        for path,recursive in search_paths:
+            libs = find_libraries('libHYPRE', root=path,
+                                  shared=is_shared, recursive=recursive)
+            if libs:
+                return libs
+        return None
