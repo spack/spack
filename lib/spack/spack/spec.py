@@ -822,6 +822,17 @@ class ForwardQueryToPackage(object):
         for f in callbacks_chain:
             try:
                 value = f()
+                # A callback can return None to trigger an error indicating that
+                # the query failed.
+                if value is None:
+                    msg  = "Query of package '{name}' for '{attrib}' failed\n"
+                    msg += "\tprefix : {spec.prefix}\n"
+                    msg += "\tspec : {spec}\n"
+                    msg += "\tqueried as : {query.name}\n"
+                    msg += "\textra parameters : {query.extra_parameters}"
+                    raise RuntimeError(msg.format(
+                        name=pkg.name, attrib=self.attribute_name,
+                        spec=instance, query=instance.last_query))
                 break
             except AttributeError:
                 pass
