@@ -114,3 +114,24 @@ class SuperluDist(Package):
         superludist_lib = join_path(self.stage.source_path,
                                     'lib/libsuperlu_dist.a')
         install(superludist_lib, self.prefix.lib)
+
+    @property
+    def headers(self):
+        """Export the headers and defines of SuperLU_DIST.
+           Sample usage: spec['superlu-dist'].headers.cpp_flags
+        """
+        return find_headers('*', root=self.prefix.include, recursive=False) \
+               or None
+
+    @property
+    def all_headers(self):
+        return self.headers  # Headers of dependent libraries are not needed.
+
+    @property
+    def libs(self):
+        """Export the SuperLU_DIST library.
+           Sample usage: spec['superlu-dist'].libs.ld_flags
+        """
+        return find_libraries('libsuperlu_dist', root=self.prefix.lib,
+                              shared=False, recursive=False) \
+               or None

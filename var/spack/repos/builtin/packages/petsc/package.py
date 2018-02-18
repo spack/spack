@@ -87,6 +87,10 @@ class Petsc(Package):
     variant('clanguage', default='C', values=('C', 'C++'),
             description='Specify C (recommended) or C++ to compile PETSc',
             multi=False)
+    variant('suite-sparse', default=False,
+            description='Activates support for SuiteSparse')
+    variant('sundials', default=False,
+            description='Activates support for SUNDIALS')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -149,6 +153,11 @@ class Petsc(Package):
     depends_on('trilinos@12.6.2:', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop', when='@xdevelop+trilinos+mpi')
+    depends_on('suite-sparse', when='+suite-sparse')
+    depends_on('sundials~int64 precision=double', when='+sundials~int64+double')
+    depends_on('sundials+int64 precision=double', when='+sundials+int64+double')
+    depends_on('sundials~int64 precision=single', when='+sundials~int64-double')
+    depends_on('sundials+int64 precision=single', when='+sundials+int64-double')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -224,8 +233,8 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed
-        for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'trilinos', 'zlib'):
+        for library in ('metis', 'boost', 'hypre', 'parmetis', 'mumps',
+                        'trilinos', 'zlib', 'sundials'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))
@@ -235,6 +244,18 @@ class Petsc(Package):
                     '--with-{library}-dir={path}'.format(
                         library=library, path=spec[library].prefix)
                 )
+        # HDF5: configuring using '--with-hdf5-dir=...' has some issues (e.g.
+        # the libraries libhdf5*_fortran.so are linked from system directories
+        # if they exist), so specify directly the include path and the libraries.
+        if '+hdf5' in spec:
+            hdf5_spec = 'hdf5:hl'
+            options.extend([
+                '--with-hdf5-include=%s' % spec[hdf5_spec].prefix.include,
+                '--with-hdf5-lib=%s' % spec[hdf5_spec].all_libs.ld_flags,
+                '--with-hdf5=1'
+            ])
+        else:
+            options.append('--with-hdf5=0')
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
         if 'superlu-dist' in spec:
@@ -250,6 +271,18 @@ class Petsc(Package):
             options.append(
                 '--with-superlu_dist=0'
             )
+        # SuiteSparse: configuring using '--with-suitesparse-dir=...' has some
+        # issues, so specify directly the include path and the libraries.
+        if '+suite-sparse' in spec:
+            ss_spec = 'suite-sparse:umfpack,klu,cholmod,btf,ccolamd,colamd,' + \
+                      'camd,amd,suitesparseconfig'
+            options.extend([
+                '--with-suitesparse-include=%s' % spec[ss_spec].prefix.include,
+                '--with-suitesparse-lib=%s' % spec[ss_spec].all_libs.ld_flags,
+                '--with-suitesparse=1'
+            ])
+        else:
+            options.append('--with-suitesparse=0')
 
         python('configure', '--prefix=%s' % prefix, *options)
 
@@ -300,3 +333,21 @@ class Petsc(Package):
         # Set up PETSC_DIR for everyone using PETSc package
         spack_env.set('PETSC_DIR', self.prefix)
         spack_env.unset('PETSC_ARCH')
+
+    @property
+    def headers(self):
+        """Export the headers and defines of PETSc.
+           Sample usage: spec['petsc'].headers.cpp_flags
+        """
+        return find_headers('petsc.h', root=self.spec.prefix.include,
+                            recursive=False) \
+               or None
+
+    @property
+    def libs(self):
+        """Export the PETSc library.
+           Sample usage: spec['petsc'].libs.ld_flags
+        """
+        return find_libraries('libpetsc', root=self.prefix.lib,
+                              shared=('+shared' in self.spec), recursive=False)\
+               or None

@@ -88,3 +88,11 @@ class Gnutls(AutotoolsPackage):
             ])
 
         return args
+
+    @property
+    def headers(self):
+        # GnuTLS headers are located inside prefix.include.gnutls and included
+        # as <gnutls/gnutls.h>, so we return a fake header in prefix.include.
+        hdr = find(self.prefix.include.gnutls, 'gnutls.h', recursive=False)
+        return HeaderList(join_path(self.prefix.include, 'fake.h')) if hdr \
+               else None

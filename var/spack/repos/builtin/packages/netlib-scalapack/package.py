@@ -67,6 +67,10 @@ class NetlibScalapack(CMakePackage):
             'libscalapack', root=self.prefix, shared=shared, recursive=True
         )
 
+    @property
+    def libs(self):
+        return self.scalapack_libs
+
     def cmake_args(self):
         spec = self.spec
 
