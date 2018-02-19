@@ -26,7 +26,7 @@ from spack import *
 
 
 class PerlGraphReadwrite(PerlPackage):
-    """write out directed graph in Dot format"""
+    """Write out directed graph in Dot format"""
 
     homepage = "http://search.cpan.org/~neilb/Graph-ReadWrite/lib/Graph/Writer/Dot.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/N/NE/NEILB/Graph-ReadWrite-2.09.tar.gz"
