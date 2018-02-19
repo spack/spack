@@ -133,7 +133,7 @@ class Sundials(CMakePackage):
     # Options added after v2.7.0
     conflicts('+cuda',          when='@:2.7.0')
     conflicts('+raja',          when='@:2.7.0')
-    conflicts('+int64',         when='@:2.7.0')
+    conflicts('~int64',         when='@:2.7.0')
     conflicts('+examples-cuda', when='@:2.7.0')
     conflicts('+examples-raja', when='@:2.7.0')
 
@@ -482,12 +482,12 @@ class Sundials(CMakePackage):
         """Export the headers and defines of SUNDIALS.
            Sample usage: spec['sundials'].headers.cpp_flags
         """
-        # SUNDIALS headers are inside subdirectories, so we use a fake header in
-        # the include directory.
+        # SUNDIALS headers are inside subdirectories, so we use a fake header
+        # in the include directory.
         hdr = find(self.prefix.include.nvector, 'nvector_serial.h',
                    recursive=False)
         return HeaderList(join_path(self.spec.prefix.include, 'fake.h')) \
-               if hdr else None
+            if hdr else None
 
     @property
     def libs(self):
@@ -504,7 +504,7 @@ class Sundials(CMakePackage):
         search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
                         [self.prefix, True]]
         is_shared = '+shared' in self.spec
-        for path,recursive in search_paths:
+        for path, recursive in search_paths:
             libs = find_libraries(sun_libs, root=path, shared=is_shared,
                                   recursive=recursive)
             if libs:
