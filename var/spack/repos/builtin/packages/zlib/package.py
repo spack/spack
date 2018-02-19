@@ -52,23 +52,23 @@ class Zlib(Package):
 
     @property
     def headers(self):
-        # If zlib is configured as external package, e.g. in /usr, searching the
-        # whole prefix.include recursively could be slow and returns a ton of
-        # headers, so we override this default behavior.
+        # If zlib is configured as external package, e.g. in /usr, searching
+        # the whole prefix.include recursively could be slow and returns a ton
+        # of headers, so we override this default behavior.
         hdr = find_headers('zlib', root=self.prefix.include, recursive=False)
         return hdr or None
 
     @property
     def libs(self):
         shared = '+shared' in self.spec
-        # If zlib is configured as external package, e.g. in /usr, searching the
-        # whole prefix recursively is slow, so we first try a search in
+        # If zlib is configured as external package, e.g. in /usr, searching
+        # the whole prefix recursively is slow, so we first try a search in
         # prefix.lib and prefix.lib64 and if that fails, then we search prefix
         # recursively.
         prefix = self.prefix
         search_paths = [[prefix.lib, False], [prefix.lib64, False],
                         [prefix, True]]
-        for path,recursive in search_paths:
+        for path, recursive in search_paths:
             libs = find_libraries('libz', root=path, shared=shared,
                                   recursive=recursive)
             if libs:
