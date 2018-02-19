@@ -35,9 +35,9 @@ class Libunwind(AutotoolsPackage):
 
     version('1.1', 'fb4ea2f6fbbe45bf032cd36e586883ce')
 
-    # On Darwin, libunwind is available without any additional include paths and
-    # libraries. In order to support that, we allow configuring libunwind as an
-    # extrnal library with a prefix that does not exist.
+    # On Darwin, libunwind is available without any additional include paths
+    # and libraries. In order to support that, we allow configuring libunwind
+    # as an extrnal library with a prefix that does not exist.
 
     @property
     def headers(self):
@@ -51,5 +51,5 @@ class Libunwind(AutotoolsPackage):
         if sys.platform == 'darwin' and not os.access(self.prefix, os.F_OK):
             return LibraryList([])
         return find_libraries('libunwind', root=self.prefix.lib,
-                              shared=('+shared' in self.spec), recursive=False)\
-               or None
+                              shared=('+shared' in self.spec),
+                              recursive=False) or None
