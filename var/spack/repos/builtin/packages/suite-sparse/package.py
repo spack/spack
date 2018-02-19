@@ -128,7 +128,7 @@ class SuiteSparse(Package):
 
     @property
     def libs(self):
-        """Export the libraies of SuiteSparse.
+        """Export the libraries of SuiteSparse.
         Sample usage: spec['suite-sparse'].libs.ld_flags
                       spec['suite-sparse:klu,btf'].libs.ld_flags
         """
