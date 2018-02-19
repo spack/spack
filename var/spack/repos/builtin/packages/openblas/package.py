@@ -227,7 +227,7 @@ class Openblas(MakefilePackage):
         prefix = self.prefix
         search_paths = [[prefix.lib, False], [prefix.lib64, False],
                         [prefix, True]]
-        for path,recursive in search_paths:
+        for path, recursive in search_paths:
             libs = find_libraries('libopenblas', root=path, shared=shared,
                                   recursive=recursive)
             if libs:
