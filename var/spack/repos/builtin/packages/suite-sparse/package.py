@@ -134,8 +134,8 @@ class SuiteSparse(Package):
         """
         # Component libraries, ordered by dependency. Any missing components?
         all_comps = ['klu', 'btf', 'umfpack', 'cholmod', 'colamd', 'amd',
-            'camd', 'ccolamd', 'cxsparse', 'ldl', 'rbio', 'spqr',
-            'suitesparseconfig']
+                     'camd', 'ccolamd', 'cxsparse', 'ldl', 'rbio', 'spqr',
+                     'suitesparseconfig']
         query_parameters = self.spec.last_query.extra_parameters
         comps = all_comps if not query_parameters else query_parameters
         libs = find_libraries(['lib' + c for c in comps], root=self.prefix.lib,
