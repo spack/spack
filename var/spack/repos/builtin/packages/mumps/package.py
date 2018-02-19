@@ -266,7 +266,7 @@ class Mumps(Package):
     @property
     def libs(self):
         component_libs = ['*mumps*', 'pord']
-        return find_libraries(['lib'+comp for comp in component_libs],
+        return find_libraries(['lib' + comp for comp in component_libs],
                               root=self.prefix.lib,
-                              shared=('+shared' in self.spec), recursive=False)\
-               or None
+                              shared=('+shared' in self.spec),
+                              recursive=False) or None
