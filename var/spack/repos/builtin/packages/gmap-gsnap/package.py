@@ -35,3 +35,4 @@ class GmapGsnap(AutotoolsPackage):
 
     version('2017-06-16', 'fcc91b8bdd4bf12ae3124de0c00db0c0')
     version('2014-12-28', '1ab07819c9e5b5b8970716165ccaa7da')
+    version('2018-02-12', '13152aedeef9ac66be915fc6bf6464f2')
