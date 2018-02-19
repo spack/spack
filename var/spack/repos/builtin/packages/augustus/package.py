@@ -50,7 +50,7 @@ class Augustus(MakefilePackage):
             makefile.filter('INCLUDES = *',
                             'INCLUDES = -I$(BAMTOOLS)/include/bamtools ')
             makefile.filter('LIBS = -lbamtools -lz',
-                            'LIBS = $(BAMTOOLS)/lib/bamtools'
+                            'LIBS = $(BAMTOOLS)/lib64/'
                             '/libbamtools.a -lz')
         with working_dir(join_path('auxprogs', 'bam2hints')):
             makefile = FileFilter('Makefile')
@@ -59,7 +59,7 @@ class Augustus(MakefilePackage):
             makefile.filter('INCLUDES = /usr/include/bamtools',
                             'INCLUDES = $(BAMTOOLS)/include/bamtools')
             makefile.filter('LIBS = -lbamtools -lz',
-                            'LIBS = $(BAMTOOLS)/lib/bamtools'
+                            'LIBS = $(BAMTOOLS)/lib64/'
                             '/libbamtools.a -lz')
 
     def install(self, spec, prefix):
