@@ -116,7 +116,8 @@ class Hypre(Package):
         in the same directory.
         Sample usage: spec['hypre'].headers.cpp_flags
         """
-        hdrs = HeaderList(find(self.prefix.include, 'HYPRE.h', recursive=False))
+        hdrs = HeaderList(find(self.prefix.include, 'HYPRE.h',
+                               recursive=False))
         return hdrs or None
 
     @property
@@ -127,7 +128,7 @@ class Hypre(Package):
         search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False],
                         [self.prefix, True]]
         is_shared = '+shared' in self.spec
-        for path,recursive in search_paths:
+        for path, recursive in search_paths:
             libs = find_libraries('libHYPRE', root=path,
                                   shared=is_shared, recursive=recursive)
             if libs:
