@@ -763,6 +763,25 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return visited
 
+    def enum_constraints(self, visited=None):
+        """Return transitive dependency constraints on this package."""
+        if visited is None:
+            visited = set()
+        visited.add(self.name)
+
+        names = []
+        clauses = []
+
+        for name in self.dependencies:
+            if name not in visited and not spack.spec.Spec(name).virtual:
+                pkg = spack.repo.get(name)
+                dvis, dnames, dclauses = pkg.enum_constraints(visited)
+                visited |= dvis
+                names.extend(dnames)
+                clauses.extend(dclauses)
+
+        return visited
+
     # package_dir and module are *class* properties (see PackageMeta),
     # but to make them work on instances we need these defs as well.
     @property
