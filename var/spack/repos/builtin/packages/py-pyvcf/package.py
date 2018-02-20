@@ -29,13 +29,13 @@ class PyPyvcf(PythonPackage):
     """PyVCF - A Variant Call Format Parser for Python"""
 
     homepage = "https://github.com/jamescasbon/PyVCF"
-    url      = "https://github.com/jamescasbon/PyVCF/archive/v0.6.0.tar.gz"
+    url      = "https://pypi.python.org/packages/64/1b/7c393d0cd5b1de2bb025d6ef45f71a013258214ae3564ede54adbd74ad00/PyVCF-0.6.7.tar.gz"
 
+    version('0.6.8', '3cc70aa59e62dab7b4a85bd5a9f2e714')
     version('0.6.7', '51b57ce99e0c2f7be2a18d08d8f87734')
-    version('0.6.0', '5e38a610b1bf837e5e74a748e281cec7')
 
-    depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-cython', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython', type='build')
     depends_on('py-pysam', type=('build', 'run'))
     depends_on('py-argparse', type=('build', 'run'), when='^python@2.6')
     depends_on('py-ordereddict', type=('build', 'run'), when='^python@2.6')
