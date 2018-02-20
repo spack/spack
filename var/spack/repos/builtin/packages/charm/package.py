@@ -37,8 +37,11 @@ class Charm(Package):
     (your laptop) to the largest supercomputers."""
 
     homepage = "http://charmplusplus.org"
-    url      = "http://charm.cs.illinois.edu/distrib/charm-6.7.1.tar.gz"
+    url      = "http://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
 
+    version("6.8.2", "a887a34b638a5b2f7fcf7ff3c262496d")
+    version("6.8.1", "3e95ffa760909154ef16b643c9bb8193")
+    version("6.8.0", "54df066a5aefb0bbc1a263c2383c2bba")
     version("6.7.1", "a8e20cf85e9c8721158f5bbd0ade48d9")
     version("6.7.0", "35a39a7975f1954a7db2d76736158231")
     version("6.6.1", "9554230f741e2599deaaac4d9d93d7ab")
@@ -47,63 +50,123 @@ class Charm(Package):
 
     # Support OpenMPI; see
     # <https://charm.cs.illinois.edu/redmine/issues/1206>
-    patch("mpi.patch")
+    # Patch is no longer needed in versions 6.8.0+
+    patch("mpi.patch", when="@:6.7.1")
+
     # Ignore compiler warnings while configuring
     patch("strictpass.patch")
 
-    # Communication mechanisms (choose exactly one)
-    # TODO: Support Blue Gene/Q PAMI, Cray GNI, Cray shmem, CUDA
+    # Build targets
+    # "target" is reserved, so we have to use something else.
     variant(
-        'backend',
-        default='mpi',
-        values=('mpi', 'multicore', 'net', 'netlrts', 'verbs'),
-        description='Set the backend to use'
+        "build-target",
+        default="LIBS",
+        values=("charm++", "AMPI", "LIBS"),
+        description="Specify the target to build"
+    )
+
+    # Communication mechanisms (choose exactly one)
+    variant(
+        "backend",
+        default="mpi",
+        values=("mpi", "multicore", "netlrts", "verbs", "gni",
+                "ofi", "pami", "pamilrts"),
+        description="Set the backend to use"
+    )
+
+    # Compilers (choose exactly one)
+    variant(
+        "compiler",
+        default="gcc",
+        values=("icc", "xlc", "gcc", "clang", "pgcc"),
+        description="Set the compiler"
+    )
+
+    # Fontran compilers (choose exactly one)
+    variant(
+        "fortran-compiler",
+        default="gfortran",
+        values=("gfortran", "flang", "xlf", "ifort", "pgf90"),
+        description="Set the fortran compiler"
     )
 
     # Other options
-    # Something is off with PAPI -- there are build errors. Maybe
-    # Charm++ expects a particular version?
     variant("papi", default=False, description="Enable PAPI integration")
+    variant("syncft", default=False, description="Compile with Charm++ fault tolerance support")
     variant("smp", default=True,
             description=(
                 "Enable SMP parallelism (does not work with +multicore)"))
     variant("tcp", default=False,
             description="Use TCP as transport mechanism (requires +net)")
-    variant("shared", default=True, description="Enable shared link support")
+    variant("omp", default=False, description="Support for the integrated LLVM OpenMP runtime")
+    variant("pthreads", default=False, description="Compile with pthreads Converse threads")
+    variant("cuda", default=False, description="Enable CUDA toolkit")
 
-    # Note: We could add variants for AMPI, LIBS, bigemulator, msa, Tau
+    variant("shared", default=True, description="Enable shared link support")
+    variant("production", default=True, description="Build charm++ with all optimizations")
+    variant("tracing", default=False, description="Enable tracing modules")
+
+    variant("incdir", description="Specify additional include path for compiler")
+    variant("libdir", description="Specify additional lib path for compiler")
+    variant("basedir", description="Shortcut for the above two - DIR/include and DIR/lib")
+    variant("destination", description="Build charm++ inside DIR, by default the destination is <version>")
+    variant("suffix", description="Append DIR to the destination directory of the Charm++ build")
 
     depends_on('mpi', when='backend=mpi')
     depends_on("papi", when="+papi")
 
     def install(self, spec, prefix):
-        target = "charm++"
-
-        comm = spec.variants['backend'].value
+        target = spec.variants["build-target"].value
 
         plat = sys.platform
         if plat.startswith("linux"):
             plat = "linux"
+        elif plat.startswith("win"):
+            plat = "win"
+        elif plat.startswith("cnl"):
+            plat = "cnl"
+        elif plat.startswith("cnk"):
+            plat = "cnk"
+
         mach = platform.machine()
+        if mach.startswith("ppc"):
+            mach = "ppc"
+        elif mach.startswith("arm"):
+            mach = "arm"
+
+        comm = spec.variants['backend'].value
 
         # Define Charm++ version names for various (plat, mach, comm)
         # combinations. Note that not all combinations are supported.
         versions = {
-            ("darwin", "i386", "multicore"): "multicore-darwin-x86",
-            ("darwin", "i386", "net"): "net-darwin-x86",
-            ("darwin", "x86_64", "mpi"): "mpi-darwin-x86_64",
-            ("darwin", "x86_64", "multicore"): "multicore-darwin-x86_64",
-            ("darwin", "x86_64", "net"): "net-darwin-x86_64",
-            ("darwin", "x86_64", "netlrts"): "netlrts-darwin-x86_64",
-            ("linux", "i386", "mpi"): "mpi-linux",
-            ("linux", "i386", "multicore"): "multicore-linux32",
-            ("linux", "i386", "net"): "net-linux",
-            ("linux", "i386", "netlrts"): "netlrts-linux",
-            ("linux", "x86_64", "mpi"): "mpi-linux-x86_64",
-            ("linux", "x86_64", "multicore"): "multicore-linux64",
-            ("linux", "x86_64", "net"): "net-linux-x86_64",
-            ("linux", "x86_64", "netlrts"): "netlrts-linux-x86_64",
-            ("linux", "x86_64", "verbs"): "verbs-linux-x86_64",
+            ("darwin",  "x86_64",   "mpi"):         "mpi-darwin-x86_64",
+            ("darwin",  "x86_64",   "multicore"):   "multicore-darwin-x86_64",
+            ("darwin",  "x86_64",   "netlrts"):     "netlrts-darwin-x86_64",
+            ("linux",   "i386",     "mpi"):         "mpi-linux",
+            ("linux",   "i386",     "multicore"):   "multicore-linux",
+            ("linux",   "i386",     "netlrts"):     "netlrts-linux",
+            ("linux",   "i386",     "uth"):         "uth-linux",
+            ("linux",   "x86_64",   "mpi"):         "mpi-linux-x86_64",
+            ("linux",   "x86_64",   "multicore"):   "multicore-linux-x86_64",
+            ("linux",   "x86_64",   "netlrts"):     "netlrts-linux-x86_64",
+            ("linux",   "x86_64",   "verbs"):       "verbs-linux-x86_64",
+            ("linux",   "x86_64",   "ofi"):         "ofi-linux-x86_64",
+            ("linux",   "x86_64",   "uth"):         "uth-linux-x86_64",
+            ("linux",   "ppc",      "mpi"):         "mpi-linux-ppc",
+            ("linux",   "ppc",      "multicore"):   "multicore-linux-ppc",
+            ("linux",   "ppc",      "netlrts"):     "netlrts-linux-ppc",
+            ("linux",   "ppc",      "pami"):        "pami-linux-ppc64le",
+            ("linux",   "ppc",      "verbs"):       "verbs-linux-ppc64le",
+            ("linux",   "arm",      "netlrts"):     "netlrts-linux-arm7",
+            ("linux",   "arm",      "multicore"):   "multicore-arm7",
+            ("win",     "x86_64",   "mpi"):         "mpi-win-x86_64",
+            ("win",     "x86_64",   "multicore"):   "multicore-win-x86_64",
+            ("win",     "x86_64",   "netlrts"):     "netlrts-win-x86_64",
+            ("cnl",     "x86_64",   "gni"):         "gni-crayxc",
+            ("cnl",     "x86_64",   "mpi"):         "mpi-crayxc",
+            ("cnk",     "x86_64",   "mpi"):         "mpi-bluegeneq",
+            ("cnk",     "x86_64",   "pami"):        "pami-bluegeneq",
+            ("cnk",     "x86_64",   "pamilrts"):    "pamilrts-bluegeneq",
         }
         if (plat, mach, comm) not in versions:
             raise InstallError(
@@ -115,16 +178,33 @@ class Charm(Package):
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack
         # here.
-        compiler = os.path.basename(self.compiler.cc)
+        options = []
 
-        options = [compiler]
-        if compiler == 'icc':
-            options.append('ifort')
+        compiler = spec.variants["compiler"].value
 
-        options.extend([
-            "--with-production",   # Note: turn this into a variant
-            "-j%d" % make_jobs,
-            "--destination=%s" % prefix])
+        if compiler != "":
+            options.append("{0}".format(compiler))
+        fortran_compiler = spec.variants["fortran-compiler"].value
+        if fortran_compiler != "":
+            options.append("{0}".format(fortran_compiler))
+
+        incdir = spec.variants["incdir"].value
+        if incdir != "":
+            options.append("--incdir={0}".format(incdir))
+        libdir = spec.variants["libdir"].value
+        if libdir != "":
+            options.append("--libdir={0}".format(libdir))
+        basedir = spec.variants["basedir"].value
+        if basedir != "":
+            options.append("--basedir={0}".format(basedir))
+        suffix = spec.variants["suffix"].value
+        if suffix != "":
+            options.append("--suffix={0}".format(suffix))
+        destination = spec.variants["destination"].value
+        if destination != "":
+            options.append("--destination={0}".format(destination))
+        else:
+            options.append("--destination={0}".format(prefix))
 
         if 'backend=mpi' in spec:
             # in intelmpi <prefix>/include and <prefix>/lib fails so --basedir
@@ -138,6 +218,8 @@ class Charm(Package):
                 for libdir in spec["mpi"].libs.directories
             ])
         if "+papi" in spec:
+            if "+tracing" not in spec:
+                raise InstallError("+papi variant requires +tracing variant.")
             options.extend(["papi", "--basedir=%s" % spec["papi"].prefix])
         if "+smp" in spec:
             if 'backend=multicore' in spec:
@@ -146,15 +228,26 @@ class Charm(Package):
                 raise InstallError("Cannot combine +smp with +multicore")
             options.append("smp")
         if "+tcp" in spec:
-            if 'backend=net' not in spec:
+            if 'backend=netlrts' not in spec:
                 # This is a Charm++ limitation; it would lead to a
                 # build error
                 raise InstallError(
                     "The +tcp variant requires "
-                    "the backend=net communication mechanism")
+                    "the backend=netlrts communication mechanism")
             options.append("tcp")
+        if "+omp" in spec:
+            options.append("omp")
+        if "+pthreads" in spec:
+            options.append("pthreads")
+        if "+cuda" in spec:
+            options.append("cuda")
+
         if "+shared" in spec:
             options.append("--build-shared")
+        if "+production" in spec:
+            options.append("--with-production")
+        if "+tracing" in spec:
+            options.append("--enable-tracing")
 
         # Call "make" via the build script
         # Note: This builds Charm++ in the "tmp" subdirectory of the
