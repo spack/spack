@@ -31,8 +31,10 @@ class Opengl(Package):
     homepage = "https://www.opengl.org/"
     url      = "https://www.opengl.org/"
 
-    # URL here is arbitrary, just so that spack's fetcher does not throw
-    # an error; fixes GitHub issue (#7061)
+
+    # A second argument (usually the hash) must be supplied to the
+    # version directive, but 'n/a' is used here because this package
+    # is a placeholder for a system/vendor installation of OpenGL
     version('3.2', 'n/a')
 
     provides('gl@:4.5', when='@4.5:')
@@ -42,6 +44,9 @@ class Opengl(Package):
     provides('gl@:4.1', when='@4.1:')
     provides('gl@:3.3', when='@3.3:')
 
+    # Override the fetcher method to throw a useful error message;
+    # fixes GitHub issue (#7061) in which this package threw a
+    # generic, uninformative error during the `fetch` step,
     @property
     def fetcher(self):
         msg = """This package is intended to be a placeholder for
