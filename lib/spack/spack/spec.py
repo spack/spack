@@ -2150,11 +2150,6 @@ class Spec(object):
         if self.virtual or self.external:
             return False
 
-        # Combine constraints from package deps with constraints from
-        # the spec
-
-        pkg = spack.repo.get(self.fullname)
-
         build_only = set()
         for dep_name in self.package_class.dependencies:
             dependency = self._evaluate_dependency_conditions(dep_name)
@@ -2165,6 +2160,8 @@ class Spec(object):
             dep_constraints = dep_constraints.copy()
             dep_constraints.append(build_constraints)
 
+        # Combine constraints from package deps with constraints from
+        # the spec
         any_change = False
         changed = True
         while changed:
