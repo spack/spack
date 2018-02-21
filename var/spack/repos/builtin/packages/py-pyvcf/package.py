@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,14 +25,15 @@
 from spack import *
 
 
-class GmapGsnap(AutotoolsPackage):
-    """GMAP: A Genomic Mapping and Alignment Program for
-       mRNA and EST Sequences, and GSNAP: Genomic Short-read
-       Nucleotide Alignment Program"""
+class PyPyvcf(PythonPackage):
+    """PyVCF - A Variant Call Format Parser for Python"""
 
-    homepage = "http://research-pub.gene.com/gmap/"
-    url      = "http://research-pub.gene.com/gmap/src/gmap-gsnap-2017-06-16.tar.gz"
+    homepage = "https://github.com/jamescasbon/PyVCF"
+    url      = "https://pypi.io/packages/source/P/PyVCF/PyVCF-0.6.8.tar.gz"
 
-    version('2018-02-12', '13152aedeef9ac66be915fc6bf6464f2')
-    version('2017-06-16', 'fcc91b8bdd4bf12ae3124de0c00db0c0')
-    version('2014-12-28', '1ab07819c9e5b5b8970716165ccaa7da')
+    version('0.6.8', '3cc70aa59e62dab7b4a85bd5a9f2e714')
+    version('0.6.7', '51b57ce99e0c2f7be2a18d08d8f87734')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython', type='build')
+    depends_on('py-pysam', type=('build', 'run'))
