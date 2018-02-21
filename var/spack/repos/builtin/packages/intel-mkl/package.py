@@ -73,8 +73,23 @@ class IntelMkl(IntelPackage):
         # there is no libmkl_gnu_thread on macOS
         conflicts('threads=openmp', when='%gcc')
 
+    @property
+    def license_required(self):
+        # The Intel libraries are provided without requiring a license as of
+        # version 2017.2. Trying to specify the license will fail. See:
+        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
+        return self.version < Version('2017.2')
+
+    @property
     def _want_shared(self):
         return ('+shared' in self.spec)
+
+    @property
+    def _mkl_int_suffix(self):
+        if '+ilp64' in self.spec:
+            return '_ilp64'
+        else:
+            return '_lp64'
 
     @property
     def mklroot(self):
@@ -133,20 +148,6 @@ class IntelMkl(IntelPackage):
         return d
 
     @property
-    def _mkl_int_suffix(self):
-        if '+ilp64' in self.spec:
-            return '_ilp64'
-        else:
-            return '_lp64'
-
-    @property
-    def license_required(self):
-        # The Intel libraries are provided without requiring a license as of
-        # version 2017.2. Trying to specify the license will fail. See:
-        # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        return self.version < Version('2017.2')
-
-    @property
     def blas_libs(self):
         mkl_libnames = ['libmkl_intel' + self._mkl_int_suffix, 'libmkl_core']
         if self.spec.satisfies('threads=openmp'):
@@ -162,7 +163,7 @@ class IntelMkl(IntelPackage):
                 omp_libs = find_libraries(
                     omp_libnames,
                     root=compiler_dir,
-                    shared=self._want_shared())
+                    shared=self._want_shared)
                 mkl_libnames.append('libmkl_intel_thread')
             elif '%gcc' in self.spec:
                 gcc = Executable(self.compiler.cc)
@@ -187,7 +188,7 @@ class IntelMkl(IntelPackage):
         mkl_libs = find_libraries(
             mkl_libnames,
             root=self._mkl_libdir,
-            shared=self._want_shared())
+            shared=self._want_shared)
         _debug_print('mkl_libs', mkl_libs)
 
         if len(mkl_libs) < 3:
@@ -198,7 +199,7 @@ class IntelMkl(IntelPackage):
         # Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(
             'libpthread libm libdl'.split(),
-            shared=self._want_shared())
+            shared=self._want_shared)
         _debug_print('system_libs', system_libs)
 
         return mkl_libs + omp_libs + system_libs
@@ -238,7 +239,7 @@ class IntelMkl(IntelPackage):
         sca_libs = find_libraries(
             scalapack_libnames,
             root=self._mkl_libdir,
-            shared=self._want_shared())
+            shared=self._want_shared)
         _debug_print('scalapack_libs', sca_libs)
 
         if len(sca_libs) < 2:
