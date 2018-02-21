@@ -27,6 +27,8 @@ import sys
 
 from spack import *
 from spack.environment import EnvironmentModifications
+from spack.util.prefix import Prefix
+from llnl.util.filesystem import join_path, ancestor
 
 
 class IntelMkl(IntelPackage):
@@ -71,68 +73,126 @@ class IntelMkl(IntelPackage):
         # there is no libmkl_gnu_thread on macOS
         conflicts('threads=openmp', when='%gcc')
 
+    def _want_shared(self):
+        return ('+shared' in self.spec)
+
+    @property
+    def mklroot(self):
+        '''Returns the version-specific toplevel product directory, i.e., the
+        directory that is to be presented to users in the MKLROOT environment
+        variable.
+        '''
+        if sys.platform == 'darwin':
+            # TODO: Verify on Mac.
+            d = self.prefix.mkl
+        else:
+            d = self.prefix
+            # A spack-internal MKL installation inherits its prefix semantics
+            # from install.sh of the package distribution, where "prefix" means
+            # the high-level installation directory that is specific to a
+            # *vendor* (illustrated by the default "/opt/intel"). We now need
+            # to drill down to the *product*-specific directory.
+            if os.path.exists(d.compilers_and_libraries):
+                d = d.compilers_and_libraries.linux.mkl
+
+            # If an admin installs MKL outside of spack and integrates it via
+            # packages.yaml, the prefix semantics will be product-specific,
+            # since such an MKL will be co-located with other products and/or
+            # versions. The product-specific prefix is what we want and need.
+            # Another site reported something close (or exactly?) like this:
+            # https://groups.google.com/d/msg/spack/x28qlmqPAys/Ewx6220uAgAJ
+            if d.endswith('mkl') or os.path.exists(d.lib):
+                pass
+
+            # On my system, self.prefix somehow ends with ".../compiler". (I
+            # think it's because I provide MKL by means of the side effect of
+            # loading an env. module for the Intel *compilers*, and spack
+            # inspects $PATH?). So, let's take a jump to the left, and a jump
+            # to the right, and do the time warp again:
+            if d.endswith('compiler'):
+                d = Prefix(ancestor(d)).mkl
+
+        _debug_print('mkl_prefix', d)
+        return d
+
+    def _mkl_libdir(self):
+        # Starting directory for find_libraries() searches and for
+        # SPACK_COMPILER_EXTRA_RPATHS.
+        if sys.platform == 'darwin':
+            # TODO: Verify on Mac.
+            d = self.mklroot.lib
+        else:
+            d = self.mklroot.lib.intel64
+        _debug_print('mkl_libdir', d)
+        return d
+
+    def _mkl_int_suffix(self):
+        if '+ilp64' in self.spec:
+            return '_ilp64'
+        else:
+            return '_lp64'
+
     @property
     def license_required(self):
         # The Intel libraries are provided without requiring a license as of
         # version 2017.2. Trying to specify the license will fail. See:
         # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        if self.version >= Version('2017.2'):
-            return False
-        else:
-            return True
+        return self.version < Version('2017.2')
 
     @property
     def blas_libs(self):
-        spec = self.spec
-        prefix = self.prefix
-        shared = '+shared' in spec
-
-        if '+ilp64' in spec:
-            mkl_integer = ['libmkl_intel_ilp64']
-        else:
-            mkl_integer = ['libmkl_intel_lp64']
-
-        mkl_threading = ['libmkl_sequential']
-
-        omp_libs = LibraryList([])
-
-        if spec.satisfies('threads=openmp'):
-            if '%intel' in spec:
-                mkl_threading = ['libmkl_intel_thread']
-                omp_threading = ['libiomp5']
-
-                if sys.platform != 'darwin':
-                    omp_root = prefix.compilers_and_libraries.linux.lib.intel64
+        mkl_libnames = ['libmkl_intel' + self._mkl_int_suffix(), 'libmkl_core']
+        if self.spec.satisfies('threads=openmp'):
+            if '%intel' in self.spec:
+                if self.prefix.endswith('mkl'):
+                    # Gambit, suitable for 2016...2018(+)
+                    compiler_dir = Prefix(ancestor(self.prefix)).compiler
                 else:
-                    omp_root = prefix.lib
-                omp_libs = find_libraries(
-                    omp_threading, root=omp_root, shared=shared)
-            elif '%gcc' in spec:
-                mkl_threading = ['libmkl_gnu_thread']
+                    # Stick to what we have. Prefix bug comes to our advantage.
+                    compiler_dir = self.prefix
 
+                omp_libnames = ['libiomp5']
+                omp_libs = find_libraries(
+                    omp_libnames,
+                    root=compiler_dir,
+                    shared=self._want_shared())
+                mkl_libnames.append('libmkl_intel_thread')
+            elif '%gcc' in self.spec:
                 gcc = Executable(self.compiler.cc)
-                libgomp = gcc('--print-file-name', 'libgomp.{0}'.format(
-                    dso_suffix), output=str)
-                omp_libs = LibraryList(libgomp)
+                omp_libnames = gcc('--print-file-name',
+                                   'libgomp.{0}'.format(dso_suffix),
+                                   output=str)
+                omp_libs = LibraryList(omp_libnames)
+                mkl_libnames.append('libmkl_gnu_thread')
+
+            if len(omp_libs) < 1:
+                _raise_install_error(
+                    'Cannot locate OpenMP libraries:',
+                    omp_libnames)
+        else:
+            omp_libs = LibraryList([])
+            mkl_libnames.append('libmkl_sequential')
+
+        _debug_print('omp_libs', omp_libs)
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
-        if sys.platform != 'darwin':
-            mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
-        else:
-            mkl_root = prefix.mkl.lib
-
         mkl_libs = find_libraries(
-            mkl_integer + ['libmkl_core'] + mkl_threading,
-            root=mkl_root,
-            shared=shared
-        )
+            mkl_libnames,
+            root=self._mkl_libdir(),
+            shared=self._want_shared())
+        _debug_print('mkl_libs', mkl_libs)
+
+        if len(mkl_libs) < 3:
+            _raise_install_error(
+                'Cannot locate core MKL libraries:',
+                mkl_libnames)
 
         # Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(
-            ['libpthread', 'libm', 'libdl'],
-            shared=shared
-        )
+            'libpthread libm libdl'.split(),
+            shared=self._want_shared())
+        _debug_print('system_libs', system_libs)
 
         return mkl_libs + omp_libs + system_libs
 
@@ -142,57 +202,54 @@ class IntelMkl(IntelPackage):
 
     @property
     def scalapack_libs(self):
-        libnames = ['libmkl_scalapack']
-
-        # Intel MKL does not directly depend on mpi but the scalapack
-        # interface does and the corresponding  BLACS library changes
-        # depending on the MPI implementation we are using. We need then to
-        # inspect the root package which asked for Scalapack and check which
-        # MPI it depends on.
-        root = self.spec.root
-        if sys.platform == 'darwin' and '^mpich' in root:
-            # MKL 2018 supports only MPICH on darwin
-            libnames.append('libmkl_blacs_mpich')
-        elif '^openmpi' in root:
-            libnames.append('libmkl_blacs_openmpi')
-        elif '^mpich@1' in root:
-            libnames.append('libmkl_blacs')
-        elif '^mpich@2:' in root:
-            libnames.append('libmkl_blacs_intelmpi')
-        elif '^mvapich2' in root:
-            libnames.append('libmkl_blacs_intelmpi')
-        elif '^mpt' in root:
-            libnames.append('libmkl_blacs_sgimpt')
-        elif '^intel-mpi' in root:
-            libnames.append('libmkl_blacs_intelmpi')
+        # Intel MKL does not directly depend on MPI but the BLACS library
+        # which underlies ScaLapack does. It comes in several personalities;
+        # we must supply a personality matching the MPI implementation that
+        # is active for the root package that asked for ScaLapack.
+        spec_root = self.spec.root
+        if sys.platform == 'darwin' and '^mpich' in spec_root:
+            # The only supported choice for MKL 2018 on Mac.
+            blacs_variant = '_mpich'
+        elif '^openmpi' in spec_root:
+            blacs_variant = '_openmpi'
+        elif '^mpich@1' in spec_root:
+            # Was supported only up to 2015.
+            blacs_variant = ''
+        elif ('^mpich@2:' in spec_root
+              or '^mvapich2' in spec_root
+              or '^intel-mpi' in spec_root):
+            blacs_variant = '_intelmpi'
+        elif '^mpt' in spec_root:
+            blacs_variant = '_sgimpt'
         else:
-            raise InstallError('No MPI found for scalapack')
+            _raise_install_error(
+                'Cannot find a BLACS variant for the given MPI.')
 
-        integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
-        mkl_root = self.prefix.mkl.lib if sys.platform == 'darwin' else \
-            self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
+        scalapack_libnames = [
+            'libmkl_scalapack' + self._mkl_int_suffix(),
+            'libmkl_blacs' + blacs_variant + self._mkl_int_suffix(),
+        ]
+        sca_libs = find_libraries(
+            scalapack_libnames,
+            root=self._mkl_libdir(),
+            shared=self._want_shared())
+        _debug_print('scalapack_libs', sca_libs)
 
-        shared = True if '+shared' in self.spec else False
+        if len(sca_libs) < 2:
+            _raise_install_error(
+                'Cannot locate ScaLapack/BLACS libraries:',
+                scalapack_libnames)
 
-        libs = find_libraries(
-            ['{0}_{1}'.format(l, integer) for l in libnames],
-            root=mkl_root,
-            shared=shared
-        )
-
-        return libs
+        return sca_libs
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # set up MKLROOT for everyone using MKL package
-        if sys.platform == 'darwin':
-            mkl_lib = self.prefix.mkl.lib
-            mkl_root = self.prefix.mkl
-        else:
-            mkl_lib = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
-            mkl_root = self.prefix.compilers_and_libraries.linux.mkl
-
-        spack_env.set('MKLROOT', mkl_root)
-        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_lib)
+        # Note: The name and meaning of the 'root=' keyword arg of
+        # find_libraries() painfully conflicts with the semantics of MKLROOT.
+        # The variable "mkl_root" that was used previously in this file,
+        # (named to suit the keyword arg), was particularly troublesome.
+        spack_env.set('MKLROOT', self.mklroot)
+        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
+                              self._mkl_libdir())
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
@@ -211,13 +268,40 @@ class IntelMkl(IntelPackage):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        mklvars = os.path.join(self.prefix.mkl.bin, 'mklvars.sh')
+        mklvars = join_path(self.mklroot.bin, 'mklvars.sh')
+        if os.path.isfile(mklvars):
+            if sys.platform == 'darwin':
+                run_env.extend(
+                    EnvironmentModifications.from_sourcing_file(
+                        mklvars))
+            else:
+                run_env.extend(
+                    EnvironmentModifications.from_sourcing_file(
+                        mklvars, 'intel64'))
 
-        if sys.platform == 'darwin':
-            if os.path.isfile(mklvars):
-                run_env.extend(EnvironmentModifications.from_sourcing_file(
-                    mklvars))
-        else:
-            if os.path.isfile(mklvars):
-                run_env.extend(EnvironmentModifications.from_sourcing_file(
-                    mklvars, 'intel64'))
+
+# A couple of utility functions that might be useful in general. If so, they
+# should really be defined elsewhere, unless deemed heretical.
+# (Or na"ive on my part).
+
+import llnl.util.tty as tty
+import inspect
+
+
+def _debug_print(label, value, *args, **kwargs):
+    '''Prints a variable, labeled, along with the caller's caller
+    function name (for more context).
+    '''
+    # See also: https://docs.python.org/2/library/inspect.html#the-interpreter-stack
+    traceback = 2
+    func_name = inspect.stack()[traceback][3]
+    tty.debug("{0}.{1}:\t'{2}'".format(func_name, label, value),
+              *args, **kwargs)
+
+
+def _raise_install_error(*args):
+    '''Issues a possibly multi-line error message, then bail out.
+    Indents all args after the first, which is useful to have long paths
+    stand out.
+    '''
+    raise InstallError("\n\t".join(str(i) for i in list(*args)))

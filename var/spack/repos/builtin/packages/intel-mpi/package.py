@@ -55,30 +55,45 @@ class IntelMpi(IntelPackage):
         # The Intel libraries are provided without requiring a license as of
         # version 2017.2. Trying to specify the license will fail. See:
         # https://software.intel.com/en-us/articles/free-ipsxe-tools-and-libraries
-        if self.version >= Version('2017.2'):
-            return False
-        else:
-            return True
+        return self.version < Version('2017.2')
+
+    @property
+    def _mpi_prefix(self):
+        # The prefix may be off from what Spack expects in case of a
+        # module-based package installation; see the discussion in
+        # ../intel-mkl/package.py:mklroot() .
+        # Note that for MPI, the layout is sligthly different from MKL:
+        # "intel64" is to be part of the prefix, to contain bin/, lib/, ...
+        # all without further architecture splits.
+        dir_found = None
+        for d in [
+            self.prefix.compilers_and_libraries.linux.mpi.intel64,
+            self.prefix.intel64,
+            self.prefix,
+        ]:
+            if os.path.exists(join_path(d.bin, 'mpirun')):
+                dir_found = d
+                break
+        if dir_found is None:
+            raise InstallError('Cannot determine Intel-MPI prefix directory.')
+        return dir_found
 
     @property
     def mpi_libs(self):
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.lib64
-        query_parameters = self.spec.last_query.extra_parameters
-        libraries = ['libmpifort', 'libmpi']
-
-        if 'cxx' in query_parameters:
-            libraries = ['libmpicxx'] + libraries
-
-        return find_libraries(
-            libraries, root=mpi_root, shared=True, recursive=True
-        )
+        # If prefix is too general, recursive searches may get file variants
+        # from supported but inappropriate sub-architectures like 'mic'.
+        libnames = ['libmpifort', 'libmpi']
+        if 'cxx' in self.spec.last_query.extra_parameters:
+            libnames = ['libmpicxx'] + libnames
+        return find_libraries(libnames,
+                              root=self._mpi_prefix.lib,
+                              shared=True, recursive=True)
 
     @property
     def mpi_headers(self):
-        # recurse from self.prefix will find too many things for all the
-        # supported sub-architectures like 'mic'
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
-        return find_headers('mpi', root=mpi_root, recursive=False)
+        return find_headers('mpi',
+                            root=self._mpi_prefix.include,
+                            recursive=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('I_MPI_CC', spack_cc)
@@ -100,8 +115,7 @@ class IntelMpi(IntelPackage):
         # and friends are set to point to the Intel compilers, but in
         # practice, mpicc fails to compile some applications while
         # mpiicc works.
-        bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
-
+        bindir = self._mpi_prefix.bin
         if self.compiler.name == 'intel':
             self.spec.mpicc  = bindir.mpiicc
             self.spec.mpicxx = bindir.mpiicpc
@@ -130,10 +144,6 @@ class IntelMpi(IntelPackage):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        mpivars = os.path.join(
-            self.prefix.compilers_and_libraries.linux.mpi.intel64.bin,
-            'mpivars.sh')
-
-        if os.path.isfile(mpivars):
-            run_env.extend(EnvironmentModifications.from_sourcing_file(
-                mpivars))
+        f = join_path(self._mpi_prefix.bin, 'mpivars.sh')
+        if os.path.isfile(f):
+            run_env.extend(EnvironmentModifications.from_sourcing_file(f))
