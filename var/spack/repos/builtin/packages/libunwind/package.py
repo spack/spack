@@ -36,8 +36,11 @@ class Libunwind(AutotoolsPackage):
     version('1.1', 'fb4ea2f6fbbe45bf032cd36e586883ce')
 
     # On Darwin, libunwind is available without any additional include paths
-    # and libraries. In order to support that, we allow configuring libunwind
-    # as an extrnal library with a prefix that does not exist.
+    # and libraries - this is because the header is in /usr/include and there
+    # is no need to add '-lunwind' since libc.dylib (and libc++.dylib) are
+    # already linked with /usr/lib/system/libunwind.dylib. In order to support
+    # this case, we allow configuring libunwind as an extrnal library with a
+    # prefix that does not exist.
 
     @property
     def headers(self):
