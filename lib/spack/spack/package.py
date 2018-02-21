@@ -563,6 +563,10 @@ class PackageBase(with_metaclass(PackageMeta, object)):
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []
 
+    #: List of attributes which affect do not affect a package's content.
+    metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
+                      'make_jobs']
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
