@@ -59,24 +59,32 @@ class IntelMpi(IntelPackage):
 
     @property
     def _mpi_prefix(self):
-        # The prefix may be off from what Spack expects in case of a
-        # module-based package installation; see the discussion in
-        # ../intel-mkl/package.py:mklroot() .
-        # Note that for MPI, the layout is sligthly different from MKL:
-        # "intel64" is to be part of the prefix, to contain bin/, lib/, ...
-        # all without further architecture splits.
-        dir_found = None
-        for d in [
-            self.prefix.compilers_and_libraries.linux.mpi.intel64,
-            self.prefix.intel64,
-            self.prefix,
-        ]:
-            if os.path.exists(join_path(d.bin, 'mpirun')):
-                dir_found = d
-                break
-        if dir_found is None:
-            raise InstallError('Cannot determine Intel-MPI prefix directory.')
-        return dir_found
+        '''Returns the effective toplevel product directory, i.e., the
+        directory that is to be presented to users in the MKLROOT environment
+        variable.
+        '''
+        # Full explanation for below in ../intel-mkl/package.py:mklroot()
+        d = self.prefix
+        if 'compilers_and_libraries' in d:
+            # Intel-MPI installed external to spack; we're (mostly) done.
+            pass
+        else:
+            # We use or are doing a spack-based installation; must qualify
+            # the prefix from vendor level to product level.
+            d = d.compilers_and_libraries
+
+            ## Idea: Use actual release-specific directory. TODO: Confirm.
+            #d = Prefix(d.append('_' + self.version))
+
+            d = d.linux.mpi
+
+        # For MPI, the layout is slightly different than MKL. The sub-arch is
+        # to be part of the prefix (though not of I_MPI_ROOT), which then
+        # contains bin/, lib/, ..., all without further arch splits.
+        if not d.endswith('intel64'):
+            d = d.intel64
+
+        return d
 
     @property
     def mpi_libs(self):
@@ -101,6 +109,9 @@ class IntelMpi(IntelPackage):
         spack_env.set('I_MPI_F77', spack_fc)
         spack_env.set('I_MPI_F90', spack_f77)
         spack_env.set('I_MPI_FC', spack_fc)
+
+        # Convenience variable. Sub-arch "intel64" must be stripped here.
+        spack_env.set('I_MPI_ROOT', ancestor(self._mpi_prefix))
 
     def setup_dependent_package(self, module, dep_spec):
         # Intel comes with 2 different flavors of MPI wrappers:

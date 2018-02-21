@@ -78,54 +78,61 @@ class IntelMkl(IntelPackage):
 
     @property
     def mklroot(self):
-        '''Returns the version-specific toplevel product directory, i.e., the
+        '''Returns the effective toplevel product directory, i.e., the
         directory that is to be presented to users in the MKLROOT environment
         variable.
         '''
+        # Used analogously in ../intel-mpi/package.py:_mpi_root()
+        d = self.prefix
         if sys.platform == 'darwin':
             # TODO: Verify on Mac.
-            d = self.prefix.mkl
+            return d.mkl
+
+        if 'compilers_and_libraries' in d:
+            # If an admin installs MKL outside of spack and integrates it
+            # via packages.yaml, the prefix will naturally point to a
+            # directory that is specific to MKL as one Intel *product*
+            # among possibly others that are installed in sibling or cousin
+            # directories. This product-specific directory is what we want
+            # and need.
+            pass
         else:
-            d = self.prefix
-            # A spack-internal MKL installation inherits its prefix semantics
-            # from install.sh of the package distribution, where "prefix" means
-            # the high-level installation directory that is specific to a
-            # *vendor* (illustrated by the default "/opt/intel"). We now need
-            # to drill down to the *product*-specific directory.
-            if os.path.exists(d.compilers_and_libraries):
-                d = d.compilers_and_libraries.linux.mkl
+            # By contrast, a spack-based MKL installation will inherit its
+            # prefix from install.sh of Intel's package distribution, where it
+            # means the high-level installation directory that is specific to
+            # the *vendor* (illustrated by the default "/opt/intel"). We must
+            # now drill down to the *product* directory to get the usual
+            # hierarchy (bin/, lib/, ...).
+            d = d.compilers_and_libraries
 
-            # If an admin installs MKL outside of spack and integrates it via
-            # packages.yaml, the prefix semantics will be product-specific,
-            # since such an MKL will be co-located with other products and/or
-            # versions. The product-specific prefix is what we want and need.
-            # Another site reported something close (or exactly?) like this:
-            # https://groups.google.com/d/msg/spack/x28qlmqPAys/Ewx6220uAgAJ
-            if d.endswith('mkl') or os.path.exists(d.lib):
-                pass
+            ## Idea: Use actual release-specific directory. TODO: Confirm.
+            #d = Prefix(d.append('_' + self.version))
 
-            # On my system, self.prefix somehow ends with ".../compiler". (I
-            # think it's because I provide MKL by means of the side effect of
-            # loading an env. module for the Intel *compilers*, and spack
-            # inspects $PATH?). So, let's take a jump to the left, and a jump
-            # to the right, and do the time warp again:
-            if d.endswith('compiler'):
-                d = Prefix(ancestor(d)).mkl
+            d = d.linux.mkl
+
+        # On my system, self.prefix somehow ends with ".../compiler". (I think
+        # this is because I provided MKL by means of the side effect of loading
+        # an env. module for the Intel *compilers*, and spack inspects $PATH?).
+        # So, take a jump to the left, and a jump to the right, and then do the
+        # time warp again:
+        if d.endswith('compiler'):
+            d = Prefix(ancestor(d)).mkl
 
         _debug_print('mkl_prefix', d)
         return d
 
+    @property
     def _mkl_libdir(self):
         # Starting directory for find_libraries() searches and for
         # SPACK_COMPILER_EXTRA_RPATHS.
         if sys.platform == 'darwin':
-            # TODO: Verify on Mac.
             d = self.mklroot.lib
         else:
             d = self.mklroot.lib.intel64
         _debug_print('mkl_libdir', d)
         return d
 
+    @property
     def _mkl_int_suffix(self):
         if '+ilp64' in self.spec:
             return '_ilp64'
@@ -141,7 +148,7 @@ class IntelMkl(IntelPackage):
 
     @property
     def blas_libs(self):
-        mkl_libnames = ['libmkl_intel' + self._mkl_int_suffix(), 'libmkl_core']
+        mkl_libnames = ['libmkl_intel' + self._mkl_int_suffix, 'libmkl_core']
         if self.spec.satisfies('threads=openmp'):
             if '%intel' in self.spec:
                 if self.prefix.endswith('mkl'):
@@ -179,7 +186,7 @@ class IntelMkl(IntelPackage):
 
         mkl_libs = find_libraries(
             mkl_libnames,
-            root=self._mkl_libdir(),
+            root=self._mkl_libdir,
             shared=self._want_shared())
         _debug_print('mkl_libs', mkl_libs)
 
@@ -221,17 +228,16 @@ class IntelMkl(IntelPackage):
             blacs_variant = '_intelmpi'
         elif '^mpt' in spec_root:
             blacs_variant = '_sgimpt'
-        else:
-            _raise_install_error(
-                'Cannot find a BLACS variant for the given MPI.')
+        else: _raise_install_error(
+                'Cannot determine a BLACS variant for the given MPI.')
 
         scalapack_libnames = [
-            'libmkl_scalapack' + self._mkl_int_suffix(),
-            'libmkl_blacs' + blacs_variant + self._mkl_int_suffix(),
+            'libmkl_scalapack' + self._mkl_int_suffix,
+            'libmkl_blacs' + blacs_variant + self._mkl_int_suffix,
         ]
         sca_libs = find_libraries(
             scalapack_libnames,
-            root=self._mkl_libdir(),
+            root=self._mkl_libdir,
             shared=self._want_shared())
         _debug_print('scalapack_libs', sca_libs)
 
@@ -249,7 +255,7 @@ class IntelMkl(IntelPackage):
         # (named to suit the keyword arg), was particularly troublesome.
         spack_env.set('MKLROOT', self.mklroot)
         spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                              self._mkl_libdir())
+                              self._mkl_libdir)
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
