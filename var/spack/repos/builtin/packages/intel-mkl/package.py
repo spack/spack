@@ -123,7 +123,7 @@ class IntelMkl(IntelPackage):
             mkl_root = prefix.mkl.lib
 
         mkl_libs = find_libraries(
-            mkl_integer + ['libmkl_core'] + mkl_threading,
+            mkl_integer + mkl_threading + ['libmkl_core'],
             root=mkl_root,
             shared=shared
         )
