@@ -208,6 +208,9 @@ class Git(AutotoolsPackage):
             # Don't link with -lrt; the system has no (and needs no) librt
             filter_file(r' -lrt$', '', 'Makefile')
 
+    def check(self):
+        make('test')
+
     @run_after('install')
     def install_completions(self):
         copy_tree('contrib/completion', self.prefix.share)

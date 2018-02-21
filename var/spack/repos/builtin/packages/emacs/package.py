@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 
+import sys
+
 
 class Emacs(AutotoolsPackage):
     """The Emacs programmable text editor."""
@@ -55,7 +57,7 @@ class Emacs(AutotoolsPackage):
     depends_on('giflib', when='+X')
     depends_on('libx11', when='+X')
     depends_on('libxaw', when='+X toolkit=athena')
-    depends_on('gtkplus+X', when='+X toolkit=gtk')
+    depends_on('gtkplus', when='+X toolkit=gtk')
     depends_on('gnutls', when='+tls')
     depends_on('libxpm ^gettext+libunistring', when='+tls')
     depends_on('ncurses+termlib', when='+tls')
@@ -71,5 +73,10 @@ class Emacs(AutotoolsPackage):
             ]
         else:
             args = ['--without-x']
+
+        # On OS X/macOS, do not build "nextstep/Emacs.app", because
+        # doing so throws an error at build-time
+        if sys.platform == 'darwin':
+            args.append('--without-ns')
 
         return args

@@ -38,8 +38,9 @@ class Valgrind(AutotoolsPackage):
 
     """
     homepage = "http://valgrind.org/"
-    url = "http://valgrind.org/downloads/valgrind-3.11.0.tar.bz2"
+    url = "https://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2"
 
+    version('3.13.0', '817dd08f1e8a66336b9ff206400a5369')
     version('3.12.0', '6eb03c0c10ea917013a7622e483d61bb')
     version('3.11.0', '4ea62074da73ae82e0162d6550d3f129')
     version('3.10.1', '60ddae962bc79e7c95cfc4667245707f')

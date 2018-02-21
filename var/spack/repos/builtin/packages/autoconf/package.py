@@ -55,12 +55,11 @@ class Autoconf(AutotoolsPackage):
         # We have to do this after install because otherwise the install
         # target will try to rebuild the binaries (filter_file updates the
         # timestamps)
-        perl = join_path(self.spec['perl'].prefix.bin, 'perl')
 
         # Revert sbang, so Spack's sbang hook can fix it up
         filter_file('^#! /usr/bin/env perl',
-                    '#! {0} -w'.format(perl),
-                    '{0}/autom4te'.format(self.prefix.bin),
+                    '#! {0} -w'.format(self.spec['perl'].command.path),
+                    self.prefix.bin.autom4te,
                     backup=False)
 
     def _make_executable(self, name):

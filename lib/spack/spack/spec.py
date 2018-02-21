@@ -689,7 +689,7 @@ def _headers_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If no headers are found
     """
-    headers = find_headers('*', root=spec.prefix.include, recurse=True)
+    headers = find_headers('*', root=spec.prefix.include, recursive=True)
 
     if headers:
         return headers
@@ -731,22 +731,22 @@ def _libs_default_handler(descriptor, spec, cls):
 
     if '+shared' in spec:
         libs = find_libraries(
-            name, root=spec.prefix, shared=True, recurse=True
+            name, root=spec.prefix, shared=True, recursive=True
         )
     elif '~shared' in spec:
         libs = find_libraries(
-            name, root=spec.prefix, shared=False, recurse=True
+            name, root=spec.prefix, shared=False, recursive=True
         )
     else:
         # Prefer shared
         libs = find_libraries(
-            name, root=spec.prefix, shared=True, recurse=True
+            name, root=spec.prefix, shared=True, recursive=True
         )
         if libs:
             return libs
 
         libs = find_libraries(
-            name, root=spec.prefix, shared=False, recurse=True
+            name, root=spec.prefix, shared=False, recursive=True
         )
 
     if libs:
@@ -925,7 +925,8 @@ class DependencyConstraints(object):
 @key_ordering
 class Spec(object):
 
-    ID_COUNTER = 0
+    #: Cache for spec's prefix, computed lazily in the corresponding property
+    _prefix = None
 
     @staticmethod
     def from_literal(spec_dict, normal=True):
@@ -1080,9 +1081,6 @@ class Spec(object):
         return spec_builder(spec_dict)
 
     def __init__(self, spec_like, **kwargs):
-        self.unique_id = Spec.ID_COUNTER
-        Spec.ID_COUNTER += 1
-
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
             self._dup(spec_like)
@@ -1240,7 +1238,9 @@ class Spec(object):
 
     @property
     def package(self):
-        return spack.repo.get(self)
+        if not self._package:
+            self._package = spack.repo.get(self)
+        return self._package
 
     @property
     def package_class(self):
@@ -1420,12 +1420,13 @@ class Spec(object):
 
     @property
     def prefix(self):
-        if hasattr(self, 'test_prefix'):
-            return Prefix(self.test_prefix)
-        return Prefix(spack.store.layout.path_for_spec(self))
+        if self._prefix is None:
+            self.prefix = spack.store.layout.path_for_spec(self)
+        return self._prefix
 
-    def _set_test_prefix(self, val):
-        self.test_prefix = val
+    @prefix.setter
+    def prefix(self, value):
+        self._prefix = Prefix(value)
 
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
@@ -1820,17 +1821,8 @@ class Spec(object):
 
         Some rigorous validation and checks are also performed on the spec.
         Concretizing ensures that it is self-consistent and that it's
-        consistent with requirements of its pacakges. See flatten() and
+        consistent with requirements of its packages. See flatten() and
         normalize() for more details on this.
-
-        It also ensures that:
-
-        .. code-block:: python
-
-            for x in self.traverse():
-                assert x.package.spec == x
-
-        which may not be true *during* the concretization step.
         """
         if not self.name:
             raise SpecError("Attempting to concretize anonymous spec")
@@ -1943,18 +1935,13 @@ class Spec(object):
         # there are declared conflicts
         matches = []
         for x in self.traverse():
-            for conflict_spec, when_list in x.package.conflicts.items():
-                if x.satisfies(conflict_spec):
+            for conflict_spec, when_list in x.package_class.conflicts.items():
+                if x.satisfies(conflict_spec, strict=True):
                     for when_spec, msg in when_list:
-                        if x.satisfies(when_spec):
+                        if x.satisfies(when_spec, strict=True):
                             matches.append((x, conflict_spec, when_spec, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
-
-        # At this point the spec-package mutual references should
-        # be self-consistent
-        for x in self.traverse():
-            x.package.spec = x
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -1972,7 +1959,7 @@ class Spec(object):
         """This is a non-destructive version of concretize().  First clones,
            then returns a concrete version of this package without modifying
            this package. """
-        clone = self.copy()
+        clone = self.copy(caches=False)
         clone.concretize()
         return clone
 
@@ -2000,8 +1987,7 @@ class Spec(object):
         If no conditions are True (and we don't depend on it), return
         ``(None, None)``.
         """
-        pkg = spack.repo.get(self.fullname)
-        conditions = pkg.dependencies[name]
+        conditions = self.package_class.dependencies[name]
 
         substitute_abstract_variants(self)
         # evaluate when specs to figure out constraints on the dependency.
@@ -2170,7 +2156,7 @@ class Spec(object):
         pkg = spack.repo.get(self.fullname)
 
         build_only = set()
-        for dep_name in pkg.dependencies:
+        for dep_name in self.package_class.dependencies:
             dependency = self._evaluate_dependency_conditions(dep_name)
             if dependency and set(dependency.type) == set(['build']):
                 build_only.add(dep_name)
@@ -2183,7 +2169,7 @@ class Spec(object):
         changed = True
         while changed:
             changed = False
-            for dep_name in pkg.dependencies:
+            for dep_name in self.package_class.dependencies:
                 dependency = self._evaluate_dependency_conditions(dep_name)
 
                 if not dependency:
@@ -2619,7 +2605,7 @@ class Spec(object):
         # FIXME: concretization to store the order of patches somewhere.
         # FIXME: Needs to be refactored in a cleaner way.
         for sha256 in self.variants['patches']._patches_in_order_of_appearance:
-            patch = self.package.lookup_patch(sha256)
+            patch = self.package_class.lookup_patch(sha256)
             if patch:
                 patches.append(patch)
                 continue
@@ -2627,7 +2613,7 @@ class Spec(object):
             # if not found in this package, check immediate dependents
             # for dependency patches
             for dep_spec in self._dependents.values():
-                patch = dep_spec.parent.package.lookup_patch(sha256)
+                patch = dep_spec.parent.package_class.lookup_patch(sha256)
 
                 if patch:
                     patches.append(patch)
@@ -2672,6 +2658,8 @@ class Spec(object):
                        self.external_path != other.external_path and
                        self.external_module != other.external_module and
                        self.compiler_flags != other.compiler_flags)
+
+        self._package = None
 
         # Local node attributes get copied first.
         self.name = other.name
@@ -2764,8 +2752,6 @@ class Spec(object):
 
         """
         clone = Spec.__new__(Spec)
-        clone.unique_id = Spec.ID_COUNTER
-        Spec.ID_COUNTER += 1
         clone._dup(self, deps=deps, **kwargs)
         return clone
 
@@ -3465,8 +3451,6 @@ class SpecParser(spack.parse.Parser):
             spec = self._initial
             self._initial = None
 
-        spec.unique_id = Spec.ID_COUNTER
-        Spec.ID_COUNTER += 1
         spec.name = spec_name
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
@@ -3481,6 +3465,7 @@ class SpecParser(spack.parse.Parser):
         spec._hash = None
         spec._cmp_key_cache = None
 
+        spec._package = None
         spec._normal = False
         spec._concrete = False
 

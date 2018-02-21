@@ -63,7 +63,7 @@ class Repeatmasker(Package):
         #    Repeatmasker? (Y/N)
         # Add a Search Engine: Done
 
-        config_answers = ['\n', '%s\n' % self.spec['perl'].prefix.bin.perl,
+        config_answers = ['\n', '%s\n' % self.spec['perl'].command.path,
                           '%s\n' % self.stage.source_path,
                           '%s\n' % self.spec['trf'].prefix.bin.trf, '2\n',
                           '%s\n' % self.spec['ncbi-rmblastn'].prefix.bin,
