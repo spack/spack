@@ -43,14 +43,7 @@ class Accfft(CMakePackage, CudaPackage):
 
     depends_on('parallel-netcdf', when='+pnetcdf')
 
-    build_targets = [
-        'accfft', 'accfft_utils',
-        'step1', 'step1f',
-        'step2', 'step2f',
-        'step3', 'step3f',
-        'step4',
-        'step5', 'step5f',
-    ]
+    parallel = False
 
     def cmake_args(self):
         spec = self.spec
@@ -64,10 +57,10 @@ class Accfft(CMakePackage, CudaPackage):
         ]
 
         if '+cuda' in spec:
-            cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch is not None:
+            cuda_arch = [x for x in spec.variants['cuda_arch'].value if x]
+            if cuda_arch:
                 args.append(
-                    '-DCUDA_NVCC_FLAGS="-arch=sm_{0}"'.format(cuda_arch[0])
+                    '-DCUDA_NVCC_FLAGS={0}'.format(' '.join(self.cuda_flags(cuda_arch)))
                 )
 
         return args
