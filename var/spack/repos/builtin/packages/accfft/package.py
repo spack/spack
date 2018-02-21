@@ -59,8 +59,8 @@ class Accfft(CMakePackage, CudaPackage):
         if '+cuda' in spec:
             cuda_arch = [x for x in spec.variants['cuda_arch'].value if x]
             if cuda_arch:
-                args.append(
-                    '-DCUDA_NVCC_FLAGS={0}'.format(' '.join(self.cuda_flags(cuda_arch)))
-                )
+                args.append('-DCUDA_NVCC_FLAGS={0}'.format(
+                    ' '.join(self.cuda_flags(cuda_arch))
+                ))
 
         return args
