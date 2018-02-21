@@ -26,7 +26,7 @@ from spack import *
 
 
 class PyMaestrowf(PythonPackage):
-    """A general purpose workflow conductor for running multi-step 
+    """A general purpose workflow conductor for running multi-step
        simulation studies."""
 
     homepage = "https://github.com/LLNL/maestrowf/"
