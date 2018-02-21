@@ -50,3 +50,5 @@ class Dislin(Package):
     def install(self, spec, prefix):
         INSTALL = Executable('./INSTALL')
         INSTALL()
+        with working_dir('examples'):
+            install('dislin_d.h', prefix)
