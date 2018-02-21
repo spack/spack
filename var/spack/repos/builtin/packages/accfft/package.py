@@ -54,7 +54,7 @@ class Accfft(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        return [
+        args = [
             '-DFFTW_ROOT={0}'.format(spec['fftw'].prefix),
             '-DFFTW_USE_STATIC_LIBS=false',
             '-DBUILD_GPU={0}'.format('true' if '+cuda' in spec else 'false'),
@@ -62,3 +62,12 @@ class Accfft(CMakePackage, CudaPackage):
                 'true' if '+shared' in spec else 'false'
             ),
         ]
+
+        if '+cuda' in spec:
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch is not None:
+                args.append(
+                    '-DCUDA_NVCC_FLAGS="-arch=sm_{0}"'.format(cuda_arch[0])
+                )
+
+        return args
