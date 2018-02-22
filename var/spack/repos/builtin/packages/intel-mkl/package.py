@@ -29,6 +29,7 @@ from spack import *
 from spack.environment import EnvironmentModifications
 from spack.util.prefix import Prefix
 from llnl.util.filesystem import join_path, ancestor
+import llnl.util.tty as tty
 
 
 class IntelMkl(IntelPackage):
@@ -91,45 +92,114 @@ class IntelMkl(IntelPackage):
         else:
             return '_lp64'
 
+#--------------------------------------------------------------------
+# Analysis of the directory layout for a Spack-born installation of:
+# intel-mkl@2018.1.163
+#--------------------------------------------------------------------
+#
+#   $ ls -l <prefix>
+#     # Unix metadata removed, entries rearranged, "->" still means symlink.
+#
+#   bin/
+#       - compilervars.*sh (symlinked) ONLY
+#
+#   compilers_and_libraries -> compilers_and_libraries_2018
+#       - generically-named entry point, stable across versions (one hopes)
+#
+#   compilers_and_libraries_2018/
+#       - vaguely-versioned dirname, holding a stub hierarchy --ignorable
+#
+#       $ ls -l compilers_and_libraries_2018/linux/
+#       [.] bin           - actual compilervars.*sh (reg. files) ONLY
+#       [.] documentation -> ../../documentation_2018/
+#       [.] lib -> ../../compilers_and_libraries_2018.1.163/linux/compiler/lib/
+#       [.] mkl -> ../../compilers_and_libraries_2018.1.163/linux/mkl/
+#       [.] pkg_bin -> ../../compilers_and_libraries_2018.1.163/linux/bin/
+#       [.] samples -> ../../samples_2018/
+#       [.] tbb -> ../../compilers_and_libraries_2018.1.163/linux/tbb/
+#
+#   compilers_and_libraries_2018.1.163/
+#       - Main "product" + a minimal set of libs from related products
+#
+#       $ ls -l compilers_and_libraries_2018.1.163/linux/
+#       bin/        - compilervars.*sh, link_install*sh  ONLY
+#       mkl/        - Main Product ==> to be assigned to MKLROOT
+#       compiler/   - lib/intel64_lin/libiomp5*  ONLY
+#       tbb/        - tbb/lib/intel64_lin/gcc4.[147]/libtbb*.so* ONLY
+#
+#   parallel_studio_xe_2018 -> parallel_studio_xe_2018.1.038/
+#   parallel_studio_xe_2018.1.038/
+#       - Alternate product packaging - ignorable
+#
+#       $ ls -l parallel_studio_xe_2018.1.038/
+#       bin/               - actual psxevars.*sh (reg. files)
+#       compilers_and_libraries_2018 -> <full_path_prefix>/comp..._2018.1.163
+#       documentation_2018 -> <full_path_prefix>/documentation_2018
+#       samples_2018 -> <full_path_prefix>/samples_2018
+#       ...
+#
+#   documentation_2018/
+#   samples_2018/
+#   lib -> compilers_and_libraries/linux/lib/
+#   mkl -> compilers_and_libraries/linux/mkl/
+#   tbb -> compilers_and_libraries/linux/tbb/
+#                                   - auxiliaries and convenience links
+#
+#--------------------------------------------------------------------
+
     @property
     def mklroot(self):
         '''Returns the effective toplevel product directory, i.e., the
         directory that is to be presented to users in the MKLROOT environment
         variable.
         '''
-        # Used analogously in ../intel-mpi/package.py:_mpi_root()
+        # Similar code in ../intel-mpi/package.py:_mpi_root()
         d = self.prefix
         if sys.platform == 'darwin':
             # TODO: Verify on Mac.
             return d.mkl
 
-        if 'compilers_and_libraries' in d:
-            # If an admin installs MKL outside of spack and integrates it
-            # via packages.yaml, the prefix will naturally point to a
-            # directory that is specific to MKL as one Intel *product*
+        if 'compilers_and_libraries_' in d and '.' in d:
+            # When MKL was installed outside of Spack (a "ghost package"
+            # integrated via packages.yaml), the prefix will inevitably point
+            # to a directory that is specific to MKL as one Intel *product*
             # among possibly others that are installed in sibling or cousin
-            # directories. This product-specific directory is what we want
-            # and need.
+            # directories. This product-specific and (preferably fully)
+            # version-specific directory is what we want and need.
+            pass
+        elif 'compilers_and_libraries' in d:
+            # A non-qualified install dir (likely a symlink) is fragile and
+            # bound to change outside of Spack's purview. That could be
+            # acceptable but it does affect reproducibility in Spack and may
+            # alter the outcome of subsequent builds of dependent packages. I'm
+            # not sure if Spack's package hashing senses this.
+            tty.warn('Intel-MKL found in a version-neutral directory - '
+                     'future builds may not be reproducible.')
             pass
         else:
-            # By contrast, a spack-based MKL installation will inherit its
+            # By contrast, a Spack-born MKL installation will inherit its
             # prefix from install.sh of Intel's package distribution, where it
             # means the high-level installation directory that is specific to
             # the *vendor* (illustrated by the default "/opt/intel"). We must
-            # now drill down to the *product* directory to get the usual
-            # hierarchy (bin/, lib/, ...).
+            # now step down into the *product* directory to get the usual
+            # hierarchy, but let's not do that in haste ...
             d = d.compilers_and_libraries
 
-            ## Idea: Use actual release-specific directory. TODO: Confirm.
+            # For a Spack-born install, using the fully-qualified release
+            # directory that is so desired above is possible but far less
+            # important since product upgrades won't land in the same parent.
+            # To force it nonetheless, uncomment the following:
             #d = Prefix(d.append('_' + self.version))
 
+            # Alright, now the final flight of stairs.
             d = d.linux.mkl
 
-        # On my system, self.prefix somehow ends with ".../compiler". (I think
-        # this is because I provided MKL by means of the side effect of loading
-        # an env. module for the Intel *compilers*, and spack inspects $PATH?).
-        # So, take a jump to the left, and a jump to the right, and then do the
-        # time warp again:
+        # On my system, using a ghosted MKL, self.prefix showed up as ending
+        # with "/compiler". I think this is because I provide that MKL by means
+        # of the side effect of loading an env. module for the Intel
+        # *compilers*, and Spack inspects $PATH(?) Well, I can live with that!
+        # It's just a jump to the left, and then a step to the right; let's do
+        # the time warp again:
         if d.endswith('compiler'):
             d = Prefix(ancestor(d)).mkl
 
@@ -138,7 +208,7 @@ class IntelMkl(IntelPackage):
 
     @property
     def _mkl_libdir(self):
-        # Starting directory for find_libraries() searches and for
+        # Provide starting directory for find_libraries() and for
         # SPACK_COMPILER_EXTRA_RPATHS.
         if sys.platform == 'darwin':
             d = self.mklroot.lib
@@ -149,22 +219,20 @@ class IntelMkl(IntelPackage):
 
     @property
     def blas_libs(self):
-        mkl_libnames = ['libmkl_intel' + self._mkl_int_suffix, 'libmkl_core']
+        mkl_libnames = ['libmkl_intel' + self._mkl_int_suffix]
+
         if self.spec.satisfies('threads=openmp'):
             if '%intel' in self.spec:
-                if self.prefix.endswith('mkl'):
-                    # Gambit, suitable for 2016...2018(+)
-                    compiler_dir = Prefix(ancestor(self.prefix)).compiler
-                else:
-                    # Stick to what we have. Prefix bug comes to our advantage.
-                    compiler_dir = self.prefix
-
+                # The directory "$MKLROOT/../compiler" will be present even for
+                # an MKL-only install (as opposed to being ghosted via
+                # packages.yaml), specificially to provide the 'iomp5' libs.
                 omp_libnames = ['libiomp5']
                 omp_libs = find_libraries(
                     omp_libnames,
-                    root=compiler_dir,
+                    root=Prefix(ancestor(self.mklroot)).compiler,
                     shared=self._want_shared)
                 mkl_libnames.append('libmkl_intel_thread')
+
             elif '%gcc' in self.spec:
                 gcc = Executable(self.compiler.cc)
                 omp_libnames = gcc('--print-file-name',
@@ -175,13 +243,13 @@ class IntelMkl(IntelPackage):
 
             if len(omp_libs) < 1:
                 _raise_install_error(
-                    'Cannot locate OpenMP libraries:',
-                    omp_libnames)
+                    'Cannot locate OpenMP libraries:', omp_libnames)
         else:
             omp_libs = LibraryList([])
             mkl_libnames.append('libmkl_sequential')
 
         _debug_print('omp_libs', omp_libs)
+        mkl_libnames.append('libmkl_core')
 
         # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
@@ -193,8 +261,7 @@ class IntelMkl(IntelPackage):
 
         if len(mkl_libs) < 3:
             _raise_install_error(
-                'Cannot locate core MKL libraries:',
-                mkl_libnames)
+                'Cannot locate core MKL libraries:', mkl_libnames)
 
         # Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(
@@ -229,7 +296,8 @@ class IntelMkl(IntelPackage):
             blacs_variant = '_intelmpi'
         elif '^mpt' in spec_root:
             blacs_variant = '_sgimpt'
-        else: _raise_install_error(
+        else:
+            _raise_install_error(
                 'Cannot determine a BLACS variant for the given MPI.')
 
         scalapack_libnames = [
@@ -244,19 +312,17 @@ class IntelMkl(IntelPackage):
 
         if len(sca_libs) < 2:
             _raise_install_error(
-                'Cannot locate ScaLapack/BLACS libraries:',
-                scalapack_libnames)
+                'Cannot locate ScaLapack/BLACS libraries:', scalapack_libnames)
 
         return sca_libs
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # Note: The name and meaning of the 'root=' keyword arg of
-        # find_libraries() painfully conflicts with the semantics of MKLROOT.
-        # The variable "mkl_root" that was used previously in this file,
-        # (named to suit the keyword arg), was particularly troublesome.
+        # BTW: The name and meaning of the 'root=' keyword arg of
+        # find_libraries() entices us to feed it an "mkl_root" variable, but
+        # that is a siren song that pulls us down and under from the true
+        # MKLROOT. Hence, such a variable name is not used here [anymore].
         spack_env.set('MKLROOT', self.mklroot)
-        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                              self._mkl_libdir)
+        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', self._mkl_libdir)
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
@@ -291,7 +357,6 @@ class IntelMkl(IntelPackage):
 # should really be defined elsewhere, unless deemed heretical.
 # (Or na"ive on my part).
 
-import llnl.util.tty as tty
 import inspect
 
 
