@@ -58,9 +58,11 @@ class NoGpgException(spack.error.SpackError):
     """Raised when gpg2 is not in $PATH """
     pass
 
+
 class NoKeyException(spack.error.SpackError):
     """Raised when gpg has no default key added."""
     pass
+
 
 class PickKeyException(spack.error.SpackError):
     """Raised when multiple keys can be used to sign."""
@@ -74,13 +76,16 @@ class NoVerifyException(spack.error.SpackError):
     """Raised if file fails signature verification."""
     pass
 
+
 class NoChecksumException(spack.error.SpackError):
     """Raised if file fails checksum verification."""
     pass
 
+
 class NewLayoutException(spack.error.SpackError):
     """Raised if directory layout is different from buildcache."""
     pass
+
 
 def has_gnupg2():
     try:
