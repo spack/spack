@@ -29,6 +29,7 @@ import tarfile
 import yaml
 import shutil
 import platform
+import tempfile
 
 import llnl.util.tty as tty
 from spack.util.gpg import Gpg
@@ -45,28 +46,61 @@ from spack.util.executable import ProcessError
 import spack.relocate as relocate
 
 
-class NoOverwriteException(Exception):
-    pass
+class NoOverwriteException(spack.error.SpackError):
+
+    def __init__(self, filepath):
+        super(NoOverwriteException, self).__init__(
+            "%s exists" % filepath)
 
 
-class NoGpgException(Exception):
-    pass
+class NoGpgException(spack.error.SpackError):
+
+    def __init__(self):
+        super(NoGpgException, self).__init__(
+            "No gpg2 is not available\n"
+            "Use spack install gpg2 and spack load gpg2.")
 
 
-class PickKeyException(Exception):
-    pass
+class NoKeyException(spack.error.SpackError):
+
+    def __init__(self):
+        super(NoKeyException, self).__init__(
+            "No default key available for signing.\n"
+            "Use spack gpg init to create a default key.")
 
 
-class NoKeyException(Exception):
-    pass
+class PickKeyException(spack.error.SpackError):
+
+    def __init__(self):
+        super(PickKeyException, self).__init__(
+            "Multi keys available for signing\n"
+            "Use spack buildcache create -k <key hash> to pick a key")
 
 
-class NoVerifyException(Exception):
-    pass
+class NoVerifyException(spack.error.SpackError):
+
+    def __init__(self):
+        super(NoVerifyException, self).__init__(
+            "Package spec file failed signature verification.\n"
+            "Use spack buildcache keys to download "
+            "and install a key for verification from the mirror.")
 
 
-class NoChecksumException(Exception):
-    pass
+class NoChecksumException(spack.error.SpackError):
+
+    def __init__(self):
+        super(NoChecksumException, self).__init__(
+            "Package tarball failed checksum verification.\n"
+            "It cannot be installed.")
+
+
+class NewLayoutException(spack.error.SpackError):
+
+    def __init__(self):
+        super(NewLayoutException, self).__init__(
+            "Package tarball was created from an install "
+            "prefix with a different directory layout.\n"
+            "It cannot be relocated.")
 
 
 def has_gnupg2():
@@ -127,6 +161,8 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     buildinfo = {}
     buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
+    buildinfo['relative_prefix'] = os.path.relpath(prefix,
+                                                   spack.store.layout.root)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
     filename = buildinfo_file_name(workdir)
@@ -247,9 +283,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         else:
             raise NoOverwriteException(str(specfile_path))
     # make a copy of the install directory to work with
-    workdir = join_path(outdir, os.path.basename(spec.prefix))
-    if os.path.exists(workdir):
-        shutil.rmtree(workdir)
+    workdir = join_path(tempfile.mkdtemp(), os.path.basename(spec.prefix))
     install_tree(spec.prefix, workdir, symlinks=True)
 
     # create info for later relocation and create tar
@@ -262,7 +296,7 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
-                arcname='%s' % os.path.basename(workdir))
+                arcname='%s' % os.path.basename(spec.prefix))
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -278,6 +312,12 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     bchecksum['hash_algorithm'] = 'sha256'
     bchecksum['hash'] = checksum
     spec_dict['binary_cache_checksum'] = bchecksum
+    # Add original install prefix relative to layout root to spec.yaml.
+    # This will be used to determine is the directory layout has changed.
+    buildinfo = {}
+    buildinfo['relative_prefix'] = os.path.relpath(spec.prefix,
+                                                   spack.store.layout.root)
+    spec_dict['buildinfo'] = buildinfo
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
     signed = False
@@ -383,12 +423,11 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     """
     extract binary tarball for given package into install area
     """
-    installpath = spec.prefix
-    if os.path.exists(installpath):
+    if os.path.exists(spec.prefix):
         if force:
-            shutil.rmtree(installpath)
+            shutil.rmtree(spec.prefix)
         else:
-            raise NoOverwriteException(str(installpath))
+            raise NoOverwriteException(str(spec.prefix))
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')
     spackfile_path = os.path.join(stagepath, spackfile_name)
@@ -421,14 +460,34 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     if bchecksum['hash'] != checksum:
         raise NoChecksumException()
 
-    # delay creating installpath until verification is complete
-    mkdirp(installpath)
-    with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=join_path(installpath, '..'))
+    new_relative_prefix = str(os.path.relpath(spec.prefix,
+                                              spack.store.layout.root))
+    # if the original relative prefix is in the spec file use it
+    buildinfo = spec_dict.get('buildinfo', {})
+    old_relative_prefix = buildinfo.get('relative_prefix', new_relative_prefix)
+    # if the original relative prefix and new relative prefix differ the
+    # directory layout has changed and the  buildcache cannot be installed
+    if old_relative_prefix != new_relative_prefix:
+        raise NewLayoutException()
 
+    # extract the tarball in a temp directory
+    tmpdir = tempfile.mkdtemp()
+    with closing(tarfile.open(tarfile_path, 'r')) as tar:
+        tar.extractall(path=tmpdir)
+    # the base of the install prefix is used when creating the tarball
+    # so the pathname should be the same now that the directory layout
+    # is confirmed
+    workdir = join_path(tmpdir, os.path.basename(spec.prefix))
+
+    # cleanup
     os.remove(tarfile_path)
     os.remove(specfile_path)
-    relocate_package(installpath)
+
+    relocate_package(workdir)
+    # Delay creating spec.prefix until verification is complete
+    # and any relocation has been done.
+    install_tree(workdir, spec.prefix, symlinks=True)
+    shutil.rmtree(tmpdir)
 
 
 def get_specs(force=False):
