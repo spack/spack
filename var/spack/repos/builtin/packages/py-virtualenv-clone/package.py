@@ -25,18 +25,14 @@
 from spack import *
 
 
-class PyPbr(PythonPackage):
-    """PBR is a library that injects some useful and sensible default
-       behaviors into your setuptools run."""
-    homepage = "https://pypi.python.org/pypi/pbr"
-    url      = "https://pypi.io/packages/source/p/pbr/pbr-1.10.0.tar.gz"
+class PyVirtualenvClone(PythonPackage):
+    """A script for cloning a non-relocatable virtualenv."""
 
-    version('3.1.1', '4e82c2e07af544c56a5b71c801525b00')
-    version('2.0.0', 'dfc1c3788eff06acfaade6f1655fa490')
-    version('1.10.0', '8e4968c587268f030e38329feb9c8f17')
-    version('1.8.1', 'c8f9285e1a4ca6f9654c529b158baa3a')
+    homepage = "https://github.com/edwardgeorge/virtualenv-clone"
+    url      = "https://pypi.io/packages/source/v/virtualenv-clone/virtualenv-clone-0.2.6.tar.gz"
 
-    depends_on('py-setuptools', type='build')
-    # Only needed for py<3.4, however when='^python@:3.4.2' syntax might be
-    # broken, if this fails, remove the when-clause
-    depends_on('py-enum34', type='build', when='^python@:3.3')
+    version('0.2.6', 'fb03cd8c7a2be75937a13756d14068fc')
+
+    depends_on('python@2.6:')
+    # not just build-time, requires pkg_resources
+    depends_on('py-setuptools', type=('build', 'run'))

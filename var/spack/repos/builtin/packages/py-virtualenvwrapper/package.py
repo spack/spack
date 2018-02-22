@@ -25,18 +25,21 @@
 from spack import *
 
 
-class PyPbr(PythonPackage):
-    """PBR is a library that injects some useful and sensible default
-       behaviors into your setuptools run."""
-    homepage = "https://pypi.python.org/pypi/pbr"
-    url      = "https://pypi.io/packages/source/p/pbr/pbr-1.10.0.tar.gz"
+class PyVirtualenvwrapper(PythonPackage):
+    """virtualenvwrapper is a set of extensions to Ian Bicking's
+    virtualenv tool. The extensions include wrappers for creating and
+    deleting virtual environments and otherwise managing your development
+    workflow, making it easier to work on more than one project at a time
+    without introducing conflicts in their dependencies."""
 
-    version('3.1.1', '4e82c2e07af544c56a5b71c801525b00')
-    version('2.0.0', 'dfc1c3788eff06acfaade6f1655fa490')
-    version('1.10.0', '8e4968c587268f030e38329feb9c8f17')
-    version('1.8.1', 'c8f9285e1a4ca6f9654c529b158baa3a')
+    homepage = "https://bitbucket.org/virtualenvwrapper/virtualenvwrapper.git"
+    url      = "https://pypi.io/packages/source/v/virtualenvwrapper/virtualenvwrapper-4.8.2.tar.gz"
 
-    depends_on('py-setuptools', type='build')
-    # Only needed for py<3.4, however when='^python@:3.4.2' syntax might be
-    # broken, if this fails, remove the when-clause
-    depends_on('py-enum34', type='build', when='^python@:3.3')
+    version('4.8.2', '8e3af0e0d42733f15c5e36df484a952e')
+
+    depends_on('python@2.6:')
+    depends_on('py-virtualenv', type=('build', 'run'))
+    depends_on('py-virtualenv-clone', type=('build', 'run'))
+    depends_on('py-stevedore', type=('build', 'run'))
+    # not just build-time, requires pkg_resources
+    depends_on('py-setuptools', type=('build', 'run'))
