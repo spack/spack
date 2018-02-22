@@ -396,8 +396,6 @@ def make_package_placeholder(workdir):
     Change paths in binaries to placeholder paths
     """
     buildinfo = read_buildinfo_file(workdir)
-    old_path = buildinfo['buildpath']
-    orig_path_names = list()
     cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
         cur_path_names.append(os.path.join(workdir, filename))

@@ -33,6 +33,15 @@ from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
 
 
+class InstallRootStringException(spack.error.SpackError):
+
+    def __init__(self):
+        super(InstallRootStringException, self).__init__(
+            "Package binary contains install root string"
+            "after replacing it in rpaths.\n"
+            "Package cannot be relocated.")
+
+
 def get_patchelf():
     """
     Builds and installs spack patchelf package on linux platforms
@@ -365,8 +374,7 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if strings_contains_installroot(cur_path):
-                tty.die("File contains install root string" +
-                        " after relative path replacement %s" % cur_path)
+                raise InstallRootStringException(cur_path)
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -375,8 +383,7 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
                                                  orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
                 if strings_contains_installroot(cur_path):
-                    tty.die("File contains install root string" +
-                            " after relative path replacement %s" % cur_path)
+                    raise InstallRootStringException(cur_path)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
@@ -395,9 +402,7 @@ def make_binary_placeholder(cur_path_names):
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
             if strings_contains_installroot(cur_path):
-                tty.die("File contains install root string" +
-                        " after placeholder path replacement %s" %
-                        cur_path)
+                raise InstallRootStringException(cur_path)
     elif platform.system() == 'Linux':
         for cur_path in cur_path_names:
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -405,9 +410,7 @@ def make_binary_placeholder(cur_path_names):
                 new_rpaths = get_placeholder_rpaths(orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
                 if strings_contains_installroot(cur_path):
-                    tty.die("File contains install root string" +
-                            " after placeholder path replacement %s" %
-                            cur_path)
+                    raise InstallRootStringException(cur_path)
     else:
         tty.die("Placeholder not implemented for %s" % platform.system())
 
