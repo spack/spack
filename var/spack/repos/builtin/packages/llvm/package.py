@@ -174,6 +174,7 @@ class Llvm(CMakePackage):
                 'cfe': 'http://llvm.org/svn/llvm-project/cfe/trunk',
                 'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
                 'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
+                'lld': 'http://llvm.org/svn/llvm-project/lld/trunk',
                 'libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
             }
         },
@@ -205,6 +206,7 @@ class Llvm(CMakePackage):
                 'cfe': '699c448c6d6d0edb693c87beb1cc8c6e',
                 'clang-tools-extra': '0cda05d1a61becb393eb63746963d7f5',
                 'lldb': '8de19973d044ca2cfe325d4625a5cfef',
+                'lld': 'a39cbecced3263feab9139b47118e062',
                 'libunwind': '98fb2c677068c6f36727fb1d5397bca3',
             }
         },
@@ -220,6 +222,7 @@ class Llvm(CMakePackage):
                 'cfe': 'a6c7b3e953f8b93e252af5917df7db97',
                 'clang-tools-extra': 'cfd46027a0ab7eed483dfcc803e86bd9',
                 'lldb': '908bdd777d3b527a914ba360477b8ab3',
+                'lld': '39cd3512cddcfd7d37ef12066c961660',
                 'libunwind': 'b72ec95fb784e61f15d6196414b92f5e',
             }
         },
@@ -235,6 +238,7 @@ class Llvm(CMakePackage):
                 'cfe': '756e17349fdc708c62974b883bf72d37',
                 'clang-tools-extra': '99e711337ec3e9a8bb36e8dd62b2cd6e',
                 'lldb': 'bd41ba7fcca55d2a554409bbccd34d2d',
+                'lld': 'e5784656e0f38e3578f10ff7551d3896',
                 'libunwind': '0c3534eaa11c0cae33a1dcf5f36ce287',
             }
         },
@@ -250,6 +254,7 @@ class Llvm(CMakePackage):
                 'cfe': '45713ec5c417ed9cad614cd283d786a1',
                 'clang-tools-extra': '1a01d545a064fcbc46a2f05f6880d3d7',
                 'lldb': '91399402f287d3f637db1207113deecb',
+                'lld': '6254dd138e23b098df4ef7840c11e2c8',
                 'libunwind': 'f273dd0ed638ad0601b23176a36f187b',
             }
         },
@@ -265,6 +270,7 @@ class Llvm(CMakePackage):
                 'cfe': '29e1d86bee422ab5345f5e9fb808d2dc',
                 'clang-tools-extra': 'f4f663068c77fc742113211841e94d5e',
                 'lldb': '968d053c3c3d7297983589164c6999e9',
+                'lld': 'c23c895c0d855a0dc426af686538a95e',
                 'libunwind': '3e5c87c723a456be599727a444b1c166',
             }
         },
@@ -280,6 +286,7 @@ class Llvm(CMakePackage):
                 'cfe': '4ff2f8844a786edb0220f490f7896080',
                 'clang-tools-extra': '6e49f285d0b366cc3cab782d8c92d382',
                 'lldb': '9e4787b71be8e432fffd31e13ac87623',
+                'lld': '68cd069bf99c71ebcfbe01d557c0e14d',
                 'libunwind': 'd66e2387e1d37a8a0c8fe6a0063a3bab',
             }
         },
@@ -295,6 +302,7 @@ class Llvm(CMakePackage):
                 'cfe': 'cc99e7019bb74e6459e80863606250c5',
                 'clang-tools-extra': 'c2344f50e0eea0b402f0092a80ddc036',
                 'lldb': 'a5da35ed9cc8c8817ee854e3dbfba00e',
+                'lld': 'de33b5c6c77698ee2f8d024fbffb8df1',
                 'libunwind': '162ade468607f153cca12be90b5194fa',
             }
         },
@@ -310,6 +318,7 @@ class Llvm(CMakePackage):
                 'cfe': '0acd026b5529164197563d135a8fd83e',
                 'clang-tools-extra': '5d49ff745037f061a7c86aeb6a24c3d2',
                 'lldb': 'a106d8a0d21fc84d76953822fbaf3398',
+                'lld': '6c3794e30fbe118a601fb694627f34f8',
                 'libunwind': '814bd52c9247c5d04629658fbcb3ab8c',
             }
         },
@@ -325,6 +334,7 @@ class Llvm(CMakePackage):
                 'cfe': '8f9d27335e7331cf0a4711e952f21f01',
                 'clang-tools-extra': 'd5a87dacb65d981a427a536f6964642e',
                 'lldb': 'e5931740400d1dc3e7db4c7ba2ceff68',
+                'lld': '91bd593a67293d84dad0bf11845546c2',
                 'libunwind': '9a75392eb7eb8ed5c0840007e212baf5',
             }
         },
@@ -339,6 +349,7 @@ class Llvm(CMakePackage):
                 'cfe': 'ff862793682f714bb7862325b9c06e20',
                 'clang-tools-extra': '3ebc1dc41659fcec3db1b47d81575e06',
                 'lldb': '51e5eb552f777b950bb0ff326e60d5f0',
+                'lld': '7143cc4fa88851a9f9b9a03621fbb387',
             }
         },
         {
@@ -352,6 +363,7 @@ class Llvm(CMakePackage):
                 'cfe': '93f9532f8f7e6f1d8e5c1116907051cb',
                 'clang-tools-extra': 'f13f31ed3038acadc6fa63fef812a246',
                 'lldb': 'cc5ea8a414c62c33e760517f8929a204',
+                'lld': '173be02b7ff4e5e31fbb0a591a03d7a3',
             }
         },
     ]
