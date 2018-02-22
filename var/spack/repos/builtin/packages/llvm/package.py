@@ -449,7 +449,14 @@ class Llvm(CMakePackage):
             cmake_args.append('-DLLVM_LINK_LLVM_DYLIB:Bool=ON')
 
         if '+all_targets' not in spec:  # all is default on cmake
-            targets = ['CppBackend', 'NVPTX', 'AMDGPU']
+
+            if spec.version < Version('3.9.0'):
+                targets = ['CppBackend', 'NVPTX', 'AMDGPU']
+            else:
+                # Starting in 3.9.0 CppBackend is no longer a target (see LLVM_ALL_TARGETS
+                # in llvm's top-level CMakeLists.txt for the complete list of targets)
+                targets = ['NVPTX', 'AMDGPU']
+
             if 'x86' in spec.architecture.target.lower():
                 targets.append('X86')
             elif 'arm' in spec.architecture.target.lower():
@@ -457,7 +464,7 @@ class Llvm(CMakePackage):
             elif 'aarch64' in spec.architecture.target.lower():
                 targets.append('AArch64')
             elif 'sparc' in spec.architecture.target.lower():
-                targets.append('sparc')
+                targets.append('Sparc')
             elif ('ppc' in spec.architecture.target.lower() or
                   'power' in spec.architecture.target.lower()):
                 targets.append('PowerPC')
