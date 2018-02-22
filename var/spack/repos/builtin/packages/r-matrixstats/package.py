@@ -35,6 +35,6 @@ class RMatrixstats(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/matrixStats/index.html"
     url      = "https://cran.rstudio.com/src/contrib/matrixStats_0.52.2.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/matrixStats"
 
     version('0.52.2', '41b987d3ae96ee6895875c413adcba3c')

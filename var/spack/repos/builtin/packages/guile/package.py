@@ -45,7 +45,7 @@ class Guile(AutotoolsPackage):
     depends_on('bdw-gc@7.0:')
     depends_on('libffi')
     depends_on('readline', when='+readline')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     build_directory = 'spack-build'
 

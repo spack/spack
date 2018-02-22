@@ -34,6 +34,7 @@ class Glib(AutotoolsPackage):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.55.1', '9cbb6b3c7e75ba75575588497c7707b6')
     version('2.53.1', '3362ef4da713f834ea26904caf3a75f5')
     version('2.49.7', '397ead3fcf325cb921d54e2c9e7dfd7a')
     version('2.49.4', 'e2c87c03017b0cd02c4c73274b92b148')
@@ -42,11 +43,12 @@ class Glib(AutotoolsPackage):
 
     variant('libmount', default=False, description='Build with libmount support')
 
-    depends_on('pkg-config@0.16:+internal_glib', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libffi')
     depends_on('zlib')
     depends_on('gettext')
     depends_on('perl', type=('build', 'run'))
+    depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
     depends_on('util-linux', when='+libmount')
 
@@ -72,10 +74,30 @@ class Glib(AutotoolsPackage):
 
         return args
 
-    @run_before('install')
-    def filter_sbang(self):
-        # Filter sbang before install so Spack's sbang hook can fix it up
-        perl = join_path(self.spec['perl'].prefix.bin, 'perl')
-        files = ['gobject/glib-mkenums']
+    @run_before('configure')
+    def fix_python_path(self):
+        if not self.spec.satisfies('@2.53.4:'):
+            return
 
-        filter_file('^#! /usr/bin/perl', '#!{0}'.format(perl), *files)
+        files = ['gobject/glib-genmarshal.in', 'gobject/glib-mkenums.in']
+
+        filter_file('^#!/usr/bin/env @PYTHON@',
+                    '#!/usr/bin/env python',
+                    *files)
+
+    @run_after('install')
+    def filter_sbang(self):
+        # Revert sbang, so Spack's sbang hook can fix it up (we have to do
+        # this after install because otherwise the install target will try
+        # to rebuild files as filter_file updates the timestamps)
+        if self.spec.satisfies('@2.53.4:'):
+            pattern = '^#!/usr/bin/env python'
+            repl = '#!{0}'.format(self.spec['python'].command.path)
+            files = ['glib-genmarshal', 'glib-mkenums']
+        else:
+            pattern = '^#! /usr/bin/perl'
+            repl = '#!{0}'.format(self.spec['perl'].command.path)
+            files = ['glib-mkenums']
+
+        files = [join_path(self.prefix.bin, file) for file in files]
+        filter_file(pattern, repl, *files, backup=False)

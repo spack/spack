@@ -40,7 +40,7 @@ class Autogen(AutotoolsPackage):
 
     variant('xml', default=True, description='Enable XML support')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on('guile@1.8:2.0')
     depends_on('libxml2', when='+xml')

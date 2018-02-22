@@ -6,7 +6,7 @@
 # Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://github.com/llnl/spack/spack
+# For details, see https://github.com/spack/spack
 # Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@ class Typhonio(CMakePackage):
         values=('Debug', 'Release'))
     variant('fortran', default=False, description='Enable Fortran support')
     variant('shared', default=False, description='Build shared libraries')
-    variant('docs', default=False, description='Build user guide and doxygen documentation')
+    variant('doc', default=False, description='Build user guide and doxygen documentation')
 
     depends_on('mpi')
     depends_on('hdf5')

@@ -37,5 +37,5 @@ class Randrproto(AutotoolsPackage):
 
     version('1.5.0', '863d6ee3e0b2708f75d968470ed31eb9')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

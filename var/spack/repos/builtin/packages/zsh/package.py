@@ -32,8 +32,9 @@ class Zsh(AutotoolsPackage):
     """
 
     homepage = "http://www.zsh.org"
-    url = "http://downloads.sourceforge.net/project/zsh/zsh/5.1.1/zsh-5.1.1.tar.gz"
+    url = "http://downloads.sourceforge.net/project/zsh/zsh/5.4.2/zsh-5.4.2.tar.gz"
 
+    version('5.4.2', checksum='dfe156fd69b0d8d1745ecf6d6e02e047')
     version('5.3.1', checksum='d583fbca0c2410bf9542ce8a651c26ca')
     version('5.1.1', checksum='8ba28a9ef82e40c3a271602f18343b2f')
 

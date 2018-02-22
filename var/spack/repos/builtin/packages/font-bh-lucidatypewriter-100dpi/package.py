@@ -38,7 +38,7 @@ class FontBhLucidatypewriter100dpi(Package):
     depends_on('fontconfig', type='build')
     depends_on('mkfontdir', type='build')
     depends_on('bdftopcf', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):

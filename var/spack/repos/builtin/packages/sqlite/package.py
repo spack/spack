@@ -33,6 +33,8 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "www.sqlite.org"
 
+    version('3.21.0', '7913de4c3126ba3c24689cb7a199ea31',
+            url='https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz')
     version('3.20.0', 'e262a28b73cc330e7e83520c8ce14e4d',
             url='https://www.sqlite.org/2017/sqlite-autoconf-3200000.tar.gz')
     version('3.18.0', 'a6687a8ae1f66abc8df739aeadecfd0c',
@@ -48,7 +50,14 @@ class Sqlite(AutotoolsPackage):
     # defines a macro B0. Sqlite has a shell.c source file that declares a
     # variable named B0 and will fail to compile when the macro is found. The
     # following patch undefines the macro in shell.c
-    patch('sqlite_b0.patch', when='@3.18.0')
+    patch('sqlite_b0.patch', when='@3.18.0:3.21.0')
+
+    # Starting version 3.17.0, SQLite uses compiler built-ins
+    # __builtin_sub_overflow(), __builtin_add_overflow(), and
+    # __builtin_mul_overflow(), which are not supported by Intel compiler.
+    # Starting version 3.21.0 SQLite doesn't use the built-ins if Intel
+    # compiler is used.
+    patch('remove_overflow_builtins.patch', when='@3.17.0:3.20%intel')
 
     def get_arch(self):
         arch = architecture.Arch()

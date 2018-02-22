@@ -39,3 +39,5 @@ class Xrootd(CMakePackage):
     version('4.3.0', '39c2fab9f632f35e12ff607ccaf9e16c')
 
     depends_on('cmake@2.6:', type='build')
+    depends_on('zlib')
+    depends_on('openssl')

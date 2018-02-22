@@ -42,4 +42,4 @@ class XcbUtilImage(AutotoolsPackage):
     depends_on('xcb-util')
 
     depends_on('xproto@7.0.8:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')

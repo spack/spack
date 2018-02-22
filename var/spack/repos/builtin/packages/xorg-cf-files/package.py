@@ -36,4 +36,4 @@ class XorgCfFiles(AutotoolsPackage):
 
     version('1.0.6', 'c0ce98377c70d95fb48e1bd856109bf8')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')

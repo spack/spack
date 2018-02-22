@@ -22,9 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import shutil
 import sys
+
+from spack import *
 
 
 class Hdf5(AutotoolsPackage):
@@ -90,6 +91,14 @@ class Hdf5(AutotoolsPackage):
     #    described in #2 we allow for such combination.
     # conflicts('+mpi+cxx')
 
+    # There are known build failures with intel@18.0.1. This issue is
+    # discussed and patch is provided at
+    # https://software.intel.com/en-us/forums/intel-fortran-compiler-for-linux-and-mac-os-x/topic/747951.
+    patch('h5f90global-mult-obj-same-equivalence-same-common-block.patch',
+          when='@1.10.1%intel@18')
+
+    filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
+
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
@@ -154,7 +163,7 @@ class Hdf5(AutotoolsPackage):
         libraries = query2libraries[key]
 
         return find_libraries(
-            libraries, root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recursive=True
         )
 
     @run_before('configure')

@@ -21,7 +21,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
+import sys
 from spack import *
 
 
@@ -46,6 +46,10 @@ class Mesa(AutotoolsPackage):
     version('12.0.6', '1a3d4fea0656c208db59289e4ed33b3f')
     version('12.0.3', '1113699c714042d8c4df4766be8c57d8')
 
+    provides('gl@:4.5', when='@17:')
+    provides('gl@:4.4', when='@13:')
+    provides('gl@:4.3', when='@12:')
+
     variant('swrender', default=True,
             description="Build with (gallium) software rendering.")
     variant('hwrender', default=False,
@@ -54,10 +58,10 @@ class Mesa(AutotoolsPackage):
             description="Use llvm for rendering pipes.")
 
     # General dependencies
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('flex@2.5.35:', type='build')
     depends_on('bison@2.4.1:', type='build')
-    depends_on('binutils', type='build')
+    depends_on('binutils', type='build', when=(sys.platform != 'darwin'))
     depends_on('python@2.6.4:', type='build')
     depends_on('py-mako@0.3.4:', type='build')
     depends_on('gettext')

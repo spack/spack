@@ -97,9 +97,7 @@ class Conduit(Package):
     # causes duplicate state issues when running compiled python modules.
     depends_on("python+shared")
     extends("python", when="+python")
-    # TODO: blas and lapack are disabled due to build
-    # issues Cyrus experienced on OSX 10.11.6
-    depends_on("py-numpy~blas~lapack", when="+python", type=('build', 'run'))
+    depends_on("py-numpy", when="+python", type=('build', 'run'))
 
     #######################
     # I/O Packages
@@ -108,9 +106,10 @@ class Conduit(Package):
     # experienced on BGQ. When on, the static build tries
     # to link against shared libs.
     #
-    # we are not using hdf5's mpi or fortran features.
-    depends_on("hdf5~cxx~mpi~fortran", when="+hdf5+shared")
-    depends_on("hdf5~shared~cxx~mpi~fortran", when="+hdf5~shared")
+    # Use HDF5 1.8, for wider output compatibly
+    # variants reflect we are not using hdf5's mpi or fortran features.
+    depends_on("hdf5@1.8.19:1.8.999~cxx~mpi~fortran", when="+hdf5+shared")
+    depends_on("hdf5@1.8.19:1.8.999~shared~cxx~mpi~fortran", when="+hdf5~shared")
 
     # we are not using silo's fortran features
     depends_on("silo~fortran", when="+silo+shared")
@@ -148,7 +147,13 @@ class Conduit(Package):
         Build and install Conduit.
         """
         with working_dir('spack-build', create=True):
-            host_cfg_fname = self.create_host_config(spec, prefix)
+            py_site_pkgs_dir = None
+            if "+python" in spec:
+                py_site_pkgs_dir = site_packages_dir
+
+            host_cfg_fname = self.create_host_config(spec,
+                                                     prefix,
+                                                     py_site_pkgs_dir)
             cmake_args = []
             # if we have a static build, we need to avoid any of
             # spack's default cmake settings related to rpaths
@@ -163,14 +168,26 @@ class Conduit(Package):
             cmake(*cmake_args)
             make()
             make("install")
+            # install copy of host config for provenance
+            install(host_cfg_fname, prefix)
 
-    def create_host_config(self, spec, prefix):
+    def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
         """
         This method creates a 'host-config' file that specifies
         all of the options used to configure and build conduit.
 
-        For more details see about 'host-config' files see:
+        For more details about 'host-config' files see:
             http://software.llnl.gov/conduit/building.html
+
+        Note:
+          The `py_site_pkgs_dir` arg exists to allow a package that
+          subclasses this package provide a specific site packages
+          dir when calling this function. `py_site_pkgs_dir` should
+          be an absolute path or `None`.
+
+          This is necessary because the spack `site_packages_dir`
+          var will not exist in the base class. For more details
+          on this issue see: https://github.com/spack/spack/issues/6261
         """
 
         #######################
@@ -209,9 +226,9 @@ class Conduit(Package):
                 raise RuntimeError(msg)
             cmake_exe = cmake_exe.path
 
-        host_cfg_fname = "%s-%s-%s.cmake" % (socket.gethostname(),
-                                             sys_type,
-                                             spec.compiler)
+        host_cfg_fname = "%s-%s-%s-conduit.cmake" % (socket.gethostname(),
+                                                     sys_type,
+                                                     spec.compiler)
 
         cfg = open(host_cfg_fname, "w")
         cfg.write("##################################\n")
@@ -256,10 +273,10 @@ class Conduit(Package):
             cfg.write("# python from spack \n")
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
                       spec['python'].command.path))
-            # install module to standard style site packages dir
-            # so we can support spack activate
-            cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                                        site_packages_dir))
+            # only set dest python site packages dir if passed
+            if py_site_pkgs_dir:
+                cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
+                                            py_site_pkgs_dir))
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
@@ -290,6 +307,16 @@ class Conduit(Package):
                                         spec['mpi'].mpicxx))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                         spec['mpi'].mpifc))
+            mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
+            if os.path.isfile(mpiexe_bin):
+                # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
+                # vs the older versions which expect MPIEXEC
+                if self.spec["cmake"].satisfies('@3.10:'):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
+                                                mpiexe_bin))
+                else:
+                    cfg.write(cmake_cache_entry("MPIEXEC",
+                                                mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 

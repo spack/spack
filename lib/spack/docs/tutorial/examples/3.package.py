@@ -25,9 +25,10 @@
 from spack import *
 
 
-class Mpileaks(AutotoolsPackage):
+class Mpileaks(Package):
     """Tool to detect and report MPI objects like MPI_Requests and
     MPI_Datatypes."""
+
     homepage = "https://github.com/hpc/mpileaks"
     url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
 
@@ -37,7 +38,7 @@ class Mpileaks(AutotoolsPackage):
     depends_on('adept-utils')
     depends_on('callpath')
 
-    def configure_args(self):
-        args = ['--with-adept-utils=%s' % self.spec['adept-utils'].prefix,
-                '--with-callpath=%s' % self.spec['callpath'].prefix]
-        return args
+    def install(self, spec, prefix):
+        configure()
+        make()
+        make('install')

@@ -34,5 +34,5 @@ class Xbitmaps(AutotoolsPackage):
 
     version('1.1.1', '288bbe310db67280a9e2e5ebc5602595')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

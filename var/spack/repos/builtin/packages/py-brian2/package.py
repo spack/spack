@@ -34,7 +34,7 @@ class PyBrian2(PythonPackage):
     version('2.0.1', 'df5990e9a71f7344887bc02f54dfd0f0')
     version('2.0rc3', '3100c5e4eb9eb83a06ff0413a7d43152')
 
-    variant('docs', default=False, description='Build the documentation')
+    variant('doc', default=False, description='Build the documentation')
 
     # depends on py-setuptools@6: for windows, if spack targets windows,
     # this will need to be added here

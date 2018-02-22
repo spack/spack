@@ -32,9 +32,13 @@ class Pkgconf(AutotoolsPackage):
     maintaining compatibility."""
 
     homepage = "http://pkgconf.org/"
-    url      = "https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.8.tar.xz"
+    url      = "https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.10.tar.xz"
 
+    version('1.4.0', 'c509c0dad5a70aa4bc3210557b7eafce')
+    version('1.3.10', '9b63707bf6f8da6efb3868101d7525fe')
     version('1.3.8', '484ba3360d983ce07416843d5bc916a8')
+
+    provides('pkgconfig')
 
     @run_after('install')
     def link_pkg_config(self):

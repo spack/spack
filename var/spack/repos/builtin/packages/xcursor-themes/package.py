@@ -38,7 +38,7 @@ class XcursorThemes(Package):
     depends_on('libxcursor')
 
     depends_on('xcursorgen', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):

@@ -44,7 +44,7 @@ class GobjectIntrospection(Package):
     depends_on("cairo")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
-    depends_on("pkg-config@0.9.0:", type="build")
+    depends_on("pkgconfig", type="build")
 
     # GobjectIntrospection does not build with sed from darwin:
     depends_on('sed', when='platform=darwin', type='build')

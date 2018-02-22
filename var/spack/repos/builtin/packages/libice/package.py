@@ -35,5 +35,5 @@ class Libice(AutotoolsPackage):
 
     depends_on('xproto', type='build')
     depends_on('xtrans', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -66,7 +66,7 @@ class Gnuplot(AutotoolsPackage):
 
     # required dependencies
     depends_on('readline')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libxpm')
     depends_on('libiconv')
 

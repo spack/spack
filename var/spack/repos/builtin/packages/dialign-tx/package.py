@@ -50,3 +50,5 @@ class DialignTx(MakefilePackage):
             install('dialign-tx', prefix.bin)
             # t-coffee recognizes as dialign-t
             install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
+
+    patch('dialign-1-0-2-gcc-5-4-0.patch', when='%gcc@5.4.0')

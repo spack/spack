@@ -40,7 +40,7 @@ class Libbeagle(AutotoolsPackage):
     depends_on('m4',       type='build')
 
     depends_on('subversion', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     def url_for_version(self, version):
         url = "https://github.com/beagle-dev/beagle-lib/archive/beagle_release_{0}.tar.gz"

@@ -39,5 +39,5 @@ class Libxfixes(AutotoolsPackage):
     depends_on('xproto', type='build')
     depends_on('fixesproto@5.0:', type='build')
     depends_on('xextproto', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

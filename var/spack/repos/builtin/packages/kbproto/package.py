@@ -36,5 +36,5 @@ class Kbproto(AutotoolsPackage):
 
     version('1.0.7', '19acc5f02ae80381e216f443134e0bbb')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

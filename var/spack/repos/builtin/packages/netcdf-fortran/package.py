@@ -46,5 +46,5 @@ class NetcdfFortran(AutotoolsPackage):
         shared = 'shared' in query_parameters
 
         return find_libraries(
-            libraries, root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recursive=True
         )

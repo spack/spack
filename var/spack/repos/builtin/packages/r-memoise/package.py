@@ -31,7 +31,7 @@ class RMemoise(RPackage):
 
     homepage = "https://github.com/hadley/memoise"
     url      = "https://cran.rstudio.com/src/contrib/memoise_1.1.0.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/memoise"
     version('1.1.0', '493209ee04673f0fcab473c3dd80fb8c')
     version('1.0.0', 'd31145292e2a88ae9a504cab1602e4ac')
 

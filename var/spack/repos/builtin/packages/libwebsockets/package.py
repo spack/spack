@@ -30,6 +30,7 @@ class Libwebsockets(CMakePackage):
 
     homepage = "https://github.com/warmcat/libwebsockets"
     url      = "https://github.com/warmcat/libwebsockets/archive/v2.1.0.tar.gz"
+    maintainers = ['ax3l']
 
     version('2.2.1', '1f641cde2ab3687db3d553f68fe0f620')
     version('2.1.1', '674684ffb90d4a0bcf7a075eb7b90192')

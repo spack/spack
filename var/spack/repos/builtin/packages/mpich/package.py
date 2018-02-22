@@ -71,6 +71,10 @@ spack package at this time.''',
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
+    filter_compiler_wrappers(
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
+    )
+
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
     # and https://lists.mpich.org/pipermail/discuss/2016-June/004768.html
@@ -169,34 +173,3 @@ spack package at this time.''',
         config_args.append(device_config)
 
         return config_args
-
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to make the MPI compilers use the
-        compilers that Spack built the package with.
-
-        If this isn't done, they'll have CC, CXX, F77, and FC set
-        to Spack's generic cc, c++, f77, and f90.  We want them to
-        be bound to whatever compiler they were built with."""
-
-        mpicc = join_path(self.prefix.bin, 'mpicc')
-        mpicxx = join_path(self.prefix.bin, 'mpicxx')
-        mpif77 = join_path(self.prefix.bin, 'mpif77')
-        mpif90 = join_path(self.prefix.bin, 'mpif90')
-
-        # Substitute Spack compile wrappers for the real
-        # underlying compiler
-        kwargs = {
-            'ignore_absent': True,
-            'backup': False,
-            'string': True
-        }
-        filter_file(env['CC'],  self.compiler.cc,  mpicc,  **kwargs)
-        filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
-        filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
-        filter_file(env['FC'],  self.compiler.fc,  mpif90, **kwargs)
-
-        # Remove this linking flag if present
-        # (it turns RPATH into RUNPATH)
-        for wrapper in (mpicc, mpicxx, mpif77, mpif90):
-            filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)

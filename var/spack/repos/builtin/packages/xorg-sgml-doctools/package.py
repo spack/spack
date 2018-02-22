@@ -35,5 +35,5 @@ class XorgSgmlDoctools(AutotoolsPackage):
 
     version('1.11', '51cf4c6b476e2b98a068fea6975b9b21')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

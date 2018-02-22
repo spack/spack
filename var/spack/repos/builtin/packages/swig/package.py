@@ -22,6 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+
+
 from spack import *
 
 
@@ -50,3 +53,8 @@ class Swig(AutotoolsPackage):
     depends_on('pcre')
 
     build_directory = 'spack-build'
+
+    @run_after('install')
+    def create_symlink(self):
+        with working_dir(self.prefix.bin):
+            os.symlink('swig', 'swig%i.0' % self.spec.version[0])

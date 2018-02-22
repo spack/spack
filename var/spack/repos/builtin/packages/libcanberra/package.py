@@ -55,7 +55,7 @@ class Libcanberra(AutotoolsPackage):
 
     depends_on('libvorbis')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
 
     def configure_args(self):
         args = ['--enable-static']

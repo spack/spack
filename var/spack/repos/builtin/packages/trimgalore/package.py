@@ -33,6 +33,7 @@ class Trimgalore(Package):
     homepage = "https://github.com/FelixKrueger/TrimGalore"
     url      = "https://github.com/FelixKrueger/TrimGalore/archive/0.4.4.tar.gz"
 
+    version('0.4.5', 'c71756042b2a65c34d483533a29dc206')
     version('0.4.4', 'aae1b807b48e38bae7074470203997bb')
 
     depends_on('perl', type=('build', 'run'))

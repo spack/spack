@@ -35,5 +35,5 @@ class Libpciaccess(AutotoolsPackage):
     version('0.13.4', 'cc1fad87da60682af1d5fa43a5da45a4')
 
     depends_on('libtool', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

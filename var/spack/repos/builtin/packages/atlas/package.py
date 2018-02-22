@@ -37,6 +37,12 @@ class Atlas(Package):
     """
     homepage = "http://math-atlas.sourceforge.net/"
 
+    version('3.11.39', '5f3252fa980f5f060f93edd4669321e2',
+            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.39/atlas3.11.39.tar.bz2')
+
+    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
+            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
+
     version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef',
             url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.3/atlas3.10.3.tar.bz2')
 
@@ -49,9 +55,6 @@ class Atlas(Package):
              md5='b1d3e3e425b2e44a06760ff173104bdf',
              destination='spack-resource-lapack',
              when='@3:')
-
-    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
-            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
 
     variant('shared', default=True, description='Builds shared library')
 
@@ -139,7 +142,7 @@ class Atlas(Package):
             to_find = ['liblapack'] + interfaces + ['libatlas']
             shared = False
         return find_libraries(
-            to_find, root=self.prefix, shared=shared, recurse=True
+            to_find, root=self.prefix, shared=shared, recursive=True
         )
 
     def install_test(self):

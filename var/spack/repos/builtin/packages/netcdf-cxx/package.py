@@ -37,3 +37,10 @@ class NetcdfCxx(AutotoolsPackage):
     version('4.2', 'd32b20c00f144ae6565d9e98d9f6204c')
 
     depends_on('netcdf')
+
+    @property
+    def libs(self):
+        shared = True
+        return find_libraries(
+            'libnetcdf_c++', root=self.prefix, shared=shared, recurse=True
+        )

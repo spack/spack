@@ -31,7 +31,7 @@ class RDplyr(RPackage):
 
     homepage = "https://github.com/hadley/dplyr"
     url      = "https://cran.rstudio.com/src/contrib/dplyr_0.7.3.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/dplyr"
 
     version('0.7.3', 'f9760b796917747e9dcd927ebb531c7d')
     version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
@@ -43,4 +43,8 @@ class RDplyr(RPackage):
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-lazyeval', type=('build', 'run'))
     depends_on('r-dbi', type=('build', 'run'))
+    depends_on('r-bindrcpp', type=('build', 'run'))
+    depends_on('r-glue', type=('build', 'run'))
+    depends_on('r-pkgconfig', type=('build', 'run'))
+    depends_on('r-plogr', type=('build', 'run'))
     depends_on('r-bh', type=('build', 'run'))

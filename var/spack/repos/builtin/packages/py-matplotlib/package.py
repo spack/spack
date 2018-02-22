@@ -86,7 +86,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('image-magick', when='+animation')
 
     # --------- Optional dependencies
-    depends_on('pkg-config', type='build')    # why not...
+    depends_on('pkgconfig', type='build')    # why not...
     depends_on('pil', when='+image', type=('build', 'run'))
     depends_on('py-ipython', when='+ipython', type=('build', 'run'))
     depends_on('ghostscript', when='+latex', type='run')

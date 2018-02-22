@@ -36,3 +36,4 @@ class PyPytestRunner(PythonPackage):
     version('2.11.1', 'bdb73eb18eca2727944a2dcf963c5a81')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm@1.15:', type='build')

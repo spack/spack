@@ -33,6 +33,8 @@ class Bwa(Package):
 
     version('0.7.17', '82cba7ef695538e6a38b9d4156837381',
             url="https://github.com/lh3/bwa/releases/download/v0.7.17/bwa-0.7.17.tar.bz2")
+    version('0.7.16a', 'c5115c9a5ea0406848500e4b23a7708c',
+            url="https://github.com/lh3/bwa/releases/download/v0.7.16/bwa-0.7.16a.tar.bz2")
     version('0.7.15', 'fcf470a46a1dbe2f96a1c5b87c530554',
             url="https://github.com/lh3/bwa/releases/download/v0.7.15/bwa-0.7.15.tar.bz2")
     version('0.7.13', 'f094f609438511766c434178a3635ab4',

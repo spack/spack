@@ -37,6 +37,7 @@ class Stc(AutotoolsPackage):
     depends_on('java')
     depends_on('ant')
     depends_on('turbine')
+    depends_on('zsh', type='run')
 
     def configure_args(self):
         args = ['--with-turbine=' + self.spec['turbine'].prefix]

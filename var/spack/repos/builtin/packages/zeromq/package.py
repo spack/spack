@@ -47,7 +47,7 @@ class Zeromq(AutotoolsPackage):
     depends_on('autoconf', type='build', when='@develop')
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool', type='build', when='@develop')
-    depends_on('pkg-config', type='build', when='@develop')
+    depends_on('pkgconfig', type='build', when='@develop')
 
     @when('@develop')
     def autoreconf(self, spec, prefix):

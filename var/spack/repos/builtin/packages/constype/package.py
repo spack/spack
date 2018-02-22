@@ -37,5 +37,5 @@ class Constype(AutotoolsPackage):
 
     version('1.0.4', '2333b9ac9fd32e58b05afa651c4590a3')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

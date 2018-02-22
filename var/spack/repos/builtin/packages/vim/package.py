@@ -35,8 +35,9 @@ class Vim(AutotoolsPackage):
     """
 
     homepage = "http://www.vim.org"
-    url      = "https://github.com/vim/vim/archive/v8.0.0134.tar.gz"
+    url      = "https://github.com/vim/vim/archive/v8.0.1376.tar.gz"
 
+    version('8.0.1376', '62855881a2d96d48956859d74cfb8a3b')
     version('8.0.0503', '82b77bd5cb38b70514bed47cfe033b8c')
     version('8.0.0454', '4030bf677bdfbd14efb588e4d9a24128')
     version('8.0.0134', 'c74668d25c2acc85d655430dd60886cd')
@@ -95,9 +96,14 @@ class Vim(AutotoolsPackage):
         configure_args.append("--with-features=" + feature_set)
 
         if '+python' in spec:
-            configure_args.append("--enable-pythoninterp=yes")
+            if 'python@3:' in self.spec:
+                configure_args.append("--enable-python3interp=yes")
+                configure_args.append("--enable-pythoninterp=no")
+            else:
+                configure_args.append("--enable-python3interp=no")
+                configure_args.append("--enable-pythoninterp=yes")
         else:
-            configure_args.append("--enable-pythoninterp=no")
+            configure_args.append("--enable-python3interp=no")
 
         if '+ruby' in spec:
             configure_args.append("--enable-rubyinterp=yes")

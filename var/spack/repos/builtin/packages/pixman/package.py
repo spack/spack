@@ -37,7 +37,7 @@ class Pixman(AutotoolsPackage):
     version('0.34.0', 'e80ebae4da01e77f68744319f01d52a3')
     version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('libpng')
 
     def configure_args(self):

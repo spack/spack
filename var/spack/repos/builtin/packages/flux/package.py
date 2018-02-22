@@ -36,7 +36,7 @@ class Flux(AutotoolsPackage):
     version('master', branch='master',
             git='https://github.com/flux-framework/flux-core')
 
-    variant('docs', default=True, description='Build flux manpages')
+    variant('doc', default=True, description='Build flux manpages')
 
     depends_on("zeromq@4.0.4:")
     depends_on("czmq@2.2:")

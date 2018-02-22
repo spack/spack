@@ -33,3 +33,10 @@ class MsgpackC(CMakePackage):
     version('1.4.1', 'e2fd3a7419b9bc49e5017fdbefab87e0')
 
     depends_on('cmake@2.8.12:', type='build')
+
+    def cmake_args(self):
+        args = [
+            "-DCMAKE_CXX_FLAGS=-Wno-implicit-fallthrough",
+            "-DCMAKE_C_FLAGS=-Wno-implicit-fallthrough"
+        ]
+        return args

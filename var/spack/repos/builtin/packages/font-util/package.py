@@ -33,5 +33,5 @@ class FontUtil(AutotoolsPackage):
 
     version('1.3.1', 'd153a9af216e4498fa171faea2c82514')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

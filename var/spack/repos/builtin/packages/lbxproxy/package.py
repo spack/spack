@@ -48,5 +48,5 @@ class Lbxproxy(AutotoolsPackage):
     depends_on('xtrans', type='build')
     depends_on('xproxymanagementprotocol', type='build')
     depends_on('bigreqsproto', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

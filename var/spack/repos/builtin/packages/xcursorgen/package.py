@@ -37,5 +37,5 @@ class Xcursorgen(AutotoolsPackage):
     depends_on('libxcursor')
     depends_on('libpng@1.2.0:')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

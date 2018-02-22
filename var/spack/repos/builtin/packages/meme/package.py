@@ -33,6 +33,7 @@ class Meme(AutotoolsPackage):
     homepage = "http://meme-suite.org"
     url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
 
+    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
     version('4.11.4', '371f513f82fa0888205748e333003897')
 
     variant('mpi', default=True, description='Enable MPI support')

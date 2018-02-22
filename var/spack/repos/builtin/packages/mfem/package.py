@@ -51,16 +51,17 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('3.3.2-rc2', git='https://github.com/mfem/mfem',
-            tag='v3.3.2-rc2')
+    version('3.3.2',
+            '01a762a5d0a2bc59ce4e2f59009045a4',
+            url='https://goo.gl/Kd7Jk8', extension='.tar.gz',
+            preferred=True)
 
     version('laghos-v1.0', git='https://github.com/mfem/mfem',
             tag='laghos-v1.0')
 
     version('3.3',
             'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
-            url='http://goo.gl/Vrpsns', extension='.tar.gz',
-            preferred=True)
+            url='http://goo.gl/Vrpsns', extension='.tar.gz')
 
     version('3.2',
             '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
@@ -160,6 +161,7 @@ class Mfem(Package):
             'PREFIX=%s' % prefix,
             'MFEM_USE_MEMALLOC=YES',
             'MFEM_DEBUG=%s' % yes_no('+debug'),
+            'CXX=%s' % env['CXX'],
             'MFEM_USE_LIBUNWIND=%s' % yes_no('+debug'),
             'MFEM_USE_GZSTREAM=%s' % yes_no('+gzstream'),
             'MFEM_USE_METIS_5=%s' % metis5_str,
@@ -174,11 +176,17 @@ class Mfem(Package):
             'MFEM_USE_MPFR=%s' % yes_no('+mpfr'),
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp')]
 
+        if '+mpi' in spec:
+            options += ['MPICXX=%s' % spec['mpi'].mpicxx]
+
         if '+hypre' in spec:
-            options += [
-                'HYPRE_DIR=%s' % spec['hypre'].prefix,
-                'HYPRE_OPT=-I%s' % spec['hypre'].prefix.include,
-                'HYPRE_LIB=-L%s' % spec['hypre'].prefix.lib + ' -lHYPRE']
+            hypre = spec['hypre']
+            hypre_flag_list = (hypre.libs +
+                               hypre['lapack'].libs +
+                               hypre['blas'].libs)
+            options += ['HYPRE_DIR=%s' % hypre.prefix,
+                        'HYPRE_OPT=-I%s' % hypre.prefix.include,
+                        'HYPRE_LIB=%s' % hypre_flag_list.ld_flags]
 
         if '+lapack' in spec:
             lapack_lib = (spec['lapack'].libs + spec['blas'].libs).ld_flags  # NOQA: ignore=E501

@@ -50,7 +50,7 @@ class Libgd(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     depends_on('gettext', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     depends_on('libiconv')
     depends_on('libpng')

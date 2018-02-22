@@ -33,5 +33,5 @@ class Fontsproto(AutotoolsPackage):
 
     version('2.1.3', '0415f0360e33f3202af67c6c46782251')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

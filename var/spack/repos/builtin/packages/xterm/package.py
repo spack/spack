@@ -52,4 +52,4 @@ class Xterm(AutotoolsPackage):
     depends_on('libxau')
     depends_on('bzip2')
 
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')

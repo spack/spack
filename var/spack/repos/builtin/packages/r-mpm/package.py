@@ -32,7 +32,7 @@ class RMpm(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/mpm/index.html"
     url = "https://cran.rstudio.com/src/contrib/mpm_1.0-22.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/mpm"
     version('1.0-22', '91885c421cafd89ce8893ccf827165a2')
 
     depends_on('r-kernsmooth', type=('build', 'run'))

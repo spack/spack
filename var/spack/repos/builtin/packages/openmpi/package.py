@@ -86,6 +86,7 @@ class Openmpi(AutotoolsPackage):
     version('2.1.2', 'ff2e55cc529802e7b0738cf87acd3ee4')  # libmpi.so.20.10.2
     version('2.1.1', 'ae542f5cf013943ffbbeb93df883731b')  # libmpi.so.20.10.1
     version('2.1.0', '4838a5973115c44e14442c01d3f21d52')  # libmpi.so.20.10.0
+    version('2.0.4', '7e3c71563787a67dce9acc4d639ef3f8')  # libmpi.so.20.0.4
     version('2.0.3', '6c09e56ac2230c4f9abd8ba029f03edd')  # libmpi.so.20.0.3
     version('2.0.2', 'ecd99aa436a1ca69ce936a96d6a3fa48')  # libmpi.so.20.0.2
     version('2.0.1', '6f78155bd7203039d2448390f3b51c96')  # libmpi.so.20.0.1
@@ -195,6 +196,7 @@ class Openmpi(AutotoolsPackage):
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('ucx', default=False, description='Enable UCX support')
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
@@ -205,11 +207,14 @@ class Openmpi(AutotoolsPackage):
     depends_on('hwloc +cuda', when='+cuda')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
+    depends_on('ucx', when='+ucx')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
+
+    filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -224,7 +229,7 @@ class Openmpi(AutotoolsPackage):
             libraries = ['libmpi_cxx'] + libraries
 
         return find_libraries(
-            libraries, root=self.prefix, shared=True, recurse=True
+            libraries, root=self.prefix, shared=True, recursive=True
         )
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -364,45 +369,10 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
+        # UCX support
+        if '+ucx' in spec:
+            config_args.append('--with-ucx={0}'.format(spec['ucx'].prefix))
+        else:
+            config_args.append('--without-ucx')
+
         return config_args
-
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to make the MPI compilers use the
-        compilers that Spack built the package with.
-
-        If this isn't done, they'll have CC, CXX and FC set
-        to Spack's generic cc, c++ and f90.  We want them to
-        be bound to whatever compiler they were built with.
-        """
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
-        wrapper_basepath = join_path(self.prefix, 'share', 'openmpi')
-
-        wrappers = [
-            ('mpicc-vt-wrapper-data.txt', self.compiler.cc),
-            ('mpicc-wrapper-data.txt', self.compiler.cc),
-            ('ortecc-wrapper-data.txt', self.compiler.cc),
-            ('shmemcc-wrapper-data.txt', self.compiler.cc),
-            ('mpic++-vt-wrapper-data.txt', self.compiler.cxx),
-            ('mpic++-wrapper-data.txt', self.compiler.cxx),
-            ('ortec++-wrapper-data.txt', self.compiler.cxx),
-            ('mpifort-vt-wrapper-data.txt', self.compiler.fc),
-            ('mpifort-wrapper-data.txt', self.compiler.fc),
-            ('shmemfort-wrapper-data.txt', self.compiler.fc),
-            ('mpif90-vt-wrapper-data.txt', self.compiler.fc),
-            ('mpif90-wrapper-data.txt', self.compiler.fc),
-            ('mpif77-vt-wrapper-data.txt',  self.compiler.f77),
-            ('mpif77-wrapper-data.txt',  self.compiler.f77)
-        ]
-
-        for wrapper_name, compiler in wrappers:
-            wrapper = join_path(wrapper_basepath, wrapper_name)
-            if not os.path.islink(wrapper):
-                # Substitute Spack compile wrappers for the real
-                # underlying compiler
-                match = 'compiler=.*'
-                substitute = 'compiler={compiler}'.format(compiler=compiler)
-                filter_file(match, substitute, wrapper, **kwargs)
-                # Remove this linking flag if present
-                # (it turns RPATH into RUNPATH)
-                filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)

@@ -49,7 +49,7 @@ class Gnutls(AutotoolsPackage):
     depends_on('zlib', when='+zlib')
     depends_on('gettext')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
 
     build_directory = 'spack-build'
 

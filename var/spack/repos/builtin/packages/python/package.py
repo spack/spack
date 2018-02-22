@@ -46,6 +46,7 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/downloads/"
     list_depth = 1
 
+    version('3.6.3', 'e9180c69ed9a878a4a8a3ab221e32fa9')
     version('3.6.2', 'e1a36bfffdd1d3a780b1825daf16e56c')
     version('3.6.1', '2d0fc9f3a5940707590e07f03ecb08b9')
     version('3.6.0', '3f7062ccf8be76491884d0e47ac8b251')
@@ -201,6 +202,12 @@ class Python(AutotoolsPackage):
             for f in os.listdir(src):
                 os.symlink(os.path.join(src, f),
                            os.path.join(dst, f))
+
+        if spec.satisfies('@3:'):
+            os.symlink(os.path.join(prefix.bin, 'python3'),
+                       os.path.join(prefix.bin, 'python'))
+            os.symlink(os.path.join(prefix.bin, 'python3-config'),
+                       os.path.join(prefix.bin, 'python-config'))
 
     # TODO: Once better testing support is integrated, add the following tests
     # https://wiki.python.org/moin/TkInter
@@ -504,11 +511,16 @@ class Python(AutotoolsPackage):
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on."""
 
+        # If we set PYTHONHOME, we must also ensure that the corresponding
+        # python is found in the build environment. This to prevent cases
+        # where a system provided python is run against the standard libraries
+        # of a Spack built python. See issue #7128
         spack_env.set('PYTHONHOME', self.home)
+        spack_env.prepend_path('PATH', os.path.dirname(self.command.path))
 
         python_paths = []
         for d in dependent_spec.traverse(
-                deptype=('build', 'run'), deptype_query='run'):
+                deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
                                               self.site_packages_dir))

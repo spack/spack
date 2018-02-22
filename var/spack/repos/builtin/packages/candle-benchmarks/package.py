@@ -44,6 +44,7 @@ class CandleBenchmarks(Package):
     depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib +python -dnn')
     depends_on('py-mdanalysis', type=('build', 'run'))
     depends_on('py-mpi4py', type=('build', 'run'))
+    depends_on('py-h5py', type=('build', 'run'))
 
     # see #3244, but use external for now
     # depends_on('tensorflow')

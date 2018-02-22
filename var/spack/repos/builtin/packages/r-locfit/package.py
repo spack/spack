@@ -30,7 +30,7 @@ class RLocfit(RPackage):
 
     homepage = "https://cran.rstudio.com/web/packages/locfit/index.html"
     url      = "https://cran.rstudio.com/src/contrib/locfit_1.5-9.1.tar.gz"
-    list_url = homepage
+    list_url = "https://cran.r-project.org/src/contrib/Archive/locfit"
 
     version('1.5-9.1', '38af7791c9cda78e2804020e65ac7fb4')
 

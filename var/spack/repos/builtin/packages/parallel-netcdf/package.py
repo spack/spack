@@ -53,6 +53,10 @@ class ParallelNetcdf(AutotoolsPackage):
         spec = self.spec
 
         args = ['--with-mpi={0}'.format(spec['mpi'].prefix)]
+        args.append('MPICC={0}'.format(spec['mpi'].mpicc))
+        args.append('MPICXX={0}'.format(spec['mpi'].mpicxx))
+        args.append('MPIF77={0}'.format(spec['mpi'].mpifc))
+        args.append('MPIF90={0}'.format(spec['mpi'].mpifc))
         args.append('SEQ_CC={0}'.format(spack_cc))
 
         if '+pic' in spec:

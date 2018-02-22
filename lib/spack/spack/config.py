@@ -60,7 +60,7 @@ import yaml
 import jsonschema
 from yaml.error import MarkedYAMLError
 from jsonschema import Draft4Validator, validators
-from ordereddict_backport import OrderedDict
+from spack.util.ordereddict import OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -74,7 +74,7 @@ import spack.schema
 import spack.util.spack_yaml as syaml
 
 
-"""Dict from section names -> schema for that section."""
+#: Dict from section names -> schema for that section
 section_schemas = {
     'compilers': spack.schema.compilers.schema,
     'mirrors': spack.schema.mirrors.schema,
@@ -84,10 +84,13 @@ section_schemas = {
     'config': spack.schema.config.schema,
 }
 
-"""OrderedDict of config scopes keyed by name.
-   Later scopes will override earlier scopes.
-"""
+#: OrderedDict of config scopes keyed by name.
+#: Later scopes will override earlier scopes.
 config_scopes = OrderedDict()
+
+#: metavar to use for commands that accept scopes
+#: this is shorter and more readable than listing all choices
+scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
 
 
 def validate_section_name(section):
@@ -211,25 +214,25 @@ class ConfigScope(object):
 #
 _platform = spack.architecture.platform().name
 
-"""Default configuration scope is the lowest-level scope. These are
-   versioned with Spack and can be overridden by systems, sites or users."""
+#: Default configuration scope is the lowest-level scope. These are
+#: versioned with Spack and can be overridden by systems, sites or users.
 _defaults_path = os.path.join(spack.etc_path, 'spack', 'defaults')
 ConfigScope('defaults', _defaults_path)
 ConfigScope('defaults/%s' % _platform, os.path.join(_defaults_path, _platform))
 
-"""System configuration is per machine.
-   No system-level configs should be checked into spack by default"""
+#: System configuration is per machine.
+#: No system-level configs should be checked into spack by default
 _system_path = os.path.join(spack.system_etc_path, 'spack')
 ConfigScope('system', _system_path)
 ConfigScope('system/%s' % _platform, os.path.join(_system_path, _platform))
 
-"""Site configuration is per spack instance, for sites or projects.
-   No site-level configs should be checked into spack by default."""
+#: Site configuration is per spack instance, for sites or projects.
+#: No site-level configs should be checked into spack by default.
 _site_path = os.path.join(spack.etc_path, 'spack')
 ConfigScope('site', _site_path)
 ConfigScope('site/%s' % _platform, os.path.join(_site_path, _platform))
 
-"""User configuration can override both spack defaults and site config."""
+#: User configuration can override both spack defaults and site config.
 _user_path = spack.user_config_path
 ConfigScope('user', _user_path)
 ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
@@ -237,7 +240,7 @@ ConfigScope('user/%s' % _platform, os.path.join(_user_path, _platform))
 
 def highest_precedence_scope():
     """Get the scope with highest precedence (prefs will override others)."""
-    return config_scopes.values()[-1]
+    return list(config_scopes.values())[-1]
 
 
 def validate_scope(scope):
@@ -446,16 +449,8 @@ def update_config(section, update_data, scope=None):
     validate_section_name(section)  # validate section name
     scope = validate_scope(scope)  # get ConfigScope object from string.
 
-    # read in the config to ensure we've got current data
-    configuration = get_config(section)
-
-    if isinstance(update_data, list):
-        configuration = update_data
-    else:
-        configuration.update(update_data)
-
     # read only the requested section's data.
-    scope.sections[section] = {section: configuration}
+    scope.sections[section] = {section: update_data}
     scope.write_section(section)
 
 

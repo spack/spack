@@ -36,5 +36,5 @@ class Xcmiscproto(AutotoolsPackage):
 
     version('1.2.2', 'ded6cd23fb2800df93ebf2b3f3b01119')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -36,5 +36,5 @@ class Renderproto(AutotoolsPackage):
 
     version('0.11.1', '9b103359123e375bb7760f7dbae3dece')
 
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

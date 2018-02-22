@@ -40,3 +40,10 @@ class NetcdfCxx4(AutotoolsPackage):
     depends_on('libtool', type='build')
 
     force_autoreconf = True
+
+    @property
+    def libs(self):
+        shared = True
+        return find_libraries(
+            'libnetcdf_c++4', root=self.prefix, shared=shared, recurse=True
+        )

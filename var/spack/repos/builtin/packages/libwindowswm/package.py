@@ -43,5 +43,5 @@ class Libwindowswm(AutotoolsPackage):
 
     depends_on('xextproto', type='build')
     depends_on('windowswmproto', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -60,7 +60,7 @@ class Wget(AutotoolsPackage):
     depends_on('pcre', when='+pcre')
 
     depends_on('perl@5.12.0:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
 
     # TODO: Add a 'test' deptype
     # depends_on('valgrind', type='test')

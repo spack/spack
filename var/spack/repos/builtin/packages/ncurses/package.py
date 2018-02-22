@@ -44,8 +44,10 @@ class Ncurses(AutotoolsPackage):
 
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
+    variant('termlib', default=False,
+            description='Enables termlib needs for gnutls in emacs.')
 
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
@@ -70,6 +72,12 @@ class Ncurses(AutotoolsPackage):
 
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')
+
+        if '+termlib' in self.spec:
+            opts.extend(('--with-termlib',
+                         '--enable-termcap',
+                         '--enable-getcap',
+                         '--enable-tcap-names'))
 
         prefix = '--prefix={0}'.format(prefix)
 
@@ -105,4 +113,4 @@ class Ncurses(AutotoolsPackage):
     @property
     def libs(self):
         return find_libraries(
-            ['libncurses', 'libncursesw'], root=self.prefix, recurse=True)
+            ['libncurses', 'libncursesw'], root=self.prefix, recursive=True)

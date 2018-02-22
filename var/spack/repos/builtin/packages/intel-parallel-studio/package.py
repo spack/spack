@@ -34,12 +34,20 @@ class IntelParallelStudio(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
+    version('professional.2018.1', '91669ff7afbfd07868a429a122c90357',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12375/parallel_studio_xe_2018_update1_professional_edition.tgz')
+    version('cluster.2018.1',      '9c007011e0e3fc72747b58756fbf01cd',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12374/parallel_studio_xe_2018_update1_cluster_edition.tgz')
+    version('composer.2018.1',     '28cb807126d713350f4aa6f9f167448a',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12381/parallel_studio_xe_2018_update1_composer_edition.tgz')
     version('professional.2018.0', '9a233854e9218937bc5f46f02b3c7542',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12062/parallel_studio_xe_2018_professional_edition.tgz')
     version('cluster.2018.0',      'fa9baeb83dd2e8e4a464e3db38f28d0f',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12058/parallel_studio_xe_2018_cluster_edition.tgz')
     version('composer.2018.0',     '31ba768fba6e7322957b03feaa3add28',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12067/parallel_studio_xe_2018_composer_edition.tgz')
+    version('cluster.2017.5',      'baeb8e584317fcdf1f60b8208bd4eab5',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12138/parallel_studio_xe_2017_update5.tgz')
     version('professional.2017.4', '27398416078e1e4005afced3e9a6df7e',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
     version('cluster.2017.4',      '27398416078e1e4005afced3e9a6df7e',
@@ -333,7 +341,7 @@ class IntelParallelStudio(IntelPackage):
 
         # Intel(R) VTune(TM) Amplifier XE
         if '+vtune' in spec:
-            components.append('intel-vtune-amplifier-xe')
+            components.append('intel-vtune-amplifier')
 
         return components
 
@@ -389,6 +397,9 @@ class IntelParallelStudio(IntelPackage):
         if '+vtune' in spec:
             vtune_dir = 'vtune_amplifier_xe/licenses'
 
+            if year >= 2018:
+                vtune_dir = 'vtune_amplifier/licenses'
+
             directories.append(vtune_dir)
 
         return [os.path.join(dir, 'license.lic') for dir in directories]
@@ -422,20 +433,22 @@ class IntelParallelStudio(IntelPackage):
             for compiler in ['icc', 'icpc', 'ifort']:
                 cfgfilename = os.path.join(
                     self.prefix, self.bin_dir, '{0}.cfg'.format(compiler))
+                cfgfilename = os.path.abspath(cfgfilename)
                 with open(cfgfilename, 'w') as f:
                     f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
 
     @run_after('install')
     def fix_psxevars(self):
-        """Newer versions of Intel Parallel Studio have a bug in the
+        """Newer versions (>2016) of Intel Parallel Studio have a bug in the
         ``psxevars.sh`` script."""
 
         bindir = glob.glob(join_path(
             self.prefix, 'parallel_studio*', 'bin'))[0]
-
-        filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
-                    os.path.join(bindir, 'psxevars.sh'),
-                    os.path.join(bindir, 'psxevars.csh'))
+        bindir = os.path.abspath(bindir)
+        if self.version[1] > 2016:
+            filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
+                        os.path.join(bindir, 'psxevars.sh'),
+                        os.path.join(bindir, 'psxevars.csh'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if '+mpi' in self.spec:

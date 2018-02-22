@@ -34,4 +34,4 @@ class Imake(AutotoolsPackage):
     version('1.0.7', '186ca7b8ff0de8752f2a2d0426542363')
 
     depends_on('xproto', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')

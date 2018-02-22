@@ -38,5 +38,5 @@ class Libxscrnsaver(AutotoolsPackage):
 
     depends_on('xextproto', type='build')
     depends_on('scrnsaverproto@1.2:', type='build')
-    depends_on('pkg-config@0.9.0:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
