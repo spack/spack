@@ -160,7 +160,8 @@ before_script:
 # Building
 #=============================================================================
 script:
-  - share/spack/qa/run-$TEST_SUITE-tests
+  - if [[ "$TEST_SUITE" == "build" ]]; then travis_wait share/spack/qa/run-$TEST_SUITE-tests; fi
+  - if [[ "$TEST_SUITE" != "build" ]]; then share/spack/qa/run-$TEST_SUITE-tests; fi
   - if [[ "$COVERAGE" == "true" ]]; then codecov --env PYTHON_VERSION --required --flags "${TEST_SUITE}${TRAVIS_OS_NAME}"; fi
 
 #=============================================================================
