@@ -86,14 +86,26 @@ class IntelMkl(IntelPackage):
         return ('+shared' in self.spec)
 
     @property
-    def _mkl_int_suffix(self):
+    def intel64_int_suffix(self):
+        '''Provide the suffix for Intel library names to match a client
+        application's int size.
+
+            _ilp64: all of int, long, and pointer are 64 bit.
+             _lp64: only long and pointer are 64 bit; int will be 32bit.
+
+        Usage:
+            libfoo_name = libfoo_stem_name + self.intel64_int_suffix
+        '''
+        # The inclusion of the underscore is deliberate, not only for
+        # convenience but also to distinguish the retval from the Spack variant
+        # in full-word searches.
         if '+ilp64' in self.spec:
             return '_ilp64'
         else:
             return '_lp64'
 
 #--------------------------------------------------------------------
-# Analysis of the directory layout for a Spack-born installation of:
+# Analysis of the directory layout for a Spack-born installation of
 # intel-mkl@2018.1.163
 #--------------------------------------------------------------------
 #
@@ -110,13 +122,13 @@ class IntelMkl(IntelPackage):
 #       - vaguely-versioned dirname, holding a stub hierarchy --ignorable
 #
 #       $ ls -l compilers_and_libraries_2018/linux/
-#       [.] bin           - actual compilervars.*sh (reg. files) ONLY
-#       [.] documentation -> ../../documentation_2018/
-#       [.] lib -> ../../compilers_and_libraries_2018.1.163/linux/compiler/lib/
-#       [.] mkl -> ../../compilers_and_libraries_2018.1.163/linux/mkl/
-#       [.] pkg_bin -> ../../compilers_and_libraries_2018.1.163/linux/bin/
-#       [.] samples -> ../../samples_2018/
-#       [.] tbb -> ../../compilers_and_libraries_2018.1.163/linux/tbb/
+#       bin         - actual compilervars.*sh (reg. files) ONLY
+#       documentation -> ../../documentation_2018/
+#       lib -> ../../compilers_and_libraries_2018.1.163/linux/compiler/lib/
+#       mkl -> ../../compilers_and_libraries_2018.1.163/linux/mkl/
+#       pkg_bin -> ../../compilers_and_libraries_2018.1.163/linux/bin/
+#       samples -> ../../samples_2018/
+#       tbb -> ../../compilers_and_libraries_2018.1.163/linux/tbb/
 #
 #   compilers_and_libraries_2018.1.163/
 #       - Main "product" + a minimal set of libs from related products
@@ -143,7 +155,7 @@ class IntelMkl(IntelPackage):
 #   lib -> compilers_and_libraries/linux/lib/
 #   mkl -> compilers_and_libraries/linux/mkl/
 #   tbb -> compilers_and_libraries/linux/tbb/
-#                                   - auxiliaries and convenience links
+#                   - auxiliaries and convenience links
 #
 #--------------------------------------------------------------------
 
@@ -173,6 +185,8 @@ class IntelMkl(IntelPackage):
             # acceptable but it does affect reproducibility in Spack and may
             # alter the outcome of subsequent builds of dependent packages. I'm
             # not sure if Spack's package hashing senses this.
+            #
+            # Code may never be reached is self.prefix has been abspath()'ed.
             tty.warn('Intel-MKL found in a version-neutral directory - '
                      'future builds may not be reproducible.')
             pass
@@ -207,7 +221,7 @@ class IntelMkl(IntelPackage):
         return d
 
     @property
-    def _mkl_libdir(self):
+    def mkl_libdir(self):
         # Provide starting directory for find_libraries() and for
         # SPACK_COMPILER_EXTRA_RPATHS.
         if sys.platform == 'darwin':
@@ -219,7 +233,11 @@ class IntelMkl(IntelPackage):
 
     @property
     def blas_libs(self):
-        mkl_libnames = ['libmkl_intel' + self._mkl_int_suffix]
+        # Main magic here.
+        # For reference, see The Intel Math Kernel Library Link Line Advisor:
+        # https://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
+
+        mkl_libnames = ['libmkl_intel' + self.intel64_int_suffix]
 
         if self.spec.satisfies('threads=openmp'):
             if '%intel' in self.spec:
@@ -251,11 +269,11 @@ class IntelMkl(IntelPackage):
         _debug_print('omp_libs', omp_libs)
         mkl_libnames.append('libmkl_core')
 
-        # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
+        # TODO?: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
         mkl_libs = find_libraries(
             mkl_libnames,
-            root=self._mkl_libdir,
+            root=self.mkl_libdir,
             shared=self._want_shared)
         _debug_print('mkl_libs', mkl_libs)
 
@@ -301,12 +319,12 @@ class IntelMkl(IntelPackage):
                 'Cannot determine a BLACS variant for the given MPI.')
 
         scalapack_libnames = [
-            'libmkl_scalapack' + self._mkl_int_suffix,
-            'libmkl_blacs' + blacs_variant + self._mkl_int_suffix,
+            'libmkl_scalapack' + self.intel64_int_suffix,
+            'libmkl_blacs' + blacs_variant + self.intel64_int_suffix,
         ]
         sca_libs = find_libraries(
             scalapack_libnames,
-            root=self._mkl_libdir,
+            root=self.mkl_libdir,
             shared=self._want_shared)
         _debug_print('scalapack_libs', sca_libs)
 
@@ -322,7 +340,7 @@ class IntelMkl(IntelPackage):
         # that is a siren song that pulls us down and under from the true
         # MKLROOT. Hence, such a variable name is not used here [anymore].
         spack_env.set('MKLROOT', self.mklroot)
-        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', self._mkl_libdir)
+        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', self.mkl_libdir)
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
