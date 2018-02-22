@@ -34,12 +34,14 @@ import llnl.util.tty as tty
 
 
 class InstallRootStringException(spack.error.SpackError):
-
-    def __init__(self):
+    """Raised when the relocated binary still has the install root string.
+    """
+    def __init__(self, file_path):
         super(InstallRootStringException, self).__init__(
-            "Package binary contains install root string"
+            "\n %s \ncontains string\n %s \n"
             "after replacing it in rpaths.\n"
-            "Package cannot be relocated.")
+            "Package cannot be relocated." %
+            (file_path, spack.store.layout.root))
 
 
 def get_patchelf():
@@ -344,6 +346,9 @@ def relocate_binary(path_names, old_dir, new_dir):
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
+            if strings_contains_installroot(path_name):
+                raise InstallRootStringException(path_name)
+
     elif platform.system() == 'Linux':
         for path_name in path_names:
             orig_rpaths = get_existing_elf_rpaths(path_name)
@@ -355,6 +360,8 @@ def relocate_binary(path_names, old_dir, new_dir):
                     new_rpaths = substitute_rpath(orig_rpaths,
                                                   old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
+                if strings_contains_installroot(path_name):
+                    raise InstallRootStringException(path_name)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
@@ -407,7 +414,7 @@ def make_binary_placeholder(cur_path_names):
         for cur_path in cur_path_names:
             orig_rpaths = get_existing_elf_rpaths(cur_path)
             if orig_rpaths:
-                new_rpaths = get_placeholder_rpaths(orig_rpaths)
+                new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
                 if strings_contains_installroot(cur_path):
                     raise InstallRootStringException(cur_path)

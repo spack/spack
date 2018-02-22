@@ -47,61 +47,40 @@ import spack.relocate as relocate
 
 
 class NoOverwriteException(spack.error.SpackError):
-
-    def __init__(self, filepath):
-        super(NoOverwriteException, self).__init__(
-            "%s exists" % filepath)
+    """Raised when a file exists and must be overwritten."""
+    def __init__(self, file_path):
+        err_msg = "\n%s\nexists\n" % file_path
+        err_msg += "Use -f option to overwrite."
+        super(NoOverwriteException, self).__init__(err_msg)
 
 
 class NoGpgException(spack.error.SpackError):
-
-    def __init__(self):
-        super(NoGpgException, self).__init__(
-            "No gpg2 is not available\n"
-            "Use spack install gpg2 and spack load gpg2.")
-
+    """Raised when gpg2 is not in $PATH """
+    pass
 
 class NoKeyException(spack.error.SpackError):
-
-    def __init__(self):
-        super(NoKeyException, self).__init__(
-            "No default key available for signing.\n"
-            "Use spack gpg init to create a default key.")
-
+    """Raised when gpg has no default key added."""
+    pass
 
 class PickKeyException(spack.error.SpackError):
-
-    def __init__(self):
-        super(PickKeyException, self).__init__(
-            "Multi keys available for signing\n"
-            "Use spack buildcache create -k <key hash> to pick a key")
+    """Raised when multiple keys can be used to sign."""
+    def __init__(self, keys):
+        err_msg = "Multi keys available for signing\n%s\n" % keys
+        err_msg += "Use spack buildcache create -k <key hash> to pick a key."
+        super(PickKeyException, self).__init__(err_msg)
 
 
 class NoVerifyException(spack.error.SpackError):
-
-    def __init__(self):
-        super(NoVerifyException, self).__init__(
-            "Package spec file failed signature verification.\n"
-            "Use spack buildcache keys to download "
-            "and install a key for verification from the mirror.")
-
+    """Raised if file fails signature verification."""
+    pass
 
 class NoChecksumException(spack.error.SpackError):
-
-    def __init__(self):
-        super(NoChecksumException, self).__init__(
-            "Package tarball failed checksum verification.\n"
-            "It cannot be installed.")
-
+    """Raised if file fails checksum verification."""
+    pass
 
 class NewLayoutException(spack.error.SpackError):
-
-    def __init__(self):
-        super(NewLayoutException, self).__init__(
-            "Package tarball was created from an install "
-            "prefix with a different directory layout.\n"
-            "It cannot be relocated.")
-
+    """Raised if directory layout is different from buildcache."""
+    pass
 
 def has_gnupg2():
     try:
@@ -217,16 +196,20 @@ def checksum_tarball(file):
 def sign_tarball(yes_to_all, key, force, specfile_path):
     # Sign the packages if keys available
     if not has_gnupg2():
-        raise NoGpgException()
+        raise NoGpgException(
+            "gpg2 is not available in $PATH .\n"
+            "Use spack install gpg2 and spack load gpg2.")
     else:
         if key is None:
             keys = Gpg.signing_keys()
             if len(keys) == 1:
                 key = keys[0]
             if len(keys) > 1:
-                raise PickKeyException()
+                raise PickKeyException(str(keys))
             if len(keys) == 0:
-                raise NoKeyException()
+                msg = "No default key available for signing.\n"
+                msg += "Use spack gpg init to create a default key."
+                raise NoKeyException(msg)
     if os.path.exists('%s.asc' % specfile_path):
         if force:
             os.remove('%s.asc' % specfile_path)
@@ -292,9 +275,19 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # optinally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if rel:
-        make_package_relative(workdir, spec.prefix)
+        try:
+            make_package_relative(workdir, spec.prefix)
+        except Exception as e:
+            shutil.rmtree(workdir)
+            shutil.rmtree(tarfile_dir)
+            tty.die(str(e))
     else:
-        make_package_placeholder(workdir)
+        try:
+            make_package_placeholder(workdir)
+        except Exception as e:
+            shutil.rmtree(workdir)
+            shutil.rmtree(tarfile_dir)
+            tty.die(str(e))
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
@@ -328,12 +321,8 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         try:
             sign_tarball(yes_to_all, key, force, specfile_path)
             signed = True
-        except NoGpgException:
-            raise NoGpgException()
-        except PickKeyException:
-            raise PickKeyException()
-        except NoKeyException():
-            raise NoKeyException()
+        except Exception as e:
+            tty.die(str(e))
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
@@ -402,11 +391,11 @@ def make_package_placeholder(workdir):
         relocate.make_binary_placeholder(cur_path_names)
 
 
-def relocate_package(prefix):
+def relocate_package(workdir):
     """
     Relocate the given package
     """
-    buildinfo = read_buildinfo_file(prefix)
+    buildinfo = read_buildinfo_file(workdir)
     new_path = spack.store.layout.root
     old_path = buildinfo['buildpath']
     rel = buildinfo.get('relative_rpaths', False)
@@ -417,7 +406,7 @@ def relocate_package(prefix):
             "%s to %s." % (old_path, new_path))
     path_names = set()
     for filename in buildinfo['relocate_textfiles']:
-        path_name = os.path.join(prefix, filename)
+        path_name = os.path.join(workdir, filename)
         # Don't add backup files generated by filter_file during install step.
         if not path_name.endswith('~'):
             path_names.add(path_name)
@@ -427,9 +416,13 @@ def relocate_package(prefix):
     if not rel:
         path_names = set()
         for filename in buildinfo['relocate_binaries']:
-            path_name = os.path.join(prefix, filename)
+            path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
-        relocate.relocate_binary(path_names, old_path, new_path)
+        try:
+            relocate.relocate_binary(path_names, old_path, new_path)
+        except Exception as e:
+            shutil.rmtree(workdir)
+            tty.die(str(e))
 
 
 def extract_tarball(spec, filename, yes_to_all=False, force=False):
@@ -441,24 +434,32 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
             shutil.rmtree(spec.prefix)
         else:
             raise NoOverwriteException(str(spec.prefix))
+
+    tmpdir = tempfile.mkdtemp()
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')
     spackfile_path = os.path.join(stagepath, spackfile_name)
     tarfile_name = tarball_name(spec, '.tar.gz')
-    tarfile_path = os.path.join(stagepath, tarfile_name)
+    tarfile_path = os.path.join(tmpdir, tarfile_name)
     specfile_name = tarball_name(spec, '.spec.yaml')
-    specfile_path = os.path.join(stagepath, specfile_name)
+    specfile_path = os.path.join(tmpdir, specfile_name)
 
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
-        tar.extractall(stagepath)
+        tar.extractall(tmpdir)
 
     if not yes_to_all:
         if os.path.exists('%s.asc' % specfile_path):
-            Gpg.verify('%s.asc' % specfile_path, specfile_path)
-            os.remove(specfile_path + '.asc')
+            try:
+                Gpg.verify('%s.asc' % specfile_path, specfile_path)
+            except Exception as e:
+                shutil.rmtree(tmpdir)
+                tty.die(str(e))
         else:
-            raise NoVerifyException()
-
+            shutil.rmtree(tmpdir)
+            raise NoVerifyException(
+                "Package spec file failed signature verification.\n"
+                "Use spack buildcache keys to download "
+                "and install a key for verification from the mirror.")
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
 
@@ -471,7 +472,10 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
 
     # if the checksums don't match don't install
     if bchecksum['hash'] != checksum:
-        raise NoChecksumException()
+        shutil.rmtree(tmpdir)
+        raise NoChecksumException(
+            "Package tarball failed checksum verification.\n"
+            "It cannot be installed.")
 
     new_relative_prefix = str(os.path.relpath(spec.prefix,
                                               spack.store.layout.root))
@@ -481,10 +485,13 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     # if the original relative prefix and new relative prefix differ the
     # directory layout has changed and the  buildcache cannot be installed
     if old_relative_prefix != new_relative_prefix:
-        raise NewLayoutException()
+        shutil.rmtree(tmpdir)
+        msg = "Package tarball was created from an install "
+        msg += "prefix with a different directory layout.\n"
+        msg += "It cannot be relocated."
+        raise NewLayoutException(msg)
 
     # extract the tarball in a temp directory
-    tmpdir = tempfile.mkdtemp()
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
         tar.extractall(path=tmpdir)
     # the base of the install prefix is used when creating the tarball
