@@ -179,15 +179,17 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     if 'libgcc_' in cur_path:
         return
     install_name_tool = Executable('install_name_tool')
+    args = []
     if new_idpath:
-        install_name_tool('-id', new_idpath, str(cur_path),
-                          output=str, err=str)
+        args.extend(['-id', new_idpath])
 
     for orig, new in zip(deps, new_deps):
-        install_name_tool('-change', orig, new, str(cur_path))
+        args.extend(['-change', orig, new])
 
     for orig, new in zip(rpaths, new_rpaths):
-        install_name_tool('-rpath', orig, new, str(cur_path))
+        args.extend(['-rpath', orig, new])
+    args.append(str(cur_path))
+    install_name_tool(*args)
     return
 
 
