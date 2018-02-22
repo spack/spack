@@ -86,6 +86,24 @@ def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
     return rel_rpaths
 
 
+def get_placeholder_rpaths(path_name, orig_rpaths):
+    """
+    Replaces orig_dir with relative path from dirname(path_name) if an rpath
+    in orig_rpaths contains orig_path. Prefixes $ORIGIN
+    to relative paths and returns replacement rpaths.
+    """
+    rel_rpaths = []
+    orig_dir = spack.store.layout.root
+    for rpath in orig_rpaths:
+        if re.match(orig_dir, rpath):
+            placeholder = 'X' * len(orig_dir)
+            rel = re.sub(orig_dir, placeholder, rpath)
+            rel_rpaths.append('%s' % rel)
+        else:
+            rel_rpaths.append(rpath)
+    return rel_rpaths
+
+
 def macho_get_paths(path_name):
     """
     Examines the output of otool -l path_name for these three fields:
@@ -139,6 +157,34 @@ def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
         if re.match(old_dir, dep):
             rel = os.path.relpath(dep, start=os.path.dirname(path_name))
             new_deps.append('@loader_path/%s' % rel)
+        else:
+            new_deps.append(dep)
+    return (new_rpaths, new_deps, new_idpath)
+
+
+def macho_make_paths_placeholder(rpaths, deps, idpath):
+    """
+    Replace old_dir with relative path from dirname(path_name)
+    in rpaths and deps; idpaths are replaced with @rpath/basebane(path_name);
+    replacement are returned.
+    """
+    new_idpath = None
+    old_dir = spack.store.layout.root
+    placeholder = 'X' * len(old_dir)
+    if idpath:
+        new_idpath = re.sub(old_dir, placeholder, idpath)
+    new_rpaths = list()
+    new_deps = list()
+    for rpath in rpaths:
+        if re.match(old_dir, rpath):
+            ph = re.sub(old_dir, placeholder, rpath)
+            new_rpaths.append('%s' % ph)
+        else:
+            new_rpaths.append(rpath)
+    for dep in deps:
+        if re.match(old_dir, dep):
+            ph = re.sub(old_dir, placeholder, dep)
+            new_deps.append('%s' % ph)
         else:
             new_deps.append(dep)
     return (new_rpaths, new_deps, new_idpath)
@@ -260,15 +306,30 @@ def needs_text_relocation(filetype):
 def relocate_binary(path_names, old_dir, new_dir):
     """
     Change old_dir to new_dir in RPATHs of elf or mach-o files
+    Account for the case where old_dir is now a placeholder
     """
+    placeholder = '@' * len(old_dir)
     if platform.system() == 'Darwin':
         for path_name in path_names:
-            rpaths, deps, idpath = macho_get_paths(path_name)
-            new_rpaths, new_deps, new_idpath = macho_replace_paths(old_dir,
-                                                                   new_dir,
-                                                                   rpaths,
-                                                                   deps,
-                                                                   idpath)
+            (rpaths, deps, idpath) = macho_get_paths(path_name)
+            if (deps[0].startswith(placeholder) or
+                rpaths[0].startswith(placeholder) or
+                (idpath and idpath.startswith(placeholder))):
+                (new_rpaths,
+                 new_deps,
+                 new_idpath) = macho_replace_paths(placeholder,
+                                                   new_dir,
+                                                   rpaths,
+                                                   deps,
+                                                   idpath)
+            else:
+                (new_rpaths,
+                 new_deps,
+                 new_idpath) = macho_replace_paths(old_dir,
+                                                   new_dir,
+                                                   rpaths,
+                                                   deps,
+                                                   idpath)
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
@@ -276,7 +337,12 @@ def relocate_binary(path_names, old_dir, new_dir):
         for path_name in path_names:
             orig_rpaths = get_existing_elf_rpaths(path_name)
             if orig_rpaths:
-                new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
+                if orig_rpaths[0].startswith(placeholder):
+                    new_rpaths = substitute_rpath(orig_rpaths,
+                                                  placeholder, new_dir)
+                else:
+                    new_rpaths = substitute_rpath(orig_rpaths,
+                                                  old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
@@ -296,6 +362,9 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
             modify_macho_object(cur_path,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
+            if strings_contains_installroot(cur_path):
+                tty.die("File contains install root string" +
+                        " after relative path replacement %s" % cur_path)
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -303,8 +372,42 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
                 new_rpaths = get_relative_rpaths(orig_path, old_dir,
                                                  orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
+                if strings_contains_installroot(cur_path):
+                    tty.die("File contains install root string" +
+                            " after relative path replacement %s" % cur_path)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
+
+
+def make_binary_placeholder(cur_path_names):
+    """
+    Make RPATHs placeholders in given elf or mach-o files
+    """
+    if platform.system() == 'Darwin':
+        for cur_path in cur_path_names:
+            rpaths, deps, idpath = macho_get_paths(cur_path)
+            (new_rpaths,
+             new_deps,
+             new_idpath) = macho_make_paths_placeholder(rpaths, deps, idpath)
+            modify_macho_object(cur_path,
+                                rpaths, deps, idpath,
+                                new_rpaths, new_deps, new_idpath)
+            if strings_contains_installroot(cur_path):
+                tty.die("File contains install root string" +
+                        " after placeholder path replacement %s" %
+                        cur_path)
+    elif platform.system() == 'Linux':
+        for cur_path in cur_path_names:
+            orig_rpaths = get_existing_elf_rpaths(cur_path)
+            if orig_rpaths:
+                new_rpaths = get_placeholder_rpaths(orig_rpaths)
+                modify_elf_object(cur_path, new_rpaths)
+                if strings_contains_installroot(cur_path):
+                    tty.die("File contains install root string" +
+                            " after placeholder path replacement %s" %
+                            cur_path)
+    else:
+        tty.die("Placeholder not implemented for %s" % platform.system())
 
 
 def relocate_text(path_names, old_dir, new_dir):

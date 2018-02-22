@@ -259,6 +259,8 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # in the spack install tree before creating tarball
     if rel:
         make_package_relative(workdir, spec.prefix)
+    else:
+        make_package_placeholder(workdir)
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
@@ -347,6 +349,19 @@ def make_package_relative(workdir, prefix):
         cur_path_names.append(os.path.join(workdir, filename))
         relocate.make_binary_relative(cur_path_names, orig_path_names,
                                       old_path)
+
+
+def make_package_placeholder(workdir):
+    """
+    Change paths in binaries to placeholder paths
+    """
+    buildinfo = read_buildinfo_file(workdir)
+    old_path = buildinfo['buildpath']
+    orig_path_names = list()
+    cur_path_names = list()
+    for filename in buildinfo['relocate_binaries']:
+        cur_path_names.append(os.path.join(workdir, filename))
+        relocate.make_binary_placeholder(cur_path_names)
 
 
 def relocate_package(prefix):
