@@ -50,6 +50,7 @@ class Llvm(CMakePackage):
     variant('clang', default=True,
             description="Build the LLVM C/C++/Objective-C compiler frontend")
     variant('lldb', default=True, description="Build the LLVM debugger")
+    variant('lld', default=True, description="Build the LLVM linker")
     variant('internal_unwind', default=True,
             description="Build the libcxxabi libunwind")
     variant('polly', default=True,
@@ -141,6 +142,12 @@ class Llvm(CMakePackage):
             'placement': 'lldb',
             'variant': '+lldb',
         },
+        'lld': {
+            'url':  base_url % {'pkg': 'lld'},
+            'destination': 'tools',
+            'placement': 'lld',
+            'variant': '+lld',
+        },
         'polly': {
             'url':  base_url % {'pkg': 'polly'},
             'destination': 'tools',
@@ -182,6 +189,7 @@ class Llvm(CMakePackage):
                 'cfe': 'e4daa278d8f252585ab73d196484bf11',
                 'clang-tools-extra': 'c2bd3733c183b033b49f7a416c6dca36',
                 'lldb': 'd64078681215b5935614b6b83b2d1463',
+                'lld': 'a873c7fdaac647613d8eed2cb03d82de',
                 'libunwind': 'ccf48200065481244d3d09828d54e87f',
             }
         },
@@ -409,6 +417,8 @@ class Llvm(CMakePackage):
         if '+lldb' not in spec:
             cmake_args.extend(['-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF',
                                '-DLLVM_TOOL_LLDB_BUILD:Bool=OFF'])
+        if '+lld' not in spec:
+            cmake_args.append('-DLLVM_TOOL_LLD_BUILD:Bool=OFF')
         if '+internal_unwind' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=OFF')
         if '+libcxx' in spec:
