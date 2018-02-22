@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,14 +25,19 @@
 from spack import *
 
 
-class GmapGsnap(AutotoolsPackage):
-    """GMAP: A Genomic Mapping and Alignment Program for
-       mRNA and EST Sequences, and GSNAP: Genomic Short-read
-       Nucleotide Alignment Program"""
+class Soapdenovo2(MakefilePackage):
+    """SOAPdenovo is a novel short-read assembly method that can build a de
+       novo draft assembly for the human-sized genomes. The program is
+       specially designed to assemble Illumina GA short reads. It creates
+       new opportunities for building reference sequences and carrying out
+       accurate analyses of unexplored genomes in a cost effective way."""
 
-    homepage = "http://research-pub.gene.com/gmap/"
-    url      = "http://research-pub.gene.com/gmap/src/gmap-gsnap-2017-06-16.tar.gz"
+    homepage = "https://github.com/aquaskyline/SOAPdenovo2"
+    url      = "https://github.com/aquaskyline/SOAPdenovo2/archive/r240.tar.gz"
 
-    version('2018-02-12', '13152aedeef9ac66be915fc6bf6464f2')
-    version('2017-06-16', 'fcc91b8bdd4bf12ae3124de0c00db0c0')
-    version('2014-12-28', '1ab07819c9e5b5b8970716165ccaa7da')
+    version('240', '3bc6b63edf87bb47874bb6f126e43cd4')
+
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('SOAPdenovo-63mer', prefix.bin)
+        install('SOAPdenovo-127mer', prefix.bin)

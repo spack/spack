@@ -7,7 +7,7 @@
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
+# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License (as
@@ -25,14 +25,10 @@
 from spack import *
 
 
-class GmapGsnap(AutotoolsPackage):
-    """GMAP: A Genomic Mapping and Alignment Program for
-       mRNA and EST Sequences, and GSNAP: Genomic Short-read
-       Nucleotide Alignment Program"""
+class PerlTextCsv(PerlPackage):
+    """Comma-separated values manipulator (using XS or PurePerl)"""
 
-    homepage = "http://research-pub.gene.com/gmap/"
-    url      = "http://research-pub.gene.com/gmap/src/gmap-gsnap-2017-06-16.tar.gz"
+    homepage = "http://search.cpan.org/~ishigaki/Text-CSV/lib/Text/CSV.pm"
+    url      = "http://search.cpan.org/CPAN/authors/id/I/IS/ISHIGAKI/Text-CSV-1.95.tar.gz"
 
-    version('2018-02-12', '13152aedeef9ac66be915fc6bf6464f2')
-    version('2017-06-16', 'fcc91b8bdd4bf12ae3124de0c00db0c0')
-    version('2014-12-28', '1ab07819c9e5b5b8970716165ccaa7da')
+    version('1.95', '1e076b4b1f8ba6a5003bf93f3c437a9e')
