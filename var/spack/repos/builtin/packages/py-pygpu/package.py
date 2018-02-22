@@ -25,10 +25,8 @@
 from spack import *
 
 
-class Libgpuarray(CMakePackage):
-    """Make a common GPU ndarray(n dimensions array) that can be reused by all
-    projects that is as future proof as possible, while keeping it easy to use
-    for simple need/quick test."""
+class PyPygpu(PythonPackage):
+    """Python packge for the libgpuarray C library."""
 
     homepage = "http://deeplearning.net/software/libgpuarray/"
     url      = "https://github.com/Theano/libgpuarray/archive/v0.6.1.tar.gz"
@@ -44,6 +42,16 @@ class Libgpuarray(CMakePackage):
     version('0.6.1', 'cfcd1b54447f9d55b05514df62c70ae2')
     version('0.6.0', '98a4ec1b4c8f225f0b89c18b899a000b')
 
-    depends_on('cuda')
-    depends_on('cudnn')
-    depends_on('cmake@3:', type='build')
+    depends_on('libgpuarray')
+    # not just build-time, requires pkg_resources
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-cython', type=('build', 'run'))
+    depends_on('py-nose', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-mako', type=('build', 'run'))
+
+#(optional) libcheck (check) to run the C tests.
+#(optional) python (python) for the python bindings.
+#(optional) mako (mako) for development or running the python bindings.
+#(optional) Cython >= 0.25 (cython) for the python bindings.
+#(optional) nosetests (nosetests) to run the python tests.
