@@ -35,16 +35,20 @@ class CandleBenchmarks(Package):
 
     version('1.0', '6eced30dc15374bc9f90a86d0396e470')
 
-    depends_on('python@2.7:')
+    variant('mpi', default=True, description='Build with MPI support')
+
+    extends('python@2.7:')
     depends_on('py-theano +gpu', type=('build', 'run'))
     depends_on('py-keras', type=('build', 'run'))
     depends_on('py-matplotlib +image', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-scikit-learn', type=('build', 'run'))
-    depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib +python -dnn')
+    depends_on('opencv@3.2.0: +core +highgui +imgproc +jpeg +png +tiff +zlib +python -dnn ~eigen')
     depends_on('py-mdanalysis', type=('build', 'run'))
-    depends_on('py-mpi4py', type=('build', 'run'))
-    depends_on('py-h5py', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
+    depends_on('py-h5py~mpi', when='~mpi', type=('build', 'run'))
+    depends_on('py-h5py+mpi', when='+mpi', type=('build', 'run'))
+    depends_on('py-requests', type=('build', 'run'))
 
     # see #3244, but use external for now
     # depends_on('tensorflow')
