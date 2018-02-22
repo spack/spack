@@ -105,7 +105,7 @@ def get_placeholder_rpaths(path_name, orig_rpaths):
     orig_dir = spack.store.layout.root
     for rpath in orig_rpaths:
         if re.match(orig_dir, rpath):
-            placeholder = 'X' * len(orig_dir)
+            placeholder = '@' * len(orig_dir)
             rel = re.sub(orig_dir, placeholder, rpath)
             rel_rpaths.append('%s' % rel)
         else:
@@ -179,7 +179,7 @@ def macho_make_paths_placeholder(rpaths, deps, idpath):
     """
     new_idpath = None
     old_dir = spack.store.layout.root
-    placeholder = 'X' * len(old_dir)
+    placeholder = '@' * len(old_dir)
     if idpath:
         new_idpath = re.sub(old_dir, placeholder, idpath)
     new_rpaths = list()
