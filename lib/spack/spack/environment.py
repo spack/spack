@@ -454,9 +454,11 @@ class EnvironmentModifications(object):
                     search = sep.join(after_list[start:end + 1])
                 except IndexError:
                     env.prepend_path(x, after)
+                    continue
 
                 if search not in before:
                     # We just need to set the variable to the new value
+                    # TODO: resolve DUP to "except" branch just above,
                     env.prepend_path(x, after)
                 else:
                     try:
@@ -530,8 +532,8 @@ def validate(env, errstream):
 
 
 def filter_environment_blacklist(env, variables):
-    """Generator that filters out any change to environment variables present in
-    the input list.
+    """Generator that filters out any change to environment variables present
+    in the input list.
 
     Args:
         env: list of environment modifications
