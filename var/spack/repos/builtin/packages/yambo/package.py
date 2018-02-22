@@ -78,6 +78,7 @@ class Yambo(AutotoolsPackage):
     depends_on('fftw~mpi', when='~mpi')
 
     depends_on('hdf5+fortran')
+    depends_on('netcdf')
     depends_on('netcdf-fortran')
     depends_on('libxc@2.0.3:')
 
@@ -128,7 +129,9 @@ class Yambo(AutotoolsPackage):
         # LAPACK
         if '+mpi' in spec:
             args.append('--with-scalapack-libs={0}'.format(
-                spec['scalapack'].libs + spec['lapack'].libs
+                spec['scalapack'].libs +
+                spec['lapack'].libs +
+                spec['blas'].libs
             ))
 
         args.extend([
