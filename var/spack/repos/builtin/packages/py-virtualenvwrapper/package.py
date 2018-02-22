@@ -25,34 +25,21 @@
 from spack import *
 
 
-class PyTheano(PythonPackage):
-    """Optimizing compiler for evaluating mathematical expressions on CPUs
-    and GPUs."""
+class PyVirtualenvwrapper(PythonPackage):
+    """virtualenvwrapper is a set of extensions to Ian Bicking's
+    virtualenv tool. The extensions include wrappers for creating and
+    deleting virtual environments and otherwise managing your development
+    workflow, making it easier to work on more than one project at a time
+    without introducing conflicts in their dependencies."""
 
-    homepage = "http://deeplearning.net/software/theano/"
-    url = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    homepage = "https://bitbucket.org/virtualenvwrapper/virtualenvwrapper.git"
+    url      = "https://pypi.io/packages/source/v/virtualenvwrapper/virtualenvwrapper-4.8.2.tar.gz"
 
-    version('1.0.1', 'a38b36c0fdc3126c574163db0a253e69')
-    version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
-    version('master', git='https://github.com/Theano/Theano.git', branch='master')
+    version('4.8.2', '8e3af0e0d42733f15c5e36df484a952e')
 
-    variant('gpu', default=False,
-            description='Builds with support for GPUs via CUDA and cuDNN')
-
-    depends_on('python@2.6:2.8,3.3:')
-
+    depends_on('python@2.6:')
+    depends_on('py-virtualenv', type=('build', 'run'))
+    depends_on('py-virtualenv-clone', type=('build', 'run'))
+    depends_on('py-stevedore', type=('build', 'run'))
+    # not just build-time, requires pkg_resources
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-scipy@0.11:', type=('build', 'run'))
-    depends_on('py-numpy@1.7.1:', type=('build', 'run'))
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
-
-    depends_on('blas')
-
-    depends_on('cuda', when='+gpu')
-    depends_on('cudnn', when='+gpu')
-    depends_on('py-pygpu', when='+gpu', type=('build', 'run'))
-    depends_on('libgpuarray', when='+gpu')
-
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose@1.3.0:', type='test')
-    # depends_on('py-nose-parameterized@0.5.0:', type='test')

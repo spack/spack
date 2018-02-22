@@ -39,7 +39,7 @@ class Bml(CMakePackage):
     version('develop', git='https://github.com/lanl/bml', branch='master')
 
     variant('shared', default=True, description='Build shared libs')
-    variant('mpi', default=False, description='Build with MPI Support')
+    variant('mpi', default=True, description='Build with MPI Support')
 
     conflicts('+mpi', when='@:1.2.2')
 

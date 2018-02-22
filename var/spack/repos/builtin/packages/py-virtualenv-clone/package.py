@@ -25,34 +25,14 @@
 from spack import *
 
 
-class PyTheano(PythonPackage):
-    """Optimizing compiler for evaluating mathematical expressions on CPUs
-    and GPUs."""
+class PyVirtualenvClone(PythonPackage):
+    """A script for cloning a non-relocatable virtualenv."""
 
-    homepage = "http://deeplearning.net/software/theano/"
-    url = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    homepage = "https://github.com/edwardgeorge/virtualenv-clone"
+    url      = "https://pypi.io/packages/source/v/virtualenv-clone/virtualenv-clone-0.2.6.tar.gz"
 
-    version('1.0.1', 'a38b36c0fdc3126c574163db0a253e69')
-    version('0.8.2', 'f2d0dfe7df141115201077cd933b2c52')
-    version('master', git='https://github.com/Theano/Theano.git', branch='master')
+    version('0.2.6', 'fb03cd8c7a2be75937a13756d14068fc')
 
-    variant('gpu', default=False,
-            description='Builds with support for GPUs via CUDA and cuDNN')
-
-    depends_on('python@2.6:2.8,3.3:')
-
+    depends_on('python@2.6:')
+    # not just build-time, requires pkg_resources
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-scipy@0.11:', type=('build', 'run'))
-    depends_on('py-numpy@1.7.1:', type=('build', 'run'))
-    depends_on('py-six@1.9.0:', type=('build', 'run'))
-
-    depends_on('blas')
-
-    depends_on('cuda', when='+gpu')
-    depends_on('cudnn', when='+gpu')
-    depends_on('py-pygpu', when='+gpu', type=('build', 'run'))
-    depends_on('libgpuarray', when='+gpu')
-
-    # TODO: Add a 'test' deptype
-    # depends_on('py-nose@1.3.0:', type='test')
-    # depends_on('py-nose-parameterized@0.5.0:', type='test')
