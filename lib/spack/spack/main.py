@@ -179,11 +179,8 @@ class SpackArgumentParser(argparse.ArgumentParser):
             cmd_set = set(c for c in commands)
 
             # make a dict of commands of interest
-            cmds = dict()
-            for action in self.actions:
-                cmd_key = spack.cmd.python_name(action.metavar)
-                if cmd_key in cmd_set:
-                    cmds[cmd_key] = action
+            cmds = dict((a.metavar, a) for a in self.actions
+                        if a.metavar in cmd_set)
 
             # add commands to a group in order, and add the group
             group = argparse._ArgumentGroup(self, title=title)
