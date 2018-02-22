@@ -67,6 +67,10 @@ class Yambo(AutotoolsPackage):
     depends_on('lapack')
 
     # MPI dependencies are forced, until we have proper forwarding of variants
+    #
+    # Note that yambo is used as an application, and not linked as a library,
+    # thus there will be no case where another package pulls-in e.g. netcdf+mpi
+    # and wants to depend on yambo~mpi.
     depends_on('mpi', when='+mpi')
     depends_on('netcdf+mpi', when='+mpi')
     depends_on('hdf5+mpi', when='+mpi')
