@@ -201,7 +201,7 @@ class IntelParallelStudio(IntelPackage):
         mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
 
         mkl_libs = find_libraries(
-            mkl_integer + ['libmkl_core'] + mkl_threading,
+            mkl_integer + mkl_threading + ['libmkl_core'],
             root=mkl_root,
             shared=shared
         )
