@@ -34,7 +34,8 @@ import llnl.util.tty as tty
 
 
 class InstallRootStringException(spack.error.SpackError):
-    """Raised when the relocated binary still has the install root string.
+    """
+    Raised when the relocated binary still has the install root string.
     """
     def __init__(self, file_path, root_path):
         super(InstallRootStringException, self).__init__(

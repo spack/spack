@@ -47,7 +47,9 @@ import spack.relocate as relocate
 
 
 class NoOverwriteException(spack.error.SpackError):
-    """Raised when a file exists and must be overwritten."""
+    """
+    Raised when a file exists and must be overwritten.
+    """
     def __init__(self, file_path):
         err_msg = "\n%s\nexists\n" % file_path
         err_msg += "Use -f option to overwrite."
@@ -55,17 +57,23 @@ class NoOverwriteException(spack.error.SpackError):
 
 
 class NoGpgException(spack.error.SpackError):
-    """Raised when gpg2 is not in $PATH """
+    """
+    Raised when gpg2 is not in PATH
+    """
     pass
 
 
 class NoKeyException(spack.error.SpackError):
-    """Raised when gpg has no default key added."""
+    """
+    Raised when gpg has no default key added.
+    """
     pass
 
 
 class PickKeyException(spack.error.SpackError):
-    """Raised when multiple keys can be used to sign."""
+    """
+    Raised when multiple keys can be used to sign.
+    """
     def __init__(self, keys):
         err_msg = "Multi keys available for signing\n%s\n" % keys
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
@@ -73,17 +81,23 @@ class PickKeyException(spack.error.SpackError):
 
 
 class NoVerifyException(spack.error.SpackError):
-    """Raised if file fails signature verification."""
+    """
+    Raised if file fails signature verification.
+    """
     pass
 
 
 class NoChecksumException(spack.error.SpackError):
-    """Raised if file fails checksum verification."""
+    """
+    Raised if file fails checksum verification.
+    """
     pass
 
 
 class NewLayoutException(spack.error.SpackError):
-    """Raised if directory layout is different from buildcache."""
+    """
+    Raised if directory layout is different from buildcache.
+    """
     pass
 
 
