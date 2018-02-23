@@ -43,7 +43,6 @@
 from spack import *
 import spack
 import spack.store
-
 import platform
 
 
@@ -168,51 +167,19 @@ class CbtfKrell(CMakePackage):
         # spec['cbtf'].prefix is the login node path for this build, as
         # we are building the login node components with this spack invocation.
         # We need these paths to be the ones created in the CNL spack innocation.
-        #compute_cbtf_dirs = spec['cbtf'].prefix
 	compute_cbtf_dir = spack.store.db.query_one('cbtf arch=cray-CNL-haswell')
-	print("compute_cbtf_dir.prefix:")
-	print(compute_cbtf_dir.prefix)
 	compute_cbtf_krell_dir = spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
-	print("compute_cbtf_krell_dir.prefix:")
-	print(compute_cbtf_krell_dir.prefix)
-        #compute_cbtf_krell_dirs = spec['cbtf-krell'].prefix
 	compute_papi_dir = spack.store.db.query_one('papi arch=cray-CNL-haswell')
-	print("compute_papi_dir.prefix:")
-	print(compute_papi_dir.prefix)
-        #compute_papi_dirs = spec['papi'].prefix
 	compute_boost_dir = spack.store.db.query_one('boost arch=cray-CNL-haswell')
-	print("compute_boost_dir.prefix:")
-	print(compute_boost_dir.prefix)
-        #compute_boost_dirs = spec['boost'].prefix
 	compute_libmonitor_dir = spack.store.db.query_one('libmonitor arch=cray-CNL-haswell')
-	print("compute_libmonitor_dir.prefix:")
-	print(compute_libmonitor_dir.prefix)
-        #compute_libmonitor_dirs = spec['libmonitor'].prefix
 	compute_libunwind_dir = spack.store.db.query_one('libunwind arch=cray-CNL-haswell')
-	print("compute_libunwind_dir.prefix:")
-	print(compute_libunwind_dir.prefix)
-        #compute_libunwind_dirs = spec['libunwind'].prefix
 	compute_xercesc_dir = spack.store.db.query_one('xerces-c arch=cray-CNL-haswell')
-	print("compute_xercesc_dir.prefix:")
-	print(compute_xercesc_dir.prefix)
-        #compute_xercesc_dirs = spec['xerces-c'].prefix
 	compute_dyninst_dir = spack.store.db.query_one('dyninst arch=cray-CNL-haswell')
-	print("compute_dyninst_dir.prefix:")
-	print(compute_dyninst_dir.prefix)
-        #compute_dyninst_dirs = spec['dyninst'].prefix
 	compute_mrnet_dir = spack.store.db.query_one('mrnet arch=cray-CNL-haswell')
-	print("compute_mrnet_dir.prefix:")
-	print(compute_mrnet_dir.prefix)
-        #compute_mrnet_dirs = spec['mrnet'].prefix
 
         CrayLoginNodeOptions.append('-DCN_RUNTIME_PLATFORM=%s'  % rt_platform)
 
-        # Could search for the compute libraries and then strip off the library name
-        # to get the install path to use in the cmake arguments -- if compute_cbtf_dirs was
-        # really a path to the compute node installation.  Right now, I believe there is no way
-        # to get that path.
-        #cbtf_cn_libs = find_libraries(['cbtf', 'libcbtf'], root=compute_cbtf_dirs, shared=True, recurse=True)
-
+        # Use install directories as CMAKE args for the building of login cbtf-krell
         CrayLoginNodeOptions.append('-DCBTF_CN_RUNTIME_DIR=%s'  % compute_cbtf_dir.prefix)
         CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'  % compute_cbtf_krell_dir.prefix)
         CrayLoginNodeOptions.append('-DPAPI_CN_RUNTIME_DIR=%s'  % compute_papi_dir.prefix)

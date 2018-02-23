@@ -170,10 +170,7 @@ class Openspeedshop(CMakePackage):
         # spec['cbtf'].prefix is the login node value for this build, as
         # we only get here when building the login node components and that is all
         # that is known to spack.
-        #compute_cbtf_krell_dirs = spec['cbtf-krell'].prefix
         compute_cbtf_krell_dir = spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
-        print("compute_cbtf_krell_dir.prefix:")
-        print(compute_cbtf_krell_dir.prefix)
 
         #Equivalent to install-tool cmake arg:
         # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'  % <base dir>/cbtf_v2.3.1.release/compute)
@@ -191,13 +188,9 @@ class Openspeedshop(CMakePackage):
         # OpenSpeedShop should not be built for the compute nodes 
         # when building in cbtf mode (+cbtf)
         platform = self.spec.architecture.platform
-        #print("platform:")
-        #print(platform)
 
         # spec.architecture.target is like `uname -m`
         target   = self.spec.architecture.target
-        #print("target:")
-        #print(target)
 
         if spec.satisfies('~offline'):
             conflicts('platform=cray')
