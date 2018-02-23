@@ -160,16 +160,15 @@ class IntelMkl(IntelPackage):
 #--------------------------------------------------------------------
 
     @property
-    def mklroot(self):
-        '''Returns the effective toplevel product directory, i.e., the
-        directory that is to be presented to users in the MKLROOT environment
-        variable.
+    def product_os_dir(self):
+        '''Returns the version-specific directory of an Intel product release,
+        holding the main product and auxiliary files from other products.
         '''
         # Similar code in ../intel-mpi/package.py:_mpi_root()
         d = self.prefix
         if sys.platform == 'darwin':
             # TODO: Verify on Mac.
-            return d.mkl
+            return d
 
         if 'compilers_and_libraries_' in d and '.' in d:
             # When MKL was installed outside of Spack (a "ghost package"
@@ -206,7 +205,7 @@ class IntelMkl(IntelPackage):
             #d = Prefix(d.append('_' + self.version))
 
             # Alright, now the final flight of stairs.
-            d = d.linux.mkl
+            d = d.linux
 
         # On my system, using a ghosted MKL, self.prefix showed up as ending
         # with "/compiler". I think this is because I provide that MKL by means
@@ -214,22 +213,101 @@ class IntelMkl(IntelPackage):
         # *compilers*, and Spack inspects $PATH(?) Well, I can live with that!
         # It's just a jump to the left, and then a step to the right; let's do
         # the time warp again:
-        if d.endswith('compiler'):
-            d = Prefix(ancestor(d)).mkl
+        #
+        # Ahem, apparently, the Prefix class lacks a native parent() method
+        # (kinda understandably so), but the syntax blows up on trying "..".
+        #
+        # TODO? accomodate other platforms(?)
+        # NB: Searching by platform, we can indulge in hardcoding the path sep.
+        #
+        while '/linux' in d and not d.endswith('/linux'):
+            d = Prefix(ancestor(d))
 
-        _debug_print('mkl_prefix', d)
+        _debug_print('product_os_dir', d)
+        return d
+
+    def product_component_dir(self, component=None):
+        '''Returns the directory of a product component, appropriate for
+        presenting to users in environment variables like MKLROOT and
+        I_MPI_ROOT.
+        '''
+        d = component
+        if component is None:
+            # For ref.: Intel packages in Spack-0.11:
+            #  intel/
+            #  intel-daal/
+            #  intel-gpu-tools/
+            #  intel-ipp/
+            #  intel-mkl/
+            #  intel-mkl-dnn/
+            #  intel-mpi/
+            #  intel-parallel-studio
+            #  intel-tbb/
+
+            if self.name.startswith('intel-mkl'):
+                d = 'mkl'
+            elif self.name.startswith('intel-mpi'):
+                d = 'mpi'
+            else:
+                _raise_install_error(
+                    'Cannot determine product component dir.')
+
+        d = Prefix(join_path(self.product_os_dir, d))
+        _debug_print('component dir', d)
         return d
 
     @property
-    def mkl_libdir(self):
+    def component_libdir(self, component=None):
         # Provide starting directory for find_libraries() and for
         # SPACK_COMPILER_EXTRA_RPATHS.
         if sys.platform == 'darwin':
-            d = self.mklroot.lib
+            d = self.product_component_dir(component).lib
         else:
-            d = self.mklroot.lib.intel64
-        _debug_print('mkl_libdir', d)
+            d = self.product_component_dir(component).lib.intel64
+        _debug_print('component_libdir', d)
         return d
+
+    @property
+    def component_bindir(self, component=None):
+        d = self.product_component_dir(component).bin
+        _debug_print('component_bindir', d)
+        return d
+
+    @property
+    def omp_libs(self):
+        # Supply LibraryList for linking OpenMP
+
+        # FIXME  if sys.platform == 'darwin' ....
+
+        # TODO?  Are variants named consistently enough in Spack to determine
+        # that OpenMP is NOT needed and then return an empty list?
+
+        if '%intel' in self.spec:
+            omp_libnames = ['libiomp5']
+
+            # Note about search root: For MKL, the directory
+            # "$MKLROOT/../compiler" will be present even for an MKL-only
+            # product installation (as opposed to one being ghosted via
+            # packages.yaml), specificially to provide the 'iomp5' libs.
+
+            omp_libs = find_libraries(
+                omp_libnames,
+                root=self.component_libdir(component='compiler'),
+                shared=self._want_shared)
+
+        elif '%gcc' in self.spec:
+            gcc = Executable(self.compiler.cc)
+            omp_libnames = gcc('--print-file-name',
+                               'libgomp.{0}'.format(dso_suffix),
+                               output=str)
+            omp_libs = LibraryList(omp_libnames)
+
+        if len(omp_libs) < 1:
+            _raise_install_error(
+                'Cannot locate OpenMP libraries:', omp_libnames)
+
+        _debug_print('omp_libs', omp_libs)
+        return omp_libs
 
     @property
     def blas_libs(self):
@@ -238,42 +316,19 @@ class IntelMkl(IntelPackage):
         # https://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
 
         mkl_libnames = ['libmkl_intel' + self.intel64_int_suffix]
-
-        if self.spec.satisfies('threads=openmp'):
-            if '%intel' in self.spec:
-                # The directory "$MKLROOT/../compiler" will be present even for
-                # an MKL-only install (as opposed to being ghosted via
-                # packages.yaml), specificially to provide the 'iomp5' libs.
-                omp_libnames = ['libiomp5']
-                omp_libs = find_libraries(
-                    omp_libnames,
-                    root=Prefix(ancestor(self.mklroot)).compiler,
-                    shared=self._want_shared)
-                mkl_libnames.append('libmkl_intel_thread')
-
-            elif '%gcc' in self.spec:
-                gcc = Executable(self.compiler.cc)
-                omp_libnames = gcc('--print-file-name',
-                                   'libgomp.{0}'.format(dso_suffix),
-                                   output=str)
-                omp_libs = LibraryList(omp_libnames)
-                mkl_libnames.append('libmkl_gnu_thread')
-
-            if len(omp_libs) < 1:
-                _raise_install_error(
-                    'Cannot locate OpenMP libraries:', omp_libnames)
-        else:
-            omp_libs = LibraryList([])
+        if not self.spec.satisfies('threads=openmp'):
             mkl_libnames.append('libmkl_sequential')
-
-        _debug_print('omp_libs', omp_libs)
+        elif '%intel' in self.spec:
+            mkl_libnames.append('libmkl_intel_thread')
+        elif '%gcc' in self.spec:
+            mkl_libnames.append('libmkl_gnu_thread')
+        else:
+            _raise_install_error('Cannot determine MKL threading libraries.')
         mkl_libnames.append('libmkl_core')
-
-        # TODO?: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
 
         mkl_libs = find_libraries(
             mkl_libnames,
-            root=self.mkl_libdir,
+            root=self.component_libdir,
             shared=self._want_shared)
         _debug_print('mkl_libs', mkl_libs)
 
@@ -281,7 +336,18 @@ class IntelMkl(IntelPackage):
             _raise_install_error(
                 'Cannot locate core MKL libraries:', mkl_libnames)
 
-        # Intel MKL link line advisor recommends these system libraries
+        # TODO? TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
+        #
+        # NB: TBB is C++, and I don't think here is the right place to try
+        # messing with compiler specifics to spit out the right libtbb and
+        # libstdc++. Can't a user now use the Spack 'tbb' provider concept?
+
+        if self.spec.satisfies('threads=openmp'):
+            omp_libs = self.omp_libs()
+        else:
+            omp_libs = LibraryList([])
+
+        # The Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(
             'libpthread libm libdl'.split(),
             shared=self._want_shared)
@@ -324,7 +390,7 @@ class IntelMkl(IntelPackage):
         ]
         sca_libs = find_libraries(
             scalapack_libnames,
-            root=self.mkl_libdir,
+            root=self.component_libdir,
             shared=self._want_shared)
         _debug_print('scalapack_libs', sca_libs)
 
@@ -339,8 +405,9 @@ class IntelMkl(IntelPackage):
         # find_libraries() entices us to feed it an "mkl_root" variable, but
         # that is a siren song that pulls us down and under from the true
         # MKLROOT. Hence, such a variable name is not used here [anymore].
-        spack_env.set('MKLROOT', self.mklroot)
-        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', self.mkl_libdir)
+        spack_env.set('MKLROOT', self.product_component_dir)
+        spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
+                              self.component_libdir)
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
@@ -359,16 +426,16 @@ class IntelMkl(IntelPackage):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        mklvars = join_path(self.mklroot.bin, 'mklvars.sh')
-        if os.path.isfile(mklvars):
-            if sys.platform == 'darwin':
-                run_env.extend(
-                    EnvironmentModifications.from_sourcing_file(
-                        mklvars))
-            else:
-                run_env.extend(
-                    EnvironmentModifications.from_sourcing_file(
-                        mklvars, 'intel64'))
+        f = join_path(self.component_bindir, 'mklvars.sh')
+        if not os.path.isfile(f):
+            return
+
+        args = []
+        if not sys.platform == 'darwin':
+            args.append('intel64')
+
+        run_env.extend(
+            EnvironmentModifications.from_sourcing_file(f, args))
 
 
 # A couple of utility functions that might be useful in general. If so, they
