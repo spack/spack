@@ -75,6 +75,6 @@ class Verilator(AutotoolsPackage):
     @run_after('install')
     def patch_CXX(self):
         filter_file(r'^CXX\s*=.*', 'CXX = {0}'.format(self.compiler.cxx),
-                join_path(self.prefix.include, 'verilated.mk'))
+                    join_path(self.prefix.include, 'verilated.mk'))
         filter_file(r'^LINK\s*=.*', 'LINK = {0}'.format(self.compiler.cxx),
-                join_path(self.prefix.include, 'verilated.mk'))
+                    join_path(self.prefix.include, 'verilated.mk'))
