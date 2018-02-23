@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,8 +33,8 @@ class LlvmOpenmpOmpt(CMakePackage):
 
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
 
-    # towards_tr4 branch
-    version('towards_tr4', branch='towards_tr4',
+    # tr6_forwards branch
+    version('tr6_forwards', branch='tr6_forwards',
             git='https://github.com/OpenMPToolsInterface/LLVM-openmp.git')
 
     version('3.9.2b2',
@@ -81,7 +81,7 @@ class LlvmOpenmpOmpt(CMakePackage):
 
         # Build llvm-openmp-ompt using the toward_tr4 branch
         # This requires the version to be 5.0 (50)
-        if '@towards_tr4' in self.spec:
+        if '@tr6_forwards' in self.spec:
                 cmake_args.extend(
                     ['-DLIBOMP_OMP_VERSION=50'])
 
