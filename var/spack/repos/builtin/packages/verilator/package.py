@@ -63,14 +63,18 @@ class Verilator(AutotoolsPackage):
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('VERILATOR_ROOT', self.prefix)
 
+    # verilator requires access to its shipped scripts (bin) and include
+    # but the standard make doesn't put it in the correct places
     @run_before('install')
     def install_include(self):
         install_tree('include', prefix.include)
         install_tree('bin', prefix.bin)
 
+    # we need to fix the CXX and LINK paths, as they point to the spack
+    # wrapper scripts which aren't usable without spack
     @run_after('install')
     def patch_CXX(self):
         filter_file(r'^CXX\s*=.*', 'CXX = {0}'.format(self.compiler.cxx),
                 join_path(self.prefix.include, 'verilated.mk'))
-        filter_file(r'^LINK\s*=.*', 'CXX = {0}'.format(self.compiler.cxx),
+        filter_file(r'^LINK\s*=.*', 'LINK = {0}'.format(self.compiler.cxx),
                 join_path(self.prefix.include, 'verilated.mk'))
