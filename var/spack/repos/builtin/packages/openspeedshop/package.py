@@ -166,14 +166,17 @@ class Openspeedshop(CMakePackage):
 
         CrayLoginNodeOptions = []
         rt_platform = "cray"
-        # how do we get the compute node (CNL) cbtf package install directory path?
+        # How do we get the compute node (CNL) cbtf package install 
+        # directory path?
         # spec['cbtf'].prefix is the login node value for this build, as
-        # we only get here when building the login node components and that is all
-        # that is known to spack.
-        compute_cbtf_krell_dir = spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
+        # we only get here when building the login node components and
+        # that is all that is known to spack.
+        compute_cbtf_krell_dir = 
+            spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
 
-        #Equivalent to install-tool cmake arg:
-        # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'  % <base dir>/cbtf_v2.3.1.release/compute)
+        # Equivalent to install-tool cmake arg:
+        # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
+        #               % <base dir>/cbtf_v2.3.1.release/compute)
         CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
                                     % compute_cbtf_krell_dir.prefix)
         CrayLoginNodeOptions.append('-DRUNTIME_PLATFORM=%s'
@@ -189,9 +192,6 @@ class Openspeedshop(CMakePackage):
         # OpenSpeedShop should not be built for the compute nodes
         # when building in cbtf mode (+cbtf)
         platform = self.spec.architecture.platform
-
-        # spec.architecture.target is like `uname -m`
-        target   = self.spec.architecture.target
 
         if spec.satisfies('~offline'):
             conflicts('platform=cray')

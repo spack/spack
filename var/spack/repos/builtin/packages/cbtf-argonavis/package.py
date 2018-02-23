@@ -43,6 +43,7 @@
 from spack import *
 import os
 
+
 class CbtfArgonavis(CMakePackage):
     """CBTF Argo Navis project contains the CUDA collector and supporting
        libraries that was done as a result of a DOE SBIR grant.
@@ -109,11 +110,11 @@ class CbtfArgonavis(CMakePackage):
         """Set up the compile and runtime environments for a package."""
 
         if os.environ.get('LD_LIBRARY_PATH'):
-            os.environ['LD_LIBRARY_PATH'] +=
-                self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
+            os.environ['LD_LIBRARY_PATH'] += self.spec['cuda'].prefix
+                                             + '/extras/CUPTI/lib64'
         else:
-            os.environ['LD_LIBRARY_PATH'] =
-                self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
+            os.environ['LD_LIBRARY_PATH'] = self.spec['cuda'].prefix
+                                            + '/extras/CUPTI/lib64'
 
         run_env.prepend_path(
             'LD_LIBRARY_PATH',
