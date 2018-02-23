@@ -425,12 +425,11 @@ class IntelMkl(IntelPackage):
             return
 
         if sys.platform == 'darwin':
-            args = []
+            run_env.extend(
+                EnvironmentModifications.from_sourcing_file(f))
         else:
-            args = ['intel64']
-
-        run_env.extend(
-            EnvironmentModifications.from_sourcing_file(f, args))
+            run_env.extend(
+                EnvironmentModifications.from_sourcing_file(f, 'intel64'))
 
 
 # A couple of utility functions that might be useful in general. If so, they
