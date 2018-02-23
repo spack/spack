@@ -66,6 +66,7 @@ done
 @pytest.mark.usefixtures('config', 'builtin_mock')
 class TestCompilerCommand(object):
 
+    @pytest.mark.skipif(True, reason="this hits resource limits")
     def test_compiler_remove(self):
         args = spack.util.pattern.Bunch(
             all=True, compiler_spec='gcc@4.5.0', add_paths=[], scope=None
