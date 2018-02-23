@@ -38,8 +38,8 @@ from contextlib import contextmanager
 
 import six
 from llnl.util import tty
-from llnl.util.executable import Executable
 from llnl.util.lang import dedupe
+from spack.util.executable import Executable
 
 __all__ = [
     'FileFilter',
