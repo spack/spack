@@ -63,6 +63,14 @@ class Verilator(AutotoolsPackage):
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('VERILATOR_ROOT', self.prefix)
 
-    @run_after('install')
+    @run_before('install')
     def install_include(self):
         install_tree('include', prefix.include)
+        install_tree('bin', prefix.bin)
+
+    @run_after('install')
+    def patch_CXX(self):
+        filter_file(r'^CXX\s*=.*', 'CXX = {0}'.format(self.compiler.cxx),
+                join_path(self.prefix.include, 'verilated.mk'))
+        filter_file(r'^LINK\s*=.*', 'CXX = {0}'.format(self.compiler.cxx),
+                join_path(self.prefix.include, 'verilated.mk'))
