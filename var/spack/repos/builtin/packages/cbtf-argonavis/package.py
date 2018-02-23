@@ -111,10 +111,10 @@ class CbtfArgonavis(CMakePackage):
 
         if os.environ.get('LD_LIBRARY_PATH'):
             os.environ['LD_LIBRARY_PATH'] += self.spec['cuda'].prefix
-                                             + '/extras/CUPTI/lib64'
+                                          + '/extras/CUPTI/lib64'
         else:
             os.environ['LD_LIBRARY_PATH'] = self.spec['cuda'].prefix
-                                            + '/extras/CUPTI/lib64'
+                                          + '/extras/CUPTI/lib64'
 
         run_env.prepend_path(
             'LD_LIBRARY_PATH',
