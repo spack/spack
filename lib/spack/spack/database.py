@@ -39,6 +39,7 @@ provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 
 """
+import datetime
 import os
 import sys
 import socket
@@ -75,6 +76,15 @@ _db_lock_timeout = 60
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
 
+#: Time format used in database entries
+_time_format = '%Y-%m-%d %H:%M:%S'
+
+
+def _today():
+    """Returns ``datetime.today()`` in the correct time format"""
+    today = datetime.datetime.today()
+    return today.strftime(_time_format)
+
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
@@ -103,14 +113,31 @@ class InstallRecord(object):
     actually remove from the database until a spec has no installed
     dependents left.
 
+    Args:
+        spec (Spec): spec tracked by the install record
+        path (str): path where the spec has been installed
+        installed (bool): whether or not the spec is currently installed
+        ref_count (int): number of specs that depend on this one
+
+        **kwargs: optional keyword arguments
+
+            explicit
+                whether or not this spec was explicitly installed,
+                or pulled-in as a dependency of something else
+
+            installation_datetime
+                date and time of the installation
     """
 
-    def __init__(self, spec, path, installed, ref_count=0, explicit=False):
+    def __init__(self, spec, path, installed, ref_count=0, **kwargs):
         self.spec = spec
         self.path = str(path)
         self.installed = bool(installed)
         self.ref_count = ref_count
-        self.explicit = explicit
+        self.explicit = kwargs.get('explicit', False)
+        self.installation_datetime = kwargs.get(
+            'installation_datetime', _today()
+        )
 
     def to_dict(self):
         return {
@@ -118,14 +145,15 @@ class InstallRecord(object):
             'path': self.path,
             'installed': self.installed,
             'ref_count': self.ref_count,
-            'explicit': self.explicit
+            'explicit': self.explicit,
+            'installation_datetime': self.installation_datetime
         }
 
     @classmethod
     def from_dict(cls, spec, dictionary):
-        d = dictionary
-        return InstallRecord(spec, d['path'], d['installed'], d['ref_count'],
-                             d.get('explicit', False))
+        d = dict(dictionary.items())
+        d.pop('spec', None)
+        return InstallRecord(spec, **d)
 
 
 class Database(object):
@@ -347,7 +375,7 @@ class Database(object):
         def invalid_record(hash_key, error):
             msg = ("Invalid record in Spack database: "
                    "hash: %s, cause: %s: %s")
-            msg %= (hash_key, type(e).__name__, str(e))
+            msg %= (hash_key, type(error).__name__, str(error))
             raise CorruptDatabaseError(msg, self._index_path)
 
         # Build up the database in three passes:
@@ -442,12 +470,18 @@ class Database(object):
                     tty.debug(
                         'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
                     explicit = True
+                    inst_datetime = _today()
                     if old_data is not None:
                         old_info = old_data.get(spec.dag_hash())
                         if old_info is not None:
                             explicit = old_info.explicit
+                            inst_datetime = old_info.installation_datetime
 
-                    self._add(spec, directory_layout, explicit=explicit)
+                    extra_args = {
+                        'explicit': explicit,
+                        'installation_datetime': inst_datetime
+                    }
+                    self._add(spec, directory_layout, **extra_args)
 
                     processed_specs.add(spec)
 
@@ -479,7 +513,8 @@ class Database(object):
                             kwargs = {
                                 'spec': entry.spec,
                                 'directory_layout': layout,
-                                'explicit': entry.explicit
+                                'explicit': entry.explicit,
+                                'installation_datetime': entry.installation_datetime  # noqa: E501
                             }
                             self._add(**kwargs)
                             processed_specs.add(entry.spec)
@@ -579,23 +614,33 @@ class Database(object):
                 self._write(None, None, None)
             self.reindex(spack.store.layout)
 
-    def _add(self, spec, directory_layout=None, explicit=False):
+    def _add(self, spec, directory_layout=None, **kwargs):
         """Add an install record for this spec to the database.
 
         Assumes spec is installed in ``layout.path_for_spec(spec)``.
 
         Also ensures dependencies are present and updated in the DB as
-        either intsalled or missing.
+        either installed or missing.
 
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError(
                 "Specs added to DB must be concrete.")
 
+        # Retrieve optional arguments
+        explicit = kwargs.get('explicit', False)
+        installation_datetime = kwargs.get(
+            'installation_datetime', _today()
+        )
+
         for dep in spec.dependencies(_tracked_deps):
             dkey = dep.dag_hash()
             if dkey not in self._data:
-                self._add(dep, directory_layout, explicit=False)
+                extra_args = {
+                    'explicit': False,
+                    'installation_datetime': installation_datetime
+                }
+                self._add(dep, directory_layout, **extra_args)
 
         key = spec.dag_hash()
         if key not in self._data:
@@ -613,8 +658,13 @@ class Database(object):
 
             # Create a new install record with no deps initially.
             new_spec = spec.copy(deps=False)
+            extra_args = {
+                'explicit': explicit,
+                'installation_datetime': installation_datetime
+            }
             self._data[key] = InstallRecord(
-                new_spec, path, installed, ref_count=0, explicit=explicit)
+                new_spec, path, installed, ref_count=0, **extra_args
+            )
 
             # Connect dependencies from the DB to the new copy.
             for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
