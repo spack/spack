@@ -40,7 +40,7 @@ class InstallRootStringException(spack.error.SpackError):
         super(InstallRootStringException, self).__init__(
             "\n %s \ncontains string\n %s \n"
             "after replacing it in rpaths.\n"
-            "Package cannot be relocated." %
+            "Package should not be relocated.\n Use -y to override." %
             (file_path, root_path))
 
 
@@ -316,7 +316,7 @@ def needs_text_relocation(filetype):
     return ("text" in filetype)
 
 
-def relocate_binary(path_names, old_dir, new_dir):
+def relocate_binary(path_names, old_dir, new_dir, yes_to_all):
     """
     Change old_dir to new_dir in RPATHs of elf or mach-o files
     Account for the case where old_dir is now a placeholder
@@ -346,8 +346,9 @@ def relocate_binary(path_names, old_dir, new_dir):
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
-            if strings_contains_installroot(path_name, old_dir):
-                raise InstallRootStringException(path_name, old_dir)
+            if (not yes_to_all and
+                strings_contains_installroot(path_name, old_dir)):
+                    raise InstallRootStringException(path_name, old_dir)
 
     elif platform.system() == 'Linux':
         for path_name in path_names:
@@ -360,13 +361,14 @@ def relocate_binary(path_names, old_dir, new_dir):
                     new_rpaths = substitute_rpath(orig_rpaths,
                                                   old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
-                if strings_contains_installroot(path_name, old_dir):
-                    raise InstallRootStringException(path_name, old_dir)
+                if (not yes_to_all and
+                    strings_contains_installroot(path_name, old_dir)):
+                        raise InstallRootStringException(path_name, old_dir)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
 
-def make_binary_relative(cur_path_names, orig_path_names, old_dir):
+def make_binary_relative(cur_path_names, orig_path_names, old_dir, yes_to_all):
     """
     Make RPATHs relative to old_dir in given elf or mach-o files
     """
@@ -380,8 +382,9 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
             modify_macho_object(cur_path,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
-            if strings_contains_installroot(cur_path):
-                raise InstallRootStringException(cur_path)
+            if (not yes_to_all and
+                strings_contains_installroot(cur_path)):
+                    raise InstallRootStringException(cur_path)
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -389,13 +392,14 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
                 new_rpaths = get_relative_rpaths(orig_path, old_dir,
                                                  orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
-                if strings_contains_installroot(cur_path, old_dir):
-                    raise InstallRootStringException(cur_path, old_dir)
+                if (not yes_to_all and
+                    strings_contains_installroot(cur_path, old_dir)):
+                        raise InstallRootStringException(cur_path, old_dir)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
 
-def make_binary_placeholder(cur_path_names):
+def make_binary_placeholder(cur_path_names, yes_to_all):
     """
     Make RPATHs placeholders in given elf or mach-o files
     """
@@ -408,8 +412,9 @@ def make_binary_placeholder(cur_path_names):
             modify_macho_object(cur_path,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
-            if strings_contains_installroot(cur_path,
-                                            spack.store.layout.root):
+            if (not yes_to_all and
+                strings_contains_installroot(cur_path,
+                                             spack.store.layout.root)):
                 raise InstallRootStringException(cur_path,
                                                  spack.store.layout.root)
     elif platform.system() == 'Linux':
@@ -418,8 +423,9 @@ def make_binary_placeholder(cur_path_names):
             if orig_rpaths:
                 new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
-                if strings_contains_installroot(cur_path,
-                                                spack.store.layout.root):
+                if (not yes_to_all and
+                    strings_contains_installroot(cur_path,
+                                                 spack.store.layout.root)):
                     raise InstallRootStringException(cur_path,
                                                      spack.store.layout.root)
     else:

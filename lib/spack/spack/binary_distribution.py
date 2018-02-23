@@ -282,14 +282,14 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # in the spack install tree before creating tarball
     if rel:
         try:
-            make_package_relative(workdir, spec.prefix)
+            make_package_relative(workdir, spec.prefix, yes_to_all)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
             tty.die(str(e))
     else:
         try:
-            make_package_placeholder(workdir)
+            make_package_placeholder(workdir, yes_to_all)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
@@ -322,13 +322,12 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
     signed = False
-    if not yes_to_all:
-        # sign the tarball and spec file with gpg
-        try:
-            sign_tarball(yes_to_all, key, force, specfile_path)
-            signed = True
-        except Exception as e:
-            tty.die(str(e))
+    # sign the tarball and spec file with gpg
+    try:
+        sign_tarball(yes_to_all, key, force, specfile_path)
+        signed = True
+    except Exception as e:
+        tty.die(str(e))
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
@@ -371,7 +370,7 @@ def download_tarball(spec):
     return None
 
 
-def make_package_relative(workdir, prefix):
+def make_package_relative(workdir, prefix, yes_to_all):
     """
     Change paths in binaries to relative paths
     """
@@ -383,10 +382,10 @@ def make_package_relative(workdir, prefix):
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
         relocate.make_binary_relative(cur_path_names, orig_path_names,
-                                      old_path)
+                                      old_path, yes_to_all)
 
 
-def make_package_placeholder(workdir):
+def make_package_placeholder(workdir, yes_to_all):
     """
     Change paths in binaries to placeholder paths
     """
@@ -394,10 +393,10 @@ def make_package_placeholder(workdir):
     cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
         cur_path_names.append(os.path.join(workdir, filename))
-        relocate.make_binary_placeholder(cur_path_names)
+        relocate.make_binary_placeholder(cur_path_names, yes_to_all)
 
 
-def relocate_package(workdir):
+def relocate_package(workdir, yes_to_all):
     """
     Relocate the given package
     """
@@ -425,7 +424,8 @@ def relocate_package(workdir):
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
         try:
-            relocate.relocate_binary(path_names, old_path, new_path)
+            relocate.relocate_binary(path_names, old_path, new_path,
+                                     yes_to_all)
         except Exception as e:
             shutil.rmtree(workdir)
             tty.die(str(e))
@@ -453,19 +453,18 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extractall(tmpdir)
 
-    if not yes_to_all:
-        if os.path.exists('%s.asc' % specfile_path):
-            try:
-                Gpg.verify('%s.asc' % specfile_path, specfile_path)
-            except Exception as e:
-                shutil.rmtree(tmpdir)
-                tty.die(str(e))
-        else:
+    if os.path.exists('%s.asc' % specfile_path):
+        try:
+            Gpg.verify('%s.asc' % specfile_path, specfile_path)
+        except Exception as e:
             shutil.rmtree(tmpdir)
-            raise NoVerifyException(
-                "Package spec file failed signature verification.\n"
-                "Use spack buildcache keys to download "
-                "and install a key for verification from the mirror.")
+            tty.die(str(e))
+    else:
+        shutil.rmtree(tmpdir)
+        raise NoVerifyException(
+            "Package spec file failed signature verification.\n"
+            "Use spack buildcache keys to download "
+            "and install a key for verification from the mirror.")
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
 
@@ -509,7 +508,7 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     os.remove(tarfile_path)
     os.remove(specfile_path)
 
-    relocate_package(workdir)
+    relocate_package(workdir, yes_to_all)
     # Delay creating spec.prefix until verification is complete
     # and any relocation has been done.
     install_tree(workdir, spec.prefix, symlinks=True)
