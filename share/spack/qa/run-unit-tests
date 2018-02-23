@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Description:
 #     Runs Spack unit tests.
@@ -28,8 +28,10 @@ ${coverage_run} bin/spack help -a
 ${coverage_run} bin/spack -p --lines 20 spec mpileaks
 
 ulimit -a
-ulimit -s 16384
-ulimit -a
 
 # Run unit tests with code coverage
 ${coverage_run} bin/spack test "$@"
+
+dmesg | grep -i "out of memory"
+echo "tail dmesg"
+dmesg | tail -n 40
