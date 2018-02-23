@@ -91,7 +91,7 @@ class Scotch(Package):
             libraries = ['libesmumps'] + libraries
 
         scotchlibs = find_libraries(
-            libraries, root=self.prefix, recurse=True, shared=shared
+            libraries, root=self.prefix, recursive=True, shared=shared
         )
         if '+compression' in self.spec:
             zlibs = self.spec['zlib'].libs

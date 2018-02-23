@@ -28,7 +28,7 @@ import spack
 import os
 
 description = "handle GPG actions for spack"
-section = "developer"
+section = "packaging"
 level = "long"
 
 

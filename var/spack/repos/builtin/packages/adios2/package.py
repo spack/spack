@@ -35,6 +35,7 @@ class Adios2(CMakePackage):
     version('develop', branch='master',
             git='https://github.com/ornladios/ADIOS2.git')
 
+    version('2.1.0', '431fa5b015349f1838b96b8f5a1cc8f8')
     version('2.0.0', 'da39655b51745d2c5f3f1e46c5abc4d7')
 
     variant('shared', default=True,
@@ -117,4 +118,7 @@ class Adios2(CMakePackage):
             '-DADIOS2_USE_Python={0}'.format(
                 'ON' if '+python' in spec else 'OFF')
         ]
+        if spec.satisfies('+python'):
+            args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
+                        % self.spec['python'].command.path)
         return args

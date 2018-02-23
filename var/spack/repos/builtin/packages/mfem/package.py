@@ -51,7 +51,7 @@ class Mfem(Package):
     # If this quick verification procedure fails, additional discussion
     # will be required to verify the new version.
 
-    version('3.3.2', 
+    version('3.3.2',
             '01a762a5d0a2bc59ce4e2f59009045a4',
             url='https://goo.gl/Kd7Jk8', extension='.tar.gz',
             preferred=True)
@@ -180,10 +180,13 @@ class Mfem(Package):
             options += ['MPICXX=%s' % spec['mpi'].mpicxx]
 
         if '+hypre' in spec:
-            options += [
-                'HYPRE_DIR=%s' % spec['hypre'].prefix,
-                'HYPRE_OPT=-I%s' % spec['hypre'].prefix.include,
-                'HYPRE_LIB=-L%s' % spec['hypre'].prefix.lib + ' -lHYPRE']
+            hypre = spec['hypre']
+            hypre_flag_list = (hypre.libs +
+                               hypre['lapack'].libs +
+                               hypre['blas'].libs)
+            options += ['HYPRE_DIR=%s' % hypre.prefix,
+                        'HYPRE_OPT=-I%s' % hypre.prefix.include,
+                        'HYPRE_LIB=%s' % hypre_flag_list.ld_flags]
 
         if '+lapack' in spec:
             lapack_lib = (spec['lapack'].libs + spec['blas'].libs).ld_flags  # NOQA: ignore=E501

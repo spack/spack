@@ -689,7 +689,7 @@ def _headers_default_handler(descriptor, spec, cls):
     Raises:
         RuntimeError: If no headers are found
     """
-    headers = find_headers('*', root=spec.prefix.include, recurse=True)
+    headers = find_headers('*', root=spec.prefix.include, recursive=True)
 
     if headers:
         return headers
@@ -731,22 +731,22 @@ def _libs_default_handler(descriptor, spec, cls):
 
     if '+shared' in spec:
         libs = find_libraries(
-            name, root=spec.prefix, shared=True, recurse=True
+            name, root=spec.prefix, shared=True, recursive=True
         )
     elif '~shared' in spec:
         libs = find_libraries(
-            name, root=spec.prefix, shared=False, recurse=True
+            name, root=spec.prefix, shared=False, recursive=True
         )
     else:
         # Prefer shared
         libs = find_libraries(
-            name, root=spec.prefix, shared=True, recurse=True
+            name, root=spec.prefix, shared=True, recursive=True
         )
         if libs:
             return libs
 
         libs = find_libraries(
-            name, root=spec.prefix, shared=False, recurse=True
+            name, root=spec.prefix, shared=False, recursive=True
         )
 
     if libs:
