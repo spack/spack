@@ -31,8 +31,8 @@ class Verilator(AutotoolsPackage):
     It compiles synthesizable Verilog (not test-bench code!), plus some PSL,
     SystemVerilog and Synthesis assertions into C++ or SystemC code. It is
     designed for large projects where fast simulation performance is of primary
-    concern, and is especially well suited to generate executable models of CPUs
-    for embedded software design teams.
+    concern, and is especially well suited to generate executable models of
+    CPUs for embedded software design teams.
 
     Please do not download this program if you are expecting a full featured
     replacement for NC-Verilog, VCS or another commercial Verilog simulator
@@ -41,12 +41,12 @@ class Verilator(AutotoolsPackage):
     SystemC, and writing just a touch of C code and Makefiles doesn't scare you
     off, this is the free Verilog compiler for you.
 
-    Verilator supports the synthesis subset of Verilog, plus initial statements,
-    proper blocking/non-blocking assignments, functions, tasks,
+    Verilator supports the synthesis subset of Verilog, plus initial
+    statements, proper blocking/non-blocking assignments, functions, tasks,
     multi-dimensional arrays, and signed numbers. It also supports very simple
     forms of SystemVerilog assertions and coverage analysis. Verilator supports
-    the more important Verilog 2005 constructs, and some SystemVerilog features,
-    with additional constructs being added as users request them.
+    the more important Verilog 2005 constructs, and some SystemVerilog
+    features, with additional constructs being added as users request them.
 
     Verilator has been used to simulate many very large multi-million gate
     designs with thousands of modules."""
@@ -59,3 +59,10 @@ class Verilator(AutotoolsPackage):
     depends_on('bison')
     depends_on('flex')
     depends_on('perl')
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('VERILATOR_ROOT', self.prefix)
+
+    @run_after('install')
+    def install_include(self):
+        install_tree('include', prefix.include)
