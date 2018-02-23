@@ -453,8 +453,8 @@ class Llvm(CMakePackage):
             if spec.version < Version('3.9.0'):
                 targets = ['CppBackend', 'NVPTX', 'AMDGPU']
             else:
-                # Starting in 3.9.0 CppBackend is no longer a target (see 
-                # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for 
+                # Starting in 3.9.0 CppBackend is no longer a target (see
+                # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
                 # the complete list of targets)
                 targets = ['NVPTX', 'AMDGPU']
 
