@@ -44,7 +44,7 @@ class Hpgmg(Package):
     version('develop', git='https://bitbucket.org/hpgmg/hpgmg.git', branch='master')
 
     variant(
-        'fe', default=True, description='Build finite element solver')
+        'fe', default=False, description='Build finite element solver')
     variant(
         'fv', default='mpi', values=('serial', 'mpi', 'none'),
         description='Build finite volume solver with or without MPI support')
