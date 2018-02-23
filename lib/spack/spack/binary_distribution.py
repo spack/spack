@@ -132,7 +132,8 @@ def write_buildinfo_file(prefix, workdir, rel=False):
             #  Check if the file contains a string with the installroot.
             #  This cuts down on the number of files added to the list
             #  of files potentially needing relocation
-            if relocate.strings_contains_installroot(path_name):
+            if relocate.strings_contains_installroot(path_name,
+                                                     spack.store.layout.root):
                 filetype = relocate.get_filetype(path_name)
                 if relocate.needs_binary_relocation(filetype, os_id):
                     rel_path_name = os.path.relpath(path_name, prefix)

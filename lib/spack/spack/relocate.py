@@ -36,12 +36,12 @@ import llnl.util.tty as tty
 class InstallRootStringException(spack.error.SpackError):
     """Raised when the relocated binary still has the install root string.
     """
-    def __init__(self, file_path):
+    def __init__(self, file_path, root_path):
         super(InstallRootStringException, self).__init__(
             "\n %s \ncontains string\n %s \n"
             "after replacing it in rpaths.\n"
             "Package cannot be relocated." %
-            (file_path, spack.store.layout.root))
+            (file_path, root_path))
 
 
 def get_patchelf():
@@ -261,14 +261,14 @@ def get_filetype(path_name):
     return output.strip()
 
 
-def strings_contains_installroot(path_name):
+def strings_contains_installroot(path_name, root_dir):
     """
     Check if the file contain the install root string.
     """
     strings = Executable('strings')
     output = strings('%s' % path_name,
                      output=str, err=str)
-    return (spack.store.layout.root in output)
+    return (root_dir in output)
 
 
 def modify_elf_object(path_name, new_rpaths):
@@ -346,8 +346,8 @@ def relocate_binary(path_names, old_dir, new_dir):
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
-            if strings_contains_installroot(path_name):
-                raise InstallRootStringException(path_name)
+            if strings_contains_installroot(path_name, old_dir):
+                raise InstallRootStringException(path_name, old_dir)
 
     elif platform.system() == 'Linux':
         for path_name in path_names:
@@ -360,8 +360,8 @@ def relocate_binary(path_names, old_dir, new_dir):
                     new_rpaths = substitute_rpath(orig_rpaths,
                                                   old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
-                if strings_contains_installroot(path_name):
-                    raise InstallRootStringException(path_name)
+                if strings_contains_installroot(path_name, old_dir):
+                    raise InstallRootStringException(path_name, old_dir)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
@@ -389,8 +389,8 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
                 new_rpaths = get_relative_rpaths(orig_path, old_dir,
                                                  orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
-                if strings_contains_installroot(cur_path):
-                    raise InstallRootStringException(cur_path)
+                if strings_contains_installroot(cur_path, old_dir):
+                    raise InstallRootStringException(cur_path, old_dir)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
 
@@ -408,16 +408,20 @@ def make_binary_placeholder(cur_path_names):
             modify_macho_object(cur_path,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
-            if strings_contains_installroot(cur_path):
-                raise InstallRootStringException(cur_path)
+            if strings_contains_installroot(cur_path,
+                                            spack.store.layout.root):
+                raise InstallRootStringException(cur_path,
+                                                 spack.store.layout.root)
     elif platform.system() == 'Linux':
         for cur_path in cur_path_names:
             orig_rpaths = get_existing_elf_rpaths(cur_path)
             if orig_rpaths:
                 new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
-                if strings_contains_installroot(cur_path):
-                    raise InstallRootStringException(cur_path)
+                if strings_contains_installroot(cur_path,
+                                                spack.store.layout.root):
+                    raise InstallRootStringException(cur_path,
+                                                     spack.store.layout.root)
     else:
         tty.die("Placeholder not implemented for %s" % platform.system())
 
