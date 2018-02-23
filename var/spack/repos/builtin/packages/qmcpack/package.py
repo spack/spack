@@ -38,6 +38,7 @@ class Qmcpack(CMakePackage):
     # Spack manual. However, it is easier to maintain because github hashes
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
+    version('3.4.0', git=url, tag='v3.4.0')
     version('3.3.0', git=url, tag='v3.3.0')
     version('3.2.0', git=url, tag='v3.2.0')
     version('3.1.1', git=url, tag='v3.1.1')
@@ -64,6 +65,8 @@ class Qmcpack(CMakePackage):
             description='Install with support for basic data analysis tools')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
+    variant('qe', default=True,
+            description='Install with patched Quantum Espresso 5.3.0')
 
     # cuda variant implies mixed precision variant by default, but there is
     # no way to express this in variant syntax, need something like
@@ -105,16 +108,28 @@ class Qmcpack(CMakePackage):
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_espresso-5.3.0.diff'
     patch_checksum = '0d8d7ba805313ddd4c02ee32c96d2f12e7091e9e82e22671d3ad5a24247860c4'
     depends_on('espresso@5.3.0~elpa',
-               patches=patch(patch_url, sha256=patch_checksum),
-               when='+mpi')
+               patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
+               when='+qe+mpi')
 
     depends_on('espresso@5.3.0~elpa~scalapack~mpi',
-               patches=patch(patch_url, sha256=patch_checksum),
-               when='~mpi')
+               patches=patch(patch_url, sha256=patch_checksum, when='+qe'),
+               when='+qe~mpi')
 
-    # This is Spack specific patch, we may need to enhance QMCPACK's CMake
-    # in the near future.
-    patch('cmake.diff')
+    # Backport several patches from recent versions of QMCPACK
+    # The test_numerics unit test is broken prior to QMCPACK 3.3.0
+    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/621.patch'
+    patch_checksum = 'e2ff7a6f0f006856085d4aab6d31f32f16353e41f760a33a7ef75f3ecce6a5d6'
+    patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
+
+    # FindMKL.cmake has an issues prior to QMCPACK 3.3.0
+    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/623.patch'
+    patch_checksum = '3eb9dec05fd1a544318ff84cd8b5926cfc6b46b375c7f3b012ccf0b50cf617b7'
+    patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
+
+    # git-rev files for not git builds issues prior to QMCPACK 3.3.0
+    patch_url = 'https://patch-diff.githubusercontent.com/raw/QMCPACK/qmcpack/pull/643.patch'
+    patch_checksum = 'c066c79901a612cf8848135e0d544efb114534cca70b90bfccc8ed989d3d9dde'
+    patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
@@ -207,14 +222,18 @@ class Qmcpack(CMakePackage):
         # header files. Intel MKL requires special case due to differences in
         # Darwin vs. Linux $MKLROOT naming schemes
         if 'intel-mkl' in self.spec:
-            args.append(
-                '-DLAPACK_INCLUDE_DIRS=%s' %
-                format(join_path(env['MKLROOT'], 'include')))
+            lapack_dir = format(join_path(env['MKLROOT'], 'include'))
         else:
-            args.append(
-                '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
-                    self.spec['lapack'].prefix.include,
-                    self.spec['blas'].prefix.include))
+            lapack_dir = ':'.join((
+                spec['lapack'].prefix.include,
+                spec['blas'].prefix.include
+            ))
+
+        args.extend([
+            '-DCMAKE_CXX_FLAGS=-I%s' % lapack_dir,
+            '-DCMAKE_C_FLAGS=-I%s' % lapack_dir
+        ])
+
         return args
 
     def install(self, spec, prefix):
