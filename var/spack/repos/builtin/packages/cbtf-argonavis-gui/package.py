@@ -49,7 +49,7 @@ class CbtfArgonavisGui(QMakePackage):
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    version('0.8.1', branch='master',
+    version('1.3.0', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis-gui.git')
 
     depends_on("cmake@3.0.2", type='build')

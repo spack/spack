@@ -68,7 +68,7 @@ class Openspeedshop(CMakePackage):
     url = "https://github.com/OpenSpeedShop"
 
     # Use when the git repository is available
-    version('2.3', branch='master',
+    version('2.3.1', branch='master',
             git='https://github.com/OpenSpeedShop/openspeedshop.git')
 
     variant('offline', default=False,
