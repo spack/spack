@@ -110,11 +110,10 @@ class CbtfArgonavis(CMakePackage):
         """Set up the compile and runtime environments for a package."""
 
         if os.environ.get('LD_LIBRARY_PATH'):
-            os.environ['LD_LIBRARY_PATH'] += self.spec['cuda'].prefix
-                                          + '/extras/CUPTI/lib64'
+            cupti_path = self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
+            os.environ['LD_LIBRARY_PATH'] += cupti_path
         else:
-            os.environ['LD_LIBRARY_PATH'] = self.spec['cuda'].prefix
-                                          + '/extras/CUPTI/lib64'
+            os.environ['LD_LIBRARY_PATH'] = cupti_path
 
         run_env.prepend_path(
             'LD_LIBRARY_PATH',

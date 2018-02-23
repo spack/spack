@@ -167,23 +167,23 @@ class CbtfKrell(CMakePackage):
         # need these paths to be the ones created in the CNL
         # spack invocation.
         compute_cbtf_dir = spack.store.db.query_one(
-                           'cbtf arch=cray-CNL-haswell')
+                         'cbtf arch=cray-CNL-haswell')
         compute_cbtf_krell_dir = spack.store.db.query_one(
-                                 'cbtf-krell arch=cray-CNL-haswell')
+                               'cbtf-krell arch=cray-CNL-haswell')
         compute_papi_dir = spack.store.db.query_one(
-                           'papi arch=cray-CNL-haswell')
+                         'papi arch=cray-CNL-haswell')
         compute_boost_dir = spack.store.db.query_one(
-                            'boost arch=cray-CNL-haswell')
+                          'boost arch=cray-CNL-haswell')
         compute_libmonitor_dir = spack.store.db.query_one(
-                                 'libmonitor arch=cray-CNL-haswell')
+                               'libmonitor arch=cray-CNL-haswell')
         compute_libunwind_dir = spack.store.db.query_one(
-                                'libunwind arch=cray-CNL-haswell')
+                              'libunwind arch=cray-CNL-haswell')
         compute_xercesc_dir = spack.store.db.query_one(
-                              'xerces-c arch=cray-CNL-haswell')
+                            'xerces-c arch=cray-CNL-haswell')
         compute_dyninst_dir = spack.store.db.query_one(
-                              'dyninst arch=cray-CNL-haswell')
+                            'dyninst arch=cray-CNL-haswell')
         compute_mrnet_dir = spack.store.db.query_one(
-                            'mrnet arch=cray-CNL-haswell')
+                          'mrnet arch=cray-CNL-haswell')
 
         CrayLoginNodeOptions.append('-DCN_RUNTIME_PLATFORM=%s'
                                     % rt_platform)
