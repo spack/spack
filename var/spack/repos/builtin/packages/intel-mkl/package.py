@@ -90,19 +90,13 @@ class IntelMkl(IntelPackage):
         '''Provide the suffix for Intel library names to match a client
         application's int size.
 
-            _ilp64: all of int, long, and pointer are 64 bit.
-             _lp64: only long and pointer are 64 bit; int will be 32bit.
-
-        Usage:
-            libfoo_name = libfoo_stem_name + self.intel64_int_suffix
+            ilp64: all of int, long, and pointer are 64 bit.
+             lp64: only long and pointer are 64 bit; int will be 32bit.
         '''
-        # The inclusion of the underscore is deliberate, not only for
-        # convenience but also to distinguish the retval from the Spack variant
-        # in full-word searches.
         if '+ilp64' in self.spec:
-            return '_ilp64'
+            return 'ilp64'
         else:
-            return '_lp64'
+            return 'lp64'
 
 #--------------------------------------------------------------------
 # Analysis of the directory layout for a Spack-born installation of
@@ -243,7 +237,6 @@ class IntelMkl(IntelPackage):
             #  intel-mpi/
             #  intel-parallel-studio
             #  intel-tbb/
-
             if self.name.startswith('intel-mkl'):
                 d = 'mkl'
             elif self.name.startswith('intel-mpi'):
@@ -315,7 +308,7 @@ class IntelMkl(IntelPackage):
         # For reference, see The Intel Math Kernel Library Link Line Advisor:
         # https://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
 
-        mkl_libnames = ['libmkl_intel' + self.intel64_int_suffix]
+        mkl_libnames = ['libmkl_intel_' + self.intel64_int_suffix]
         if not self.spec.satisfies('threads=openmp'):
             mkl_libnames.append('libmkl_sequential')
         elif '%intel' in self.spec:
@@ -368,25 +361,26 @@ class IntelMkl(IntelPackage):
         spec_root = self.spec.root
         if sys.platform == 'darwin' and '^mpich' in spec_root:
             # The only supported choice for MKL 2018 on Mac.
-            blacs_variant = '_mpich'
+            blacs_lib = 'libmkl_blacs_mpich'
         elif '^openmpi' in spec_root:
-            blacs_variant = '_openmpi'
+            blacs_lib = 'libmkl_blacs_openmpi'
         elif '^mpich@1' in spec_root:
             # Was supported only up to 2015.
-            blacs_variant = ''
+            blacs_lib = 'libmkl_blacs'
         elif ('^mpich@2:' in spec_root
               or '^mvapich2' in spec_root
               or '^intel-mpi' in spec_root):
-            blacs_variant = '_intelmpi'
+            blacs_lib = 'libmkl_blacs_intelmpi'
         elif '^mpt' in spec_root:
-            blacs_variant = '_sgimpt'
+            blacs_lib = 'libmkl_blacs_sgimpt'
         else:
             _raise_install_error(
-                'Cannot determine a BLACS variant for the given MPI.')
+                'Cannot find a BLACS library for the given MPI.')
 
+        int_suff = '_' + self.intel64_int_suffix
         scalapack_libnames = [
-            'libmkl_scalapack' + self.intel64_int_suffix,
-            'libmkl_blacs' + blacs_variant + self.intel64_int_suffix,
+            'libmkl_scalapack' + int_suff,
+            blacs_lib + int_suff,
         ]
         sca_libs = find_libraries(
             scalapack_libnames,
@@ -430,9 +424,10 @@ class IntelMkl(IntelPackage):
         if not os.path.isfile(f):
             return
 
-        args = []
-        if not sys.platform == 'darwin':
-            args.append('intel64')
+        if sys.platform == 'darwin':
+            args = []
+        else:
+            args = ['intel64']
 
         run_env.extend(
             EnvironmentModifications.from_sourcing_file(f, args))
