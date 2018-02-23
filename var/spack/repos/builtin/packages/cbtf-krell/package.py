@@ -43,7 +43,6 @@
 from spack import *
 import spack
 import spack.store
-import platform
 
 
 class CbtfKrell(CMakePackage):
@@ -105,7 +104,6 @@ class CbtfKrell(CMakePackage):
     depends_on("libunwind")
     depends_on("papi")
     depends_on("llvm-openmp-ompt@tr6_forwards+standalone")
-    #depends_on("llvm-openmp-ompt@towards_tr4+standalone")
 
     # MPI Installations
     # These have not worked either for build or execution, commenting out for
@@ -128,7 +126,6 @@ class CbtfKrell(CMakePackage):
         RTOnlyOptions = []
         RTOnlyOptions.append('-DRUNTIME_ONLY=true')
         cmakeOptions.extend(RTOnlyOptions)
-
 
     def set_mpi_cmakeOptions(self, spec, cmakeOptions):
         # Appends to cmakeOptions the options that will enable the appropriate
@@ -158,37 +155,59 @@ class CbtfKrell(CMakePackage):
         cmakeOptions.extend(MPIOptions)
 
     def set_CrayLoginNode_cmakeOptions(self, spec, cmakeOptions):
-        # Appends to cmakeOptions the options that will enable the appropriate
-        # Cray login node libraries
+        # Appends to cmakeOptions the options that will enable
+        # the appropriate Cray login node libraries
 
         CrayLoginNodeOptions = []
         rt_platform = "cray"
-        # How do we get the compute node (CNL) cbtf package install directory path
-        # spec['cbtf'].prefix is the login node path for this build, as
-        # we are building the login node components with this spack invocation.
-        # We need these paths to be the ones created in the CNL spack innocation.
-	compute_cbtf_dir = spack.store.db.query_one('cbtf arch=cray-CNL-haswell')
-	compute_cbtf_krell_dir = spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
-	compute_papi_dir = spack.store.db.query_one('papi arch=cray-CNL-haswell')
-	compute_boost_dir = spack.store.db.query_one('boost arch=cray-CNL-haswell')
-	compute_libmonitor_dir = spack.store.db.query_one('libmonitor arch=cray-CNL-haswell')
-	compute_libunwind_dir = spack.store.db.query_one('libunwind arch=cray-CNL-haswell')
-	compute_xercesc_dir = spack.store.db.query_one('xerces-c arch=cray-CNL-haswell')
-	compute_dyninst_dir = spack.store.db.query_one('dyninst arch=cray-CNL-haswell')
-	compute_mrnet_dir = spack.store.db.query_one('mrnet arch=cray-CNL-haswell')
+        # How do we get the compute node (CNL) cbtf package
+        # install directory path. spec['cbtf'].prefix is the
+        # login node path for this build, as we are building
+        # the login node components with this spack invocation. We
+        # need these paths to be the ones created in the CNL
+        # spack invocation.
+        compute_cbtf_dir =
+            spack.store.db.query_one('cbtf arch=cray-CNL-haswell')
+        compute_cbtf_krell_dir =
+            spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
+        compute_papi_dir =
+            spack.store.db.query_one('papi arch=cray-CNL-haswell')
+        compute_boost_dir =
+            spack.store.db.query_one('boost arch=cray-CNL-haswell')
+        compute_libmonitor_dir =
+            spack.store.db.query_one('libmonitor arch=cray-CNL-haswell')
+        compute_libunwind_dir =
+            spack.store.db.query_one('libunwind arch=cray-CNL-haswell')
+        compute_xercesc_dir =
+            spack.store.db.query_one('xerces-c arch=cray-CNL-haswell')
+        compute_dyninst_dir =
+            spack.store.db.query_one('dyninst arch=cray-CNL-haswell')
+        compute_mrnet_dir =
+            spack.store.db.query_one('mrnet arch=cray-CNL-haswell')
 
-        CrayLoginNodeOptions.append('-DCN_RUNTIME_PLATFORM=%s'  % rt_platform)
+        CrayLoginNodeOptions.append('-DCN_RUNTIME_PLATFORM=%s'
+                                    % rt_platform)
 
-        # Use install directories as CMAKE args for the building of login cbtf-krell
-        CrayLoginNodeOptions.append('-DCBTF_CN_RUNTIME_DIR=%s'  % compute_cbtf_dir.prefix)
-        CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'  % compute_cbtf_krell_dir.prefix)
-        CrayLoginNodeOptions.append('-DPAPI_CN_RUNTIME_DIR=%s'  % compute_papi_dir.prefix)
-        CrayLoginNodeOptions.append('-DBOOST_CN_RUNTIME_DIR=%s'  % compute_boost_dir.prefix)
-        CrayLoginNodeOptions.append('-DLIBMONITOR_CN_RUNTIME_DIR=%s'  % compute_libmonitor_dir.prefix)
-        CrayLoginNodeOptions.append('-DLIBUNWIND_CN_RUNTIME_DIR=%s'  % compute_libunwind_dir.prefix)
-        CrayLoginNodeOptions.append('-DXERCESC_CN_RUNTIME_DIR=%s'  % compute_xercesc_dir.prefix)
-        CrayLoginNodeOptions.append('-DDYNINST_CN_RUNTIME_DIR=%s'  % compute_dyninst_dir.prefix)
-        CrayLoginNodeOptions.append('-DMRNET_CN_RUNTIME_DIR=%s'  % compute_mrnet_dir.prefix)
+        # Use install directories as CMAKE args for the building
+        # of login cbtf-krell
+        CrayLoginNodeOptions.append('-DCBTF_CN_RUNTIME_DIR=%s'
+                                    % compute_cbtf_dir.prefix)
+        CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
+                                    % compute_cbtf_krell_dir.prefix)
+        CrayLoginNodeOptions.append('-DPAPI_CN_RUNTIME_DIR=%s'
+                                    % compute_papi_dir.prefix)
+        CrayLoginNodeOptions.append('-DBOOST_CN_RUNTIME_DIR=%s'
+                                    % compute_boost_dir.prefix)
+        CrayLoginNodeOptions.append('-DLIBMONITOR_CN_RUNTIME_DIR=%s'
+                                    % compute_libmonitor_dir.prefix)
+        CrayLoginNodeOptions.append('-DLIBUNWIND_CN_RUNTIME_DIR=%s'
+                                    % compute_libunwind_dir.prefix)
+        CrayLoginNodeOptions.append('-DXERCESC_CN_RUNTIME_DIR=%s'
+                                    % compute_xercesc_dir.prefix)
+        CrayLoginNodeOptions.append('-DDYNINST_CN_RUNTIME_DIR=%s'
+                                    % compute_dyninst_dir.prefix)
+        CrayLoginNodeOptions.append('-DMRNET_CN_RUNTIME_DIR=%s'
+                                    % compute_mrnet_dir.prefix)
 
         cmakeOptions.extend(CrayLoginNodeOptions)
 
@@ -215,7 +234,6 @@ class CbtfKrell(CMakePackage):
 
         if self.spec.satisfies('+runtime'):
             self.set_RTOnly_cmakeOptions(spec, cmake_args)
-            
 
         # Add any MPI implementations coming from variant settings
         self.set_mpi_cmakeOptions(spec, cmake_args)
@@ -223,7 +241,6 @@ class CbtfKrell(CMakePackage):
         if self.spec.satisfies('+crayfe'):
             # We need to build target/compute node components/libraries first
             # then pass those libraries to the cbtf-krell login node build
-            rt_platform = "cray"
             self.set_CrayLoginNode_cmakeOptions(spec, cmake_args)
 
         return cmake_args

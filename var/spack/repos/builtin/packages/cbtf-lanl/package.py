@@ -60,11 +60,11 @@ class CbtfLanl(CMakePackage):
 
     depends_on("cmake@3.0.2:", type='build')
     # Dependencies for cbtf-krell
-    #depends_on("mrnet@5.0.1:+lwthreads")
-    #depends_on("xerces-c@3.1.1:")
-    #depends_on("cbtf")
-    #depends_on("cbtf+cti", when='+cti')
-    #depends_on("cbtf+runtime", when='+runtime')
+    depends_on("mrnet@5.0.1:+lwthreads")
+    depends_on("xerces-c@3.1.1:")
+    depends_on("cbtf")
+    depends_on("cbtf+cti", when='+cti')
+    depends_on("cbtf+runtime", when='+runtime')
     depends_on("cbtf-krell")
     depends_on("cbtf-krell+cti", when='+cti')
     depends_on("cbtf-krell+runtime", when='+runtime')

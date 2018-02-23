@@ -64,14 +64,14 @@ class CbtfArgonavis(CMakePackage):
             description='CMake build type')
 
     depends_on("cmake@3.0.2:", type='build')
-    #depends_on("boost@1.50.0:1.59.0")
-    #depends_on("papi")
-    #depends_on("libmonitor")
-    #depends_on("mrnet@5.0.1:+lwthreads")
-    #depends_on("mrnet@5.0.1:+cti", when='+cti')
-    #depends_on("cbtf")
-    #depends_on("cbtf+cti", when='+cti')
-    #depends_on("cbtf+runtime", when='+runtime')
+    depends_on("boost@1.50.0:1.59.0")
+    depends_on("papi")
+    depends_on("libmonitor")
+    depends_on("mrnet@5.0.1:+lwthreads")
+    depends_on("mrnet@5.0.1:+cti", when='+cti')
+    depends_on("cbtf")
+    depends_on("cbtf+cti", when='+cti')
+    depends_on("cbtf+runtime", when='+runtime')
     depends_on("cbtf-krell")
     depends_on("cbtf-krell+cti", when="+cti")
     depends_on("cbtf-krell+runtime", when="+runtime")
@@ -109,11 +109,15 @@ class CbtfArgonavis(CMakePackage):
         """Set up the compile and runtime environments for a package."""
 
         if os.environ.get('LD_LIBRARY_PATH'):
-            os.environ['LD_LIBRARY_PATH'] += self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
+            os.environ['LD_LIBRARY_PATH'] +=
+                self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
         else:
-            os.environ['LD_LIBRARY_PATH'] = self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
+            os.environ['LD_LIBRARY_PATH'] =
+                self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
 
         run_env.prepend_path(
-            'LD_LIBRARY_PATH', self.spec['cuda'].prefix + '/extras/CUPTI/lib64')
+            'LD_LIBRARY_PATH',
+            self.spec['cuda'].prefix + '/extras/CUPTI/lib64')
         spack_env.prepend_path(
-            'LD_LIBRARY_PATH', self.spec['cuda'].prefix + '/extras/CUPTI/lib64')
+            'LD_LIBRARY_PATH',
+            self.spec['cuda'].prefix + '/extras/CUPTI/lib64')

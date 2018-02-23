@@ -174,18 +174,19 @@ class Openspeedshop(CMakePackage):
 
         #Equivalent to install-tool cmake arg:
         # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'  % <base dir>/cbtf_v2.3.1.release/compute)
-        CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'  % compute_cbtf_krell_dir.prefix)
-        CrayLoginNodeOptions.append('-DRUNTIME_PLATFORM=%s'  % rt_platform)
+        CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
+                                    % compute_cbtf_krell_dir.prefix)
+        CrayLoginNodeOptions.append('-DRUNTIME_PLATFORM=%s'
+                                    % rt_platform)
 
         cmakeOptions.extend(CrayLoginNodeOptions)
-
 
     def cmake_args(self):
 
         spec = self.spec
 
         # Checking the platform and target
-        # OpenSpeedShop should not be built for the compute nodes 
+        # OpenSpeedShop should not be built for the compute nodes
         # when building in cbtf mode (+cbtf)
         platform = self.spec.architecture.platform
 
@@ -217,7 +218,6 @@ class Openspeedshop(CMakePackage):
 
                 # Appends base options to cmake_args
                 self.set_defaultbase_cmakeOptions(spec, cmake_args)
-
                 cmake_args.extend(
                     ['-DCMAKE_CXX_FLAGS=%s'  % compile_flags,
                      '-DCMAKE_C_FLAGS=%s'    % compile_flags,
@@ -276,9 +276,10 @@ class Openspeedshop(CMakePackage):
                             % spec['qt'].prefix])
 
                 if spec.satisfies('+crayfe'):
-                    # We need to build target/compute node components/libraries first
-                    # then pass those libraries to the openspeedshop login node build
-                    rt_platform = "cray"
+                    # We need to build target/compute node
+                    # components/libraries first then pass
+                    # those libraries to the openspeedshop
+                    # login node build
                     self.set_CrayLoginNode_cmakeOptions(spec, cmake_args)
 
         return cmake_args
