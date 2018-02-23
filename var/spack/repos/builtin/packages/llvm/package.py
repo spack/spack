@@ -453,8 +453,9 @@ class Llvm(CMakePackage):
             if spec.version < Version('3.9.0'):
                 targets = ['CppBackend', 'NVPTX', 'AMDGPU']
             else:
-                # Starting in 3.9.0 CppBackend is no longer a target (see LLVM_ALL_TARGETS
-                # in llvm's top-level CMakeLists.txt for the complete list of targets)
+                # Starting in 3.9.0 CppBackend is no longer a target (see 
+                # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for 
+                # the complete list of targets)
                 targets = ['NVPTX', 'AMDGPU']
 
             if 'x86' in spec.architecture.target.lower():
@@ -481,7 +482,9 @@ class Llvm(CMakePackage):
         with working_dir(self.build_directory):
             # When building shared libraries these need to be installed first
             make('install-LLVMTableGen')
-            make('install-LLVMDemangle')
+            if self.spec.version >= Version('4.0.0'):
+                # LLVMDemangle target was added in 4.0.0
+                make('install-LLVMDemangle')
             make('install-LLVMSupport')
 
     @run_after('install')
