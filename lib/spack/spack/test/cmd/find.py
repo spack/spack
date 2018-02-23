@@ -62,7 +62,9 @@ def test_query_arguments():
         missing=False,
         unknown=False,
         explicit=False,
-        implicit=False
+        implicit=False,
+        start_date="2018-02-23 14:36:00",
+        end_date=None
     )
 
     q_args = query_arguments(args)
@@ -72,6 +74,8 @@ def test_query_arguments():
     assert q_args['installed'] is True
     assert q_args['known'] is any
     assert q_args['explicit'] is any
+    assert 'start_date' in q_args
+    assert 'end_date' not in q_args
 
     # Check that explicit works correctly
     args.explicit = True

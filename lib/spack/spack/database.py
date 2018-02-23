@@ -86,6 +86,18 @@ def _today():
     return today.strftime(_time_format)
 
 
+def str2datetime(datetime_str):
+    """Parses a date string and return an appropriate datetime object
+
+    Args:
+        datetime_str (str): string with date and time
+
+    Returns:
+        Corresponding ``datetime`` object
+    """
+    return datetime.datetime.strptime(datetime_str, _time_format)
+
+
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
        function to a Spec."""
@@ -816,45 +828,64 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def query(self, query_spec=any, known=any, installed=True, explicit=any):
-        """Run a query on the database.
+    def query(self, query_spec=any, **kwargs):
+        """Run a query on the database
 
-        ``query_spec``
-            Queries iterate through specs in the database and return
-            those that satisfy the supplied ``query_spec``.  If
-            query_spec is `any`, This will match all specs in the
-            database.  If it is a spec, we'll evaluate
-            ``spec.satisfies(query_spec)``.
+        Args:
+            query_spec: queries iterate through specs in the database and
+                return those that satisfy the supplied ``query_spec``. If
+                query_spec is `any`, This will match all specs in the
+                database.  If it is a spec, we'll evaluate
+                ``spec.satisfies(query_spec)``
 
-        The query can be constrained by two additional attributes:
+            **kwargs: optional constraint arguments
 
-        ``known``
-            Possible values: True, False, any
+                known
+                    Possible values: True, False, any
 
-            Specs that are "known" are those for which Spack can
-            locate a ``package.py`` file -- i.e., Spack "knows" how to
-            install them.  Specs that are unknown may represent
-            packages that existed in a previous version of Spack, but
-            have since either changed their name or been removed.
+                    Specs that are "known" are those for which Spack can
+                    locate a ``package.py`` file -- i.e., Spack "knows" how to
+                    install them.  Specs that are unknown may represent
+                    packages that existed in a previous version of Spack, but
+                    have since either changed their name or been removed
 
-        ``installed``
-            Possible values: True, False, any
+                installed
+                    Possible values: True, False, any
 
-            Specs for which a prefix exists are "installed". A spec
-            that is NOT installed will be in the database if some
-            other spec depends on it but its installation has gone
-            away since Spack installed it.
+                    Specs for which a prefix exists are "installed". A spec
+                    that is NOT installed will be in the database if some
+                    other spec depends on it but its installation has gone
+                    away since Spack installed it.
 
-        TODO: Specs are a lot like queries.  Should there be a
-              wildcard spec object, and should specs have attributes
-              like installed and known that can be queried?  Or are
-              these really special cases that only belong here?
+                explicit
+                    Possible values: True, False, any
 
+                    A spec that was installed following a specific user
+                    request is marked as explicit. If instead it was
+                    pulled-in as a dependency of a user requested spec
+                    it's considered implicit.
+
+                start_date
+                    date in format YYYY-MM-DD HH:MM:SS
+
+                    Filters the query discarding specs that have been
+                    installed before ``start_date``.
+
+                end_date
+                    date in format YYYY-MM-DD HH:MM:SS
+
+                    Filters the query discarding specs that have been
+                    installed after ``end_date``.
+        Returns:
+            list of specs that match the query
         """
+        # TODO: Specs are a lot like queries.  Should there be a
+        # TODO: wildcard spec object, and should specs have attributes
+        # TODO: like installed and known that can be queried?  Or are
+        # TODO: these really special cases that only belong here?
         with self.read_transaction():
             # Just look up concrete specs with hashes; no fancy search.
-            if (isinstance(query_spec, spack.spec.Spec) and
-                query_spec._concrete):
+            if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
 
                 hash_key = query_spec.dag_hash()
                 if hash_key in self._data:
@@ -865,14 +896,38 @@ class Database(object):
             # Abstract specs require more work -- currently we test
             # against everything.
             results = []
+
+            # Take care of managing the keyword arguments to the query
+            known = kwargs.pop('known', any)
+            installed = kwargs.pop('installed', True)
+            explicit = kwargs.pop('explicit', any)
+            start_date = kwargs.pop('start_date', datetime.datetime.min)
+            end_date = kwargs.pop('end_date', datetime.datetime.max)
+
+            # Raise an exception if we have still entries in kwargs
+            # Mimic what python would do in case of a single unexpected
+            # keyword argument
+            if kwargs:
+                msg = 'spack.database.query() got unexpected keyword arguments'
+                keys = ["'{0}'".format(x) for x in kwargs]
+                msg += ' {0}'.format(', '.join(keys))
+                raise TypeError(msg)
+
             for key, rec in self._data.items():
                 if installed is not any and rec.installed != installed:
                     continue
+
                 if explicit is not any and rec.explicit != explicit:
                     continue
+
                 if known is not any and spack.repo.exists(
                         rec.spec.name) != known:
                     continue
+
+                inst_date = str2datetime(rec.installation_datetime)
+                if not (start_date < inst_date < end_date):
+                    continue
+
                 if query_spec is any or rec.spec.satisfies(query_spec):
                     results.append(rec.spec)
 
@@ -885,7 +940,9 @@ class Database(object):
         query. Returns None if no installed package matches.
 
         """
-        concrete_specs = self.query(query_spec, known, installed)
+        concrete_specs = self.query(
+            query_spec, known=known, installed=installed
+        )
         assert len(concrete_specs) <= 1
         return concrete_specs[0] if concrete_specs else None
 

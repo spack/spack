@@ -26,6 +26,7 @@ import sys
 
 import llnl.util.tty as tty
 import spack
+import spack.database
 import spack.cmd.common.arguments as arguments
 from spack.cmd import display_specs
 
@@ -96,6 +97,14 @@ def setup_parser(subparser):
                            action='store_true',
                            help='show fully qualified package names')
 
+    subparser.add_argument(
+        '--start-date',
+        help='earliest date of installation [YYYY-MM-DD HH:MM:SS]'
+    )
+    subparser.add_argument(
+        '--end-date', help='latest date of installation [YYYY-MM-DD HH:MM:SS]'
+    )
+
     arguments.add_common_arguments(subparser, ['constraint'])
 
 
@@ -114,6 +123,13 @@ def query_arguments(args):
     if args.implicit:
         explicit = False
     q_args = {'installed': installed, 'known': known, "explicit": explicit}
+
+    # Time window of installation
+    for attribute in ('start_date', 'end_date'):
+        date = getattr(args, attribute)
+        if date:
+            q_args[attribute] = spack.database.str2datetime(date)
+
     return q_args
 
 
