@@ -31,6 +31,15 @@ from spack.environment import EnvironmentModifications
 class IntelMpi(IntelPackage):
     """Intel MPI"""
 
+# https://software.intel.com/en-us/articles/intel-mpi-library-release-notes-linux
+# Intel® MPI Library 2018 Update 2
+#   ...
+#   Intel® MPI Library is now available to install in YUM and APT repositories.
+#   ...
+# See also:
+# https://software.intel.com/en-us/articles/installing-intel-free-libs-and-python-yum-repo
+# https://software.intel.com/en-us/articles/installing-intel-parallel-studio-xe-on-aws-linux-instances
+
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
     version('2018.1.163', '437ce50224c5bbf98fd578a810c3e401',
@@ -58,35 +67,6 @@ class IntelMpi(IntelPackage):
         return self.version < Version('2017.2')
 
     @property
-    def _mpi_prefix(self):
-        '''Returns the effective toplevel product directory, i.e., the
-        directory that is to be presented to users in the MKLROOT environment
-        variable.
-        '''
-        # Full explanation for below in ../intel-mkl/package.py:mklroot()
-        d = self.prefix
-        if 'compilers_and_libraries' in d:
-            # Intel-MPI installed external to spack; we're (mostly) done.
-            pass
-        else:
-            # We use or are doing a spack-based installation; must qualify
-            # the prefix from vendor level to product level.
-            d = d.compilers_and_libraries
-
-            ## Idea: Use actual release-specific directory. TODO: Confirm.
-            #d = Prefix(d.append('_' + self.version))
-
-            d = d.linux.mpi
-
-        # For MPI, the layout is slightly different than MKL. The sub-arch is
-        # to be part of the prefix (though not of I_MPI_ROOT), which then
-        # contains bin/, lib/, ..., all without further arch splits.
-        if not d.endswith('intel64'):
-            d = d.intel64
-
-        return d
-
-    @property
     def mpi_libs(self):
         # If prefix is too general, recursive searches may get file variants
         # from supported but inappropriate sub-architectures like 'mic'.
@@ -94,13 +74,13 @@ class IntelMpi(IntelPackage):
         if 'cxx' in self.spec.last_query.extra_parameters:
             libnames = ['libmpicxx'] + libnames
         return find_libraries(libnames,
-                              root=self._mpi_prefix.lib,
+                              root=self.component_libdir,
                               shared=True, recursive=True)
 
     @property
     def mpi_headers(self):
         return find_headers('mpi',
-                            root=self._mpi_prefix.include,
+                            root=self.component_includedir,
                             recursive=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -110,8 +90,8 @@ class IntelMpi(IntelPackage):
         spack_env.set('I_MPI_F90', spack_f77)
         spack_env.set('I_MPI_FC', spack_fc)
 
-        # Convenience variable. Sub-arch "intel64" must be stripped here.
-        spack_env.set('I_MPI_ROOT', ancestor(self._mpi_prefix))
+        # Convenience variable.
+        spack_env.set('I_MPI_ROOT', self.product_component_dir)
 
     def setup_dependent_package(self, module, dep_spec):
         # Intel comes with 2 different flavors of MPI wrappers:
@@ -126,7 +106,7 @@ class IntelMpi(IntelPackage):
         # and friends are set to point to the Intel compilers, but in
         # practice, mpicc fails to compile some applications while
         # mpiicc works.
-        bindir = self._mpi_prefix.bin
+        bindir = self.component_bindir
         if self.compiler.name == 'intel':
             self.spec.mpicc  = bindir.mpiicc
             self.spec.mpicxx = bindir.mpiicpc
@@ -155,6 +135,6 @@ class IntelMpi(IntelPackage):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        f = join_path(self._mpi_prefix.bin, 'mpivars.sh')
+        f = join_path(self.component_bindir, 'mpivars.sh')
         if os.path.isfile(f):
             run_env.extend(EnvironmentModifications.from_sourcing_file(f))

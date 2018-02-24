@@ -185,13 +185,54 @@ class IntelPackage(PackageBase):
 #                   - auxiliaries and convenience links
 #
 #--------------------------------------------------------------------
+# Directory analysis for intel-mpi@2018.1.163
+#--------------------------------------------------------------------
+# For MPI, the layout is slightly different than MKL. The prefix will have to
+# include the sub-arch, which contains bin/, lib/, ..., all without further
+# arch splits. I_MPI_ROOT, however, must be the package dir.
+#
+# FIXME: For MANPATH, need the parent dir.
+#
+#   $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/
+#   bin64 -> intel64/bin/
+#   etc64 -> intel64/etc/
+#   include64 -> intel64/include/
+#   lib64 -> intel64/lib/
+#
+#   benchmarks/
+#   binding/
+#   intel64/
+#   man/
+#   test/
+#
+#   MPI-2019 preview; Relnotes contain: "File structure clean-up."
+#   https://software.intel.com/en-us/articles/restoring-legacy-path-structure-on-intel-mpi-library-2019
+#
+#   $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi_2019/
+#   binding/
+#   doc/
+#   imb/
+#   intel64/
+#   man/
+#   test/
+#
+#--------------------------------------------------------------------
+#
+# Note on macOS support, i.e., sys.platform == 'darwin':
+#
+# - On macOS, the Spack methods here only include support to integrate an
+#   externally installed MKL.
+#
+# - URLs in child packages will be Linux-specific; macOS download packages are
+#   located in differently numbered dirs and are named m_*.dmg.
+#
+#--------------------------------------------------------------------
 
     @property
     def product_os_dir(self):
         '''Returns the version-specific directory of an Intel product release,
         holding the main product and auxiliary files from other products.
         '''
-        # Similar code in ../intel-mpi/package.py:_mpi_root()
         d = self.prefix
         if sys.platform == 'darwin':
             # TODO: Verify on Mac.
@@ -277,7 +318,28 @@ class IntelPackage(PackageBase):
             else:
                 raise_lib_error('Cannot determine product component dir.')
 
+        # Note analysis of MPI dir above:  Since both I_MPI_ROOT and MANPATH
+        # need the 'mpi' dir, do NOT qualify the retval further.
+        #NODO: d = d.intel64 if ... 'mpi' ...
+
         d = Prefix(join_path(self.product_os_dir, d))
+        debug_print(d)
+        return d
+
+    @property
+    def component_bindir(self, component=None):
+        d = self.product_component_dir(component)
+        if sys.platform == 'darwin':
+            d = d.bin
+        else:
+            if self.name.startswith('intel-mpi') or component == 'mpi':
+                d = d.intel64.bin
+            # TODO: eval if needed
+            #elif ... 'compiler'
+            #    d = Prefix(ancestor(d)).bin.intel64
+            else:
+                d = d.bin
+
         debug_print(d)
         return d
 
@@ -285,16 +347,27 @@ class IntelPackage(PackageBase):
     def component_libdir(self, component=None):
         # Provide starting directory for find_libraries() and for
         # SPACK_COMPILER_EXTRA_RPATHS.
+
+        d = self.product_component_dir(component)
         if sys.platform == 'darwin':
-            d = self.product_component_dir(component).lib
+            d = d.lib
         else:
-            d = self.product_component_dir(component).lib.intel64
+            if self.name.startswith('intel-mpi') or component == 'mpi':
+                d = d.intel64.lib
+            else:
+                d = d.lib.intel64
+            # A bit weird, but  I'm sure there are good reasons for it.
+
         debug_print(d)
         return d
 
     @property
-    def component_bindir(self, component=None):
-        d = self.product_component_dir(component).bin
+    def component_includedir(self, component=None):
+        d = self.product_component_dir(component)
+        if self.name.startswith('intel-mpi') or component == 'mpi':
+            d = d.intel64
+        d = d.include
+
         debug_print(d)
         return d
 
@@ -345,6 +418,8 @@ class IntelPackage(PackageBase):
             return 'ilp64'
         else:
             return 'lp64'
+
+#--------------------------------------------------------------------
 
     @property
     def global_license_file(self):
