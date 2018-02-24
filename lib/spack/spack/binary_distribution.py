@@ -228,7 +228,8 @@ def sign_tarball(key, force, specfile_path):
                 raise PickKeyException(str(keys))
             if len(keys) == 0:
                 msg = "No default key available for signing.\n"
-                msg += "Use spack gpg init and spack gpg create to create a default key."
+                msg += "Use spack gpg init and spack gpg create"
+                msg += " to create a default key."
                 raise NoKeyException(msg)
     if os.path.exists('%s.asc' % specfile_path):
         if force:
@@ -335,7 +336,6 @@ def build_tarball(spec, outdir, force=False, rel=False, allow_root=False,
     spec_dict['buildinfo'] = buildinfo
     with open(specfile_path, 'w') as outfile:
         outfile.write(yaml.dump(spec_dict))
-    signed = False
     # sign the tarball and spec file with gpg
     sign_tarball(key, force, specfile_path)
     # put tarball, spec and signature files in .spack archive
@@ -432,7 +432,7 @@ def relocate_package(workdir, allow_root):
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
         relocate.relocate_binary(path_names, old_path, new_path,
-                                     allow_root)
+                                 allow_root)
 
 
 def extract_tarball(spec, filename, allow_root=False, force=False):
