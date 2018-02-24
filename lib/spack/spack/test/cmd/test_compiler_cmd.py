@@ -75,12 +75,15 @@ class TestCompilerCommand(object):
         )
         spack.cmd.compiler.compiler_find(args)
 
+        test_compiler = 'gcc@' + test_version
+
         args = spack.util.pattern.Bunch(
-            all=True, compiler_spec='gcc@4.5.0', add_paths=[], scope=None
+            all=True, compiler_spec=test_compiler, add_paths=[],
+            scope=None
         )
         spack.cmd.compiler.compiler_remove(args)
         compilers = spack.compilers.all_compiler_specs()
-        assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
+        assert spack.spec.CompilerSpec(test_compiler) not in compilers
 
     def test_compiler_add(self, mock_compiler_dir):
         args = spack.util.pattern.Bunch(
