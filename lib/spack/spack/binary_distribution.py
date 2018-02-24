@@ -46,7 +46,7 @@ from spack.util.executable import ProcessError
 import spack.relocate as relocate
 
 
-class NoOverwriteException(spack.error.SpackError):
+class NoOverwriteException(Exception):
     """
     Raised when a file exists and must be overwritten.
     """
@@ -213,12 +213,12 @@ def checksum_tarball(file):
     return hasher.hexdigest()
 
 
-def sign_tarball(yes_to_all, key, force, specfile_path):
+def sign_tarball(key, force, specfile_path):
     # Sign the packages if keys available
     if not has_gnupg2():
         raise NoGpgException(
             "gpg2 is not available in $PATH .\n"
-            "Use spack install gpg2 and spack load gpg2.")
+            "Use spack install gnupg and spack load gnupg.")
     else:
         if key is None:
             keys = Gpg.signing_keys()
@@ -228,7 +228,7 @@ def sign_tarball(yes_to_all, key, force, specfile_path):
                 raise PickKeyException(str(keys))
             if len(keys) == 0:
                 msg = "No default key available for signing.\n"
-                msg += "Use spack gpg init to create a default key."
+                msg += "Use spack gpg init and spack gpg create to create a default key."
                 raise NoKeyException(msg)
     if os.path.exists('%s.asc' % specfile_path):
         if force:
@@ -253,7 +253,7 @@ def generate_index(outdir, indexfile_path):
     f.close()
 
 
-def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
+def build_tarball(spec, outdir, force=False, rel=False, allow_root=False,
                   key=None):
     """
     Build a tarball from given spec and put it into the directory structure
@@ -296,14 +296,14 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
     # in the spack install tree before creating tarball
     if rel:
         try:
-            make_package_relative(workdir, spec.prefix, yes_to_all)
+            make_package_relative(workdir, spec.prefix, allow_root)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
             tty.die(str(e))
     else:
         try:
-            make_package_placeholder(workdir, yes_to_all)
+            make_package_placeholder(workdir, allow_root)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
@@ -337,23 +337,17 @@ def build_tarball(spec, outdir, force=False, rel=False, yes_to_all=False,
         outfile.write(yaml.dump(spec_dict))
     signed = False
     # sign the tarball and spec file with gpg
-    try:
-        sign_tarball(yes_to_all, key, force, specfile_path)
-        signed = True
-    except Exception as e:
-        tty.die(str(e))
+    sign_tarball(key, force, specfile_path)
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
         tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
         tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
-        if signed:
-            tar.add(name='%s.asc' % specfile_path,
-                    arcname='%s.asc' % specfile_name)
+        tar.add(name='%s.asc' % specfile_path,
+                arcname='%s.asc' % specfile_name)
 
     # cleanup file moved to archive
     os.remove(tarfile_path)
-    if signed:
-        os.remove('%s.asc' % specfile_path)
+    os.remove('%s.asc' % specfile_path)
 
     # create an index.html for the build_cache directory so specs can be found
     if os.path.exists(indexfile_path):
@@ -384,7 +378,7 @@ def download_tarball(spec):
     return None
 
 
-def make_package_relative(workdir, prefix, yes_to_all):
+def make_package_relative(workdir, prefix, allow_root):
     """
     Change paths in binaries to relative paths
     """
@@ -396,10 +390,10 @@ def make_package_relative(workdir, prefix, yes_to_all):
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
         relocate.make_binary_relative(cur_path_names, orig_path_names,
-                                      old_path, yes_to_all)
+                                      old_path, allow_root)
 
 
-def make_package_placeholder(workdir, yes_to_all):
+def make_package_placeholder(workdir, allow_root):
     """
     Change paths in binaries to placeholder paths
     """
@@ -407,10 +401,10 @@ def make_package_placeholder(workdir, yes_to_all):
     cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
         cur_path_names.append(os.path.join(workdir, filename))
-        relocate.make_binary_placeholder(cur_path_names, yes_to_all)
+        relocate.make_binary_placeholder(cur_path_names, allow_root)
 
 
-def relocate_package(workdir, yes_to_all):
+def relocate_package(workdir, allow_root):
     """
     Relocate the given package
     """
@@ -437,15 +431,11 @@ def relocate_package(workdir, yes_to_all):
         for filename in buildinfo['relocate_binaries']:
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
-        try:
-            relocate.relocate_binary(path_names, old_path, new_path,
-                                     yes_to_all)
-        except Exception as e:
-            shutil.rmtree(workdir)
-            tty.die(str(e))
+        relocate.relocate_binary(path_names, old_path, new_path,
+                                     allow_root)
 
 
-def extract_tarball(spec, filename, yes_to_all=False, force=False):
+def extract_tarball(spec, filename, allow_root=False, force=False):
     """
     extract binary tarball for given package into install area
     """
@@ -522,11 +512,17 @@ def extract_tarball(spec, filename, yes_to_all=False, force=False):
     os.remove(tarfile_path)
     os.remove(specfile_path)
 
-    relocate_package(workdir, yes_to_all)
+    try:
+        relocate_package(workdir, allow_root)
+    except Exception as e:
+        shutil.rmtree(workdir)
+        tty.die(str(e))
     # Delay creating spec.prefix until verification is complete
     # and any relocation has been done.
-    install_tree(workdir, spec.prefix, symlinks=True)
-    shutil.rmtree(tmpdir)
+    else:
+        install_tree(workdir, spec.prefix, symlinks=True)
+    finally:
+        shutil.rmtree(tmpdir)
 
 
 def get_specs(force=False):
