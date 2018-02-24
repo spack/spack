@@ -27,9 +27,8 @@ This implements a parallel map operation but it can accept more values
 than multiprocessing.Pool.apply() can.  For example, apply() will fail
 to pickle functions if they're passed indirectly as parameters.
 """
-from multiprocessing import Process, Pipe, Semaphore, Value
+from multiprocessing import Semaphore, Value
 from multiprocessing.dummy import Pool
-import llnl.util.tty as tty
 
 __all__ = ['spawn', 'parmap', 'Barrier']
 
