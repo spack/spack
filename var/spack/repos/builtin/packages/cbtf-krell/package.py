@@ -166,24 +166,15 @@ class CbtfKrell(CMakePackage):
         # the login node components with this spack invocation. We
         # need these paths to be the ones created in the CNL
         # spack invocation.
-        compute_cbtf_dir = spack.store.db.query_one(
-                           'cbtf arch=cray-CNL-haswell')
-        compute_cbtf_krell_dir = spack.store.db.query_one(
-                                 'cbtf-krell arch=cray-CNL-haswell')
-        compute_papi_dir = spack.store.db.query_one(
-                           'papi arch=cray-CNL-haswell')
-        compute_boost_dir = spack.store.db.query_one(
-                            'boost arch=cray-CNL-haswell')
-        compute_libmonitor_dir = spack.store.db.query_one(
-                                 'libmonitor arch=cray-CNL-haswell')
-        compute_libunwind_dir = spack.store.db.query_one(
-                                'libunwind arch=cray-CNL-haswell')
-        compute_xercesc_dir = spack.store.db.query_one(
-                              'xerces-c arch=cray-CNL-haswell')
-        compute_dyninst_dir = spack.store.db.query_one(
-                              'dyninst arch=cray-CNL-haswell')
-        compute_mrnet_dir = spack.store.db.query_one(
-                            'mrnet arch=cray-CNL-haswell')
+        be_cbtf = spack.store.db.query_one('cbtf arch=cray-CNL-haswell')
+        be_cbtfk = spack.store.db.query_one('cbtf-krell arch=cray-CNL-haswell')
+        be_papi = spack.store.db.query_one('papi arch=cray-CNL-haswell')
+        be_boost = spack.store.db.query_one('boost arch=cray-CNL-haswell')
+        be_mont = spack.store.db.query_one('libmonitor arch=cray-CNL-haswell')
+        be_unw = spack.store.db.query_one('libunwind arch=cray-CNL-haswell')
+        be_xer = spack.store.db.query_one('xerces-c arch=cray-CNL-haswell')
+        be_dyn = spack.store.db.query_one('dyninst arch=cray-CNL-haswell')
+        be_mrnet = spack.store.db.query_one('mrnet arch=cray-CNL-haswell')
 
         CrayLoginNodeOptions.append('-DCN_RUNTIME_PLATFORM=%s'
                                     % rt_platform)
@@ -191,23 +182,23 @@ class CbtfKrell(CMakePackage):
         # Use install directories as CMAKE args for the building
         # of login cbtf-krell
         CrayLoginNodeOptions.append('-DCBTF_CN_RUNTIME_DIR=%s'
-                                    % compute_cbtf_dir.prefix)
+                                    % be_cbtf.prefix)
         CrayLoginNodeOptions.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
-                                    % compute_cbtf_krell_dir.prefix)
+                                    % be_cbtfk.prefix)
         CrayLoginNodeOptions.append('-DPAPI_CN_RUNTIME_DIR=%s'
-                                    % compute_papi_dir.prefix)
+                                    % be_papi.prefix)
         CrayLoginNodeOptions.append('-DBOOST_CN_RUNTIME_DIR=%s'
-                                    % compute_boost_dir.prefix)
+                                    % be_boost.prefix)
         CrayLoginNodeOptions.append('-DLIBMONITOR_CN_RUNTIME_DIR=%s'
-                                    % compute_libmonitor_dir.prefix)
+                                    % be_mont.prefix)
         CrayLoginNodeOptions.append('-DLIBUNWIND_CN_RUNTIME_DIR=%s'
-                                    % compute_libunwind_dir.prefix)
+                                    % be_unw.prefix)
         CrayLoginNodeOptions.append('-DXERCESC_CN_RUNTIME_DIR=%s'
-                                    % compute_xercesc_dir.prefix)
+                                    % be_xer.prefix)
         CrayLoginNodeOptions.append('-DDYNINST_CN_RUNTIME_DIR=%s'
-                                    % compute_dyninst_dir.prefix)
+                                    % be_dyn.prefix)
         CrayLoginNodeOptions.append('-DMRNET_CN_RUNTIME_DIR=%s'
-                                    % compute_mrnet_dir.prefix)
+                                    % be_mrnet.prefix)
 
         cmakeOptions.extend(CrayLoginNodeOptions)
 
