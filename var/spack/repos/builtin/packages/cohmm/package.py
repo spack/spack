@@ -41,7 +41,7 @@ class Cohmm(MakefilePackage):
             branch='sad')
 
     variant('openmp', default=True, description='Build with OpenMP Support')
-    variant('gnuplot', default=True, description='Enable gnu plot Support')
+    variant('gnuplot', default=False, description='Enable gnu plot Support')
     depends_on('gnuplot', when='+gnuplot')
 
     def edit(self, spec, prefix):

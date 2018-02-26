@@ -60,7 +60,7 @@ class Libxc(Package):
             libraries = ['libxcf90'] + libraries
 
         return find_libraries(
-            libraries, root=self.prefix, shared=shared, recurse=True
+            libraries, root=self.prefix, shared=shared, recursive=True
         )
 
     def install(self, spec, prefix):

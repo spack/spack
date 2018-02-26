@@ -57,7 +57,7 @@ class Elpa(AutotoolsPackage):
     def libs(self):
         libname = 'libelpa_openmp' if '+openmp' in self.spec else 'libelpa'
         return find_libraries(
-            libname, root=self.prefix, shared=True, recurse=True
+            libname, root=self.prefix, shared=True, recursive=True
         )
 
     build_directory = 'spack-build'

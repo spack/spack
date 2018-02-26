@@ -34,8 +34,8 @@ from spack.binary_distribution import NoOverwriteException, NoGpgException
 from spack.binary_distribution import NoKeyException, PickKeyException
 from spack.binary_distribution import NoVerifyException, NoChecksumException
 
-description = "Create, download and install build cache files."
-section = "caching"
+description = "create, download and install binary packages"
+section = "packaging"
 level = "long"
 
 
@@ -43,7 +43,7 @@ def setup_parser(subparser):
     setup_parser.parser = subparser
     subparsers = subparser.add_subparsers(help='buildcache sub-commands')
 
-    create = subparsers.add_parser('create')
+    create = subparsers.add_parser('create', help=createtarball.__doc__)
     create.add_argument('-r', '--rel', action='store_true',
                         help="make all rpaths relative" +
                              " before creating tarballs.")
@@ -63,7 +63,7 @@ def setup_parser(subparser):
         help="specs of packages to create buildcache for")
     create.set_defaults(func=createtarball)
 
-    install = subparsers.add_parser('install')
+    install = subparsers.add_parser('install', help=installtarball.__doc__)
     install.add_argument('-f', '--force', action='store_true',
                          help="overwrite install directory if it exists.")
     install.add_argument('-y', '--yes-to-all', action='store_true',
@@ -74,7 +74,7 @@ def setup_parser(subparser):
         help="specs of packages to install biuldache for")
     install.set_defaults(func=installtarball)
 
-    listcache = subparsers.add_parser('list')
+    listcache = subparsers.add_parser('list', help=listspecs.__doc__)
     listcache.add_argument('-f', '--force', action='store_true',
                            help="force new download of specs")
     listcache.add_argument(
@@ -82,7 +82,7 @@ def setup_parser(subparser):
         help="specs of packages to search for")
     listcache.set_defaults(func=listspecs)
 
-    dlkeys = subparsers.add_parser('keys')
+    dlkeys = subparsers.add_parser('keys', help=getkeys.__doc__)
     dlkeys.add_argument(
         '-i', '--install', action='store_true',
         help="install Keys pulled from mirror")
@@ -179,6 +179,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
 
 
 def createtarball(args):
+    """create a binary package from an existing install"""
     if not args.packages:
         tty.die("build cache file creation requires at least one" +
                 " installed package argument")
@@ -240,6 +241,7 @@ def createtarball(args):
 
 
 def installtarball(args):
+    """install from a binary package"""
     if not args.packages:
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
@@ -296,6 +298,7 @@ def install_tarball(spec, args):
 
 
 def listspecs(args):
+    """list binary packages available from mirrors"""
     specs = bindist.get_specs(args.force)
     if args.packages:
         pkgs = set(args.packages)
@@ -318,6 +321,7 @@ def listspecs(args):
 
 
 def getkeys(args):
+    """get public keys available on mirrors"""
     install = False
     if args.install:
         install = True

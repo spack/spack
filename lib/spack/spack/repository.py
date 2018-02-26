@@ -819,7 +819,7 @@ class Repo(object):
                     % (self.config_file, self.root))
 
     @_autospec
-    def get(self, spec, new=False):
+    def get(self, spec):
         if not self.exists(spec.name):
             raise UnknownPackageError(spec.name)
 
@@ -828,18 +828,13 @@ class Repo(object):
                 "Repository %s does not contain package %s"
                 % (self.namespace, spec.fullname))
 
-        key = hash(spec)
-        if new or key not in self._instances:
-            package_class = self.get_pkg_class(spec.name)
-            try:
-                copy = spec.copy()  # defensive copy.  Package owns its spec.
-                self._instances[key] = package_class(copy)
-            except Exception:
-                if spack.debug:
-                    sys.excepthook(*sys.exc_info())
-                raise FailedConstructorError(spec.fullname, *sys.exc_info())
-
-        return self._instances[key]
+        package_class = self.get_pkg_class(spec.name)
+        try:
+            return package_class(spec)
+        except Exception:
+            if spack.debug:
+                sys.excepthook(*sys.exc_info())
+            raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
     @_autospec
     def dump_provenance(self, spec, path):

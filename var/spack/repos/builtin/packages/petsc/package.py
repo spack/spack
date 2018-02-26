@@ -113,10 +113,13 @@ class Petsc(Package):
 
     # Other dependencies
     depends_on('boost', when='@:3.5+boost')
-    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
-    depends_on('metis@5:+int64', when='+metis+int64~double')
-    depends_on('metis@5:~int64+real64', when='+metis~int64+double')
-    depends_on('metis@5:+int64', when='+metis+int64~double')
+    depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
+    depends_on('metis@5:~int64', when='@:3.7.99+metis~int64~double')
+    depends_on('metis@5:+int64+real64', when='@:3.7.99+metis+int64+double')
+    depends_on('metis@5:+int64', when='@:3.7.99+metis+int64~double')
+    # petsc-3.8+ uses default (float) metis with any (petsc) precision
+    depends_on('metis@5:~int64', when='@3.8:+metis~int64')
+    depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
     depends_on('hdf5+mpi+hl', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
@@ -248,7 +251,7 @@ class Petsc(Package):
                 '--with-superlu_dist=0'
             )
 
-        configure('--prefix=%s' % prefix, *options)
+        python('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
         make('MAKE_NP=%s' % make_jobs, parallel=False)
