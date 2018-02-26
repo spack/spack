@@ -109,3 +109,9 @@ class Hypre(Package):
                 sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
                         '-rhsone')
             make("install")
+
+    @property
+    def libs(self):
+        is_shared = self.spec.satisfies('+shared')
+        return find_libraries('libHYPRE', root=self.prefix,
+                              shared=is_shared, recursive=True)
