@@ -22,26 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-This implements a parallel map operation but it can accept more values
-than multiprocessing.Pool.apply() can.  For example, apply() will fail
-to pickle functions if they're passed indirectly as parameters.
-"""
 from multiprocessing import Semaphore, Value
 from multiprocessing.dummy import Pool
 
-__all__ = ['spawn', 'parmap', 'Barrier']
+__all__ = ['parmap', 'Barrier']
 
 
-def spawn(f):
-    def fun(pipe, x):
-        pipe.send(f(x))
-        pipe.close()
-    return fun
+MAX_THREADS_PER_MAP = 5
 
 
 def parmap(f, X):
-    pool = Pool(5)
+    # Note that the dummy version of Pool uses threads rather than processes.
+    # Using a global thread pool shared by all parmap calls would cause
+    # hangs if the function provided to parmap also invokes parmap.
+    if not X:
+        return list()
+    pool = Pool(min(len(X), MAX_THREADS_PER_MAP))
     return list(pool.map(f, X))
 
 
