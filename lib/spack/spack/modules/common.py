@@ -515,13 +515,14 @@ class BaseContext(tengine.Context):
         # before asking for package-specific modifications
         for item in dependencies(self.spec, 'all'):
             package = self.spec[item.name].package
-            build_environment.set_module_variables_for_package(package)
+            build_environment.set_module_variables_for_package(package, env)
             package.setup_dependent_package(
                 self.spec.package.module, self.spec
             )
             package.setup_dependent_environment(_, env, self.spec)
         # Package specific modifications
-        build_environment.set_module_variables_for_package(self.spec.package)
+        build_environment.set_module_variables_for_package(self.spec.package,
+                env)
         self.spec.package.setup_environment(_, env)
 
         # Modifications required from modules.yaml

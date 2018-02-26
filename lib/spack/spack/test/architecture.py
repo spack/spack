@@ -11,6 +11,7 @@ import os
 import platform as py_platform
 
 import spack.architecture
+import spack.build_environment
 from spack.spec import Spec
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux

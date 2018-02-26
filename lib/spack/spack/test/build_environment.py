@@ -7,6 +7,7 @@ import os
 import pytest
 
 import spack.build_environment
+from spack.environment import EnvironmentModifications
 import spack.spec
 from spack.paths import build_env_path
 from spack.build_environment import dso_suffix, _static_to_shared_library

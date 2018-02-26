@@ -799,3 +799,37 @@ def invalid_spec(request):
     """Specs that do not parse cleanly due to invalid formatting.
     """
     return request.param
+
+
+#########
+# Environment
+########
+
+
+@pytest.fixture()
+def temp_env():
+    old_env = os.environ.copy()
+    yield
+    os.environ = old_env
+
+
+#######
+# Mock Configure executable
+#######
+
+
+@pytest.fixture(scope="function")
+def mock_configure(tmpdir_factory, temp_env):
+    """Create a mock configure in a directory"""
+
+    tmpdir = tmpdir_factory.mktemp("mock_configure_dir")
+    configure_exe = str(tmpdir.join("configure"))
+
+    with open(configure_exe, "w") as file:
+        file.write("#!/bin/sh\n")
+        file.write("echo $@")
+
+    os.chmod(configure_exe, 0o755)
+    path_put_first("PATH", [configure_exe])
+
+    yield configure_exe

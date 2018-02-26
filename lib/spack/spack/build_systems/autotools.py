@@ -222,8 +222,7 @@ class AutotoolsPackage(PackageBase):
 
         # Monkey-patch the configure script in the corresponding module
         inspect.getmodule(self).configure = Executable(
-            self.configure_abs_path
-        )
+            self.configure_abs_path)
 
     def configure_args(self):
         """Produces a list containing all the arguments that must be passed to

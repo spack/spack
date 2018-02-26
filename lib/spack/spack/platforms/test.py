@@ -19,8 +19,13 @@ class Test(Platform):
 
     def __init__(self):
         super(Test, self).__init__('test')
-        self.add_target(self.default, Target(self.default))
-        self.add_target(self.front_end, Target(self.front_end))
+
+        default_target = Target(self.default, "/path/to/backend/modulefile")
+        front_end_target = Target(self.front_end,
+                                  "/path/to/frontend/modulefile")
+
+        self.add_target(self.default, default_target)
+        self.add_target(self.front_end, front_end_target)
 
         self.add_operating_system(
             self.default_os, OperatingSystem('debian', 6))
@@ -30,3 +35,7 @@ class Test(Platform):
     @classmethod
     def detect(cls):
         return True
+
+    def setup_frontend_environment(self, env):
+        env.set('CC', 'test_compiler')
+        env.apply_modifications()

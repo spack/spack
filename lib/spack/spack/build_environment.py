@@ -32,6 +32,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+from contextlib import contextmanager
 import inspect
 import multiprocessing
 import os
@@ -46,6 +47,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
 from llnl.util.filesystem import mkdirp, install, install_tree
 
+import spack.architecture
 import spack.build_systems.cmake
 import spack.build_systems.meson
 import spack.config
@@ -88,6 +90,7 @@ SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 
 # Platform-specific library suffix.
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+
 
 
 class MakeExecutable(Executable):
@@ -169,13 +172,25 @@ def set_compiler_environment_variables(pkg, env):
     assert all(key in compiler.link_paths for key in (
         'cc', 'cxx', 'f77', 'fc'))
 
+    return env
+
+
+def set_compiler_environment_variables(pkg, env):
+    assert pkg.spec.concrete
+    compiler = pkg.compiler
+
+    # Set compiler variables used by CMake and autotools
+    assert all(key in compiler.link_paths for key in (
+        'cc', 'cxx', 'f77', 'fc'))
+
     # Populate an object with the list of environment modifications
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor,
     # ttyout, ttyerr, etc.
-    link_dir = spack.paths.build_env_path
 
     # Set SPACK compiler variables so that our wrapper knows what to call
+    link_dir = spack.paths.build_env_path
+
     if compiler.cc:
         env.set('SPACK_CC', compiler.cc)
         env.set('CC', os.path.join(link_dir, compiler.link_paths['cc']))
@@ -188,6 +203,7 @@ def set_compiler_environment_variables(pkg, env):
     if compiler.fc:
         env.set('SPACK_FC',  compiler.fc)
         env.set('FC', os.path.join(link_dir, compiler.link_paths['fc']))
+
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
@@ -237,6 +253,28 @@ def set_compiler_environment_variables(pkg, env):
     compiler.setup_custom_environment(pkg, env)
 
     return env
+
+
+def build_env_compilers(pkg, platform, env):
+
+    cross_compiler = pkg.compiler
+
+    def _build_env_compilers(executable):
+        """Fork a sub process that will run the phase in a fork with a
+        preserved environment"""
+        def run_executable_in_frontend(*args, **kwargs):
+            try:
+                pid = os.fork()
+            except OSError:
+                exit("Could not create child process for frontend")
+
+            # Inside the child process where we change to frontend env
+            if pid == 0:
+                platform.setup_frontend_environment(env)
+                executable(*args, **kwargs)
+                exit()
+        return run_executable_in_frontend
+    return _build_env_compilers
 
 
 def set_build_environment_variables(pkg, env, dirty):
@@ -370,7 +408,7 @@ def set_build_environment_variables(pkg, env, dirty):
     return env
 
 
-def _set_variables_for_single_module(pkg, module):
+def _set_variables_for_single_module(pkg, module, env):
     """Helper function to set module variables for single module."""
     # number of jobs spack will build with.
     jobs = spack.config.get('config:build_jobs') or multiprocessing.cpu_count()
@@ -432,6 +470,10 @@ def _set_variables_for_single_module(pkg, module):
     # Platform-specific library suffix.
     m.dso_suffix = dso_suffix
 
+    m.build_env_compilers = build_env_compilers(pkg,
+                                                pkg.architecture.platform,
+                                                env)
+
     def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
         compiler_path = kwargs.get('compiler', m.spack_cc)
         compiler = Executable(compiler_path)
@@ -442,7 +484,7 @@ def _set_variables_for_single_module(pkg, module):
     m.static_to_shared_library = static_to_shared_library
 
 
-def set_module_variables_for_package(pkg):
+def set_module_variables_for_package(pkg, env):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
     """
@@ -453,7 +495,7 @@ def set_module_variables_for_package(pkg):
     # called. parent_class_modules includes pkg.module.
     modules = parent_class_modules(pkg.__class__)
     for mod in modules:
-        _set_variables_for_single_module(pkg, mod)
+        _set_variables_for_single_module(pkg, mod, env)
 
 
 def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
@@ -656,7 +698,7 @@ def setup_package(pkg, dirty):
         dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
-    set_module_variables_for_package(pkg)
+    set_module_variables_for_package(pkg, spack_env)
     pkg.setup_environment(spack_env, run_env)
 
     # Loading modules, in particular if they are meant to be used outside
