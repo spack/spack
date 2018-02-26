@@ -81,7 +81,8 @@ class Llvm(CMakePackage):
     depends_on('cmake@3.4.3:', type='build')
 
     # Universal dependency
-    depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
+    depends_on('python@2.7:2.8', when='@:4.999')
+    depends_on('python')
     depends_on('py-lit', type=('build', 'run'))
 
     # lldb dependencies
