@@ -31,14 +31,14 @@ from spack.environment import EnvironmentModifications
 class IntelMpi(IntelPackage):
     """Intel MPI"""
 
-# https://software.intel.com/en-us/articles/intel-mpi-library-release-notes-linux
-# Intel® MPI Library 2018 Update 2
-#   ...
-#   Intel® MPI Library is now available to install in YUM and APT repositories.
-#   ...
-# See also:
-# https://software.intel.com/en-us/articles/installing-intel-free-libs-and-python-yum-repo
-# https://software.intel.com/en-us/articles/installing-intel-parallel-studio-xe-on-aws-linux-instances
+    # https://software.intel.com/en-us/articles/intel-mpi-library-release-notes-linux
+    # Intel MPI Library 2018 Update 2
+    #   ...
+    #   Intel MPI Library is now available .. in YUM and APT repositories.
+    #   ...
+    # See also:
+    # https://software.intel.com/en-us/articles/installing-intel-free-libs-and-python-yum-repo
+    # https://software.intel.com/en-us/articles/installing-intel-parallel-studio-xe-on-aws-linux-instances
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
@@ -74,13 +74,13 @@ class IntelMpi(IntelPackage):
         if 'cxx' in self.spec.last_query.extra_parameters:
             libnames = ['libmpicxx'] + libnames
         return find_libraries(libnames,
-                              root=self.component_libdir,
+                              root=self.component_lib_dir,
                               shared=True, recursive=True)
 
     @property
     def mpi_headers(self):
         return find_headers('mpi',
-                            root=self.component_includedir,
+                            root=self.component_include_dir,
                             recursive=False)
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
@@ -91,7 +91,7 @@ class IntelMpi(IntelPackage):
         spack_env.set('I_MPI_FC', spack_fc)
 
         # Convenience variable.
-        spack_env.set('I_MPI_ROOT', self.product_component_dir)
+        spack_env.set('I_MPI_ROOT', self.component_dir)
 
     def setup_dependent_package(self, module, dep_spec):
         # Intel comes with 2 different flavors of MPI wrappers:
@@ -106,7 +106,7 @@ class IntelMpi(IntelPackage):
         # and friends are set to point to the Intel compilers, but in
         # practice, mpicc fails to compile some applications while
         # mpiicc works.
-        bindir = self.component_bindir
+        bindir = self.component_bin_dir
         if self.compiler.name == 'intel':
             self.spec.mpicc  = bindir.mpiicc
             self.spec.mpicxx = bindir.mpiicpc
@@ -135,6 +135,6 @@ class IntelMpi(IntelPackage):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        f = join_path(self.component_bindir, 'mpivars.sh')
+        f = join_path(self.component_bin_dir, 'mpivars.sh')
         if os.path.isfile(f):
             run_env.extend(EnvironmentModifications.from_sourcing_file(f))

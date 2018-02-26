@@ -102,7 +102,7 @@ class IntelMkl(IntelPackage):
 
         mkl_libs = find_libraries(
             mkl_libnames,
-            root=self.component_libdir,
+            root=self.component_lib_dir,
             shared=self._want_shared)
         debug_print(mkl_libs)
 
@@ -163,7 +163,7 @@ class IntelMkl(IntelPackage):
         ]
         sca_libs = find_libraries(
             scalapack_libnames,
-            root=self.component_libdir,
+            root=self.component_lib_dir,
             shared=self._want_shared)
         debug_print(sca_libs)
 
@@ -178,9 +178,9 @@ class IntelMkl(IntelPackage):
         # find_libraries() entices us to feed it an "mkl_root" variable, but
         # that is a siren song that pulls us down and under from the true
         # MKLROOT. Hence, such a variable name is not used here [anymore].
-        spack_env.set('MKLROOT', self.product_component_dir)
+        spack_env.set('MKLROOT', self.component_dir)
         spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                              self.component_libdir)
+                              self.component_lib_dir)
 
     def setup_environment(self, spack_env, run_env):
         """Adds environment variables to the generated module file.
@@ -199,7 +199,7 @@ class IntelMkl(IntelPackage):
         # TODO: At some point we should split setup_environment into
         # setup_build_environment and setup_run_environment to get around
         # this problem.
-        f = join_path(self.component_bindir, 'mklvars.sh')
+        f = join_path(self.component_bin_dir, 'mklvars.sh')
         if not os.path.isfile(f):
             return
 

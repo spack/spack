@@ -131,105 +131,105 @@ class IntelPackage(PackageBase):
 
         return matches
 
-#--------------------------------------------------------------------
-# Analysis of the directory layout for a Spack-born installation of
-# intel-mkl@2018.1.163
-#--------------------------------------------------------------------
-#
-#   $ ls -l <prefix>
-#     # Unix metadata removed, entries rearranged, "->" still means symlink.
-#
-#   bin/
-#       - compilervars.*sh (symlinked) ONLY
-#
-#   compilers_and_libraries -> compilers_and_libraries_2018
-#       - generically-named entry point, stable across versions (one hopes)
-#
-#   compilers_and_libraries_2018/
-#       - vaguely-versioned dirname, holding a stub hierarchy --ignorable
-#
-#       $ ls -l compilers_and_libraries_2018/linux/
-#       bin         - actual compilervars.*sh (reg. files) ONLY
-#       documentation -> ../../documentation_2018/
-#       lib -> ../../compilers_and_libraries_2018.1.163/linux/compiler/lib/
-#       mkl -> ../../compilers_and_libraries_2018.1.163/linux/mkl/
-#       pkg_bin -> ../../compilers_and_libraries_2018.1.163/linux/bin/
-#       samples -> ../../samples_2018/
-#       tbb -> ../../compilers_and_libraries_2018.1.163/linux/tbb/
-#
-#   compilers_and_libraries_2018.1.163/
-#       - Main "product" + a minimal set of libs from related products
-#
-#       $ ls -l compilers_and_libraries_2018.1.163/linux/
-#       bin/        - compilervars.*sh, link_install*sh  ONLY
-#       mkl/        - Main Product ==> to be assigned to MKLROOT
-#       compiler/   - lib/intel64_lin/libiomp5*  ONLY
-#       tbb/        - tbb/lib/intel64_lin/gcc4.[147]/libtbb*.so* ONLY
-#
-#   parallel_studio_xe_2018 -> parallel_studio_xe_2018.1.038/
-#   parallel_studio_xe_2018.1.038/
-#       - Alternate product packaging - ignorable
-#
-#       $ ls -l parallel_studio_xe_2018.1.038/
-#       bin/               - actual psxevars.*sh (reg. files)
-#       compilers_and_libraries_2018 -> <full_path_prefix>/comp..._2018.1.163
-#       documentation_2018 -> <full_path_prefix>/documentation_2018
-#       samples_2018 -> <full_path_prefix>/samples_2018
-#       ...
-#
-#   documentation_2018/
-#   samples_2018/
-#   lib -> compilers_and_libraries/linux/lib/
-#   mkl -> compilers_and_libraries/linux/mkl/
-#   tbb -> compilers_and_libraries/linux/tbb/
-#                   - auxiliaries and convenience links
-#
-#--------------------------------------------------------------------
-# Directory analysis for intel-mpi@2018.1.163
-#--------------------------------------------------------------------
-# For MPI, the layout is slightly different than MKL. The prefix will have to
-# include the sub-arch, which contains bin/, lib/, ..., all without further
-# arch splits. I_MPI_ROOT, however, must be the package dir.
-#
-# FIXME: For MANPATH, need the parent dir.
-#
-#   $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/
-#   bin64 -> intel64/bin/
-#   etc64 -> intel64/etc/
-#   include64 -> intel64/include/
-#   lib64 -> intel64/lib/
-#
-#   benchmarks/
-#   binding/
-#   intel64/
-#   man/
-#   test/
-#
-#   MPI-2019 preview; Relnotes contain: "File structure clean-up."
-#   https://software.intel.com/en-us/articles/restoring-legacy-path-structure-on-intel-mpi-library-2019
-#
-#   $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi_2019/
-#   binding/
-#   doc/
-#   imb/
-#   intel64/
-#   man/
-#   test/
-#
-#--------------------------------------------------------------------
-#
-# Note on macOS support, i.e., sys.platform == 'darwin':
-#
-# - On macOS, the Spack methods here only include support to integrate an
-#   externally installed MKL.
-#
-# - URLs in child packages will be Linux-specific; macOS download packages are
-#   located in differently numbered dirs and are named m_*.dmg.
-#
-#--------------------------------------------------------------------
+    #--------------------------------------------------------------------
+    # Analysis of the directory layout for a Spack-born installation of
+    # intel-mkl@2018.1.163
+    #--------------------------------------------------------------------
+    #
+    #   $ ls -l <prefix>
+    #   # Unix metadata removed, entries rearranged, "->" still means symlink.
+    #
+    #   bin/
+    #       - compilervars.*sh (symlinked) ONLY
+    #
+    #   compilers_and_libraries -> compilers_and_libraries_2018
+    #       - generically-named entry point, stable across versions (one hopes)
+    #
+    #   compilers_and_libraries_2018/
+    #       - vaguely-versioned dirname, holding a stub hierarchy --ignorable
+    #
+    #       $ ls -l compilers_and_libraries_2018/linux/
+    #       bin         - actual compilervars.*sh (reg. files) ONLY
+    #       documentation -> ../../documentation_2018/
+    #       lib -> ../../compilers_and_libraries_2018.1.163/linux/compiler/lib/
+    #       mkl -> ../../compilers_and_libraries_2018.1.163/linux/mkl/
+    #       pkg_bin -> ../../compilers_and_libraries_2018.1.163/linux/bin/
+    #       samples -> ../../samples_2018/
+    #       tbb -> ../../compilers_and_libraries_2018.1.163/linux/tbb/
+    #
+    #   compilers_and_libraries_2018.1.163/
+    #       - Main "product" + a minimal set of libs from related products
+    #
+    #       $ ls -l compilers_and_libraries_2018.1.163/linux/
+    #       bin/        - compilervars.*sh, link_install*sh  ONLY
+    #       mkl/        - Main Product ==> to be assigned to MKLROOT
+    #       compiler/   - lib/intel64_lin/libiomp5*  ONLY
+    #       tbb/        - tbb/lib/intel64_lin/gcc4.[147]/libtbb*.so* ONLY
+    #
+    #   parallel_studio_xe_2018 -> parallel_studio_xe_2018.1.038/
+    #   parallel_studio_xe_2018.1.038/
+    #       - Alternate product packaging - ignorable
+    #
+    #       $ ls -l parallel_studio_xe_2018.1.038/
+    #       bin/               - actual psxevars.*sh (reg. files)
+    #       compilers_and_libraries_2018 -> <full_path>/comp...aries_2018.1.163
+    #       documentation_2018 -> <full_path_prefix>/documentation_2018
+    #       samples_2018 -> <full_path_prefix>/samples_2018
+    #       ...
+    #
+    #   documentation_2018/
+    #   samples_2018/
+    #   lib -> compilers_and_libraries/linux/lib/
+    #   mkl -> compilers_and_libraries/linux/mkl/
+    #   tbb -> compilers_and_libraries/linux/tbb/
+    #                   - auxiliaries and convenience links
+    #
+    #--------------------------------------------------------------------
+    # Directory analysis for intel-mpi@2018.1.163
+    #--------------------------------------------------------------------
+    # For MPI, the layout is slightly different than MKL. The prefix will have
+    # to include the sub-arch, which contains bin/, lib/, ..., all without
+    # further arch splits. I_MPI_ROOT, however, must be the package dir.
+    #
+    # FIXME: For MANPATH, need the parent dir.
+    #
+    #   $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi/
+    #   bin64 -> intel64/bin/
+    #   etc64 -> intel64/etc/
+    #   include64 -> intel64/include/
+    #   lib64 -> intel64/lib/
+    #
+    #   benchmarks/
+    #   binding/
+    #   intel64/
+    #   man/
+    #   test/
+    #
+    #   MPI-2019 preview; Relnotes contain: "File structure clean-up."
+    #   https://software.intel.com/en-us/articles/restoring-legacy-path-structure-on-intel-mpi-library-2019
+    #
+    #   $ ls -lF /opt/intel/compilers_and_libraries_2018.1.163/linux/mpi_2019/
+    #   binding/
+    #   doc/
+    #   imb/
+    #   intel64/
+    #   man/
+    #   test/
+    #
+    #--------------------------------------------------------------------
+    #
+    # Note on macOS support, i.e., sys.platform == 'darwin':
+    #
+    # - On macOS, the Spack methods here only include support to integrate an
+    #   externally installed MKL.
+    #
+    # - URLs in child packages will be Linux-specific; macOS download packages
+    #   are located in differently numbered dirs and are named m_*.dmg.
+    #
+    #--------------------------------------------------------------------
 
     @property
-    def product_os_dir(self):
+    def product_dir(self):
         '''Returns the version-specific directory of an Intel product release,
         holding the main product and auxiliary files from other products.
         '''
@@ -238,23 +238,29 @@ class IntelPackage(PackageBase):
             # TODO: Verify on Mac.
             return d
 
+        # Distinguish between product installations that were done outside of
+        # Spack (as "ghost package" integrated via packages.yaml) and
+        # Spack-native ones. The key issue is that their prefixes will
+        # qualitatively differ in directory depth.
         if 'compilers_and_libraries_' in d and '.' in d:
-            # When MKL was installed outside of Spack (a "ghost package"
-            # integrated via packages.yaml), the prefix will inevitably point
-            # to a directory that is specific to MKL as one Intel *product*
-            # among possibly others that are installed in sibling or cousin
-            # directories. This product-specific and (preferably fully)
-            # version-specific directory is what we want and need.
+            # When MKL was installed outside of Spack, it is likely just one
+            # product or product component among possibly many other Intel
+            # products and their releases that were installed in sibling or
+            # cousin directories.  In such cases, the prefix given to Spack
+            # will inevitably be a highly product-specific and preferably fully
+            # version-specific directory.  This is what we want and need.
             pass
         elif 'compilers_and_libraries' in d:
-            # A non-qualified install dir (likely a symlink) is fragile and
-            # bound to change outside of Spack's purview. That could be
-            # acceptable but it does affect reproducibility in Spack and may
-            # alter the outcome of subsequent builds of dependent packages. I'm
-            # not sure if Spack's package hashing senses this.
-            #
-            # Code may never be reached is self.prefix has been abspath()'ed.
-            tty.warn('Intel-MKL found in a version-neutral directory - '
+            # The Intel installer scripts try hard to place compatibility links
+            # named like this in the install dir to convey upgrade benefits to
+            # traditional client apps. But such a generic name can be trouble
+            # when given to Spack: the link target is bound to change outside
+            # of Spack's purview and when it does, the outcome of subsequent
+            # builds of dependent packages may be affected. (Though Intel has
+            # been remarkably good at backward compatibility.)
+            # I'm not sure if Spack's package hashing includes link targets.
+            # NB: Code may never be reached if self.prefix is abspath()'ed!?
+            tty.warn('Intel product found in a version-neutral directory - '
                      'future builds may not be reproducible.')
             pass
         else:
@@ -275,6 +281,8 @@ class IntelPackage(PackageBase):
             # Alright, now the final flight of stairs.
             d = d.linux
 
+        # TODO? accomodate other platforms(?)
+
         # On my system, using a ghosted MKL, self.prefix showed up as ending
         # with "/compiler". I think this is because I provide that MKL by means
         # of the side effect of loading an env. module for the Intel
@@ -283,60 +291,56 @@ class IntelPackage(PackageBase):
         # the time warp again:
         #
         # Ahem, apparently, the Prefix class lacks a native parent() method
-        # (kinda understandably so), but the syntax blows up on trying "..".
+        # (kinda understandably so), and the syntax blows up on trying "..".
         #
-        # TODO? accomodate other platforms(?)
         # NB: Searching by platform, we can indulge in hardcoding the path sep.
-        #
         while '/linux' in d and not d.endswith('/linux'):
             d = Prefix(ancestor(d))
 
         debug_print(d)
         return d
 
-    def product_component_dir(self, component=None):
+    def component_dir(self, component=None):
         '''Returns the directory of a product component, appropriate for
         presenting to users in environment variables like MKLROOT and
         I_MPI_ROOT.
         '''
-        d = component
         if component is None:
-            # For ref.: Intel packages in Spack-0.11:
-            #  intel/
-            #  intel-daal/
-            #  intel-gpu-tools/
-            #  intel-ipp/
-            #  intel-mkl/
-            #  intel-mkl-dnn/
-            #  intel-mpi/
-            #  intel-parallel-studio
-            #  intel-tbb/
+            # For ref.: Intel packages in Spack-0.11 (not using current func.):
+            #
+            #  intel/               intel-ipp/          intel-mpi/
+            #  intel-daal/          intel-mkl/          intel-parallel-studio
+            #  intel-gpu-tools/     intel-mkl-dnn/      intel-tbb/
+            #
             if self.name.startswith('intel-mkl'):
                 d = 'mkl'
             elif self.name.startswith('intel-mpi'):
                 d = 'mpi'
             else:
                 raise_lib_error('Cannot determine product component dir.')
+        else:
+            d = component
 
         # Note analysis of MPI dir above:  Since both I_MPI_ROOT and MANPATH
         # need the 'mpi' dir, do NOT qualify the retval further.
         #NODO: d = d.intel64 if ... 'mpi' ...
 
-        d = Prefix(join_path(self.product_os_dir, d))
+        d = Prefix(join_path(self.product_dir, d))
         debug_print(d)
         return d
 
     @property
-    def component_bindir(self, component=None):
-        d = self.product_component_dir(component)
+    def component_bin_dir(self, component=None):
+        d = self.component_dir(component)
         if sys.platform == 'darwin':
             d = d.bin
         else:
             if self.name.startswith('intel-mpi') or component == 'mpi':
                 d = d.intel64.bin
-            # TODO: eval if needed
+            # TODO: figure out if the following is needed:
             #elif ... 'compiler'
             #    d = Prefix(ancestor(d)).bin.intel64
+            # If not, conditional can be collapsed.
             else:
                 d = d.bin
 
@@ -344,11 +348,11 @@ class IntelPackage(PackageBase):
         return d
 
     @property
-    def component_libdir(self, component=None):
-        # Provide starting directory for find_libraries() and for
+    def component_lib_dir(self, component=None):
+        # Provide starting directory for find_libraries() and
         # SPACK_COMPILER_EXTRA_RPATHS.
 
-        d = self.product_component_dir(component)
+        d = self.component_dir(component)
         if sys.platform == 'darwin':
             d = d.lib
         else:
@@ -362,8 +366,8 @@ class IntelPackage(PackageBase):
         return d
 
     @property
-    def component_includedir(self, component=None):
-        d = self.product_component_dir(component)
+    def component_include_dir(self, component=None):
+        d = self.component_dir(component)
         if self.name.startswith('intel-mpi') or component == 'mpi':
             d = d.intel64
         d = d.include
@@ -377,8 +381,8 @@ class IntelPackage(PackageBase):
 
         # FIXME  if sys.platform == 'darwin' ....
 
-        # TODO?  Are variants named consistently enough in Spack to determine
-        # that OpenMP is NOT needed and then return an empty list?
+        # TODO?  Across Spack packages for "client" applications, are variants
+        #   named consistently enough to determine if OpenMP is even needed?
 
         if '%intel' in self.spec:
             omp_libnames = ['libiomp5']
@@ -390,7 +394,7 @@ class IntelPackage(PackageBase):
 
             omp_libs = find_libraries(
                 omp_libnames,
-                root=self.component_libdir(component='compiler'),
+                root=self.component_lib_dir(component='compiler'),
                 shared=self._want_shared)
 
         elif '%gcc' in self.spec:
