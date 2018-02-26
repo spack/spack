@@ -64,7 +64,7 @@ class InfoCollector(object):
 
     When exiting the context this change will be rolled-back.
 
-    The data collected is available through the ``test_suites``
+    The data collected is available through the ``specs``
     attribute once exited, and it's organized as a list where
     each item represents the installation of one of the spec.
 
@@ -77,49 +77,51 @@ class InfoCollector(object):
 
     def __init__(self, specs):
         #: Specs that will be installed
-        self.specs = specs
-        #: Context that will be used to stamp the report from
-        #: the template file
-        self.test_suites = []
+        self.input_specs = specs
+        #: This is where we record the data that will be included
+        #: in our report.
+        self.specs = []
 
     def __enter__(self):
-        # Initialize the test suites with the data that
-        # is available upfront
-        for spec in self.specs:
+        # Initialize the spec report with the data that is available upfront.
+        for input_spec in self.input_specs:
             name_fmt = '{0}_{1}'
-            name = name_fmt.format(spec.name, spec.dag_hash(length=7))
+            name = name_fmt.format(input_spec.name,
+                                   input_spec.dag_hash(length=7))
 
-            suite = {
+            spec = {
                 'name': name,
                 'nerrors': None,
                 'nfailures': None,
-                'ntests': None,
+                'npackages': None,
                 'time': None,
                 'timestamp': time.strftime(
                     "%a, %d %b %Y %H:%M:%S", time.gmtime()
                 ),
                 'properties': [],
-                'testcases': []
+                'packages': []
             }
 
-            self.test_suites.append(suite)
+            self.specs.append(spec)
 
             Property = collections.namedtuple('Property', ['name', 'value'])
-            suite['properties'].append(
-                Property('architecture', spec.architecture)
+            spec['properties'].append(
+                Property('architecture', input_spec.architecture)
             )
-            suite['properties'].append(Property('compiler', spec.compiler))
+            spec['properties'].append(
+                Property('compiler', input_spec.compiler))
 
             # Check which specs are already installed and mark them as skipped
-            for dep in filter(lambda x: x.package.installed, spec.traverse()):
-                test_case = {
+            for dep in filter(lambda x: x.package.installed,
+                              input_spec.traverse()):
+                package = {
                     'name': dep.name,
                     'id': dep.dag_hash(),
                     'elapsed_time': '0.0',
                     'result': 'skipped',
                     'message': 'Spec already installed'
                 }
-                suite['testcases'].append(test_case)
+                spec['packages'].append(package)
 
         def gather_info(do_install):
             """Decorates do_install to gather useful information for
@@ -134,7 +136,7 @@ class InfoCollector(object):
                 # We accounted before for what is already installed
                 installed_on_entry = pkg.installed
 
-                test_case = {
+                package = {
                     'name': pkg.name,
                     'id': pkg.spec.dag_hash(),
                     'elapsed_time': None,
@@ -147,42 +149,42 @@ class InfoCollector(object):
                 try:
 
                     value = do_install(pkg, *args, **kwargs)
-                    test_case['result'] = 'success'
+                    package['result'] = 'success'
                     if installed_on_entry:
                         return
 
                 except spack.build_environment.InstallError as e:
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
-                    test_case['result'] = 'failure'
-                    test_case['stdout'] = fetch_package_log(pkg)
-                    test_case['message'] = e.message or 'Installation failure'
-                    test_case['exception'] = e.traceback
+                    package['result'] = 'failure'
+                    package['stdout'] = fetch_package_log(pkg)
+                    package['message'] = e.message or 'Installation failure'
+                    package['exception'] = e.traceback
 
                 except (Exception, BaseException) as e:
                     # Everything else is an error (the installation
                     # failed outside of the child process)
-                    test_case['result'] = 'error'
-                    test_case['stdout'] = fetch_package_log(pkg)
-                    test_case['message'] = str(e) or 'Unknown error'
-                    test_case['exception'] = traceback.format_exc()
+                    package['result'] = 'error'
+                    package['stdout'] = fetch_package_log(pkg)
+                    package['message'] = str(e) or 'Unknown error'
+                    package['exception'] = traceback.format_exc()
 
                 finally:
-                    test_case['elapsed_time'] = time.time() - start_time
+                    package['elapsed_time'] = time.time() - start_time
 
-                # Append the case to the correct test suites. In some
+                # Append the package to the correct spec report. In some
                 # cases it may happen that a spec that is asked to be
                 # installed explicitly will also be installed as a
                 # dependency of another spec. In this case append to both
-                # test suites.
+                # spec reports.
                 for s in llnl.util.lang.dedupe([pkg.spec.root, pkg.spec]):
                     name = name_fmt.format(s.name, s.dag_hash(length=7))
                     try:
                         item = next((
-                            x for x in self.test_suites
+                            x for x in self.specs
                             if x['name'] == name
                         ))
-                        item['testcases'].append(test_case)
+                        item['packages'].append(package)
                     except StopIteration:
                         pass
 
@@ -199,16 +201,16 @@ class InfoCollector(object):
         # Restore the original method in PackageBase
         spack.package.PackageBase.do_install = InfoCollector._backup_do_install
 
-        for suite in self.test_suites:
-            suite['ntests'] = len(suite['testcases'])
-            suite['nfailures'] = len(
-                [x for x in suite['testcases'] if x['result'] == 'failure']
+        for spec in self.specs:
+            spec['npackages'] = len(spec['packages'])
+            spec['nfailures'] = len(
+                [x for x in spec['packages'] if x['result'] == 'failure']
             )
-            suite['nerrors'] = len(
-                [x for x in suite['testcases'] if x['result'] == 'error']
+            spec['nerrors'] = len(
+                [x for x in spec['packages'] if x['result'] == 'error']
             )
-            suite['time'] = sum([
-                float(x['elapsed_time']) for x in suite['testcases']
+            spec['time'] = sum([
+                float(x['elapsed_time']) for x in spec['packages']
             ])
 
 
@@ -273,4 +275,4 @@ class collect_info(object):
             with open(self.filename, 'w') as f:
                 env = spack.tengine.make_environment()
                 t = env.get_template(templates[self.format_name])
-                f.write(t.render({'test_suites': self.collector.test_suites}))
+                f.write(t.render({'specs': self.collector.specs}))
