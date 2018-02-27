@@ -32,7 +32,6 @@ import os
 import re
 import shutil
 import stat
-import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager
@@ -40,6 +39,7 @@ from contextlib import contextmanager
 import six
 from llnl.util import tty
 from llnl.util.lang import dedupe
+from spack.util.executable import Executable
 
 __all__ = [
     'FileFilter',
@@ -583,12 +583,10 @@ def fix_darwin_install_name(path):
     libs = glob.glob(join_path(path, "*.dylib"))
     for lib in libs:
         # fix install name first:
-        subprocess.Popen(
-            ["install_name_tool", "-id", lib, lib],
-            stdout=subprocess.PIPE).communicate()[0]
-        long_deps = subprocess.Popen(
-            ["otool", "-L", lib],
-            stdout=subprocess.PIPE).communicate()[0].split('\n')
+        install_name_tool = Executable('install_name_tool')
+        install_name_tool('-id', lib, lib)
+        otool = Executable('otool')
+        long_deps = otool('-L', lib, output=str).split('\n')
         deps = [dep.partition(' ')[0][1::] for dep in long_deps[2:-1]]
         # fix all dependencies:
         for dep in deps:
@@ -599,9 +597,7 @@ def fix_darwin_install_name(path):
                 # but we don't know builddir (nor how symbolic links look
                 # in builddir). We thus only compare the basenames.
                 if os.path.basename(dep) == os.path.basename(loc):
-                    subprocess.Popen(
-                        ["install_name_tool", "-change", dep, loc, lib],
-                        stdout=subprocess.PIPE).communicate()[0]
+                    install_name_tool('-change', dep, loc, lib)
                     break
 
 
