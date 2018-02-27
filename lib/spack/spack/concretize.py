@@ -297,9 +297,9 @@ class DefaultConcretizer(object):
 
         # Find another spec that has a compiler, or the root if none do
         other_spec = spec if spec.compiler else find_spec(
-            spec, lambda x: x.compiler, spec.root)
+            spec, lambda x: x.compiler and x.architecture == spec.architecture,
+            spec)
         other_compiler = other_spec.compiler
-        assert(other_spec)
 
         # Check if the compiler is already fully specified
         if other_compiler in all_compiler_specs:

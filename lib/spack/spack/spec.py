@@ -1646,7 +1646,8 @@ class Spec(object):
         except Exception as e:
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
-    def _concretize_helper(self, visited=None):
+    def _concretize_helper(self, visited=None, skip_build_only=False,
+                           in_build=False):
         """Recursive helper function for concretize().
            This concretizes everything bottom-up.  As things are
            concretized, they're added to the presets, and ancestors
@@ -1665,10 +1666,26 @@ class Spec(object):
 
         changed = False
 
+        if in_build:
+            has_arch = list(x for x in self.traverse() if x.architecture)
+            if not has_arch:
+                frontend_arch = ArchSpec(
+                    spack.architecture.frontend_sys_type())
+                for dep in self.traverse():
+                    dep.architecture = frontend_arch
+
         # Concretize deps first -- this is a bottom-up process.
-        for name in sorted(self._dependencies.keys()):
-            changed |= self._dependencies[
-                name].spec._concretize_helper(visited)
+        deps = set(self.dependencies(deptype=('link', 'run', 'include')))
+        all_deps = set(self.dependencies())
+        build_only_deps = all_deps - deps
+        if skip_build_only:
+            to_visit = deps
+        else:
+            to_visit = all_deps
+        to_visit = sorted(to_visit, key=lambda spec: spec.name)
+        for dep in to_visit:
+            dep._concretize_helper(visited, skip_build_only=skip_build_only,
+                                   in_build=dep in build_only_deps)
 
         # Concretize virtual dependencies last.  Because they're added
         # to presets below, their constraints will all be merged, but we'll
@@ -1841,7 +1858,7 @@ class Spec(object):
         while changed:
             changes = (self._normalize(dep_constraints, force),
                        self._expand_virtual_packages(dep_constraints),
-                       self._concretize_helper())
+                       self._concretize_helper(skip_build_only=True))
             changed = any(changes)
             force = True
 
