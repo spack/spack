@@ -56,7 +56,7 @@ class Minighost(MakefilePackage):
             targets.append('FC={0}'.format(self.spec['mpi'].mpif77))
             targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
             targets.append(
-                'LIBS=-lm -lmpicxx')
+                'LIBS=-lm -lmpi_cxx')
         else:
             targets.append('PROTOCOL=-D_MG_SERIAL')
             targets.append('FC=f77')
