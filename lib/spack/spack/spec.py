@@ -1661,7 +1661,7 @@ class Spec(object):
 
         visited.add(self)
 
-        if self.concrete:
+        if self.concrete or self.virtual:
             return False
 
         changed = False
@@ -1673,8 +1673,10 @@ class Spec(object):
                     spack.architecture.frontend_sys_type())
                 for dep in self.traverse():
                     dep.architecture = frontend_arch
+        # Concretize arch in a top-down manner
+        spack.concretizer.concretize_architecture(self)
 
-        # Concretize deps first -- this is a bottom-up process.
+        # Concretize other properties bottom-up
         deps = set(self.dependencies(deptype=('link', 'run', 'include')))
         all_deps = set(self.dependencies())
         build_only_deps = all_deps - deps
@@ -1687,18 +1689,13 @@ class Spec(object):
             dep._concretize_helper(visited, skip_build_only=skip_build_only,
                                    in_build=dep in build_only_deps)
 
-        # Concretize virtual dependencies last.  Because they're added
-        # to presets below, their constraints will all be merged, but we'll
-        # still need to select a concrete package later.
-        if not self.virtual:
-            updated = (
-                spack.concretizer.concretize_architecture(self),
-                spack.concretizer.concretize_compiler(self),
-                spack.concretizer.concretize_compiler_flags(
-                    self),  # has to be concretized after compiler
-                spack.concretizer.concretize_version(self),
-                spack.concretizer.concretize_variants(self))
-            changed |= any(updated)
+        updated = (
+            spack.concretizer.concretize_compiler(self),
+            spack.concretizer.concretize_compiler_flags(
+                self),  # has to be concretized after compiler
+            spack.concretizer.concretize_version(self),
+            spack.concretizer.concretize_variants(self))
+        changed |= any(updated)
 
         return changed
 
