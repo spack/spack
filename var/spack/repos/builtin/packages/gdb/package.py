@@ -56,6 +56,6 @@ class Gdb(AutotoolsPackage):
         args = []
         if '+python' in self.spec:
             args.append('--with-python')
-            args.append(
-                    'LDFLAGS={0}'.format(self.spec['python'].libs.ld_flags))
+            args.append('LDFLAGS={0}'.format(
+                self.spec['python'].libs.ld_flags))
         return args
