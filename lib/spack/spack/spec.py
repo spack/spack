@@ -1481,7 +1481,7 @@ class Spec(object):
 
         # TODO: restore build dependencies here once we have less picky
         # TODO: concretization.
-        deps = self.dependencies_dict(deptype=('link', 'run'))
+        deps = self.dependencies_dict(deptype=('link', 'run', 'include'))
         if deps:
             d['dependencies'] = syaml_dict([
                 (name,
