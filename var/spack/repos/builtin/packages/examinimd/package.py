@@ -39,7 +39,6 @@ class Examinimd(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/ECP-copa/ExaMiniMD"
     url      = "https://github.com/ECP-copa/ExaMiniMD/archive/master.zip"
 
