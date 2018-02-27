@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
+# Copyright (c) 2018, Los Alamos National Security, LLC
 # Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
