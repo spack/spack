@@ -1495,7 +1495,8 @@ class Spec(object):
 
     def to_dict(self):
         node_list = []
-        for s in self.traverse(order='pre', deptype=('link', 'run')):
+        for s in self.traverse(
+                order='pre', deptype=('link', 'run', 'include')):
             node = s.to_node_dict()
             node[s.name]['hash'] = s.dag_hash()
             node_list.append(node)
