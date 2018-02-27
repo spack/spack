@@ -43,14 +43,13 @@ class Examinimd(MakefilePackage):
     homepage = "https://github.com/ECP-copa/ExaMiniMD"
     url      = "https://github.com/ECP-copa/ExaMiniMD/archive/master.zip"
 
-    
     version('develop', git='https://github.com/ECP-copa/ExaMiniMD', branch='master')
-    #TODO: Add proper tagged release when available
+    # TODO: Add proper tagged release when available
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
     variant('pthreads', default=False, description='Build with POSIX Threads support')
-    #TODO: Set up cuda variant when test machine available
+    # TODO: Set up cuda variant when test machine available
 
     conflicts('+openmp', when='+pthreads')
 
@@ -60,25 +59,24 @@ class Examinimd(MakefilePackage):
     @property
     def build_targets(self):
         targets = []
-        #Append Kokkos
+        # Append Kokkos
         targets.append('KOKKOS_PATH={0}'.format(self.spec['kokkos'].prefix))
-        #Set kokkos device
+        # Set kokkos device
         if 'openmp' in self.spec:
             targets.append('KOKKOS_DEVICES=OpenMP')
         elif 'pthreads' in self.spec:
             targets.append('KOKKOS_DEVICES=Pthread')
         else:
             targets.append('KOKKOS_DEVICES=Serial')
-        #Set MPI as needed
+        # Set MPI as needed
         if '+mpi' in self.spec:
             targets.append('MPI=1')
             targets.append('CXX = {0}'.format(self.spec['mpi'].mpicxx))
         else:
             targets.append('MPI=0')
             targets.append('CXX = {0}'.format('spack_cxx'))
-        
         return targets
-    
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('src/ExaMiniMD', prefix.bin)
@@ -86,4 +84,3 @@ class Examinimd(MakefilePackage):
         mkdirp(prefix.doc)
         install('README.md', prefix.doc)
         install('LICENSE.md', prefix.doc)
-
