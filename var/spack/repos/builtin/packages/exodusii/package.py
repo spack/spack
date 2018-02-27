@@ -79,6 +79,9 @@ class Exodusii(CMakePackage):
             '-DTPL_ENABLE_MPI={0}'.format('ON' if '+mpi' in spec else 'OFF'),
             '-DCMAKE_C_COMPILER={0}'.format(cc_path),
             '-DCMAKE_CXX_COMPILER={0}'.format(cxx_path),
+
+            # jgw
+            '-DCMAKE_CXX_FLAGS={0}'.format("-std=c++11"),
         ]
 
         return options
