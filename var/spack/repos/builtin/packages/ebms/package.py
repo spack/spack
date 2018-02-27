@@ -43,7 +43,7 @@ class Ebms(MakefilePackage):
 
     variant('mpi', default=True, description='Build with MPI support')
 
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi@2:', when='+mpi')
 
     tags = ['proxy-app']
 
