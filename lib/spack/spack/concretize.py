@@ -320,7 +320,7 @@ class DefaultConcretizer(object):
         # By default, prefer later versions of compilers
         compiler_list = sorted(
             compiler_list, key=lambda x: (x.name, x.version), reverse=True)
-        ppk = PackagePrefs(other_spec.name, 'compiler')
+        ppk = PackagePrefs(other_spec.root.name, 'compiler')
         matches = sorted(compiler_list, key=ppk)
 
         # copy concrete version into other_compiler
