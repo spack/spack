@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-from spack.build_systems.cuda import CudaPackage
 
 
 class Dealii(CMakePackage, CudaPackage):
@@ -151,6 +150,9 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre', when='+trilinos+mpi+int64')
 
     # check that the combination of variants makes sense
+    conflicts('^openblas+ilp64', when='@:8.5.1')
+    conflicts('^intel-mkl+ilp64', when='@:8.5.1')
+    conflicts('^intel-parallel-studio+mkl+ilp64', when='@:8.5.1')
     conflicts('+assimp', when='@:8.5.1')
     conflicts('+gmsh', when='@:8.5.1')
     conflicts('+nanoflann', when='@:8.5.1')
@@ -189,6 +191,11 @@ class Dealii(CMakePackage, CudaPackage):
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
+
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            options.append('-DLAPACK_WITH_64BIT_BLAS_INDICES=ON')
 
         if spec.satisfies('@:8.99'):
             options.extend([
@@ -270,7 +277,7 @@ class Dealii(CMakePackage, CudaPackage):
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
                 'sundials', 'nanoflann', 'assimp', 'gmsh'):
-            if library in spec:
+            if ('+' + library) in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
                     '-DDEAL_II_WITH_%s:BOOL=ON' % library.upper()

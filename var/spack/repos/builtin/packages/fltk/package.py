@@ -42,6 +42,8 @@ class Fltk(Package):
 
     version('1.3.3', '9ccdb0d19dc104b87179bd9fd10822e3')
 
+    depends_on('libx11')
+
     patch('font.patch', when='@1.3.3')
 
     variant('shared', default=True,

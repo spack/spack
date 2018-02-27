@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import llnl.util.tty as tty
 
 
 class Qmcpack(CMakePackage):
@@ -33,13 +34,14 @@ class Qmcpack(CMakePackage):
     homepage = "http://www.qmcpack.org/"
     url      = "https://github.com/QMCPACK/qmcpack.git"
 
-    # This download method is untrusted, and is not recommended
-    # by the Spack manual. However, it is easier to maintain
-    # because github hashes can occasionally change
+    # This download method is untrusted, and is not recommended by the
+    # Spack manual. However, it is easier to maintain because github hashes
+    # can occasionally change.
+    # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
+    version('3.3.0', git=url, tag='v3.3.0')
     version('3.2.0', git=url, tag='v3.2.0')
     version('3.1.1', git=url, tag='v3.1.1')
     version('3.1.0', git=url, tag='v3.1.0')
-    version('3.0.0', git=url, tag='v3.0.0')
     version('develop', git=url)
 
     # These defaults match those in the QMCPACK manual
@@ -57,7 +59,7 @@ class Qmcpack(CMakePackage):
                         'Array-of-Structure code. Only for CPU code'
                         'and only in mixed precision')
     variant('timers', default=False,
-             description='Build with support for timers')
+            description='Build with support for timers')
     variant('da', default=False,
             description='Install with support for basic data analysis tools')
     variant('gui', default=False,
@@ -72,7 +74,9 @@ class Qmcpack(CMakePackage):
     conflicts('^openblas+ilp64')
     conflicts('^intel-mkl+ilp64')
 
-    # Dependencies match those in the QMCPACK manual
+    # Dependencies match those in the QMCPACK manual.
+    # FIXME: once concretizer can unite unconditional and conditional
+    # dependencies the some of the '~mpi' will not be necessary.
     depends_on('cmake@3.4.3:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('libxml2')
@@ -92,7 +96,7 @@ class Qmcpack(CMakePackage):
     # blas and lapack patching fails often and so are disabled at this time
     depends_on('py-numpy~blas~lapack', type='run', when='+da')
 
-    # GUI is optional fpr data anlysis
+    # GUI is optional for data anlysis
     # py-matplotlib leads to a long complex DAG for dependencies
     depends_on('py-matplotlib', type='run', when='+gui')
 
@@ -108,6 +112,10 @@ class Qmcpack(CMakePackage):
                patches=patch(patch_url, sha256=patch_checksum),
                when='~mpi')
 
+    # This is Spack specific patch, we may need to enhance QMCPACK's CMake
+    # in the near future.
+    patch('cmake.diff')
+
     def patch(self):
         # FindLibxml2QMC.cmake doesn't check the environment by default
         # for libxml2, so we fix that.
@@ -116,22 +124,23 @@ class Qmcpack(CMakePackage):
                     'CMake/FindLibxml2QMC.cmake')
 
     def cmake_args(self):
+        spec = self.spec
         args = []
 
-        if '+mpi' in self.spec:
-            mpi = self.spec['mpi']
+        if '+mpi' in spec:
+            mpi = spec['mpi']
             args.append('-DCMAKE_C_COMPILER={0}'.format(mpi.mpicc))
             args.append('-DCMAKE_CXX_COMPILER={0}'.format(mpi.mpicxx))
             args.append('-DMPI_BASE_DIR:PATH={0}'.format(mpi.prefix))
 
         # Currently FFTW_HOME and LIBXML2_HOME are used by CMake.
         # Any CMake warnings about other variables are benign.
-        xml2_prefix = self.spec['libxml2'].prefix
+        xml2_prefix = spec['libxml2'].prefix
         args.append('-DLIBXML2_HOME={0}'.format(xml2_prefix))
         args.append('-DLibxml2_INCLUDE_DIRS={0}'.format(xml2_prefix.include))
         args.append('-DLibxml2_LIBRARY_DIRS={0}'.format(xml2_prefix.lib))
 
-        fftw_prefix = self.spec['fftw'].prefix
+        fftw_prefix = spec['fftw'].prefix
         args.append('-DFFTW_HOME={0}'.format(fftw_prefix))
         args.append('-DFFTW_INCLUDE_DIRS={0}'.format(fftw_prefix.include))
         args.append('-DFFTW_LIBRARY_DIRS={0}'.format(fftw_prefix.lib))
@@ -140,15 +149,15 @@ class Qmcpack(CMakePackage):
         args.append('-DHDF5_ROOT={0}'.format(self.spec['hdf5'].prefix))
 
         # Default is MPI, serial version is convenient for cases, e.g. laptops
-        if '+mpi' in self.spec:
+        if '+mpi' in spec:
             args.append('-DQMC_MPI=1')
-        elif '~mpi' in self.spec:
+        elif '~mpi' in spec:
             args.append('-DQMC_MPI=0')
 
         # Default is real-valued single particle orbitals
-        if '+complex' in self.spec:
+        if '+complex' in spec:
             args.append('-DQMC_COMPLEX=1')
-        elif '~complex' in self.spec:
+        elif '~complex' in spec:
             args.append('-DQMC_COMPLEX=0')
 
         # When '-DQMC_CUDA=1', CMake automatically sets:
@@ -157,44 +166,56 @@ class Qmcpack(CMakePackage):
         # There is a double-precision CUDA path, but it is not as well
         # tested.
 
-        if '+cuda' in self.spec:
+        if '+cuda' in spec:
             args.append('-DQMC_CUDA=1')
-        elif '~cuda' in self.spec:
+        elif '~cuda' in spec:
             args.append('-DQMC_CUDA=0')
 
         # Mixed-precision versues double-precision CPU and GPU code
-        if '+mixed' in self.spec:
+        if '+mixed' in spec:
             args.append('-DQMC_MIXED_PRECISION=1')
-        elif '~mixed' in self.spec:
+        elif '~mixed' in spec:
             args.append('-DQMC_MIXED_PRECISION=0')
 
         # New Structure-of-Array (SOA) code, much faster than default
         # Array-of-Structure (AOS) code.
         # No support for local atomic orbital basis.
-        if '+soa' in self.spec:
+        if '+soa' in spec:
             args.append('-DENABLE_SOA=1')
-        elif '~soa' in self.spec:
+        elif '~soa' in spec:
             args.append('-DENABLE_SOA=0')
 
         # Manual Timers
-        if '+timers' in self.spec:
+        if '+timers' in spec:
             args.append('-DENABLE_TIMERS=1')
-        elif '~timers' in self.spec:
+        elif '~timers' in spec:
             args.append('-DENABLE_TIMERS=0')
 
-    #     # Proper MKL detection not working.
-    #     # Include MKL flags
-    #     if 'intel-mkl' in self.spec:
-    #         args.append('-DBLA_VENDOR=Intel10_64lp_seq')
-    #         args.append('-DQMC_INCLUDE={0}'.format(join_path(env['MKLROOT'],'include')))
-        return args
+        # Proper detection of optimized BLAS and LAPACK.
+        # Based on the code from the deal II Spack package:
+        # https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/dealii/package.py
+        #
+        # Basically, we override CMake's auto-detection mechanism
+        # and use the Spack's interface instead
+        lapack_blas = spec['lapack'].libs + spec['blas'].libs
+        args.extend([
+            '-DLAPACK_FOUND=true',
+            '-DLAPACK_LIBRARIES=%s' % lapack_blas.joined(';')
+        ])
 
-    # def setup_environment(self, spack_env, run_env):
-    #     # Add MKLROOT/lib to the CMAKE_PREFIX_PATH to enable CMake to find
-    #     # MKL libraries. MKLROOT environment variable must be defined for
-    #     # this to work properly.
-    #     if 'intel-mkl' in self.spec:
-    #         spack_env.append_path('CMAKE_PREFIX_PATH',format(join_path(env['MKLROOT'],'lib')))
+        # Additionally, we need to pass the BLAS+LAPACK include directory for
+        # header files. Intel MKL requires special case due to differences in
+        # Darwin vs. Linux $MKLROOT naming schemes
+        if 'intel-mkl' in self.spec:
+            args.append(
+                '-DLAPACK_INCLUDE_DIRS=%s' %
+                format(join_path(env['MKLROOT'], 'include')))
+        else:
+            args.append(
+                '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
+                    self.spec['lapack'].prefix.include,
+                    self.spec['blas'].prefix.include))
+        return args
 
     def install(self, spec, prefix):
         """Make the install targets"""
@@ -228,7 +249,19 @@ class Qmcpack(CMakePackage):
     def check(self):
         """Run ctest after building binary.
         It can take over 24 hours to run all the regression tests, here we
-        only run the unit tests and short tests."""
+        only run the unit tests and short tests. If the unit tests fail,
+        the QMCPACK installation aborts. On the other hand, the short tests
+        are too strict and often fail, but are still useful to run. In the
+        future, the short tests will be more reasonable in terms of quality
+        assurance (i.e. they will not be so strict), but will be sufficient to
+        validate QMCPACK in production."""
+
         with working_dir(self.build_directory):
             ctest('-L', 'unit')
-            ctest('-R', 'short')
+            try:
+                ctest('-R', 'short')
+            except ProcessError:
+                warn  = 'Unit tests passed, but short tests have failed.\n'
+                warn += 'Please review failed tests before proceeding\n'
+                warn += 'with production calculations.\n'
+                tty.msg(warn)

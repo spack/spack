@@ -36,6 +36,7 @@ class Qt(Package):
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
 
+    version('5.10.0', 'c5e275ab0ed7ee61d0f4b82cd471770d')
     version('5.9.1',  '77b4af61c49a09833d4df824c806acaf')
     version('5.9.0',  '9c8bc8b828c2b56721980368266df9d9')
     version('5.8.0',  'a9f2494f75f966e2f22358ec367d8f41')
@@ -65,6 +66,10 @@ class Qt(Package):
             description="Build with phonon support.")
     variant('opengl',     default=False,
             description="Build with OpenGL support.")
+
+    # fix installation of pkgconfig files
+    # see https://github.com/Homebrew/homebrew-core/pull/5951
+    patch('restore-pc-files.patch', when='@5.9: platform=darwin')
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
@@ -96,12 +101,24 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
     depends_on("icu4c")
-    depends_on("fontconfig")
+    depends_on("fontconfig", when=(sys.platform != 'darwin'))  # (Unix only)
     depends_on("freetype")
-    # FIXME:
-    # depends_on("freetype", when='@5.8:') and '-system-freetype'
-    # -system-harfbuzz
-    # -system-pcre
+
+    # Core options:
+    # -doubleconversion  [system/qt/no]
+    # -iconv             [posix/sun/gnu/no] (Unix only)
+    # -pcre              [system/qt]
+
+    # Gui, printing, widget options:
+    # -harfbuzz          [system/qt/no]
+    # -xkbcommon-x11     [system/qt/no]
+    # -system-xkbcommon
+
+    # Database options:
+    # -sqlite            [system/qt]
+
+    # Qt3D options:
+    # -assimp            [system/qt/no]
 
     # QtQml
     depends_on("python", when='@5.7.0:', type='build')
@@ -121,6 +138,17 @@ class Qt(Package):
     # depends_on("pulse", when='+multimedia')
     # depends_on("flac", when='+multimedia')
     # depends_on("ogg", when='+multimedia')
+    # -pulseaudio                [auto] (Unix only)
+    # -alsa                      [auto] (Unix only)
+
+    # Webengine options:
+    # -webengine-alsa            [auto] (Linux only)
+    # -webengine-pulseaudio      [auto] (Linux only)
+    # -webengine-embedded-build  [auto] (Linux only)
+    # -webengine-icu             [system/qt] (Linux only)
+    # -webengine-ffmpeg          [system/qt] (Linux only)
+    # -webengine-opus            [system/qt] (Linux only)
+    # -webengine-webp            [system/qt] (Linux only)
 
     use_xcode = True
 
@@ -146,7 +174,9 @@ class Qt(Package):
         elif version >= Version('2.1'):
             url += 'x11-'
 
-        if version >= Version('4.0'):
+        if version >= Version('5.10.0'):
+            url += 'src-'
+        elif version >= Version('4.0'):
             url += 'opensource-src-'
         elif version >= Version('3'):
             url += 'free-'
@@ -198,6 +228,7 @@ class Qt(Package):
 
     @property
     def common_config_args(self):
+        # incomplete list is here http://doc.qt.io/qt-5/configure-options.html
         config_args = [
             '-prefix', self.prefix,
             '-v',
@@ -208,11 +239,13 @@ class Qt(Package):
             '-confirm-license',
             '-openssl-linked',
             '-optimized-qmake',
-            '-fontconfig',
             '-system-freetype',
             '-I{0}/freetype2'.format(self.spec['freetype'].prefix.include),
             '-no-pch'
         ]
+
+        if sys.platform != 'darwin':
+            config_args.append('-fontconfig')
 
         if '@:5.7.1' in self.spec:
             config_args.append('-no-openvg')
@@ -254,6 +287,8 @@ class Qt(Package):
                 '-no-pulseaudio',
                 '-no-alsa',
             ])
+
+        # FIXME: else: -system-xcb ?
 
         if '@4' in self.spec and sys.platform == 'darwin':
             config_args.append('-cocoa')

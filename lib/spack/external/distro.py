@@ -41,7 +41,7 @@ import subprocess
 if not sys.platform.startswith('linux'):
     raise ImportError('Unsupported platform: {0}'.format(sys.platform))
 
-_UNIXCONFDIR = '/etc'
+_UNIXCONFDIR = os.environ.get('UNIXCONFDIR', '/etc')
 _OS_RELEASE_BASENAME = 'os-release'
 
 #: Translation table for normalizing the "ID" attribute defined in os-release
@@ -983,28 +983,41 @@ class LinuxDistribution(object):
                 distro_info['id'] = match.group(1)
             return distro_info
         else:
-            basenames = os.listdir(_UNIXCONFDIR)
-            # We sort for repeatability in cases where there are multiple
-            # distro specific files; e.g. CentOS, Oracle, Enterprise all
-            # containing `redhat-release` on top of their own.
-            basenames.sort()
+            try:
+                basenames = os.listdir(_UNIXCONFDIR)
+                # We sort for repeatability in cases where there are multiple
+                # distro specific files; e.g. CentOS, Oracle, Enterprise all
+                # containing `redhat-release` on top of their own.
+                basenames.sort()
+            except OSError:
+                # This may occur when /etc is not readable but we can't be
+                # sure about the *-release files. Check common entries of
+                # /etc for information. If they turn out to not be there the
+                # error is handled in `_parse_distro_release_file()`.
+                basenames = ['SuSE-release',
+                             'arch-release',
+                             'base-release',
+                             'centos-release',
+                             'fedora-release',
+                             'gentoo-release',
+                             'mageia-release',
+                             'manjaro-release',
+                             'oracle-release',
+                             'redhat-release',
+                             'sl-release',
+                             'slackware-version']
             for basename in basenames:
                 if basename in _DISTRO_RELEASE_IGNORE_BASENAMES:
                     continue
                 match = _DISTRO_RELEASE_BASENAME_PATTERN.match(basename)
                 if match:
-                    try:
-                        filepath = os.path.join(_UNIXCONFDIR, basename)
-                        distro_info = self._parse_distro_release_file(filepath)
-                        if 'name' in distro_info:
-                            # The name is always present if the pattern matches
-                            self.distro_release_file = filepath
-                            distro_info['id'] = match.group(1)
-                            return distro_info
-                    except IOError:
-                        # We found a file we do not have permission to read
-                        # Continue checking candidate files for distro file.
-                        continue
+                    filepath = os.path.join(_UNIXCONFDIR, basename)
+                    distro_info = self._parse_distro_release_file(filepath)
+                    if 'name' in distro_info:
+                        # The name is always present if the pattern matches
+                        self.distro_release_file = filepath
+                        distro_info['id'] = match.group(1)
+                        return distro_info
             return {}
 
     def _parse_distro_release_file(self, filepath):
@@ -1018,12 +1031,16 @@ class LinuxDistribution(object):
         Returns:
             A dictionary containing all information items.
         """
-        if os.path.isfile(filepath):
+        try:
             with open(filepath) as fp:
                 # Only parse the first line. For instance, on SLES there
                 # are multiple lines. We don't want them...
                 return self._parse_distro_release_content(fp.readline())
-        return {}
+        except (OSError, IOError):
+            # Ignore not being able to read a specific, seemingly version
+            # related file.
+            # See https://github.com/nir0s/distro/issues/162
+            return {}
 
     @staticmethod
     def _parse_distro_release_content(line):
@@ -1075,11 +1092,9 @@ def main():
     else:
         logger.info('Name: %s', name(pretty=True))
         distribution_version = version(pretty=True)
-        if distribution_version:
-            logger.info('Version: %s', distribution_version)
+        logger.info('Version: %s', distribution_version)
         distribution_codename = codename()
-        if distribution_codename:
-            logger.info('Codename: %s', distribution_codename)
+        logger.info('Codename: %s', distribution_codename)
 
 
 if __name__ == '__main__':

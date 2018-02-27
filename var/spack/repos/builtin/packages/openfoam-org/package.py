@@ -137,13 +137,18 @@ class OpenfoamOrg(Package):
     #
 
     def setup_environment(self, spack_env, run_env):
+        # This should be similar to the openfoam-com package,
+        # but sourcing the etc/bashrc here seems to exit with an error.
+        # ... this needs to be examined in more detail.
+        #
+        # Minimal environment only.
         run_env.set('FOAM_PROJECT_DIR', self.projectdir)
         run_env.set('WM_PROJECT_DIR', self.projectdir)
         for d in ['wmake', self.archbin]:  # bin already added automatically
             run_env.prepend_path('PATH', join_path(self.projectdir, d))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Provide location of the OpenFOAM project.
+        """Location of the OpenFOAM project directory.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.

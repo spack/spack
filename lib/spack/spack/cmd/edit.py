@@ -120,8 +120,8 @@ def edit(parser, args):
             if not os.path.exists(path):
                 files = glob.glob(path + '*')
                 blacklist = ['.pyc', '~']  # blacklist binaries and backups
-                files = filter(lambda x: all(s not in x for s in blacklist),
-                               files)
+                files = list(filter(
+                    lambda x: all(s not in x for s in blacklist), files))
                 if len(files) > 1:
                     m = 'Multiple files exist with the name {0}.'.format(name)
                     m += ' Please specify a suffix. Files are:\n\n'
