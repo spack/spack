@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import glob
+
 
 class Shoremap(Package):
     """Whole genome resequencing of pools of recombinant mutant genomes allows
@@ -43,8 +43,10 @@ class Shoremap(Package):
 
     def patch(self):
         makefile = FileFilter('makefile')
-        makefile.filter(r'-L/usr/lib/ ', '-L' + self.spec['libxt'].prefix.lib + ' ')
-        makefile.filter(r'-L\./dislin.* -ldislin', '-L' + self.spec['dislin'].prefix + ' -ldislin')
+        makefile.filter(r'-L/usr/lib/ ',
+                        '-L' + self.spec['libxt'].prefix.lib + ' ')
+        makefile.filter(r'-L\./dislin.* -ldislin',
+                        '-L' + self.spec['dislin'].prefix + ' -ldislin')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.prepend_path('LD_LIBRARY_PATH', self.spec['dislin'].prefix)
