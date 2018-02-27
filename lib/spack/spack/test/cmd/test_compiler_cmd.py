@@ -66,26 +66,18 @@ done
 @pytest.mark.usefixtures('config', 'builtin_mock')
 class TestCompilerCommand(object):
 
-    def test_compiler_remove(self, mock_compiler_dir):
+    def test_compiler_remove(self):
         args = spack.util.pattern.Bunch(
-            all=None,
-            compiler_spec=None,
-            add_paths=[mock_compiler_dir],
-            scope=None
-        )
-        spack.cmd.compiler.compiler_find(args)
-
-        test_compiler = 'gcc@' + test_version
-
-        args = spack.util.pattern.Bunch(
-            all=True, compiler_spec=test_compiler, add_paths=[],
-            scope=None
+            all=True, compiler_spec='gcc@4.5.0', add_paths=[], scope=None
         )
         spack.cmd.compiler.compiler_remove(args)
         compilers = spack.compilers.all_compiler_specs()
-        assert spack.spec.CompilerSpec(test_compiler) not in compilers
+        assert spack.spec.CompilerSpec("gcc@4.5.0") not in compilers
 
     def test_compiler_add(self, mock_compiler_dir):
+        # Compilers available by default.
+        old_compilers = set(spack.compilers.all_compiler_specs())
+
         args = spack.util.pattern.Bunch(
             all=None,
             compiler_spec=None,
@@ -96,4 +88,5 @@ class TestCompilerCommand(object):
 
         # Ensure new compiler is in there
         new_compilers = set(spack.compilers.all_compiler_specs())
-        assert any(c.version == Version(test_version) for c in new_compilers)
+        new_compiler = new_compilers - old_compilers
+        assert any(c.version == Version(test_version) for c in new_compiler)
