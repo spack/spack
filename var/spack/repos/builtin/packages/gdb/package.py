@@ -52,10 +52,10 @@ class Gdb(AutotoolsPackage):
     # Optional dependency
     depends_on('python', when='+python')
 
-
     def configure_args(self):
         args = []
         if '+python' in self.spec:
-            args.extend(['--with-python'])
-            args.append('LDFLAGS={0}'.format(self.spec['python'].libs.ld_flags))
+            args.append('--with-python')
+            args.append(
+                    'LDFLAGS={0}'.format(self.spec['python'].libs.ld_flags))
         return args
