@@ -82,4 +82,4 @@ class Examinimd(MakefilePackage):
         install_tree('input', prefix.input)
         mkdirp(prefix.doc)
         install('README.md', prefix.doc)
-        install('LICENSE.md', prefix.doc)
+        install('LICENSE', prefix.doc)
