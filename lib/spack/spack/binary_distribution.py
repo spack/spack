@@ -389,7 +389,7 @@ def make_package_relative(workdir, prefix, allow_root):
     for filename in buildinfo['relocate_binaries']:
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
-        relocate.make_binary_relative(cur_path_names, orig_path_names,
+    relocate.make_binary_relative(cur_path_names, orig_path_names,
                                       old_path, allow_root)
 
 
@@ -401,7 +401,7 @@ def make_package_placeholder(workdir, allow_root):
     cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
         cur_path_names.append(os.path.join(workdir, filename))
-        relocate.make_binary_placeholder(cur_path_names, allow_root)
+    relocate.make_binary_placeholder(cur_path_names, allow_root)
 
 
 def relocate_package(workdir, allow_root):
