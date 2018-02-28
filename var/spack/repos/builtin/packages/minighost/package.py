@@ -63,7 +63,7 @@ class Minighost(MakefilePackage):
         if '%gcc' in self.spec:
             targets.append('COMPILER_SUITE=gnu')
             if '+mpi' in self.spec:
-                targets.append('LIBS=-lm -lmpi_cxx -lgfortran')
+                targets.append('LIBS=-lm -lmpi_f77 -lmpi -lgfortran')
             else:
                 targets.append('LIBS=-lm -lgfortran')
         elif '%cce' in self.spec:
