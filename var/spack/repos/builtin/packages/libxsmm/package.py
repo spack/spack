@@ -68,10 +68,10 @@ class Libxsmm(MakefilePackage):
     @property
     def libs(self):
         result = find_libraries(['libxsmm', 'libxsmmf'], root=self.prefix,
-                                recurse=True)
+                                recursive=True)
         if len(result) == 0:
             result = find_libraries(['libxsmm', 'libxsmmf'], root=self.prefix,
-                                    shared=False, recurse=True)
+                                    shared=False, recursive=True)
         return result
 
     def edit(self, spec, prefix):
