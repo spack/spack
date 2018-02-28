@@ -390,7 +390,7 @@ def make_package_relative(workdir, prefix, allow_root):
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
     relocate.make_binary_relative(cur_path_names, orig_path_names,
-                                      old_path, allow_root)
+                                  old_path, allow_root)
 
 
 def make_package_placeholder(workdir, allow_root):
