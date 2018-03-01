@@ -277,12 +277,11 @@ class IntelPackage(PackageBase):
     #
     #--------------------------------------------------------------------
 
-    @property
-    def compilers_dir(self):
+    def product_dir(self, product_dir_name, postfix_dir=''):
         '''Returns the version-specific directory of an Intel product release,
-        holding the main product and auxiliary files from other products.
+        holding the main product and possibly auxiliary files from other
+        products.
         '''
-        # NB: The grab-baggish "intel-parallel-studio" overwrites this method.
         d = self.prefix
         if sys.platform == 'darwin':
             # TODO: Verify on Mac.
@@ -292,7 +291,7 @@ class IntelPackage(PackageBase):
         # Spack (as "ghost package" integrated via packages.yaml) and
         # Spack-native ones. The key issue is that their prefixes will
         # qualitatively differ in directory depth.
-        if 'compilers_and_libraries_' in d and '.' in d:
+        if ('%s_' % product_dir_name) in d and '.' in d:
             # When MKL was installed outside of Spack, it is likely just one
             # product or product component among possibly many other Intel
             # products and their releases that were installed in sibling or
@@ -300,7 +299,7 @@ class IntelPackage(PackageBase):
             # will inevitably be a highly product-specific and preferably fully
             # version-specific directory.  This is what we want and need.
             pass
-        elif 'compilers_and_libraries' in d:
+        elif product_dir_name in d:
             # The Intel installer scripts try hard to place compatibility links
             # named like this in the install dir to convey upgrade benefits to
             # traditional client apps. But such a generic name can be trouble
@@ -319,19 +318,53 @@ class IntelPackage(PackageBase):
             # means the high-level installation directory that is specific to
             # the *vendor* (think of the default "/opt/intel"). We must now
             # step down into the *product* directory to get the usual
-            # hierarchy, but let's not do that in haste ...
-            d = d.compilers_and_libraries
+            # hierarchy. but let's not do that in haste ...
+            #
+            # For a Spack-born install, the fully-qualified release directory
+            # desired above may seem less important since product upgrades
+            # won't land in the same parent. However, only the fully qualified
+            # directory contains the regular files for the compiler commands:
+            #
+    # $ ls -lF <HASH>/compilers_and_libraries*/linux/bin/intel64/icc
+    #
+    # <HASH>/compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
+    #
+    # <HASH>/compilers_and_libraries_2018/linux/bin/intel64/icc -> \
+    #    ../../../../compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
+    #
+    # <HASH>/compilers_and_libraries/linux/bin/intel64/icc -> \
+    #    ../../../../compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
+            #
+            # Now, Spack packages for MKL and MPI packges use triplet versions,
+            # but intel-parallel-studio does not. So, sadly, we can't have it
+            # easy like this:
+            #
+            #d = Prefix(d.append('compilers_and_libraries_' + self.version))
+            #
+            # Let's see what we got:
 
-            # For a Spack-born install, using the fully-qualified release
-            # directory that is so desired above is possible but far less
-            # important since product upgrades won't land in the same parent.
-            # To force it nonetheless, uncomment the following:
-            #d = Prefix(d.append('_' + self.version))
+            version_glob = product_dir_name + '_2???.*.*'
+            version_dirs = glob.glob(join_path(d, version_glob))
+            if version_dirs:
+                # Take the highest and thus presumably newest match, which
+                # better be the sole one anyway.
+                d = Prefix(version_dirs[-1])
+            else:
+                # This *will* happen during pre-build setup_environment()
+                # when the destination dir is still empty.
+                d = Prefix(join_path(d, product_dir_name))
 
             # Alright, now the final flight of stairs.
-            d = d.linux
+            # NB: A Spack-external package should have this in prefix already.
+            d = Prefix(join_path(d, postfix_dir))
 
+        debug_print(d)
+        return d
+
+    @property
+    def compilers_dir(self):
         # TODO? accomodate other platforms(?)
+        d = self.product_dir('compilers_and_libraries', postfix_dir='linux')
 
         # On my system, using a ghosted MKL, self.prefix showed up as ending
         # with "/compiler". I think this is because I provide that MKL by means
@@ -354,33 +387,8 @@ class IntelPackage(PackageBase):
     def studio_dir(self):
         # The Parallel Studio dir as such holds mostly symlinks to other
         # components, so it's rarely needed, except for, ta-da, psxevars.sh.
-        d = self.prefix
-        if sys.platform == 'darwin':
-            # TODO: verify (if even applicable)
-            return d
+        d = self.product_dir('parallel_studio_xe', postfix_dir='')
 
-        if 'parallel_studio' in d:
-            # Package was likely installed outside of Spack; see lenghty
-            # explanation in parent's compilers_dir().
-            pass
-        else:
-            # Spack-born installation
-            year = str(self.version[1])
-            update_num = str(self.version[2])
-            # Further version components in the full directory name (Intel's
-            # internal build number and possibly more) are usually not in the
-            # user-declared version and are not easily apparent either.
-            v_dir_fuzzy = 'parallel_studio_xe_%s' % year
-            v_dir_glob = '%s.%s*' % (v_dir_fuzzy, update_num)
-
-            version_dirs = glob.glob(join_path(d, v_dir_glob))
-            if version_dirs:
-                # Take highest match, hopefully being the sole one or at least
-                # the newest.
-                d = Prefix(version_dirs[-1])
-            else:
-                # Will happen during pre-build call of setup_environment()
-                d = Prefix(join_path(d, v_dir_fuzzy))
         debug_print(d)
         return d
 
@@ -416,14 +424,22 @@ class IntelPackage(PackageBase):
         debug_print(d)
         return d
 
-    def component_bin_dir(self, component=None):
+    def relative_path(self, file_or_dir, relative_to=''):
+        if not relative_to:
+            relative_to = self.prefix
+        file_or_dir = os.path.realpath(file_or_dir)
+        relative_to = os.path.realpath(relative_to)
+        p = os.path.relpath(file_or_dir, relative_to)
+        return p
+
+    def component_bin_dir(self, component=None, relative=False):
         d = self.component_dir(component)
 
         if sys.platform == 'darwin':
             # TODO: verify
             d = d.bin
         else:
-            if component == 'mpi' or 'intel-mpi':
+            if component == 'mpi' or 'intel-mpi' in self.name:
                 d = d.intel64.bin
             elif component == 'compiler' or 'parallel-studio' in self.name:
                 d = Prefix(ancestor(d)).bin.intel64
@@ -432,10 +448,13 @@ class IntelPackage(PackageBase):
             else:
                 d = d.bin
 
+        if relative:
+            d = self.relative_path(d)
+
         debug_print(d)
         return d
 
-    def component_lib_dir(self, component=None):
+    def component_lib_dir(self, component=None, relative=False):
         # Provide starting directory for find_libraries() and
         # SPACK_COMPILER_EXTRA_RPATHS.
         d = self.component_dir(component)
@@ -449,16 +468,22 @@ class IntelPackage(PackageBase):
                 d = d.lib.intel64
             # A bit weird, but  I'm sure there are good reasons for it.
 
+        if relative:
+            d = self.relative_path(d)
+
         debug_print(d)
         return d
 
     @property
-    def component_include_dir(self, component=None):
+    def component_include_dir(self, component=None, relative=False):
         d = self.component_dir(component)
 
         if component == 'mpi' or 'intel-mpi' in self.name:
             d = d.intel64
         d = d.include
+
+        if relative:
+            d = self.relative_path(d)
 
         debug_print(d)
         return d
@@ -636,17 +661,7 @@ class IntelPackage(PackageBase):
                 EnvironmentModifications.from_sourcing_file(f, 'intel64'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if '+mpi' in self.spec or 'intel-mpi' in self.name:
-            spack_env.set('I_MPI_CC', spack_cc)
-            spack_env.set('I_MPI_CXX', spack_cxx)
-            spack_env.set('I_MPI_F77', spack_fc)
-            spack_env.set('I_MPI_F90', spack_f77)
-            spack_env.set('I_MPI_FC', spack_fc)
-
-            # Convenience variable.
-            spack_env.set('I_MPI_ROOT', self.component_dir(component='mpi'))
-
-        elif '+mkl' in self.spec or 'intel-mkl' in self.name:
+        if '+mkl' in self.spec or 'intel-mkl' in self.name:
             # BTW: The name and meaning of the 'root=' keyword arg of
             # find_libraries() entices us to feed it an "mkl_root" variable,
             # but that is a siren song that pulls us down and under from the
@@ -656,7 +671,10 @@ class IntelPackage(PackageBase):
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                                   self.component_lib_dir(component='mkl'))
 
-        # For other Intel packages, either not needed or not implemented.
+        # Hmm, +mpi would be nice to handle here as well but a plain transfer
+        # from var/spack/repos/builtin/packages/intel-mpi/package.py fails
+        # because flake8 says spack_cc & friends are undefined - grep(1) failed
+        # me in determining where these are defined.
 
     def setup_dependent_package(self, module, dep_spec):
         if '+mpi' in self.spec or 'intel-mpi' in self.name:
