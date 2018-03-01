@@ -904,6 +904,9 @@ class DependencyConstraints(object):
         for types, context in type_to_context.items():
             if any(t in deptypes for t in types):
                 DependencyConstraints._update_context(spec, context)
+        #for context in (self.run, self.link, self.build):
+        #    if spec.name in context and not (spec is context[spec.name]):
+        #        import pdb; pdb.set_trace()
 
     @staticmethod
     def _update_context(spec, context):
@@ -2214,13 +2217,15 @@ class Spec(object):
         shared_run = {}
         shared_link = {}
         shared_build = {}
-        shared_run.update((x.name, x) for x in self.traverse(deptype='run'))
+        shared_run.update((x.name, x) for x in
+                          self.traverse(deptype='run', root=False))
         for dep in shared_run.values():
             # If self wasnt a run dependency of parent, the shared run deps
             # were re-initialized to {}
             dep_constraints.update(dep, ('run',))
         shared_link.update((x.name, x) for x in
-                           self.traverse(deptype=('link', 'include')))
+                           self.traverse(
+                               deptype=('link', 'include'), root=False))
         for dep in shared_link.values():
             dep_constraints.update(dep, ('link',))
         shared_build.update((x.name, x) for x in
