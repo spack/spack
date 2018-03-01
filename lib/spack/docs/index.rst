@@ -74,6 +74,7 @@ or refer to the full manual below.
    contribution_guide
    packaging_guide
    developer_guide
+   docker_for_developers
    Spack API Docs <spack>
    LLNL API Docs <llnl>
 

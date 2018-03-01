@@ -234,5 +234,5 @@ class Opencv(CMakePackage):
     def libs(self):
         shared = "+shared" in self.spec
         return find_libraries(
-            "libopencv_*", root=self.prefix, shared=shared, recurse=True
+            "libopencv_*", root=self.prefix, shared=shared, recursive=True
         )
