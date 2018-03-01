@@ -25,27 +25,29 @@
 from spack import *
 
 
-class Mpileaks(AutotoolsPackage):
-    """Tool to detect and report leaked MPI objects like MPI_Requests and
-       MPI_Datatypes."""
+class Aspcud(CMakePackage):
+    """Aspcud: Package dependency solver
 
-    homepage = "https://github.com/hpc/mpileaks"
-    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
+       Aspcud is a solver for package dependencies. A package universe
+       and a request to install, remove, or upgrade packages have to
+       be encoded in the CUDF format. Such a CUDF document can then be
+       passed to aspcud along with an optimization criteria to obtain
+       a solution to the given package problem."""
 
-    version('1.0', '8838c574b39202a57d7c2d68692718aa')
+    homepage = "https://potassco.org/aspcud"
+    url      = "https://github.com/potassco/aspcud/archive/v1.9.4.tar.gz"
 
-    variant("stackstart", values=int, default=0,
-            description="Specify the number of stack frames to truncate")
+    version('1.9.4', '35e5c663a25912e4bdc94f168e827ed2')
 
-    depends_on("mpi")
-    depends_on("adept-utils")
-    depends_on("callpath")
+    depends_on('boost', type=('build'))
+    depends_on('cmake', type=('build'))
+    depends_on('re2c', type=('build'))
+    depends_on('clingo')
 
-    def configure_args(self):
-        stackstart = int(self.spec.variants['stackstart'].value)
-        args = ["--with-adept-utils=" + spec['adept-utils'].prefix,
-                "--with-callpath=" + spec['callpath'].prefix]
-        if stackstart:
-            args.extend(['--with-stack-start-c=%s' % stackstart,
-                         '--with-stack-start-fortran=%s' % stackstart])
+    def cmake_args(self):
+        spec = self.spec
+        gringo_path = join_path(spec['clingo'].prefix.bin, 'gringo')
+        clasp_path = join_path(spec['clingo'].prefix.bin, 'clasp')
+        args = ['-DASPCUD_GRINGO_PATH={0}'.format(gringo_path),
+                '-DASPCUD_CLASP_PATH={0}'.format(clasp_path)]
         return args

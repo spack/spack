@@ -770,10 +770,6 @@ class ForwardQueryToPackage(object):
                 instance
         """
         self.attribute_name = attribute_name
-        # Turn the default handler into a function with the right
-        # signature that always returns None
-        if default_handler is None:
-            default_handler = lambda descriptor, spec, cls: None
         self.default = default_handler
 
     def __get__(self, instance, cls):
@@ -792,8 +788,11 @@ class ForwardQueryToPackage(object):
 
         The first call that produces a value will stop the chain.
 
-        If no call can handle the request or a None value is produced,
-        then AttributeError is raised.
+        If no call can handle the request then AttributeError is raised with a
+        message indicating that no relevant attribute exists.
+        If a call returns None, an AttributeError is raised with a message
+        indicating a query failure, e.g. that library files were not found in a
+        'libs' query.
         """
         pkg = instance.package
         try:
@@ -814,34 +813,53 @@ class ForwardQueryToPackage(object):
         # Try to get the generic method from Package
         callbacks_chain.append(lambda: getattr(pkg, self.attribute_name))
         # Final resort : default callback
-        callbacks_chain.append(lambda: self.default(self, instance, cls))
+        if self.default is not None:
+            callbacks_chain.append(lambda: self.default(self, instance, cls))
 
         # Trigger the callbacks in order, the first one producing a
         # value wins
         value = None
+        message = None
         for f in callbacks_chain:
             try:
                 value = f()
+                # A callback can return None to trigger an error indicating
+                # that the query failed.
+                if value is None:
+                    msg  = "Query of package '{name}' for '{attrib}' failed\n"
+                    msg += "\tprefix : {spec.prefix}\n"
+                    msg += "\tspec : {spec}\n"
+                    msg += "\tqueried as : {query.name}\n"
+                    msg += "\textra parameters : {query.extra_parameters}"
+                    message = msg.format(
+                        name=pkg.name, attrib=self.attribute_name,
+                        spec=instance, query=instance.last_query)
+                else:
+                    return value
                 break
             except AttributeError:
                 pass
-        # 'None' value raises AttributeError : this permits to 'disable'
-        # the call in a particular package by returning None from the
-        # queried attribute, or will trigger an exception if  things
-        # searched for were not found
-        if value is None:
-            fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
-            fmt += '\tspec : \'{spec}\'\n'
-            fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
-            fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
-            message = fmt.format(
-                name=pkg.name,
-                query=self.attribute_name,
-                spec=instance
-            )
+        # value is 'None'
+        if message is not None:
+            # Here we can use another type of exception. If we do that, the
+            # unit test 'test_getitem_exceptional_paths' in the file
+            # lib/spack/spack/test/spec_dag.py will need to be updated to match
+            # the type.
             raise AttributeError(message)
-
-        return value
+        # 'None' value at this point means that there are no appropriate
+        # properties defined and no default handler, or that all callbacks
+        # raised AttributeError. In this case, we raise AttributeError with an
+        # appropriate message.
+        fmt = '\'{name}\' package has no relevant attribute \'{query}\'\n'  # NOQA: ignore=E501
+        fmt += '\tspec : \'{spec}\'\n'
+        fmt += '\tqueried as : \'{spec.last_query.name}\'\n'
+        fmt += '\textra parameters : \'{spec.last_query.extra_parameters}\'\n'  # NOQA: ignore=E501
+        message = fmt.format(
+            name=pkg.name,
+            query=self.attribute_name,
+            spec=instance
+        )
+        raise AttributeError(message)
 
     def __set__(self, instance, value):
         cls_name = type(instance).__name__
