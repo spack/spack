@@ -22,17 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 
 from spack import *
-from spack.environment import EnvironmentModifications
 
 
 class IntelMpi(IntelPackage):
     """Intel MPI"""
 
+    # BTW:
     # https://software.intel.com/en-us/articles/intel-mpi-library-release-notes-linux
-    # Intel MPI Library 2018 Update 2
+    #   Intel MPI Library 2018 Update 2
     #   ...
     #   Intel MPI Library is now available .. in YUM and APT repositories.
     #   ...
@@ -67,74 +66,5 @@ class IntelMpi(IntelPackage):
         return self.version < Version('2017.2')
 
     @property
-    def mpi_libs(self):
-        # If prefix is too general, recursive searches may get file variants
-        # from supported but inappropriate sub-architectures like 'mic'.
-        libnames = ['libmpifort', 'libmpi']
-        if 'cxx' in self.spec.last_query.extra_parameters:
-            libnames = ['libmpicxx'] + libnames
-        return find_libraries(libnames,
-                              root=self.component_lib_dir,
-                              shared=True, recursive=True)
-
-    @property
-    def mpi_headers(self):
-        return find_headers('mpi',
-                            root=self.component_include_dir,
-                            recursive=False)
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('I_MPI_CC', spack_cc)
-        spack_env.set('I_MPI_CXX', spack_cxx)
-        spack_env.set('I_MPI_F77', spack_fc)
-        spack_env.set('I_MPI_F90', spack_f77)
-        spack_env.set('I_MPI_FC', spack_fc)
-
-        # Convenience variable.
-        spack_env.set('I_MPI_ROOT', self.component_dir)
-
-    def setup_dependent_package(self, module, dep_spec):
-        # Intel comes with 2 different flavors of MPI wrappers:
-        #
-        # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
-        #   the Intel compilers.
-        # * mpicc, mpicxx, mpif90, and mpif77 allow you to set which
-        #   compilers to wrap using I_MPI_CC and friends. By default,
-        #   wraps around the GCC compilers.
-        #
-        # In theory, these should be equivalent as long as I_MPI_CC
-        # and friends are set to point to the Intel compilers, but in
-        # practice, mpicc fails to compile some applications while
-        # mpiicc works.
-        bindir = self.component_bin_dir
-        if self.compiler.name == 'intel':
-            self.spec.mpicc  = bindir.mpiicc
-            self.spec.mpicxx = bindir.mpiicpc
-            self.spec.mpifc  = bindir.mpiifort
-            self.spec.mpif77 = bindir.mpiifort
-        else:
-            self.spec.mpicc  = bindir.mpicc
-            self.spec.mpicxx = bindir.mpicxx
-            self.spec.mpifc  = bindir.mpif90
-            self.spec.mpif77 = bindir.mpif77
-
-    def setup_environment(self, spack_env, run_env):
-        """Adds environment variables to the generated module file.
-
-        These environment variables come from running:
-
-        .. code-block:: console
-
-           $ source compilers_and_libraries/linux/mpi/intel64/bin/mpivars.sh
-        """
-        # NOTE: Spack runs setup_environment twice, once pre-build to set up
-        # the build environment, and once post-installation to determine
-        # the environment variables needed at run-time to add to the module
-        # file. The script we need to source is only present post-installation,
-        # so check for its existence before sourcing.
-        # TODO: At some point we should split setup_environment into
-        # setup_build_environment and setup_run_environment to get around
-        # this problem.
-        f = join_path(self.component_bin_dir, 'mpivars.sh')
-        if os.path.isfile(f):
-            run_env.extend(EnvironmentModifications.from_sourcing_file(f))
+    def file_to_source(self):
+        return join_path(self.component_bin_dir(), 'mpivars.sh')

@@ -22,11 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import glob
 import os
 
 from spack import *
-from spack.environment import EnvironmentModifications
 
 
 class IntelParallelStudio(IntelPackage):
@@ -34,74 +32,89 @@ class IntelParallelStudio(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
+    # As of roughly 2017, the product comes in three "editions" that vary by
+    # scope.
+    #
+    # In Spack, select the edition via the version number in the spec, e.g.:
+    #   intel-parallel-studio@cluster.2018
+    #
+    # NB: Download packages for some pre-2018 versions are actually the same
+    # across editions, with differences apparent only from the tokens present
+    # in the license file obtained as part of the purchase.
+
+    # Cluster Edition (top; all components included)
     version('professional.2018.1', '91669ff7afbfd07868a429a122c90357',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12375/parallel_studio_xe_2018_update1_professional_edition.tgz')
-    version('cluster.2018.1',      '9c007011e0e3fc72747b58756fbf01cd',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12374/parallel_studio_xe_2018_update1_cluster_edition.tgz')
-    version('composer.2018.1',     '28cb807126d713350f4aa6f9f167448a',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12381/parallel_studio_xe_2018_update1_composer_edition.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12375/parallel_studio_xe_2018_update1_professional_edition.tgz')
     version('professional.2018.0', '9a233854e9218937bc5f46f02b3c7542',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12062/parallel_studio_xe_2018_professional_edition.tgz')
-    version('cluster.2018.0',      'fa9baeb83dd2e8e4a464e3db38f28d0f',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12058/parallel_studio_xe_2018_cluster_edition.tgz')
-    version('composer.2018.0',     '31ba768fba6e7322957b03feaa3add28',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12067/parallel_studio_xe_2018_composer_edition.tgz')
-    version('cluster.2017.5',      'baeb8e584317fcdf1f60b8208bd4eab5',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12138/parallel_studio_xe_2017_update5.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12062/parallel_studio_xe_2018_professional_edition.tgz')
     version('professional.2017.4', '27398416078e1e4005afced3e9a6df7e',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
-    version('cluster.2017.4',      '27398416078e1e4005afced3e9a6df7e',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
-    version('composer.2017.4',     'd03d351809e182c481dc65e07376d9a2',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
     version('professional.2017.3', '691874735458d3e88fe0bcca4438b2a9',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
-    version('cluster.2017.3',      '691874735458d3e88fe0bcca4438b2a9',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
-    version('composer.2017.3',     '52344df122c17ddff3687f84ceb21623',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
     version('professional.2017.2', '70e54b33d940a1609ff1d35d3c56e3b3',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
-    version('cluster.2017.2',      '70e54b33d940a1609ff1d35d3c56e3b3',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
-    version('composer.2017.2',     '2891ab1ece43eb61b6ab892f07c47f01',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
     version('professional.2017.1', '7f75a4a7e2c563be778c377f9d35a542',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
-    version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
-    version('composer.2017.1',     '1f31976931ed8ec424ac7c3ef56f5e85',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10978/parallel_studio_xe_2017_update1_composer_edition.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
     version('professional.2017.0', '34c98e3329d6ac57408b738ae1daaa01',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9651/parallel_studio_xe_2017.tgz')
-    version('cluster.2017.0',      '34c98e3329d6ac57408b738ae1daaa01',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9651/parallel_studio_xe_2017.tgz')
-    version('composer.2017.0',     'b67da0065a17a05f110ed1d15c3c6312',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9656/parallel_studio_xe_2017_composer_edition.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9651/parallel_studio_xe_2017.tgz')
     version('professional.2016.4', '16a641a06b156bb647c8a56e71f3bb33',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9781/parallel_studio_xe_2016_update4.tgz')
-    version('cluster.2016.4',      '16a641a06b156bb647c8a56e71f3bb33',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9781/parallel_studio_xe_2016_update4.tgz')
-    version('composer.2016.4',      '2bc9bfc9be9c1968a6e42efb4378f40e',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9785/parallel_studio_xe_2016_composer_edition_update4.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9781/parallel_studio_xe_2016_update4.tgz')
     version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
-    version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
-    version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9063/parallel_studio_xe_2016_composer_edition_update3.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
     version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
-    version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
-    version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
     version('professional.2015.6', 'd460f362c30017b60f85da2e51ad25bf',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+
+    # Professional Edition (middle; excluded: MPI/TAC/Cluster Checker)
+    version('cluster.2018.1',      '9c007011e0e3fc72747b58756fbf01cd',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12374/parallel_studio_xe_2018_update1_cluster_edition.tgz')
+    version('cluster.2018.0',      'fa9baeb83dd2e8e4a464e3db38f28d0f',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12058/parallel_studio_xe_2018_cluster_edition.tgz')
+    version('cluster.2017.5',      'baeb8e584317fcdf1f60b8208bd4eab5',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12138/parallel_studio_xe_2017_update5.tgz')
+    version('cluster.2017.4',      '27398416078e1e4005afced3e9a6df7e',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11537/parallel_studio_xe_2017_update4.tgz')
+    version('cluster.2017.3',      '691874735458d3e88fe0bcca4438b2a9',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11460/parallel_studio_xe_2017_update3.tgz')
+    version('cluster.2017.2',      '70e54b33d940a1609ff1d35d3c56e3b3',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11298/parallel_studio_xe_2017_update2.tgz')
+    version('cluster.2017.1',      '7f75a4a7e2c563be778c377f9d35a542',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10973/parallel_studio_xe_2017_update1.tgz')
+    version('cluster.2017.0',      '34c98e3329d6ac57408b738ae1daaa01',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9651/parallel_studio_xe_2017.tgz')
+    version('cluster.2016.4',      '16a641a06b156bb647c8a56e71f3bb33',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9781/parallel_studio_xe_2016_update4.tgz')
+    version('cluster.2016.3',      'eda19bb0d0d19709197ede58f13443f3',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9061/parallel_studio_xe_2016_update3.tgz')
+    version('cluster.2016.2',      '70be832f2d34c9bf596a5e99d5f2d832',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8676/parallel_studio_xe_2016_update2.tgz')
     version('cluster.2015.6',      'd460f362c30017b60f85da2e51ad25bf',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8469/parallel_studio_xe_2015_update6.tgz')
+
+    # Composer version (basic; excluded: MPI/..., Advisor/Inspector/Vtune)
+    version('composer.2018.1',     '28cb807126d713350f4aa6f9f167448a',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12381/parallel_studio_xe_2018_update1_composer_edition.tgz')
+    version('composer.2018.0',     '31ba768fba6e7322957b03feaa3add28',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12067/parallel_studio_xe_2018_composer_edition.tgz')
+    version('composer.2017.4',     'd03d351809e182c481dc65e07376d9a2',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11541/parallel_studio_xe_2017_update4_composer_edition.tgz')
+    version('composer.2017.3',     '52344df122c17ddff3687f84ceb21623',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11464/parallel_studio_xe_2017_update3_composer_edition.tgz')
+    version('composer.2017.2',     '2891ab1ece43eb61b6ab892f07c47f01',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/11302/parallel_studio_xe_2017_update2_composer_edition.tgz')
+    version('composer.2017.1',     '1f31976931ed8ec424ac7c3ef56f5e85',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/10978/parallel_studio_xe_2017_update1_composer_edition.tgz')
+    version('composer.2017.0',     'b67da0065a17a05f110ed1d15c3c6312',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9656/parallel_studio_xe_2017_composer_edition.tgz')
+    version('composer.2016.4',      '2bc9bfc9be9c1968a6e42efb4378f40e',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9785/parallel_studio_xe_2016_composer_edition_update4.tgz')
+    version('composer.2016.3',     '3208eeabee951fc27579177b593cefe9',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/9063/parallel_studio_xe_2016_composer_edition_update3.tgz')
+    version('composer.2016.2',     '1133fb831312eb519f7da897fec223fa',
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8680/parallel_studio_xe_2016_composer_edition_update2.tgz')
     version('composer.2015.6',      'da9f8600c18d43d58fba0488844f79c9',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
+        url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8432/l_compxe_2015.6.233.tgz')
 
     # Generic Variants
     variant('rpath',    default=True,
@@ -164,109 +177,6 @@ class IntelParallelStudio(IntelPackage):
     conflicts('+inspector', when='@composer.0:composer.9999')
     conflicts('+itac',      when='@composer.0:composer.9999')
     conflicts('+vtune',     when='@composer.0:composer.9999')
-
-    @property
-    def blas_libs(self):
-        spec = self.spec
-        prefix = self.prefix
-        shared = '+shared' in spec
-
-        if '+ilp64' in spec:
-            mkl_integer = ['libmkl_intel_ilp64']
-        else:
-            mkl_integer = ['libmkl_intel_lp64']
-
-        mkl_threading = ['libmkl_sequential']
-
-        omp_libs = LibraryList([])
-
-        if spec.satisfies('threads=openmp'):
-            if '%intel' in spec:
-                mkl_threading = ['libmkl_intel_thread']
-                omp_threading = ['libiomp5']
-
-                omp_root = prefix.compilers_and_libraries.linux.lib.intel64
-                omp_libs = find_libraries(
-                    omp_threading, root=omp_root, shared=shared)
-            elif '%gcc' in spec:
-                mkl_threading = ['libmkl_gnu_thread']
-
-                gcc = Executable(self.compiler.cc)
-                omp_libs = gcc('--print-file-name', 'libgomp.{0}'.format(
-                    dso_suffix), output=str)
-                omp_libs = LibraryList(omp_libs)
-
-        # TODO: TBB threading: ['libmkl_tbb_thread', 'libtbb', 'libstdc++']
-
-        mkl_root = prefix.compilers_and_libraries.linux.mkl.lib.intel64
-
-        mkl_libs = find_libraries(
-            mkl_integer + mkl_threading + ['libmkl_core'],
-            root=mkl_root,
-            shared=shared
-        )
-
-        # Intel MKL link line advisor recommends these system libraries
-        system_libs = find_system_libraries(
-            ['libpthread', 'libm', 'libdl'],
-            shared=shared
-        )
-
-        return mkl_libs + omp_libs + system_libs
-
-    @property
-    def lapack_libs(self):
-        return self.blas_libs
-
-    @property
-    def scalapack_libs(self):
-        libnames = ['libmkl_scalapack']
-        if self.spec.satisfies('^openmpi'):
-            libnames.append('libmkl_blacs_openmpi')
-        elif self.spec.satisfies('^mpich@1'):
-            libnames.append('libmkl_blacs')
-        elif self.spec.satisfies('^mpich@2:'):
-            libnames.append('libmkl_blacs_intelmpi')
-        elif self.spec.satisfies('^mvapich2'):
-            libnames.append('libmkl_blacs_intelmpi')
-        elif self.spec.satisfies('^mpt'):
-            libnames.append('libmkl_blacs_sgimpt')
-        # TODO: ^intel-parallel-studio can mean intel mpi, a compiler or a lib
-        # elif self.spec.satisfies('^intel-parallel-studio'):
-        #     libnames.append('libmkl_blacs_intelmpi')
-        else:
-            raise InstallError('No MPI found for scalapack')
-
-        integer = 'ilp64' if '+ilp64' in self.spec else 'lp64'
-        mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64
-        shared = True if '+shared' in self.spec else False
-
-        libs = find_libraries(
-            ['{0}_{1}'.format(l, integer) for l in libnames],
-            root=mkl_root,
-            shared=shared
-        )
-        return libs
-
-    @property
-    def mpi_libs(self):
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.lib64
-        query_parameters = self.spec.last_query.extra_parameters
-        libraries = ['libmpifort', 'libmpi']
-
-        if 'cxx' in query_parameters:
-            libraries = ['libmpicxx'] + libraries
-
-        return find_libraries(
-            libraries, root=mpi_root, shared=True, recurse=True
-        )
-
-    @property
-    def mpi_headers(self):
-        # recurse from self.prefix will find too many things for all the
-        # supported sub-architectures like 'mic'
-        mpi_root = self.prefix.compilers_and_libraries.linux.mpi.include64
-        return find_headers('mpi', root=mpi_root, recurse=False)
 
     @property
     def components(self):
@@ -346,17 +256,24 @@ class IntelParallelStudio(IntelPackage):
         return components
 
     @property
-    def bin_dir(self):
-        """The relative path to the bin directory with symlinks resolved."""
+    def file_to_source(self):
+        return join_path(self.studio_dir, 'bin', 'psxevars.sh')
 
+    @property
+    def _compiler_bin_dir(self):
+        """Path to the C and Fortran compilers."""
+
+        return self.compilers_dir()
         bin_path = os.path.join(self.prefix.bin, 'icc')
         absolute_path = os.path.realpath(bin_path)  # resolve symlinks
         relative_path = os.path.relpath(absolute_path, self.prefix)
         return os.path.dirname(relative_path)
 
     @property
-    def lib_dir(self):
-        """The relative path to the lib directory with symlinks resolved."""
+    def _compiler_lib_dir(self):
+        """Path to the compilers' libs, with symlinks resolved."""
+
+        BUG_NEED_COMPILERS_DIR
 
         lib_path = os.path.join(self.prefix.lib, 'intel64', 'libimf.a')
         absolute_path = os.path.realpath(lib_path)  # resolve symlinks
@@ -370,7 +287,7 @@ class IntelParallelStudio(IntelPackage):
 
         directories = [
             'Licenses',
-            self.bin_dir
+            self._compiler_bin_dir
         ]
 
         if '+advisor' in spec:
@@ -429,89 +346,40 @@ class IntelParallelStudio(IntelPackage):
         spec = self.spec
 
         if '+rpath' in spec:
-            lib_dir = os.path.join(self.prefix, self.lib_dir)
+            lib_dir = os.path.join(self.prefix, self._compiler_lib_dir)
             for compiler in ['icc', 'icpc', 'ifort']:
                 cfgfilename = os.path.join(
-                    self.prefix, self.bin_dir, '{0}.cfg'.format(compiler))
+                    self.prefix, self._compiler_bin_dir, '{0}.cfg'.format(compiler))
                 cfgfilename = os.path.abspath(cfgfilename)
+
                 with open(cfgfilename, 'w') as f:
-                    f.write('-Xlinker -rpath -Xlinker {0}\n'.format(lib_dir))
+                    f.write('-Xlinker -rpath={0}\n'.format(lib_dir))
 
     @run_after('install')
     def fix_psxevars(self):
         """Newer versions (>2016) of Intel Parallel Studio have a bug in the
         ``psxevars.sh`` script."""
+# Not sure if this still applies as of 2018 (if at all). Unchanged
+# versions (I think) are:
+#
+# $ grep "SCRIPTPATH=" parallel_studio_xe_201?.*/psxevars.sh
+# par..._xe_2016.0.047/psxevars.sh:SCRIPTPATH=/opt/intel
+# par..._xe_2016.1.056/psxevars.sh:SCRIPTPATH=/opt/intel
+# par..._xe_2016.2.062/psxevars.sh:SCRIPTPATH=/opt/intel
+# par..._xe_2016.3.067/psxevars.sh:SCRIPTPATH=/opt/intel
+# par..._xe_2016.4.072/psxevars.sh:SCRIPTPATH=/opt/intel
+# par..._xe_2017.0.035/psxevars.sh:SCRIPTPATH=/opt/intel
+# par..._xe_2017.3.053/psxevars.sh:SCRIPTPATH=/opt/intel/par..._xe_2017.3.053
+# par..._xe_2017.4.056/psxevars.sh:SCRIPTPATH=/opt/intel/par..._xe_2017.4.056
+# par..._xe_2017.5.061/psxevars.sh:SCRIPTPATH=/opt/intel/par..._xe_2017.5.061
+# par..._xe_2017.6.064/psxevars.sh:SCRIPTPATH=/opt/intel/par..._xe_2017.6.064
+# par..._xe_2018.1.038/psxevars.sh:SCRIPTPATH=/opt/intel/par..._xe_2018.1.038
+#
+# (I did not have .1 and .2 installed)
 
-        bindir = glob.glob(join_path(
-            self.prefix, 'parallel_studio*', 'bin'))[0]
-        bindir = os.path.abspath(bindir)
-        if self.version[1] > 2016:
-            filter_file('^SCRIPTPATH=.*', 'SCRIPTPATH={0}'.format(self.prefix),
-                        os.path.join(bindir, 'psxevars.sh'),
-                        os.path.join(bindir, 'psxevars.csh'))
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        if '+mpi' in self.spec:
-            spack_env.set('I_MPI_CC',  spack_cc)
-            spack_env.set('I_MPI_CXX', spack_cxx)
-            spack_env.set('I_MPI_F77', spack_fc)
-            spack_env.set('I_MPI_F90', spack_f77)
-            spack_env.set('I_MPI_FC',  spack_fc)
-
-        # set up MKLROOT for everyone using MKL package
-        if '+mkl' in self.spec:
-            mkl_root = self.prefix.compilers_and_libraries.linux.mkl.lib.intel64  # noqa
-
-            spack_env.set('MKLROOT', self.prefix)
-            spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS', mkl_root)
-
-    def setup_dependent_package(self, module, dep_spec):
-        if '+mpi' in self.spec:
-            # Intel comes with 2 different flavors of MPI wrappers:
-            #
-            # * mpiicc, mpiicpc, and mpifort are hardcoded to wrap around
-            #   the Intel compilers.
-            # * mpicc, mpicxx, mpif90, and mpif77 allow you to set which
-            #   compilers to wrap using I_MPI_CC and friends. By default,
-            #   wraps around the GCC compilers.
-            #
-            # In theory, these should be equivalent as long as I_MPI_CC
-            # and friends are set to point to the Intel compilers, but in
-            # practice, mpicc fails to compile some applications while
-            # mpiicc works.
-            bindir = self.prefix.compilers_and_libraries.linux.mpi.intel64.bin
-
-            if self.compiler.name == 'intel':
-                self.spec.mpicc  = bindir.mpiicc
-                self.spec.mpicxx = bindir.mpiicpc
-                self.spec.mpifc  = bindir.mpiifort
-                self.spec.mpif77 = bindir.mpiifort
-            else:
-                self.spec.mpicc  = bindir.mpicc
-                self.spec.mpicxx = bindir.mpicxx
-                self.spec.mpifc  = bindir.mpif90
-                self.spec.mpif77 = bindir.mpif77
-
-    def setup_environment(self, spack_env, run_env):
-        """Adds environment variables to the generated module file.
-
-        These environment variables come from running:
-
-        .. code-block:: console
-
-           $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
-        """
-        # NOTE: Spack runs setup_environment twice, once pre-build to set up
-        # the build environment, and once post-installation to determine
-        # the environment variables needed at run-time to add to the module
-        # file. The script we need to source is only present post-installation,
-        # so check for its existence before sourcing.
-        # TODO: At some point we should split setup_environment into
-        # setup_build_environment and setup_run_environment to get around
-        # this problem.
-        psxevars = glob.glob(join_path(
-            self.prefix, 'parallel_studio*', 'bin', 'psxevars.sh'))
-
-        if psxevars:
-            run_env.extend(EnvironmentModifications.from_sourcing_file(
-                psxevars[0], 'intel64'))
+        f = self.file_to_source
+        if self.version > Version('2016') and self.version < Version('2017.3'):
+            filter_file('^SCRIPTPATH=.*',
+                        'SCRIPTPATH={0}'.format(self.prefix),
+                        f)
+        # Don't bother with the csh version.
