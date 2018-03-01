@@ -722,7 +722,7 @@ class TestSpecDag(object):
 
         run3 -b-> build3
     """
-
+    @pytest.mark.usefixtures('config')
     def test_deptype_traversal(self):
         dag = Spec('dtuse')
         dag.concretize()

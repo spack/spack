@@ -2134,8 +2134,6 @@ class Spec(object):
             if provider:
                 dep = provider
         else:
-            if dep.package.provides('pkgconfig'):
-                import pdb; pdb.set_trace()
             provider_index.update(dep)
 
         #tty.debug("merging: " + dep.name)
@@ -2217,8 +2215,14 @@ class Spec(object):
         shared_link = {}
         shared_build = {}
         shared_run.update((x.name, x) for x in self.traverse(deptype='run'))
+        for dep in shared_run.values():
+            # If self wasnt a run dependency of parent, the shared run deps
+            # were re-initialized to {}
+            dep_constraints.update(dep, ('run',))
         shared_link.update((x.name, x) for x in
                            self.traverse(deptype=('link', 'include')))
+        for dep in shared_link.values():
+            dep_constraints.update(dep, ('link',))
         shared_build.update((x.name, x) for x in
                             self.dependencies(deptype=('build', 'test')))
 
