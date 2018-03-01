@@ -113,6 +113,7 @@ from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
 from llnl.util.lang import check_kwargs
 from llnl.util.tty.color import cwrite, colorize, cescape, get_color_when
+import llnl.util.tty as tty
 
 import spack
 import spack.architecture
@@ -882,44 +883,76 @@ class SpecBuildInterface(ObjectWrapper):
 
 
 class DependencyConstraints(object):
-    def __init__(self, spec=None):
-        context = {}
-        if spec:
-            for dep in spec.visible_dependencies():
-                context[dep.name] = dep
-        self.contexts = [context]
+    def __init__(self, shared_run=None, shared_link=None, shared_build=None):
+        self.run = shared_run or {}
+        self.link = shared_link or {}
+        self.build = shared_build or {}
 
     def copy(self):
         copy = DependencyConstraints()
-        copy.contexts = list(self.contexts)
+        copy.run = list(self.run)
+        copy.link = list(self.link)
+        copy.build = list(self.build)
         return copy
 
-    def update(self, spec):
-        for context in self.contexts:
+    def update(self, spec, deptypes):
+        type_to_context = {
+            ('run',): self.run,
+            ('link', 'include'): self.link,
+            ('build', 'test'): self.build,
+        }
+        for types, context in type_to_context.items():
+            if any(t in deptypes for t in types):
+                DependencyConstraints._update_context(spec, context)
+
+    @staticmethod
+    def _update_context(spec, context):
+        try:
             if spec.name in context:
                 assert(spec is context[spec.name])
-        for context in self.contexts:
+            if spec.name not in context:
+                context[spec.name] = spec
+        except:
+            import pdb; pdb.set_trace()
+            raise
+
+    @staticmethod
+    def _update_contexts(spec, contexts):
+        for context in contexts:
+            if spec.name in context:
+                assert(spec is context[spec.name])
+        for context in contexts:
             if spec.name not in context:
                 context[spec.name] = spec
 
     def update_transitive(self, spec):
-        for x in spec.traverse(deptype=('link', 'run', 'include')):
-            self.update(x)
+        for x in spec.traverse(deptype=('link', 'include')):
+            self.update(x, ('link',))
+        for x in spec.traverse(deptype='run'):
+            self.update(x, ('run',))
+        for x in spec.dependencies(deptype=('build', 'test')):
+            self.update(x, ('build',))
 
-    def get(self, name):
-        hits = list(c for c in self.contexts if name in c)
-        if hits:
-            return hits[0][name]
-
-    def append(self, other):
-        self.contexts.extend(other.contexts)
+    def get(self, name, deptypes):
+        type_to_context = {
+            ('run',): self.run,
+            ('link', 'include'): self.link,
+            ('build', 'test'): self.build,
+        }
+        for types, context in type_to_context.items():
+            if any(t in deptypes for t in types):
+                if name in context:
+                    return context[name]
 
     def root_deps(self):
-        return list(self.contexts[0].values())
+        return list(itertools.chain(self.run.values(), self.link.values(),
+                                    self.build.values()))
 
     def replace(self, spec_name, replacement):
-        self.contexts[0][replacement.name] = replacement
-        self.contexts[0][spec_name] = replacement
+        for context in (self.run, self.link, self.build):
+            if spec_name in context:
+                context[replacement.name] = replacement
+                context[spec_name] = replacement
 
 
 @key_ordering
@@ -1769,7 +1802,8 @@ class Spec(object):
                         copy = self.copy()
                         copy[spec.name]._dup(replacement, deps=False)
 
-                        dep_constraints_copy = DependencyConstraints(copy)
+                        dep_constraints_copy = DependencyConstraints()
+                        dep_constraints_copy.update_transitive(copy)
 
                         try:
                             # If there are duplicate providers or duplicate
@@ -1848,7 +1882,8 @@ class Spec(object):
         changed = True
         force = False
 
-        dep_constraints = DependencyConstraints(self)
+        dep_constraints = DependencyConstraints()
+        dep_constraints.update_transitive(self)
         user_specified_deps = set(
             x.copy(deps=False) for x in self.traverse(root=False))
         self._dependencies.clear()
@@ -2099,9 +2134,15 @@ class Spec(object):
             if provider:
                 dep = provider
         else:
+            if dep.package.provides('pkgconfig'):
+                import pdb; pdb.set_trace()
             provider_index.update(dep)
 
-        pre_existing = dep_constraints.get(dep.name)
+        #tty.debug("merging: " + dep.name)
+        #if dep.name == 'pkgconfig':
+        #    import pdb; pdb.set_trace()
+
+        pre_existing = dep_constraints.get(dep.name, dependency.type)
 
         # If the spec isn't already in the set of dependencies, add it.
         # Note: dep is always owned by this method. If it's from the
@@ -2111,7 +2152,7 @@ class Spec(object):
             # merge package/vdep information into spec
             try:
                 changed |= pre_existing.constrain(dep)
-                dep_constraints.update(pre_existing)
+                dep_constraints.update(pre_existing, dependency.type)
                 resolved = pre_existing
             except UnsatisfiableSpecError as e:
                 fmt = 'An unsatisfiable {0}'.format(e.constraint_type)
@@ -2132,8 +2173,9 @@ class Spec(object):
         else:
             if self.concrete:
                 return False
-            dep_constraints.update(dep)
+            dep_constraints.update(dep, dependency.type)
             resolved = dep
+            tty.debug('not pre-existing: ' + dep.name)
             changed = True
 
         # Add merged spec to my deps and recurse
@@ -2141,9 +2183,11 @@ class Spec(object):
             self._add_dependency(resolved, dependency.type)
         elif self._dependencies[resolved.name].spec != resolved:
             child = self._dependencies[resolved.name].spec
-            err_msg = ("{0} has {1} as a dependency but dep constraints" +
+            import pdb; pdb.set_trace()
+            err_msg = ("{0} has {1} as a dependency but dep constraints"
                        " contain a reference to a different {2}")
-            err_msg.format(self.name, child.format(), resolved.format())
+            err_msg = err_msg.format(
+                self.name, child.format(), resolved.format())
             raise ValueError(err_msg)
 
         changed |= resolved._normalize_helper(
@@ -2156,7 +2200,7 @@ class Spec(object):
                           user_build_constraints=None):
         """Recursive helper function for _normalize."""
         if self in visited:
-            dep_constraints.update_transitive(self)
+            #dep_constraints.update_transitive(self)
             return False
         visited.add(self)
 
@@ -2165,20 +2209,20 @@ class Spec(object):
         if self.virtual or self.external:
             return False
 
-        build_only = set()
-        for dep_name in self.package_class.dependencies:
-            dependency = self._evaluate_dependency_conditions(dep_name)
-            if dependency and set(dependency.type) == set(['build']):
-                build_only.add(dep_name)
-        if build_only:
-            build_constraints = DependencyConstraints(self)
-            dep_constraints = dep_constraints.copy()
-            dep_constraints.append(build_constraints)
-
         # Combine constraints from package deps with constraints from
         # the spec
         any_change = False
         changed = True
+        shared_run = {}
+        shared_link = {}
+        shared_build = {}
+        shared_run.update((x.name, x) for x in self.traverse(deptype='run'))
+        shared_link.update((x.name, x) for x in
+                           self.traverse(deptype=('link', 'include')))
+        shared_build.update((x.name, x) for x in
+                            self.dependencies(deptype=('build', 'test')))
+
+        dep_to_constraints = {}
         while changed:
             changed = False
             for dep_name in self.package_class.dependencies:
@@ -2190,14 +2234,34 @@ class Spec(object):
                           set(dependency.type) - set(['test'])):
                     continue
 
-                child_build = in_build or dep_name in build_only
-                if dep_name in build_only:
-                    child_constraints = build_constraints
+                deptypes = dependency.type
+                if dep_name in dep_to_constraints:
+                    child_constraints = dep_to_constraints[dep_name]
                 else:
-                    child_constraints = dep_constraints
+                    if 'run' in deptypes:
+                        run_group = dep_constraints.run
+                    elif 'build' in deptypes or 'test' in deptypes:
+                        run_group = shared_run
+                    else:
+                        run_group = None
 
-                if dependency and (all_deps or dep_name not in build_only):
-                    if user_build_constraints and dep_name in build_only:
+                    if 'link' in deptypes or 'include' in deptypes:
+                        link_group = dep_constraints.link
+                    else:
+                        link_group = None
+
+                    child_constraints = DependencyConstraints(
+                        shared_run=run_group,
+                        shared_link=link_group,
+                        shared_build=shared_build
+                    )
+                    dep_to_constraints[dep_name] = child_constraints
+
+                build_only = set(deptypes) <= set(['build', 'test'])
+                child_build = in_build or build_only
+
+                if dependency and (all_deps or not build_only):
+                    if user_build_constraints and build_only:
                         for constraint_spec in user_build_constraints:
                             if constraint_spec.name == dependency.name:
                                 dependency.constrain(constraint_spec)
@@ -2206,13 +2270,16 @@ class Spec(object):
                         dependency, child_constraints, visited,
                         provider_index, all_deps, child_build,
                         user_build_constraints)
+                    if local_changed:
+                        tty.debug('changed: ' + dependency.name)
                     changed |= local_changed
             any_change |= changed
 
         return any_change
 
     def normalize(self):
-        dep_constraints = DependencyConstraints(self)
+        dep_constraints = DependencyConstraints()
+        dep_constraints.update_transitive(self)
         self._dependencies.clear()
         self._normalize(dep_constraints, force=True)
         # Don't check if all user-specified deps are satisfied here because
@@ -2252,7 +2319,7 @@ class Spec(object):
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
         provider_index = ProviderIndex(
-            list(dep_constraints.root_deps()), restrict=True)
+            list(self.traverse()), restrict=True)
 
         visited = set()
 
