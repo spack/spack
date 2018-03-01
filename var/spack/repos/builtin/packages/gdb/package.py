@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gdb(Package):
+class Gdb(AutotoolsPackage):
     """GDB, the GNU Project debugger, allows you to see what is going on
     'inside' another program while it executes -- or what another
     program was doing at the moment it crashed.
@@ -52,10 +52,10 @@ class Gdb(Package):
     # Optional dependency
     depends_on('python', when='+python')
 
-    def install(self, spec, prefix):
-        options = ['--prefix=%s' % prefix]
-        if '+python' in spec:
-            options.extend(['--with-python'])
-        configure(*options)
-        make()
-        make("install")
+    def configure_args(self):
+        args = []
+        if '+python' in self.spec:
+            args.append('--with-python')
+            args.append('LDFLAGS={0}'.format(
+                self.spec['python'].libs.ld_flags))
+        return args

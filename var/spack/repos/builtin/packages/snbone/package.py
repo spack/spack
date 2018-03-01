@@ -50,7 +50,9 @@ class Snbone(MakefilePackage):
                 elif self.compiler.name == 'intel':
                     make('COMPILER=intel', 'LDFLAGS=-lm')
                 else:
-                    make('COMPILER=gfortran', 'LDFLAGS=-lm')
+                    # older gcc need link libs after objs, but
+                    # LDFLAGS is in the front, so use IBMLIB instead
+                    make('COMPILER=gfortran', 'IBMLIB=-lm')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin.C)
