@@ -423,7 +423,6 @@ def _compiler_concretization_failure(compiler_spec, arch):
     # Distinguish between the case that there are compilers for
     # the arch but not with the given compiler spec and the case that
     # there are no compilers for the arch at all
-    import pdb; pdb.set_trace()
     if not spack.compilers.compilers_for_arch(arch):
         available_os_targets = set(
             (c.operating_system, c.target) for c in
