@@ -7,14 +7,16 @@ CC  = "gcc@4.8.5"
 JDK = "jdk@8u141-b15"
 
 # Install Intel Compiler
-for pkg in ["intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC),
+for pkg in ["intel-parallel-studio@cluster.2015.6+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC),
+            "intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC),
             "intel-parallel-studio@cluster.2017.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC),
             "intel-parallel-studio@cluster.2018.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %{} threads=openmp".format(CC)]:
     os.system("rm -f $HOME/spack/etc/spack/licenses/intel/license.lic")
     install(pkg)
 
 # Install Intel Parallel Studio
-for pkg in ["intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %intel@16.0.4 threads=openmp".format(CC),
+for pkg in ["intel-parallel-studio@cluster.2015.6+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %intel@15.0.6 threads=openmp",
+            "intel-parallel-studio@cluster.2016.4+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %intel@16.0.4 threads=openmp",
             "intel-parallel-studio@cluster.2017.5+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %intel@17.0.5 threads=openmp",
             "intel-parallel-studio@cluster.2018.1+advisor+clck+daal+inspector+ipp+itac+mkl+mpi+tbb+vtune %intel@18.0.1 threads=openmp"]:
     os.system("rm -f $HOME/spack/etc/spack/licenses/intel/license.lic")
