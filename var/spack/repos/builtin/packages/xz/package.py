@@ -34,6 +34,9 @@ class Xz(AutotoolsPackage):
     url      = "http://tukaani.org/xz/xz-5.2.0.tar.bz2"
     list_url = "http://tukaani.org/xz/old.html"
 
-    version('5.2.3', '1592e7ca3eece099b03b35f4d9179e7c')
-    version('5.2.2', 'f90c9a0c8b259aee2234c4e0d7fd70af')
-    version('5.2.0', '867cc8611760240ebf3440bd6e170bb9')
+    version('5.2.3', '1592e7ca3eece099b03b35f4d9179e7c',
+            url='https://netcologne.dl.sourceforge.net/project/lzmautils/xz-5.2.3.tar.bz2')
+    version('5.2.2', 'f90c9a0c8b259aee2234c4e0d7fd70af',
+            url='https://netcologne.dl.sourceforge.net/project/lzmautils/xz-5.2.2.tar.bz2')
+    version('5.2.0', '867cc8611760240ebf3440bd6e170bb9',
+            url='https://netcologne.dl.sourceforge.net/project/lzmautils/xz-5.2.0.tar.bz2')
