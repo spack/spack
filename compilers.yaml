@@ -129,3 +129,16 @@ compilers:
       fc: /lustre/spack/tools/linux-centos7-x86_64/intel-16.0.4/intel-parallel-studio-cluster.2016.4-ybjjq75tqpzgzjc4drolyijzm45g5qul/bin/ifort
     spec: intel@16.0.4
     target: x86_64
+- compiler:
+    environment: {}
+    extra_rpaths: []
+    flags: {}
+    modules: []
+    operating_system: centos7
+    paths:
+      cc:  /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/icc
+      cxx: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/icpc
+      f77: /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/ifort
+      fc:  /lustre/usr/intel_cluster_studio/composer_xe_2015.2.164/bin/intel64/ifort
+    spec: intel@15.0.2
+    target: x86_64
