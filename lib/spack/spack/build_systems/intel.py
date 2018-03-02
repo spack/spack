@@ -277,7 +277,7 @@ class IntelPackage(PackageBase):
     #
     #--------------------------------------------------------------------
 
-    def product_dir(self, product_dir_name, version_glob='_2???.*.*',
+    def product_dir(self, product_dir_name, version_glob='_2???.*.*[0-9]',
         postfix_dir=''):
         '''Returns the version-specific directory of an Intel product release,
         holding the main product and possibly auxiliary files from other
@@ -359,7 +359,7 @@ class IntelPackage(PackageBase):
 
             # Alright, now the final flight of stairs.
             # NB: A Spack-external package should have this in prefix already,
-            # so it's only applied here.
+            # so it's only applied here, for Spack-internal requests.
             d = Prefix(join_path(d, postfix_dir))
 
         debug_print(d)
@@ -395,9 +395,10 @@ class IntelPackage(PackageBase):
         # components, so it's rarely needed, except for, ta-da, psxevars.sh.
 
         d = self.product_dir('parallel_studio_xe', postfix_dir='')
-        # NODO: The sole 2015 "composer" version in the Spack repo's as of
-        # 2018-02 would in fact need:
+        # NODO: The sole 2015 "composer" version in the Spack repos (as of
+        # 2018-02) would in fact need:
         #d = self.product_dir('composer_xe', postfix_dir='')
+        # But a site running Spack likely has the successors licensed, right?
 
         debug_print(d)
         return d
@@ -669,6 +670,8 @@ class IntelPackage(PackageBase):
         else:
             run_env.extend(
                 EnvironmentModifications.from_sourcing_file(f, 'intel64'))
+        # DEBUG
+        self.setup_dependent_environment(spack_env, run_env, '')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         if '+mkl' in self.spec or 'intel-mkl' in self.name:
@@ -681,10 +684,20 @@ class IntelPackage(PackageBase):
             spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                                   self.component_lib_dir(component='mkl'))
 
-        # Hmm, +mpi would be nice to handle here as well but a plain transfer
-        # from var/spack/repos/builtin/packages/intel-mpi/package.py fails
-        # because flake8 says spack_cc & friends are undefined - grep(1) failed
-        # me in determining where these are defined.
+        # Hmm, +mpi would be nice to handle here as well but unification from:
+        #   var/spack/repos/builtin/packages/intel-mpi/package.py
+        #   var/spack/repos/builtin/packages/intel-parallel-studio/package.py
+        # fails because flake8 says spack_cc & friends are undefined - grep(1)
+        # failed me in determining where these are defined.
+        #
+        #if '+mpi' in self.spec or 'intel-mpi' in self.name:
+        #   spack_env.set('I_MPI_CC', spack_cc)
+        #   spack_env.set('I_MPI_CXX', spack_cxx)
+        #   spack_env.set('I_MPI_F77', spack_fc)
+        #   spack_env.set('I_MPI_F90', spack_f77)
+        #   spack_env.set('I_MPI_FC', spack_fc)
+        #   # Convenience variable.
+        #   spack_env.set('I_MPI_ROOT', self.component_dir(component='mpi'))
 
     def setup_dependent_package(self, module, dep_spec):
         if '+mpi' in self.spec or 'intel-mpi' in self.name:

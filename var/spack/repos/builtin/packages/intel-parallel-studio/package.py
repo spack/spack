@@ -312,6 +312,17 @@ class IntelParallelStudio(IntelPackage):
             with open(compiler_cfg, 'w') as f:
                 f.write('-Xlinker -rpath={0}\n'.format(compiler_lib_dir))
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # DUP code in var/spack/repos/builtin/packages/intel-mpi/package.py
+        # Should be in parent class, but spack_cc & friends are undef'd there!?
+        spack_env.set('I_MPI_CC', spack_cc)
+        spack_env.set('I_MPI_CXX', spack_cxx)
+        spack_env.set('I_MPI_F77', spack_fc)
+        spack_env.set('I_MPI_F90', spack_f77)
+        spack_env.set('I_MPI_FC', spack_fc)
+        # Convenience variable.
+        spack_env.set('I_MPI_ROOT', self.component_dir(component='mpi'))
+
     @run_after('install')
     def fix_psxevars(self):
         """Newer versions (>2016) of Intel Parallel Studio have a bug in the
