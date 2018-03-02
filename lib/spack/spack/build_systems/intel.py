@@ -277,7 +277,8 @@ class IntelPackage(PackageBase):
     #
     #--------------------------------------------------------------------
 
-    def product_dir(self, product_dir_name, postfix_dir=''):
+    def product_dir(self, product_dir_name, version_glob='_2???.*.*',
+        postfix_dir=''):
         '''Returns the version-specific directory of an Intel product release,
         holding the main product and possibly auxiliary files from other
         products.
@@ -292,7 +293,7 @@ class IntelPackage(PackageBase):
         # Spack-native ones. The key issue is that their prefixes will
         # qualitatively differ in directory depth.
         if ('%s_' % product_dir_name) in d and '.' in d:
-            # When MKL was installed outside of Spack, it is likely just one
+            # If e.g. MKL was installed outside of Spack, it is likely just one
             # product or product component among possibly many other Intel
             # products and their releases that were installed in sibling or
             # cousin directories.  In such cases, the prefix given to Spack
@@ -308,9 +309,12 @@ class IntelPackage(PackageBase):
             # builds of dependent packages may be affected. (Though Intel has
             # been remarkably good at backward compatibility.)
             # I'm not sure if Spack's package hashing includes link targets.
+            #
             # NB: Code may never be reached if self.prefix is abspath()'ed!?
-            tty.warn('Intel product found in a version-neutral directory - '
-                     'future builds may not be reproducible.')
+            # NB2: Warning could get tiresome without a seen++ test.
+            #
+            #tty.warn('Intel product found in a version-neutral directory - '
+            #         'future builds may not be reproducible.')
             pass
         else:
             # By contrast, a Spack-born MKL installation will inherit its
@@ -335,27 +339,27 @@ class IntelPackage(PackageBase):
     # <HASH>/compilers_and_libraries/linux/bin/intel64/icc -> \
     #    ../../../../compilers_and_libraries_2018.1.163/linux/bin/intel64/icc*
             #
-            # Now, Spack packages for MKL and MPI packges use triplet versions,
-            # but intel-parallel-studio does not. So, sadly, we can't have it
-            # easy like this:
-            #
+            # Now, the Spack packages for MKL and MPI packges use version
+            # triplets, but the one for intel-parallel-studio does not.
+            # So, we can't have it quite as easy as:
             #d = Prefix(d.append('compilers_and_libraries_' + self.version))
-            #
-            # Let's see what we got:
+            # Alright, let's see what we can find instead:
+            matching_dirs = glob.glob(join_path(d, product_dir_name +
+                version_glob))
 
-            version_glob = product_dir_name + '_2???.*.*'
-            version_dirs = glob.glob(join_path(d, version_glob))
-            if version_dirs:
+            if matching_dirs:
                 # Take the highest and thus presumably newest match, which
                 # better be the sole one anyway.
-                d = Prefix(version_dirs[-1])
+                d = Prefix(matching_dirs[-1])
             else:
-                # This *will* happen during pre-build setup_environment()
-                # when the destination dir is still empty.
+                # No match -- this *will* happen during pre-build
+                # setup_environment() when the destination dir is still empty.
+                # Return a sensible value anyway.
                 d = Prefix(join_path(d, product_dir_name))
 
             # Alright, now the final flight of stairs.
-            # NB: A Spack-external package should have this in prefix already.
+            # NB: A Spack-external package should have this in prefix already,
+            # so it's only applied here.
             d = Prefix(join_path(d, postfix_dir))
 
         debug_print(d)
@@ -363,8 +367,9 @@ class IntelPackage(PackageBase):
 
     @property
     def compilers_dir(self):
-        # TODO? accomodate other platforms(?)
-        d = self.product_dir('compilers_and_libraries', postfix_dir='linux')
+        # TODO? accommodate other platforms(?)
+        platform = 'linux'
+        d = self.product_dir('compilers_and_libraries', postfix_dir=platform)
 
         # On my system, using a ghosted MKL, self.prefix showed up as ending
         # with "/compiler". I think this is because I provide that MKL by means
@@ -376,8 +381,9 @@ class IntelPackage(PackageBase):
         # Ahem, apparently, the Prefix class lacks a native parent() method
         # (kinda understandably so), and the syntax blows up on trying "..".
         #
-        # NB: Searching by platform, we can indulge in hardcoding the path sep.
-        while '/linux' in d and not d.endswith('/linux'):
+        # NB: Targeting a platform, we can indulge in hardcoding the path sep.
+        platform_dir = '/' + platform
+        while platform_dir in d and not d.endswith(platform_dir):
             d = Prefix(ancestor(d))
 
         debug_print(d)
@@ -387,7 +393,11 @@ class IntelPackage(PackageBase):
     def studio_dir(self):
         # The Parallel Studio dir as such holds mostly symlinks to other
         # components, so it's rarely needed, except for, ta-da, psxevars.sh.
+
         d = self.product_dir('parallel_studio_xe', postfix_dir='')
+        # NODO: The sole 2015 "composer" version in the Spack repo's as of
+        # 2018-02 would in fact need:
+        #d = self.product_dir('composer_xe', postfix_dir='')
 
         debug_print(d)
         return d
