@@ -54,4 +54,5 @@ class Snpeff(Package):
         java = join_path(self.spec['java'].prefix.bin, 'java')
         kwargs = {'backup': False}
         filter_file('^java', java, script, **kwargs)
-        filter_file('snpEff.jar', join_path(prefix.bin, 'snpEff.jar'), script, **kwargs)
+        filter_file('snpEff.jar', join_path(prefix.bin, 'snpEff.jar'),
+                    script, **kwargs)
