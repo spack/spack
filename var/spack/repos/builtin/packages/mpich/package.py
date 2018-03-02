@@ -42,7 +42,7 @@ class Mpich(AutotoolsPackage):
     version('3.1.1', '40dc408b1e03cc36d80209baaa2d32b7')
     version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
-    version('develop', git='git://github.com/pmodels/mpich')
+    version('develop', git='git://github.com/pmodels/mpich', submodules=True)
 
     variant('hydra', default=True,  description='Build the hydra process manager')
     variant('pmi',   default=True,  description='Build with PMI support')
