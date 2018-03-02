@@ -107,9 +107,7 @@ def set_placeholder(dirname):
 
 def get_placeholder_rpaths(path_name, orig_rpaths):
     """
-    Replaces orig_dir with relative path from dirname(path_name) if an rpath
-    in orig_rpaths contains orig_path. Prefixes $ORIGIN
-    to relative paths and returns replacement rpaths.
+    Replaces original layout root dir with a placeholder string in all rpaths.
     """
     rel_rpaths = []
     orig_dir = spack.store.layout.root
@@ -363,13 +361,14 @@ def relocate_binary(path_names, old_dir, new_dir, allow_root):
     elif platform.system() == 'Linux':
         for path_name in path_names:
             orig_rpaths = get_existing_elf_rpaths(path_name)
-            # new style buildaches with placeholder in binaries
             if orig_rpaths:
                 if orig_rpaths[0].startswith(placeholder):
+                    # new style buildaches with placeholder in binaries
                     new_rpaths = substitute_rpath(orig_rpaths,
                                                   placeholder, new_dir)
-            # old style buildcaches with original install root in binaries
                 else:
+                    # old style buildcaches with original install
+                    # root in binaries
                     new_rpaths = substitute_rpath(orig_rpaths,
                                                   old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
