@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -25,27 +25,14 @@
 from spack import *
 
 
-class Mpileaks(AutotoolsPackage):
-    """Tool to detect and report leaked MPI objects like MPI_Requests and
-       MPI_Datatypes."""
+class MparkVariant(CMakePackage):
+    """C++17 `std::variant` for C++11/14/17"""
 
-    homepage = "https://github.com/hpc/mpileaks"
-    url      = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
+    homepage = "https://mpark.github.io/variant"
+    url      = "https://github.com/mpark/variant/archive/v1.3.0.tar.gz"
+    maintainers = ['ax3l']
 
-    version('1.0', '8838c574b39202a57d7c2d68692718aa')
+    version('1.3.0', '368b7d6f1a07bd6ee26ff518258dc71c')
 
-    variant("stackstart", values=int, default=0,
-            description="Specify the number of stack frames to truncate")
-
-    depends_on("mpi")
-    depends_on("adept-utils")
-    depends_on("callpath")
-
-    def configure_args(self):
-        stackstart = int(self.spec.variants['stackstart'].value)
-        args = ["--with-adept-utils=" + spec['adept-utils'].prefix,
-                "--with-callpath=" + spec['callpath'].prefix]
-        if stackstart:
-            args.extend(['--with-stack-start-c=%s' % stackstart,
-                         '--with-stack-start-fortran=%s' % stackstart])
-        return args
+    conflicts('%gcc@:4.7')
+    conflicts('%clang@:3.5')
