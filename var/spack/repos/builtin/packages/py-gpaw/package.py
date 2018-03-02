@@ -42,9 +42,9 @@ class PyGpaw(PythonPackage):
     depends_on('py-ase',        type=('build', 'run'))
     depends_on('py-numpy +blas +lapack', type=('build', 'run'))
     depends_on('py-scipy',      type=('build', 'run'))
-    depends_on('libxc',type=('build','link','run'))
-    depends_on('blas',type=('build','link','run'))
-    depends_on('lapack',type=('build','link','run'))
+    depends_on('libxc')
+    depends_on('blas')
+    depends_on('lapack')
     depends_on('fftw+mpi',when='+fftw +mpi')
     depends_on('fftw~mpi',when='+fftw ~mpi')
     depends_on('scalapack',when='+scalapack')
@@ -60,19 +60,16 @@ class PyGpaw(PythonPackage):
 
         libs = blas.libs + lapack.libs + libxc.libs
         include_dirs = [blas.prefix.include,lapack.prefix.include,libxc.prefix.include]
-        lib_dirs = [blas.prefix.lib,lapack.prefix.lib,libxc.prefix.lib]
         if '+mpi' in spec:
             libs += spec['mpi'].libs
             include_dirs.append(spec['mpi'].prefix.include)
-            lib_dirs.append(spec['mpi'].prefix.lib)
         if '+scalapack' in spec:
             libs += spec['scalapack'].libs
             include_dirs.append(spec['scalapack'].prefix.include)
-            lib_dirs.append(spec['scalapack'].prefix.lib)
         if '+fftw' in spec:
             libs += spec['fftw'].libs
             include_dirs.append(spec['fftw'].prefix.include)
-            lib_dirs.append(spec['fftw'].prefix.lib)
+        lib_dirs = list(libs.directories)
         libs = list(libs.names)
 
         with open('customize.py', 'w') as f:
