@@ -241,7 +241,7 @@ class OperatingSystem(object):
 
     def __init__(self, name, version):
         self.name = name.replace('-', '_')
-        self.version = version
+        self.version = version.replace('-', '_')
 
     def __str__(self):
         return "%s%s" % (self.name, self.version)
