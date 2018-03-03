@@ -50,6 +50,7 @@ class Hdf5(AutotoolsPackage):
     version('1.8.14', 'a482686e733514a51cde12d6fe5c5d95')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
     version('1.8.12', 'd804802feb99b87fc668a90e6fa34411')
+    version('1.8.10', '710aa9fb61a51d61a7e2c09bf0052157')
 
     variant('debug', default=False,
             description='Builds a debug version of the library')
@@ -97,6 +98,9 @@ class Hdf5(AutotoolsPackage):
     patch('h5f90global-mult-obj-same-equivalence-same-common-block.patch',
           when='@1.10.1%intel@18')
 
+    patch('th5s.patch', when='@1.8.10')
+    patch('h5tools_str.patch', when='@1.8.10')
+    patch('h5dump.patch', when='@1.8.10')
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 
     def url_for_version(self, version):

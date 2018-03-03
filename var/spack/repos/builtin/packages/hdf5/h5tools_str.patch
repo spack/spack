@@ -1,0 +1,11 @@
+--- /usr/workspace/wsrzc/pozulp1/sp/pozulpspack/spack/var/spack/stage/hdf5-1.8.10-q7gnahmiajrcbk6lyp3fwaixcofqjhwf/hdf5-1.8.10/tools/lib/h5tools_str.c	2012-10-11 10:31:39.000000000 -0700
++++ hdf5-1.8.10p1/tools/lib/h5tools_str.c	2018-03-02 18:08:15.860060885 -0800
+@@ -632,7 +632,7 @@
+         h5tools_str_append(str, "%s", OPT(info->line_indent, ""));
+     }
+ 
+-//    ctx->need_prefix = 0;
++/*    ctx->need_prefix = 0; */
+ }
+ 
+ /*-------------------------------------------------------------------------
