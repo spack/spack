@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from os.path import join
 
 
 class Tcptrace(AutotoolsPackage):
@@ -52,6 +53,5 @@ class Tcptrace(AutotoolsPackage):
 
     def install(self, spec, prefix):
         # The build system has trouble creating directories
-        cp = which('cp')
-        mkdirp(self.prefix.bin)
-        cp('tcptrace', self.prefix.bin)
+        mkdirp(prefix.bin)
+        install('tcptrace', join(prefix.bin, 'tcptrace'))
