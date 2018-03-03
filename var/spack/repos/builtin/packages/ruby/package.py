@@ -39,6 +39,7 @@ class Ruby(AutotoolsPackage):
 
     extendable = True
 
+    depends_on('pkgconfig', type=('build'))
     depends_on('libffi')
     depends_on('zlib')
     depends_on('libx11')
@@ -46,6 +47,11 @@ class Ruby(AutotoolsPackage):
     depends_on('tk')
     depends_on('openssl', when='+openssl')
     depends_on('readline', when='+readline')
+
+    # gcc-7-based build requires patches (cf. https://bugs.ruby-lang.org/issues/13150)
+    patch('ruby_23_gcc7.patch', level=0, when='@2.2.0:2.2.999 %gcc@7:')
+    patch('ruby_23_gcc7.patch', level=0, when='@2.3.0:2.3.4 %gcc@7:')
+    patch('ruby_24_gcc7.patch', level=1, when='@2.4.0 %gcc@7:')
 
     resource(
         name='rubygems-updated-ssl-cert',
