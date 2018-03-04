@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -37,5 +36,4 @@ class Colordiff(Package):
     depends_on('perl')
 
     def install(self, spec, prefix):
-        make("INSTALL_DIR=%s/bin" % prefix, "ETC_DIR=%s/etc" % prefix,
-             "MAN_DIR=%s/man" % prefix, 'install', parallel=False)
+        make("INSTALL_DIR=" + prefix.bin, "ETC_DIR=" + prefix.etc, "MAN_DIR=" + prefix.man, 'install', parallel=False)
