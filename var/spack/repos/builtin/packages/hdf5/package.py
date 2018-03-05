@@ -98,7 +98,8 @@ class Hdf5(AutotoolsPackage):
     patch('h5f90global-mult-obj-same-equivalence-same-common-block.patch',
           when='@1.10.1%intel@18')
 
-    # Turn line comments into block comments to conform with pre C99 language standards
+    # Turn line comments into block comments to conform with pre C99 language
+    # standards
     patch('pre-c99-comments.patch', when='@1.8.10')
 
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
