@@ -33,13 +33,14 @@ class Neuron(Package):
     the use of sections that are automatically subdivided into individual
     compartments, instead of requiring the user to manually create
     compartments. The primary scripting language is hoc but a Python
-    interface is also available."""
+    interface is also available.
+    """
 
     homepage = "https://www.neuron.yale.edu/"
     url      = "http://www.neuron.yale.edu/ftp/neuron/versions/v7.5/nrn-7.5.tar.gz"
     github   = "https://github.com/nrnhines/nrn"
 
-    version('7.5', '1641ae7a7cd02728e5ae4c8aa93b3749')
+    version('7.5', 'fb72c841374dfacbb6c2168ff57bfae9')
     version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
     version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
     version('7.2', '5486709b6366add932e3a6d141c4f7ad')
@@ -63,6 +64,21 @@ class Neuron(Package):
     depends_on('mpi',         when='+mpi')
     depends_on('python@2.6:', when='+python')
     depends_on('ncurses',     when='~cross-compile')
+
+    filter_compiler_wrappers('*/bin/nrniv_makefile')
+
+    def get_neuron_bindir(self):
+        # instead of recreating the logic of the neuron's configure
+        # we dinamically find the directory containing the installed binaries
+
+        file_list = find(self.prefix, '*/bin/nrniv_makefile')
+        # check needed as when initially evaluated the bindir doesn't exist yet
+        if file_list:
+            neuron_bindir = os.path.dirname(file_list[0])
+        else:
+            neuron_bindir = join_path(self.prefix, 'bin')
+
+        return neuron_bindir
 
     def patch(self):
         # aclocal need complete include path (especially on os x)
@@ -89,18 +105,6 @@ class Neuron(Package):
             options.append('macdarwin=no')
 
         return options
-
-    def get_arch_dir(self):
-        if 'bgq' in self.spec.architecture:
-            arch = 'powerpc64'
-        elif 'cray' in self.spec.architecture:
-            arch = 'x86_64'
-        elif 'ppc64le' in self.spec.architecture:
-            arch = 'powerpc64le'
-        else:
-            arch = self.spec.architecture.target
-
-        return arch
 
     def get_python_options(self, spec):
         options = []
@@ -199,26 +203,8 @@ class Neuron(Package):
             make('VERBOSE=1')
             make('install')
 
-    @run_after('install')
-    def filter_compilers(self):
-        """run after install to avoid spack compiler wrappers
-        getting embded into nrnivmodl script"""
-
-        arch = self.get_arch_dir()
-        nrnmakefile = join_path(self.prefix, arch, 'bin/nrniv_makefile')
-
-        kwargs = {
-            'backup': False,
-            'string': True
-        }
-
-        filter_file(env['CC'],  self.compiler.cc, nrnmakefile, **kwargs)
-        filter_file(env['CXX'], self.compiler.cxx, nrnmakefile, **kwargs)
-
     def setup_environment(self, spack_env, run_env):
-        arch = self.get_arch_dir()
-        run_env.prepend_path('PATH', join_path(self.prefix, arch, 'bin'))
+        run_env.prepend_path('PATH', self.get_neuron_bindir())
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        arch = self.get_arch_dir()
-        spack_env.prepend_path('PATH', join_path(self.prefix, arch, 'bin'))
+        spack_env.prepend_path('PATH', self.get_neuron_bindir())
