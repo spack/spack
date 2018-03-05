@@ -98,9 +98,9 @@ class Hdf5(AutotoolsPackage):
     patch('h5f90global-mult-obj-same-equivalence-same-common-block.patch',
           when='@1.10.1%intel@18')
 
-    patch('th5s.patch', when='@1.8.10')
-    patch('h5tools_str.patch', when='@1.8.10')
-    patch('h5dump.patch', when='@1.8.10')
+    # Turn line comments into block comments to conform with pre C99 language standards
+    patch('pre-c99-comments.patch', when='@1.8.10')
+
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 
     def url_for_version(self, version):
