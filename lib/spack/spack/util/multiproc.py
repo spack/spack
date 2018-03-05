@@ -23,22 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from multiprocessing import Semaphore, Value
-from multiprocessing.dummy import Pool
 
-__all__ = ['parmap', 'Barrier']
-
-
-MAX_THREADS_PER_MAP = 5
-
-
-def parmap(f, X):
-    # Note that the dummy version of Pool uses threads rather than processes.
-    # Using a global thread pool shared by all parmap calls would cause
-    # hangs if the function provided to parmap also invokes parmap.
-    if not X:
-        return list()
-    pool = Pool(min(len(X), MAX_THREADS_PER_MAP))
-    return list(pool.map(f, X))
+__all__ = ['Barrier']
 
 
 class Barrier:

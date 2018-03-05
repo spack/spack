@@ -32,7 +32,7 @@ from llnl.util.filesystem import join_path
 import spack.error
 import spack.spec
 import spack.architecture
-from spack.util.multiproc import parmap
+from spack.util.multithread import parmap
 from spack.util.executable import Executable, ProcessError
 from spack.util.environment import get_path
 

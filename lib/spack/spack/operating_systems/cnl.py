@@ -29,7 +29,7 @@ import llnl.util.tty as tty
 import spack.spec
 import spack.compilers
 from spack.architecture import OperatingSystem
-from spack.util.multiproc import parmap
+from spack.util.multithread import parmap
 from spack.util.module_cmd import get_module_cmd
 
 

@@ -86,7 +86,7 @@ import llnl.util.tty as tty
 import spack
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
-from spack.util.multiproc import parmap
+from spack.util.multithread import parmap
 from spack.util.spack_yaml import syaml_dict
 import spack.error as serr
 
