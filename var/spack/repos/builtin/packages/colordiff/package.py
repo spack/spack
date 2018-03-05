@@ -38,4 +38,3 @@ class Colordiff(Package):
     def install(self, spec, prefix):
         make("INSTALL_DIR=" + prefix.bin, "ETC_DIR=" + prefix.etc,
              "MAN_DIR=" + prefix.man, 'install', parallel=False)
-        
