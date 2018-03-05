@@ -127,8 +127,7 @@ addons:
 cache:
   pip: true
   directories:
-  - spack/spack/var/spack/cache
-  - ~/.mirror
+    - ~/.mirror
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
