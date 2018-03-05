@@ -33,4 +33,3 @@ class Tclap(AutotoolsPackage):
 
     version('1.2.2', '6f35665814dca292eceda007d7e13bcb')
     version('1.2.1', 'eb0521d029bf3b1cc0dcaa7e42abf82a')
-
