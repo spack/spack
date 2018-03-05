@@ -68,8 +68,8 @@ class Neuron(Package):
     filter_compiler_wrappers('*/bin/nrniv_makefile')
 
     def get_neuron_bindir(self):
-        # instead of recreating the logic of the neuron's configure
-        # we dinamically find the directory containing the installed binaries
+        # instead of recreating the logic of neuron's configure we dynamically
+        # find the directory containing the installed binaries
 
         file_list = find(self.prefix, '*/bin/nrniv_makefile')
         # check needed as when initially evaluated the bindir doesn't exist yet
