@@ -27,13 +27,13 @@ from spack import *
 
 
 class Neuron(Package):
+    """NEURON is a simulation environment for single and networks of neurons.
 
-    """NEURON is a simulation environment for modeling individual
-    and networks of neurons. NEURON models individual neurons via
-    the use of sections that are automatically subdivided into individual
-    compartments, instead of requiring the user to manually create
-    compartments. The primary scripting language is hoc but a Python
-    interface is also available.
+    NEURON is a simulation environment for modeling individual and networks of
+    neurons. NEURON models individual neurons via the use of sections that are
+    automatically subdivided into individual compartments, instead of
+    requiring the user to manually create compartments. The primary scripting
+    language is hoc but a Python interface is also available.
     """
 
     homepage = "https://www.neuron.yale.edu/"
@@ -65,20 +65,25 @@ class Neuron(Package):
     depends_on('python@2.6:', when='+python')
     depends_on('ncurses',     when='~cross-compile')
 
+    conflicts('~shared', when='+python')
+
     filter_compiler_wrappers('*/bin/nrniv_makefile')
 
-    def get_neuron_bindir(self):
-        # instead of recreating the logic of neuron's configure we dynamically
-        # find the directory containing the installed binaries
+    def get_neuron_archdir(self):
+        """Determine the architecture-specific neuron base directory.
 
+        Instead of recreating the logic of the neuron's configure
+        we dynamically find the architecture-specific directory by
+        looking for a specific binary.
+        """
         file_list = find(self.prefix, '*/bin/nrniv_makefile')
-        # check needed as when initially evaluated the bindir doesn't exist yet
+        # check needed as when initially evaluated the prefix is empty
         if file_list:
-            neuron_bindir = os.path.dirname(file_list[0])
+            neuron_archdir = os.path.dirname(os.path.dirname(file_list[0]))
         else:
-            neuron_bindir = join_path(self.prefix, 'bin')
+            neuron_archdir = self.prefix
 
-        return neuron_bindir
+        return neuron_archdir
 
     def patch(self):
         # aclocal need complete include path (especially on os x)
@@ -204,7 +209,13 @@ class Neuron(Package):
             make('install')
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.get_neuron_bindir())
+        neuron_archdir = self.get_neuron_archdir()
+        run_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        run_env.prepend_path(
+            'LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('PATH', self.get_neuron_bindir())
+        neuron_archdir = self.get_neuron_archdir()
+        spack_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        spack_env.prepend_path(
+            'LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
