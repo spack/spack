@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+
 from spack import *
 
 
@@ -51,8 +53,7 @@ class Tcl(AutotoolsPackage):
     def setup_environment(self, spack_env, run_env):
         # When using Tkinter from within spack provided python+tk, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
-        run_env.set('TCL_LIBRARY', join_path(self.prefix.lib, 'tcl{0}'.format(
-            self.spec.version.up_to(2))))
+        run_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
@@ -66,6 +67,16 @@ class Tcl(AutotoolsPackage):
         with working_dir(self.prefix.bin):
             symlink('tclsh{0}'.format(self.version.up_to(2)), 'tclsh')
 
+    # ========================================================================
+    # Set up environment to make install easy for tcl extensions.
+    # ========================================================================
+
+    @property
+    def tcl_lib_dir(self):
+        """The Tcl version-specific library directory where all extensions are
+        installed."""
+        return join_path('lib', 'tcl{0}'.format(self.version.up_to(2)))
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
@@ -76,15 +87,13 @@ class Tcl(AutotoolsPackage):
         # where a system provided tcl is run against the standard libraries
         # of a Spack built tcl. See issue #7128 that relates to python but
         # it boils down to the same situation we have here.
-        spack_env.set('TCLLIBPATH', self.home)
-        spack_env.prepend_path('PATH', os.path.dirname(self.command.path))
+        spack_env.prepend_path('PATH', os.path.dirname(self.prefix.bin))
 
-        tcl_paths = []
-        for d in dependent_spec.traverse(
-                deptype=('build', 'run', 'test')):
+        tcl_paths = [join_path(self.prefix, self.tcl_lib_dir)]
+
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
-                tcl_paths.append(join_path(d.prefix,
-                                           self.site_packages_dir))
+                tcl_paths.append(join_path(d.prefix, self.tcl_lib_dir))
 
         tcllibpath = ':'.join(tcl_paths)
         spack_env.set('TCLLIBPATH', tcllibpath)
@@ -93,4 +102,4 @@ class Tcl(AutotoolsPackage):
         # dependent_spec and prepend it to TCLLIBPATH
         if dependent_spec.package.extends(self.spec):
             run_env.prepend_path('TCLLIBPATH', join_path(
-                dependent_spec.prefix, self.site_packages_dir))
+                dependent_spec.prefix, self.tcl_lib_dir))
