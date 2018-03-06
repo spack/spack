@@ -98,8 +98,16 @@ class Hdf5(AutotoolsPackage):
     patch('h5f90global-mult-obj-same-equivalence-same-common-block.patch',
           when='@1.10.1%intel@18')
 
-    # Turn line comments into block comments to conform with pre C99 language
-    # standards
+    # Turn line comments into block comments to conform with pre-C99 language
+    # standards. Versions of hdf5 after 1.8.10 don't require this patch,
+    # either because they conform to pre-C99 or neglect to ask for pre-C99
+    # language standards from their compiler. The hdf5 build system adds
+    # the -ansi cflag (run 'man gcc' for info on -ansi) for some versions
+    # of some compilers (see hdf5-1.8.10/config/gnu-flags). The hdf5 build
+    # system does not provide an option to disable -ansi, but since the
+    # pre-C99 code is restricted to just five lines of line comments in
+    # three src files, this patch accomplishes the simple task of patching the
+    # three src files and leaves the hdf5 build system alone.
     patch('pre-c99-comments.patch', when='@1.8.10')
 
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
