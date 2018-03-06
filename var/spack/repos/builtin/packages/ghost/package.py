@@ -27,50 +27,59 @@ from spack import *
 
 
 class Ghost(CMakePackage):
-    """GHOST: a General, Hybrid and Optimized Sparse Toolkit
-    
-       This library provides highly optimized building blocks for implementing sparse iterative eigenvalue and linear solvers
-       multi- and manycore clusters and on heterogenous CPU/GPU machines. For an iterative solver library using these kernels, see 
-       the phist package.
-    
+    """GHOST: a General, Hybrid and Optimized Sparse Toolkit.
+       This library provides highly optimized building blocks for implementing
+       sparse iterative eigenvalue and linear solvers multi- and manycore
+       clusters and on heterogenous CPU/GPU machines. For an iterative solver
+       library using these kernels, see the phist package.
     """
 
     homepage = "https://www.bitbucket.org/essex/ghost/"
     url      = "https://bitbucket.org/essex/ghost/"
 
-    version('develop', git='https://bitbucket.org/essex/ghost/ghost.git', branch='devel')
-                                
+    version('develop',
+        git='https://bitbucket.org/essex/ghost/ghost.git', branch='devel')
 
-    variant('shared',  default=True, description='Enables the build of shared libraries')
-    variant('mpi', default=True, description='enable/disable MPI')
-    variant('cuda',default=False,description='enable/disable CUDA')
-    variant('mkl',default=False,description='use MKL to provide BLAS routines')
-    variant('scotch',default=False,description='enable/disable matrix reordering with PT-SCOTCH')
-    variant('zoltan',default=False,description='enable/disable matrix reordering with Zoltan')
+
+    variant('shared', default=True,
+        description='Enables the build of shared libraries')
+    variant('mpi', default=True,
+        description='enable/disable MPI')
+    variant('cuda',default=False,
+        description='enable/disable CUDA')
+    variant('scotch',default=False,
+        description='enable/disable matrix reordering with PT-SCOTCH')
+    variant('zoltan',default=False,
+        description='enable/disable matrix reordering with Zoltan')
 
     # ###################### Dependencies ##########################
 
     # Everything should be compiled position independent (-fpic)
     depends_on('cmake@3.5:')
     depends_on('hwloc')
+    depends_on('blas')
     depends_on('mpi', when='+mpi')
     depends_on('cuda@8:', when='+cuda')
-    depends_on('intel-mkl',when='+mkl')
-    depends_on('blas',when='~mkl') # note: we actually depend on cblas, but that's included in most blas libs (e.g. netlib-lapack, mkl, openblas)
     depends_on('scotch', when='+scotch')
     depends_on('zoltan', when='+zoltan')
 
     def cmake_args(self):
         spec=self.spec
         cblas_include_dir=''
-        if '~mkl' in spec:
-            cblas_include_dir='-DCBLAS_INCLUDE_DIR='+spec['blas'].prefix.include
+        if not '^mkl' in spec:
+            cblas_include_dir='-DCBLAS_INCLUDE_DIR='+\
+            spec['blas'].prefix.include
 
-        args = ['-DGHOST_ENABLE_MPI:BOOL=%s' % ('ON' if '+mpi' in spec else 'OFF'),
-                '-DGHOST_USE_CUDA:BOOL=%s'   % ('ON' if '+cuda' in spec else 'OFF'),
-                '-DGHOST_USE_SCOTCH:BOOL=%s'   % ('ON' if '+scotch' in spec else 'OFF'),
-                '-DGHOST_USE_ZOLTAN:BOOL=%s'   % ('ON' if '+zoltan' in spec else 'OFF'),
-                '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if '+shared' in spec else 'OFF'),
+        args = ['-DGHOST_ENABLE_MPI:BOOL=%s'
+                % ('ON' if '+mpi' in spec else 'OFF'),
+                '-DGHOST_USE_CUDA:BOOL=%s'
+                        % ('ON' if '+cuda' in spec else 'OFF'),
+                '-DGHOST_USE_SCOTCH:BOOL=%s'
+                        % ('ON' if '+scotch' in spec else 'OFF'),
+                '-DGHOST_USE_ZOLTAN:BOOL=%s'
+                        % ('ON' if '+zoltan' in spec else 'OFF'),
+                '-DBUILD_SHARED_LIBS:BOOL=%s'
+                        % ('ON' if '+shared' in spec else 'OFF'),
                 cblas_include_dir,
                 ];
 
