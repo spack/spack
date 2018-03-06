@@ -88,3 +88,19 @@ software outside of Spack. Unfortunately, this command no longer works.
 See https://github.com/spack/spack/issues/2597 and
 https://github.com/spack/spack/issues/2662 for details. This is expected
 to be fixed by https://github.com/spack/spack/pull/2664.
+
+--------------------------------
+intel-mkl does not work on macOS
+--------------------------------
+
+**Status:** Only a workaround available due to the way Intel provides
+the library
+
+Installing intel-mkl under macOS requires a different download. This
+is not compatible with spack. However, there exists a workaround which
+is as follows:
+
+1. Download the intel-mkl version for macOS from Intel's homepage.
+2. Install the downloaded version manually.
+3. Add intel-mkl as external package. By default the path is
+   ``/opt/intel``.

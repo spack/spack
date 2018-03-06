@@ -24,10 +24,11 @@
 ##############################################################################
 
 import os
+import sys
 import xml.etree.ElementTree as ET
 
 from llnl.util.filesystem import install, join_path
-from spack.package import PackageBase, run_after
+from spack.package import PackageBase, run_after, InstallError
 from spack.util.executable import Executable
 
 
@@ -117,6 +118,8 @@ class IntelPackage(PackageBase):
 
         See https://software.intel.com/en-us/articles/configuration-file-format
         """
+        if sys.platform == 'darwin':
+            raise InstallError('macOS is not supported. For a workaround see https://github.com/spack/spack/blob/develop/lib/spack/docs/known_issues.rst')
         # Patterns used to check silent configuration file
         #
         # anythingpat - any string

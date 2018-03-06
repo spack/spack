@@ -67,10 +67,6 @@ class IntelMkl(IntelPackage):
     provides('scalapack')
     provides('mkl')
 
-    if sys.platform == 'darwin':
-        # there is no libmkl_gnu_thread on macOS
-        conflicts('threads=openmp', when='%gcc')
-
     @property
     def license_required(self):
         # The Intel libraries are provided without requiring a license as of
