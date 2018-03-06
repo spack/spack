@@ -225,6 +225,11 @@ def set_build_environment_variables(pkg, env, dirty):
     build_link_prefixes = [dep.prefix for dep in build_link_deps]
     rpath_prefixes      = [dep.prefix for dep in rpath_deps]
 
+    # Treat the compiler as a dependency. Compilers are special and have
+    # implicit link paths they look at for otherwise-unknown `-l` flags. Add
+    # them to the list of paths for rpaths.
+    rpath_prefixes.extend(pkg.compiler.implicit_link_paths)
+
     # add run-time dependencies of direct build-time dependencies:
     for build_dep in build_deps:
         for run_dep in build_dep.traverse(deptype='run'):
