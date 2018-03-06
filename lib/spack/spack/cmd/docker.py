@@ -100,6 +100,12 @@ def create_dockerfile(image, branch, repo):
     apt-get install -y git gcc g++ gfortran make bzip2 && \\
     apt-get install -y patch file curl python gnupg2 xz-utils && \\
     rm -rf /var/lib/apt/lists/*
+    """,
+        'archlinux': """pacman -Syu && \\
+    pacman -Sy --noconfirm  \\
+    base-devel ca-certificates curl \\
+    gcc gcc-fortran git gnupg2 iproute2 \\
+    make openssh python sudo tcl
     """
     }
 
