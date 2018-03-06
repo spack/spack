@@ -634,6 +634,22 @@ class Database(object):
         Also ensures dependencies are present and updated in the DB as
         either installed or missing.
 
+        Args:
+            spec: spec to be added
+            directory_layout: layout of the spec installation
+            **kwargs:
+
+                explicit
+                    Possible values: True, False, any
+
+                    A spec that was installed following a specific user
+                    request is marked as explicit. If instead it was
+                    pulled-in as a dependency of a user requested spec
+                    it's considered implicit.
+
+                installation_datetime
+                    Date and time of installation
+
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError(
