@@ -32,22 +32,27 @@ class Openglu(Package):
     homepage = "https://www.opengl.org/resources/libraries"
     url      = "https://www.opengl.org/resources/libraries"
 
-    # URL here is arbitrary, just so that spack's fetcher does not throw
-    # an error
-    version('1.3', 'bbc57d4fe3bd3fb095bdbef6fcb977c4',
-            url='https://www.mesa3d.org/archive/glu/glu-9.0.0.tar.gz')
+    # A second argument (usually the has) must be supplied to the
+    # version directive, but 'n/a' is used here because this package
+    # is a placeholder for a system/vendor installation of OpenGL
+    version('1.3', 'n/a')
 
     provides('glu@:1.3', when='@1.3:')
     provides('glu@:1.2', when='@1.2:')
     provides('glu@:1.1', when='@1.1:')
     provides('glu@:1.', when='@1.0:')
 
-    def install(self, spec, prefix):
-        msg = """This package is intended to be a placeholder for system-provided
-        OpenGL utility (GLU) libraries from hardware vendors.  Please
-        download and install the GLU drivers/libraries for your
-        graphics hardware separately, and then set that up as an
-        external package.  An example of a working packages.yaml:
+    # Override the fetcher method to throw a useful error message;
+    # fixes an issue similar to Github issue (#7061), in which the
+    # opengl package threw a generic, uninformative error message
+    # during the `fetch` step
+    @property
+    def fetcher(self):
+        msg = """This package is intended to be a placeholder for
+        system-provided OpenGL utility (GLU) libraries from hardware vendors.
+        Please download and install the GLU drivers/libraries for your
+        graphics hardware separately, and then set that up as an external
+        package.  An example of a working packages.yaml:
 
         packages:
           openglu:
@@ -73,8 +78,9 @@ class Openglu(Package):
         In that case, /usr/X11R6 should contain
 
         include/GL       (GLU headers, including "glu.h")
-        lib              (GLU libraries, including "libGLU.dylib")
-
-        """
+        lib              (GLU libraries, including "libGLU.dylib")"""
 
         raise InstallError(msg)
+
+    def install(self, spec, prefix):
+        pass
