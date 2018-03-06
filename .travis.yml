@@ -124,7 +124,10 @@ addons:
       - perl
       - perl-base
 
-cache: pip
+cache:
+  pip: true
+  directories:
+    - ~/.mirror
 
 # Work around Travis's lack of support for Python on OSX
 before_install:
