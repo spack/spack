@@ -195,10 +195,15 @@ def filter_compiler_wrappers(*files, **kwargs):
 
         x = llnl.util.filesystem.FileFilter(*abs_files)
 
-        x.filter(os.environ['CC'], self.compiler.cc, **filter_kwargs)
-        x.filter(os.environ['CXX'], self.compiler.cxx, **filter_kwargs)
-        x.filter(os.environ['F77'], self.compiler.f77, **filter_kwargs)
-        x.filter(os.environ['FC'], self.compiler.fc, **filter_kwargs)
+        replacements = [
+            ('CC', self.compiler.cc),
+            ('CXX', self.compiler.cxx),
+            ('F77', self.compiler.f77),
+            ('FC', self.compiler.fc)
+        ]
+        for env_var, compiler_path in replacements:
+            if env_var in os.environ:
+                x.filter(os.environ[env_var], compiler_path, **filter_kwargs)
 
         # Remove this linking flag if present (it turns RPATH into RUNPATH)
         x.filter('-Wl,--enable-new-dtags', '', **filter_kwargs)

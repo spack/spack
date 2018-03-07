@@ -33,6 +33,18 @@ from llnl.util.filesystem import filter_file
 import llnl.util.tty as tty
 
 
+class InstallRootStringException(spack.error.SpackError):
+    """
+    Raised when the relocated binary still has the install root string.
+    """
+    def __init__(self, file_path, root_path):
+        super(InstallRootStringException, self).__init__(
+            "\n %s \ncontains string\n %s \n"
+            "after replacing it in rpaths.\n"
+            "Package should not be relocated.\n Use -a to override." %
+            (file_path, root_path))
+
+
 def get_patchelf():
     """
     Builds and installs spack patchelf package on linux platforms
@@ -86,6 +98,29 @@ def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
     return rel_rpaths
 
 
+def set_placeholder(dirname):
+    """
+    return string of @'s with same length
+    """
+    return '@' * len(dirname)
+
+
+def get_placeholder_rpaths(path_name, orig_rpaths):
+    """
+    Replaces original layout root dir with a placeholder string in all rpaths.
+    """
+    rel_rpaths = []
+    orig_dir = spack.store.layout.root
+    for rpath in orig_rpaths:
+        if re.match(orig_dir, rpath):
+            placeholder = set_placeholder(orig_dir)
+            rel = re.sub(orig_dir, placeholder, rpath)
+            rel_rpaths.append('%s' % rel)
+        else:
+            rel_rpaths.append(rpath)
+    return rel_rpaths
+
+
 def macho_get_paths(path_name):
     """
     Examines the output of otool -l path_name for these three fields:
@@ -121,7 +156,7 @@ def macho_get_paths(path_name):
 def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
     """
     Replace old_dir with relative path from dirname(path_name)
-    in rpaths and deps; idpaths are replaced with @rpath/basebane(path_name);
+    in rpaths and deps; idpaths are replaced with @rpath/libname as needed;
     replacement are returned.
     """
     new_idpath = None
@@ -139,6 +174,34 @@ def macho_make_paths_relative(path_name, old_dir, rpaths, deps, idpath):
         if re.match(old_dir, dep):
             rel = os.path.relpath(dep, start=os.path.dirname(path_name))
             new_deps.append('@loader_path/%s' % rel)
+        else:
+            new_deps.append(dep)
+    return (new_rpaths, new_deps, new_idpath)
+
+
+def macho_make_paths_placeholder(rpaths, deps, idpath):
+    """
+    Replace old_dir with a placeholder of the same length
+    in rpaths and deps and idpaths is needed.
+    replacement are returned.
+    """
+    new_idpath = None
+    old_dir = spack.store.layout.root
+    placeholder = set_placeholder(old_dir)
+    if idpath:
+        new_idpath = re.sub(old_dir, placeholder, idpath)
+    new_rpaths = list()
+    new_deps = list()
+    for rpath in rpaths:
+        if re.match(old_dir, rpath):
+            ph = re.sub(old_dir, placeholder, rpath)
+            new_rpaths.append('%s' % ph)
+        else:
+            new_rpaths.append(rpath)
+    for dep in deps:
+        if re.match(old_dir, dep):
+            ph = re.sub(old_dir, placeholder, dep)
+            new_deps.append('%s' % ph)
         else:
             new_deps.append(dep)
     return (new_rpaths, new_deps, new_idpath)
@@ -179,15 +242,17 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     if 'libgcc_' in cur_path:
         return
     install_name_tool = Executable('install_name_tool')
+    args = []
     if new_idpath:
-        install_name_tool('-id', new_idpath, str(cur_path),
-                          output=str, err=str)
+        args.extend(['-id', new_idpath])
 
     for orig, new in zip(deps, new_deps):
-        install_name_tool('-change', orig, new, str(cur_path))
+        args.extend(['-change', orig, new])
 
     for orig, new in zip(rpaths, new_rpaths):
-        install_name_tool('-rpath', orig, new, str(cur_path))
+        args.extend(['-rpath', orig, new])
+    args.append(str(cur_path))
+    install_name_tool(*args)
     return
 
 
@@ -202,14 +267,14 @@ def get_filetype(path_name):
     return output.strip()
 
 
-def strings_contains_installroot(path_name):
+def strings_contains_installroot(path_name, root_dir):
     """
     Check if the file contain the install root string.
     """
     strings = Executable('strings')
     output = strings('%s' % path_name,
                      output=str, err=str)
-    return (spack.store.layout.root in output)
+    return (root_dir in output)
 
 
 def modify_elf_object(path_name, new_rpaths):
@@ -257,34 +322,66 @@ def needs_text_relocation(filetype):
     return ("text" in filetype)
 
 
-def relocate_binary(path_names, old_dir, new_dir):
+def relocate_binary(path_names, old_dir, new_dir, allow_root):
     """
     Change old_dir to new_dir in RPATHs of elf or mach-o files
+    Account for the case where old_dir is now a placeholder
     """
+    placeholder = set_placeholder(old_dir)
     if platform.system() == 'Darwin':
         for path_name in path_names:
-            rpaths, deps, idpath = macho_get_paths(path_name)
-            new_rpaths, new_deps, new_idpath = macho_replace_paths(old_dir,
-                                                                   new_dir,
-                                                                   rpaths,
-                                                                   deps,
-                                                                   idpath)
+            (rpaths, deps, idpath) = macho_get_paths(path_name)
+            # new style buildaches with placeholder in binaries
+            if (deps[0].startswith(placeholder) or
+                rpaths[0].startswith(placeholder) or
+                (idpath and idpath.startswith(placeholder))):
+                (new_rpaths,
+                 new_deps,
+                 new_idpath) = macho_replace_paths(placeholder,
+                                                   new_dir,
+                                                   rpaths,
+                                                   deps,
+                                                   idpath)
+            # old style buildcaches with original install root in binaries
+            else:
+                (new_rpaths,
+                 new_deps,
+                 new_idpath) = macho_replace_paths(old_dir,
+                                                   new_dir,
+                                                   rpaths,
+                                                   deps,
+                                                   idpath)
             modify_macho_object(path_name,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
+            if (not allow_root and
+                strings_contains_installroot(path_name, old_dir)):
+                    raise InstallRootStringException(path_name, old_dir)
+
     elif platform.system() == 'Linux':
         for path_name in path_names:
             orig_rpaths = get_existing_elf_rpaths(path_name)
             if orig_rpaths:
-                new_rpaths = substitute_rpath(orig_rpaths, old_dir, new_dir)
+                if orig_rpaths[0].startswith(placeholder):
+                    # new style buildaches with placeholder in binaries
+                    new_rpaths = substitute_rpath(orig_rpaths,
+                                                  placeholder, new_dir)
+                else:
+                    # old style buildcaches with original install
+                    # root in binaries
+                    new_rpaths = substitute_rpath(orig_rpaths,
+                                                  old_dir, new_dir)
                 modify_elf_object(path_name, new_rpaths)
+                if (not allow_root and
+                    strings_contains_installroot(path_name, old_dir)):
+                        raise InstallRootStringException(path_name, old_dir)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
 
 
-def make_binary_relative(cur_path_names, orig_path_names, old_dir):
+def make_binary_relative(cur_path_names, orig_path_names, old_dir, allow_root):
     """
-    Make RPATHs relative to old_dir in given elf or mach-o files
+    Replace old RPATHs with paths relative to old_dir in binary files
     """
     if platform.system() == 'Darwin':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
@@ -296,6 +393,9 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
             modify_macho_object(cur_path,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
+            if (not allow_root and
+                strings_contains_installroot(cur_path)):
+                    raise InstallRootStringException(cur_path)
     elif platform.system() == 'Linux':
         for cur_path, orig_path in zip(cur_path_names, orig_path_names):
             orig_rpaths = get_existing_elf_rpaths(cur_path)
@@ -303,8 +403,44 @@ def make_binary_relative(cur_path_names, orig_path_names, old_dir):
                 new_rpaths = get_relative_rpaths(orig_path, old_dir,
                                                  orig_rpaths)
                 modify_elf_object(cur_path, new_rpaths)
+                if (not allow_root and
+                    strings_contains_installroot(cur_path, old_dir)):
+                        raise InstallRootStringException(cur_path, old_dir)
     else:
         tty.die("Prelocation not implemented for %s" % platform.system())
+
+
+def make_binary_placeholder(cur_path_names, allow_root):
+    """
+    Replace old install root in RPATHs with placeholder in binary files
+    """
+    if platform.system() == 'Darwin':
+        for cur_path in cur_path_names:
+            rpaths, deps, idpath = macho_get_paths(cur_path)
+            (new_rpaths,
+             new_deps,
+             new_idpath) = macho_make_paths_placeholder(rpaths, deps, idpath)
+            modify_macho_object(cur_path,
+                                rpaths, deps, idpath,
+                                new_rpaths, new_deps, new_idpath)
+            if (not allow_root and
+                strings_contains_installroot(cur_path,
+                                             spack.store.layout.root)):
+                raise InstallRootStringException(cur_path,
+                                                 spack.store.layout.root)
+    elif platform.system() == 'Linux':
+        for cur_path in cur_path_names:
+            orig_rpaths = get_existing_elf_rpaths(cur_path)
+            if orig_rpaths:
+                new_rpaths = get_placeholder_rpaths(cur_path, orig_rpaths)
+                modify_elf_object(cur_path, new_rpaths)
+                if (not allow_root and
+                    strings_contains_installroot(cur_path,
+                                                 spack.store.layout.root)):
+                    raise InstallRootStringException(cur_path,
+                                                     spack.store.layout.root)
+    else:
+        tty.die("Placeholder not implemented for %s" % platform.system())
 
 
 def relocate_text(path_names, old_dir, new_dir):

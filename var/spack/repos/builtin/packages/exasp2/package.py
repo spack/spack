@@ -42,7 +42,9 @@ class Exasp2(MakefilePackage):
     tags = ['proxy-app']
 
     homepage = "https://github.com/ECP-copa/ExaSP2"
+    url      = "https://github.com/ECP-copa/ExaSP2/tarball/v1.0"
 
+    version('1.0', 'dba545995acc73f2bd1101bcb377bff5')
     version('develop', git='https://github.com/ECP-copa/ExaSP2',
             branch='master')
 
