@@ -94,6 +94,11 @@ class Openssl(Package):
            'aarch64' in spack.architecture.sys_type():
             options.append('no-asm')
 
+        arch = spec.architecture
+        if (arch.platform == 'darwin' and arch.platform_os == 'highsierra' and
+                '%gcc' in spec):
+            options.append('-mmacosx-version-min=10.12')
+
         config = Executable('./config')
         config('--prefix=%s' % prefix,
                '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
