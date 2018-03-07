@@ -33,6 +33,7 @@ class Fmt(CMakePackage):
     homepage = "http://fmtlib.net/latest/index.html"
     url      = "https://github.com/fmtlib/fmt/releases/download/4.0.0/fmt-4.0.0.zip"
 
+    version('4.1.0', 'ded3074a9405a07604d6355fdb592484')
     version('4.0.0', '605b5abee11b83195191234f4f414cf1')
     version('3.0.2', 'b190a7b8f2a5e522ee70cf339a53d3b2')
     version('3.0.1', '14505463b838befe1513b09cae112715')

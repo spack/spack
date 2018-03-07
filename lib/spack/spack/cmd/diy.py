@@ -34,7 +34,7 @@ import spack.cmd.common.arguments as arguments
 from spack.stage import DIYStage
 
 description = "do-it-yourself: build from an existing source directory"
-section = "developer"
+section = "build"
 level = "long"
 
 

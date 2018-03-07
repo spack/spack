@@ -34,9 +34,10 @@ class Xsimd(CMakePackage):
 
     version('develop', branch='master',
             git='https://github.com/QuantStack/xsimd.git')
+    version('4.0.0', '4186ec94985daa3fc284d9d0d4aa03e8')
     version('3.1.0', '29c1c525116cbda28f610e2bf24a827e')
 
-    depends_on('googletest')
+    depends_on('googletest', type='build')
 
     # C++14 support
     conflicts('%gcc@:4.8')

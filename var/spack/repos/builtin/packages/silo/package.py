@@ -43,10 +43,15 @@ class Silo(Package):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
-    depends_on('hdf5')
+    depends_on('hdf5~mpi')
     depends_on('qt', when='+silex')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
+
+    def flag_handler(self, name, flags):
+        if name == 'ldflags' and self.spec['hdf5'].satisfies('~shared'):
+            flags.append('-ldl')
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         config_args = [

@@ -54,17 +54,16 @@ class Minighost(MakefilePackage):
         if '+mpi' in self.spec:
             targets.append('PROTOCOL=-D_MG_MPI')
             targets.append('FC={0}'.format(self.spec['mpi'].mpif77))
-            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
-            targets.append(
-                'LIBS=-lm -lgfortran -lmpi_usempi -lmpi_mpifh -lmpi')
+            # CC is only used for linking, use it to pull in the right f77 libs
+            targets.append('CC={0}'.format(self.spec['mpi'].mpif77))
         else:
             targets.append('PROTOCOL=-D_MG_SERIAL')
             targets.append('FC=f77')
             targets.append('CC=cc')
-            targets.append('LIBS=-lm -lgfortran')
 
         if '%gcc' in self.spec:
             targets.append('COMPILER_SUITE=gnu')
+            targets.append('LIBS=-lm -lgfortran')
         elif '%cce' in self.spec:
             targets.append('COMPILER_SUITE=cray')
         elif '%intel' in self.spec:

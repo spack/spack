@@ -56,13 +56,15 @@ class Libtool(AutotoolsPackage):
         for name in executables:
             setattr(module, name, self._make_executable(name))
 
-    @when('platform=darwin')
-    def configure_args(self):
+    @run_after('install')
+    def post_install(self):
         # Some platforms name GNU libtool and GNU libtoolize
         # 'glibtool' and 'glibtoolize', respectively, to differentiate
         # them from BSD libtool and BSD libtoolize. On these BSD
         # platforms, build systems sometimes expect to use the assumed
         # GNU commands glibtool and glibtoolize instead of the BSD
         # variant; this happens frequently, for instance, on Darwin
-        args = ['--program-prefix=g']
-        return args
+        symlink(join_path(self.prefix.bin, 'libtool'),
+                join_path(self.prefix.bin, 'glibtool'))
+        symlink(join_path(self.prefix.bin, 'libtoolize'),
+                join_path(self.prefix.bin, 'glibtoolize'))

@@ -56,6 +56,7 @@ import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
 import spack.mirror
+import spack.mixins
 import spack.repository
 import spack.url
 import spack.util.web
@@ -141,7 +142,10 @@ class InstallPhase(object):
             return other
 
 
-class PackageMeta(spack.directives.DirectiveMetaMixin):
+class PackageMeta(
+    spack.directives.DirectiveMeta,
+    spack.mixins.PackageMixinsMeta
+):
     """Conveniently transforms attributes to permit extensible phases
 
     Iterates over the attribute 'phases' and creates / updates private
@@ -182,6 +186,9 @@ class PackageMeta(spack.directives.DirectiveMetaMixin):
                                 PackageMeta.phase_fmt.format(phase_name),
                                 None
                             )
+                            if phase is not None:
+                                break
+
                         attr_dict[PackageMeta.phase_fmt.format(
                             phase_name)] = phase.copy()
                         phase = attr_dict[
@@ -617,6 +624,8 @@ class PackageBase(with_metaclass(PackageMeta, object)):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
         self.extra_args = {}
+
+        super(PackageBase, self).__init__()
 
     def possible_dependencies(self, transitive=True, visited=None):
         """Return set of possible transitive dependencies of this package.
@@ -1279,7 +1288,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         tty.msg('Installing %s from binary cache' % self.name)
         tarball = binary_distribution.download_tarball(binary_spec)
         binary_distribution.extract_tarball(
-            binary_spec, tarball, yes_to_all=False, force=False)
+            binary_spec, tarball, allow_root=False, force=False)
         spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
         return True
 

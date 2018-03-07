@@ -48,7 +48,7 @@ class Nalu(CMakePackage):
             git='https://github.com/NaluCFD/Nalu.git', branch='master')
 
     # Currently Nalu only builds with certain libraries statically
-    depends_on('yaml-cpp+pic~shared@0.5.3:')
+    depends_on('yaml-cpp+pic~shared@develop')
     depends_on('trilinos~shared+exodus+tpetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+shards@master,12.12.1:')
     depends_on('openfast+cxx', when='+openfast')
     depends_on('tioga', when='+tioga')
@@ -60,8 +60,7 @@ class Nalu(CMakePackage):
 
         options.extend([
             '-DTrilinos_DIR:PATH=%s' % spec['trilinos'].prefix,
-            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON'
+            '-DYAML_DIR:PATH=%s' % spec['yaml-cpp'].prefix
         ])
 
         if '+openfast' in spec:

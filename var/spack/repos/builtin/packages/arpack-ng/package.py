@@ -91,7 +91,7 @@ class ArpackNg(Package):
             libraries = ['libparpack'] + libraries
 
         return find_libraries(
-            libraries, root=self.prefix, shared=True, recurse=True
+            libraries, root=self.prefix, shared=True, recursive=True
         )
 
     @when('@3.4.0:')

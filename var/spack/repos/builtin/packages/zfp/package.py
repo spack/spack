@@ -26,18 +26,15 @@ from spack import *
 
 
 class Zfp(MakefilePackage):
-    """zfp is an open source C library for compressed floating-point arrays
-       that supports very high throughput read and write random acces,
-       target error bounds or bit rates.  Although bit-for-bit lossless
-       compression is not always possible, zfp is usually accurate to
-       within machine epsilon in near-lossless mode, and is often orders
-       of magnitude more accurate than other lossy compressors. Versions
-       of zfp 0.5.1 or newer also support compression of integer data.
+    """zfp is an open source C/C++ library for high-fidelity, high-throughput
+       lossy compression of floating-point and integer multi-dimensional
+       arrays.
     """
 
     homepage = 'http://computation.llnl.gov/projects/floating-point-compression'
-    url      = 'http://computation.llnl.gov/projects/floating-point-compression/download/zfp-0.5.1.tar.gz'
+    url      = 'http://computation.llnl.gov/projects/floating-point-compression/download/zfp-0.5.2.tar.gz'
 
+    version('0.5.2', '2f0a77aa34087219a6e10b8b7d031e77')
     version('0.5.1', '0ed7059a9b480635e0dd33745e213d17')
     version('0.5.0', '2ab29a852e65ad85aae38925c5003654')
 
