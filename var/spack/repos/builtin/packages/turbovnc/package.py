@@ -88,6 +88,8 @@ class Turbovnc(CMakePackage):
             options.append('-DTVNC_BUILDSERVER:BOOL=ON')
             if '~x11deps' in self.spec:
                 options.append('-DTVNC_NVCONTROL:BOOL=ON')
+        else:
+            options.append('-DTVNC_BUILDSERVER:BOOL=OFF')
         if '+x11deps' in self.spec:
             options.append('-DXKB_BASE_DIRECTORY:PATH=' +
                            self.spec['xkeyboard-config'].prefix +
