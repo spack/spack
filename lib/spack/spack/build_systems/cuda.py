@@ -22,12 +22,12 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.package import Package
+from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
 import platform
 
 
-class CudaPackage(Package):
+class CudaPackage(PackageBase):
     """Auxiliary class which contains CUDA variant, dependencies and conflicts
     and is meant to unify and facilitate its usage.
     """
