@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 ##########################################################################
-# Copyright (c) 2015-2017 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2018 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -41,6 +41,7 @@
 ##########################################################################
 
 from spack import *
+import os
 
 
 class CbtfArgonavis(CMakePackage):
@@ -50,18 +51,31 @@ class CbtfArgonavis(CMakePackage):
     """
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    version('1.8', branch='master',
+    version('1.9.1', branch='master',
             git='https://github.com/OpenSpeedShop/cbtf-argonavis.git')
 
+    variant('cti', default=False,
+            description="Build MRNet with the CTI startup option")
+    variant('crayfe', default=False,
+            description="build only the FE tool using the runtime_dir \
+                         to point to target build.")
+    variant('runtime', default=False,
+            description="build only the runtime libraries and collectors.")
     variant('build_type', default='None', values=('None'),
             description='CMake build type')
 
     depends_on("cmake@3.0.2:", type='build')
     depends_on("boost@1.50.0:1.59.0")
     depends_on("papi")
+    depends_on("libmonitor")
     depends_on("mrnet@5.0.1:+lwthreads")
+    depends_on("mrnet@5.0.1:+cti", when='+cti')
     depends_on("cbtf")
+    depends_on("cbtf+cti", when='+cti')
+    depends_on("cbtf+runtime", when='+runtime')
     depends_on("cbtf-krell")
+    depends_on("cbtf-krell+cti", when="+cti")
+    depends_on("cbtf-krell+runtime", when="+runtime")
     depends_on("cuda")
 
     parallel = False
@@ -87,6 +101,23 @@ class CbtfArgonavis(CMakePackage):
             '-DBoost_DIR=%s' % spec['boost'].prefix,
             '-DBOOST_LIBRARYDIR=%s' % spec['boost'].prefix.lib,
             '-DMRNET_DIR=%s' % spec['mrnet'].prefix,
+            '-DLIBMONITOR_DIR=%s' % spec['libmonitor'].prefix,
             '-DBoost_NO_SYSTEM_PATHS=ON']
 
         return cmake_args
+
+    def setup_environment(self, spack_env, run_env):
+        """Set up the compile and runtime environments for a package."""
+
+        if os.environ.get('LD_LIBRARY_PATH'):
+            cupti_path = self.spec['cuda'].prefix + '/extras/CUPTI/lib64'
+            os.environ['LD_LIBRARY_PATH'] += cupti_path
+        else:
+            os.environ['LD_LIBRARY_PATH'] = cupti_path
+
+        run_env.prepend_path(
+            'LD_LIBRARY_PATH',
+            self.spec['cuda'].prefix + '/extras/CUPTI/lib64')
+        spack_env.prepend_path(
+            'LD_LIBRARY_PATH',
+            self.spec['cuda'].prefix + '/extras/CUPTI/lib64')
