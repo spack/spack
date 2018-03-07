@@ -39,6 +39,8 @@ class Nekcem(Package):
 
     # We only have a development version
     version('develop', git='https://github.com/NekCEM/NekCEM.git')
+    version('0b8bedd', git='https://github.com/NekCEM/NekCEM.git',
+            commit='0b8beddfdcca646bfcc866dfda1c5f893338399b')
 
     # dependencies
     depends_on('mpi', when='+mpi')

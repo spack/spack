@@ -40,6 +40,8 @@ class Occa(Package):
     homepage = "http://libocca.org"
 
     version('develop', git='https://github.com/libocca/occa.git')
+    version('0.2', git='https://github.com/libocca/occa.git', tag='0.2')
+    version('0.1', git='https://github.com/libocca/occa.git', tag='0.1')
     version('0.0.0', git='https://github.com/libocca/occa.git',
             commmit='381e886886dc87823769c5f20d0ecb29dd117afa')
 
