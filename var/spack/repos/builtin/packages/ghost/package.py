@@ -40,16 +40,15 @@ class Ghost(CMakePackage):
     version('develop',
         git='https://bitbucket.org/essex/ghost/ghost.git', branch='devel')
 
-
     variant('shared', default=True,
         description='Enables the build of shared libraries')
     variant('mpi', default=True,
         description='enable/disable MPI')
-    variant('cuda',default=False,
+    variant('cuda',default=False, 
         description='enable/disable CUDA')
-    variant('scotch',default=False,
+    variant('scotch',default=False, 
         description='enable/disable matrix reordering with PT-SCOTCH')
-    variant('zoltan',default=False,
+    variant('zoltan',default=False, 
         description='enable/disable matrix reordering with Zoltan')
 
     # ###################### Dependencies ##########################
@@ -64,24 +63,24 @@ class Ghost(CMakePackage):
     depends_on('zoltan', when='+zoltan')
 
     def cmake_args(self):
-        spec=self.spec
-        cblas_include_dir=''
-        if not '^mkl' in spec:
-            cblas_include_dir='-DCBLAS_INCLUDE_DIR='+\
-            spec['blas'].prefix.include
+        spec = self.spec
+        cblas_include_dir = ''
+        if '^mkl' not in spec:
+            cblas_include_dir = '-DCBLAS_INCLUDE_DIR='+\
+                spec['blas'].prefix.include
 
         args = ['-DGHOST_ENABLE_MPI:BOOL=%s'
-                % ('ON' if '+mpi' in spec else 'OFF'),
+                % ('ON' if '+mpi' in spec else 'OFF'), 
                 '-DGHOST_USE_CUDA:BOOL=%s'
-                        % ('ON' if '+cuda' in spec else 'OFF'),
+                % ('ON' if '+cuda' in spec else 'OFF'), 
                 '-DGHOST_USE_SCOTCH:BOOL=%s'
-                        % ('ON' if '+scotch' in spec else 'OFF'),
+                % ('ON' if '+scotch' in spec else 'OFF'), 
                 '-DGHOST_USE_ZOLTAN:BOOL=%s'
-                        % ('ON' if '+zoltan' in spec else 'OFF'),
+                % ('ON' if '+zoltan' in spec else 'OFF'), 
                 '-DBUILD_SHARED_LIBS:BOOL=%s'
-                        % ('ON' if '+shared' in spec else 'OFF'),
+                % ('ON' if '+shared' in spec else 'OFF'), 
                 cblas_include_dir,
-                ];
+                ]
 
         return args
 
