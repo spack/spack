@@ -83,7 +83,6 @@ class LibjpegTurbo(Package):
         args = []
         if '+java' in self.spec:
             args.append('--with-java')
-            # args.append('--with-java=' + self.spec['jdk'].prefix)
         else:
             args.append('--without-java')
         return args
