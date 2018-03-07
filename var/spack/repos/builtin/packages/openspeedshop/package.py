@@ -186,13 +186,6 @@ class Openspeedshop(CMakePackage):
 
         spec = self.spec
 
-        # Checking the platform and target
-        # OpenSpeedShop should not be built for the compute nodes
-        # when building in cbtf mode (+cbtf)
-        # platform = self.spec.architecture.platform
-        # if spec.satisfies('~offline'):
-        #     conflicts('platform=cray')
-
         compile_flags = "-O2 -g"
 
         if spec.satisfies('+offline'):
