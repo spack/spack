@@ -28,8 +28,7 @@ from spack import *
 class Dislin(Package):
     """DISLIN is a high level and easy to use graphics library for displaying
        data as curves,  bar graphs,  pie charts,  3D-colour plots,  surfaces,
-       contours and maps. The software is available for several C, Fortran 77
-       and Fortran 90 compilers."""
+       contours and maps."""
 
     homepage = "http://www.mps.mpg.de/dislin"
     url      = "ftp://ftp.gwdg.de/pub/grafik/dislin/linux/i586_64/dislin-11.0.linux.i586_64.tar.gz"
