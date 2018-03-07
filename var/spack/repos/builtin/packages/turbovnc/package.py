@@ -96,9 +96,5 @@ class Turbovnc(CMakePackage):
                            '/share/X11/xkb')
             options.append('-DXKB_BIN_DIRECTORY:PATH=' +
                            self.spec['xkbcomp'].prefix + '/bin')
-        if '+debug' in self.spec:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
-        else:
-            options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
 
         return options
