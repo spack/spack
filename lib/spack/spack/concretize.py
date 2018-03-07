@@ -214,15 +214,21 @@ class DefaultConcretizer(object):
         DAG has an architecture, then use the root otherwise use the defaults
         on the platform.
         """
-        root_arch = spec.root.architecture
+        try:
+            nearest = next(p for p in spec.traverse(direction='parents')
+                           if (p.architecture and p is not spec))
+            nearest_arch = nearest.architecture
+        except StopIteration:
+            nearest_arch = None
+
         sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
         spec_changed = False
 
         if spec.architecture is None:
-            spec.architecture = spack.spec.ArchSpec(sys_arch)
+            spec.architecture = spack.spec.ArchSpec()
             spec_changed = True
 
-        default_archs = list(x for x in [root_arch, sys_arch] if x)
+        default_archs = list(x for x in [nearest_arch, sys_arch] if x)
         for arch in default_archs:
             if spec.architecture.concrete:
                 break
@@ -232,9 +238,6 @@ class DefaultConcretizer(object):
             for field in replacement_fields:
                 setattr(spec.architecture, field, getattr(arch, field))
                 spec_changed = True
-
-        if not spec.architecture.concrete:
-            raise InsufficientArchitectureInfoError(spec, default_archs)
 
         return spec_changed
 
