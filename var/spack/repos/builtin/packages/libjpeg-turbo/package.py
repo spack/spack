@@ -5,7 +5,6 @@
 
 from spack import *
 import os
-import sys
 import platform
 
 
@@ -93,5 +92,6 @@ class LibjpegTurbo(Package):
                 'JNI_CFLAGS',
                 '-I' + self.spec['jdk'].prefix.include +
                 ' ' + '-I' +
-                os.path.join(self.spec['jdk'].prefix.include, platform.system().lower()),
+                os.path.join(self.spec['jdk'].prefix.include,
+                             platform.system().lower()),
                 separator=' ')
