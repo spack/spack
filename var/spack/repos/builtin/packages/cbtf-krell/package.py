@@ -80,8 +80,6 @@ class CbtfKrell(CMakePackage):
             description="build only the FE tool using the runtime_dir \
                          to point to target build.")
 
-    patch('llvm.patch')
-
     # Dependencies for cbtf-krell
     depends_on("cmake@3.0.2:", type='build')
 
