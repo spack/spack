@@ -26,13 +26,14 @@ from spack import *
 
 
 class Shoremap(Package):
-    """Whole genome resequencing of pools of recombinant mutant genomes allows
+    """SHOREmap is a computational tool implementing a method that enables
+       simple and straightforward mapping-by-sequencing analysis.
+       
+       Whole genome resequencing of pools of recombinant mutant genomes allows
        directly linking phenotypic traits to causal mutations. Such an
        analysis, called mapping-by-sequencing, combines classical genetic
        mapping and next generation sequencing by relying on selection-induced
-       patterns within genome-wide allele frequency in pooled genomes. SHOREmap
-       is a computational tool implementing a method that enables simple and
-       straightforward mapping-by-sequencing analysis."""
+       patterns within genome-wide allele frequency in pooled genomes."""
 
     homepage = "http://bioinfo.mpipz.mpg.de/shoremap/"
     url      = "http://bioinfo.mpipz.mpg.de/shoremap/SHOREmap_v3.6.tar.gz"
