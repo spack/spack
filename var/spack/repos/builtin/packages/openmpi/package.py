@@ -308,6 +308,11 @@ class Openmpi(AutotoolsPackage):
             # for Open-MPI 2.0:, C++ bindings are disabled by default.
             config_args.extend(['--enable-mpi-cxx'])
 
+        arch = self.spec.architecture
+        if (arch.platform == 'darwin' and arch.platform_os == 'highsierra' and
+                '%gcc' in spec):
+            config_args.append('CFLAGS=-mmacosx-version-min=10.12')
+
         # Fabrics and schedulers
         config_args.extend(self.with_or_without('fabrics'))
         config_args.extend(self.with_or_without('schedulers'))
