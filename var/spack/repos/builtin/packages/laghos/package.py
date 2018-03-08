@@ -41,7 +41,7 @@ class Laghos(MakefilePackage):
     version('develop', git=git, branch='master')
 
     depends_on('mpi')
-    depends_on('mfem@laghos-v1.0', when='@1.0')
+    depends_on('mfem@laghos-v1.0:', when='@1.0')
 
     @property
     def build_targets(self):
