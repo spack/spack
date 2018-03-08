@@ -239,6 +239,9 @@ class DefaultConcretizer(object):
                 setattr(spec.architecture, field, getattr(arch, field))
                 spec_changed = True
 
+        if not spec.architecture.concrete:
+            raise InsufficientArchitectureInfoError(spec, default_archs)
+
         return spec_changed
 
     def concretize_variants(self, spec):
