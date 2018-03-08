@@ -231,7 +231,8 @@ class DefaultConcretizer(object):
             spec_changed = True
 
         # replace each of the fields (platform, os, target) separately
-        replacement_fields = [k for k, v in iteritems(nearest_arch.to_cmp_dict())
+        nearest_dict = nearest_arch.to_cmp_dict()
+        replacement_fields = [k for k, v in iteritems(nearest_dict)
                               if v and not getattr(spec.architecture, k)]
         for field in replacement_fields:
             setattr(spec.architecture, field, getattr(nearest_arch, field))

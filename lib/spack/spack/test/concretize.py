@@ -194,7 +194,7 @@ class TestConcretize(object):
         spec = Spec('cmake-client %gcc@4.7.2 os=fe ^ cmake')
         try:
             spec.concretize()
-        except:
+        except UnavailableCompilerVersionError:
             # Concretization will fail with an UnavailableCompilerVersionError
             # if the architecture is concretized incorrectly.
             assert False
