@@ -288,7 +288,8 @@ class Openmpi(AutotoolsPackage):
                 opts.append('--with-{0}'.format(x))
 
         if 'schedulers=slurm' in spec:
-            if self.spec.satisfies('@1.5.4:'): # PMI support was added in 1.5.5
+            # PMI support was added in 1.5.5
+            if self.spec.satisfies('@1.5.4:'):
                 # See how SLURM and OpenMPI work together
                 # https://www.open-mpi.org/faq/?category=slurm
                 # https://slurm.schedmd.com/mpi_guide.html#open_mpi
