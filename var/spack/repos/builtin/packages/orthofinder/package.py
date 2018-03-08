@@ -25,34 +25,29 @@
 from spack import *
 
 
-class Elfutils(AutotoolsPackage):
-    """elfutils is a collection of various binary tools such as
-    eu-objdump, eu-readelf, and other utilities that allow you to
-    inspect and manipulate ELF files. Refer to Table 5.Tools Included
-    in elfutils for Red Hat Developer for a complete list of binary
-    tools that are distributed with the Red Hat Developer Toolset
-    version of elfutils."""
+class Orthofinder(Package):
+    """OrthoFinder is a fast, accurate and comprehensive analysis tool for
+    comparative genomics.
 
-    homepage = "https://fedorahosted.org/elfutils/"
+    It finds orthologues and orthogroups infers rooted  gene trees for all
+    orthogroups and infers a rooted species tree for the species being
+    analysed. OrthoFinder also provides comprehensive statistics for
+    comparative genomic analyses. OrthoFinder is simple to use and all you
+    need to run it is a set of protein sequence files (one per species)
+    in FASTA format."""
 
-    url = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
-    list_url = "https://sourceware.org/elfutils/ftp"
-    list_depth = 1
+    homepage = "https://github.com/davidemms/OrthoFinder"
+    url      = "https://github.com/davidemms/OrthoFinder/releases/download/2.2.0/OrthoFinder-2.2.0.tar.gz"
 
-    version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
-    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
+    version('2.2.0', '4ff585e1eb148fc694a219296fbdd431')
 
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('gettext')
-    conflicts('%gcc@7.2.0:', when='@0.163')
+    depends_on('blast-plus', type='run')
+    depends_on('mcl', type='run')
+    depends_on('fastme', type='run')
+    depends_on('py-dlcpar', type='run')
 
-    provides('elf@1')
+    def install(self, spec, prefix):
+        install_tree('.', prefix.bin)
 
-    def configure_args(self):
-        # configure doesn't use LIBS correctly
-        gettext_lib = self.spec['gettext'].prefix.lib,
-        return [
-            'LDFLAGS=-Wl,--no-as-needed -L%s -lintl' % gettext_lib,
-            '--enable-maintainer-mode']
+        chmod = which('chmod')
+        chmod('+x', join_path(prefix.bin, 'orthofinder'))

@@ -25,34 +25,24 @@
 from spack import *
 
 
-class Elfutils(AutotoolsPackage):
-    """elfutils is a collection of various binary tools such as
-    eu-objdump, eu-readelf, and other utilities that allow you to
-    inspect and manipulate ELF files. Refer to Table 5.Tools Included
-    in elfutils for Red Hat Developer for a complete list of binary
-    tools that are distributed with the Red Hat Developer Toolset
-    version of elfutils."""
+class Gcta(Package):
 
-    homepage = "https://fedorahosted.org/elfutils/"
+    """GCTA (Genome-wide Complex Trait Analysis) was originally designed to
+    estimate the proportion of phenotypic variance explained by all genome-wide
+    SNPs for complex traits (the GREML method), and has subsequently extended
+    for many other analyses to better understand the genetic architecture of
+    complex traits. GCTA currently supports the following analyses."""
 
-    url = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
-    list_url = "https://sourceware.org/elfutils/ftp"
-    list_depth = 1
+    homepage = "http://cnsgenomics.com/software/gcta/#Overview"
+    url      = "http://cnsgenomics.com/software/gcta/gcta_1.91.2beta.zip"
 
-    version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
-    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41', preferred=True)
+    version('1.91.2beta_mac', 'ce0882ad35dd9474ffe40911da369274700af1ecb9916c0a355b7bad14850234')
+    version('1.91.2beta', '192efb767be1c7ca9c2dac5d2c2317a97c7a9db1f801168d19ad2a51b98d9b10', preferred=True)
 
-    depends_on('flex', type='build')
-    depends_on('bison', type='build')
-    depends_on('gettext')
-    conflicts('%gcc@7.2.0:', when='@0.163')
+    conflicts('@1.91.2beta', when='platform=darwin')
+    conflicts('@1.91.2beta_mac', when='platform=linux')
 
-    provides('elf@1')
-
-    def configure_args(self):
-        # configure doesn't use LIBS correctly
-        gettext_lib = self.spec['gettext'].prefix.lib,
-        return [
-            'LDFLAGS=-Wl,--no-as-needed -L%s -lintl' % gettext_lib,
-            '--enable-maintainer-mode']
+    def install(self, spec, prefix):
+        mkdirp(prefix.bin)
+        install('gcta64', join_path(prefix.bin, 'gcta64'))
+        set_executable(join_path(prefix.bin, 'gcta64'))
