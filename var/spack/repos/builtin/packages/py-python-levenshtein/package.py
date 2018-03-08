@@ -26,7 +26,7 @@ from spack import *
 
 
 class PyPythonLevenshtein(PythonPackage):
-    """Python extension for computing string edit distances and 
+    """Python extension for computing string edit distances and
     similarities."""
 
     homepage = "https://github.com/ztane/python-Levenshtein"
