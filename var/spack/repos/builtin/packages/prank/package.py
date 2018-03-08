@@ -36,6 +36,7 @@ class Prank(Package):
     depends_on('mafft')
     depends_on('exonerate')
     depends_on('bpp-suite')      # for bppancestor
+    conflicts('%gcc@7.2.0', when='@:150803')
 
     def install(self, spec, prefix):
         with working_dir('src'):
