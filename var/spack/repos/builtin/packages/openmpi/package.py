@@ -280,7 +280,7 @@ class Openmpi(AutotoolsPackage):
         return line
 
     def with_or_without_schedulers(self, activated):
-        spec  = self.spec
+        spec = self.spec
         opts = []
 
         for x in ['alps', 'lsf', 'tm', 'sge', 'loadleveler']:
