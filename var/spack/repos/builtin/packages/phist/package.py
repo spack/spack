@@ -27,70 +27,75 @@ import os
 import fnmatch
 from spack import *
 
+
 class Phist(CMakePackage):
     """ PHIST - a Pipelined, Hybrid-parallel Iterative Solver Toolkit.
 
-PHIST provides implementations of and interfaces to block iterative solvers 
-for sparse linear and eigenvalue problems. In contrast to other libraries we 
+PHIST provides implementations of and interfaces to block iterative solvers
+for sparse linear and eigenvalue problems. In contrast to other libraries we
 support multiple backends (e.g. Trilinos, PETSc and our own optimized kernels),
-and interfaces in multiple languages such as C, C++, Fortran 2003 and Python. 
-PHIST has a clear focus on portability and hardware performance: in particular 
-we support row-major storage of block vectors and using GPUs (via the ghost 
+and interfaces in multiple languages such as C, C++, Fortran 2003 and Python.
+PHIST has a clear focus on portability and hardware performance: in particular
+we support row-major storage of block vectors and using GPUs (via the ghost
 library or Trilinos/Tpetra).
 """
 
     homepage = "https://bitbucket.org/essex/phist/"
 
-    # run expensive test suite (recommended oly if you have 12 physical cores, takes a few minutes)
+    # run expensive test suite (recommended oly if you have 12 physical cores,
+    # takes a few minutes)
     run_tests  = False
     smoke_test = True
 
-    version('develop', 
+    version('develop',
             git='https://bitbucket.org/essex/phist/phist.git', branch='devel')
-    version('master', 
+    version('master',
             git='https://bitbucket.org/essex/phist/phist.git', branch='master')
-    version('1.4.1', '53ca2c2c000a36790e1626ed1eb642e3', 
+    version('1.4.1', '53ca2c2c000a36790e1626ed1eb642e3',
             url='https://bitbucket.org/essex/phist/get/phist-1.4.1.tar.gz')
 
-    # note: there is no virtual package for lapacke (the C bindings for lapack),
-    # We look for a file like lapacke.h in the lapack prefix, if it is found we
-    # pass it to phist's cmake, otherwise we hope that phist finds it itself.
+    # note: there is no virtual package for lapacke (the C bindings for
+    # lapack), We look for a file like lapacke.h in the lapack prefix, if it
+    # is found we pass it to phist's cmake, otherwise we hope that phist finds
+    #  it itself.
     def lapacke_include_dir(self):
-        prefix=self.spec['lapack'].prefix
-        include_dir="NOTFOUND"
+        prefix = self.spec['lapack'].prefix
+        include_dir = "NOTFOUND"
         for root, dir, files in os.walk(prefix):
             if fnmatch.filter(files, "*lapacke.h"):
-                include_dir=root
+                include_dir = root
                 break
         return include_dir
 
     def cmake_args(self):
-        spec=self.spec
-        outlev=spec.variants['outlev'].value
+        spec = self.spec
+        outlev = spec.variants['outlev'].value
         lapack_libs = (spec['lapack'].libs + spec['blas'].libs).joined(';')
         lapacke_inc = self.lapacke_include_dir()
-        tpl_lapacke_include_dirs=''
+        tpl_lapacke_include_dirs = ''
         if lapacke_inc != "NOTFOUND":
-            tpl_lapacke_include_dirs='-DTPL_LAPACKE_INCLUDE_DIRS='+lapacke_inc
+            tpl_lapacke_include_dirs = '-DTPL_LAPACKE_INCLUDE_DIRS='
+            + lapacke_inc
+
         # Use everything until the first '+' sign as the kernel library.
         # Note that we already restrict the string to a list of given values,
         # so we don't need to check more carefully here.
-        kernel_lib=spec.variants['kernel_lib'].value.split('+',1)[0]
+        kernel_lib = spec.variants['kernel_lib'].value.split('+', 1)[0]
 
-        args = ['-DPHIST_KERNEL_LIB=%s' % kernel_lib, 
-                '-DPHIST_OUTLEV=%s' % outlev, 
-                '-DTPL_LAPACKE_LIBRARIES=%s' % lapack_libs, 
-                tpl_lapacke_include_dirs, 
-                '-DPHIST_ENABLE_MPI:BOOL=%s' 
-                % ('ON' if '+mpi' in spec else 'OFF'), 
-                '-DBUILD_SHARED_LIBS:BOOL=%s' 
-                % ('ON' if '+shared' in spec else 'OFF'), 
-                '-DPHIST_USE_TRILINOS_TPLS:BOOL=%s' 
-                % ('ON' if '+trilinos' in spec else 'OFF'), 
-                '-DPHIST_USE_SOLVER_TPLS:BOOL=%s' 
-                % ('ON' if '+trilinos' in spec else 'OFF'), 
-                '-DPHIST_USE_PRECON_TPLS:BOOL=%s' 
-                % ('ON' if '+trilinos' in spec else 'OFF'), 
+        args = ['-DPHIST_KERNEL_LIB=%s' % kernel_lib,
+                '-DPHIST_OUTLEV=%s' % outlev,
+                '-DTPL_LAPACKE_LIBRARIES=%s' % lapack_libs,
+                tpl_lapacke_include_dirs,
+                '-DPHIST_ENABLE_MPI:BOOL=%s'
+                % ('ON' if '+mpi' in spec else 'OFF'),
+                '-DBUILD_SHARED_LIBS:BOOL=%s'
+                % ('ON' if '+shared' in spec else 'OFF'),
+                '-DPHIST_USE_TRILINOS_TPLS:BOOL=%s'
+                % ('ON' if '+trilinos' in spec else 'OFF'),
+                '-DPHIST_USE_SOLVER_TPLS:BOOL=%s'
+                % ('ON' if '+trilinos' in spec else 'OFF'),
+                '-DPHIST_USE_PRECON_TPLS:BOOL=%s'
+                % ('ON' if '+trilinos' in spec else 'OFF'),
                 ]
 
         return args
@@ -101,35 +106,39 @@ library or Trilinos/Tpetra).
         with working_dir(self.build_directory):
             make("check")
 
-
     @run_after('install')
     @on_package_attributes(smoke_test=True)
     def test_install(self):
         with working_dir(self.build_directory):
             make("test_install")
 
-    variant(name='kernel_lib', default='builtin', 
-            description='select the kernel library (backend) for phist', 
-            values=['builtin','epetra','tpetra','petsc','petsc+complex', 
-            'eigen','ghost'])
-    variant(name='outlev', default='2',values=['0','1','2','3','4','5'], 
-        description='verbosity. 0: errors 1: +warnings 2: +info 3: +verbose '\
-                '4: +extreme 5; +debug')
+    variant(name='kernel_lib', default='builtin',
+            description='select the kernel library (backend) for phist',
+            values=['builtin',
+                    'epetra',
+                    'tpetra',
+                    'petsc',
+                    'petsc+complex',
+                    'eigen',
+                    'ghost'])
+    variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
+            description='verbosity. 0: errors 1: +warnings 2: +info '
+                        '3: +verbose 4: +extreme 5; +debug')
 
-    variant('shared',  default=True, 
-        description='Enables the build of shared libraries')
+    variant('shared',  default=True,
+            description='Enables the build of shared libraries')
 
-    variant('mpi', default=True, 
-        description='enable/disable MPI (note that the kernel library may '\
-                'not support this choice)')
-    variant('parmetis', default=False, 
-        description='enable/disable ParMETIS partitioning (only actually '\
+    variant('mpi', default=True,
+            description='enable/disable MPI (note that the kernel library may '
+            'not support this choice)')
+    variant('parmetis', default=False,
+            description='enable/disable ParMETIS partitioning (only actually '
                         'used with kernel_lib=builtin)')
-    variant('trilinos', default=False, 
-        description='enable/disable Trilinos third-party libraries. '\
-                        'For all kernel_libs, we can use Belos and Anasazi '\
-                        'iterative solvers. For the Trilinos backends '\
-                        '(kernel_lib=epetra|tpetra) we can use preconditioner '\
+    variant('trilinos', default=False,
+            description='enable/disable Trilinos third-party libraries. '
+                        'For all kernel_libs, we can use Belos and Anasazi '
+                        'iterative solvers. For the Trilinos backends '
+                        '(kernel_lib=epetra|tpetra) we can use preconditioner '
                         'packages such as Ifpack, Ifpack2 and ML.')
 
     # ###################### Dependencies ##########################
@@ -150,5 +159,3 @@ library or Trilinos/Tpetra).
 
     depends_on('trilinos', when='+trilinos')
     depends_on('parmetis', when='+parmetis')
-
-
