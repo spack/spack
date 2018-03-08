@@ -61,7 +61,7 @@ packages_path      = join_path(repos_path, "builtin")
 mock_packages_path = join_path(repos_path, "builtin.mock")
 
 # User configuration location
-user_config_path = os.path.expanduser('~/.spack')
+user_config_path = None
 
 prefix = spack_root
 opt_path        = join_path(prefix, "opt")
@@ -121,6 +121,12 @@ concretizer = DefaultConcretizer()
 #-----------------------------------------------------------------------------
 _config = spack.config.get_config('config')
 
+# Check if user_config paths are enabled, add it to the config scope if it is.
+if _config.get('user_config', True):
+    user_config_path = os.path.expanduser('~/.spack/')
+    spack.config.ConfigScope('user', user_config_path)
+    _platform = spack.architecture.platform().name
+    spack.config.ConfigScope('user/%s' % _platform, os.path.join(user_config_path, _platform))
 
 # Path where downloaded source code is cached
 cache_path = canonicalize_path(
@@ -128,9 +134,14 @@ cache_path = canonicalize_path(
 fetch_cache = spack.fetch_strategy.FsCache(cache_path)
 
 
-# cache for miscellaneous stuff.
+# Cache for miscellaneous stuff. It defaults to being within the user config directory,
+# Otherwise it ends up next to the regular cache.
+_default_misc_cache_path = os.path.join(os.path.dirname(cache_path), 'misc_cache')
+if user_config_path is not None:
+    _default_misc_cache_path = os.path.join(user_config_path, 'cache')
+
 misc_cache_path = canonicalize_path(
-    _config.get('misc_cache', join_path(user_config_path, 'cache')))
+    _config.get('misc_cache', _default_misc_cache_path))
 misc_cache = FileCache(misc_cache_path)
 
 
