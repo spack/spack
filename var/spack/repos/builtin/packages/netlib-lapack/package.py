@@ -136,7 +136,7 @@ class NetlibLapack(Package):
         key = tuple(sorted(query_parameters))
         headers = query2headers[key]
 
-        paths = join_path(self.spec.prefix.include, headers)
+        paths = join_path(self.spec.prefix.include, headers[0])
         if os.path.exists(paths):
             return HeaderList(paths)
         else:
