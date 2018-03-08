@@ -35,10 +35,15 @@ class Geos(Package):
     homepage = "http://trac.osgeo.org/geos/"
     url      = "http://download.osgeo.org/geos/geos-3.4.2.tar.bz2"
 
-    # Verison 3.5.0 supports Autotools and CMake
-    version('3.5.0', '136842690be7f504fba46b3c539438dd')
+    # Versions from 3.5.1 support Autotools and CMake
+    version('3.6.2', 'a32142343c93d3bf151f73db3baa651f')
+    version('3.6.1', 'c97e338b3bc81f9848656e9d693ca6cc')
+    version('3.6.0', '55de5fdf075c608d2d7b9348179ee649')
+    version('3.5.1', '2e3e1ccbd42fee9ec427106b65e43dc0')
 
-    # Versions through 3.4.2 have CMake, but only Autotools is supported
+    # Versions through 3.5.0 have CMake, but only Autotools is supported
+    version('3.5.0', '136842690be7f504fba46b3c539438dd')
+    version('3.4.3', '77f2c2cca1e9f49bc1bece9037ac7a7a')
     version('3.4.2', 'fc5df2d926eb7e67f988a43a92683bae')
     version('3.4.1', '4c930dec44c45c49cd71f3e0931ded7e')
     version('3.4.0', 'e41318fc76b5dc764a69d43ac6b18488')

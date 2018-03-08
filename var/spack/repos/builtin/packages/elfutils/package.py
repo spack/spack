@@ -46,6 +46,7 @@ class Elfutils(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('bison', type='build')
     depends_on('gettext')
+    conflicts('%gcc@7.2.0:', when='@0.163')
 
     provides('elf@1')
 

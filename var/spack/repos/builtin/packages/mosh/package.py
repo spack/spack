@@ -44,6 +44,7 @@ class Mosh(AutotoolsPackage):
     depends_on('zlib')
     depends_on('openssl')
 
+    depends_on('pkgconfig', type='build')
     depends_on('perl', type='run')
 
     build_directory = 'spack-build'

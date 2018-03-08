@@ -48,6 +48,11 @@ class Silo(Package):
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
 
+    def flag_handler(self, name, flags):
+        if name == 'ldflags' and self.spec['hdf5'].satisfies('~shared'):
+            flags.append('-ldl')
+        return (flags, None, None)
+
     def install(self, spec, prefix):
         config_args = [
             '--enable-fortran' if '+fortran' in spec else '--disable-fortran',

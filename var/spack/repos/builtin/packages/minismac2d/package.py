@@ -49,7 +49,7 @@ class Minismac2d(MakefilePackage):
             'CPP=cpp',
             'FC={0}'.format(self.spec['mpi'].mpifc),
             'LD={0}'.format(self.spec['mpi'].mpifc),
-            'MPIDIR=-I{0}/include'.format(self.spec['mpi'].prefix),
+            'MPIDIR=-I{0}'.format(self.spec['mpi'].headers.directories[0]),
             'CPPFLAGS=-P -traditional  -DD_PRECISION',
             'FFLAGS=-O3 -c -g -DD_PRECISION',
             'LDFLAGS=-O3',
