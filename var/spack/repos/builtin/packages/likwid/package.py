@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import glob
+import os
 
 
 class Likwid(Package):
@@ -105,5 +106,6 @@ class Likwid(Package):
                             spec['lua'].prefix.bin),
                         'config.mk')
 
+        env['PWD'] = os.getcwd()
         make()
         make('install')

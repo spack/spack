@@ -73,7 +73,7 @@ def fake_fetchify(url, pkg):
 
 
 @pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
-def test_packaging(mock_archive, tmpdir):
+def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
     spec = Spec("patchelf")
     spec.concretize()
@@ -218,22 +218,20 @@ echo $PATH"""
 
 
 def test_relocate_text(tmpdir):
-    # Validate the text path replacement
-    old_dir = '/home/spack/opt/spack'
-    filename = str(tmpdir) + '/dummy.txt'
-    with open(filename, "w") as script:
-        script.write(old_dir)
-        script.close()
-
-    filenames = [filename]
-    new_dir = '/opt/rh/devtoolset/'
-    relocate_text(filenames, old_dir, new_dir)
-
-    assert(strings_contains_installroot(filename) is False)
-
-    with open(filename, "r") as script:
-        for line in script:
-            assert(new_dir in line)
+    with tmpdir.as_cwd():
+        # Validate the text path replacement
+        old_dir = '/home/spack/opt/spack'
+        filename = 'dummy.txt'
+        with open(filename, "w") as script:
+            script.write(old_dir)
+            script.close()
+        filenames = [filename]
+        new_dir = '/opt/rh/devtoolset/'
+        relocate_text(filenames, old_dir, new_dir)
+        with open(filename, "r")as script:
+            for line in script:
+                assert(new_dir in line)
+        assert(strings_contains_installroot(filename, old_dir) is False)
 
 
 def test_needs_relocation():
