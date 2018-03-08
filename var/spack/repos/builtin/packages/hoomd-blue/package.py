@@ -52,7 +52,7 @@ class HoomdBlue(CMakePackage):
     # https://bitbucket.org/glotzer/hoomd-blue/issues/238
     version('2.2.2', git=git, tag='v2.2.2', submodules=True)
     version('2.1.6', git=git, tag='v2.1.6', submodules=True)
-    
+
     variant('mpi',  default=True,  description='Compile with MPI enabled')
     variant('cuda', default=True,  description='Compile with CUDA Toolkit')
     variant('doc',  default=False, description='Generate documentation')
