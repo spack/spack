@@ -37,3 +37,9 @@ class JsonC(AutotoolsPackage):
     depends_on('autoconf', type='build')
 
     parallel = False
+
+    @when('@0.12.1 %gcc@7')
+    def patch(self):
+        filter_file('-Wextra',
+                    '-Wextra -Wno-error=implicit-fallthrough',
+                    'Makefile.in')
