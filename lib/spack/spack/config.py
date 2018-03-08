@@ -232,6 +232,7 @@ _site_path = os.path.join(spack.etc_path, 'spack')
 ConfigScope('site', _site_path)
 ConfigScope('site/%s' % _platform, os.path.join(_site_path, _platform))
 
+
 def highest_precedence_scope():
     """Get the scope with highest precedence (prefs will override others)."""
     return list(config_scopes.values())[-1]
