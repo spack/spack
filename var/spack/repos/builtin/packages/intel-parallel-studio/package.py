@@ -294,23 +294,19 @@ class IntelParallelStudio(IntelPackage):
         if not '+rpath' in self.spec:
             return
 
-        compiler_lib_dir = self.component_lib_dir(
-            component='compiler', relative=False)
+        # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-using-configuration-files
+        compilers_bin_dir = self.component_bin_dir(component='compiler')
+        rpath_dir = self.component_lib_dir(component='compiler')
 
-        for compiler_name in 'icc icpc ifort'.split:
-
-            compiler_cmd = os.path.join(self.component_bin_dir(
-                component='compiler', relative=False), compiler_name)
-
-            # I'm afraid I must insist.
-            if not os.path.isfile(compiler_cmd):
+        for compiler_name in 'icc icpc ifort'.split():
+            f = os.path.join(compilers_bin_dir, compiler_name)
+            if not os.path.isfile(f):
                 raise InstallError(
-                    'Cannot find compiler command to configure rpath:\n\t'
-                    + compiler_cmd)
+                    'Cannot find compiler command to configure rpath:\n\t' + f)
 
-            compiler_cfg = os.path.abspath(compiler_name + '.cfg')
-            with open(compiler_cfg, 'w') as f:
-                f.write('-Xlinker -rpath={0}\n'.format(compiler_lib_dir))
+            compiler_cfg = os.path.abspath(f + '.cfg')
+            with open(compiler_cfg, 'w') as fh:
+                fh.write('-Xlinker -rpath={0}\n'.format(rpath_dir))
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # DUP code in var/spack/repos/builtin/packages/intel-mpi/package.py
