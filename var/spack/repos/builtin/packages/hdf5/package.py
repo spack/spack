@@ -50,6 +50,7 @@ class Hdf5(AutotoolsPackage):
     version('1.8.14', 'a482686e733514a51cde12d6fe5c5d95')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
     version('1.8.12', 'd804802feb99b87fc668a90e6fa34411')
+    version('1.8.10', '710aa9fb61a51d61a7e2c09bf0052157')
 
     variant('debug', default=False,
             description='Builds a debug version of the library')
@@ -96,6 +97,18 @@ class Hdf5(AutotoolsPackage):
     # https://software.intel.com/en-us/forums/intel-fortran-compiler-for-linux-and-mac-os-x/topic/747951.
     patch('h5f90global-mult-obj-same-equivalence-same-common-block.patch',
           when='@1.10.1%intel@18')
+
+    # Turn line comments into block comments to conform with pre-C99 language
+    # standards. Versions of hdf5 after 1.8.10 don't require this patch,
+    # either because they conform to pre-C99 or neglect to ask for pre-C99
+    # language standards from their compiler. The hdf5 build system adds
+    # the -ansi cflag (run 'man gcc' for info on -ansi) for some versions
+    # of some compilers (see hdf5-1.8.10/config/gnu-flags). The hdf5 build
+    # system does not provide an option to disable -ansi, but since the
+    # pre-C99 code is restricted to just five lines of line comments in
+    # three src files, this patch accomplishes the simple task of patching the
+    # three src files and leaves the hdf5 build system alone.
+    patch('pre-c99-comments.patch', when='@1.8.10')
 
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 

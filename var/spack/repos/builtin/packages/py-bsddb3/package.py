@@ -31,8 +31,8 @@ class PyBsddb3(PythonPackage):
        Sequence and Transaction objects, and each of these is exposed
        as a Python type in the bsddb3.db module."""
 
-    homepage = "://pypi.python.org/pypi/bsddb3/6.2.5"
-    url      = "https://pypi.python.org/packages/ba/a7/131dfd4e3a5002ef30e20bee679d5e6bcb2fcc6af21bd5079dc1707a132c/bsddb3-6.2.5.tar.gz#md5=610267c189964c905a931990e1ba438c"
+    homepage = "https://pypi.python.org/pypi/bsddb3/6.2.5"
+    url      = "https://pypi.io/packages/source/b/bsddb3/bsddb3-6.2.5.tar.gz"
 
     version('6.2.5', '610267c189964c905a931990e1ba438c')
 

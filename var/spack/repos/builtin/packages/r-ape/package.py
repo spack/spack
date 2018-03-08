@@ -46,6 +46,10 @@ class RApe(RPackage):
     url      = "https://cran.r-project.org/src/contrib/ape_4.1.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/ape"
 
+    version('5.0', '82fd2786a502f070ca020797f7b19fa4')
     version('4.1', 'a9ed416d6d172d4b9682556cf692d7c2')
 
     depends_on('r@3.2:')
+    depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

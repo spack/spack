@@ -42,5 +42,5 @@ class NetcdfCxx(AutotoolsPackage):
     def libs(self):
         shared = True
         return find_libraries(
-            'libnetcdf_c++', root=self.prefix, shared=shared, recurse=True
+            'libnetcdf_c++', root=self.prefix, shared=shared, recursive=True
         )
