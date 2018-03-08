@@ -27,17 +27,18 @@ from spack import *
 
 class RTfbstools(RPackage):
     """TFBSTools is a package for the analysis and manipulation of
+       transcription factor binding sites. 
+
+       It includes matrices conversion between Position Frequency Matirx (PFM),
+       Position Weight Matirx (PWM) and Information Content Matrix (ICM). It
+       can also scan putative TFBS from sequence/alignment, query JASPAR
+       database and provides a wrapper of de novo motif discovery software.
+       TFBSTools is a package for the analysis and manipulation of
        transcription factor binding sites. It includes matrices conversion
        between Position Frequency Matirx (PFM), Position Weight Matirx (PWM)
        and Information Content Matrix (ICM). It can also scan putative TFBS
        from sequence/alignment, query JASPAR database and provides a wrapper
-       of de novo motif discovery software.TFBSTools is a package for the
-       analysis and manipulation of transcription factor binding sites.
-       It includes matrices conversion between Position Frequency Matirx
-       (PFM), Position Weight Matirx (PWM) and Information Content Matrix
-       (ICM). It can also scan putative TFBS from sequence/alignment, query
-       JASPAR database and provides a wrapper of de novo motif discovery
-       software."""
+       of de novo motif discovery software."""
 
     homepage = "http://bioconductor.org/packages/TFBSTools/"
     url      = "https://git.bioconductor.org/packages/TFBSTools"
