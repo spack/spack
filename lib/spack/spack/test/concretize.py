@@ -190,6 +190,28 @@ class TestConcretize(object):
         assert set(client.compiler_flags['fflags']) == set(['-O0'])
         assert not set(cmake.compiler_flags['fflags'])
 
+    def test_architecture_inheritance(self):
+        spec = Spec('cmake-client %gcc@4.7.2 os=fe ^ cmake')
+        try:
+            spec.concretize()
+        except:
+            # Concretization will fail with an UnavailableCompilerVersionError
+            # if the architecture is concretized incorrectly.
+            assert False
+        assert spec['cmake'].architecture == spec.architecture
+
+    def test_architecture_deep_inheritance(self):
+        # This test is dependent on traversal towards the root from mpich
+        # reaching callpath before mpileaks despite both depending on mpi.
+        # May only work because mpi is virtual, or because of artifacts of
+        # the ordering.
+        spec = Spec('mpileaks %clang@3.3 os=CNL target=foo' +
+                    ' ^callpath os=SuSE11 ^mpich os=be')
+        spec.concretize()
+
+        for s in spec.traverse(root=False):
+            assert s.architecture.target == spec.architecture.target
+
     def test_compiler_flags_from_user_are_grouped(self):
         spec = Spec('a%gcc cflags="-O -foo-flag foo-val" platform=test')
         spec.concretize()
