@@ -25,21 +25,22 @@
 from spack import *
 
 
-class RIgraph(RPackage):
-    """Routines for simple graphs and network analysis. It can handle large
-    graphs very well and provides functions for generating random and regular
-    graphs, graph visualization, centrality methods and much more."""
+class RPhangorn(RPackage):
+    """Package contains methods for estimation of phylogenetic trees and
+       networks using Maximum Likelihood, Maximum Parsimony, distance methods
+       and Hadamard conjugation. Allows to compare trees, models selection and
+       offers visualizations for trees and split networks."""
 
-    homepage = "http://igraph.org/"
-    url      = "https://cran.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/igraph"
+    homepage = "http://www.example.co://github.com/KlausVigo/phangorn"
+    url      = "https://cran.r-project.org/src/contrib/phangorn_2.3.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/phangorn"
 
-    version('1.1.2', 'ca1617aea272852d2856c4661ad1c7d8')
-    version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')
+    version('2.3.1', '85e7309900d061432508ab6f7e3e627e')
 
+    depends_on('r-ape@5.0:', type=('build', 'run'))
+    depends_on('r-quadprog', type=('build', 'run'))
+    depends_on('r-igraph@1.0:', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
+    depends_on('r-fastmatch', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-pkgconfig', type=('build', 'run'))
-    depends_on('r-irlba', type=('build', 'run'))
-    depends_on('gmp')
-    depends_on('libxml2')
+    depends_on('r-rcpp@0.12.0:', type=('build', 'run'))

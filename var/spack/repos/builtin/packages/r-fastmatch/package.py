@@ -25,21 +25,14 @@
 from spack import *
 
 
-class RIgraph(RPackage):
-    """Routines for simple graphs and network analysis. It can handle large
-    graphs very well and provides functions for generating random and regular
-    graphs, graph visualization, centrality methods and much more."""
+class RFastmatch(RPackage):
+    """Package providing a fast match() replacement for cases that require
+       repeated look-ups. It is slightly faster that R's built-in match()
+       function on first match against a table, but extremely fast on any
+       subsequent lookup as it keeps the hash table in memory."""
 
-    homepage = "http://igraph.org/"
-    url      = "https://cran.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/igraph"
+    homepage = "http://www.rforge.net/fastmatch"
+    url      = "https://cran.r-project.org/src/contrib/fastmatch_1.1-0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/fastmatch"
 
-    version('1.1.2', 'ca1617aea272852d2856c4661ad1c7d8')
-    version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')
-
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-pkgconfig', type=('build', 'run'))
-    depends_on('r-irlba', type=('build', 'run'))
-    depends_on('gmp')
-    depends_on('libxml2')
+    version('1.1-0', '900c2363c15059ac9d63c4c71ea2d6b2')
