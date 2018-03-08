@@ -215,32 +215,27 @@ class DefaultConcretizer(object):
         on the platform.
         """
         try:
+            # Get the nearest architecture with any fields set
             nearest = next(p for p in spec.traverse(direction='parents')
                            if (p.architecture and p is not spec))
             nearest_arch = nearest.architecture
         except StopIteration:
-            nearest_arch = None
+            # Default to the system architecture if nothing set
+            nearest_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
 
-        sys_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
         spec_changed = False
 
+        # ensure type safety for the architecture
         if spec.architecture is None:
             spec.architecture = spack.spec.ArchSpec()
             spec_changed = True
 
-        default_archs = list(x for x in [nearest_arch, sys_arch] if x)
-        for arch in default_archs:
-            if spec.architecture.concrete:
-                break
-
-            replacement_fields = [k for k, v in iteritems(arch.to_cmp_dict())
-                                  if v and not getattr(spec.architecture, k)]
-            for field in replacement_fields:
-                setattr(spec.architecture, field, getattr(arch, field))
-                spec_changed = True
-
-        if not spec.architecture.concrete:
-            raise InsufficientArchitectureInfoError(spec, default_archs)
+        # replace each of the fields (platform, os, target) separately
+        replacement_fields = [k for k, v in iteritems(nearest_arch.to_cmp_dict())
+                              if v and not getattr(spec.architecture, k)]
+        for field in replacement_fields:
+            setattr(spec.architecture, field, getattr(nearest_arch, field))
+            spec_changed = True
 
         return spec_changed
 
