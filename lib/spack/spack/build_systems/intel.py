@@ -26,6 +26,7 @@
 import os
 import sys
 import glob
+import re
 import inspect
 import xml.etree.ElementTree as ET
 import llnl.util.tty as tty
@@ -278,7 +279,7 @@ class IntelPackage(PackageBase):
     #--------------------------------------------------------------------
 
     def product_dir(self, product_dir_name, version_glob='_2???.*.*[0-9]',
-        postfix_dir=''):
+                    postfix_dir=''):
         '''Returns the version-specific directory of an Intel product release,
         holding the main product and possibly auxiliary files from other
         products.
@@ -344,8 +345,8 @@ class IntelPackage(PackageBase):
             # So, we can't have it quite as easy as:
             #d = Prefix(d.append('compilers_and_libraries_' + self.version))
             # Alright, let's see what we can find instead:
-            matching_dirs = glob.glob(join_path(d, product_dir_name +
-                version_glob))
+            matching_dirs = glob.glob(
+                join_path(d, product_dir_name + version_glob))
 
             if matching_dirs:
                 # Take the highest and thus presumably newest match, which
@@ -809,27 +810,35 @@ class IntelPackage(PackageBase):
 
     @property
     def determine_license_type(self):
-        # Try file within Spack first, then Intel defaults.
-        # fall back to Spack-internal if needed.
-        #
-        # Hmm - Spack brings up: $EDITOR self.global_license_file
+        # Consider spack-internal Intel license store only when populated.
 
-        #if not os.path.isfile(self.global_license_file):
-            #if 'INTEL_LICENSE_FILE' in os.environ:
-            #    return { 'ACTIVATION_TYPE': 'exist_lic', }
+        license_type = {}
+        f = self.global_license_file
+        if os.path.isfile(f):
+            # NB: Spack brings up $EDITOR in set_up_license() when
+            # self.license_files been defined, regardless of
+            # self.license_required. So, the "if" is usually True here.
+            with open(f) as fh:
+                if re.search(r'^[ \t]*[^' + self.license_comment + '\n]',
+                             fh.read(), re.MULTILINE):
+                    license_type = {
+                        'ACTIVATION_TYPE': 'license_file',
+                        'ACTIVATION_LICENSE_FILE': f,
+                    }
 
-        # TODO: Base decision on whether "self.global_license_file" has
-        # actually been populated, viz.  grep '^[^#]'
+        if not license_type:
+            if [v for v in self.license_vars if v in os.environ]:
+                license_type = {
+                    'ACTIVATION_TYPE': 'exist_lic',
+                }
+            elif glob.glob('/opt/intel/licenses/*.lic'):
+                # Searched for by default ($INTEL_LICENSE_FILE not even needed)
+                license_type = {
+                    'ACTIVATION_TYPE': 'exist_lic',
+                }
 
-        if glob.glob('/opt/intel/licenses/*.lic'):
-            return {
-                'ACTIVATION_TYPE': 'exist_lic',
-            }
-
-        return {
-            'ACTIVATION_TYPE': 'license_file',
-            'ACTIVATION_LICENSE_FILE': self.global_license_file,
-        }
+        debug_print(license_type)
+        return license_type
 
     @property
     def global_license_file(self):
@@ -919,12 +928,15 @@ class IntelPackage(PackageBase):
         #  "... you can also uninstall the Intel(R) Software Manager
         #  completely: <installdir>/intel/ism/uninstall.sh"
 
-        #TODO: try one of:
+        f = join_path(self.studio_dir, 'ism', 'uninstall.sh')
+        if os.path.isfile(f):
+            tty.warn('Uninstalling "Intel Software Improvement Program"'
+                     'component')
+            uninstall = Executable(f)
+            uninstall('--silent')
+
+        #TODO? also try
         #   ~/intel/ism/uninstall --silent
-        #   self.prefix/ism/uninstall --silent
-        #
-        #if os.path.isfile(self.studio_dir) ...
-        #   uninstall_phone_home = Executable( ...
 
         debug_print(os.getcwd())
         return
