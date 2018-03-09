@@ -195,18 +195,6 @@ def createtarball(args):
     signkey = None
     if args.key:
         signkey = args.key
-    allow_root = False
-    force = False
-    relative = False
-    unsigned = False
-    if args.unsigned:
-        unsigned = True
-    if args.allow_root:
-        allow_root = True
-    if args.force:
-        force = True
-    if args.rel:
-        relative = True
 
     matches = find_matching_specs(pkgs, False, False)
     for match in matches:
@@ -231,8 +219,8 @@ def createtarball(args):
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        bindist.build_tarball(spec, outdir, force,
-                              relative, unsigned, allow_root, signkey)
+        bindist.build_tarball(spec, outdir, args.force, args.rel,
+                              args.unsigned, args.allow_root, signkey)
 
 
 def installtarball(args):
@@ -241,13 +229,7 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.packages)
-    multiple = False
-    if args.multiple:
-        multiple = True
-    force = False
-    if args.force:
-        force = True
-    matches = match_downloaded_specs(pkgs, multiple, force)
+    matches = match_downloaded_specs(pkgs, args.multiple, args.force)
 
     for match in matches:
         install_tarball(match, args)
@@ -258,26 +240,18 @@ def install_tarball(spec, args):
     if s.external or s.virtual:
         tty.warn("Skipping external or virtual package %s" % spec.format())
         return
-    allow_root = False
-    if args.allow_root:
-        allow_root = True
-    force = False
-    if args.force:
-        force = True
-    unsigned = False
-    if args.unsigned:
-        unsigned = True
     for d in s.dependencies(deptype=('link', 'run')):
         tty.msg("Installing buildcache for dependency spec %s" % d)
         install_tarball(d, args)
     package = spack.repo.get(spec)
-    if s.concrete and package.installed and not force:
+    if s.concrete and package.installed and not args.force:
         tty.warn("Package for spec %s already installed." % spec.format())
     else:
         tarball = bindist.download_tarball(spec)
         if tarball:
             tty.msg('Installing buildcache for spec %s' % spec.format())
-            bindist.extract_tarball(spec, tarball, allow_root, unsigned, force)
+            bindist.extract_tarball(spec, tarball, args.allow_root,
+                                    args.unsigned, args.force)
             spack.store.db.reindex(spack.store.layout)
         else:
             tty.die('Download of binary cache file for spec %s failed.' %
@@ -309,16 +283,7 @@ def listspecs(args):
 
 def getkeys(args):
     """get public keys available on mirrors"""
-    install = False
-    if args.install:
-        install = True
-    trust = False
-    if args.trust:
-        trust = True
-    force = False
-    if args.force:
-        force = True
-    bindist.get_keys(install, trust, force)
+    bindist.get_keys(args.install, args.trust, args.force)
 
 
 def buildcache(parser, args):
