@@ -584,7 +584,7 @@ def get_specs(force=False):
     return specs
 
 
-def get_keys(install=False, yes_to_all=False, force=False):
+def get_keys(install=False, trust=False, force=False):
     """
     Get pgp public keys available on mirror
     """
@@ -621,9 +621,9 @@ def get_keys(install=False, yes_to_all=False, force=False):
                         continue
             tty.msg('Found key %s' % link)
             if install:
-                if yes_to_all:
+                if trust:
                     Gpg.trust(stage.save_filename)
                     tty.msg('Added this key to trusted keys.')
                 else:
                     tty.msg('Will not add this key to trusted keys.'
-                            'Use -y to override')
+                            'Use -t to install all downloaded keys')
