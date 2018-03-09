@@ -37,8 +37,11 @@ class RKeggrest(RPackage):
     url      = "https://git.bioconductor.org/packages/KEGGREST"
     list_url = homepage
 
+    version('1.18.1', git='https://git.bioconductor.org/packages/KEGGREST', commit='f6e6f1987e4db9d977a75609fab0cb710be2e2e4')
     version('1.2.0', git='https://git.bioconductor.org/packages/KEGGREST', commit='ed48de0def57a909894e237fa4731c4a052d8849')
 
     depends_on('r-httr', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'))
     depends_on('r-biostrings', type=('build', 'run'))
+    depends_on('r@3.4.0:3.4.9', when='@1.2.0')
+    depends_on('r@3.4.3:3.4.9', when='@1.18.1')
