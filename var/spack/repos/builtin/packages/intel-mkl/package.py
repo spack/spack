@@ -190,8 +190,8 @@ class IntelMkl(IntelPackage):
         else:
             include_dir = prefix.include
 
-        cblas_h = join_path(include_dir,'mkl_cblas.h')
-        lapacke_h = join_path(include_dir,'mkl_lapacke.h')
+        cblas_h = join_path(include_dir, 'mkl_cblas.h')
+        lapacke_h = join_path(include_dir, 'mkl_lapacke.h')
         return HeaderList([cblas_h, lapacke_h])
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):

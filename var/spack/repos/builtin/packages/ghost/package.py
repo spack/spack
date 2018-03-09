@@ -64,8 +64,9 @@ class Ghost(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        # note: we require the cblas_include_dir property from the blas provider,
-        # this is implemented at least for intel-mkl and netlib-lapack
+        # note: we require the cblas_include_dir property from the blas
+        # provider, this is implemented at least for intel-mkl and
+        # netlib-lapack
         args = ['-DGHOST_ENABLE_MPI:BOOL=%s'
                 % ('ON' if '+mpi' in spec else 'OFF'),
                 '-DGHOST_USE_CUDA:BOOL=%s'

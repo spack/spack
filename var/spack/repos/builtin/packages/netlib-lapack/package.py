@@ -127,8 +127,8 @@ class NetlibLapack(Package):
     @property
     def headers(self):
         include_dir = self.spec.prefix.include
-        cblas_h = join_path(include_dir,'cblas.h')
-        lapacke_h = join_path(include_dir,'lapacke.h')
+        cblas_h = join_path(include_dir, 'cblas.h')
+        lapacke_h = join_path(include_dir, 'lapacke.h')
         return HeaderList([cblas_h, lapacke_h])
 
     def install_one(self, spec, prefix, shared):
