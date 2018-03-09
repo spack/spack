@@ -197,7 +197,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('ucx', default=False, description='Enable UCX support')
-    variant('pmi', default=False, description='Enable Process Management Interface support')
+    variant('pmi', default=False, description='Enable PMI support')
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
@@ -285,10 +285,13 @@ class Openmpi(AutotoolsPackage):
         # https://www.open-mpi.org/faq/?category=slurm
         # https://slurm.schedmd.com/mpi_guide.html#open_mpi
         # TODO: Add PMIx support for openmpi(>2.0.0)
+        version = self.version
+        spec = self.spec
         if not activated:
             return '--without-slurm'
-        elif activated and self.version >= Version('1.5.5') and '+pmi' not in self.spec:
-            raise SpackError("+pmi is required for openmpi(>1.5.5) to work with SLURM.")
+        elif activated and version >= Version('1.5.5') and '+pmi' not in spec:
+            raise SpackError(
+                "+pmi is required for openmpi(>1.5.5) to work with SLURM.")
         else:
             return '--with-slurm'
 
