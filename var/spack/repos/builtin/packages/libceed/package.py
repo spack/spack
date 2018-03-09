@@ -33,9 +33,9 @@ class Libceed(Package):
 
     version('0.1', git='https://github.com/CEED/libCEED.git', tag='v0.1')
 
-    variant('occa', default=True,description='Enable MPI parallelism')
+    variant('occa', default=True,description='Enable OCCA backends.')
 
-    depends_on('occa', when='+occa')
+    depends_on('occa@0.2:', when='+occa')
 
     def install(self, spec, prefix):
         make('DESTDIR=%s' % prefix)
