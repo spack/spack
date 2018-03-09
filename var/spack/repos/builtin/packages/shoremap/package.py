@@ -28,7 +28,7 @@ from spack import *
 class Shoremap(Package):
     """SHOREmap is a computational tool implementing a method that enables
        simple and straightforward mapping-by-sequencing analysis.
-       
+
        Whole genome resequencing of pools of recombinant mutant genomes allows
        directly linking phenotypic traits to causal mutations. Such an
        analysis, called mapping-by-sequencing, combines classical genetic
