@@ -1288,7 +1288,7 @@ class PackageBase(with_metaclass(PackageMeta, object)):
         tty.msg('Installing %s from binary cache' % self.name)
         tarball = binary_distribution.download_tarball(binary_spec)
         binary_distribution.extract_tarball(
-            binary_spec, tarball, allow_root=False, force=False)
+            binary_spec, tarball, allow_root=False, unsigned=False, force=False)
         spack.store.db.add(self.spec, spack.store.layout, explicit=explicit)
         return True
 
