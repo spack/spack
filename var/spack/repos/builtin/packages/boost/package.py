@@ -56,8 +56,10 @@ class Boost(Package):
     #       +python and +mpi, there seem to be errors with out-of-date
     #       API calls from mpi/python.
     #       See: https://github.com/spack/spack/issues/3963
-    version('1.64.0', '93eecce2abed9d2442c9676914709349')
-    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
+    version('1.64.0', '93eecce2abed9d2442c9676914709349',
+            url='https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2')
+    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847',
+            url='https://dl.bintray.com/boostorg/release/1.63.0/source/boost_1_63_0.tar.bz2')
     version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
     version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
     version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
