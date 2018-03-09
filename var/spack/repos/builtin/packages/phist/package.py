@@ -70,7 +70,8 @@ library or Trilinos/Tpetra).
     def cmake_args(self):
         spec = self.spec
         outlev = spec.variants['outlev'].value
-        lapacke_libs = (spec['lapack:c'].libs + spec['blas:c'].libs).joined(';')
+        lapacke_libs = \
+            (spec['lapack:c'].libs + spec['blas:c'].libs).joined(';')
         lapacke_include_dir = format(spec['lapack:c'].headers.directories[0])
 
         # Use everything until the first '+' sign as the kernel library.
